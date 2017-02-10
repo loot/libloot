@@ -59,7 +59,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'LOOT'
+project = u'LOOT API'
 copyright = u'2016, WrinklyNinja'
 author = u'WrinklyNinja'
 
@@ -270,7 +270,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'LOOT.tex', u'LOOT Documentation',
+    (master_doc, 'loot_api.tex', u'LOOT API Documentation',
      u'WrinklyNinja', 'manual'),
 ]
 
@@ -312,7 +312,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'loot', u'LOOT Documentation',
+    (master_doc, 'loot_api', u'LOOT API Documentation',
      [author], 1)
 ]
 
@@ -327,8 +327,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'LOOT', u'LOOT Documentation',
-     author, 'LOOT', 'One line description of project.',
+    (master_doc, 'loot_api', u'LOOT API Documentation',
+     author, 'loot_api', 'One line description of project.',
      'Miscellaneous'),
 ]
 

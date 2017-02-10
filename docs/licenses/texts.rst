@@ -12,30 +12,6 @@ Copyright License Texts
 .. include:: Boost Software License v1.0.txt
   :literal:
 
-`Chromium Embedded Framework`_
-==============================
-
-.. _Chromium Embedded Framework: https://bitbucket.org/chromiumembedded/cef
-
-.. include:: BSD License (Chromium Embedded Framework).txt
-  :literal:
-
-`Jed`_
-======
-
-.. _Jed: https://github.com/SlexAxton/Jed
-
-.. include:: MIT License (Jed).txt
-  :literal:
-
-`Jed Gettext Parser`_
-=====================
-
-.. _Jed Gettext Parser: https://github.com/WrinklyNinja/jed-gettext-parser
-
-.. include:: MIT License (Jed Gettext Parser).txt
-  :literal:
-
 `libgit2`_
 ==========
 
@@ -44,8 +20,8 @@ Copyright License Texts
 .. include:: GNU GPL v2 (libgit2).txt
   :literal:
 
-LOOT, `Libespm`_ & `Libloadorder`_
-==================================
+LOOT API, `Libespm`_ & `Libloadorder`_
+======================================
 
 .. _libespm: https://github.com/WrinklyNinja/libespm
 .. _libloadorder: https://github.com/WrinklyNinja/libloadorder
@@ -53,26 +29,10 @@ LOOT, `Libespm`_ & `Libloadorder`_
 .. include:: GNU GPL v3.txt
   :literal:
 
-LOOT Documentation
-==================
+LOOT API Documentation
+======================
 
 .. include:: GNU FDL v1.3.txt
-  :literal:
-
-`Marked`_
-=========
-
-.. _Marked: https://github.com/chjj/marked
-
-.. include:: MIT License (Marked).txt
-  :literal:
-
-`Polymer`_
-==========
-
-.. _Polymer: https://www.polymer-project.org/
-
-.. include:: BSD License (Polymer).txt
   :literal:
 
 `Pseudosem`_

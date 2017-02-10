@@ -49,6 +49,3 @@ Thumbs.db
 *.sdf
 *.opensdf
 build
-*.mo
-bower_components
-node_modules

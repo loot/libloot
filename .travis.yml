@@ -6,29 +6,14 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test # ppa:ubuntu-toolchain-r/test
-      - kubuntu-backports       # ppa:kubuntu-ppa/backports
     packages:
       - libbz2-dev
       - libssl-dev
       - gcc-5
       - g++-5
-      - cmake
-      - cmake-data
-      # GUI dependencies
-      - libx11-dev
-      - libgtk2.0-dev
-      - libnss3-dev
-      - libgconf2-dev
-      - libxss-dev
-      - libasound2-dev
-      - libxtst-dev
-      # Scripting dependencies
-      - imagemagick
 
 cache:
   directories:
-    - $TRAVIS_BUILD_DIR/node_modules
-    - $TRAVIS_BUILD_DIR/bower_components
     - $HOME/boost_1_61_0/boost
     - $HOME/boost_1_61_0/stage/lib
 
@@ -36,16 +21,7 @@ install:
   # Use GCC 5.
   - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
   - export CXXFLAGS="-fPIC" CFLAGS="-fPIC"
-  # Install the latest stable Node.js. The default Node.js version is too old
-  # for some of the JavaScript syntax used.
-  - npm install -g nvm
-  - nvm install node
-  # Install Node.js dependencies
-  - npm install
-  # Add local binary path to PATH
-  - export PATH="./node_modules/.bin:$PATH"
-  # Install runtime dependencies using Bower
-  - bower install
+  # Build Boost.
   - wget https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.0.0/install_boost.py
   - python install_boost.py --directory ~ --boost-version 1.61.0 atomic chrono date_time filesystem iostreams locale log regex system thread
   # Install packages for generating documentation
@@ -58,11 +34,13 @@ install:
   - tar -xf doxygen-1.8.12.linux.bin.tar.gz
   # Add Doxygen binary path to PATH
   - export PATH="$PWD/doxygen-1.8.12/bin:$PATH"
+  # Get CMake (version available in repositories is too old, needs to be 3.1+)
+  - wget --no-check-certificate https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz
+  - tar -xzf cmake-3.7.2-Linux-x86_64.tar.gz
+  - export PATH=$PWD/cmake-3.7.2-Linux-x86_64/bin:$PATH
 
 before_script:
   - mkdir build
-  - node scripts/create_ico.js
-  # Move into the cloned LOOT repo build path.
   - cd build
   # Link dynamically to the C++ standard library runtime.
   - cmake .. -DBOOST_ROOT=~/boost_1_61_0
@@ -71,49 +49,38 @@ script:
   - make all
   - ./loot_api_internals_tests
   - ./loot_api_tests
-  - ./loot_gui_tests
 
 after_success:
   - cd $TRAVIS_BUILD_DIR
-  # Get the full repo history before trying to run the archiver.
-  - git fetch --unshallow
-  - node scripts/potomo.js
   - sphinx-build -b html docs build/docs/html
-  - node scripts/archive.js
-  # Need to replace the HEAD branch descriptor in the archive filenames
-  - for ARCHIVE in build/*.tar.xz; do mv $ARCHIVE $(echo $ARCHIVE | sed "s/HEAD/$TRAVIS_BRANCH/"); done
+  - cd build
+  - cpack
+  - cd ..
+  # Get the full repo history before trying to run git describe.
+  - git fetch --unshallow
+  - GIT_DESCRIBE=$(git describe --tags --long --always --abbrev=7)
   # Make copies of the archives for GitHub deployment to find.
-  - cp $(ls build/loot-api_*.tar.xz) build/loot-api.tar.xz
+  - cp $(ls build/package/loot_api-*.tar.xz) build/loot-api.tar.xz
   # Need to replace the Bintray config files' version placeholders.
-  - VERSION=$(ls build/loot_*.tar.xz | sed 's/build\/loot_//;s/.tar.xz//;')
-  - sed -i "s/REPLACE_THIS_VERSION/$VERSION/" scripts/travis/loot.bintray.json
-  - sed -i "s/REPLACE_THIS_VERSION/$VERSION/" scripts/travis/loot-api.bintray.json
+  - sed -i "s/REPLACE_THIS_VERSION/${GIT_DESCRIBE}_${TRAVIS_BRANCH}/" scripts/travis/loot-api.bintray.json
 
 deploy:
-  - provider: bintray
-    file: scripts/travis/loot.bintray.json
-    user: wrinklyninja
-    key:
-      secure: "CyJpCbkO4pK+h4ZFDqwS3FZNwTaY7638IT7uzVKhGQV2CD9nMR7mb9bL6DG/Uxs91MuBeCu8RwzXtK5IVmPkH5AbMO95JMsjor+t8lT6AHhjvgmAhOBXJa5qMbFBFbLQErTdudHIcOxgjyjA5vqt5Zf0DlWty7WnE10WoU/O7qg="
-    skip_cleanup: true
-    on:
-      all_branches: true
   - provider: bintray
     file: scripts/travis/loot-api.bintray.json
     user: wrinklyninja
     key:
-      secure: "CyJpCbkO4pK+h4ZFDqwS3FZNwTaY7638IT7uzVKhGQV2CD9nMR7mb9bL6DG/Uxs91MuBeCu8RwzXtK5IVmPkH5AbMO95JMsjor+t8lT6AHhjvgmAhOBXJa5qMbFBFbLQErTdudHIcOxgjyjA5vqt5Zf0DlWty7WnE10WoU/O7qg="
+      secure: "zczTW2fGiTDlrgCtDyWAcQ+FftErR8XFZ7Lz3Mnj3gbedlS7wKdpffXngpepGGQQp3N5Jt0F51mQDrRFfvgmSk0IpuSVKkzuUNt5aJEav7LYb9tho4afXGu/fd3Sj8nF0NM4rB9b2sHMKOLSBD/a+7qsf0q3W4lFZGRQPzqq6RBqB0p8brsdf4g/aoVjAGltUtagMNMYJbs5MNsZLX0Zw9pRB4bSvCf9YNXLcMckA2FQC+xiWAliMOQQlnQU5QZgzNypiTvYpyYwhLM3Xy6/QB9WkABDPEfYNcnOX7JRI81Q6QGWbbSNpDcGI1LmxDwYCftpI7ilbL+yj8Al6AFAn4Ia3AcMpoXv9De/11HYftwYL+76Lud+EaCZimy5FIj6d+GBVwiZkpnbEi8r0LJ0o9dBlLJESqSRwqhYH25fahSgfT/Tew5ftigOfJRY/sYXYXJS5TLeV7OaP6LXAivBWttB3Wo3OcE+4HsvmpgIrHGhvKsmtAQMs2ddBwKdro9jqtaCBbM2To05FtQ1/RYV2dD3v8nF7CwSX6VLp1a973CUZ5/IF3R6ONeCVwkxVqe7hPlo65NAx8L8jvxjksYIQ/r1aPhJLU7UCPPic47I/6M0fsRnT8pcRymnMcfQ5QT7h7gtqQQRJzYKaalkYVObw1ygDsqgPh5LZTf6U6S+bG8="
     skip_cleanup: true
     on:
       all_branches: true
   - provider: releases
     api_key:
-      secure: "TuiXR/J5cdvgAXqU5x79E7thXwzN4Jqo1vKolPPb5ahrBllBHFh23awyOIdlTnXY1aS6NjS85uIiD3TNZ/hwrtDsjMgNs1ofL6A9B+7uQJjpK8JqFUECrJCMsEhnwRSzIUeqDeZp440x3c0bTFqfSMErrG/ga5S+VyNYHYREqo4="
+      secure: "HBBghmIDgWsPq6YVrKh/M0au51ffWQdnaNr2QUFBEzsrMUgaAR04vd3eLtodHr5W2m6fJFfvIDnROYh2KnFQP0MFwEkldyToHpAJqoSxOJ2uJzq7TOiWTVlKbdnutQ+0GS0URcoM32uxRgkduWWe9McZ1mj12oyV2PKR2ojtNp9ni12O2qfzH32YPdQZ3zutxRgB82OZ0qj7HMHfD4v0yPhBncZaEWFTKKRy/LgJvaEGsEsb7u8MidRVpo/pNbNirjlh7Vlx4tm7kT2R4/ehH8H2y3MjxCaacfzaqi6LoGqMBVEjhpETI1COMvhezUdzmB/GBdX8zlTKuSs1GwiUl6FXnEPxnIU+qllx5PkHeph3GpkPZ8ChUuqnEksaBZsnVQ0D06KrivLb5otlRkfk4xfEX/68KUP7y/dNVZCVYOHSPD0N+iaKhGhTkjt77xJQ0z3U1qtoHrbtSdVUdeb+xIiyYCr8mHrQy+gNGqB8NLtpsdqWpjKh/BAcYnlu15VZLq6AASpLaDeBsCGXm/Er15z5meXDyRPtR1qT9XZgDEMXsn7ywe/dNfNxiY8sPxNn6vpqNvD7AR4s8nYm7qAm3JBw5xBaqh5HpkibIcNADkZGvDWjsbvO48/g1J5R+XT6CE77Qbj9UcYR532TbD0VSYFr6+snTf0Vwe1JgoiHNSk="
     file:
       - build/loot-api.tar.xz
     skip_cleanup: true
     on:
-      repo: loot/loot
+      repo: loot/loot-api
       tags: true
 
 notifications:

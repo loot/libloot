@@ -8,7 +8,7 @@
     "name": "REPLACE_THIS_VERSION"
   },
   "files": [{
-    "includePattern": "build/(loot-api_.+\\.tar.xz)",
+    "includePattern": "build/package/(loot_api-.+\\.tar.xz)",
     "uploadPattern": "$1"
   }],
   "publish": true
