@@ -35,6 +35,7 @@ class MasterlistTest : public CommonGameTestFixture {
 protected:
   MasterlistTest() :
     repoBranch("master"),
+    oldBranch("old-branch"),
     repoUrl("https://github.com/loot/testing-metadata.git"),
     masterlistPath(localPath / "masterlist.yaml") {}
 
@@ -53,6 +54,7 @@ protected:
 
   const std::string repoUrl;
   const std::string repoBranch;
+  const std::string oldBranch;
 
   const boost::filesystem::path masterlistPath;
 };
@@ -176,6 +178,39 @@ TEST_P(MasterlistTest, getInfoShouldAppendSuffixesToReturnedStringsIfTheMasterli
   EXPECT_EQ(40, info.revision_id.length());
   EXPECT_EQ(10, info.revision_date.length());
   EXPECT_TRUE(info.is_modified);
+}
+
+TEST_P(MasterlistTest, isLatestShouldThrowIfTheGivenPathDoesNotBelongToAGitRepository) {
+  ASSERT_NO_THROW(boost::filesystem::copy("./testing-metadata/masterlist.yaml", masterlistPath));
+
+  EXPECT_THROW(Masterlist::IsLatest(masterlistPath, repoBranch), GitStateError);
+}
+
+TEST_P(MasterlistTest, isLatestShouldThrowIfTheGivenBranchIsAnEmptyString) {
+  Masterlist masterlist;
+  ASSERT_TRUE(masterlist.Update(masterlistPath,
+                                repoUrl,
+                                repoBranch));
+
+  EXPECT_THROW(Masterlist::IsLatest(masterlistPath, ""), std::invalid_argument);
+}
+
+TEST_P(MasterlistTest, isLatestShouldReturnFalseIfTheCurrentRevisionIsNotTheLatestRevisionInTheGivenBranch) {
+  Masterlist masterlist;
+  ASSERT_TRUE(masterlist.Update(masterlistPath,
+                                repoUrl,
+                                oldBranch));
+
+  EXPECT_FALSE(Masterlist::IsLatest(masterlistPath, repoBranch));
+}
+
+TEST_P(MasterlistTest, isLatestShouldReturnTrueIfTheCurrentRevisionIsTheLatestRevisioninTheGivenBranch) {
+  Masterlist masterlist;
+  ASSERT_TRUE(masterlist.Update(masterlistPath,
+                                repoUrl,
+                                repoBranch));
+
+  EXPECT_TRUE(Masterlist::IsLatest(masterlistPath, repoBranch));
 }
 }
 }

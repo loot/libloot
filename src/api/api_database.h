@@ -54,6 +54,9 @@ struct ApiDatabase : public DatabaseInterface {
   MasterlistInfo GetMasterlistRevision(const std::string& masterlist_path,
                                        const bool get_short_id) const;
 
+  bool IsLatestMasterlist(const std::string& masterlist_path,
+                          const std::string& branch) const;
+
   std::set<std::string> GetKnownBashTags() const;
 
   std::vector<Message> GetGeneralMessages(bool evaluateConditions = false) const;

@@ -25,13 +25,11 @@
 #include "api/helpers/git_helper.h"
 
 #include <boost/format.hpp>
-#include <boost/locale.hpp>
 #include <boost/log/trivial.hpp>
 
 #include "loot/exception/error_categories.h"
 #include "loot/exception/git_state_error.h"
 
-using boost::locale::translate;
 using std::string;
 
 namespace fs = boost::filesystem;
@@ -101,16 +99,9 @@ void GitHelper::Call(int error_code) {
     gitError = std::to_string(error_code) + "; " + last_error->message;
   giterr_clear();
 
-  if (errorMessage_.empty())
-    errorMessage_ = "Git operation failed.";
+  auto message = (boost::format("Git operation failed. Details: %1%") % gitError).str();
 
-  errorMessage_ = (boost::format("%1% Details: %2%") % errorMessage_ % gitError).str();
-
-  throw std::system_error(error_code, libgit2_category(), errorMessage_);
-}
-
-void GitHelper::SetErrorMessage(const std::string& message) {
-  errorMessage_ = message;
+  throw std::system_error(error_code, libgit2_category(), message);
 }
 
 bool GitHelper::IsRepository(const boost::filesystem::path& path) {
@@ -144,7 +135,6 @@ void GitHelper::Clone(const boost::filesystem::path& path, const std::string& ur
   if (data_.repo != nullptr)
     throw GitStateError("Cannot clone repository that has already been opened.");
 
-  SetErrorMessage(translate("An error occurred while trying to clone the remote masterlist repository."));
   // Clone the remote repository.
   BOOST_LOG_TRIVIAL(info) << "Repository doesn't exist, cloning the remote repository.";
 
@@ -193,7 +183,6 @@ void GitHelper::Fetch(const std::string& remote) {
     throw GitStateError("Cannot fetch updates for repository that has not been opened.");
 
   BOOST_LOG_TRIVIAL(trace) << "Fetching updates from remote.";
-  SetErrorMessage(translate("An error occurred while trying to update the masterlist. This could be due to a server-side error. Try again in a few minutes."));
 
   // Get the origin remote.
   Call(git_remote_lookup(&data_.remote, data_.repo, remote.c_str()));

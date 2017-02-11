@@ -98,18 +98,6 @@ TEST_F(GitHelperTest, callShouldThrowIfPassedANonZeroValue) {
   EXPECT_THROW(git_.Call(-1), std::system_error);
 }
 
-TEST_F(GitHelperTest, setErrorMessageShouldSetTheMessageForThrownExceptions) {
-  const char * errorMessage = "test message";
-  git_.SetErrorMessage(errorMessage);
-
-  try {
-    git_.Call(1);
-    ADD_FAILURE() << "An exception should have been thrown.";
-  } catch (std::system_error& e) {
-    EXPECT_NE(nullptr, strstr(e.what(), errorMessage));
-  }
-}
-
 TEST_F(GitHelperTest, isRepositoryShouldReturnTrueForARepositoryRoot) {
   EXPECT_TRUE(GitHelper::IsRepository(parentRepoRoot));
 }

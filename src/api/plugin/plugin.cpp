@@ -35,6 +35,7 @@
 #include "api/game/game.h"
 #include "api/helpers/crc.h"
 #include "api/helpers/version.h"
+#include "loot/exception/file_access_error.h"
 
 using libespm::FormId;
 using std::set;
@@ -113,7 +114,7 @@ Plugin::Plugin(const Game& game, const std::string& name, const bool headerOnly)
     }
   } catch (std::exception& e) {
     BOOST_LOG_TRIVIAL(error) << "Cannot read plugin file \"" << name << "\". Details: " << e.what();
-    messages_.push_back(Message(MessageType::error, (boost::format(boost::locale::translate("Cannot read \"%1%\". Details: %2%")) % name % e.what()).str()));
+    throw FileAccessError((boost::format("Cannot read \"%1%\". Details: %2%") % name % e.what()).str());
   }
 
   BOOST_LOG_TRIVIAL(trace) << name_ << ": " << "Plugin loading complete.";
@@ -133,10 +134,6 @@ std::string Plugin::GetVersion() const {
 
 std::vector<std::string> Plugin::GetMasters() const {
   return getMasters();
-}
-
-std::vector<Message> Plugin::GetStatusMessages() const {
-  return messages_;
 }
 
 std::set<Tag> Plugin::GetBashTags() const {

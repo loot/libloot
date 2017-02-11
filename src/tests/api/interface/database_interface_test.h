@@ -38,6 +38,7 @@ protected:
     userlistPath_(localPath / "userlist.yaml"),
     url_("https://github.com/loot/testing-metadata.git"),
     branch_("master"),
+    oldBranch_("old-branch"),
     minimalOutputPath_(localPath / "minimal.yml"),
     generalUserlistMessage("A general userlist message.") {}
 
@@ -124,6 +125,7 @@ protected:
   const boost::filesystem::path minimalOutputPath_;
   const std::string url_;
   const std::string branch_;
+  const std::string oldBranch_;
   const std::string generalUserlistMessage;
 
   std::shared_ptr<DatabaseInterface> db_;
@@ -319,6 +321,18 @@ TEST_P(DatabaseInterfaceTest, getMasterlistRevisionShouldSucceedIfAnEditedVersio
   EXPECT_EQ(40, info.revision_id.length());
   EXPECT_EQ(10, info.revision_date.length());
   EXPECT_TRUE(info.is_modified);
+}
+
+TEST_P(DatabaseInterfaceTest, isLatestMasterlistShouldReturnFalseIfTheCurrentRevisionIsNotTheLatestRevisionInTheGivenBranch) {
+  ASSERT_NO_THROW(db_->UpdateMasterlist(masterlistPath.string(), url_, oldBranch_));
+
+  EXPECT_FALSE(db_->IsLatestMasterlist(masterlistPath.string(), branch_));
+}
+
+TEST_P(DatabaseInterfaceTest, isLatestMasterlistShouldReturnTrueIfTheCurrentRevisionIsTheLatestRevisioninTheGivenBranch) {
+  ASSERT_NO_THROW(db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
+
+  EXPECT_TRUE(db_->IsLatestMasterlist(masterlistPath.string(), branch_));
 }
 
 TEST_P(DatabaseInterfaceTest, getKnownBashTagsShouldReturnAllBashTagsListedInLoadedMetadata) {

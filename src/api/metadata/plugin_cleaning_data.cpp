@@ -81,45 +81,4 @@ MessageContent PluginCleaningData::ChooseInfo(const LanguageCode language) const
   BOOST_LOG_TRIVIAL(trace) << "Choosing dirty info content.";
   return MessageContent::Choose(info_, language);
 }
-
-Message PluginCleaningData::AsMessage() const {
-  using boost::format;
-  using boost::locale::translate;
-
-  const std::string itmRecords = (format(translate("%1% ITM record", "%1% ITM records", itm_)) % itm_).str();
-  const std::string deletedReferences = (format(translate("%1% deleted reference", "%1% deleted references", ref_)) % ref_).str();
-  const std::string deletedNavmeshes = (format(translate("%1% deleted navmesh", "%1% deleted navmeshes", nav_)) % nav_).str();
-
-  format f;
-  if (itm_ > 0 && ref_ > 0 && nav_ > 0)
-    f = format(translate("%1% found %2%, %3% and %4%.")) % utility_ % itmRecords % deletedReferences % deletedNavmeshes;
-  else if (itm_ == 0 && ref_ == 0 && nav_ == 0)
-    f = format(translate("%1% found dirty edits.")) % utility_;
-
-  else if (itm_ == 0 && ref_ > 0 && nav_ > 0)
-    f = format(translate("%1% found %2% and %3%.")) % utility_ % deletedReferences % deletedNavmeshes;
-  else if (itm_ > 0 && ref_ == 0 && nav_ > 0)
-    f = format(translate("%1% found %2% and %3%.")) % utility_ % itmRecords % deletedNavmeshes;
-  else if (itm_ > 0 && ref_ > 0 && nav_ == 0)
-    f = format(translate("%1% found %2% and %3%.")) % utility_ % itmRecords % deletedReferences;
-
-  else if (itm_ > 0)
-    f = format(translate("%1% found %2%.")) % utility_ % itmRecords;
-  else if (ref_ > 0)
-    f = format(translate("%1% found %2%.")) % utility_ % deletedReferences;
-  else if (nav_ > 0)
-    f = format(translate("%1% found %2%.")) % utility_ % deletedNavmeshes;
-
-  std::string message = f.str();
-  if (info_.empty()) {
-    return Message(MessageType::warn, message);
-  }
-
-  auto info = info_;
-  for (auto& content : info) {
-    content = MessageContent(message + " " + content.GetText(), content.GetLanguage());
-  }
-
-  return Message(MessageType::warn, info);
-}
 }

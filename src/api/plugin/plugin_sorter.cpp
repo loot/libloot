@@ -215,15 +215,7 @@ void PluginSorter::AddPluginVertices(Game& game) {
   for (const auto &plugin : game.GetPlugins()) {
     BOOST_LOG_TRIVIAL(trace) << "Getting and evaluating metadata for plugin " << plugin->GetName();
 
-    PluginMetadata metadata(plugin->GetName());
-    try {
-      metadata = game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true);
-    } catch (std::exception& e) {
-      BOOST_LOG_TRIVIAL(error) << "\"" << plugin->GetName() << "\" contains a condition that could not be evaluated. Details: " << e.what();
-      metadata.SetMessages({
-        Message(MessageType::error, (boost::format(boost::locale::translate("\"%1%\" contains a condition that could not be evaluated. Details: %2%")) % plugin->GetName() % e.what()).str()),
-      });
-    }
+    auto metadata = game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true);
 
     BOOST_LOG_TRIVIAL(trace) << "Adding vertex for plugin \"" << plugin->GetName() << "\"";
 

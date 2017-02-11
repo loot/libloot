@@ -66,14 +66,6 @@ public:
   virtual std::vector<std::string> GetMasters() const = 0;
 
   /**
-   * Get any status messages associated with the plugin.
-   *
-   * For example, if parsing failed, it could be recorded in a status message.
-   * @return A vector of status messages.
-   */
-  virtual std::vector<Message> GetStatusMessages() const = 0;
-
-  /**
    * Get any Bash Tags found in the plugin's description field.
    * @return A set of Bash Tags. The order of elements in the set holds no
    *         semantics.

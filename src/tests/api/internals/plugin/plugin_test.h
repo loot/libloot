@@ -37,6 +37,7 @@ protected:
   PluginTest() :
     emptyFile("EmptyFile.esm"),
     nonPluginFile("NotAPlugin.esm"),
+    lowercaseBlankEsp("blank.esp"),
     game_(GetParam(), dataPath.parent_path(), localPath),
     blankArchive("Blank" + game_.GetArchiveFileExtension()),
     blankSuffixArchive("Blank - Different - suffix" + game_.GetArchiveFileExtension()) {}
@@ -55,6 +56,10 @@ protected:
     out.close();
     ASSERT_TRUE(boost::filesystem::exists(dataPath / nonPluginFile));
 
+#ifndef _WIN32
+    ASSERT_NO_THROW(boost::filesystem::copy(dataPath / blankEsp, dataPath / lowercaseBlankEsp));
+#endif
+
     // Create dummy archive files.
     out.open(dataPath / blankArchive);
     out.close();
@@ -67,6 +72,9 @@ protected:
 
     boost::filesystem::remove(dataPath / emptyFile);
     boost::filesystem::remove(dataPath / nonPluginFile);
+#ifndef _WIN32
+    boost::filesystem::remove(dataPath / lowercaseBlankEsp);
+#endif
     boost::filesystem::remove(dataPath / blankArchive);
     boost::filesystem::remove(dataPath / blankSuffixArchive);
   }
@@ -75,6 +83,7 @@ protected:
 
   const std::string emptyFile;
   const std::string nonPluginFile;
+  const std::string lowercaseBlankEsp;
   const std::string blankArchive;
   const std::string blankSuffixArchive;
 };
@@ -85,7 +94,6 @@ public:
   std::string GetLowercasedName() const { return ""; }
   std::string GetVersion() const { return ""; }
   std::vector<std::string> GetMasters() const { return std::vector<std::string>(); }
-  std::vector<Message> GetStatusMessages() const { return std::vector<Message>(); }
   std::set<Tag> GetBashTags() const { return std::set<Tag>(); }
   uint32_t GetCRC() const { return 0; }
 
@@ -159,6 +167,10 @@ TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
   }), plugin.GetMasters());
 }
 
+TEST_P(PluginTest, loadingAPluginThatDoesNotExistShouldThrow) {
+  EXPECT_THROW(Plugin(game_, "Blank\\.esp", true), FileAccessError);
+}
+
 TEST_P(PluginTest, loadsArchiveForAnArchiveThatExactlyMatchesAnEsmFileBasenameShouldReturnTrueForAllGamesExceptOblivion) {
   bool loadsArchive = Plugin(game_, blankEsm, true).LoadsArchive();
 
@@ -194,10 +206,6 @@ TEST_P(PluginTest, loadsArchiveShouldReturnFalseForAPluginThatDoesNotLoadAnArchi
   EXPECT_FALSE(Plugin(game_, blankMasterDependentEsp, true).LoadsArchive());
 }
 
-TEST_P(PluginTest, loadsArchiveShouldReturnFalseForAPluginWithARegexFilename) {
-  EXPECT_FALSE(Plugin(game_, "Blank\\.esp", true).LoadsArchive());
-}
-
 TEST_P(PluginTest, isValidShouldReturnTrueForAValidPlugin) {
   EXPECT_TRUE(Plugin::IsValid(blankEsm, game_));
 }
@@ -219,14 +227,14 @@ TEST_P(PluginTest, isActiveShouldReturnFalseForAPluginThatIsNotActive) {
 }
 
 TEST_P(PluginTest, lessThanOperatorShouldUseCaseInsensitiveLexicographicalNameComparison) {
-  Plugin plugin1(game_, "Blank.esp", true);
-  Plugin plugin2(game_, "blank.esp", true);
+  Plugin plugin1(game_, blankEsp, true);
+  Plugin plugin2(game_, lowercaseBlankEsp, true);
 
   EXPECT_FALSE(plugin1 < plugin2);
   EXPECT_FALSE(plugin2 < plugin1);
 
-  Plugin plugin3 = Plugin(game_, "blank.esm", true);
-  Plugin plugin4 = Plugin(game_, "blank.esp", true);
+  Plugin plugin3 = Plugin(game_, blankEsm, true);
+  Plugin plugin4 = Plugin(game_, blankEsp, true);
 
   EXPECT_TRUE(plugin3 < plugin4);
   EXPECT_FALSE(plugin4 < plugin3);

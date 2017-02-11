@@ -48,7 +48,6 @@ public:
   std::string GetLowercasedName() const;
   std::string GetVersion() const;
   std::vector<std::string> GetMasters() const;
-  std::vector<Message> GetStatusMessages() const;
   std::set<Tag> GetBashTags() const;
   uint32_t GetCRC() const;
 

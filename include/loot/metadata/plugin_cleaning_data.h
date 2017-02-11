@@ -143,13 +143,6 @@ public:
    *         does not exist, the English-language MessageContent object.
    */
   LOOT_API MessageContent ChooseInfo(const LanguageCode language) const;
-
-  /**
-   * Get a warning message describing the cleaning data.
-   * @return A Message object detailing the number and types of dirty edits
-   *         found, the cleaning utility used, plus any additional information.
-   */
-  LOOT_API Message AsMessage() const;
 private:
   uint32_t crc_;
   unsigned int itm_;

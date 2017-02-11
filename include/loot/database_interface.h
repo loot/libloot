@@ -149,6 +149,20 @@ public:
                                                const bool get_short_id) const = 0;
 
   /**
+   * Check if the given masterlist is the latest available for a given branch.
+   * @param  masterlist_path
+   *         A string containing the relative or absolute path to the masterlist
+   *         file for which the latest revision should be obtained. It needs to
+   *         be in a local Git repository.
+   * @param  branch
+   *         The branch to check against.
+   * @return True if the masterlist revision matches the latest masterlist
+   *         revision for the given branch, and false otherwise.
+   */
+  virtual bool IsLatestMasterlist(const std::string& masterlist_path,
+                                  const std::string& branch) const = 0;
+
+  /**
    *  @}
    *  @name Non-plugin Data Access
    *  @{

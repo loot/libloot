@@ -33,17 +33,15 @@
 #include "api/helpers/git_helper.h"
 
 using boost::format;
-using boost::locale::translate;
 using std::string;
 
 namespace fs = boost::filesystem;
 
 namespace loot {
 MasterlistInfo Masterlist::GetInfo(const boost::filesystem::path& path, bool shortID) {
-    // Compare HEAD and working copy, and get revision info.
+  // Compare HEAD and working copy, and get revision info.
   GitHelper git;
   MasterlistInfo info;
-  git.SetErrorMessage((format(translate("An error occurred while trying to read the local masterlist's version. If this error happens again, try deleting the \".git\" folder in %1%.")) % path.parent_path().string()).str());
 
   if (!fs::exists(path)) {
     BOOST_LOG_TRIVIAL(info) << "Unknown masterlist revision: No masterlist present.";
@@ -84,6 +82,34 @@ MasterlistInfo Masterlist::GetInfo(const boost::filesystem::path& path, bool sho
   return info;
 }
 
+bool Masterlist::IsLatest(const boost::filesystem::path& path,
+                          const std::string& repoBranch) {
+  if (repoBranch.empty())
+    throw std::invalid_argument("Repository branch must not be empty.");
+
+  GitHelper git;
+
+  if (!git.IsRepository(path.parent_path())) {
+    BOOST_LOG_TRIVIAL(info) << "Cannot get latest masterlist revision: Git repository missing.";
+    throw GitStateError(string("Unknown: \"") + path.parent_path().string() + "\" is not a Git repository.");
+  }
+
+  BOOST_LOG_TRIVIAL(info) << "Attempting to open repository.";
+  git.Call(git_repository_open(&git.GetData().repo, path.parent_path().string().c_str()));
+
+  git.Fetch("origin");
+
+  // Get the remote branch's commit ID.
+  git_oid branchOid;
+  git.Call(git_reference_name_to_id(&branchOid, git.GetData().repo, (string("refs/remotes/origin/") + repoBranch).c_str()));
+
+  // Get HEAD's commit ID.
+  git_oid headOid;
+  git.Call(git_reference_name_to_id(&headOid, git.GetData().repo, "HEAD"));
+
+  return boost::equal(branchOid.id, headOid.id);
+}
+
 bool Masterlist::Update(const boost::filesystem::path& path, const std::string& repoUrl, const std::string& repoBranch) {
   GitHelper git;
   fs::path repoPath = path.parent_path();
@@ -92,7 +118,7 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
   if (repoUrl.empty() || repoBranch.empty())
     throw std::invalid_argument("Repository URL and branch must not be empty.");
 
-// Initialise checkout options.
+  // Initialise checkout options.
   BOOST_LOG_TRIVIAL(debug) << "Setting up checkout options.";
   char * paths = new char[filename.length() + 1];
   strcpy(paths, filename.c_str());
@@ -110,8 +136,7 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
   if (!git.IsRepository(repoPath))
     git.Clone(repoPath, repoUrl);
   else {
-      // Repository exists: check settings are correct, then pull updates.
-    git.SetErrorMessage((format(translate("An error occurred while trying to access the local masterlist repository. If this error happens again, try deleting the \".git\" folder in %1%.")) % repoPath.string()).str());
+    // Repository exists: check settings are correct, then pull updates.
 
     // Open the repository.
     BOOST_LOG_TRIVIAL(info) << "Existing repository found, attempting to open it.";
@@ -125,7 +150,6 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
     git.Fetch("origin");
 
     // Check that a local branch with the correct name exists.
-    git.SetErrorMessage((format(translate("An error occurred while trying to access the local masterlist repository. If this error happens again, try deleting the \".git\" folder in %1%.")) % repoPath.string()).str());
     int ret = git_branch_lookup(&git.GetData().reference, git.GetData().repo, repoBranch.c_str(), GIT_BRANCH_LOCAL);
     if (ret == GIT_ENOTFOUND)
         // Branch doesn't exist. Create a new branch using the remote branch's latest commit.
@@ -231,10 +255,8 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
   // and try again.
 
   bool parsingFailed = false;
-  std::string parsingError;
-  git.SetErrorMessage((format(translate("An error occurred while trying to read information on the updated masterlist. If this error happens again, try deleting the \".git\" folder in %1%.")) % repoPath.string()).str());
   do {
-      // Get the HEAD revision's short ID.
+    // Get the HEAD revision's short ID.
     string revision = git.GetHeadShortId();
 
     //Now try parsing the masterlist.
@@ -245,17 +267,12 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
       parsingFailed = false;
     } catch (std::exception& e) {
       parsingFailed = true;
-      if (parsingError.empty())
-        parsingError = (format(translate("Masterlist revision %1%: %2%. The latest masterlist revision contains a syntax error, LOOT is using the most recent valid revision instead. Syntax errors are usually minor and fixed within hours.")) % revision % e.what()).str();
 
-    //There was an error, roll back one revision.
+      //There was an error, roll back one revision.
       BOOST_LOG_TRIVIAL(error) << "Masterlist parsing failed. Masterlist revision " + string(revision) + ": " + e.what();
       git.CheckoutRevision("HEAD^");
     }
   } while (parsingFailed);
-
-  if (!parsingError.empty())
-    AppendMessage(Message(MessageType::error, parsingError));
 
   return true;
 }

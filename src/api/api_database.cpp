@@ -116,6 +116,11 @@ MasterlistInfo ApiDatabase::GetMasterlistRevision(const std::string& masterlistP
   return Masterlist::GetInfo(masterlistPath, getShortID);
 }
 
+bool ApiDatabase::IsLatestMasterlist(const std::string& masterlist_path,
+                                     const std::string& branch) const {
+  return Masterlist::IsLatest(masterlist_path, branch);
+}
+
 //////////////////////////
 // DB Access Functions
 //////////////////////////

@@ -60,7 +60,6 @@ public:
   };
 
   void Call(int error_code);
-  void SetErrorMessage(const std::string& message);
 
   static bool IsRepository(const boost::filesystem::path& path);
   static bool IsFileDifferent(const boost::filesystem::path& repoRoot, const std::string& filename);
@@ -81,7 +80,6 @@ private:
   static void FixRepoPermissions(const boost::filesystem::path& path);
 
   GitData data_;
-  std::string errorMessage_;
 };
 }
 #endif
