@@ -1,7 +1,7 @@
-Contributing To LOOT
-====================
+Contributing To the LOOT API
+============================
 
-A general guide to contributing to LOOT, may be found on [LOOT's website](https://loot.github.io/docs/contributing/How-To-Contribute). Information more specific to this repository is found here.
+A general guide to contributing to LOOT may be found on [LOOT's website](https://loot.github.io/docs/contributing/How-To-Contribute). Information more specific to this repository is found here.
 
 ## Repository Branching Structure
 
@@ -18,6 +18,14 @@ The best way to get started is to comment on something in GitHub's commit log or
 Surprise pull requests aren't recommended because everything you touched may have been rewritten, making your changes a pain to integrate, or obsolete. There are only generally a few contributors at any one time though, so there's not much chance of painful conflicts requiring resolution, provided you're working off the correct branch.
 
 When you do make a pull request, please do so from a branch which doesn't have the same name as they branch you're requesting your changes to be merged into. It's a lot easier to keep track of what pull request branches do when they're named something like `you:specific-cool-feature` rather than `you:master`.
+
+### Adding Support For A New Language
+
+If you're adding support for a new language, the LOOT API's source code must be updated to recognise it. The files and functions which must be updated are given below.
+
+* In [language_code.h](include/loot/enum/language_code.h), append a value for the language to the `LanguageCode` enum.
+* In [language.cpp](src/api/helpers/language.cpp), define the value for the constant you added, and update `Language::Language(LanguageCode code)` and `Language::codes({...})` to include lines for your language.
+* In [localised_content.rst](docs/metadata/data_structures/localised_content.rst), add a row for your language to the Language Codes table.
 
 ## Code Style
 
