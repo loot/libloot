@@ -9,11 +9,11 @@ The localised content data structure is a key-value string map.
 
 .. describe:: lang
 
-  **Required.** The language that ``text`` is written in, given as a POSIX language code. LOOT supports the following languages and language codes:
+  **Required.** The language that ``text`` is written in, given as a code of the form ``ll`` or ``ll_CC``, where ``ll`` is an ISO 639-1 language code and ``CC`` is an ISO 3166 country code. For example,
 
-  ====================  ==========
-  Language              POSIX Code
-  ====================  ==========
+  ====================  =====
+  Language              Code
+  ====================  =====
   Brazilian Portuguese  pt_BR
   Chinese               zh_CN
   Danish                da
@@ -26,4 +26,4 @@ The localised content data structure is a key-value string map.
   Russian               ru
   Spanish               es
   Swedish               sv
-  ====================  ==========
+  ====================  =====

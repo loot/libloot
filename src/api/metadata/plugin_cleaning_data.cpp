@@ -77,7 +77,7 @@ std::vector<MessageContent> PluginCleaningData::GetInfo() const {
   return info_;
 }
 
-MessageContent PluginCleaningData::ChooseInfo(const LanguageCode language) const {
+MessageContent PluginCleaningData::ChooseInfo(const std::string& language) const {
   BOOST_LOG_TRIVIAL(trace) << "Choosing dirty info content.";
   return MessageContent::Choose(info_, language);
 }

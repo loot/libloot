@@ -40,6 +40,8 @@ namespace test {
 class CommonGameTestFixture : public ::testing::TestWithParam<GameType> {
 protected:
   CommonGameTestFixture() :
+    french("fr"),
+    german("de"),
     missingPath("./missing"),
     dataPath(getPluginsPath()),
     localPath(getLocalPath()),
@@ -173,6 +175,9 @@ protected:
   }
 
 protected:
+  const std::string french;
+  const std::string german;
+
   const boost::filesystem::path missingPath;
   const boost::filesystem::path dataPath;
   const boost::filesystem::path localPath;

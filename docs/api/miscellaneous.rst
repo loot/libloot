@@ -12,6 +12,11 @@ String Encoding
 * File paths are case-sensitive if and only if the underlying file system is
   case-sensitive.
 
+Language Codes
+==============
+
+All language strings in the API are codes of the form ``ll`` or ``ll_CC``, where ``ll`` is an ISO 639-1 language code and ``CC`` is an ISO 3166 country code. For example, the default language for metadata message content is English, identified by the code ``en``, and Brazilian Portuguese is ``pt_BR``.
+
 Errors
 ======
 

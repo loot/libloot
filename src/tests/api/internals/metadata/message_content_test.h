@@ -33,72 +33,74 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
+const std::string french = "fr";
+
 TEST(MessageContent, defaultConstructorShouldSetEmptyEnglishLanguageString) {
   MessageContent content;
 
   EXPECT_TRUE(content.GetText().empty());
-  EXPECT_EQ(LanguageCode::english, content.GetLanguage());
+  EXPECT_EQ(MessageContent::defaultLanguage, content.GetLanguage());
 }
 
 TEST(MessageContent, contentConstructorShouldStoreGivenStringAndLanguage) {
-  MessageContent content("content", LanguageCode::french);
+  MessageContent content("content", french);
 
   EXPECT_EQ("content", content.GetText());
-  EXPECT_EQ(LanguageCode::french, content.GetLanguage());
+  EXPECT_EQ(french, content.GetLanguage());
 }
 
 TEST(MessageContent, contentShouldBeEqualIfStringsAreCaseInsensitivelyEqual) {
-  MessageContent content1("content", LanguageCode::english);
-  MessageContent content2("Content", LanguageCode::french);
+  MessageContent content1("content");
+  MessageContent content2("Content", french);
 
   EXPECT_TRUE(content1 == content2);
 }
 
 TEST(MessageContent, contentShouldBeUnequalIfStringsAreNotCaseInsensitivelyEqual) {
-  MessageContent content1("content1", LanguageCode::french);
-  MessageContent content2("content2", LanguageCode::french);
+  MessageContent content1("content1", french);
+  MessageContent content2("content2", french);
 
   EXPECT_FALSE(content1 == content2);
 }
 
 TEST(MessageContent, LessThanOperatorShouldUseCaseInsensitiveLexicographicalComparison) {
-  MessageContent content1("content", LanguageCode::english);
-  MessageContent content2("Content", LanguageCode::french);
+  MessageContent content1("content");
+  MessageContent content2("Content", french);
 
   EXPECT_FALSE(content1 < content2);
   EXPECT_FALSE(content2 < content1);
 
-  content1 = MessageContent("content1", LanguageCode::french);
-  content2 = MessageContent("content2", LanguageCode::english);
+  content1 = MessageContent("content1", french);
+  content2 = MessageContent("content2");
 
   EXPECT_TRUE(content1 < content2);
   EXPECT_FALSE(content2 < content1);
 }
 
 TEST(MessageContent, emittingAsYamlShouldOutputDataCorrectly) {
-  MessageContent content("content", LanguageCode::french);
+  MessageContent content("content", french);
   YAML::Emitter emitter;
   emitter << content;
 
-  EXPECT_EQ("lang: " + Language(content.GetLanguage()).GetLocale() +
+  EXPECT_EQ("lang: " + french +
             "\ntext: '" + content.GetText() + "'", emitter.c_str());
 }
 
 TEST(MessageContent, encodingAsYamlShouldOutputDataCorrectly) {
-  MessageContent content("content", LanguageCode::french);
+  MessageContent content("content", french);
   YAML::Node node;
   node = content;
 
   EXPECT_EQ(content.GetText(), node["text"].as<std::string>());
-  EXPECT_EQ(Language(LanguageCode::french).GetLocale(), node["lang"].as<std::string>());
+  EXPECT_EQ(french, node["lang"].as<std::string>());
 }
 
 TEST(MessageContent, decodingFromYamlShouldSetDataCorrectly) {
-  YAML::Node node = YAML::Load("{text: content, lang: de}");
+  YAML::Node node = YAML::Load("{text: content, lang: fr}");
   MessageContent content = node.as<MessageContent>();
 
   EXPECT_EQ("content", content.GetText());
-  EXPECT_EQ(LanguageCode::german, content.GetLanguage());
+  EXPECT_EQ(french, content.GetLanguage());
 }
 
 TEST(MessageContent, decodingFromYamlScalarShouldThrow) {

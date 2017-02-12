@@ -30,7 +30,6 @@
 #include "loot/api_decorator.h"
 #include "loot/metadata/conditional_metadata.h"
 #include "loot/metadata/message_content.h"
-#include "loot/enum/language_code.h"
 #include "loot/enum/message_type.h"
 #include "loot/struct/simple_message.h"
 
@@ -111,7 +110,7 @@ public:
    * @return A MessageContent object for the preferred language, or for English
    *         if a MessageContent object is not available for the given language.
    */
-  LOOT_API MessageContent GetContent(const LanguageCode language) const;
+  LOOT_API MessageContent GetContent(const std::string& language) const;
 
   /**
    * Get the message as a SimpleMessage given a language.
@@ -120,7 +119,7 @@ public:
    * @return A SimpleMessage object for the preferred language, or for English
    *         if message text is not available for the given language.
    */
-  LOOT_API SimpleMessage ToSimpleMessage(const LanguageCode language) const;
+  LOOT_API SimpleMessage ToSimpleMessage(const std::string& language) const;
 private:
   MessageType type_;
   std::vector<MessageContent> content_;

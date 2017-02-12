@@ -36,7 +36,7 @@ namespace test {
 class PluginMetadataTest : public CommonGameTestFixture {
 protected:
   PluginMetadataTest() : info_(std::vector<MessageContent>({
-    MessageContent("info", LanguageCode::english),
+    MessageContent("info"),
   })) {}
 
   const std::vector<MessageContent> info_;
@@ -458,21 +458,21 @@ TEST_P(PluginMetadataTest, simpleMessagesShouldReturnMessagesAsSimpleMessages) {
   PluginMetadata plugin;
   plugin.SetMessages({
     Message(MessageType::say, "content1"),
-    Message(MessageType::warn, {{"content2",LanguageCode::french}, {"other content2", LanguageCode::english}}),
+    Message(MessageType::warn, {{"content2",french}, {"other content2", MessageContent::defaultLanguage}}),
     Message(MessageType::error, "content3"),
   });
 
-  auto simpleMessages = plugin.GetSimpleMessages(LanguageCode::french);
+  auto simpleMessages = plugin.GetSimpleMessages(french);
 
   EXPECT_EQ(3, simpleMessages.size());
   EXPECT_EQ(MessageType::say, simpleMessages.front().type);
-  EXPECT_EQ(LanguageCode::english, simpleMessages.front().language);
+  EXPECT_EQ(MessageContent::defaultLanguage, simpleMessages.front().language);
   EXPECT_EQ("content1", simpleMessages.front().text);
   EXPECT_EQ(MessageType::warn, (++simpleMessages.begin())->type);
-  EXPECT_EQ(LanguageCode::french, (++simpleMessages.begin())->language);
+  EXPECT_EQ(french, (++simpleMessages.begin())->language);
   EXPECT_EQ("content2", (++simpleMessages.begin())->text);
   EXPECT_EQ(MessageType::error, simpleMessages.back().type);
-  EXPECT_EQ(LanguageCode::english, simpleMessages.back().language);
+  EXPECT_EQ(MessageContent::defaultLanguage, simpleMessages.back().language);
   EXPECT_EQ("content3", simpleMessages.back().text);
 }
 

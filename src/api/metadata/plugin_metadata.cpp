@@ -219,7 +219,7 @@ std::set<Location> PluginMetadata::GetLocations() const {
   return locations_;
 }
 
-std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(const LanguageCode language) const {
+std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(const std::string& language) const {
   std::vector<SimpleMessage> simpleMessages(messages_.size());
   std::transform(begin(messages_), end(messages_), begin(simpleMessages), [&](const Message& message) {
     return message.ToSimpleMessage(language);

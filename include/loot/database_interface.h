@@ -27,7 +27,6 @@
 #include <string>
 #include <vector>
 
-#include "loot/enum/language_code.h"
 #include "loot/enum/plugin_cleanliness.h"
 #include "loot/metadata/message.h"
 #include "loot/metadata/plugin_metadata.h"

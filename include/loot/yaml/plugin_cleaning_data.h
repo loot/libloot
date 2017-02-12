@@ -76,7 +76,7 @@ struct convert<loot::PluginCleaningData> {
       if (node["info"].IsSequence())
         info = node["info"].as<std::vector<loot::MessageContent>>();
       else {
-        info.push_back(loot::MessageContent(node["info"].as<std::string>(), loot::LanguageCode::english));
+        info.push_back(loot::MessageContent(node["info"].as<std::string>()));
       }
     }
 
@@ -84,7 +84,7 @@ struct convert<loot::PluginCleaningData> {
     if (info.size() > 1) {
       bool found = false;
       for (const auto &mc : info) {
-        if (mc.GetLanguage() == loot::LanguageCode::english)
+        if (mc.GetLanguage() == loot::MessageContent::defaultLanguage)
           found = true;
       }
       if (!found)

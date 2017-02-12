@@ -26,18 +26,18 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "loot/language.h"
-
 namespace loot {
-MessageContent::MessageContent() : language_(LanguageCode::english) {}
+const std::string MessageContent::defaultLanguage = "en";
 
-MessageContent::MessageContent(const std::string& text, const LanguageCode language) : text_(text), language_(language) {}
+MessageContent::MessageContent() : language_(MessageContent::defaultLanguage) {}
+
+MessageContent::MessageContent(const std::string& text, const std::string& language) : text_(text), language_(language) {}
 
 std::string MessageContent::GetText() const {
   return text_;
 }
 
-LanguageCode MessageContent::GetLanguage() const {
+std::string MessageContent::GetLanguage() const {
   return language_;
 }
 
@@ -49,7 +49,7 @@ bool MessageContent::operator == (const MessageContent& rhs) const {
   return (boost::iequals(text_, rhs.GetText()));
 }
 MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
-                                      const LanguageCode language) {
+                                      const std::string& language) {
   if (content.empty())
     return MessageContent();
   else if (content.size() == 1)
@@ -59,7 +59,7 @@ MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
     for (const auto &mc : content) {
       if (mc.GetLanguage() == language) {
         return mc;
-      } else if (mc.GetLanguage() == LanguageCode::english)
+      } else if (mc.GetLanguage() == MessageContent::defaultLanguage)
         english = mc;
     }
     return english;

@@ -138,11 +138,11 @@ public:
   /**
    * Choose an info MessageContent object given a preferred language.
    * @param  language
-   *         The preferred language's LanguageCode.
+   *         The preferred language's code.
    * @return The MessageContent object for the preferred language, or if one
    *         does not exist, the English-language MessageContent object.
    */
-  LOOT_API MessageContent ChooseInfo(const LanguageCode language) const;
+  LOOT_API MessageContent ChooseInfo(const std::string& language) const;
 private:
   uint32_t crc_;
   unsigned int itm_;

@@ -74,14 +74,14 @@ struct convert<loot::Message> {
     if (node["content"].IsSequence())
       content = node["content"].as< std::vector<loot::MessageContent> >();
     else {
-      content.push_back(loot::MessageContent(node["content"].as<std::string>(), loot::LanguageCode::english));
+      content.push_back(loot::MessageContent(node["content"].as<std::string>()));
     }
 
     //Check now that at least one item in content is English if there are multiple items.
     if (content.size() > 1) {
       bool found = false;
       for (const auto &mc : content) {
-        if (mc.GetLanguage() == loot::LanguageCode::english)
+        if (mc.GetLanguage() == loot::MessageContent::defaultLanguage)
           found = true;
       }
       if (!found)

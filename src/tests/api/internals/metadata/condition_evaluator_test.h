@@ -36,10 +36,10 @@ class ConditionEvaluatorTest : public CommonGameTestFixture {
 protected:
   ConditionEvaluatorTest() :
     info_(std::vector<MessageContent>({
-      MessageContent("info", LanguageCode::english),
-    })),
-    game_(GetParam(), dataPath.parent_path(), localPath),
-    evaluator_(&game_) {}
+      MessageContent("info"),
+  })),
+  game_(GetParam(), dataPath.parent_path(), localPath),
+  evaluator_(&game_) {}
 
   const std::vector<MessageContent> info_;
 

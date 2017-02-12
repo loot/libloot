@@ -25,9 +25,9 @@
 #define LOOT_METADATA_MESSAGE_CONTENT
 
 #include <string>
+#include <vector>
 
 #include "loot/api_decorator.h"
-#include "loot/language.h"
 
 namespace loot {
 /**
@@ -35,6 +35,12 @@ namespace loot {
  */
 class MessageContent {
 public:
+  /**
+   * The code for the default language assumed for message content, which is
+   * English.
+   */
+  static const std::string defaultLanguage;
+
   /**
    * Construct a MessageContent object with an empty English message string.
    * @return A MessageContent object.
@@ -49,7 +55,8 @@ public:
    *         The language that the message is written in.
    * @return A MessageContent object.
    */
-  LOOT_API MessageContent(const std::string& text, const LanguageCode language);
+  LOOT_API MessageContent(const std::string& text,
+                          const std::string& language = defaultLanguage);
 
   /**
    * Get the message text.
@@ -61,7 +68,7 @@ public:
    * Get the message language.
    * @return A code representing the language that the message is written in.
    */
-  LOOT_API LanguageCode GetLanguage() const;
+  LOOT_API std::string GetLanguage() const;
 
   /**
    * A less-than operator implemented with no semantics so that MessageContent
@@ -83,17 +90,17 @@ public:
    * @param  content
    *         The MessageContent objects to choose between.
    * @param  language
-   *         The LanguageCode for the preferred language to select. If no
+   *         The language code for the preferred language to select. If no
    *         message in the preferred language is present, the English
    *         MessageContent will be returned.
    * @return A MessageContent object. If the given vector is empty, a
    *         default-constructed MessageContent is returned.
    */
   LOOT_API static MessageContent Choose(const std::vector<MessageContent> content,
-                                        const LanguageCode language);
+                                        const std::string& language);
 private:
   std::string text_;
-  LanguageCode language_;
+  std::string language_;
 };
 }
 

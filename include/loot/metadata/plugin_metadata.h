@@ -176,7 +176,7 @@ public:
    *        The language to create the SimpleMessage objects for.
    * @return The plugin's messages as SimpleMessage objects.
    */
-  LOOT_API std::vector<SimpleMessage> GetSimpleMessages(const LanguageCode language) const;
+  LOOT_API std::vector<SimpleMessage> GetSimpleMessages(const std::string& language) const;
 
   /**
    * Set whether the plugin metadata is enabled for use during sorting or not.

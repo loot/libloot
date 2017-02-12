@@ -36,7 +36,7 @@ namespace test {
 class PluginCleaningDataTest : public CommonGameTestFixture {
 protected:
   PluginCleaningDataTest() : info_(std::vector<MessageContent>({
-    MessageContent("info", LanguageCode::english),
+    MessageContent("info"),
   })) {}
 
   const std::vector<MessageContent> info_;
@@ -93,37 +93,37 @@ TEST_P(PluginCleaningDataTest, LessThanOperatorShouldCompareCrcValues) {
 
 TEST_P(PluginCleaningDataTest, chooseInfoShouldCreateADefaultContentObjectIfNoneExists) {
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", std::vector<MessageContent>(), 2, 10, 30);
-  EXPECT_EQ(MessageContent(), dirtyInfo.ChooseInfo(LanguageCode::english));
+  EXPECT_EQ(MessageContent(), dirtyInfo.ChooseInfo(MessageContent::defaultLanguage));
 }
 
 TEST_P(PluginCleaningDataTest, chooseInfoShouldLeaveTheContentUnchangedIfOnlyOneStringExists) {
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info_, 2, 10, 30);
 
-  EXPECT_EQ(info_[0], dirtyInfo.ChooseInfo(LanguageCode::french));
-  EXPECT_EQ(info_[0], dirtyInfo.ChooseInfo(LanguageCode::english));
+  EXPECT_EQ(info_[0], dirtyInfo.ChooseInfo(french));
+  EXPECT_EQ(info_[0], dirtyInfo.ChooseInfo(MessageContent::defaultLanguage));
 }
 
 TEST_P(PluginCleaningDataTest, chooseInfoShouldSelectTheEnglishStringIfNoStringExistsForTheGivenLanguage) {
-  MessageContent content("content1", LanguageCode::english);
+  MessageContent content("content1", MessageContent::defaultLanguage);
   std::vector<MessageContent> info({
     content,
-    MessageContent("content1", LanguageCode::german),
+    MessageContent("content1", german),
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 
-  EXPECT_EQ(content, dirtyInfo.ChooseInfo(LanguageCode::french));
+  EXPECT_EQ(content, dirtyInfo.ChooseInfo(french));
 }
 
 TEST_P(PluginCleaningDataTest, chooseInfoShouldSelectTheStringForTheGivenLanguageIfOneExists) {
-  MessageContent french("content3", LanguageCode::french);
+  MessageContent frenchContent("content3", french);
   std::vector<MessageContent> info({
-    MessageContent("content1", LanguageCode::german),
-    MessageContent("content2", LanguageCode::english),
-    french,
+    MessageContent("content1", german),
+    MessageContent("content2", MessageContent::defaultLanguage),
+    frenchContent,
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 
-  EXPECT_EQ(french, dirtyInfo.ChooseInfo(LanguageCode::french));
+  EXPECT_EQ(frenchContent, dirtyInfo.ChooseInfo(french));
 }
 
 TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {

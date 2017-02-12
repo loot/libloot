@@ -9,8 +9,6 @@ Enumerations
 
 .. doxygenenum:: loot::GameType
 
-.. doxygenenum:: loot::LanguageCode
-
 .. doxygenenum:: loot::LogVerbosity
 
 .. doxygenenum:: loot::MessageType
@@ -56,9 +54,6 @@ Classes
    :members:
 
 .. doxygenclass:: loot::File
-   :members:
-
-.. doxygenclass:: loot::Language
    :members:
 
 .. doxygenclass:: loot::Location

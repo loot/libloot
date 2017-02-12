@@ -28,14 +28,13 @@
 #include <boost/log/trivial.hpp>
 
 #include "api/game/game.h"
-#include "loot/language.h"
 
 namespace loot {
 Message::Message() : type_(MessageType::say) {}
 
 Message::Message(const MessageType type, const std::string& content,
                  const std::string& condition) : type_(type), ConditionalMetadata(condition) {
-  content_.push_back(MessageContent(content, LanguageCode::english));
+  content_.push_back(MessageContent(content));
 }
 
 Message::Message(const MessageType type, const std::vector<MessageContent>& content,
@@ -43,7 +42,7 @@ Message::Message(const MessageType type, const std::vector<MessageContent>& cont
   if (content.size() > 1) {
     bool englishStringExists = false;
     for (const auto &mc : content) {
-      if (mc.GetLanguage() == LanguageCode::english)
+      if (mc.GetLanguage() == MessageContent::defaultLanguage)
         englishStringExists = true;
     }
     if (!englishStringExists)
@@ -53,7 +52,7 @@ Message::Message(const MessageType type, const std::vector<MessageContent>& cont
 
 bool Message::operator < (const Message& rhs) const {
   if (!content_.empty() && !rhs.GetContent().empty())
-    return boost::ilexicographical_compare(GetContent(LanguageCode::english).GetText(), rhs.GetContent(LanguageCode::english).GetText());
+    return boost::ilexicographical_compare(GetContent(MessageContent::defaultLanguage).GetText(), rhs.GetContent(MessageContent::defaultLanguage).GetText());
   else if (content_.empty() && !rhs.GetContent().empty())
     return true;
   else
@@ -71,10 +70,10 @@ MessageType Message::GetType() const {
 std::vector<MessageContent> Message::GetContent() const {
   return content_;
 }
-MessageContent Message::GetContent(const LanguageCode language) const {
+MessageContent Message::GetContent(const std::string& language) const {
   return MessageContent::Choose(content_, language);
 }
-SimpleMessage Message::ToSimpleMessage(const LanguageCode language) const {
+SimpleMessage Message::ToSimpleMessage(const std::string& language) const {
   MessageContent content = GetContent(language);
   SimpleMessage simpleMessage;
 

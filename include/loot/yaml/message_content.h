@@ -36,7 +36,7 @@ struct convert<loot::MessageContent> {
   static Node encode(const loot::MessageContent& rhs) {
     Node node;
     node["text"] = rhs.GetText();
-    node["lang"] = loot::Language(rhs.GetLanguage()).GetLocale();
+    node["lang"] = rhs.GetLanguage();
 
     return node;
   }
@@ -50,7 +50,7 @@ struct convert<loot::MessageContent> {
       throw RepresentationException(node.Mark(), "bad conversion: 'lang' key missing from 'message content' object");
 
     std::string text = node["text"].as<std::string>();
-    loot::LanguageCode lang = loot::Language(node["lang"].as<std::string>()).GetCode();
+    std::string lang = node["lang"].as<std::string>();
 
     rhs = loot::MessageContent(text, lang);
 
@@ -61,7 +61,7 @@ struct convert<loot::MessageContent> {
 inline Emitter& operator << (Emitter& out, const loot::MessageContent& rhs) {
   out << BeginMap;
 
-  out << Key << "lang" << Value << loot::Language(rhs.GetLanguage()).GetLocale();
+  out << Key << "lang" << Value << rhs.GetLanguage();
 
   out << Key << "text" << Value << YAML::SingleQuoted << rhs.GetText();
 

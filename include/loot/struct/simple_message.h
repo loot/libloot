@@ -33,7 +33,7 @@ struct SimpleMessage {
   MessageType type;
 
   /** @brief The language the message string is written in. */
-  LanguageCode language;
+  std::string language;
 
   /**
    * @brief The message string, which may be formatted using
