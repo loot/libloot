@@ -39,7 +39,7 @@ public:
    * The code for the default language assumed for message content, which is
    * English.
    */
-  static const std::string defaultLanguage;
+  LOOT_API static const std::string defaultLanguage;
 
   /**
    * Construct a MessageContent object with an empty English message string.
