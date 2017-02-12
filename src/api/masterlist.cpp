@@ -24,6 +24,9 @@
 
 #include "api/masterlist.h"
 
+#include <iomanip>
+#include <sstream>
+
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
@@ -71,9 +74,9 @@ MasterlistInfo Masterlist::GetInfo(const boost::filesystem::path& path, bool sho
   const git_oid * oid = git_object_id(git.GetData().object);
   git.Call(git_commit_lookup(&git.GetData().commit, git.GetData().repo, oid));
   git_time_t time = git_commit_time(git.GetData().commit);
-  boost::locale::date_time dateTime(time);
-  std::stringstream out;
-  out << boost::locale::as::ftime("%Y-%m-%d") << dateTime;
+
+  std::ostringstream out;
+  out << std::put_time(std::gmtime(&time), "%Y-%m-%d");
   info.revision_date = out.str();
 
   BOOST_LOG_TRIVIAL(trace) << "Diffing masterlist HEAD and working copy.";
