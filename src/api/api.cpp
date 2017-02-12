@@ -61,10 +61,6 @@ LOOT_API void SetLoggingVerbosity(LogVerbosity verbosity) {
 }
 
 LOOT_API void SetLogFile(const std::string& path) {
-  // Set the locale to get UTF-8 conversions working correctly.
-  std::locale::global(boost::locale::generator().generate(""));
-  boost::filesystem::path::imbue(std::locale());
-
   boost::log::add_file_log(
     boost::log::keywords::file_name = path,
     boost::log::keywords::auto_flush = true,
@@ -85,14 +81,14 @@ LOOT_API bool IsCompatible(const unsigned int versionMajor, const unsigned int v
     return versionMinor == loot::LootVersion::minor;
 }
 
+LOOT_API void InitialiseLocale(const std::string& id) {
+  std::locale::global(boost::locale::generator().generate(id));
+  boost::filesystem::path::imbue(std::locale());
+}
+
 LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(const GameType game,
                                                          const std::string& gamePath,
                                                          const std::string& gameLocalPath) {
-  // Set the locale to get UTF-8 conversions working correctly.
-  std::locale::global(boost::locale::generator().generate(""));
-  boost::filesystem::path::imbue(std::locale());
-
-  // Check for valid paths.
   const std::string resolvedGamePath = ResolvePath(gamePath);
   if (!gamePath.empty() && !fs::is_directory(resolvedGamePath))
     throw std::invalid_argument("Given game path \"" + gamePath + "\" does not resolve to a valid directory.");
