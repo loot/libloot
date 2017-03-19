@@ -2,6 +2,87 @@
 Version History
 ***************
 
+0.11.0 - Unreleased
+===================
+
+Added
+-----
+
+- New functions to :cpp:class:`loot::DatabaseInterface`:
+
+  - :cpp:any:`WriteUserMetadata()`
+  - :cpp:any:`GetKnownBashTags()`
+  - :cpp:any:`GetGeneralMessages()`
+  - :cpp:any:`GetPluginMetadata()`
+  - :cpp:any:`GetPluginUserMetadata()`
+  - :cpp:any:`SetPluginUserMetadata()`
+  - :cpp:any:`DiscardPluginUserMetadata()`
+  - :cpp:any:`DiscardAllUserMetadata()`
+  - :cpp:any:`IsLatestMasterlist()`
+
+- A :cpp:any:`loot::GameInterface` pure abstract class that exposes methods for
+  accessing game-specific functionality.
+- A :cpp:any:`loot::PluginInterface` pure abstract class that exposes methods
+  for accessing plugin file data.
+- The :cpp:any:`loot::SetLoggingVerbosity()` and :cpp:any:`loot::SetLogFile()`
+  functions and :cpp:any:`loot::LogVerbosity` enum for controlling the API's
+  logging behaviour.
+- An :cpp:any:`loot::InitialiseLocale()` function that must be called to
+  configure the API's locale before any of its other functionality is used.
+- LOOT's internal metadata classes are now exposed as part of the API.
+
+Changed
+-------
+
+- Renamed ``loot::CreateDatabase()`` to :cpp:any:`loot::CreateGameHandle()`, and
+  changed its signature so that it returns a shared pointer to a
+  :cpp:any:`loot::GameInterface` instead of a shared pointer to a
+  :cpp:any:`loot::DatabaseInterface`.
+- Moved :cpp:any:`SortPlugins()` into :cpp:any:`loot::GameInterface`.
+- Some :cpp:any:`loot::DatabaseInterface` methods are now const:
+
+  - :cpp:any:`WriteMinimalList()`
+  - :cpp:any:`GetMasterlistRevision()`
+
+- LOOT's internal YAML conversion functions have been refactored into the
+  ``include/loot/yaml`` directory, but they are not really part of the API.
+  They're only exposed so that they can be shared between the API and LOOT
+  application without introducing another component.
+- LOOT's internal string encoding conversion functions have been refactored into
+  the ``include/loot/windows_encoding_converters.h`` header, but are not really
+  part of the API. They're only exposed so that they can be shared between the
+  API and LOOT application without introducing another component.
+- Metadata is now cached more efficiently, reducing the API's memory footprint.
+- Log timestamps now have microsecond precision.
+- Updated to libgit2 v0.25.1.
+- Refactored code only useful to the LOOT application out of the API internals
+  and into the application source code.
+
+Removed
+-------
+
+- ``DatabaseInterface::GetPluginTags()``,
+  ``DatabaseInterface::GetPluginMessages()`` and
+  ``DatabaseInterface::GetPluginCleanliness()`` have been removed as they have
+  been superseded by ``DatabaseInterface::GetPluginMetadata()``.
+- The ``GameDetectionError`` class, as it is no longer thrown by the API.
+- The ``PluginTags`` struct, as it is no longer used.
+- The ``LanguageCode`` enum, as the API now uses ISO language codes directly
+  instead.
+- The LOOT API no longer caches the load order, as this is already done more
+  accurately by libloadorder (which is used internally).
+
+Fixed
+-----
+
+- Libgit2 error details were not being logged.
+- A FileAccessError was thrown when the masterlist path was an empty string. The
+  API now just skips trying to load the masterlist in this case.
+- Updating the masterlist did not update the cached metadata, requiring a call
+  to :cpp:any:`LoadLists()`.
+- The reference documentation was broken due to an incompatibility between
+  Sphinx 1.5.x and Breathe 4.4.
+
 0.10.3 - 2017-01-08
 ===================
 
