@@ -33,6 +33,8 @@ Functions
 
 .. doxygenfunction:: loot::IsCompatible
 
+.. doxygenfunction:: loot::InitialiseLocale
+
 .. doxygenfunction:: loot::CreateGameHandle
 
 Interfaces
