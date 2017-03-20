@@ -13,8 +13,6 @@ Enumerations
 
 .. doxygenenum:: loot::MessageType
 
-.. doxygenenum:: loot::PluginCleanliness
-
 Public-Field Data Structures
 ============================
 

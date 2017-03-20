@@ -69,6 +69,11 @@ Removed
 - The ``PluginTags`` struct, as it is no longer used.
 - The ``LanguageCode`` enum, as the API now uses ISO language codes directly
   instead.
+- The ``PluginCleanliness`` enum. as it's no longer used. Plugin cleanliness
+  should now be checked by getting a plugin's evaluated metadata and checking
+  if any dirty info is present. If none is present, the cleanliness is unknown.
+  If dirty info is present, check if any of the English info strings contain the
+  text "Do not clean": if not, the plugin is dirty.
 - The LOOT API no longer caches the load order, as this is already done more
   accurately by libloadorder (which is used internally).
 
