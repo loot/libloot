@@ -67,7 +67,7 @@ void MetadataList::Load(const boost::filesystem::path& filepath) {
   BOOST_LOG_TRIVIAL(debug) << "File loaded successfully.";
 }
 
-void MetadataList::Save(const boost::filesystem::path& filepath) {
+void MetadataList::Save(const boost::filesystem::path& filepath) const {
   BOOST_LOG_TRIVIAL(trace) << "Saving metadata list to: " << filepath;
   YAML::Emitter yout;
   yout.SetIndent(2);

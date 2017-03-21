@@ -39,7 +39,7 @@ class Game;
 class MetadataList {
 public:
   void Load(const boost::filesystem::path& filepath);
-  void Save(const boost::filesystem::path& filepath);
+  void Save(const boost::filesystem::path& filepath) const;
   void Clear();
 
   std::list<PluginMetadata> Plugins() const;
