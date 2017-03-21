@@ -41,9 +41,6 @@ public:
 
   GameCache& operator=(const GameCache& cache);
 
-  Masterlist& GetMasterlist();
-  MetadataList& GetUserlist();
-
   // Returns false for second bool if no cached condition.
   std::pair<bool, bool> GetCachedCondition(const std::string& condition) const;
   void CacheCondition(const std::string& condition, bool result);
@@ -55,8 +52,6 @@ public:
   void ClearCachedConditions();
   void ClearCachedPlugins();
 private:
-  Masterlist masterlist_;
-  MetadataList userlist_;
   std::unordered_map<std::string, bool> conditions_;
   std::unordered_map<std::string, std::shared_ptr<const Plugin>> plugins_;
 

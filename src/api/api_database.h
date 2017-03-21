@@ -75,6 +75,8 @@ struct ApiDatabase : public DatabaseInterface {
   void DiscardAllUserMetadata();
 private:
   Game& game_;
+  Masterlist masterlist_;
+  MetadataList userlist_;
 };
 }
 

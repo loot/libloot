@@ -40,28 +40,16 @@ namespace loot {
 GameCache::GameCache() {}
 
 GameCache::GameCache(const GameCache& cache) :
-  masterlist_(cache.masterlist_),
-  userlist_(cache.userlist_),
   conditions_(cache.conditions_),
   plugins_(cache.plugins_) {}
 
 GameCache& GameCache::operator=(const GameCache& cache) {
   if (&cache != this) {
-    masterlist_ = cache.masterlist_;
-    userlist_ = cache.userlist_;
     conditions_ = cache.conditions_;
     plugins_ = cache.plugins_;
   }
 
   return *this;
-}
-
-Masterlist & GameCache::GetMasterlist() {
-  return masterlist_;
-}
-
-MetadataList & GameCache::GetUserlist() {
-  return userlist_;
 }
 
 void GameCache::CacheCondition(const std::string& condition, bool result) {

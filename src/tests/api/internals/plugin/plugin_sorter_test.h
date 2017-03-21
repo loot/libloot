@@ -89,7 +89,7 @@ TEST_P(PluginSorterTest, sortingShouldEvaluateRelativeGlobalPriorities) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
   PluginMetadata plugin(blankDifferentMasterDependentEsp);
   plugin.SetGlobalPriority(Priority(-100));
-  game_.GetUserlist().AddPlugin(plugin);
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   PluginSorter ps;
   std::vector<std::string> expectedSortedOrder({
@@ -116,7 +116,7 @@ TEST_P(PluginSorterTest, sortingWithGlobalPrioritiesShouldInheritRecursivelyRega
   // Set Blank.esp's priority.
   PluginMetadata plugin(blankEsp);
   plugin.SetGlobalPriority(Priority(2));
-  game_.GetUserlist().AddPlugin(plugin);
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   // Load Blank - Master Dependent.esp after Blank.esp so that it
   // inherits Blank.esp's priority.
@@ -124,7 +124,7 @@ TEST_P(PluginSorterTest, sortingWithGlobalPrioritiesShouldInheritRecursivelyRega
   plugin.SetLoadAfterFiles({
     File(blankEsp),
   });
-  game_.GetUserlist().AddPlugin(plugin);
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   // Load Blank - Different.esp after Blank - Master Dependent.esp, so
   // that it inherits its inherited priority.
@@ -132,14 +132,14 @@ TEST_P(PluginSorterTest, sortingWithGlobalPrioritiesShouldInheritRecursivelyRega
   plugin.SetLoadAfterFiles({
     File(blankMasterDependentEsp),
   });
-  game_.GetUserlist().AddPlugin(plugin);
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   // Set Blank - Different Master Dependent.esp to have a higher priority
   // than 0 but lower than Blank.esp. Need to also make it a global priority
   // because it doesn't otherwise conflict with the other plugins.
   plugin = PluginMetadata(blankDifferentMasterDependentEsp);
   plugin.SetGlobalPriority(Priority(1));
-  game_.GetUserlist().AddPlugin(plugin);
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   PluginSorter ps;
   std::vector<std::string> expectedSortedOrder({
@@ -167,7 +167,7 @@ TEST_P(PluginSorterTest, sortingShouldUseLoadAfterMetadataWhenDecidingRelativePl
       File(blankDifferentEsp),
       File(blankDifferentPluginDependentEsp),
   });
-  game_.GetUserlist().AddPlugin(plugin);
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   PluginSorter ps;
   std::vector<std::string> expectedSortedOrder({
@@ -195,7 +195,7 @@ TEST_P(PluginSorterTest, sortingShouldUseRequirementMetadataWhenDecidingRelative
       File(blankDifferentEsp),
       File(blankDifferentPluginDependentEsp),
   });
-  game_.GetUserlist().AddPlugin(plugin);
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   PluginSorter ps;
   std::vector<std::string> expectedSortedOrder({
@@ -220,7 +220,7 @@ TEST_P(PluginSorterTest, sortingShouldThrowIfACyclicInteractionIsEncountered) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
   PluginMetadata plugin(blankEsm);
   plugin.SetLoadAfterFiles({File(blankMasterDependentEsm)});
-  game_.GetUserlist().AddPlugin(plugin);
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   PluginSorter ps;
   EXPECT_THROW(ps.Sort(game_), CyclicInteractionError);

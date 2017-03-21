@@ -63,23 +63,23 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
     }
   }
 
-  game_.GetMasterlist() = temp;
-  game_.GetUserlist() = userTemp;
+  masterlist_ = temp;
+  userlist_ = userTemp;
 }
 
 void ApiDatabase::EvalLists() {
   // Clear caches before evaluating conditions.
   game_.ClearCachedConditions();
 
-  Masterlist temp = game_.GetMasterlist();
-  MetadataList userTemp = game_.GetUserlist();
+  Masterlist temp = masterlist_;
+  MetadataList userTemp = userlist_;
 
   // Refresh active plugins before evaluating conditions.
   temp.EvalAllConditions(game_);
   userTemp.EvalAllConditions(game_);
 
-  game_.GetMasterlist() = temp;
-  game_.GetUserlist() = userTemp;
+  masterlist_ = temp;
+  userlist_ = userTemp;
 }
 
 void ApiDatabase::WriteUserMetadata(const std::string& outputFile, const bool overwrite) const {
@@ -89,7 +89,7 @@ void ApiDatabase::WriteUserMetadata(const std::string& outputFile, const bool ov
   if (boost::filesystem::exists(outputFile) && !overwrite)
     throw FileAccessError("Output file exists but overwrite is not set to true.");
 
-  game_.GetUserlist().Save(outputFile);
+  userlist_.Save(outputFile);
 }
 
 ////////////////////////////////////
@@ -104,7 +104,7 @@ bool ApiDatabase::UpdateMasterlist(const std::string& masterlistPath,
 
   Masterlist masterlist;
   if (masterlist.Update(masterlistPath, remoteURL, remoteBranch)) {
-    game_.GetMasterlist() = masterlist;
+    masterlist_ = masterlist;
     return true;
   }
 
@@ -126,8 +126,8 @@ bool ApiDatabase::IsLatestMasterlist(const std::string& masterlist_path,
 //////////////////////////
 
 std::set<std::string> ApiDatabase::GetKnownBashTags() const {
-  auto masterlistTags = game_.GetMasterlist().BashTags();
-  auto userlistTags = game_.GetUserlist().BashTags();
+  auto masterlistTags = masterlist_.BashTags();
+  auto userlistTags = userlist_.BashTags();
 
   if (!userlistTags.empty()) {
     masterlistTags.insert(std::begin(userlistTags), std::end(userlistTags));
@@ -137,8 +137,8 @@ std::set<std::string> ApiDatabase::GetKnownBashTags() const {
 }
 
 std::vector<Message> ApiDatabase::GetGeneralMessages(bool evaluateConditions) const {
-  auto masterlistMessages = game_.GetMasterlist().Messages();
-  auto userlistMessages = game_.GetUserlist().Messages();
+  auto masterlistMessages = masterlist_.Messages();
+  auto userlistMessages = userlist_.Messages();
 
   if (!userlistMessages.empty()) {
     masterlistMessages.insert(std::end(masterlistMessages), std::begin(userlistMessages), std::end(userlistMessages));
@@ -162,10 +162,10 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(bool evaluateConditions) co
 PluginMetadata ApiDatabase::GetPluginMetadata(const std::string& plugin,
                                               bool includeUserMetadata,
                                               bool evaluateConditions) const {
-  PluginMetadata metadata = game_.GetMasterlist().FindPlugin(plugin);
+  PluginMetadata metadata = masterlist_.FindPlugin(plugin);
 
   if (includeUserMetadata) {
-    metadata.MergeMetadata(game_.GetUserlist().FindPlugin(plugin));
+    metadata.MergeMetadata(userlist_.FindPlugin(plugin));
   }
 
   if (evaluateConditions) {
@@ -178,7 +178,7 @@ PluginMetadata ApiDatabase::GetPluginMetadata(const std::string& plugin,
 
 PluginMetadata ApiDatabase::GetPluginUserMetadata(const std::string& plugin,
                                                   bool evaluateConditions) const {
-  PluginMetadata metadata = game_.GetUserlist().FindPlugin(plugin);
+  PluginMetadata metadata = userlist_.FindPlugin(plugin);
 
   if (evaluateConditions) {
     ConditionEvaluator evaluator(&game_);
@@ -189,16 +189,16 @@ PluginMetadata ApiDatabase::GetPluginUserMetadata(const std::string& plugin,
 }
 
 void ApiDatabase::SetPluginUserMetadata(const PluginMetadata& pluginMetadata) {
-  game_.GetUserlist().ErasePlugin(pluginMetadata);
-  game_.GetUserlist().AddPlugin(pluginMetadata);
+  userlist_.ErasePlugin(pluginMetadata);
+  userlist_.AddPlugin(pluginMetadata);
 }
 
 void ApiDatabase::DiscardPluginUserMetadata(const std::string& plugin) {
-  game_.GetUserlist().ErasePlugin(plugin);
+  userlist_.ErasePlugin(plugin);
 }
 
 void ApiDatabase::DiscardAllUserMetadata() {
-  game_.GetUserlist().Clear();
+  userlist_.Clear();
 }
 
 // Writes a minimal masterlist that only contains mods that have Bash Tag suggestions,
@@ -212,7 +212,7 @@ void ApiDatabase::WriteMinimalList(const std::string& outputFile, const bool ove
   if (boost::filesystem::exists(outputFile) && !overwrite)
     throw FileAccessError("Output file exists but overwrite is not set to true.");
 
-  Masterlist temp = game_.GetMasterlist();
+  Masterlist temp = masterlist_;
   std::unordered_set<PluginMetadata> minimalPlugins;
   for (const auto &plugin : temp.Plugins()) {
     PluginMetadata p(plugin.GetName());
