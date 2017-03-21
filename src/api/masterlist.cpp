@@ -110,7 +110,7 @@ bool Masterlist::IsLatest(const boost::filesystem::path& path,
   git_oid headOid;
   git.Call(git_reference_name_to_id(&headOid, git.GetData().repo, "HEAD"));
 
-  return boost::equal(branchOid.id, headOid.id);
+  return memcmp(branchOid.id, headOid.id, 20) == 0;
 }
 
 bool Masterlist::Update(const boost::filesystem::path& path, const std::string& repoUrl, const std::string& repoBranch) {
