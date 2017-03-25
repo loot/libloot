@@ -123,7 +123,7 @@ INSTANTIATE_TEST_CASE_P(,
                           GameType::tes5se));
 
 TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
-  Plugin plugin(game_, blankEsm, true);
+  Plugin plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true);
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.GetMasters().empty());
@@ -133,13 +133,13 @@ TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
 }
 
 TEST_P(PluginTest, loadingHeaderOnlyShouldNotReadFieldsOrCalculateCrc) {
-  Plugin plugin(game_, blankEsm, true);
+  Plugin plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true);
 
   EXPECT_EQ(0, plugin.GetCRC());
 }
 
 TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
-  Plugin plugin(game_, blankEsm, true);
+  Plugin plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true);
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.GetMasters().empty());
@@ -149,25 +149,25 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
 }
 
 TEST_P(PluginTest, loadingWholePluginShouldReadFields) {
-  Plugin plugin(game_, blankMasterDependentEsm, false);
+  Plugin plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsm, false);
 
   EXPECT_EQ(4, plugin.NumOverrideFormIDs());
 }
 
 TEST_P(PluginTest, loadingWholePluginShouldCalculateCrc) {
-  Plugin plugin(game_, blankEsm, false);
+  Plugin plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false);
 
   EXPECT_EQ(blankEsmCrc, plugin.GetCRC());
 }
 
 TEST_P(PluginTest, loadingANonMasterPluginShouldReadTheMasterFlagAsFalse) {
-  Plugin plugin(game_, blankMasterDependentEsp, true);
+  Plugin plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsp, true);
 
   EXPECT_FALSE(plugin.IsMaster());
 }
 
 TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
-  Plugin plugin(game_, blankMasterDependentEsp, true);
+  Plugin plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsp, true);
 
   EXPECT_EQ(std::vector<std::string>({
       blankEsm
@@ -175,11 +175,11 @@ TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
 }
 
 TEST_P(PluginTest, loadingAPluginThatDoesNotExistShouldThrow) {
-  EXPECT_THROW(Plugin(game_, "Blank\\.esp", true), FileAccessError);
+  EXPECT_THROW(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), "Blank\\.esp", true), FileAccessError);
 }
 
 TEST_P(PluginTest, loadsArchiveForAnArchiveThatExactlyMatchesAnEsmFileBasenameShouldReturnTrueForAllGamesExceptOblivion) {
-  bool loadsArchive = Plugin(game_, blankEsm, true).LoadsArchive();
+  bool loadsArchive = Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true).LoadsArchive();
 
   if (GetParam() == GameType::tes4)
     EXPECT_FALSE(loadsArchive);
@@ -188,11 +188,11 @@ TEST_P(PluginTest, loadsArchiveForAnArchiveThatExactlyMatchesAnEsmFileBasenameSh
 }
 
 TEST_P(PluginTest, loadsArchiveForAnArchiveThatExactlyMatchesAnEspFileBasenameShouldReturnTrue) {
-  EXPECT_TRUE(Plugin(game_, blankEsp, true).LoadsArchive());
+  EXPECT_TRUE(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsp, true).LoadsArchive());
 }
 
 TEST_P(PluginTest, loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEsmFileBasenameShouldReturnTrueForAllGamesExceptOblivionAndSkyrim) {
-  bool loadsArchive = Plugin(game_, blankDifferentEsm, true).LoadsArchive();
+  bool loadsArchive = Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankDifferentEsm, true).LoadsArchive();
 
   if (GetParam() == GameType::tes4 || GetParam() == GameType::tes5)
     EXPECT_FALSE(loadsArchive);
@@ -201,7 +201,7 @@ TEST_P(PluginTest, loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEsmFil
 }
 
 TEST_P(PluginTest, loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEspFileBasenameShouldReturnTrueForAllGamesExceptSkyrim) {
-  bool loadsArchive = Plugin(game_, blankDifferentEsp, true).LoadsArchive();
+  bool loadsArchive = Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankDifferentEsp, true).LoadsArchive();
 
   if (GetParam() == GameType::tes5)
     EXPECT_FALSE(loadsArchive);
@@ -210,45 +210,45 @@ TEST_P(PluginTest, loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEspFil
 }
 
 TEST_P(PluginTest, loadsArchiveShouldReturnFalseForAPluginThatDoesNotLoadAnArchive) {
-  EXPECT_FALSE(Plugin(game_, blankMasterDependentEsp, true).LoadsArchive());
+  EXPECT_FALSE(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsp, true).LoadsArchive());
 }
 
 TEST_P(PluginTest, isValidShouldReturnTrueForAValidPlugin) {
-  EXPECT_TRUE(Plugin::IsValid(blankEsm, game_));
+  EXPECT_TRUE(Plugin::IsValid(blankEsm, game_.Type(), game_.DataPath()));
 }
 
 TEST_P(PluginTest, isValidShouldReturnFalseForANonPluginFile) {
-  EXPECT_FALSE(Plugin::IsValid(nonPluginFile, game_));
+  EXPECT_FALSE(Plugin::IsValid(nonPluginFile, game_.Type(), game_.DataPath()));
 }
 
 TEST_P(PluginTest, isValidShouldReturnFalseForAnEmptyFile) {
-  EXPECT_FALSE(Plugin::IsValid(emptyFile, game_));
+  EXPECT_FALSE(Plugin::IsValid(emptyFile, game_.Type(), game_.DataPath()));
 }
 
 TEST_P(PluginTest, isActiveShouldReturnTrueForAPluginThatIsActive) {
-  EXPECT_TRUE(Plugin(game_, blankEsm, true).IsActive());
+  EXPECT_TRUE(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true).IsActive());
 }
 
 TEST_P(PluginTest, isActiveShouldReturnFalseForAPluginThatIsNotActive) {
-  EXPECT_FALSE(Plugin(game_, blankEsp, true).IsActive());
+  EXPECT_FALSE(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsp, true).IsActive());
 }
 
 TEST_P(PluginTest, lessThanOperatorShouldUseCaseInsensitiveLexicographicalNameComparison) {
-  Plugin plugin1(game_, blankEsp, true);
-  Plugin plugin2(game_, lowercaseBlankEsp, true);
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsp, true);
+  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), lowercaseBlankEsp, true);
 
   EXPECT_FALSE(plugin1 < plugin2);
   EXPECT_FALSE(plugin2 < plugin1);
 
-  Plugin plugin3 = Plugin(game_, blankEsm, true);
-  Plugin plugin4 = Plugin(game_, blankEsp, true);
+  Plugin plugin3 = Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true);
+  Plugin plugin4 = Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsp, true);
 
   EXPECT_TRUE(plugin3 < plugin4);
   EXPECT_FALSE(plugin4 < plugin3);
 }
 
 TEST_P(PluginTest, doFormIDsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
-  Plugin plugin1(game_, blankEsm, false);
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false);
   OtherPluginType plugin2;
 
   EXPECT_FALSE(plugin1.DoFormIDsOverlap(plugin2));
@@ -256,48 +256,48 @@ TEST_P(PluginTest, doFormIDsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObj
 }
 
 TEST_P(PluginTest, doFormIDsOverlapShouldReturnFalseForTwoPluginsWithOnlyHeadersLoaded) {
-  Plugin plugin1(game_, blankEsm, true);
-  Plugin plugin2(game_, blankMasterDependentEsm, true);
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true);
+  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsm, true);
 
   EXPECT_FALSE(plugin1.DoFormIDsOverlap(plugin2));
   EXPECT_FALSE(plugin2.DoFormIDsOverlap(plugin1));
 }
 
 TEST_P(PluginTest, doFormIDsOverlapShouldReturnFalseIfThePluginsHaveUnrelatedRecords) {
-  Plugin plugin1(game_, blankEsm, false);
-  Plugin plugin2(game_, blankEsp, false);
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false);
+  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsp, false);
 
   EXPECT_FALSE(plugin1.DoFormIDsOverlap(plugin2));
   EXPECT_FALSE(plugin2.DoFormIDsOverlap(plugin1));
 }
 
 TEST_P(PluginTest, doFormIDsOverlapShouldReturnTrueIfOnePluginOverridesTheOthersRecords) {
-  Plugin plugin1(game_, blankEsm, false);
-  Plugin plugin2(game_, blankMasterDependentEsm, false);
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false);
+  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsm, false);
 
   EXPECT_TRUE(plugin1.DoFormIDsOverlap(plugin2));
   EXPECT_TRUE(plugin2.DoFormIDsOverlap(plugin1));
 }
 
 TEST_P(PluginTest, overlapFormIDsShouldReturnAnEmptySetForTwoPluginsWithOnlyHeadersLoaded) {
-  Plugin plugin1(game_, blankEsm, true);
-  Plugin plugin2(game_, blankMasterDependentEsm, true);
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true);
+  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsm, true);
 
   EXPECT_TRUE(plugin1.OverlapFormIDs(plugin2).empty());
   EXPECT_TRUE(plugin2.OverlapFormIDs(plugin1).empty());
 }
 
 TEST_P(PluginTest, overlapFormIDsShouldReturnAnEmptySetIfThePluginsHaveUnrelatedRecords) {
-  Plugin plugin1(game_, blankEsm, false);
-  Plugin plugin2(game_, blankEsp, false);
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false);
+  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsp, false);
 
   EXPECT_TRUE(plugin1.OverlapFormIDs(plugin2).empty());
   EXPECT_TRUE(plugin2.OverlapFormIDs(plugin1).empty());
 }
 
 TEST_P(PluginTest, overlapFormIDsShouldReturnTheFormIDsOfRecordsAddedByOnePluginAndOverriddenByTheOther) {
-  Plugin plugin1(game_, blankEsm, false);
-  Plugin plugin2(game_, blankMasterDependentEsm, false);
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false);
+  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsm, false);
 
   std::set<libespm::FormId> expectedFormIds({
       libespm::FormId(blankEsm, std::vector<std::string>(), 0xCF0),

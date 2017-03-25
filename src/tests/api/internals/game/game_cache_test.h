@@ -72,15 +72,15 @@ TEST_P(GameCacheTest, gettingANonCachedConditionShouldReturnAFalseFalsePair) {
 }
 
 TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
-  cache_.AddPlugin(Plugin(game_, blankEsm, true));
+  cache_.AddPlugin(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true));
   EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm)->GetName());
 }
 
 TEST_P(GameCacheTest, addingAPluginThatIsAlreadyCachedShouldOverwriteExistingEntry) {
-  cache_.AddPlugin(Plugin(game_, blankEsm, true));
+  cache_.AddPlugin(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true));
   EXPECT_EQ(0, cache_.GetPlugin(blankEsm)->GetCRC());
 
-  cache_.AddPlugin(Plugin(game_, blankEsm, false));
+  cache_.AddPlugin(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false));
   EXPECT_EQ(blankEsmCrc, cache_.GetPlugin(blankEsm)->GetCRC());
 }
 
@@ -89,7 +89,7 @@ TEST_P(GameCacheTest, gettingAPluginThatIsNotCachedShouldThrow) {
 }
 
 TEST_P(GameCacheTest, gettingAPluginShouldBeCaseInsensitive) {
-  cache_.AddPlugin(Plugin(game_, blankEsm, true));
+  cache_.AddPlugin(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true));
   EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm)->GetName());
 }
 
@@ -98,8 +98,8 @@ TEST_P(GameCacheTest, gettingPluginsShouldReturnAnEmptySetIfNoPluginsHaveBeenCac
 }
 
 TEST_P(GameCacheTest, gettingPluginsShouldReturnASetOfCachedPluginsIfPluginsHaveBeenCached) {
-  cache_.AddPlugin(Plugin(game_, blankEsm, true));
-  cache_.AddPlugin(Plugin(game_, blankMasterDependentEsm, true));
+  cache_.AddPlugin(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true));
+  cache_.AddPlugin(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsm, true));
 
   EXPECT_FALSE(cache_.GetPlugins().empty());
 }
@@ -121,7 +121,7 @@ TEST_P(GameCacheTest, clearingCachedPluginsShouldNotThrowIfNoPluginsAreCached) {
 }
 
 TEST_P(GameCacheTest, clearingCachedPluginsShouldClearAnyCachedPlugins) {
-  cache_.AddPlugin(Plugin(game_, blankEsm, true));
+  cache_.AddPlugin(Plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true));
   cache_.ClearCachedPlugins();
 
   EXPECT_TRUE(cache_.GetPlugins().empty());

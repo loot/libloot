@@ -64,10 +64,11 @@ Game::Game(const GameType gameType,
   type_(gameType),
   gamePath_(gamePath),
   localDataPath_(localDataPath),
-  cache_(std::make_shared<GameCache>()) {
+  cache_(std::make_shared<GameCache>()),
+  loadOrderHandler_(std::make_shared<LoadOrderHandler>()) {
   BOOST_LOG_TRIVIAL(info) << "Initialising load order data for game of type " << (int)type_ << " at: " << gamePath_;
 
-  loadOrderHandler_.Init(type_, gamePath_, localDataPath_);
+  loadOrderHandler_->Init(type_, gamePath_, localDataPath_);
 
   database_ = std::make_shared<ApiDatabase>(*this);
 }
@@ -84,12 +85,16 @@ std::shared_ptr<GameCache> Game::GetCache() {
   return cache_;
 }
 
+std::shared_ptr<LoadOrderHandler> Game::GetLoadOrderHandler() {
+  return loadOrderHandler_;
+}
+
 std::shared_ptr<DatabaseInterface> Game::GetDatabase() {
   return database_;
 }
 
 bool Game::IsValidPlugin(const std::string& plugin) const {
-  return Plugin::IsValid(plugin, *this);
+  return Plugin::IsValid(plugin, Type(), DataPath());
 }
 
 void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeadersOnly) {
@@ -98,10 +103,10 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
 
   // First get the plugin sizes.
   for (const auto& plugin : plugins) {
-    if (!Plugin::IsValid(plugin, *this))
+    if (!IsValidPlugin(plugin))
       throw std::invalid_argument("\"" + plugin + "\" is not a valid plugin");
 
-    uintmax_t fileSize = Plugin::GetFileSize(plugin, *this);
+    uintmax_t fileSize = Plugin::GetFileSize(plugin, DataPath());
     meanFileSize += fileSize;
 
     // Trim .ghost extension if present.
@@ -144,10 +149,8 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
     threads.push_back(thread([&]() {
       for (auto pluginName : pluginGroup) {
         BOOST_LOG_TRIVIAL(trace) << "Loading " << pluginName;
-        if (boost::iequals(pluginName, masterFile_))
-          cache_->AddPlugin(Plugin(*this, pluginName, true));
-        else
-          cache_->AddPlugin(Plugin(*this, pluginName, loadHeadersOnly));
+        const bool loadHeader = boost::iequals(pluginName, masterFile_) || loadHeadersOnly;
+        cache_->AddPlugin(Plugin(Type(), DataPath(), loadOrderHandler_, pluginName, loadHeader));
       }
     }));
   }
@@ -188,15 +191,15 @@ bool Game::IsPluginActive(const std::string& plugin) const {
   try {
     return std::static_pointer_cast<const Plugin>(GetPlugin(plugin))->IsActive();
   } catch (...) {
-    return loadOrderHandler_.IsPluginActive(plugin);
+    return loadOrderHandler_->IsPluginActive(plugin);
   }
 }
 
 std::vector<std::string> Game::GetLoadOrder() const {
-  return loadOrderHandler_.GetLoadOrder();
+  return loadOrderHandler_->GetLoadOrder();
 }
 
 void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
-  loadOrderHandler_.SetLoadOrder(loadOrder);
+  loadOrderHandler_->SetLoadOrder(loadOrder);
 }
 }

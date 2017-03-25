@@ -407,8 +407,8 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
       // The file wasn't in the plugin cache, load it as a plugin
       // if it appears to be valid, otherwise treat it as a non
       // plugin file.
-      if (Plugin::IsValid(filePath, *game_))
-        return Version(Plugin(*game_, filePath, true).GetVersion());
+      if (Plugin::IsValid(filePath, game_->Type(), game_->DataPath()))
+        return Version(Plugin(game_->Type(), game_->DataPath(), game_->GetLoadOrderHandler(), filePath, true).GetVersion());
 
       return Version(game_->DataPath() / filePath);
     }

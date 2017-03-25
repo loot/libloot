@@ -47,6 +47,7 @@ public:
   boost::filesystem::path DataPath() const;
 
   std::shared_ptr<GameCache> GetCache();
+  std::shared_ptr<LoadOrderHandler> GetLoadOrderHandler();
 
   // Game Interface Methods //
   ////////////////////////////
@@ -72,13 +73,13 @@ public:
   void SetLoadOrder(const std::vector<std::string>& loadOrder);
 private:
   std::shared_ptr<GameCache> cache_;
+  std::shared_ptr<LoadOrderHandler> loadOrderHandler_;
   std::shared_ptr<DatabaseInterface> database_;
 
   const GameType type_;
   const boost::filesystem::path gamePath_;
   const boost::filesystem::path localDataPath_;
 
-  LoadOrderHandler loadOrderHandler_;
   std::string masterFile_;
 };
 }

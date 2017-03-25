@@ -33,16 +33,19 @@
 #include <boost/locale.hpp>
 #include <libespm/Plugin.h>
 
+#include "api/game/load_order_handler.h"
 #include "loot/metadata/plugin_metadata.h"
 #include "loot/enum/game_type.h"
 #include "loot/plugin_interface.h"
 
 namespace loot {
-class Game;
-
 class Plugin : public PluginInterface, private libespm::Plugin {
 public:
-  Plugin(const Game& game, const std::string& name, const bool headerOnly);
+  Plugin(const GameType gameType,
+         const boost::filesystem::path& dataPath,
+         std::shared_ptr<LoadOrderHandler> loadOrderHandler,
+         const std::string& name,
+         const bool headerOnly);
 
   std::string GetName() const;
   std::string GetLowercasedName() const;
@@ -63,8 +66,8 @@ public:
   std::set<libespm::FormId> OverlapFormIDs(const Plugin& plugin) const;
 
   // Validity checks.
-  static bool IsValid(const std::string& filename, const Game& game);
-  static uintmax_t GetFileSize(const std::string& filename, const Game& game);
+  static bool IsValid(const std::string& filename, const GameType gameType, const boost::filesystem::path& dataPath);
+  static uintmax_t GetFileSize(const std::string& filename, const boost::filesystem::path& dataPath);
 
   bool operator < (const Plugin& rhs) const;
 private:

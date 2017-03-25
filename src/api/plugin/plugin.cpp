@@ -42,16 +42,20 @@ using std::set;
 using std::string;
 
 namespace loot {
-Plugin::Plugin(const Game& game, const std::string& name, const bool headerOnly) :
+Plugin::Plugin(const GameType gameType,
+               const boost::filesystem::path& dataPath,
+               std::shared_ptr<LoadOrderHandler> loadOrderHandler,
+               const std::string& name,
+               const bool headerOnly) :
   name_(name),
-  libespm::Plugin(Plugin::GetLibespmGameId(game.Type())),
+  libespm::Plugin(Plugin::GetLibespmGameId(gameType)),
   isEmpty_(true),
   isActive_(false),
   loadsArchive_(false),
   crc_(0),
   numOverrideRecords_(0) {
   try {
-    boost::filesystem::path filepath = game.DataPath() / name_;
+    boost::filesystem::path filepath = dataPath / name_;
 
     // In case the plugin is ghosted.
     if (!boost::filesystem::exists(filepath) && boost::filesystem::exists(filepath.string() + ".ghost"))
@@ -94,9 +98,9 @@ Plugin::Plugin(const Game& game, const std::string& name, const bool headerOnly)
       }
     }
     // Get whether the plugin is active or not.
-    isActive_ = game.IsPluginActive(name_);
+    isActive_ = loadOrderHandler->IsPluginActive(name_);
 
-    loadsArchive_ = LoadsArchive(name_, game.Type(), game.DataPath());
+    loadsArchive_ = LoadsArchive(name_, gameType, dataPath);
   } catch (std::exception& e) {
     BOOST_LOG_TRIVIAL(error) << "Cannot read plugin file \"" << name << "\". Details: " << e.what();
     throw FileAccessError((boost::format("Cannot read \"%1%\". Details: %2%") % name % e.what()).str());
@@ -186,7 +190,7 @@ std::set<FormId> Plugin::OverlapFormIDs(const Plugin& plugin) const {
   return overlap;
 }
 
-bool Plugin::IsValid(const std::string& filename, const Game& game) {
+bool Plugin::IsValid(const std::string& filename, const GameType gameType, const boost::filesystem::path& dataPath) {
   BOOST_LOG_TRIVIAL(trace) << "Checking to see if \"" << filename << "\" is a valid plugin.";
 
   //If the filename passed ends in '.ghost', that should be trimmed.
@@ -201,19 +205,19 @@ bool Plugin::IsValid(const std::string& filename, const Game& game) {
     return false;
 
   // Add the ".ghost" file extension if the plugin is ghosted.
-  boost::filesystem::path filepath = game.DataPath() / name;
+  boost::filesystem::path filepath = dataPath / name;
   if (!boost::filesystem::exists(filepath) && boost::filesystem::exists(filepath.string() + ".ghost"))
     filepath += ".ghost";
 
-  if (libespm::Plugin::isValid(filepath, GetLibespmGameId(game.Type()), true))
+  if (libespm::Plugin::isValid(filepath, GetLibespmGameId(gameType), true))
     return true;
 
   BOOST_LOG_TRIVIAL(warning) << "The .es(p|m) file \"" << filename << "\" is not a valid plugin.";
   return false;
 }
 
-uintmax_t Plugin::GetFileSize(const std::string & filename, const Game & game) {
-  boost::filesystem::path realPath = game.DataPath() / filename;
+uintmax_t Plugin::GetFileSize(const std::string & filename, const boost::filesystem::path& dataPath) {
+  boost::filesystem::path realPath = dataPath / filename;
   if (!boost::filesystem::exists(realPath))
     realPath += ".ghost";
 
