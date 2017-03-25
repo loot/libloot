@@ -39,8 +39,8 @@ protected:
     nonPluginFile("NotAPlugin.esm"),
     lowercaseBlankEsp("blank.esp"),
     game_(GetParam(), dataPath.parent_path(), localPath),
-    blankArchive("Blank" + game_.GetArchiveFileExtension()),
-    blankSuffixArchive("Blank - Different - suffix" + game_.GetArchiveFileExtension()) {}
+    blankArchive("Blank" + GetArchiveFileExtension(game_.Type())),
+    blankSuffixArchive("Blank - Different - suffix" + GetArchiveFileExtension(game_.Type())) {}
 
   void SetUp() {
     CommonGameTestFixture::SetUp();
@@ -86,6 +86,13 @@ protected:
   const std::string lowercaseBlankEsp;
   const std::string blankArchive;
   const std::string blankSuffixArchive;
+private:
+  static std::string GetArchiveFileExtension(const GameType gameType) {
+    if (gameType == GameType::fo4)
+      return ".ba2";
+    else
+      return ".bsa";
+  }
 };
 
 class OtherPluginType : public PluginInterface {

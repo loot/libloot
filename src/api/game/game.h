@@ -45,7 +45,6 @@ public:
 
   GameType Type() const;
   boost::filesystem::path DataPath() const;
-  std::string GetArchiveFileExtension() const;
 
   std::shared_ptr<GameCache> GetCache();
 

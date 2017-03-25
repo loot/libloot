@@ -80,13 +80,6 @@ boost::filesystem::path Game::DataPath() const {
   return gamePath_ / "Data";
 }
 
-std::string Game::GetArchiveFileExtension() const {
-  if (type_ == GameType::fo4)
-    return ".ba2";
-  else
-    return ".bsa";
-}
-
 std::shared_ptr<GameCache> Game::GetCache() {
   return cache_;
 }

@@ -90,15 +90,6 @@ TEST_P(GameTest, constructingShouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
   EXPECT_NO_THROW(Game(GetParam(), dataPath.parent_path(), localPath));
 }
 
-TEST_P(GameTest, getArchiveFileExtensionShouldReturnDotBa2IfGameIdIsFallout4AndDotBsaOtherwise) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
-
-  if (game.Type() == GameType::fo4)
-    EXPECT_EQ(".ba2", game.GetArchiveFileExtension());
-  else
-    EXPECT_EQ(".bsa", game.GetArchiveFileExtension());
-}
-
 TEST_P(GameTest, loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 

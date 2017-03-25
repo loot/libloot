@@ -96,22 +96,7 @@ Plugin::Plugin(const Game& game, const std::string& name, const bool headerOnly)
     // Get whether the plugin is active or not.
     isActive_ = game.IsPluginActive(name_);
 
-    // Get whether the plugin loads an archive (BSA/BA2) or not.
-    const string archiveExtension = game.GetArchiveFileExtension();
-
-    if (game.Type() == GameType::tes5) {
-        // Skyrim plugins only load BSAs that exactly match their basename.
-      loadsArchive_ = boost::filesystem::exists(game.DataPath() / (name_.substr(0, name_.length() - 4) + archiveExtension));
-    } else if (game.Type() != GameType::tes4 || boost::iends_with(name_, ".esp")) {
-        //Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which begin with the plugin basename.
-      string basename = name_.substr(0, name_.length() - 4);
-      for (boost::filesystem::directory_iterator it(game.DataPath()); it != boost::filesystem::directory_iterator(); ++it) {
-        if (boost::iequals(it->path().extension().string(), archiveExtension) && boost::istarts_with(it->path().filename().string(), basename)) {
-          loadsArchive_ = true;
-          break;
-        }
-      }
-    }
+    loadsArchive_ = LoadsArchive(name_, game.Type(), game.DataPath());
   } catch (std::exception& e) {
     BOOST_LOG_TRIVIAL(error) << "Cannot read plugin file \"" << name << "\". Details: " << e.what();
     throw FileAccessError((boost::format("Cannot read \"%1%\". Details: %2%") % name % e.what()).str());
@@ -241,6 +226,33 @@ bool Plugin::operator < (const Plugin & rhs) const {
 
 bool Plugin::IsActive() const {
   return isActive_;
+}
+
+std::string Plugin::GetArchiveFileExtension(const GameType gameType) {
+  if (gameType == GameType::fo4)
+    return ".ba2";
+  else
+    return ".bsa";
+}
+
+bool Plugin::LoadsArchive(const std::string& pluginName, const GameType gameType, const boost::filesystem::path& dataPath) {
+  // Get whether the plugin loads an archive (BSA/BA2) or not.
+  const string archiveExtension = GetArchiveFileExtension(gameType);
+
+  if (gameType == GameType::tes5) {
+    // Skyrim plugins only load BSAs that exactly match their basename.
+    return boost::filesystem::exists(dataPath / (pluginName.substr(0, pluginName.length() - 4) + archiveExtension));
+  } else if (gameType != GameType::tes4 || boost::iends_with(pluginName, ".esp")) {
+    //Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which begin with the plugin basename.
+    string basename = pluginName.substr(0, pluginName.length() - 4);
+    for (boost::filesystem::directory_iterator it(dataPath); it != boost::filesystem::directory_iterator(); ++it) {
+      if (boost::iequals(it->path().extension().string(), archiveExtension) && boost::istarts_with(it->path().filename().string(), basename)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 libespm::GameId Plugin::GetLibespmGameId(GameType gameType) {

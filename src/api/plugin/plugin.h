@@ -68,6 +68,8 @@ public:
 
   bool operator < (const Plugin& rhs) const;
 private:
+  static std::string GetArchiveFileExtension(const GameType gameType);
+  static bool LoadsArchive(const std::string& pluginName, const GameType gameType, const boost::filesystem::path& dataPath);
   static libespm::GameId GetLibespmGameId(GameType gameType);
 
   bool isEmpty_;  // Does the plugin contain any records other than the TES4 header?
