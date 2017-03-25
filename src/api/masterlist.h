@@ -33,8 +33,6 @@
 #include "loot/struct/masterlist_info.h"
 
 namespace loot {
-class Game;
-
 class Masterlist : public MetadataList {
 public:
   bool Update(const boost::filesystem::path& path,
