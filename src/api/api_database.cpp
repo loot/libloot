@@ -36,7 +36,12 @@
 #include "api/plugin/plugin_sorter.h"
 
 namespace loot {
-ApiDatabase::ApiDatabase(Game& game) : game_(game) {}
+ApiDatabase::ApiDatabase(const GameType gameType,
+                         const boost::filesystem::path& dataPath,
+                         std::shared_ptr<GameCache> gameCache,
+                         std::shared_ptr<LoadOrderHandler> loadOrderHandler) :
+  gameCache_(gameCache),
+  conditionEvaluator_(gameType, dataPath, gameCache, loadOrderHandler) {}
 
 ///////////////////////////////////
 // Database Loading Functions
@@ -69,14 +74,14 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
 
 void ApiDatabase::EvalLists() {
   // Clear caches before evaluating conditions.
-  game_.GetCache()->ClearCachedConditions();
+  gameCache_->ClearCachedConditions();
 
   Masterlist temp = masterlist_;
   MetadataList userTemp = userlist_;
 
   // Refresh active plugins before evaluating conditions.
-  temp.EvalAllConditions(game_);
-  userTemp.EvalAllConditions(game_);
+  temp.EvalAllConditions(conditionEvaluator_);
+  userTemp.EvalAllConditions(conditionEvaluator_);
 
   masterlist_ = temp;
   userlist_ = userTemp;
@@ -146,10 +151,9 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(bool evaluateConditions) co
 
   if (evaluateConditions) {
     // Evaluate conditions from scratch.
-    game_.GetCache()->ClearCachedConditions();
-    ConditionEvaluator evaluator(&game_);
+    gameCache_->ClearCachedConditions();
     for (auto it = std::begin(masterlistMessages); it != std::end(masterlistMessages);) {
-      if (!evaluator.evaluate(it->GetCondition()))
+      if (!conditionEvaluator_.evaluate(it->GetCondition()))
         it = masterlistMessages.erase(it);
       else
         ++it;
@@ -169,8 +173,7 @@ PluginMetadata ApiDatabase::GetPluginMetadata(const std::string& plugin,
   }
 
   if (evaluateConditions) {
-    ConditionEvaluator evaluator(&game_);
-    return evaluator.evaluateAll(metadata);
+    return conditionEvaluator_.evaluateAll(metadata);
   }
 
   return metadata;
@@ -181,8 +184,7 @@ PluginMetadata ApiDatabase::GetPluginUserMetadata(const std::string& plugin,
   PluginMetadata metadata = userlist_.FindPlugin(plugin);
 
   if (evaluateConditions) {
-    ConditionEvaluator evaluator(&game_);
-    return evaluator.evaluateAll(metadata);
+    return conditionEvaluator_.evaluateAll(metadata);
   }
 
   return metadata;

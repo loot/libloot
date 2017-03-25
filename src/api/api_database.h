@@ -29,12 +29,20 @@
 #include <string>
 #include <vector>
 
-#include "api/game/game.h"
+#include "api/game/game_cache.h"
+#include "api/game/load_order_handler.h"
+#include "api/metadata/condition_evaluator.h"
+#include "api/metadata_list.h"
+#include "api/masterlist.h"
 #include "loot/database_interface.h"
+#include "loot/enum/game_type.h"
 
 namespace loot {
 struct ApiDatabase : public DatabaseInterface {
-  ApiDatabase(Game& game);
+  ApiDatabase(const GameType gameType,
+              const boost::filesystem::path& dataPath,
+              std::shared_ptr<GameCache> gameCache,
+              std::shared_ptr<LoadOrderHandler> loadOrderHandler);
 
   void LoadLists(const std::string& masterlist_path,
                  const std::string& userlist_path = "");
@@ -74,7 +82,8 @@ struct ApiDatabase : public DatabaseInterface {
 
   void DiscardAllUserMetadata();
 private:
-  Game& game_;
+  std::shared_ptr<GameCache> gameCache_;
+  ConditionEvaluator conditionEvaluator_;
   Masterlist masterlist_;
   MetadataList userlist_;
 };

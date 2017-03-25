@@ -55,8 +55,7 @@ namespace loot {
 template<typename Iterator, typename Skipper>
 class ConditionGrammar : public boost::spirit::qi::grammar < Iterator, bool(), Skipper > {
 public:
-  ConditionGrammar() : ConditionGrammar(nullptr) {}
-  ConditionGrammar(ConditionEvaluator& evaluator) : ConditionGrammar::base_type(expression_, "condition grammar"), evaluator_(evaluator) {
+  ConditionGrammar(const ConditionEvaluator& evaluator) : ConditionGrammar::base_type(expression_, "condition grammar"), evaluator_(evaluator) {
     using boost::spirit::unicode::char_;
     using boost::spirit::unicode::string;
     namespace phoenix = boost::phoenix;
@@ -203,7 +202,7 @@ private:
   boost::spirit::qi::rule<Iterator, std::string()> quotedStr_, filePath_, comparator_;
   boost::spirit::qi::rule<Iterator, char()> invalidPathChars_;
 
-  ConditionEvaluator& evaluator_;
+  const ConditionEvaluator& evaluator_;
 };
 }
 #endif

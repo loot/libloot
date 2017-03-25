@@ -38,7 +38,7 @@ protected:
   ConditionGrammarTest() :
     resourcePath(dataPath / "resource" / "detail" / "resource.txt"),
     game_(GetParam(), dataPath.parent_path(), localPath),
-    evaluator_(&game_),
+    evaluator_(game_.Type(), game_.DataPath(), game_.GetCache(), game_.GetLoadOrderHandler()),
     result_(false),
     success_(false) {}
 
@@ -103,7 +103,7 @@ INSTANTIATE_TEST_CASE_P(,
                           GameType::tes5se));
 
 TEST_P(ConditionGrammarTest, parsingInvalidSyntaxShouldThrow) {
-  ConditionEvaluator evaluator(nullptr);
+  ConditionEvaluator evaluator;
   Grammar grammar(evaluator);
   std::string condition("file(foo)");
 
@@ -126,7 +126,7 @@ TEST_P(ConditionGrammarTest, evaluatingInvalidSyntaxShouldThrow) {
 }
 
 TEST_P(ConditionGrammarTest, parsingAnEmptyConditionShouldThrow) {
-  ConditionEvaluator evaluator(nullptr);
+  ConditionEvaluator evaluator;
   Grammar grammar(evaluator);
   std::string condition("");
 
@@ -573,7 +573,6 @@ TEST_P(ConditionGrammarTest, aVersionGreaterThanOrEqualToConditionForAPluginWith
 }
 
 TEST_P(ConditionGrammarTest, anActiveConditionWithAPluginThatIsActiveShouldEvaluateToTrue) {
-
   Grammar grammar(evaluator_);
   std::string condition("active(\"" + blankEsm + "\")");
 
@@ -587,7 +586,6 @@ TEST_P(ConditionGrammarTest, anActiveConditionWithAPluginThatIsActiveShouldEvalu
 }
 
 TEST_P(ConditionGrammarTest, anActiveConditionWithAPluginThatIsNotActiveShouldEvaluateToFalse) {
-
   Grammar grammar(evaluator_);
   std::string condition("active(\"" + blankEsp + "\")");
 
@@ -601,7 +599,6 @@ TEST_P(ConditionGrammarTest, anActiveConditionWithAPluginThatIsNotActiveShouldEv
 }
 
 TEST_P(ConditionGrammarTest, anActiveConditionWithARegexMatchingAnActivePluginShouldEvaluateToTrue) {
-
   Grammar grammar(evaluator_);
   std::string condition("active(\"Blank\\.esm\")");
 
@@ -615,7 +612,6 @@ TEST_P(ConditionGrammarTest, anActiveConditionWithARegexMatchingAnActivePluginSh
 }
 
 TEST_P(ConditionGrammarTest, anActiveConditionWithARegexMatchingNoActivePluginsShouldEvaluateToFalse) {
-
   Grammar grammar(evaluator_);
   std::string condition("active(\"Blank\\.esp\")");
 
@@ -629,7 +625,6 @@ TEST_P(ConditionGrammarTest, anActiveConditionWithARegexMatchingNoActivePluginsS
 }
 
 TEST_P(ConditionGrammarTest, aManyActiveConditionWithARegexMatchingMoreThanOnePluginThatIsActiveShouldEvaluateToTrue) {
-
   Grammar grammar(evaluator_);
   std::string condition("many_active(\"Blank( - Different Master Dependent)?\\.es(m|p)\")");
 
@@ -643,7 +638,6 @@ TEST_P(ConditionGrammarTest, aManyActiveConditionWithARegexMatchingMoreThanOnePl
 }
 
 TEST_P(ConditionGrammarTest, aManyActiveConditionWithARegexMatchingOnlyOnePluginThatIsActiveShouldEvaluateToFalse) {
-
   Grammar grammar(evaluator_);
   std::string condition("many_active(\"Blank\\.esm\")");
 
@@ -657,7 +651,6 @@ TEST_P(ConditionGrammarTest, aManyActiveConditionWithARegexMatchingOnlyOnePlugin
 }
 
 TEST_P(ConditionGrammarTest, aManyActiveConditionWithARegexMatchingNoPluginsThatAreActiveShouldEvaluateToFalse) {
-
   Grammar grammar(evaluator_);
   std::string condition("many_active(\"Blank\\.esp\")");
 

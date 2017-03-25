@@ -31,11 +31,10 @@
 
 #include <boost/filesystem.hpp>
 
+#include "api/metadata/condition_evaluator.h"
 #include "loot/metadata/plugin_metadata.h"
 
 namespace loot {
-class Game;
-
 class MetadataList {
 public:
   void Load(const boost::filesystem::path& filepath);
@@ -57,7 +56,7 @@ public:
   void AppendMessage(const Message& message);
 
   // Eval plugin conditions.
-  void EvalAllConditions(Game& game);
+  void EvalAllConditions(const ConditionEvaluator& conditionEvaluator);
 
 protected:
   std::set<std::string> bashTags_;

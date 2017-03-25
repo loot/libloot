@@ -70,7 +70,7 @@ Game::Game(const GameType gameType,
 
   loadOrderHandler_->Init(type_, gamePath_, localDataPath_);
 
-  database_ = std::make_shared<ApiDatabase>(*this);
+  database_ = std::make_shared<ApiDatabase>(Type(), DataPath(), GetCache(), GetLoadOrderHandler());
 }
 
 GameType Game::Type() const {

@@ -39,7 +39,7 @@ protected:
       MessageContent("info"),
   })),
   game_(GetParam(), dataPath.parent_path(), localPath),
-  evaluator_(&game_) {}
+  evaluator_(game_.Type(), game_.DataPath(), game_.GetCache(), game_.GetLoadOrderHandler()) {}
 
   const std::vector<MessageContent> info_;
 

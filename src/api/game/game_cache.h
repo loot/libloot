@@ -29,8 +29,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "api/masterlist.h"
-#include "api/metadata_list.h"
 #include "api/plugin/plugin.h"
 
 namespace loot {

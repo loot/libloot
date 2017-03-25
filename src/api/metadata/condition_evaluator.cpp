@@ -35,10 +35,18 @@
 using boost::format;
 
 namespace loot {
-ConditionEvaluator::ConditionEvaluator(Game * game) : game_(game) {}
+ConditionEvaluator::ConditionEvaluator() : gameType_(GameType::tes4), gameCache_(nullptr), loadOrderHandler_(nullptr) {}
+ConditionEvaluator::ConditionEvaluator(const GameType gameType,
+                                       const boost::filesystem::path& dataPath,
+                                       std::shared_ptr<GameCache> gameCache,
+                                       std::shared_ptr<LoadOrderHandler> loadOrderHandler) :
+  gameType_(gameType),
+  dataPath_(dataPath),
+  gameCache_(gameCache),
+  loadOrderHandler_(loadOrderHandler) {}
 
-bool ConditionEvaluator::evaluate(const std::string& condition) {
-  if (game_ == nullptr) {
+bool ConditionEvaluator::evaluate(const std::string& condition) const {
+  if (shouldParseOnly()) {
     // Still check that the syntax is valid.
     parseCondition(condition);
     return false;
@@ -49,19 +57,19 @@ bool ConditionEvaluator::evaluate(const std::string& condition) {
 
   BOOST_LOG_TRIVIAL(trace) << "Evaluating condition: " << condition;
 
-  auto cachedValue = game_->GetCache()->GetCachedCondition(condition);
+  auto cachedValue = gameCache_->GetCachedCondition(condition);
   if (cachedValue.second)
     return cachedValue.first;
 
   bool result = parseCondition(condition);
 
-  game_->GetCache()->CacheCondition(condition, result);
+  gameCache_->CacheCondition(condition, result);
 
   return result;
 }
 
-bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData, const std::string& pluginName) {
-  if (game_ == nullptr || pluginName.empty())
+bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData, const std::string& pluginName) const {
+  if (shouldParseOnly() || pluginName.empty())
     return false;
 
   // First need to get plugin's CRC.
@@ -69,23 +77,23 @@ bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData, const 
 
   // Get the CRC from the game plugin cache if possible.
   try {
-    crc = game_->GetPlugin(pluginName)->GetCRC();
+    crc = gameCache_->GetPlugin(pluginName)->GetCRC();
   } catch (...) {}
 
   // Otherwise calculate it from the file.
   if (crc == 0) {
-    if (boost::filesystem::exists(game_->DataPath() / pluginName)) {
-      crc = GetCrc32(game_->DataPath() / pluginName);
-    } else if (boost::filesystem::exists(game_->DataPath() / (pluginName + ".ghost"))) {
-      crc = GetCrc32(game_->DataPath() / (pluginName + ".ghost"));
+    if (boost::filesystem::exists(dataPath_ / pluginName)) {
+      crc = GetCrc32(dataPath_ / pluginName);
+    } else if (boost::filesystem::exists(dataPath_ / (pluginName + ".ghost"))) {
+      crc = GetCrc32(dataPath_ / (pluginName + ".ghost"));
     }
   }
 
   return cleaningData.GetCRC() == crc;
 }
 
-PluginMetadata ConditionEvaluator::evaluateAll(const PluginMetadata& pluginMetadata) {
-  if (game_ == nullptr)
+PluginMetadata ConditionEvaluator::evaluateAll(const PluginMetadata& pluginMetadata) const {
+  if (shouldParseOnly())
     return pluginMetadata;
 
   PluginMetadata evaluatedMetadata(pluginMetadata.GetName());
@@ -151,7 +159,7 @@ PluginMetadata ConditionEvaluator::evaluateAll(const PluginMetadata& pluginMetad
 bool ConditionEvaluator::fileExists(const std::string& filePath) const {
   validatePath(filePath);
 
-  if (game_ == nullptr)
+  if (shouldParseOnly())
     return false;
 
   if (filePath == "LOOT")
@@ -161,23 +169,23 @@ bool ConditionEvaluator::fileExists(const std::string& filePath) const {
   // for plugins.
   try {
     // GetPlugin throws if it can't find an entry.
-    game_->GetPlugin(filePath);
+    gameCache_->GetPlugin(filePath);
 
     return true;
   } catch (...) {
     // Not a loaded plugin, check the filesystem.
     if (boost::iends_with(filePath, ".esp") || boost::iends_with(filePath, ".esm"))
-      return boost::filesystem::exists(game_->DataPath() / filePath)
-      || boost::filesystem::exists(game_->DataPath() / (filePath + ".ghost"));
+      return boost::filesystem::exists(dataPath_ / filePath)
+      || boost::filesystem::exists(dataPath_ / (filePath + ".ghost"));
     else
-      return boost::filesystem::exists(game_->DataPath() / filePath);
+      return boost::filesystem::exists(dataPath_ / filePath);
   }
 }
 
 bool ConditionEvaluator::regexMatchExists(const std::string& regexString) const {
   auto pathRegex = splitRegex(regexString);
 
-  if (game_ == nullptr)
+  if (shouldParseOnly())
     return false;
 
   return isRegexMatchInDataDirectory(pathRegex,
@@ -187,7 +195,7 @@ bool ConditionEvaluator::regexMatchExists(const std::string& regexString) const 
 bool ConditionEvaluator::regexMatchesExist(const std::string& regexString) const {
   auto pathRegex = splitRegex(regexString);
 
-  if (game_ == nullptr)
+  if (shouldParseOnly())
     return false;
 
   return areRegexMatchesInDataDirectory(pathRegex,
@@ -197,43 +205,43 @@ bool ConditionEvaluator::regexMatchesExist(const std::string& regexString) const
 bool ConditionEvaluator::isPluginActive(const std::string& pluginName) const {
   validatePath(pluginName);
 
-  if (game_ == nullptr)
+  if (shouldParseOnly())
     return false;
 
   if (pluginName == "LOOT")
     return false;
 
-  return game_->IsPluginActive(pluginName);
+  return loadOrderHandler_->IsPluginActive(pluginName);
 }
 
 bool ConditionEvaluator::isPluginMatchingRegexActive(const std::string& regexString) const {
   auto pathRegex = splitRegex(regexString);
 
-  if (game_ == nullptr)
+  if (shouldParseOnly())
     return false;
 
   return isRegexMatchInDataDirectory(pathRegex,
                                      [&](const std::string& filename) {
-    return game_->IsPluginActive(filename);
+    return loadOrderHandler_->IsPluginActive(filename);
   });
 }
 
 bool ConditionEvaluator::arePluginsActive(const std::string& regexString) const {
   auto pathRegex = splitRegex(regexString);
 
-  if (game_ == nullptr)
+  if (shouldParseOnly())
     return false;
 
   return areRegexMatchesInDataDirectory(pathRegex,
                                         [&](const std::string& filename) {
-    return game_->IsPluginActive(filename);
+    return loadOrderHandler_->IsPluginActive(filename);
   });
 }
 
-bool ConditionEvaluator::checksumMatches(const std::string& filePath, const uint32_t checksum) {
+bool ConditionEvaluator::checksumMatches(const std::string& filePath, const uint32_t checksum) const {
   validatePath(filePath);
 
-  if (game_ == nullptr)
+  if (shouldParseOnly())
     return false;
 
   uint32_t realChecksum = 0;
@@ -243,14 +251,14 @@ bool ConditionEvaluator::checksumMatches(const std::string& filePath, const uint
     // CRC could be for a plugin or a file.
     // Get the CRC from the game plugin cache if possible.
     try {
-      realChecksum = game_->GetPlugin(filePath)->GetCRC();
+      realChecksum = gameCache_->GetPlugin(filePath)->GetCRC();
     } catch (...) {}
 
     if (realChecksum == 0) {
-      if (boost::filesystem::exists(game_->DataPath() / filePath))
-        realChecksum = GetCrc32(game_->DataPath() / filePath);
-      else if ((boost::iends_with(filePath, ".esp") || boost::iends_with(filePath, ".esm")) && boost::filesystem::exists(game_->DataPath() / (filePath + ".ghost")))
-        realChecksum = GetCrc32(game_->DataPath() / (filePath + ".ghost"));
+      if (boost::filesystem::exists(dataPath_ / filePath))
+        realChecksum = GetCrc32(dataPath_ / filePath);
+      else if ((boost::iends_with(filePath, ".esp") || boost::iends_with(filePath, ".esm")) && boost::filesystem::exists(dataPath_ / (filePath + ".ghost")))
+        realChecksum = GetCrc32(dataPath_ / (filePath + ".ghost"));
     }
   }
 
@@ -339,7 +347,7 @@ std::pair<boost::filesystem::path, std::regex> ConditionEvaluator::splitRegex(co
 }
 
 bool ConditionEvaluator::isGameSubdirectory(const boost::filesystem::path& path) const {
-  boost::filesystem::path parentPath = game_->DataPath() / path;
+  boost::filesystem::path parentPath = dataPath_ / path;
 
   return boost::filesystem::exists(parentPath) && boost::filesystem::is_directory(parentPath);
 }
@@ -353,7 +361,7 @@ bool ConditionEvaluator::isRegexMatchInDataDirectory(const std::pair<boost::file
     return false;
   }
 
-  return std::any_of(boost::filesystem::directory_iterator(game_->DataPath() / pathRegex.first),
+  return std::any_of(boost::filesystem::directory_iterator(dataPath_ / pathRegex.first),
                      boost::filesystem::directory_iterator(),
                      [&](const boost::filesystem::directory_entry& entry) {
     const std::string filename = entry.path().filename().string();
@@ -376,7 +384,7 @@ bool ConditionEvaluator::areRegexMatchesInDataDirectory(const std::pair<boost::f
     return false;
   });
 }
-bool ConditionEvaluator::parseCondition(const std::string & condition) {
+bool ConditionEvaluator::parseCondition(const std::string & condition) const {
   if (condition.empty())
     return true;
 
@@ -402,16 +410,19 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
     // from its description field. Try getting an entry from the
     // plugin cache.
     try {
-      return Version(game_->GetPlugin(filePath)->GetVersion());
+      return Version(gameCache_->GetPlugin(filePath)->GetVersion());
     } catch (...) {
       // The file wasn't in the plugin cache, load it as a plugin
       // if it appears to be valid, otherwise treat it as a non
       // plugin file.
-      if (Plugin::IsValid(filePath, game_->Type(), game_->DataPath()))
-        return Version(Plugin(game_->Type(), game_->DataPath(), game_->GetLoadOrderHandler(), filePath, true).GetVersion());
+      if (Plugin::IsValid(filePath, gameType_, dataPath_))
+        return Version(Plugin(gameType_, dataPath_, loadOrderHandler_, filePath, true).GetVersion());
 
-      return Version(game_->DataPath() / filePath);
+      return Version(dataPath_ / filePath);
     }
   }
+}
+bool ConditionEvaluator::shouldParseOnly() const {
+  return gameCache_ == nullptr || loadOrderHandler_ == nullptr;
 }
 }

@@ -47,8 +47,6 @@ std::string ConditionalMetadata::GetCondition() const {
 
 void ConditionalMetadata::ParseCondition() const {
   BOOST_LOG_TRIVIAL(trace) << "Testing condition syntax: " << condition_;
-  ConditionEvaluator evaluator(nullptr);
-
-  evaluator.evaluate(condition_);
+  ConditionEvaluator().evaluate(condition_);
 }
 }

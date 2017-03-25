@@ -30,7 +30,8 @@
 
 #include <boost/filesystem.hpp>
 
-#include "api/game/game.h"
+#include "api/game/game_cache.h"
+#include "api/game/load_order_handler.h"
 #include "api/helpers/version.h"
 #include "loot/metadata/plugin_cleaning_data.h"
 #include "loot/metadata/plugin_metadata.h"
@@ -38,11 +39,15 @@
 namespace loot {
 class ConditionEvaluator {
 public:
-  ConditionEvaluator(Game * game);
+  ConditionEvaluator();
+  ConditionEvaluator(const GameType gameType,
+                     const boost::filesystem::path& dataPath,
+                     std::shared_ptr<GameCache> gameCache,
+                     std::shared_ptr<LoadOrderHandler> loadOrderHandler);
 
-  bool evaluate(const std::string& condition);
-  bool evaluate(const PluginCleaningData& cleaningData, const std::string& pluginName);
-  PluginMetadata evaluateAll(const PluginMetadata& pluginMetadata);
+  bool evaluate(const std::string& condition) const;
+  bool evaluate(const PluginCleaningData& cleaningData, const std::string& pluginName) const;
+  PluginMetadata evaluateAll(const PluginMetadata& pluginMetadata) const;
 
   bool fileExists(const std::string& filePath) const;
   bool regexMatchExists(const std::string& regexString) const;
@@ -53,7 +58,7 @@ public:
   bool arePluginsActive(const std::string& regexString) const;
 
   bool checksumMatches(const std::string& filePath,
-                       const uint32_t checksum);
+                       const uint32_t checksum) const;
 
   bool compareVersions(const std::string& filePath,
                        const std::string& testVersion,
@@ -74,11 +79,16 @@ private:
   bool areRegexMatchesInDataDirectory(const std::pair<boost::filesystem::path, std::regex>& pathRegex,
                                       const std::function<bool(const std::string&)> condition) const;
 
-  bool parseCondition(const std::string& condition);
+  bool parseCondition(const std::string& condition) const;
 
   Version getVersion(const std::string& filePath) const;
 
-  Game * game_;
+  bool shouldParseOnly() const;
+
+  const GameType gameType_;
+  const boost::filesystem::path dataPath_;
+  const std::shared_ptr<GameCache> gameCache_;
+  const std::shared_ptr<LoadOrderHandler> loadOrderHandler_;
 };
 }
 
