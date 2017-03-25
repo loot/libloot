@@ -143,6 +143,14 @@ INSTANTIATE_TEST_CASE_P(,
                           GameType::fo4,
                           GameType::tes5se));
 
+TEST_P(DatabaseInterfaceTest, loadListsShouldSucceedEvenIfGameHandleIsDiscarded) {
+  db_ = CreateGameHandle(GetParam(), dataPath.parent_path().string(), localPath.string())->GetDatabase();
+
+  ASSERT_NO_THROW(GenerateMasterlist());
+
+  EXPECT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
+}
+
 TEST_P(DatabaseInterfaceTest, loadListsShouldThrowIfNoMasterlistIsPresent) {
   EXPECT_THROW(db_->LoadLists(masterlistPath.string(), ""), FileAccessError);
 }
