@@ -103,7 +103,7 @@ TEST_P(GameTest, loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalle
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));
-  EXPECT_EQ(11, game.GetPlugins().size());
+  EXPECT_EQ(11, game.GetCache()->GetPlugins().size());
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(game.GetPlugin(masterFile));
@@ -118,7 +118,7 @@ TEST_P(GameTest, loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugi
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
-  EXPECT_EQ(11, game.GetPlugins().size());
+  EXPECT_EQ(11, game.GetCache()->GetPlugins().size());
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(game.GetPlugin(blankEsm));

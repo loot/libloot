@@ -49,13 +49,13 @@ bool ConditionEvaluator::evaluate(const std::string& condition) {
 
   BOOST_LOG_TRIVIAL(trace) << "Evaluating condition: " << condition;
 
-  auto cachedValue = game_->GetCachedCondition(condition);
+  auto cachedValue = game_->GetCache()->GetCachedCondition(condition);
   if (cachedValue.second)
     return cachedValue.first;
 
   bool result = parseCondition(condition);
 
-  game_->CacheCondition(condition, result);
+  game_->GetCache()->CacheCondition(condition, result);
 
   return result;
 }

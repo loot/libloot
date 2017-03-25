@@ -34,7 +34,7 @@
 #include "loot/game_interface.h"
 
 namespace loot {
-class Game : public GameInterface, public GameCache {
+class Game : public GameInterface {
 public:
   Game(const GameType gameType,
        const boost::filesystem::path& gamePath = "",
@@ -46,6 +46,8 @@ public:
   GameType Type() const;
   boost::filesystem::path DataPath() const;
   std::string GetArchiveFileExtension() const;
+
+  std::shared_ptr<GameCache> GetCache();
 
   // Game Interface Methods //
   ////////////////////////////
@@ -70,6 +72,7 @@ public:
 
   void SetLoadOrder(const std::vector<std::string>& loadOrder);
 private:
+  std::shared_ptr<GameCache> cache_;
   std::shared_ptr<DatabaseInterface> database_;
 
   const GameType type_;

@@ -63,7 +63,8 @@ Game::Game(const GameType gameType,
            const boost::filesystem::path& localDataPath) :
   type_(gameType),
   gamePath_(gamePath),
-  localDataPath_(localDataPath) {
+  localDataPath_(localDataPath),
+  cache_(std::make_shared<GameCache>()) {
   BOOST_LOG_TRIVIAL(info) << "Initialising load order data for game of type " << (int)type_ << " at: " << gamePath_;
 
   loadOrderHandler_.Init(type_, gamePath_, localDataPath_);
@@ -84,6 +85,10 @@ std::string Game::GetArchiveFileExtension() const {
     return ".ba2";
   else
     return ".bsa";
+}
+
+std::shared_ptr<GameCache> Game::GetCache() {
+  return cache_;
 }
 
 std::shared_ptr<DatabaseInterface> Game::GetDatabase() {
@@ -136,7 +141,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
   }
 
   // Clear the existing plugin cache.
-  ClearCachedPlugins();
+  cache_->ClearCachedPlugins();
 
   // Load the plugins.
   BOOST_LOG_TRIVIAL(trace) << "Starting plugin loading.";
@@ -147,9 +152,9 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
       for (auto pluginName : pluginGroup) {
         BOOST_LOG_TRIVIAL(trace) << "Loading " << pluginName;
         if (boost::iequals(pluginName, masterFile_))
-          AddPlugin(Plugin(*this, pluginName, true));
+          cache_->AddPlugin(Plugin(*this, pluginName, true));
         else
-          AddPlugin(Plugin(*this, pluginName, loadHeadersOnly));
+          cache_->AddPlugin(Plugin(*this, pluginName, loadHeadersOnly));
       }
     }));
   }
@@ -162,12 +167,12 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
 }
 
 std::shared_ptr<const PluginInterface> Game::GetPlugin(const std::string& pluginName) const {
-  return std::static_pointer_cast<const PluginInterface>(GameCache::GetPlugin(pluginName));
+  return std::static_pointer_cast<const PluginInterface>(cache_->GetPlugin(pluginName));
 }
 
 std::set<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins() const {
   std::set<std::shared_ptr<const PluginInterface>> interfacePointers;
-  for (auto& plugin : GameCache::GetPlugins()) {
+  for (auto& plugin : cache_->GetPlugins()) {
     interfacePointers.insert(std::static_pointer_cast<const PluginInterface>(plugin));
   }
 

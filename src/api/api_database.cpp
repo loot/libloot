@@ -69,7 +69,7 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
 
 void ApiDatabase::EvalLists() {
   // Clear caches before evaluating conditions.
-  game_.ClearCachedConditions();
+  game_.GetCache()->ClearCachedConditions();
 
   Masterlist temp = masterlist_;
   MetadataList userTemp = userlist_;
@@ -146,7 +146,7 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(bool evaluateConditions) co
 
   if (evaluateConditions) {
     // Evaluate conditions from scratch.
-    game_.ClearCachedConditions();
+    game_.GetCache()->ClearCachedConditions();
     ConditionEvaluator evaluator(&game_);
     for (auto it = std::begin(masterlistMessages); it != std::end(masterlistMessages);) {
       if (!evaluator.evaluate(it->GetCondition()))

@@ -212,7 +212,7 @@ void PluginSorter::AddPluginVertices(Game& game) {
   // Using a set of plugin names followed by finding the matching key
   // in the unordered map, as it's probably faster than copying the
   // full plugin objects then sorting them.
-  for (const auto &plugin : game.GetPlugins()) {
+  for (const auto &plugin : game.GetCache()->GetPlugins()) {
     BOOST_LOG_TRIVIAL(trace) << "Getting and evaluating metadata for plugin " << plugin->GetName();
 
     auto metadata = game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true);
