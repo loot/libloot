@@ -69,20 +69,28 @@ void MetadataList::Load(const boost::filesystem::path& filepath) {
 
 void MetadataList::Save(const boost::filesystem::path& filepath) const {
   BOOST_LOG_TRIVIAL(trace) << "Saving metadata list to: " << filepath;
-  YAML::Emitter yout;
-  yout.SetIndent(2);
-  yout << YAML::BeginMap
-    << YAML::Key << "bash_tags" << YAML::Value << bashTags_
-    << YAML::Key << "globals" << YAML::Value << messages_
-    << YAML::Key << "plugins" << YAML::Value << Plugins()
-    << YAML::EndMap;
+  YAML::Emitter emitter;
+  emitter.SetIndent(2);
+  emitter << YAML::BeginMap;
 
-  boost::filesystem::ofstream uout(filepath);
-  if (uout.fail())
+  if (!bashTags_.empty())
+    emitter << YAML::Key << "bash_tags" << YAML::Value << bashTags_;
+
+  if (!messages_.empty())
+    emitter << YAML::Key << "globals" << YAML::Value << messages_;
+
+  auto plugins = Plugins();
+  if (!plugins.empty())
+    emitter << YAML::Key << "plugins" << YAML::Value << plugins;
+
+  emitter << YAML::EndMap;
+
+  boost::filesystem::ofstream out(filepath);
+  if (out.fail())
     throw FileAccessError("Couldn't open output file.");
 
-  uout << yout.c_str();
-  uout.close();
+  out << emitter.c_str();
+  out.close();
 }
 
 void MetadataList::Clear() {

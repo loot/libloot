@@ -214,26 +214,15 @@ void ApiDatabase::WriteMinimalList(const std::string& outputFile, const bool ove
   if (boost::filesystem::exists(outputFile) && !overwrite)
     throw FileAccessError("Output file exists but overwrite is not set to true.");
 
-  Masterlist temp = masterlist_;
-  std::unordered_set<PluginMetadata> minimalPlugins;
-  for (const auto &plugin : temp.Plugins()) {
-    PluginMetadata p(plugin.GetName());
-    p.SetTags(plugin.GetTags());
-    p.SetDirtyInfo(plugin.GetDirtyInfo());
-    minimalPlugins.insert(p);
+  MetadataList minimalList;
+  for (const auto& plugin : masterlist_.Plugins()) {
+    PluginMetadata minimalPlugin(plugin.GetName());
+    minimalPlugin.SetTags(plugin.GetTags());
+    minimalPlugin.SetDirtyInfo(plugin.GetDirtyInfo());
+
+    minimalList.AddPlugin(minimalPlugin);
   }
 
-  YAML::Emitter yout;
-  yout.SetIndent(2);
-  yout << YAML::BeginMap
-    << YAML::Key << "plugins" << YAML::Value << minimalPlugins
-    << YAML::EndMap;
-
-  boost::filesystem::path p(outputFile);
-  boost::filesystem::ofstream out(p);
-  if (out.fail())
-    throw FileAccessError("Couldn't open output file.");
-  out << yout.c_str();
-  out.close();
+  minimalList.Save(outputFile);
 }
 }

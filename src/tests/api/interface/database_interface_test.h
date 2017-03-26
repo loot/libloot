@@ -220,9 +220,7 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldNotWriteMasterlistMet
 
   EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true));
 
-  std::string expectedContent = "bash_tags:\n  []\nglobals:\n  []\nplugins:\n  []";
-
-  EXPECT_EQ(expectedContent, GetFileContent(minimalOutputPath_));
+  EXPECT_EQ("{}", GetFileContent(minimalOutputPath_));
 }
 
 TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
