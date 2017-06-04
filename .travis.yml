@@ -25,7 +25,7 @@ install:
   - wget https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.4.0/install_boost.py
   - python install_boost.py --directory ~ --boost-version 1.64.0 -a 64 -t gcc-6 atomic chrono date_time filesystem iostreams locale log regex system thread
   # Install packages for generating documentation
-  - pip install --user sphinx breathe sphinx_rtd_theme
+  - pip install --user -r docs/requirements.txt
   # Add sphinx-build to PATH
   - export PATH="$HOME/.local/bin:$PATH"
   # Don't install Doxygen from the repositories, it also gets the LaTeX packages
