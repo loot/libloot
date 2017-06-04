@@ -9,21 +9,21 @@ addons:
     packages:
       - libbz2-dev
       - libssl-dev
-      - gcc-5
-      - g++-5
+      - gcc-6
+      - g++-6
 
 cache:
   directories:
-    - $HOME/boost_1_61_0/boost
-    - $HOME/boost_1_61_0/stage/lib
+    - $HOME/boost_1_64_0/boost
+    - $HOME/boost_1_64_0/stage/lib
 
 install:
   # Use GCC 5.
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
   - export CXXFLAGS="-fPIC" CFLAGS="-fPIC"
   # Build Boost.
-  - wget https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.0.0/install_boost.py
-  - python install_boost.py --directory ~ --boost-version 1.61.0 atomic chrono date_time filesystem iostreams locale log regex system thread
+  - wget https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.4.0/install_boost.py
+  - python install_boost.py --directory ~ --boost-version 1.64.0 -a 64 -t gcc-6 atomic chrono date_time filesystem iostreams locale log regex system thread
   # Install packages for generating documentation
   - pip install --user sphinx breathe sphinx_rtd_theme
   # Add sphinx-build to PATH
@@ -35,15 +35,15 @@ install:
   # Add Doxygen binary path to PATH
   - export PATH="$PWD/doxygen-1.8.12/bin:$PATH"
   # Get CMake (version available in repositories is too old, needs to be 3.1+)
-  - wget --no-check-certificate https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz
-  - tar -xzf cmake-3.7.2-Linux-x86_64.tar.gz
-  - export PATH=$PWD/cmake-3.7.2-Linux-x86_64/bin:$PATH
+  - wget --no-check-certificate https://cmake.org/files/v3.8/cmake-3.8.2-Linux-x86_64.tar.gz
+  - tar -xzf cmake-3.8.2-Linux-x86_64.tar.gz
+  - export PATH=$PWD/cmake-3.8.2-Linux-x86_64/bin:$PATH
 
 before_script:
   - mkdir build
   - cd build
   # Link dynamically to the C++ standard library runtime.
-  - cmake .. -DBOOST_ROOT=~/boost_1_61_0
+  - cmake .. -DBOOST_ROOT=~/boost_1_64_0 -DBOOST_LIBRARYDIR=~/boost_1_64_0/stage/64/lib
 
 script:
   - make all
