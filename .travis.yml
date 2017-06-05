@@ -18,9 +18,7 @@ cache:
     - $HOME/boost_1_64_0/stage/lib
 
 install:
-  # Use GCC 5.
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
-  - export CXXFLAGS="-fPIC" CFLAGS="-fPIC"
   # Build Boost.
   - wget https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.4.0/install_boost.py
   - python install_boost.py --directory ~ --boost-version 1.64.0 -a 64 -t gcc-6 atomic chrono date_time filesystem iostreams locale log regex system thread
