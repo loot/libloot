@@ -35,7 +35,6 @@ class GameInterfaceTest : public ApiGameOperationsTest {
 protected:
   GameInterfaceTest() :
     emptyFile("EmptyFile.esm"),
-    nonPluginFile("NotAPlugin.esm"),
     pluginsToLoad({
       masterFile,
       blankEsm,
@@ -54,11 +53,9 @@ protected:
     ApiGameOperationsTest::TearDown();
 
     boost::filesystem::remove(dataPath / emptyFile);
-    boost::filesystem::remove(dataPath / nonPluginFile);
   }
 
   const std::string emptyFile;
-  const std::string nonPluginFile;
   const std::vector<std::string> pluginsToLoad;
 };
 
@@ -79,12 +76,6 @@ TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidPlugin) {
 }
 
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForANonPluginFile) {
-  // Write out an non-empty, non-plugin file.
-  boost::filesystem::ofstream out(dataPath / nonPluginFile);
-  out << "This isn't a valid plugin file.";
-  out.close();
-  ASSERT_TRUE(boost::filesystem::exists(dataPath / nonPluginFile));
-
   EXPECT_FALSE(handle_->IsValidPlugin(nonPluginFile));
 }
 

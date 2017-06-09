@@ -48,6 +48,8 @@ protected:
     lootDataPath("./local/LOOT"),
     masterFile(getMasterFile()),
     missingEsp("Blank.missing.esp"),
+    nonPluginFile("NotAPlugin.esm"),
+    invalidPlugin("Invalid.esm"),
     blankEsm("Blank.esm"),
     blankDifferentEsm("Blank - Different.esm"),
     blankMasterDependentEsm("Blank - Master Dependent.esm"),
@@ -93,6 +95,12 @@ protected:
     ASSERT_FALSE(boost::filesystem::exists(dataPath / (blankMasterDependentEsm + ".ghost")));
     ASSERT_NO_THROW(boost::filesystem::rename(dataPath / blankMasterDependentEsm, dataPath / (blankMasterDependentEsm + ".ghost")));
     ASSERT_TRUE(boost::filesystem::exists(dataPath / (blankMasterDependentEsm + ".ghost")));
+
+    // Write out an non-empty, non-plugin file.
+    boost::filesystem::ofstream out(dataPath / nonPluginFile);
+    out << "This isn't a valid plugin file.";
+    out.close();
+    ASSERT_TRUE(boost::filesystem::exists(dataPath / nonPluginFile));
   }
 
   void TearDown() {
@@ -105,6 +113,9 @@ protected:
     ASSERT_TRUE(boost::filesystem::exists(dataPath / (blankMasterDependentEsm + ".ghost")));
     ASSERT_NO_THROW(boost::filesystem::rename(dataPath / (blankMasterDependentEsm + ".ghost"), dataPath / blankMasterDependentEsm));
     ASSERT_FALSE(boost::filesystem::exists(dataPath / (blankMasterDependentEsm + ".ghost")));
+
+    ASSERT_NO_THROW(boost::filesystem::remove(dataPath / nonPluginFile));
+    ASSERT_NO_THROW(boost::filesystem::remove(dataPath / invalidPlugin));
   }
 
   std::vector<std::string> readFileLines(const boost::filesystem::path& file) {
@@ -130,6 +141,8 @@ protected:
       for (boost::filesystem::directory_iterator it(dataPath); it != boost::filesystem::directory_iterator(); ++it) {
         if (boost::filesystem::is_regular_file(it->status())) {
           std::string filename = it->path().filename().string();
+          if (filename == nonPluginFile)
+            continue;
           if (boost::ends_with(filename, ".ghost"))
             filename = it->path().stem().string();
           if (boost::ends_with(filename, ".esp") || boost::ends_with(filename, ".esm"))
@@ -185,6 +198,8 @@ protected:
 
   const std::string masterFile;
   const std::string missingEsp;
+  const std::string nonPluginFile;
+  const std::string invalidPlugin;
   const std::string blankEsm;
   const std::string blankDifferentEsm;
   const std::string blankMasterDependentEsm;

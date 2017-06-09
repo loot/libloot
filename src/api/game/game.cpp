@@ -150,7 +150,11 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
       for (auto pluginName : pluginGroup) {
         BOOST_LOG_TRIVIAL(trace) << "Loading " << pluginName;
         const bool loadHeader = boost::iequals(pluginName, masterFile_) || loadHeadersOnly;
-        cache_->AddPlugin(Plugin(Type(), DataPath(), loadOrderHandler_, pluginName, loadHeader));
+        try {
+          cache_->AddPlugin(Plugin(Type(), DataPath(), loadOrderHandler_, pluginName, loadHeader));
+        } catch(std::exception& e) {
+          BOOST_LOG_TRIVIAL(error) << "Caught exception while trying to add " << pluginName << " to the cache: " << e.what();
+        }
       }
     }));
   }

@@ -36,7 +36,6 @@ class PluginTest : public CommonGameTestFixture {
 protected:
   PluginTest() :
     emptyFile("EmptyFile.esm"),
-    nonPluginFile("NotAPlugin.esm"),
     lowercaseBlankEsp("blank.esp"),
     game_(GetParam(), dataPath.parent_path(), localPath),
     blankArchive("Blank" + GetArchiveFileExtension(game_.Type())),
@@ -49,12 +48,6 @@ protected:
     boost::filesystem::ofstream out(dataPath / emptyFile);
     out.close();
     ASSERT_TRUE(boost::filesystem::exists(dataPath / emptyFile));
-
-    // Write out an non-empty, non-plugin file.
-    out.open(dataPath / nonPluginFile);
-    out << "This isn't a valid plugin file.";
-    out.close();
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / nonPluginFile));
 
 #ifndef _WIN32
     ASSERT_NO_THROW(boost::filesystem::copy(dataPath / blankEsp, dataPath / lowercaseBlankEsp));
@@ -71,7 +64,6 @@ protected:
     CommonGameTestFixture::TearDown();
 
     boost::filesystem::remove(dataPath / emptyFile);
-    boost::filesystem::remove(dataPath / nonPluginFile);
 #ifndef _WIN32
     boost::filesystem::remove(dataPath / lowercaseBlankEsp);
 #endif
@@ -82,7 +74,6 @@ protected:
   Game game_;
 
   const std::string emptyFile;
-  const std::string nonPluginFile;
   const std::string lowercaseBlankEsp;
   const std::string blankArchive;
   const std::string blankSuffixArchive;

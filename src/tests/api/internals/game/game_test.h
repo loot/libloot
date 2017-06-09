@@ -105,6 +105,29 @@ TEST_P(GameTest, loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalle
   EXPECT_EQ(0, plugin->GetCRC());
 }
 
+TEST_P(GameTest, loadPluginsWithANonPluginShouldNotAddItToTheLoadedPlugins) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  ASSERT_THROW(game.LoadPlugins({ nonPluginFile }, false), std::invalid_argument);
+
+  ASSERT_TRUE(game.GetLoadedPlugins().empty());
+}
+
+TEST_P(GameTest, loadPluginsWithAnInvalidPluginShouldNotAddItToTheLoadedPlugins) {
+  ASSERT_FALSE(boost::filesystem::exists(dataPath / invalidPlugin));
+  ASSERT_NO_THROW(boost::filesystem::copy_file(dataPath / blankEsm, dataPath / invalidPlugin));
+  ASSERT_TRUE(boost::filesystem::exists(dataPath / invalidPlugin));
+  boost::filesystem::ofstream out(dataPath / invalidPlugin, std::fstream::app);
+  out << "GRUP0";
+  out.close();
+
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  ASSERT_NO_THROW(game.LoadPlugins({ invalidPlugin }, false));
+
+  ASSERT_TRUE(game.GetLoadedPlugins().empty());
+}
+
 TEST_P(GameTest, loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
