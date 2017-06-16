@@ -38,7 +38,9 @@ namespace fs = boost::filesystem;
 
 namespace loot {
 std::string ResolvePath(const std::string& path) {
-  if (path.empty() || !fs::is_symlink(path))
+  // NTFS junction links show up as symlinks and directories, but resolving
+  // them just appends their target path.
+  if (path.empty() || !fs::is_symlink(path) || fs::is_directory(path))
     return path;
 
   return fs::read_symlink(path).string();

@@ -37,14 +37,21 @@ class CreateGameHandleTest : public CommonGameTestFixture {
 protected:
   CreateGameHandleTest() :
     handle_(nullptr),
-    gamePathSymlink(dataPath.parent_path().string() + "symlink"),
-    localPathSymlink(localPath.string() + "symlink") {}
+    gamePathSymlink(dataPath.parent_path().string() + ".symlink"),
+    localPathSymlink(localPath.string() + ".symlink"),
+    gamePathJunctionLink(dataPath.parent_path().string() + ".junction"),
+    localPathJunctionLink(localPath.string() + ".junction") {}
 
   void SetUp() {
     CommonGameTestFixture::SetUp();
 
     boost::filesystem::create_directory_symlink(dataPath.parent_path(), gamePathSymlink);
     boost::filesystem::create_directory_symlink(localPath, localPathSymlink);
+
+#ifdef _WIN32
+    system(("mklink /J \"" + boost::filesystem::absolute(gamePathJunctionLink).string() + "\" \"" + boost::filesystem::absolute(dataPath).parent_path().string() + "\"").c_str());
+    system(("mklink /J \"" + boost::filesystem::absolute(localPathJunctionLink).string() + "\" \"" + boost::filesystem::absolute(localPath).string() + "\"").c_str());
+#endif
   }
 
   void TearDown() {
@@ -52,12 +59,16 @@ protected:
 
     boost::filesystem::remove(gamePathSymlink);
     boost::filesystem::remove(localPathSymlink);
+    boost::filesystem::remove(gamePathJunctionLink);
+    boost::filesystem::remove(localPathJunctionLink);
   }
 
   std::shared_ptr<GameInterface> handle_;
 
   const boost::filesystem::path gamePathSymlink;
   const boost::filesystem::path localPathSymlink;
+  const boost::filesystem::path gamePathJunctionLink;
+  const boost::filesystem::path localPathJunctionLink;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -104,6 +115,13 @@ TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathSymlinks) {
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), gamePathSymlink.string(), localPathSymlink.string()));
   EXPECT_NE(nullptr, handle_);
 }
+
+#ifdef _WIN32
+TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathJunctionLinks) {
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), gamePathJunctionLink.string(), localPathJunctionLink.string()));
+  EXPECT_NE(nullptr, handle_);
+}
+#endif
 }
 }
 
