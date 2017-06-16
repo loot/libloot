@@ -216,7 +216,7 @@ void GitHelper::CheckoutNewBranch(const std::string& remote, const std::string& 
   // Create a branch.
   BOOST_LOG_TRIVIAL(trace) << "Creating the new branch.";
   Call(git_commit_lookup(&data_.commit, data_.repo, commit_id));
-  Call(git_branch_create(&data_.reference, data_.repo, branch.c_str(), data_.commit, 0));
+  Call(git_branch_create(&data_.reference, data_.repo, branch.c_str(), data_.commit, 1));
 
   // Set upstream.
   BOOST_LOG_TRIVIAL(trace) << "Setting the upstream for the new branch.";
