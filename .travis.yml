@@ -15,7 +15,7 @@ addons:
 cache:
   directories:
     - $HOME/boost_1_64_0/boost
-    - $HOME/boost_1_64_0/stage/lib
+    - $HOME/boost_1_64_0/stage/64/lib
 
 install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
