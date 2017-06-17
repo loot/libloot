@@ -181,8 +181,8 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
           // The local branch can't be easily merged. Best just to delete and recreate it.
         BOOST_LOG_TRIVIAL(trace) << "Local branch cannot be easily merged with remote branch.";
 
-        BOOST_LOG_TRIVIAL(trace) << "Deleting the local branch.";
-        git.Call(git_branch_delete(git.GetData().reference));
+        BOOST_LOG_TRIVIAL(trace) << "Detaching HEAD so that the branch can be recreated.";
+        git.Call(git_repository_detach_head(git.GetData().repo));
 
         // Need to free ref before calling git.CheckoutNewBranch()
         git_reference_free(git.GetData().reference);

@@ -47,6 +47,9 @@ build:
 
 test_script:
   - cd %APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%
+  # Some tests call Git, so set a user
+  - git config --global user.email "appveyor@ci"
+  - git config --global user.name "AppVeyor"
   - loot_api_internals_tests.exe --gtest_output=xml:loot_api_internals_tests.xml
   - loot_api_tests.exe --gtest_output=xml:loot_api_tests.xml
 

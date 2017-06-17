@@ -45,6 +45,9 @@ before_script:
 
 script:
   - make all
+  # Some tests call Git, so set a user
+  - git config --global user.email "travis@ci"
+  - git config --global user.name "Travis"
   - ./loot_api_internals_tests
   - ./loot_api_tests
 

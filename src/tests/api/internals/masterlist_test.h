@@ -71,19 +71,19 @@ INSTANTIATE_TEST_CASE_P(,
                           GameType::fo4,
                           GameType::tes5se));
 
-TEST_P(MasterlistTest, updateWithSeparateParametersShouldThrowIfAnInvalidPathIsGiven) {
+TEST_P(MasterlistTest, updateShouldThrowIfAnInvalidPathIsGiven) {
   Masterlist masterlist;
 
   EXPECT_THROW(masterlist.Update(";//\?", repoUrl, repoBranch), boost::filesystem::filesystem_error);
 }
 
-TEST_P(MasterlistTest, updateWithSeparateParametersShouldThrowIfABlankPathIsGiven) {
+TEST_P(MasterlistTest, updateShouldThrowIfABlankPathIsGiven) {
   Masterlist masterlist;
 
   EXPECT_THROW(masterlist.Update("", repoUrl, repoBranch), boost::filesystem::filesystem_error);
 }
 
-TEST_P(MasterlistTest, updateWithSeparateParametersShouldThrowIfABranchThatDoesNotExistIsGiven) {
+TEST_P(MasterlistTest, updateShouldThrowIfABranchThatDoesNotExistIsGiven) {
   Masterlist masterlist;
 
   EXPECT_THROW(masterlist.Update(masterlistPath,
@@ -91,13 +91,13 @@ TEST_P(MasterlistTest, updateWithSeparateParametersShouldThrowIfABranchThatDoesN
                                  "missing-branch"), std::system_error);
 }
 
-TEST_P(MasterlistTest, updateWithSeparateParametersShouldThrowIfABlankBranchIsGiven) {
+TEST_P(MasterlistTest, updateShouldThrowIfABlankBranchIsGiven) {
   Masterlist masterlist;
 
   EXPECT_THROW(masterlist.Update(masterlistPath, repoUrl, ""), std::invalid_argument);
 }
 
-TEST_P(MasterlistTest, updateWithSeparateParametersShouldThrowIfAUrlThatDoesNotExistIsGiven) {
+TEST_P(MasterlistTest, updateShouldThrowIfAUrlThatDoesNotExistIsGiven) {
   Masterlist masterlist;
 
   EXPECT_THROW(masterlist.Update(masterlistPath,
@@ -105,19 +105,19 @@ TEST_P(MasterlistTest, updateWithSeparateParametersShouldThrowIfAUrlThatDoesNotE
                                  repoBranch), std::system_error);
 }
 
-TEST_P(MasterlistTest, updateWithSeparateParametersShouldThrowIfABlankUrlIsGiven) {
+TEST_P(MasterlistTest, updateShouldThrowIfABlankUrlIsGiven) {
   Masterlist masterlist;
   EXPECT_THROW(masterlist.Update(masterlistPath, "", repoBranch), std::invalid_argument);
 }
 
-TEST_P(MasterlistTest, updateWithSeparateParametersShouldReturnTrueIfNoMasterlistExists) {
+TEST_P(MasterlistTest, updateShouldReturnTrueIfNoMasterlistExists) {
   Masterlist masterlist;
   EXPECT_TRUE(masterlist.Update(masterlistPath,
                                 repoUrl,
                                 repoBranch));
 }
 
-TEST_P(MasterlistTest, updateWithSeparateParametersShouldReturnFalseIfAnUpToDateMasterlistExists) {
+TEST_P(MasterlistTest, updateShouldReturnFalseIfAnUpToDateMasterlistExists) {
   Masterlist masterlist;
 
   EXPECT_TRUE(masterlist.Update(masterlistPath,
@@ -127,6 +127,18 @@ TEST_P(MasterlistTest, updateWithSeparateParametersShouldReturnFalseIfAnUpToDate
   EXPECT_FALSE(masterlist.Update(masterlistPath,
                                  repoUrl,
                                  repoBranch));
+}
+
+TEST_P(MasterlistTest, updateShouldDiscardLocalHistoryIfRemoteHistoryIsDifferent) {
+  Masterlist masterlist;
+  ASSERT_TRUE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
+
+  auto testPath = boost::filesystem::current_path();
+  boost::filesystem::current_path(masterlistPath.parent_path());
+  system("git commit --amend -m \"changing local history\"");
+  boost::filesystem::current_path(testPath);
+
+  EXPECT_TRUE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
 }
 
 TEST_P(MasterlistTest, getInfoShouldThrowIfNoMasterlistExistsAtTheGivenPath) {
