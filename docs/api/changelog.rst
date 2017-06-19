@@ -2,6 +2,21 @@
 Version History
 ***************
 
+0.11.1 - 2017-06-19
+===================
+
+Fixed
+-----
+
+- A crash would occur when loading an plugin that had invalid data past its
+  header. Such plugins are now just silently ignored.
+- :cpp:any:`loot::CreateGameHandle()` would not resolve game or local data paths
+  that are junction links correctly, which caused problems later when trying to
+  perform actions such as loading plugins.
+- Performing a masterlist update on a branch where the remote and local
+  histories had diverged would fail. The existing local branch is now discarded
+  and the remote branch checked out anew, as intended.
+
 0.11.0 - 2017-05-13
 ===================
 
