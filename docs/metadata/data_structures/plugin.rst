@@ -79,7 +79,7 @@ This is the structure that brings all the others together, and forms the main co
 
   ``cleaning data set``
 
-  An unordered set of cleaning data structures for this plugin, identifying clean plugins. Plugin entries with regular expression filenames **must not** contain cleaning data. The ``itm``, ```udr`` and ``nav`` fields are unused in this context, as they're assumed to be zero.
+  An unordered set of cleaning data structures for this plugin, identifying clean plugins. Plugin entries with regular expression filenames **must not** contain cleaning data. The ``itm``, ``udr`` and ``nav`` fields are unused in this context, as they're assumed to be zero.
 
 Equality
 --------
