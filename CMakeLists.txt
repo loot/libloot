@@ -84,7 +84,7 @@ set(LIBGIT2_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_
 ExternalProject_Add(libloadorder
                     PREFIX "external"
                     DEPENDS libespm
-                    URL "https://github.com/WrinklyNinja/libloadorder/archive/9.5.4.tar.gz"
+                    URL "https://github.com/WrinklyNinja/libloadorder/archive/9.5.5.tar.gz"
                     CMAKE_ARGS -DBOOST_ROOT=${BOOST_ROOT} -DBOOST_LIBRARYDIR=${BOOST_LIBRARYDIR} -DMSVC_STATIC_RUNTIME=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
                     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target loadorder --config $(CONFIGURATION)
                     INSTALL_COMMAND "")
