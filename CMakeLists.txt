@@ -278,7 +278,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
                    curl
                    z
                    crypto
-                   rt)
+                   rt
+                   pthread)
 ENDIF ()
 
 IF (MSVC)
