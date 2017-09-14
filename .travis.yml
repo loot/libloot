@@ -20,7 +20,7 @@ cache:
 install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
   # Build Boost.
-  - wget https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.4.0/install_boost.py
+  - wget https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.5.0/install_boost.py
   - python install_boost.py --directory ~ --boost-version 1.64.0 -a 64 -t gcc-6 atomic chrono date_time filesystem iostreams locale log regex system thread
   # Install packages for generating documentation
   - pip install --user -r docs/requirements.txt

@@ -56,7 +56,7 @@ find_package(Boost REQUIRED COMPONENTS atomic log log_setup regex locale thread 
 ExternalProject_Add(GTest
                     PREFIX "external"
                     URL "https://github.com/google/googletest/archive/release-1.8.0.tar.gz"
-                    CMAKE_ARGS -Dgtest_force_shared_crt=${MSVC_SHARED_RUNTIME}
+                    CMAKE_ARGS -Dgtest_force_shared_crt=${MSVC_SHARED_RUNTIME} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
 set (GTEST_INCLUDE_DIRS "${SOURCE_DIR}/googletest/include")
@@ -85,7 +85,7 @@ ExternalProject_Add(libloadorder
                     PREFIX "external"
                     DEPENDS libespm
                     URL "https://github.com/WrinklyNinja/libloadorder/archive/9.5.5.tar.gz"
-                    CMAKE_ARGS -DBOOST_ROOT=${BOOST_ROOT} -DBOOST_LIBRARYDIR=${BOOST_LIBRARYDIR} -DMSVC_STATIC_RUNTIME=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
+                    CMAKE_ARGS -DBOOST_ROOT=${BOOST_ROOT} -DBOOST_LIBRARYDIR=${BOOST_LIBRARYDIR} -DMSVC_STATIC_RUNTIME=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target loadorder --config $(CONFIGURATION)
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(libloadorder SOURCE_DIR BINARY_DIR)
@@ -118,7 +118,7 @@ ExternalProject_Add(testing-plugins
 ExternalProject_Add(yaml-cpp
                     PREFIX "external"
                     URL "https://github.com/WrinklyNinja/yaml-cpp/archive/patched-for-loot.tar.gz"
-                    CMAKE_ARGS -DMSVC_SHARED_RT=${MSVC_SHARED_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
+                    CMAKE_ARGS -DMSVC_SHARED_RT=${MSVC_SHARED_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target yaml-cpp --config $(CONFIGURATION)
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(yaml-cpp SOURCE_DIR BINARY_DIR)
@@ -268,7 +268,7 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions (-DUNICODE -D_UNICODE -DLIBLO_STATIC)
 ENDIF ()
 
-IF (CMAKE_COMPILER_IS_GNUCXX)
+IF (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};.")
     set (CMAKE_BUILD_WITH_INSTALL_RPATH ON)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -std=c++14")
@@ -280,6 +280,10 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
                    crypto
                    rt
                    pthread)
+
+    IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set (LOOT_LIBS ${LOOT_LIBS} supc++)
+    ENDIF ()
 ENDIF ()
 
 IF (MSVC)

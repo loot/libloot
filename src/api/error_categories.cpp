@@ -22,6 +22,8 @@
     <https://www.gnu.org/licenses/>.
     */
 
+#include <string>
+
 #include "loot/exception/error_categories.h"
 
 namespace loot {
