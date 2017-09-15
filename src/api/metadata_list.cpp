@@ -80,6 +80,10 @@ void MetadataList::Save(const boost::filesystem::path& filepath) const {
     emitter << YAML::Key << "globals" << YAML::Value << messages_;
 
   auto plugins = Plugins();
+  plugins.sort([](const PluginMetadata& p1, const PluginMetadata& p2) {
+    return p1.GetLowercasedName() < p2.GetLowercasedName();
+  });
+
   if (!plugins.empty())
     emitter << YAML::Key << "plugins" << YAML::Value << plugins;
 
