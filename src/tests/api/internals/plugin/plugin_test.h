@@ -269,36 +269,6 @@ TEST_P(PluginTest, doFormIDsOverlapShouldReturnTrueIfOnePluginOverridesTheOthers
   EXPECT_TRUE(plugin1.DoFormIDsOverlap(plugin2));
   EXPECT_TRUE(plugin2.DoFormIDsOverlap(plugin1));
 }
-
-TEST_P(PluginTest, overlapFormIDsShouldReturnAnEmptySetForTwoPluginsWithOnlyHeadersLoaded) {
-  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true);
-  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsm, true);
-
-  EXPECT_TRUE(plugin1.OverlapFormIDs(plugin2).empty());
-  EXPECT_TRUE(plugin2.OverlapFormIDs(plugin1).empty());
-}
-
-TEST_P(PluginTest, overlapFormIDsShouldReturnAnEmptySetIfThePluginsHaveUnrelatedRecords) {
-  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false);
-  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsp, false);
-
-  EXPECT_TRUE(plugin1.OverlapFormIDs(plugin2).empty());
-  EXPECT_TRUE(plugin2.OverlapFormIDs(plugin1).empty());
-}
-
-TEST_P(PluginTest, overlapFormIDsShouldReturnTheFormIDsOfRecordsAddedByOnePluginAndOverriddenByTheOther) {
-  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, false);
-  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsm, false);
-
-  std::set<libespm::FormId> expectedFormIds({
-      libespm::FormId(blankEsm, std::vector<std::string>(), 0xCF0),
-      libespm::FormId(blankEsm, std::vector<std::string>(), 0xCF1),
-      libespm::FormId(blankEsm, std::vector<std::string>(), 0xCF2),
-      libespm::FormId(blankEsm, std::vector<std::string>(), 0xCF3),
-  });
-  EXPECT_EQ(expectedFormIds, plugin1.OverlapFormIDs(plugin2));
-  EXPECT_EQ(expectedFormIds, plugin2.OverlapFormIDs(plugin1));
-}
 }
 }
 

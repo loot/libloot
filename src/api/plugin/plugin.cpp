@@ -176,20 +176,6 @@ size_t Plugin::NumOverrideFormIDs() const {
   return numOverrideRecords_;
 }
 
-std::set<FormId> Plugin::OverlapFormIDs(const Plugin& plugin) const {
-  set<FormId> formIds(getFormIds());
-  set<FormId> otherFormIds(plugin.getFormIds());
-  set<FormId> overlap;
-
-  set_intersection(begin(formIds),
-                   end(formIds),
-                   begin(otherFormIds),
-                   end(otherFormIds),
-                   inserter(overlap, end(overlap)));
-
-  return overlap;
-}
-
 bool Plugin::IsValid(const std::string& filename, const GameType gameType, const boost::filesystem::path& dataPath) {
   BOOST_LOG_TRIVIAL(trace) << "Checking to see if \"" << filename << "\" is a valid plugin.";
 

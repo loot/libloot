@@ -63,7 +63,6 @@ public:
 
   //Load ordering functions.
   size_t NumOverrideFormIDs() const;
-  std::set<libespm::FormId> OverlapFormIDs(const Plugin& plugin) const;
 
   // Validity checks.
   static bool IsValid(const std::string& filename, const GameType gameType, const boost::filesystem::path& dataPath);
@@ -82,7 +81,6 @@ private:
   std::string version_;  //Obtained from description field.
   uint32_t crc_;
   std::set<Tag> tags_;
-  std::vector<Message> messages_;
 
   //Useful caches.
   size_t numOverrideRecords_;
