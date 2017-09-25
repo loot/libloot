@@ -74,18 +74,7 @@ void LoadOrderHandler::Init(const GameType& gameType,
   else
     ret = LIBLO_ERROR_INVALID_ARGS;
 
-  if (ret != LIBLO_OK && ret != LIBLO_WARN_LO_MISMATCH) {
-    const char * e = nullptr;
-    string err;
-    lo_get_error_message(&e);
-    if (e == nullptr) {
-      err = "libloadorder failed to create a game handle. Details could not be fetched.";
-    } else {
-      err = (format("libloadorder failed to create a game handle. Details: %1%") % e).str();
-    }
-
-    throw std::system_error(ret, libloadorder_category(), err);
-  }
+  HandleError("create a game handle", ret);
 }
 
 bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
@@ -93,18 +82,8 @@ bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
 
   bool result = false;
   unsigned int ret = lo_get_plugin_active(gh_, pluginName.c_str(), &result);
-  if (ret != LIBLO_OK) {
-    const char * e = nullptr;
-    string err;
-    lo_get_error_message(&e);
-    if (e == nullptr) {
-      err = "libloadorder failed to check if a plugin is active. Details could not be fetched.";
-    } else {
-      err = (format("libloadorder failed to check if a plugin is active. Details: %1%") % e).str();
-    }
 
-    throw std::system_error(ret, libloadorder_category(), err);
-  }
+  HandleError("check if a plugin is active", ret);
 
   return result;
 }
@@ -116,18 +95,8 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
   size_t pluginArrSize;
 
   unsigned int ret = lo_get_load_order(gh_, &pluginArr, &pluginArrSize);
-  if (ret != LIBLO_OK && ret != LIBLO_WARN_LO_MISMATCH) {
-    const char * e = nullptr;
-    string err;
-    lo_get_error_message(&e);
-    if (e == nullptr) {
-      err = "libloadorder failed to get the load order. Details could not be fetched.";
-    } else {
-      err = (format("libloadorder failed to get the load order. Details: %1%") % e).str();
-    }
 
-    throw std::system_error(ret, libloadorder_category(), err);
-  }
+  HandleError("get the load order", ret);
 
   std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
   lo_free_string_array(pluginArr, pluginArrSize);
@@ -153,17 +122,25 @@ void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) c
     delete[] pluginArr[i];
   delete[] pluginArr;
 
-  if (ret != LIBLO_OK && ret != LIBLO_WARN_LO_MISMATCH) {
-    const char * e = nullptr;
-    string err;
-    lo_get_error_message(&e);
-    if (e == nullptr) {
-      err = "libloadorder failed to set the load order. Details could not be fetched.";
-    } else {
-      err = (format("libloadorder failed to set the load order. Details: %1%") % e).str();
-    }
+  HandleError("set the load order", ret);
+}
 
-    throw std::system_error(ret, libloadorder_category(), err);
+void LoadOrderHandler::HandleError(const std::string& operation, unsigned int returnCode) const {
+  if (returnCode == LIBLO_OK || returnCode == LIBLO_WARN_LO_MISMATCH) {
+    return;
   }
+
+  const char * e = nullptr;
+  string err;
+  lo_get_error_message(&e);
+  if (e == nullptr) {
+    err = "libloadorder failed to " + operation + ". Details could not be fetched.";
+  }
+  else {
+    err = (format("libloadorder failed to set the load order. Details: %1%") % e).str();
+  }
+
+  BOOST_LOG_TRIVIAL(error) << err;
+  throw std::system_error(returnCode, libloadorder_category(), err);
 }
 }

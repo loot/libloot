@@ -50,6 +50,8 @@ public:
 
   void SetLoadOrder(const std::vector<std::string>& loadOrder) const;
 private:
+  void HandleError(const std::string& operation, unsigned int returnCode) const;
+
   lo_game_handle gh_;
 };
 }
