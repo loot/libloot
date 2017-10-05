@@ -100,14 +100,19 @@ set(LIBGIT2_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_
 
 ExternalProject_Add(libloadorder
                     PREFIX "external"
-                    DEPENDS libespm
-                    URL "https://github.com/WrinklyNinja/libloadorder/archive/9.5.5.tar.gz"
-                    CMAKE_ARGS -DBOOST_ROOT=${BOOST_ROOT} -DBOOST_LIBRARYDIR=${BOOST_LIBRARYDIR} -DMSVC_STATIC_RUNTIME=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-                    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target loadorder --config $(CONFIGURATION)
+                    URL "https://github.com/WrinklyNinja/libloadorder/archive/rust-rewrite.tar.gz"
+                    CONFIGURE_COMMAND ""
+                    BUILD_IN_SOURCE 1
+                    BUILD_COMMAND cargo build --release --all --all-features --target ${RUST_TARGET}
                     INSTALL_COMMAND "")
-ExternalProject_Get_Property(libloadorder SOURCE_DIR BINARY_DIR)
-set(LIBLOADORDER_INCLUDE_DIRS "${SOURCE_DIR}/include")
-set(LIBLOADORDER_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}loadorder${CMAKE_STATIC_LIBRARY_SUFFIX}")
+ExternalProject_Get_Property(libloadorder SOURCE_DIR)
+set(LIBLOADORDER_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
+set(LIBLOADORDER_LIBRARIES "${SOURCE_DIR}/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}loadorder_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
+IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set (LIBLOADORDER_LIBRARIES ${LIBLOADORDER_LIBRARIES} Userenv)
+ELSE ()
+    set (LIBLOADORDER_LIBRARIES ${LIBLOADORDER_LIBRARIES} dl)
+ENDIF ()
 
 ExternalProject_Add(pseudosem
                     PREFIX "external"

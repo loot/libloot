@@ -30,7 +30,7 @@
 #include <unordered_set>
 
 #include <boost/filesystem.hpp>
-#include <libloadorder/libloadorder.h>
+#include <libloadorder.hpp>
 
 #include "loot/enum/game_type.h"
 

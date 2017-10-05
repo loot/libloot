@@ -40,8 +40,8 @@ LoadOrderHandler::~LoadOrderHandler() {
   lo_destroy_handle(gh_);
 }
 
-void LoadOrderHandler::Init(const GameType& gameType, 
-                            const boost::filesystem::path& gamePath, 
+void LoadOrderHandler::Init(const GameType& gameType,
+                            const boost::filesystem::path& gamePath,
                             const boost::filesystem::path& gameLocalAppData) {
   if (gamePath.empty()) {
     throw std::invalid_argument("Game path is not initialised.");
@@ -52,7 +52,7 @@ void LoadOrderHandler::Init(const GameType& gameType,
   if (!tempPathString.empty())
     gameLocalDataPath = tempPathString.c_str();
 
-// If the handle has already been initialised, close it and open another.
+  // If the handle has already been initialised, close it and open another.
   if (gh_ != nullptr) {
     lo_destroy_handle(gh_);
     gh_ = nullptr;
@@ -74,7 +74,7 @@ void LoadOrderHandler::Init(const GameType& gameType,
   else
     ret = LIBLO_ERROR_INVALID_ARGS;
 
-  if (ret != LIBLO_OK && ret != LIBLO_WARN_BAD_FILENAME && ret != LIBLO_WARN_INVALID_LIST && ret != LIBLO_WARN_LO_MISMATCH) {
+  if (ret != LIBLO_OK && ret != LIBLO_WARN_LO_MISMATCH) {
     const char * e = nullptr;
     string err;
     lo_get_error_message(&e);
@@ -83,7 +83,7 @@ void LoadOrderHandler::Init(const GameType& gameType,
     } else {
       err = (format("libloadorder failed to create a game handle. Details: %1%") % e).str();
     }
-    lo_cleanup();
+
     throw std::system_error(ret, libloadorder_category(), err);
   }
 }
@@ -93,7 +93,7 @@ bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
 
   bool result = false;
   unsigned int ret = lo_get_plugin_active(gh_, pluginName.c_str(), &result);
-  if (ret != LIBLO_OK && ret != LIBLO_WARN_BAD_FILENAME) {
+  if (ret != LIBLO_OK) {
     const char * e = nullptr;
     string err;
     lo_get_error_message(&e);
@@ -102,7 +102,7 @@ bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
     } else {
       err = (format("libloadorder failed to check if a plugin is active. Details: %1%") % e).str();
     }
-    lo_cleanup();
+
     throw std::system_error(ret, libloadorder_category(), err);
   }
 
@@ -116,7 +116,7 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
   size_t pluginArrSize;
 
   unsigned int ret = lo_get_load_order(gh_, &pluginArr, &pluginArrSize);
-  if (ret != LIBLO_OK && ret != LIBLO_WARN_BAD_FILENAME && ret != LIBLO_WARN_INVALID_LIST && ret != LIBLO_WARN_LO_MISMATCH) {
+  if (ret != LIBLO_OK && ret != LIBLO_WARN_LO_MISMATCH) {
     const char * e = nullptr;
     string err;
     lo_get_error_message(&e);
@@ -125,14 +125,13 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
     } else {
       err = (format("libloadorder failed to get the load order. Details: %1%") % e).str();
     }
-    lo_cleanup();
+
     throw std::system_error(ret, libloadorder_category(), err);
   }
 
-  std::vector<string> loadOrder;
-  for (size_t i = 0; i < pluginArrSize; ++i) {
-    loadOrder.push_back(string(pluginArr[i]));
-  }
+  std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
+  lo_free_string_array(pluginArr, pluginArrSize);
+
   return loadOrder;
 }
 
@@ -154,7 +153,7 @@ void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) c
     delete[] pluginArr[i];
   delete[] pluginArr;
 
-  if (ret != LIBLO_OK && ret != LIBLO_WARN_BAD_FILENAME && ret != LIBLO_WARN_INVALID_LIST && ret != LIBLO_WARN_LO_MISMATCH) {
+  if (ret != LIBLO_OK && ret != LIBLO_WARN_LO_MISMATCH) {
     const char * e = nullptr;
     string err;
     lo_get_error_message(&e);
@@ -163,7 +162,6 @@ void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) c
     } else {
       err = (format("libloadorder failed to set the load order. Details: %1%") % e).str();
     }
-    lo_cleanup();
 
     throw std::system_error(ret, libloadorder_category(), err);
   }
