@@ -45,6 +45,8 @@ protected:
   inline void SetUp() {
     CommonGameTestFixture::SetUp();
 
+    game_.LoadCurrentLoadOrderState();
+
     // Write out an empty resource file.
     ASSERT_NO_THROW(boost::filesystem::create_directories(resourcePath.parent_path()));
     boost::filesystem::ofstream out(resourcePath);

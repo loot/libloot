@@ -63,7 +63,7 @@ public:
   /**
    * @brief Parses plugins and loads their data.
    * @details Any previously-loaded plugin data is discarded when this function
-   *          is called.
+   *          is called. This function also loads the current load order state.
    * @param plugins
    *        The filenames of the plugins to load.
    * @param loadHeadersOnly
@@ -126,6 +126,16 @@ public:
   *  @name Load Order Interaction
   *  @{
   */
+
+  /**
+   * 
+   * @brief Load the current load order state, discarding any previously held
+   *        state.
+   * @details This function should be called whenever the load order or active
+   *          state of plugins "on disk" changes, so that the cached state is
+   *          updated to reflect the changes.
+   */
+  virtual void LoadCurrentLoadOrderState() = 0;
 
   /**
    * @brief Check if a plugin is active.

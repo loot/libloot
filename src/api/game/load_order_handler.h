@@ -44,6 +44,8 @@ public:
             const boost::filesystem::path& gamePath,
             const boost::filesystem::path& gameLocalAppData = "");
 
+  void LoadCurrentState();
+
   std::vector<std::string> GetLoadOrder() const;
 
   bool IsPluginActive(const std::string& pluginName) const;

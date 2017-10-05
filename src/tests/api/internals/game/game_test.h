@@ -145,18 +145,21 @@ TEST_P(GameTest, loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugi
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasNotBeenLoaded) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  game.LoadCurrentLoadOrderState();
 
   EXPECT_TRUE(game.IsPluginActive(blankEsm));
 }
 
 TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItHasNotBeenLoaded) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  game.LoadCurrentLoadOrderState();
 
   EXPECT_FALSE(game.IsPluginActive(blankEsp));
 }
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItsHeaderHasBeenLoaded) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  game.LoadCurrentLoadOrderState();
 
   ASSERT_NO_THROW(loadInstalledPlugins(game, true));
 
@@ -165,6 +168,7 @@ TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItsHeaderHasBeenLoaded) {
 
 TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItsHeaderHasBeenLoaded) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  game.LoadCurrentLoadOrderState();
 
   ASSERT_NO_THROW(loadInstalledPlugins(game, true));
 
@@ -173,6 +177,7 @@ TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItsHeaderHasBeenLoaded) {
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasBeenFullyLoaded) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  game.LoadCurrentLoadOrderState();
 
   ASSERT_NO_THROW(loadInstalledPlugins(game, false));
 
@@ -181,6 +186,7 @@ TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasBeenFullyLoaded) {
 
 TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItHasBeenFullyLoaded) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  game.LoadCurrentLoadOrderState();
 
   ASSERT_NO_THROW(loadInstalledPlugins(game, false));
 

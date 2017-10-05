@@ -158,18 +158,22 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
 }
 
 TEST_P(GameInterfaceTest, isPluginActiveShouldReturnFalseIfTheGivenPluginIsNotActive) {
+  handle_->LoadCurrentLoadOrderState();
   EXPECT_TRUE(handle_->IsPluginActive(blankEsm));
 }
 
 TEST_P(GameInterfaceTest, isPluginActiveShouldReturnTrueIfTheGivenPluginIsActive) {
+  handle_->LoadCurrentLoadOrderState();
   EXPECT_FALSE(handle_->IsPluginActive(blankEsp));
 }
 
 TEST_P(GameInterfaceTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
+  handle_->LoadCurrentLoadOrderState();
   ASSERT_EQ(getLoadOrder(), handle_->GetLoadOrder());
 }
 
 TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
+  handle_->LoadCurrentLoadOrderState();
   std::vector<std::string> loadOrder({
     masterFile,
     blankEsm,

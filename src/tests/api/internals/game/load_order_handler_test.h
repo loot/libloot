@@ -92,8 +92,17 @@ TEST_P(LoadOrderHandlerTest, isPluginActiveShouldThrowIfTheHandlerHasNotBeenInit
   EXPECT_THROW(loadOrderHandler_.IsPluginActive(masterFile), std::system_error);
 }
 
+TEST_P(LoadOrderHandlerTest, isPluginActiveShouldReturnFalseIfLoadOrderStateHasNotBeenLoaded) {
+  initialiseHandler();
+
+  EXPECT_FALSE(loadOrderHandler_.IsPluginActive(masterFile));
+  EXPECT_FALSE(loadOrderHandler_.IsPluginActive(blankEsm));
+  EXPECT_FALSE(loadOrderHandler_.IsPluginActive(blankEsp));
+}
+
 TEST_P(LoadOrderHandlerTest, isPluginActiveShouldReturnCorrectPluginStatesAfterInitialisation) {
   initialiseHandler();
+  loadOrderHandler_.LoadCurrentState();
 
   EXPECT_TRUE(loadOrderHandler_.IsPluginActive(masterFile));
   EXPECT_TRUE(loadOrderHandler_.IsPluginActive(blankEsm));
@@ -104,8 +113,15 @@ TEST_P(LoadOrderHandlerTest, getLoadOrderShouldThrowIfTheHandlerHasNotBeenInitia
   EXPECT_THROW(loadOrderHandler_.GetLoadOrder(), std::system_error);
 }
 
+TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnAnEmptyVectorIfStateHasNotBeenLoaded) {
+  initialiseHandler();
+
+  EXPECT_TRUE(loadOrderHandler_.GetLoadOrder().empty());
+}
+
 TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
   initialiseHandler();
+  loadOrderHandler_.LoadCurrentState();
 
   ASSERT_EQ(getLoadOrder(), loadOrderHandler_.GetLoadOrder());
 }
@@ -116,6 +132,7 @@ TEST_P(LoadOrderHandlerTest, setLoadOrderShouldThrowIfTheHandlerHasNotBeenInitia
 
 TEST_P(LoadOrderHandlerTest, setLoadOrderShouldSetTheLoadOrder) {
   initialiseHandler();
+  loadOrderHandler_.LoadCurrentState();
 
   EXPECT_NO_THROW(loadOrderHandler_.SetLoadOrder(loadOrderToSet_));
 

@@ -44,6 +44,8 @@ protected:
   void SetUp() {
     CommonGameTestFixture::SetUp();
 
+    game_.LoadCurrentLoadOrderState();
+
     // Write out an empty file.
     boost::filesystem::ofstream out(dataPath / emptyFile);
     out.close();

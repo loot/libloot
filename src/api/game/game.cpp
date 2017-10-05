@@ -140,6 +140,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
 
   // Clear the existing plugin cache.
   cache_->ClearCachedPlugins();
+  loadOrderHandler_->LoadCurrentState();
 
   // Load the plugins.
   BOOST_LOG_TRIVIAL(trace) << "Starting plugin loading.";
@@ -189,6 +190,10 @@ std::vector<std::string> Game::SortPlugins(const std::vector<std::string>& plugi
   //Sort plugins into their load order.
   PluginSorter sorter;
   return sorter.Sort(*this);
+}
+
+void Game::LoadCurrentLoadOrderState() {
+  loadOrderHandler_->LoadCurrentState();
 }
 
 bool Game::IsPluginActive(const std::string& plugin) const {

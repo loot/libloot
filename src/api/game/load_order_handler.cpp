@@ -77,6 +77,14 @@ void LoadOrderHandler::Init(const GameType& gameType,
   HandleError("create a game handle", ret);
 }
 
+void LoadOrderHandler::LoadCurrentState() {
+  BOOST_LOG_TRIVIAL(debug) << "Loading the current load order state.";
+
+  unsigned int ret = lo_load_current_state(gh_);
+
+  HandleError("load the current load order state", ret);
+}
+
 bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
   BOOST_LOG_TRIVIAL(debug) << "Checking if plugin \"" << pluginName << "\" is active.";
 
