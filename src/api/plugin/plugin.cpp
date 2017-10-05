@@ -37,7 +37,6 @@
 #include "api/helpers/version.h"
 #include "loot/exception/file_access_error.h"
 
-using libespm::FormId;
 using std::set;
 using std::string;
 
@@ -48,7 +47,7 @@ Plugin::Plugin(const GameType gameType,
                const std::string& name,
                const bool headerOnly) :
   name_(name),
-  libespm::Plugin(Plugin::GetLibespmGameId(gameType)),
+  esPlugin(nullptr),
   isEmpty_(true),
   isActive_(false),
   loadsArchive_(false),
@@ -61,23 +60,26 @@ Plugin::Plugin(const GameType gameType,
     if (!boost::filesystem::exists(filepath) && boost::filesystem::exists(filepath.string() + ".ghost"))
       filepath += ".ghost";
 
-    load(filepath, headerOnly);
+    Load(filepath, gameType, headerOnly);
 
-    isEmpty_ = getRecordAndGroupCount() == 0;
+    auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
+    if (ret != ESP_OK) {
+      throw FileAccessError(name + " : Libespm error code: " + std::to_string(ret));
+    }
 
     if (!headerOnly) {
       BOOST_LOG_TRIVIAL(trace) << name_ << ": Caching CRC value.";
       crc_ = GetCrc32(filepath);
-    }
 
-    BOOST_LOG_TRIVIAL(trace) << name_ << ": Counting override FormIDs.";
-    for (const auto& formID : getFormIds()) {
-      if (!boost::iequals(formID.getPluginName(), name_))
-        ++numOverrideRecords_;
+      BOOST_LOG_TRIVIAL(trace) << name_ << ": Counting override FormIDs.";
+      ret = esp_plugin_count_override_records(esPlugin.get(), &numOverrideRecords_);
+      if (ret != ESP_OK) {
+        throw FileAccessError(name + " : Libespm error code: " + std::to_string(ret));
+      }
     }
 
     //Also read Bash Tags applied and version string in description.
-    string text = getDescription();
+    string text = GetDescription();
     BOOST_LOG_TRIVIAL(trace) << name_ << ": " << "Attempting to extract Bash Tags from the description.";
     size_t pos1 = text.find("{{BASH:");
     if (pos1 != string::npos && pos1 + 7 != text.length()) {
@@ -118,11 +120,21 @@ std::string Plugin::GetLowercasedName() const {
 }
 
 std::string Plugin::GetVersion() const {
-  return Version(getDescription()).AsString();
+  return Version(GetDescription()).AsString();
 }
 
 std::vector<std::string> Plugin::GetMasters() const {
-  return getMasters();
+  char ** masters;
+  uint8_t numMasters;
+  auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ + " : Libespm error code: " + std::to_string(ret));
+  }
+
+  std::vector<std::string> mastersVec(masters, masters + numMasters);
+  esp_string_array_free(masters, numMasters);
+
+  return mastersVec;
 }
 
 std::set<Tag> Plugin::GetBashTags() const {
@@ -134,7 +146,13 @@ uint32_t Plugin::GetCRC() const {
 }
 
 bool Plugin::IsMaster() const {
-  return isMasterFile();
+  bool isMaster;
+  auto ret = esp_plugin_is_master(esPlugin.get(), &isMaster);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ + " : Libespm error code: " + std::to_string(ret));
+  }
+
+  return isMaster;
 }
 
 bool Plugin::IsEmpty() const {
@@ -149,22 +167,13 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
   try {
     auto otherPlugin = dynamic_cast<const Plugin&>(plugin);
 
-    //Basically std::set_intersection except with an early exit instead of an append to results.
-    set<FormId> formIds(getFormIds());
-    set<FormId> otherFormIds(otherPlugin.getFormIds());
-    auto i = begin(formIds);
-    auto j = begin(otherFormIds);
-    auto iend = end(formIds);
-    auto jend = end(otherFormIds);
-
-    while (i != iend && j != jend) {
-      if (*i < *j)
-        ++i;
-      else if (*j < *i)
-        ++j;
-      else
-        return true;
+    bool doPluginsOverlap;
+    auto ret = esp_plugin_do_records_overlap(esPlugin.get(), otherPlugin.esPlugin.get(), &doPluginsOverlap);
+    if (ret != ESP_OK) {
+      throw FileAccessError(name_ + " : Libespm error code: " + std::to_string(ret));
     }
+
+    return doPluginsOverlap;
   } catch (std::bad_cast&) {
     BOOST_LOG_TRIVIAL(error) << "Tried to check if FormIDs overlapped with a non-Plugin implementation of PluginInterface.";
   }
@@ -190,16 +199,16 @@ bool Plugin::IsValid(const std::string& filename, const GameType gameType, const
   if (!boost::iends_with(name, ".esm") && !boost::iends_with(name, ".esp"))
     return false;
 
-  // Add the ".ghost" file extension if the plugin is ghosted.
-  boost::filesystem::path filepath = dataPath / name;
-  if (!boost::filesystem::exists(filepath) && boost::filesystem::exists(filepath.string() + ".ghost"))
-    filepath += ".ghost";
+  bool isValid;
+  auto path = dataPath / filename;
+  int ret = esp_plugin_is_valid(GetEspluginGameId(gameType), path.string().c_str(), true, &isValid);
 
-  if (libespm::Plugin::isValid(filepath, GetLibespmGameId(gameType), true))
-    return true;
+  if (ret != ESP_OK || !isValid) {
+    BOOST_LOG_TRIVIAL(warning) << "The .es(p|m) file \"" << filename << "\" is not a valid plugin.";
+  }
 
-  BOOST_LOG_TRIVIAL(warning) << "The .es(p|m) file \"" << filename << "\" is not a valid plugin.";
-  return false;
+  return (ret == ESP_OK && isValid)
+    || Plugin::IsValid(filename + ".ghost", gameType, dataPath);
 }
 
 uintmax_t Plugin::GetFileSize(const std::string & filename, const boost::filesystem::path& dataPath) {
@@ -216,6 +225,37 @@ bool Plugin::operator < (const Plugin & rhs) const {
 
 bool Plugin::IsActive() const {
   return isActive_;
+}
+
+void Plugin::Load(const boost::filesystem::path& path, GameType gameType, bool headerOnly) {
+  ::Plugin * plugin;
+  int ret = esp_plugin_new(&plugin, GetEspluginGameId(gameType), path.string().c_str());
+  if (ret != ESP_OK) {
+      throw FileAccessError(path.string() + " : Libespm error code: " + std::to_string(ret));
+  }
+
+  esPlugin = std::shared_ptr<std::remove_pointer<::Plugin>::type>(plugin, esp_plugin_free);
+
+  ret = esp_plugin_parse(esPlugin.get(), headerOnly);
+  if (ret != ESP_OK) {
+    throw FileAccessError(path.string() + " : Libespm error code: " + std::to_string(ret));
+  }
+}
+
+std::string Plugin::GetDescription() const {
+  char * description;
+  auto ret = esp_plugin_description(esPlugin.get(), &description);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ + " : Libespm error code: " + std::to_string(ret));
+  }
+  if (description == nullptr) {
+    return "";
+  }
+
+  string descriptionStr = description;
+  esp_string_free(description);
+
+  return descriptionStr;
 }
 
 std::string Plugin::GetArchiveFileExtension(const GameType gameType) {
@@ -245,16 +285,16 @@ bool Plugin::LoadsArchive(const std::string& pluginName, const GameType gameType
   return false;
 }
 
-libespm::GameId Plugin::GetLibespmGameId(GameType gameType) {
+unsigned int Plugin::GetEspluginGameId(GameType gameType) {
   if (gameType == GameType::tes4)
-    return libespm::GameId::OBLIVION;
+    return ESP_GAME_OBLIVION;
   else if (gameType == GameType::tes5 || gameType == GameType::tes5se)
-    return libespm::GameId::SKYRIM;
+    return ESP_GAME_SKYRIM;
   else if (gameType == GameType::fo3)
-    return libespm::GameId::FALLOUT3;
+    return ESP_GAME_FALLOUT3;
   else if (gameType == GameType::fonv)
-    return libespm::GameId::FALLOUTNV;
+    return ESP_GAME_FALLOUTNV;
   else
-    return libespm::GameId::FALLOUT4;
+    return ESP_GAME_SKYRIM;
 }
 }

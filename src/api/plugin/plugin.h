@@ -28,10 +28,11 @@
 #include <list>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <boost/locale.hpp>
-#include <libespm/Plugin.h>
+#include <esplugin.hpp>
 
 #include "api/game/load_order_handler.h"
 #include "loot/metadata/plugin_metadata.h"
@@ -39,7 +40,7 @@
 #include "loot/plugin_interface.h"
 
 namespace loot {
-class Plugin : public PluginInterface, private libespm::Plugin {
+class Plugin : public PluginInterface {
 public:
   Plugin(const GameType gameType,
          const boost::filesystem::path& dataPath,
@@ -70,9 +71,12 @@ public:
 
   bool operator < (const Plugin& rhs) const;
 private:
+  void Load(const boost::filesystem::path& path, GameType gameType, bool headerOnly);
+  std::string GetDescription() const;
+
   static std::string GetArchiveFileExtension(const GameType gameType);
   static bool LoadsArchive(const std::string& pluginName, const GameType gameType, const boost::filesystem::path& dataPath);
-  static libespm::GameId GetLibespmGameId(GameType gameType);
+  static unsigned int GetEspluginGameId(GameType gameType);
 
   bool isEmpty_;  // Does the plugin contain any records other than the TES4 header?
   bool isActive_;
@@ -84,6 +88,8 @@ private:
 
   //Useful caches.
   size_t numOverrideRecords_;
+
+  std::shared_ptr<std::remove_pointer<::Plugin>::type> esPlugin;
 };
 }
 

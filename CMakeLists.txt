@@ -51,6 +51,16 @@ IF (NOT Boost_USE_STATIC_LIBS)
     add_definitions(-DBOOST_LOG_DYN_LINK)
 ENDIF ()
 
+IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    IF (NOT "${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
+        set(RUST_TARGET i686-pc-windows-msvc)
+    ELSE ()
+        set(RUST_TARGET x86_64-pc-windows-msvc)
+    ENDIF ()
+ELSE ()
+    set(RUST_TARGET x86_64-unknown-linux-gnu)
+ENDIF ()
+
 find_package(Boost REQUIRED COMPONENTS atomic log log_setup regex locale thread date_time chrono filesystem system iostreams)
 
 ExternalProject_Add(GTest
@@ -62,14 +72,21 @@ ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
 set (GTEST_INCLUDE_DIRS "${SOURCE_DIR}/googletest/include")
 set (GTEST_LIBRARIES "${BINARY_DIR}/googlemock/gtest/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-ExternalProject_Add(libespm
+ExternalProject_Add(esplugin
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/libespm/archive/2.5.5.tar.gz"
+                    URL "https://github.com/WrinklyNinja/esplugin/archive/1.0.3.tar.gz"
                     CONFIGURE_COMMAND ""
-                    BUILD_COMMAND ""
+                    BUILD_IN_SOURCE 1
+                    BUILD_COMMAND cargo build --release --all --all-features --target ${RUST_TARGET}
                     INSTALL_COMMAND "")
-ExternalProject_Get_Property(libespm SOURCE_DIR)
-set (LIBESPM_INCLUDE_DIRS "${SOURCE_DIR}/include")
+ExternalProject_Get_Property(esplugin SOURCE_DIR)
+set (ESPLUGIN_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
+set (ESPLUGIN_LIBRARIES "${SOURCE_DIR}/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}esplugin_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
+IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set (ESPLUGIN_LIBRARIES ${ESPLUGIN_LIBRARIES} Userenv)
+ELSE ()
+    set (ESPLUGIN_LIBRARIES ${ESPLUGIN_LIBRARIES} dl)
+ENDIF ()
 
 ExternalProject_Add(libgit2
                     PREFIX "external"
@@ -253,7 +270,7 @@ include_directories ("${CMAKE_SOURCE_DIR}/src"
                      "${CMAKE_SOURCE_DIR}/include"
                      ${LIBLOADORDER_INCLUDE_DIRS}
                      ${LIBGIT2_INCLUDE_DIRS}
-                     ${LIBESPM_INCLUDE_DIRS}
+                     ${ESPLUGIN_INCLUDE_DIRS}
                      ${Boost_INCLUDE_DIRS}
                      ${YAML_CPP_INCLUDE_DIRS}
                      ${GTEST_INCLUDE_DIRS}
@@ -317,13 +334,13 @@ ENDIF ()
 
 # Build tests.
 add_executable       (loot_api_internals_tests ${LOOT_API_SRC} ${LOOT_API_HEADERS} ${LOOT_TESTS_SRC} ${LOOT_TESTS_HEADERS})
-add_dependencies     (loot_api_internals_tests libespm libgit2 libloadorder pseudosem yaml-cpp GTest testing-metadata testing-plugins)
-target_link_libraries(loot_api_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES} ${LIBLOADORDER_LIBRARIES})
+add_dependencies     (loot_api_internals_tests esplugin libgit2 libloadorder pseudosem yaml-cpp GTest testing-metadata testing-plugins)
+target_link_libraries(loot_api_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES})
 
 # Build API.
 add_library          (loot_api ${LOOT_API_SRC} ${LOOT_API_HEADERS})
-add_dependencies     (loot_api libespm libgit2 libloadorder pseudosem yaml-cpp)
-target_link_libraries(loot_api ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${YAML_CPP_LIBRARIES})
+add_dependencies     (loot_api esplugin libgit2 libloadorder pseudosem yaml-cpp)
+target_link_libraries(loot_api ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${YAML_CPP_LIBRARIES})
 
 # Build API tests.
 add_executable       (loot_api_tests ${LOOT_API_TESTS_SRC} ${LOOT_API_TESTS_HEADERS})
