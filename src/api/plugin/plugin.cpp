@@ -155,6 +155,16 @@ bool Plugin::IsMaster() const {
   return isMaster;
 }
 
+bool Plugin::IsLightMaster() const {
+  bool isLightMaster;
+  auto ret = esp_plugin_is_light_master(esPlugin.get(), &isLightMaster);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ + " : Libespm error code: " + std::to_string(ret));
+  }
+
+  return isLightMaster;
+}
+
 bool Plugin::IsEmpty() const {
   return isEmpty_;
 }
@@ -196,7 +206,7 @@ bool Plugin::IsValid(const std::string& filename, const GameType gameType, const
     name = filename;
 
   // Check that the file has a valid extension.
-  if (!boost::iends_with(name, ".esm") && !boost::iends_with(name, ".esp"))
+  if (!hasPluginFileExtension(name, gameType))
     return false;
 
   bool isValid;
@@ -286,15 +296,27 @@ bool Plugin::LoadsArchive(const std::string& pluginName, const GameType gameType
 }
 
 unsigned int Plugin::GetEspluginGameId(GameType gameType) {
-  if (gameType == GameType::tes4)
+  switch (gameType) {
+  case GameType::tes4:
     return ESP_GAME_OBLIVION;
-  else if (gameType == GameType::tes5 || gameType == GameType::tes5se)
+  case GameType::tes5:
     return ESP_GAME_SKYRIM;
-  else if (gameType == GameType::fo3)
+  case GameType::tes5se:
+    return ESP_GAME_SKYRIMSE;
+  case GameType::fo3:
     return ESP_GAME_FALLOUT3;
-  else if (gameType == GameType::fonv)
+  case GameType::fonv:
     return ESP_GAME_FALLOUTNV;
-  else
-    return ESP_GAME_SKYRIM;
+  default:
+    return ESP_GAME_FALLOUT4;
+  }
+}
+
+bool hasPluginFileExtension(const std::string& filename, GameType gameType) {
+  bool espOrEsm = boost::iends_with(filename, ".esp") || boost::iends_with(filename, ".esm");
+  bool lightMaster = (gameType == GameType::fo4 || gameType == GameType::tes5se) 
+    && boost::iends_with(filename, ".esl");
+
+  return espOrEsm || lightMaster;
 }
 }

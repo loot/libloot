@@ -74,7 +74,7 @@ set (GTEST_LIBRARIES "${BINARY_DIR}/googlemock/gtest/${CMAKE_CFG_INTDIR}/${CMAKE
 
 ExternalProject_Add(esplugin
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/esplugin/archive/1.0.3.tar.gz"
+                    URL "https://github.com/WrinklyNinja/esplugin/archive/1.0.5.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --all --all-features --target ${RUST_TARGET}
@@ -100,7 +100,7 @@ set(LIBGIT2_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_
 
 ExternalProject_Add(libloadorder
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/libloadorder/archive/rust-rewrite.tar.gz"
+                    URL "https://github.com/WrinklyNinja/libloadorder/archive/master.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --all --all-features --target ${RUST_TARGET}

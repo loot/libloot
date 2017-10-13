@@ -86,6 +86,12 @@ public:
   virtual bool IsMaster() const = 0;
 
   /**
+  * Check if the plugin is a light master.
+  * @return True if plugin is a light master, false otherwise.
+  */
+  virtual bool IsLightMaster() const = 0;
+
+  /**
    * Check if the plugin contains any records other than its TES4 header.
    * @return True if the plugin only contains a TES4 header, false otherwise.
    */

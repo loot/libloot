@@ -32,6 +32,7 @@
 #include <vector>
 
 #include <boost/locale.hpp>
+#include <boost/algorithm/string.hpp>
 #include <esplugin.hpp>
 
 #include "api/game/load_order_handler.h"
@@ -56,6 +57,7 @@ public:
   uint32_t GetCRC() const;
 
   bool IsMaster() const;
+  bool IsLightMaster() const;
   bool IsEmpty() const;
   bool LoadsArchive() const;
   bool DoFormIDsOverlap(const PluginInterface& plugin) const;
@@ -91,6 +93,8 @@ private:
 
   std::shared_ptr<std::remove_pointer<::Plugin>::type> esPlugin;
 };
+
+bool hasPluginFileExtension(const std::string& filename, GameType gameType);
 }
 
 #endif

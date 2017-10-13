@@ -51,7 +51,7 @@ std::string PluginSortingData::GetName() const {
 }
 
 bool PluginSortingData::IsMaster() const {
-  return plugin_.IsMaster();
+  return plugin_.IsMaster() || plugin_.IsLightMaster();
 }
 
 bool PluginSortingData::LoadsArchive() const {

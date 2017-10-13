@@ -174,7 +174,7 @@ bool ConditionEvaluator::fileExists(const std::string& filePath) const {
     return true;
   } catch (...) {
     // Not a loaded plugin, check the filesystem.
-    if (boost::iends_with(filePath, ".esp") || boost::iends_with(filePath, ".esm"))
+    if (hasPluginFileExtension(filePath, gameType_))
       return boost::filesystem::exists(dataPath_ / filePath)
       || boost::filesystem::exists(dataPath_ / (filePath + ".ghost"));
     else
@@ -257,7 +257,7 @@ bool ConditionEvaluator::checksumMatches(const std::string& filePath, const uint
     if (realChecksum == 0) {
       if (boost::filesystem::exists(dataPath_ / filePath))
         realChecksum = GetCrc32(dataPath_ / filePath);
-      else if ((boost::iends_with(filePath, ".esp") || boost::iends_with(filePath, ".esm")) && boost::filesystem::exists(dataPath_ / (filePath + ".ghost")))
+      else if (hasPluginFileExtension(filePath, gameType_) && boost::filesystem::exists(dataPath_ / (filePath + ".ghost")))
         realChecksum = GetCrc32(dataPath_ / (filePath + ".ghost"));
     }
   }

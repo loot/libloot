@@ -37,6 +37,7 @@ protected:
   PluginTest() :
     emptyFile("EmptyFile.esm"),
     lowercaseBlankEsp("blank.esp"),
+    blankEsl("blank.esl"),
     game_(GetParam(), dataPath.parent_path(), localPath),
     blankArchive("Blank" + GetArchiveFileExtension(game_.Type())),
     blankSuffixArchive("Blank - Different - suffix" + GetArchiveFileExtension(game_.Type())) {}
@@ -55,6 +56,8 @@ protected:
     ASSERT_NO_THROW(boost::filesystem::copy(dataPath / blankEsp, dataPath / lowercaseBlankEsp));
 #endif
 
+    ASSERT_NO_THROW(boost::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
+
     // Create dummy archive files.
     out.open(dataPath / blankArchive);
     out.close();
@@ -69,6 +72,7 @@ protected:
 #ifndef _WIN32
     boost::filesystem::remove(dataPath / lowercaseBlankEsp);
 #endif
+    boost::filesystem::remove(dataPath / blankEsl);
     boost::filesystem::remove(dataPath / blankArchive);
     boost::filesystem::remove(dataPath / blankSuffixArchive);
   }
@@ -77,6 +81,7 @@ protected:
 
   const std::string emptyFile;
   const std::string lowercaseBlankEsp;
+  const std::string blankEsl;
   const std::string blankArchive;
   const std::string blankSuffixArchive;
 private:
@@ -98,6 +103,7 @@ public:
   uint32_t GetCRC() const { return 0; }
 
   bool IsMaster() const { return false; }
+  bool IsLightMaster() const { return false; }
   bool IsEmpty() const { return false; }
   bool LoadsArchive() const { return false; }
   bool DoFormIDsOverlap(const PluginInterface& plugin) const { return true; }
@@ -157,6 +163,16 @@ TEST_P(PluginTest, loadingANonMasterPluginShouldReadTheMasterFlagAsFalse) {
   Plugin plugin(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsp, true);
 
   EXPECT_FALSE(plugin.IsMaster());
+}
+
+TEST_P(PluginTest, isLightMasterShouldBeTrueForAPluginWithEslFileExtensionForFallout4AndSkyrimSeAndFalseOtherwise) {
+  Plugin plugin1(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsm, true);
+  Plugin plugin2(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankMasterDependentEsp, true);
+  Plugin plugin3(game_.Type(), game_.DataPath(), game_.GetLoadOrderHandler(), blankEsl, true);
+
+  EXPECT_FALSE(plugin1.IsLightMaster());
+  EXPECT_FALSE(plugin2.IsLightMaster());
+  EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::tes5se, plugin3.IsLightMaster());
 }
 
 TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
@@ -270,6 +286,18 @@ TEST_P(PluginTest, doFormIDsOverlapShouldReturnTrueIfOnePluginOverridesTheOthers
 
   EXPECT_TRUE(plugin1.DoFormIDsOverlap(plugin2));
   EXPECT_TRUE(plugin2.DoFormIDsOverlap(plugin1));
+}
+
+TEST_P(PluginTest, hasPluginFileExtensionShouldBeTrueIfFileEndsInDotEspOrDotEsm) {
+  EXPECT_TRUE(hasPluginFileExtension("file.esp", GetParam()));
+  EXPECT_TRUE(hasPluginFileExtension("file.esm", GetParam()));
+  EXPECT_FALSE(hasPluginFileExtension("file.bsa", GetParam()));
+}
+
+TEST_P(PluginTest, hasPluginFileExtensionShouldBeTrueIfFileEndsInDotEslOnlyForFallout4AndSkyrimSE) {
+  bool result = hasPluginFileExtension("file.esl", GetParam());
+
+  EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::tes5se, result);
 }
 }
 }
