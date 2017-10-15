@@ -100,7 +100,7 @@ set(LIBGIT2_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_
 
 ExternalProject_Add(libloadorder
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/libloadorder/archive/master.tar.gz"
+                    URL "https://github.com/WrinklyNinja/libloadorder/archive/10.0.0.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --all --all-features --target ${RUST_TARGET}
