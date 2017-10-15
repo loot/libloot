@@ -57,13 +57,6 @@ public:
                          const std::string& userlist_path = "") = 0;
 
   /**
-   *  @brief Evaluates all conditions and regular expression metadata entries.
-   *  @details Repeated calls re-evaluate the metadata from scratch. This
-   *           function affects the output of all the database access functions.
-   */
-  virtual void EvalLists() = 0;
-
-  /**
    * Writes a metadata file containing all loaded user-added metadata.
    * @param outputFile
    *         The path to which the file shall be written.

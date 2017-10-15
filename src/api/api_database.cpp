@@ -72,21 +72,6 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
   userlist_ = userTemp;
 }
 
-void ApiDatabase::EvalLists() {
-  // Clear caches before evaluating conditions.
-  gameCache_->ClearCachedConditions();
-
-  Masterlist temp = masterlist_;
-  MetadataList userTemp = userlist_;
-
-  // Refresh active plugins before evaluating conditions.
-  temp.EvalAllConditions(conditionEvaluator_);
-  userTemp.EvalAllConditions(conditionEvaluator_);
-
-  masterlist_ = temp;
-  userlist_ = userTemp;
-}
-
 void ApiDatabase::WriteUserMetadata(const std::string& outputFile, const bool overwrite) const {
   if (!boost::filesystem::exists(boost::filesystem::path(outputFile).parent_path()))
     throw std::invalid_argument("Output directory does not exist.");

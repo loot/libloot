@@ -173,17 +173,6 @@ TEST_P(DatabaseInterfaceTest, loadListsShouldSucceedIfTheMasterlistAndUserlistAr
   EXPECT_NO_THROW(db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
 }
 
-TEST_P(DatabaseInterfaceTest, evalListsShouldReturnOkWithNoListsLoaded) {
-  EXPECT_NO_THROW(db_->EvalLists());
-}
-
-TEST_P(DatabaseInterfaceTest, evalListsShouldReturnOKForAllLanguagesWithAMasterlistLoaded) {
-  ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
-
-  EXPECT_NO_THROW(db_->EvalLists());
-}
-
 TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldThrowIfTheFileAlreadyExistsAndTheOverwriteArgumentIsFalse) {
   ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false));
   ASSERT_TRUE(boost::filesystem::exists(minimalOutputPath_));
