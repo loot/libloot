@@ -24,6 +24,7 @@
 
 #include <gtest/gtest.h>
 
+#include "loot/api.h"
 #include "tests/api/interface/create_game_handle_test.h"
 #include "tests/api/interface/database_interface_test.h"
 #include "tests/api/interface/game_interface_test.h"
@@ -33,15 +34,37 @@
 #include <boost/locale.hpp>
 
 int main(int argc, char **argv) {
-    //Set the locale to get encoding conversions working correctly.
+  //Set the locale to get encoding conversions working correctly.
   std::locale::global(boost::locale::generator().generate(""));
   boost::filesystem::path::imbue(std::locale());
   loot::InitialiseLocale("");
 
-  //Disable logging or else stdout will get overrun.
-  boost::log::core::get()->set_logging_enabled(false);
-  loot::SetLoggingVerbosity(loot::LogVerbosity::off);
+  //Set a null log callback or else stdout will get overrun.
+  loot::SetLoggingCallback([](loot::LogLevel, const char *) {});
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
+}
+
+namespace loot {
+namespace test {
+TEST(SetLoggingCallback, shouldWriteMessagesToGivenCallback) {
+  std::string loggedMessages;
+  SetLoggingCallback([&](LogLevel level, const char * string) {
+    loggedMessages += std::string(string);
+  });
+
+  try {
+    CreateGameHandle(GameType::tes4, "", "");
+  }
+  catch (...) {
+    EXPECT_EQ("Initialising load order data for game of type 0 at: \"\"", loggedMessages);
+
+    SetLoggingCallback([](LogLevel, const char *) {});
+    return;
+  }
+
+  FAIL();
+}
+}
 }

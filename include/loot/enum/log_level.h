@@ -22,20 +22,23 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_LOG_VERBOSITY
-#define LOOT_LOG_VERBOSITY
+#ifndef LOOT_LOG_LEVEL
+#define LOOT_LOG_LEVEL
 
 /**
  * The namespace used by the LOOT API.
  */
 namespace loot {
 /**
- * @brief Codes used to specify different levels of API logging verbosity.
+ * @brief Codes used to specify different levels of API logging.
  */
-enum struct LogVerbosity : unsigned int {
-  off,
-  warning,
+enum struct LogLevel : unsigned int {
   trace,
+  debug,
+  info,
+  warning,
+  error,
+  fatal
 };
 }
 

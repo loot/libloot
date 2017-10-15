@@ -46,34 +46,54 @@ std::string ResolvePath(const std::string& path) {
   return fs::read_symlink(path).string();
 }
 
-LOOT_API void SetLoggingVerbosity(LogVerbosity verbosity) {
-  switch (verbosity) {
-  case LogVerbosity::off:
-    boost::log::core::get()->set_logging_enabled(false);
-    break;
-  case LogVerbosity::warning:
-    boost::log::core::get()->set_filter(boost::log::trivial::severity > boost::log::trivial::warning);
-    boost::log::core::get()->set_logging_enabled(true);
-    break;
-  case LogVerbosity::trace:
-    boost::log::core::get()->reset_filter();
-    boost::log::core::get()->set_logging_enabled(true);
-    break;
+LogLevel mapFromBoostLog(boost::log::trivial::severity_level severity) {
+  using boost::log::trivial::severity_level;
+  switch (severity) {
+    case severity_level::trace:
+      return LogLevel::trace;
+    case severity_level::debug:
+      return LogLevel::debug;
+    case severity_level::info:
+      return LogLevel::info;
+    case severity_level::warning:
+      return LogLevel::warning;
+    case severity_level::error:
+      return LogLevel::error;
+    case severity_level::fatal:
+      return LogLevel::fatal;
+    default:
+      return LogLevel::trace;
   }
 }
 
-LOOT_API void SetLogFile(const std::string& path) {
-  boost::log::add_file_log(
-    boost::log::keywords::file_name = path,
-    boost::log::keywords::auto_flush = true,
-    boost::log::keywords::format = (
-      boost::log::expressions::stream
-      << "[" << boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%H:%M:%S.%f") << "]"
-      << " [" << boost::log::trivial::severity << "]: "
-      << boost::log::expressions::smessage
-      )
-  );
-  boost::log::add_common_attributes();
+class LoggingSink : public boost::log::sinks::basic_formatted_sink_backend<char, boost::log::sinks::concurrent_feeding> {
+public:
+  LoggingSink(std::function<void(LogLevel, const char*)> callback) {
+    this->callback = callback;
+  }
+
+  void consume(const boost::log::record_view& rec, const std::string& str) {
+    using boost::log::trivial::severity_level;
+    auto severity = rec.attribute_values()[boost::log::aux::default_attribute_names::severity()].extract<severity_level>();
+    if (!severity) {
+      return;
+    }
+
+    callback(mapFromBoostLog(*severity), str.c_str());
+  }
+
+private:
+  std::function<void(LogLevel, const char*)> callback;
+};
+
+LOOT_API void SetLoggingCallback(std::function<void(LogLevel, const char*)> callback) {
+  typedef boost::log::sinks::synchronous_sink<LoggingSink> sink_t;
+
+  auto sink_backend = boost::make_shared<LoggingSink>(callback);
+  boost::shared_ptr<sink_t> sink(new sink_t(sink_backend));
+
+  boost::log::core::get()->remove_all_sinks();
+  boost::log::core::get()->add_sink(sink);
 }
 
 LOOT_API bool IsCompatible(const unsigned int versionMajor, const unsigned int versionMinor, const unsigned int versionPatch) {
