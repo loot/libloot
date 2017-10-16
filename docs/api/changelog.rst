@@ -2,6 +2,48 @@
 Version History
 ***************
 
+0.12.0 - Unreleased
+===================
+
+Added
+-----
+
+- Support for light master (``.esl``) plugins.
+- :cpp:any:`LoadCurrentLoadOrderState()` in :cpp:any:`loot::GameInterface` to
+  expose load order cache management to clients, as libloadorder no longer 
+  internally manages it.
+- :cpp:any:`loot::SetLoggingCallback()` to allow clients to handle the LOOT 
+  API's logging statements themselves.
+- Logging of libloadorder error details.
+
+Changed
+-------
+
+- :cpp:any:`LoadPlugins()` now loads the current load order 
+  state before loading plugins.
+- Replaced libespm dependency with esplugin v1.0.5. This significantly improves
+  safety and sorting performance, especially for large load orders.
+- Updated libloadorder to v10.0.0. This significantly improves safety and the
+  performance of load order operations, at the expense of exposing cache 
+  management to the client.
+- Updated libgit2 to v0.26.0.
+
+Removed
+-------
+
+- ``DatabaseInterface::EvalLists()`` as it was superseded in v0.11.0 by the 
+  ability to evaluate conditions when getting general messages and individual 
+  plugins' metadata, which is more efficient.
+- ``SetLoggingVerbosity()`` and ``SetLogFile()`` as they have been superseded
+  by the new :cpp:any:`loot::SetLoggingCallback()` function.
+
+Fixed
+-----
+
+- Formatting in metadata documentation.
+- Saving metadata wrote entries in an inconsistent order.
+- Clang build errors.
+
 0.11.1 - 2017-06-19
 ===================
 

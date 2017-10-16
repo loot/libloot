@@ -9,7 +9,7 @@ Enumerations
 
 .. doxygenenum:: loot::GameType
 
-.. doxygenenum:: loot::LogVerbosity
+.. doxygenenum:: loot::LogLevel
 
 .. doxygenenum:: loot::MessageType
 
@@ -25,9 +25,7 @@ Public-Field Data Structures
 Functions
 =========
 
-.. doxygenfunction:: loot::SetLoggingVerbosity
-
-.. doxygenfunction:: loot::SetLogFile
+.. doxygenfunction:: loot::SetLoggingCallback
 
 .. doxygenfunction:: loot::IsCompatible
 
