@@ -47,8 +47,6 @@ struct ApiDatabase : public DatabaseInterface {
   void LoadLists(const std::string& masterlist_path,
                  const std::string& userlist_path = "");
 
-  void EvalLists();
-
   void WriteUserMetadata(const std::string& outputFile,
                          const bool overwrite) const;
 
