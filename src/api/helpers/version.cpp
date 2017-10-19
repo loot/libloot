@@ -28,7 +28,7 @@
 #include <boost/algorithm/string.hpp>
 #include <pseudosem.h>
 
-#include "loot/windows_encoding_converters.h"
+#include "api/helpers/windows_encoding_converters.h"
 
 #ifdef _WIN32
 #   ifndef UNICODE

@@ -211,7 +211,6 @@ set (LOOT_API_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/plugin_interface.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/struct/masterlist_info.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/struct/simple_message.h"
-                      "${CMAKE_SOURCE_DIR}/include/loot/windows_encoding_converters.h"
                       "${CMAKE_SOURCE_DIR}/src/api/api_database.h"
                       "${CMAKE_SOURCE_DIR}/src/api/metadata/condition_evaluator.h"
                       "${CMAKE_SOURCE_DIR}/src/api/metadata/condition_grammar.h"
@@ -224,7 +223,8 @@ set (LOOT_API_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/src/api/plugin/plugin_sorter.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/git_helper.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.h"
-                      "${CMAKE_SOURCE_DIR}/src/api/helpers/version.h")
+                      "${CMAKE_SOURCE_DIR}/src/api/helpers/version.h"
+                      "${CMAKE_SOURCE_DIR}/src/api/helpers/windows_encoding_converters.h")
 
 set (LOOT_TESTS_SRC "${CMAKE_SOURCE_DIR}/src/tests/api/internals/main.cpp")
 
