@@ -131,6 +131,8 @@ void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) c
   delete[] pluginArr;
 
   HandleError("set the load order", ret);
+
+  BOOST_LOG_TRIVIAL(info) << "Load order set successfully.";
 }
 
 void LoadOrderHandler::HandleError(const std::string& operation, unsigned int returnCode) const {
