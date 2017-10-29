@@ -28,7 +28,7 @@ along with LOOT.  If not, see
 #include "loot/metadata/plugin_cleaning_data.h"
 
 #include "api/game/game.h"
-#include "loot/yaml/plugin_cleaning_data.h"
+#include "api/metadata/yaml/plugin_cleaning_data.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {

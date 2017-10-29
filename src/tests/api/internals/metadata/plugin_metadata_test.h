@@ -29,7 +29,7 @@ along with LOOT.  If not, see
 
 #include "tests/common_game_test_fixture.h"
 
-#include "loot/yaml/plugin_metadata.h"
+#include "api/metadata/yaml/plugin_metadata.h"
 
 namespace loot {
 namespace test {

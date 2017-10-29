@@ -28,7 +28,7 @@ along with LOOT.  If not, see
 #include "loot/metadata/message.h"
 
 #include "api/game/game.h"
-#include "loot/yaml/message.h"
+#include "api/metadata/yaml/message.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {

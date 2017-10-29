@@ -25,7 +25,7 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_HELPERS_YAML_SET_HELPERS_TEST
 #define LOOT_TESTS_API_INTERNALS_HELPERS_YAML_SET_HELPERS_TEST
 
-#include "loot/yaml/set.h"
+#include "api/metadata/yaml/set.h"
 
 #include <gtest/gtest.h>
 

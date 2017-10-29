@@ -26,7 +26,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "loot/yaml/file.h"
+#include "api/metadata/yaml/file.h"
 
 namespace loot {
 File::File() {}

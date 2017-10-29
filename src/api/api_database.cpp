@@ -30,7 +30,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "loot/exception/file_access_error.h"
-#include "loot/yaml/plugin_metadata.h"
+#include "api/metadata/yaml/plugin_metadata.h"
 #include "api/game/game.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/plugin/plugin_sorter.h"

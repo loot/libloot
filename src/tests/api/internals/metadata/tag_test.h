@@ -29,7 +29,7 @@ along with LOOT.  If not, see
 
 #include <gtest/gtest.h>
 
-#include "loot/yaml/tag.h"
+#include "api/metadata/yaml/tag.h"
 
 namespace loot {
 namespace test {

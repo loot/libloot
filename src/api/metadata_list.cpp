@@ -29,7 +29,7 @@
 #include <boost/log/trivial.hpp>
 
 #include "loot/exception/file_access_error.h"
-#include "loot/yaml/plugin_metadata.h"
+#include "api/metadata/yaml/plugin_metadata.h"
 #include "api/game/game.h"
 #include "api/metadata/condition_evaluator.h"
 

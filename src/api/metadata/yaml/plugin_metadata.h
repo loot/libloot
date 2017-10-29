@@ -35,13 +35,13 @@
 
 #include "loot/metadata/plugin_metadata.h"
 
-#include "loot/yaml/file.h"
-#include "loot/yaml/location.h"
-#include "loot/yaml/message_content.h"
-#include "loot/yaml/message.h"
-#include "loot/yaml/plugin_cleaning_data.h"
-#include "loot/yaml/set.h"
-#include "loot/yaml/tag.h"
+#include "api/metadata/yaml/file.h"
+#include "api/metadata/yaml/location.h"
+#include "api/metadata/yaml/message_content.h"
+#include "api/metadata/yaml/message.h"
+#include "api/metadata/yaml/plugin_cleaning_data.h"
+#include "api/metadata/yaml/set.h"
+#include "api/metadata/yaml/tag.h"
 
 namespace YAML {
 template<>
