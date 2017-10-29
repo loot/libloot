@@ -40,6 +40,9 @@ struct SimpleMessage {
    * [GitHub Flavored Markdown](https://help.github.com/articles/github-flavored-markdown).
    */
   std::string text;
+
+  /** @brief The message's condition string. */
+  std::string condition;
 };
 }
 

@@ -80,6 +80,7 @@ SimpleMessage Message::ToSimpleMessage(const std::string& language) const {
   simpleMessage.type = GetType();
   simpleMessage.language = content.GetLanguage();
   simpleMessage.text = content.GetText();
+  simpleMessage.condition = GetCondition();
 
   return simpleMessage;
 }

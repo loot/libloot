@@ -143,13 +143,14 @@ TEST_P(MessageTest, toSimpleMessageShouldSelectTextAndLanguageUsingGetContent) {
     MessageContent("content1", german),
     MessageContent("content2"),
     MessageContent("content3", french),
-  }));
+  }), "condition1");
 
   SimpleMessage simpleMessage = message.ToSimpleMessage(french);
 
   EXPECT_EQ(MessageType::warn, simpleMessage.type);
   EXPECT_EQ("content3", simpleMessage.text);
   EXPECT_EQ(french, simpleMessage.language);
+  EXPECT_EQ("condition1", simpleMessage.condition);
 }
 
 TEST_P(MessageTest, emittingAsYamlShouldOutputNoteMessageTypeCorrectly) {
