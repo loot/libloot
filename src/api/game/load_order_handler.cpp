@@ -147,7 +147,7 @@ void LoadOrderHandler::HandleError(const std::string& operation, unsigned int re
     err = "libloadorder failed to " + operation + ". Details could not be fetched.";
   }
   else {
-    err = (format("libloadorder failed to set the load order. Details: %1%") % e).str();
+    err = (format("libloadorder failed to " + operation + ". Details: %1%") % e).str();
   }
 
   BOOST_LOG_TRIVIAL(error) << err;
