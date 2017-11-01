@@ -36,10 +36,8 @@
 #include <cstdint>
 #include <regex>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/spirit/include/phoenix_bind.hpp>
@@ -47,6 +45,7 @@
 
 #include "loot/exception/condition_syntax_error.h"
 #include "api/game/game.h"
+#include "api/helpers/logging.h"
 #include "api/helpers/version.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/plugin/plugin.h"
@@ -127,6 +126,8 @@ public:
     qi::on_error<qi::fail>(filePath_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
     qi::on_error<qi::fail>(comparator_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
     qi::on_error<qi::fail>(invalidPathChars_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
+
+    logger_ = getLogger();
   }
 
 private:
@@ -139,7 +140,9 @@ private:
 
   //Eval's exact paths. Check for files and ghosted plugins.
   void CheckFile(bool& result, const std::string& file) const {
-    BOOST_LOG_TRIVIAL(trace) << "Checking to see if the file \"" << file << "\" exists.";
+    if (logger_) {
+      logger_->trace("Checking to see if the file \"{}\" exists.", file);
+    }
 
     result = false;
     if (IsRegex(file))
@@ -147,30 +150,40 @@ private:
     else
       result = evaluator_.fileExists(file);
 
-    BOOST_LOG_TRIVIAL(trace) << "File check result: " << result;
+    if (logger_) {
+      logger_->trace("File check result: {}", result);
+    }
   }
 
   void CheckMany(bool& result, const std::string& regexStr) const {
-    BOOST_LOG_TRIVIAL(trace) << "Checking to see if more than one file matching the regex \"" << regexStr << "\" exist.";
+    if (logger_) {
+      logger_->trace("Checking to see if more than one file matching the regex \"{}\" exists.", regexStr);
+    }
 
     result = false;
     result = evaluator_.regexMatchesExist(regexStr);
   }
 
   void CheckSum(bool& result, const std::string& file, const uint32_t checksum) {
-    BOOST_LOG_TRIVIAL(trace) << "Checking the CRC of the file \"" << file << "\".";
+    if (logger_) {
+      logger_->trace("Checking the CRC of the file \"{}\".", file);
+    }
 
     result = false;
     result = evaluator_.checksumMatches(file, checksum);
   }
 
   void CheckVersion(bool& result, const std::string&  file, const std::string& version, const std::string& comparator) const {
-    BOOST_LOG_TRIVIAL(trace) << "Checking version of file \"" << file << "\".";
+    if (logger_) {
+      logger_->trace("Checking the version of the file \"{}\".", file);
+    }
 
     result = false;
     result = evaluator_.compareVersions(file, version, comparator);
 
-    BOOST_LOG_TRIVIAL(trace) << "Version check result: " << result;
+    if (logger_) {
+      logger_->trace("Version check result: {}", result);
+    }
   }
 
   void CheckActive(bool& result, const std::string& file) const {
@@ -180,11 +193,15 @@ private:
     else
       result = evaluator_.isPluginActive(file);
 
-    BOOST_LOG_TRIVIAL(trace) << "Active check result: " << result;
+    if (logger_) {
+      logger_->trace("Active check result: {}", result);
+    }
   }
 
   void CheckManyActive(bool& result, const std::string& regexStr) const {
-    BOOST_LOG_TRIVIAL(trace) << "Checking to see if more than one file matching the regex \"" << regexStr << "\" exist.";
+    if (logger_) {
+      logger_->trace("Checking to see if more than one file matching the regex \"{}\" is active.", regexStr);
+    }
 
     result = false;
     result = evaluator_.arePluginsActive(regexStr);
@@ -203,6 +220,7 @@ private:
   boost::spirit::qi::rule<Iterator, char()> invalidPathChars_;
 
   const ConditionEvaluator& evaluator_;
+  std::shared_ptr<spdlog::logger> logger_;
 };
 }
 #endif

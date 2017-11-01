@@ -28,12 +28,12 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/format.hpp>
 #include <boost/locale.hpp>
 
 #include "api/game/game.h"
 #include "api/helpers/crc.h"
+#include "api/helpers/logging.h"
 #include "api/helpers/version.h"
 #include "loot/exception/file_access_error.h"
 
@@ -53,6 +53,8 @@ Plugin::Plugin(const GameType gameType,
   loadsArchive_(false),
   crc_(0),
   numOverrideRecords_(0) {
+  auto logger = getLogger();
+
   try {
     boost::filesystem::path filepath = dataPath / name_;
 
@@ -68,10 +70,14 @@ Plugin::Plugin(const GameType gameType,
     }
 
     if (!headerOnly) {
-      BOOST_LOG_TRIVIAL(trace) << name_ << ": Caching CRC value.";
+      if (logger) {
+        logger->trace("{}: Caching CRC value.", name_);
+      }
       crc_ = GetCrc32(filepath);
 
-      BOOST_LOG_TRIVIAL(trace) << name_ << ": Counting override FormIDs.";
+      if (logger) {
+        logger->trace("{}: Counting override FormIDs.", name_);
+      }
       ret = esp_plugin_count_override_records(esPlugin.get(), &numOverrideRecords_);
       if (ret != ESP_OK) {
         throw FileAccessError(name + " : Libespm error code: " + std::to_string(ret));
@@ -79,8 +85,11 @@ Plugin::Plugin(const GameType gameType,
     }
 
     //Also read Bash Tags applied and version string in description.
+    if (logger) {
+      logger->trace("{}: Attempting to extract Bash Tags from the description.", name_);
+    }
+
     string text = GetDescription();
-    BOOST_LOG_TRIVIAL(trace) << name_ << ": " << "Attempting to extract Bash Tags from the description.";
     size_t pos1 = text.find("{{BASH:");
     if (pos1 != string::npos && pos1 + 7 != text.length()) {
       pos1 += 7;
@@ -94,8 +103,11 @@ Plugin::Plugin(const GameType gameType,
 
         for (auto &tag : bashTags) {
           boost::trim(tag);
-          BOOST_LOG_TRIVIAL(trace) << name_ << ": " << "Extracted Bash Tag: " << tag;
           tags_.insert(Tag(tag));
+
+          if (logger) {
+            logger->trace("{}: Extracted Bash Tag: {}", name_, tag);
+          }
         }
       }
     }
@@ -104,11 +116,15 @@ Plugin::Plugin(const GameType gameType,
 
     loadsArchive_ = LoadsArchive(name_, gameType, dataPath);
   } catch (std::exception& e) {
-    BOOST_LOG_TRIVIAL(error) << "Cannot read plugin file \"" << name << "\". Details: " << e.what();
+    if (logger) {
+      logger->error("Cannot read plugin file \"{}\". Details: {}", name_, e.what());
+    }
     throw FileAccessError((boost::format("Cannot read \"%1%\". Details: %2%") % name % e.what()).str());
   }
 
-  BOOST_LOG_TRIVIAL(trace) << name_ << ": " << "Plugin loading complete.";
+  if (logger) {
+    logger->trace("{}: Plugin loading complete.", name_);
+  }
 }
 
 std::string Plugin::GetName() const {
@@ -185,7 +201,10 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
 
     return doPluginsOverlap;
   } catch (std::bad_cast&) {
-    BOOST_LOG_TRIVIAL(error) << "Tried to check if FormIDs overlapped with a non-Plugin implementation of PluginInterface.";
+    auto logger = getLogger();
+    if (logger) {
+      logger->error("Tried to check if FormIDs overlapped with a non-Plugin implementation of PluginInterface.");
+    }
   }
 
   return false;
@@ -196,7 +215,10 @@ size_t Plugin::NumOverrideFormIDs() const {
 }
 
 bool Plugin::IsValid(const std::string& filename, const GameType gameType, const boost::filesystem::path& dataPath) {
-  BOOST_LOG_TRIVIAL(trace) << "Checking to see if \"" << filename << "\" is a valid plugin.";
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Checking to see if \"{}\" is a valid plugin.", filename);
+  }
 
   //If the filename passed ends in '.ghost', that should be trimmed.
   std::string name;
@@ -214,7 +236,9 @@ bool Plugin::IsValid(const std::string& filename, const GameType gameType, const
   int ret = esp_plugin_is_valid(GetEspluginGameId(gameType), path.string().c_str(), true, &isValid);
 
   if (ret != ESP_OK || !isValid) {
-    BOOST_LOG_TRIVIAL(warning) << "The .es(p|m) file \"" << filename << "\" is not a valid plugin.";
+    if (logger) {
+      logger->warn("The file \"{}\" is not a valid plugin.", filename);
+    }
   }
 
   return (ret == ESP_OK && isValid)
@@ -314,7 +338,7 @@ unsigned int Plugin::GetEspluginGameId(GameType gameType) {
 
 bool hasPluginFileExtension(const std::string& filename, GameType gameType) {
   bool espOrEsm = boost::iends_with(filename, ".esp") || boost::iends_with(filename, ".esm");
-  bool lightMaster = (gameType == GameType::fo4 || gameType == GameType::tes5se) 
+  bool lightMaster = (gameType == GameType::fo4 || gameType == GameType::tes5se)
     && boost::iends_with(filename, ".esl");
 
   return espOrEsm || lightMaster;

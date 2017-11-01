@@ -25,14 +25,9 @@
 #include "loot/api.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/support/date_time.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/utility/setup/file.hpp>
 
 #include "api/game/game.h"
+#include "api/helpers/logging.h"
 
 namespace fs = boost::filesystem;
 
@@ -46,54 +41,13 @@ std::string ResolvePath(const std::string& path) {
   return fs::read_symlink(path).string();
 }
 
-LogLevel mapFromBoostLog(boost::log::trivial::severity_level severity) {
-  using boost::log::trivial::severity_level;
-  switch (severity) {
-    case severity_level::trace:
-      return LogLevel::trace;
-    case severity_level::debug:
-      return LogLevel::debug;
-    case severity_level::info:
-      return LogLevel::info;
-    case severity_level::warning:
-      return LogLevel::warning;
-    case severity_level::error:
-      return LogLevel::error;
-    case severity_level::fatal:
-      return LogLevel::fatal;
-    default:
-      return LogLevel::trace;
-  }
-}
-
-class LoggingSink : public boost::log::sinks::basic_formatted_sink_backend<char, boost::log::sinks::concurrent_feeding> {
-public:
-  LoggingSink(std::function<void(LogLevel, const char*)> callback) {
-    this->callback = callback;
-  }
-
-  void consume(const boost::log::record_view& rec, const std::string& str) {
-    using boost::log::trivial::severity_level;
-    auto severity = rec.attribute_values()[boost::log::aux::default_attribute_names::severity()].extract<severity_level>();
-    if (!severity) {
-      return;
-    }
-
-    callback(mapFromBoostLog(*severity), str.c_str());
-  }
-
-private:
-  std::function<void(LogLevel, const char*)> callback;
-};
-
 LOOT_API void SetLoggingCallback(std::function<void(LogLevel, const char*)> callback) {
-  typedef boost::log::sinks::synchronous_sink<LoggingSink> sink_t;
+  auto sink = std::make_shared<SpdLoggingSink>(callback);
+  auto logger = std::make_shared<spdlog::logger>(LOGGER_NAME, sink);
+  logger->set_level(spdlog::level::level_enum::trace);
 
-  auto sink_backend = boost::make_shared<LoggingSink>(callback);
-  boost::shared_ptr<sink_t> sink(new sink_t(sink_backend));
-
-  boost::log::core::get()->remove_all_sinks();
-  boost::log::core::get()->add_sink(sink);
+  spdlog::drop(LOGGER_NAME);
+  spdlog::register_logger(logger);
 }
 
 LOOT_API bool IsCompatible(const unsigned int versionMajor, const unsigned int versionMinor, const unsigned int versionPatch) {

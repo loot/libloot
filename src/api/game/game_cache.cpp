@@ -28,7 +28,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/locale.hpp>
-#include <boost/log/trivial.hpp>
 
 using boost::locale::to_lower;
 using std::lock_guard;

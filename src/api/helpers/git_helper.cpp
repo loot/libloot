@@ -25,16 +25,30 @@
 #include "api/helpers/git_helper.h"
 
 #include <boost/format.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "loot/exception/error_categories.h"
 #include "loot/exception/git_state_error.h"
+#include "api/helpers/logging.h"
 
 using std::string;
 
 namespace fs = boost::filesystem;
 
 namespace loot {
+GitHelper::GitHelper() : logger_(getLogger()) {}
+
+GitHelper::~GitHelper() {
+  if (data_.repo != nullptr) {
+    std::string path = git_repository_path(data_.repo);
+
+    if (!path.empty()) {
+      try {
+        FixRepoPermissions(path);
+      } catch (std::exception&) {}
+    }
+  }
+}
+
 GitHelper::GitData::GitData() :
   repo(nullptr),
   remote(nullptr),
@@ -78,12 +92,6 @@ GitHelper::GitData::~GitData() {
     delete[] checkout_options.paths.strings[i];
   }
 
-  if (!path.empty()) {
-    try {
-      FixRepoPermissions(path);
-    } catch (std::exception&) {}
-  }
-
   git_libgit2_shutdown();
 }
 
@@ -110,20 +118,30 @@ bool GitHelper::IsRepository(const boost::filesystem::path& path) {
 
 // Removes the read-only flag from some files in git repositories created by libgit2.
 void GitHelper::FixRepoPermissions(const boost::filesystem::path& path) {
-  BOOST_LOG_TRIVIAL(trace) << "Recursively setting write permission on directory: " << path;
+  if (logger_) {
+    logger_->trace("Recursively setting write permission on directory: {}", path.string());
+  }
   for (fs::recursive_directory_iterator it(path); it != fs::recursive_directory_iterator(); ++it) {
     if ((it->status().permissions() & (fs::owner_write | fs::group_write | fs::others_write)) == 0) {
-      BOOST_LOG_TRIVIAL(trace) << "Setting write permission for: " << it->path();
+      if (logger_) {
+        logger_->trace("Setting write permission for: {}", it->path().string());
+      }
       fs::permissions(it->path(), fs::add_perms | fs::owner_write);
     }
   }
 }
 
 int GitHelper::DiffFileCallback(const git_diff_delta *delta, float progress, void * payload) {
-  BOOST_LOG_TRIVIAL(trace) << "Checking diff for: " << delta->old_file.path;
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Checking diff for: {}", delta->old_file.path);
+  }
+
   DiffPayload * gdp = (DiffPayload*)payload;
   if (strcmp(delta->old_file.path, gdp->fileToFind) == 0) {
-    BOOST_LOG_TRIVIAL(warning) << "Edited masterlist found.";
+    if (logger) {
+      logger->warn("Edited masterlist found.");
+    }
     gdp->fileFound = true;
   }
 
@@ -136,7 +154,9 @@ void GitHelper::Clone(const boost::filesystem::path& path, const std::string& ur
     throw GitStateError("Cannot clone repository that has already been opened.");
 
   // Clone the remote repository.
-  BOOST_LOG_TRIVIAL(info) << "Repository doesn't exist, cloning the remote repository.";
+  if (logger_) {
+    logger_->info("Repository doesn't exist, cloning the remote repository.");
+  }
 
   fs::path tempPath = path.parent_path() / fs::unique_path();
 
@@ -147,7 +167,9 @@ void GitHelper::Clone(const boost::filesystem::path& path, const std::string& ur
       // Directory is non-empty. Delete the masterlist file and
       // .git folder, then move any remaining files to a temporary
       // folder while the repo is cloned, before moving them back.
-    BOOST_LOG_TRIVIAL(trace) << "Repo path not empty, renaming folder.";
+    if (logger_) {
+      logger_->trace("Repo path not empty, renaming folder.");
+    }
 
     // Clear any read-only flags first.
     FixRepoPermissions(path);
@@ -166,7 +188,9 @@ void GitHelper::Clone(const boost::filesystem::path& path, const std::string& ur
 
   if (fs::exists(tempPath)) {
       //Move contents back in.
-    BOOST_LOG_TRIVIAL(trace) << "Repo path wasn't empty, moving previous files back in.";
+    if (logger_) {
+      logger_->trace("Repo path wasn't empty, moving previous files back in.");
+    }
     for (fs::directory_iterator it(tempPath); it != fs::directory_iterator(); ++it) {
       if (!fs::exists(path / it->path().filename())) {
           //No conflict, OK to move back in.
@@ -182,7 +206,9 @@ void GitHelper::Fetch(const std::string& remote) {
   if (data_.repo == nullptr)
     throw GitStateError("Cannot fetch updates for repository that has not been opened.");
 
-  BOOST_LOG_TRIVIAL(trace) << "Fetching updates from remote.";
+  if (logger_) {
+    logger_->trace("Fetching updates from remote.");
+  }
 
   // Get the origin remote.
   Call(git_remote_lookup(&data_.remote, data_.repo, remote.c_str()));
@@ -193,7 +219,10 @@ void GitHelper::Fetch(const std::string& remote) {
 
   // Log some stats on what was fetched either during update or clone.
   const git_transfer_progress * stats = git_remote_stats(data_.remote);
-  BOOST_LOG_TRIVIAL(info) << "Received " << stats->indexed_objects << " of " << stats->total_objects << " objects in " << stats->received_bytes << " bytes.";
+  if (logger_) {
+    logger_->trace("Received {} of {} objects in {} bytes.",
+      stats->indexed_objects, stats->total_objects, stats->received_bytes);
+  }
 
   git_remote_free(data_.remote);
   data_.remote = nullptr;
@@ -209,26 +238,34 @@ void GitHelper::CheckoutNewBranch(const std::string& remote, const std::string& 
   else if (data_.reference != nullptr)
     throw GitStateError("Cannot fetch repository updates, reference memory already allocated.");
 
-  BOOST_LOG_TRIVIAL(trace) << "Looking up commit referred to by the remote branch \"" << branch << "\".";
+  if (logger_) {
+    logger_->trace("Looking up commit referred to by the remote branch \"{}\".", branch);
+  }
   Call(git_revparse_single(&data_.object, data_.repo, (remote + "/" + branch).c_str()));
   const git_oid * commit_id = git_object_id(data_.object);
 
-  // Create a branch.
-  BOOST_LOG_TRIVIAL(trace) << "Creating the new branch.";
+  if (logger_) {
+    logger_->trace("Creating the new branch.");
+  }
   Call(git_commit_lookup(&data_.commit, data_.repo, commit_id));
   Call(git_branch_create(&data_.reference, data_.repo, branch.c_str(), data_.commit, 1));
 
-  // Set upstream.
-  BOOST_LOG_TRIVIAL(trace) << "Setting the upstream for the new branch.";
+  if (logger_) {
+    logger_->trace("Setting the upstream for the new branch.");
+  }
   Call(git_branch_set_upstream(data_.reference, (remote + "/" + branch).c_str()));
 
   // Check if HEAD points to the desired branch and set it to if not.
   if (!git_branch_is_head(data_.reference)) {
-    BOOST_LOG_TRIVIAL(trace) << "Setting HEAD to follow branch: " << branch;
+    if (logger_) {
+      logger_->trace("Setting HEAD to follow branch: {}", branch);
+    }
     Call(git_repository_set_head(data_.repo, (string("refs/heads/") + branch).c_str()));
   }
 
-  BOOST_LOG_TRIVIAL(trace) << "Performing a Git checkout of HEAD.";
+  if (logger_) {
+    logger_->trace("Performing a Git checkout of HEAD.");
+  }
   Call(git_checkout_head(data_.repo, &data_.checkout_options));
 
   // Free tree and commit pointers. Reference pointer is still used below.
@@ -254,7 +291,9 @@ void GitHelper::CheckoutRevision(const std::string& revision) {
   Call(git_repository_set_head_detached(data_.repo, oid));
 
   // Checkout the new HEAD.
-  BOOST_LOG_TRIVIAL(trace) << "Performing a Git checkout of HEAD.";
+  if (logger_) {
+    logger_->trace("Performing a Git checkout of HEAD.");
+  }
   Call(git_checkout_head(data_.repo, &data_.checkout_options));
 
   git_object_free(data_.object);
@@ -271,11 +310,15 @@ std::string GitHelper::GetHeadShortId() {
   else if (data_.buffer.ptr != nullptr)
     throw GitStateError("Cannot fetch repository updates, buffer memory already allocated.");
 
-  BOOST_LOG_TRIVIAL(trace) << "Getting the Git object for HEAD.";
+  if (logger_) {
+    logger_->trace("Getting the Git object for HEAD.");
+  }
   Call(git_repository_head(&data_.reference, data_.repo));
   Call(git_reference_peel(&data_.object, data_.reference, GIT_OBJ_COMMIT));
 
-  BOOST_LOG_TRIVIAL(trace) << "Generating hex string for Git object ID.";
+  if (logger_) {
+    logger_->trace("Generating hex string for Git object ID.");
+  }
   Call(git_object_short_id(&data_.buffer, data_.object));
   string revision = data_.buffer.ptr;
 
@@ -294,24 +337,36 @@ GitHelper::GitData& GitHelper::GetData() {
 }
 
 bool GitHelper::IsFileDifferent(const boost::filesystem::path& repoRoot, const std::string& filename) {
+  auto logger = getLogger();
+
   if (!IsRepository(repoRoot)) {
-    BOOST_LOG_TRIVIAL(info) << "Unknown masterlist revision: Git repository missing.";
+    if (logger) {
+      logger->info("Unknown masterlist revision: Git repository missing.");
+    }
     throw GitStateError("Cannot check if the \"" + filename + "\" working copy is edited, Git repository missing.");
   }
 
-  BOOST_LOG_TRIVIAL(debug) << "Existing repository found, attempting to open it.";
+  if (logger) {
+    logger->trace("Existing repository found, attempting to open it.");
+  }
   GitHelper git;
   git.Call(git_repository_open(&git.data_.repo, repoRoot.string().c_str()));
 
   // Perform a git diff, then iterate the deltas to see if one exists for the masterlist.
-  BOOST_LOG_TRIVIAL(trace) << "Getting the tree for the HEAD revision.";
+  if (logger) {
+    logger->trace("Getting the tree for the HEAD revision.");
+  }
   git.Call(git_revparse_single(&git.data_.object, git.data_.repo, "HEAD^{tree}"));
   git.Call(git_tree_lookup(&git.data_.tree, git.data_.repo, git_object_id(git.data_.object)));
 
-  BOOST_LOG_TRIVIAL(trace) << "Performing git diff.";
+  if (logger) {
+    logger->trace("Performing git diff.");
+  }
   git.Call(git_diff_tree_to_workdir_with_index(&git.data_.diff, git.data_.repo, git.data_.tree, NULL));
 
-  BOOST_LOG_TRIVIAL(trace) << "Iterating over git diff deltas.";
+  if (logger) {
+    logger->trace("Iterating over git diff deltas.");
+  }
   GitHelper::DiffPayload payload;
   payload.fileFound = false;
   payload.fileToFind = filename.c_str();

@@ -29,6 +29,7 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
+#include <spdlog/spdlog.h>
 
 #include "api/game/game.h"
 #include "api/plugin/plugin.h"
@@ -83,6 +84,7 @@ private:
   std::map<vertex_t, size_t> indexMap_;
   vertex_map_t vertexIndexMap_;
   std::vector<std::string> oldLoadOrder_;
+  std::shared_ptr<spdlog::logger> logger_;
 };
 }
 

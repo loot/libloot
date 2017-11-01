@@ -27,7 +27,7 @@
 #include <boost/crc.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/format.hpp>
-#include <boost/log/trivial.hpp>
+#include "api/helpers/logging.h"
 
 #include "loot/exception/file_access_error.h"
 
@@ -48,7 +48,10 @@ size_t GetStreamSize(std::istream& stream) {
 //Calculate the CRC of the given file for comparison purposes.
 uint32_t GetCrc32(const boost::filesystem::path& filename) {
   try {
-    BOOST_LOG_TRIVIAL(trace) << "Calculating CRC for: " << filename.string();
+    auto logger = getLogger();
+    if (logger) {
+      logger->trace("Calculating CRC for: {}", filename.string());
+    }
 
     boost::filesystem::ifstream ifile(filename, std::ios::binary);
     ifile.exceptions(std::ios_base::badbit | std::ios_base::failbit);
@@ -68,7 +71,9 @@ uint32_t GetCrc32(const boost::filesystem::path& filename) {
     }
 
     uint32_t checksum = result.checksum();
-    BOOST_LOG_TRIVIAL(debug) << "CRC32(\"" << filename.string() << "\"): " << std::hex << checksum << std::dec;
+    if (logger) {
+      logger->debug("CRC32(\"{}\"): {:x}", filename.string(), checksum);
+    }
     return checksum;
 
   } catch (std::exception& e) {

@@ -26,18 +26,21 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "loot/exception/file_access_error.h"
-#include "api/metadata/yaml/plugin_metadata.h"
 #include "api/game/game.h"
+#include "api/helpers/logging.h"
 #include "api/metadata/condition_evaluator.h"
+#include "api/metadata/yaml/plugin_metadata.h"
 
 namespace loot {
 void MetadataList::Load(const boost::filesystem::path& filepath) {
   Clear();
 
-  BOOST_LOG_TRIVIAL(debug) << "Loading file: " << filepath;
+  auto logger = getLogger();
+  if (logger) {
+    logger->debug("Loading file: {}", filepath.string());
+  }
 
   boost::filesystem::ifstream in(filepath);
   if (!in.good())
@@ -64,11 +67,16 @@ void MetadataList::Load(const boost::filesystem::path& filepath) {
   if (metadataList["bash_tags"])
     bashTags_ = metadataList["bash_tags"].as<std::set<std::string>>();
 
-  BOOST_LOG_TRIVIAL(debug) << "File loaded successfully.";
+  if (logger) {
+    logger->debug("File loaded successfully.");
+  }
 }
 
 void MetadataList::Save(const boost::filesystem::path& filepath) const {
-  BOOST_LOG_TRIVIAL(trace) << "Saving metadata list to: " << filepath;
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Saving metadata list to: {}", filepath.string());
+  }
   YAML::Emitter emitter;
   emitter.SetIndent(2);
   emitter << YAML::BeginMap;

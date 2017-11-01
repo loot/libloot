@@ -29,6 +29,7 @@
 
 #include <boost/filesystem.hpp>
 #include <git2.h>
+#include <spdlog/spdlog.h>
 
 namespace loot {
 class GitHelper {
@@ -59,6 +60,9 @@ public:
     git_clone_options clone_options;
   };
 
+  GitHelper();
+  ~GitHelper();
+
   void Call(int error_code);
 
   static bool IsRepository(const boost::filesystem::path& path);
@@ -77,9 +81,10 @@ public:
 private:
     // Removes the read-only flag from some files in git repositories
     // created by libgit2.
-  static void FixRepoPermissions(const boost::filesystem::path& path);
+  void FixRepoPermissions(const boost::filesystem::path& path);
 
   GitData data_;
+  std::shared_ptr<spdlog::logger> logger_;
 };
 }
 #endif

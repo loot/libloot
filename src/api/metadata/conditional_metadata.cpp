@@ -24,10 +24,8 @@
 
 #include "loot/metadata/conditional_metadata.h"
 
-#include <boost/locale.hpp>
-#include <boost/log/trivial.hpp>
-
 #include "api/game/game.h"
+#include "api/helpers/logging.h"
 #include "api/metadata/condition_evaluator.h"
 
 using std::string;
@@ -46,7 +44,12 @@ std::string ConditionalMetadata::GetCondition() const {
 }
 
 void ConditionalMetadata::ParseCondition() const {
-  BOOST_LOG_TRIVIAL(trace) << "Testing condition syntax: " << condition_;
-  ConditionEvaluator().evaluate(condition_);
+  if (!condition_.empty()) {
+    auto logger = getLogger();
+    if (logger) {
+      logger->trace("Testing condition syntax: {}", condition_);
+    }
+    ConditionEvaluator().evaluate(condition_);
+  }
 }
 }

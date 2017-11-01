@@ -28,12 +28,12 @@
 #include <sstream>
 
 #include <boost/format.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "loot/exception/file_access_error.h"
 #include "loot/exception/git_state_error.h"
 #include "api/game/game.h"
 #include "api/helpers/git_helper.h"
+#include "api/helpers/logging.h"
 
 using boost::format;
 using std::string;
@@ -46,22 +46,34 @@ MasterlistInfo Masterlist::GetInfo(const boost::filesystem::path& path, bool sho
   GitHelper git;
   MasterlistInfo info;
 
+  auto logger = getLogger();
+
   if (!fs::exists(path)) {
-    BOOST_LOG_TRIVIAL(info) << "Unknown masterlist revision: No masterlist present.";
+    if (logger) {
+      logger->info("Unknown masterlist revision: No masterlist present.");
+    }
     throw FileAccessError(string("N/A: No masterlist present at ") + path.string());
   } else if (!git.IsRepository(path.parent_path())) {
-    BOOST_LOG_TRIVIAL(info) << "Unknown masterlist revision: Git repository missing.";
+    if (logger) {
+      logger->info("Unknown masterlist revision: Git repository missing.");
+    }
     throw GitStateError(string("Unknown: \"") + path.parent_path().string() + "\" is not a Git repository.");
   }
 
-  BOOST_LOG_TRIVIAL(debug) << "Existing repository found, attempting to open it.";
+  if (logger) {
+    logger->debug("Existing repository found, attempting to open it.");
+  }
   git.Call(git_repository_open(&git.GetData().repo, path.parent_path().string().c_str()));
 
   //Need to get the HEAD object, because the individual file has a different SHA.
-  BOOST_LOG_TRIVIAL(info) << "Getting the Git object for the tree at HEAD.";
+  if (logger) {
+    logger->info("Getting the Git object for the tree at HEAD.");
+  }
   git.Call(git_revparse_single(&git.GetData().object, git.GetData().repo, "HEAD"));
 
-  BOOST_LOG_TRIVIAL(trace) << "Generating hex string for Git object ID.";
+  if (logger) {
+    logger->trace("Generating hex string for Git object ID.");
+  }
   if (shortID) {
     git.Call(git_object_short_id(&git.GetData().buffer, git.GetData().object));
     info.revision_id = git.GetData().buffer.ptr;
@@ -70,7 +82,9 @@ MasterlistInfo Masterlist::GetInfo(const boost::filesystem::path& path, bool sho
     info.revision_id = git_oid_tostr(c_rev, GIT_OID_HEXSZ + 1, git_object_id(git.GetData().object));
   }
 
-  BOOST_LOG_TRIVIAL(trace) << "Getting date for Git object.";
+  if (logger) {
+    logger->trace("Getting date for Git object.");
+  }
   const git_oid * oid = git_object_id(git.GetData().object);
   git.Call(git_commit_lookup(&git.GetData().commit, git.GetData().repo, oid));
   git_time_t time = git_commit_time(git.GetData().commit);
@@ -79,7 +93,9 @@ MasterlistInfo Masterlist::GetInfo(const boost::filesystem::path& path, bool sho
   out << std::put_time(std::gmtime(&time), "%Y-%m-%d");
   info.revision_date = out.str();
 
-  BOOST_LOG_TRIVIAL(trace) << "Diffing masterlist HEAD and working copy.";
+  if (logger) {
+    logger->trace("Diffing masterlist HEAD and working copy.");
+  }
   info.is_modified = GitHelper::IsFileDifferent(path.parent_path(), path.filename().string());
 
   return info;
@@ -91,13 +107,18 @@ bool Masterlist::IsLatest(const boost::filesystem::path& path,
     throw std::invalid_argument("Repository branch must not be empty.");
 
   GitHelper git;
+  auto logger = getLogger();
 
   if (!git.IsRepository(path.parent_path())) {
-    BOOST_LOG_TRIVIAL(info) << "Cannot get latest masterlist revision: Git repository missing.";
+    if (logger) {
+      logger->info("Cannot get latest masterlist revision: Git repository missing.");
+    }
     throw GitStateError(string("Unknown: \"") + path.parent_path().string() + "\" is not a Git repository.");
   }
 
-  BOOST_LOG_TRIVIAL(info) << "Attempting to open repository.";
+  if (logger) {
+    logger->info("Attempting to open repository.");
+  }
   git.Call(git_repository_open(&git.GetData().repo, path.parent_path().string().c_str()));
 
   git.Fetch("origin");
@@ -115,6 +136,7 @@ bool Masterlist::IsLatest(const boost::filesystem::path& path,
 
 bool Masterlist::Update(const boost::filesystem::path& path, const std::string& repoUrl, const std::string& repoBranch) {
   GitHelper git;
+  auto logger = getLogger();
   fs::path repoPath = path.parent_path();
   string filename = path.filename().string();
 
@@ -122,7 +144,9 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
     throw std::invalid_argument("Repository URL and branch must not be empty.");
 
   // Initialise checkout options.
-  BOOST_LOG_TRIVIAL(debug) << "Setting up checkout options.";
+  if (logger) {
+    logger->debug("Setting up checkout options.");
+  }
   char * paths = new char[filename.length() + 1];
   strcpy(paths, filename.c_str());
   git.GetData().checkout_options.checkout_strategy = GIT_CHECKOUT_FORCE | GIT_CHECKOUT_DONT_REMOVE_EXISTING;
@@ -135,18 +159,24 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
   git.GetData().clone_options.checkout_branch = repoBranch.c_str();
 
   // Now try to access the repository if it exists, or clone one if it doesn't.
-  BOOST_LOG_TRIVIAL(trace) << "Attempting to open the Git repository at: " << repoPath;
+  if (logger) {
+    logger->trace("Attempting to open the Git repository at: {}", repoPath.string());
+  }
   if (!git.IsRepository(repoPath))
     git.Clone(repoPath, repoUrl);
   else {
     // Repository exists: check settings are correct, then pull updates.
 
     // Open the repository.
-    BOOST_LOG_TRIVIAL(info) << "Existing repository found, attempting to open it.";
+    if (logger) {
+      logger->info("Existing repository found, attempting to open it.");
+    }
     git.Call(git_repository_open(&git.GetData().repo, repoPath.string().c_str()));
 
     // Set the remote URL.
-    BOOST_LOG_TRIVIAL(info) << "Using remote URL: " << repoUrl;
+    if (logger) {
+      logger->info("Using remote URL: {}", repoUrl);
+    }
     git.Call(git_remote_set_url(git.GetData().repo, "origin", repoUrl.c_str()));
 
     // Now fetch updates from the remote.
@@ -164,14 +194,18 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
 
       // Check if HEAD points to the desired branch and set it to if not.
       if (!git_branch_is_head(git.GetData().reference)) {
-        BOOST_LOG_TRIVIAL(trace) << "Setting HEAD to follow branch: " << repoBranch;
+        if (logger) {
+          logger->trace("Setting HEAD to follow branch: {}", repoBranch);
+        }
         git.Call(git_repository_set_head(git.GetData().repo, (string("refs/heads/") + repoBranch).c_str()));
       }
 
       // Get remote branch reference.
       git.Call(git_branch_upstream(&git.GetData().reference2, git.GetData().reference));
 
-      BOOST_LOG_TRIVIAL(trace) << "Checking HEAD and remote branch's mergeability.";
+      if (logger) {
+        logger->trace("Checking HEAD and remote branch's mergeability.");
+      }
       git_merge_analysis_t analysis;
       git_merge_preference_t pref;
       git.Call(git_annotated_commit_from_ref(&git.GetData().annotated_commit, git.GetData().repo, git.GetData().reference2));
@@ -179,9 +213,13 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
 
       if ((analysis & GIT_MERGE_ANALYSIS_FASTFORWARD) == 0 && (analysis & GIT_MERGE_ANALYSIS_UP_TO_DATE) == 0) {
           // The local branch can't be easily merged. Best just to delete and recreate it.
-        BOOST_LOG_TRIVIAL(trace) << "Local branch cannot be easily merged with remote branch.";
+        if (logger) {
+          logger->trace("Local branch cannot be easily merged with remote branch.");
+        }
 
-        BOOST_LOG_TRIVIAL(trace) << "Detaching HEAD so that the branch can be recreated.";
+        if (logger) {
+          logger->trace("Detaching HEAD so that the branch can be recreated.");
+        }
         git.Call(git_repository_detach_head(git.GetData().repo));
 
         // Need to free ref before calling git.CheckoutNewBranch()
@@ -206,8 +244,9 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
             // No merge is required, but HEAD might be ahead of the remote branch. Check
             // to see if that's the case, and move HEAD back to match the remote branch
             // if so.
-          BOOST_LOG_TRIVIAL(trace) << "Local branch is up-to-date with remote branch.";
-          BOOST_LOG_TRIVIAL(trace) << "Checking to see if local and remote branch heads are equal.";
+          if (logger) {
+            logger->trace("Local branch is up-to-date with remote branch. Checking to see if local and remote branch heads are equal.");
+          }
 
           // Get local branch commit ID.
           git.Call(git_reference_peel(&git.GetData().object, git.GetData().reference, GIT_OBJ_COMMIT));
@@ -223,21 +262,29 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
           // action needs to be taken. Otherwise, a checkout
           // must be performed and the checked-out file parsed.
           if (!updateBranchHead) {
-            BOOST_LOG_TRIVIAL(trace) << "Local and remote branch heads are equal.";
+            if (logger) {
+              logger->trace("Local and remote branch heads are equal.");
+            }
             if (!GitHelper::IsFileDifferent(repoPath, filename)) {
-              BOOST_LOG_TRIVIAL(info) << "Local branch and masterlist file are already up to date.";
+              if (logger) {
+                logger->info("Local branch and masterlist file are already up to date.");
+              }
               return false;
             }
-          } else
-            BOOST_LOG_TRIVIAL(trace) << "Local branch heads is ahead of remote branch head.";
-        } else
-          BOOST_LOG_TRIVIAL(trace) << "Local branch can be fast-forwarded to remote branch.";
+          } else if (logger) {
+            logger->trace("Local branch heads is ahead of remote branch head.");
+          }
+        } else if (logger) {
+          logger->trace("Local branch can be fast-forwarded to remote branch.");
+        }
 
         if (updateBranchHead) {
             // The remote branch reference points to a particular
             // commit. Update the local branch reference to point
             // to the same commit.
-          BOOST_LOG_TRIVIAL(trace) << "Syncing local branch head with remote branch head.";
+          if (logger) {
+            logger->trace("Syncing local branch head with remote branch head.");
+          }
           git.Call(git_reference_set_target(&git.GetData().reference2, git.GetData().reference, remote_commit_id, "Setting branch reference."));
 
           git_reference_free(git.GetData().reference2);
@@ -247,7 +294,9 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
         git_reference_free(git.GetData().reference);
         git.GetData().reference = nullptr;
 
-        BOOST_LOG_TRIVIAL(trace) << "Performing a Git checkout of HEAD.";
+        if (logger) {
+          logger->trace("Performing a Git checkout of HEAD.");
+        }
         git.Call(git_checkout_head(git.GetData().repo, &git.GetData().checkout_options));
       }
     }
@@ -263,7 +312,9 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
     string revision = git.GetHeadShortId();
 
     //Now try parsing the masterlist.
-    BOOST_LOG_TRIVIAL(debug) << "Testing masterlist parsing.";
+    if (logger) {
+      logger->debug("Testing masterlist parsing.");
+    }
     try {
       this->Load(path);
 
@@ -272,7 +323,9 @@ bool Masterlist::Update(const boost::filesystem::path& path, const std::string& 
       parsingFailed = true;
 
       //There was an error, roll back one revision.
-      BOOST_LOG_TRIVIAL(error) << "Masterlist parsing failed. Masterlist revision " + string(revision) + ": " + e.what();
+      if (logger) {
+        logger->error("Masterlist parsing failed. Masterlist revision {}: {}", revision, e.what());
+      }
       git.CheckoutRevision("HEAD^");
     }
   } while (parsingFailed);

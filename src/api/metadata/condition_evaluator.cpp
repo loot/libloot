@@ -26,9 +26,9 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "api/helpers/crc.h"
+#include "api/helpers/logging.h"
 #include "api/metadata/condition_grammar.h"
 #include "loot/exception/condition_syntax_error.h"
 
@@ -55,7 +55,10 @@ bool ConditionEvaluator::evaluate(const std::string& condition) const {
   if (condition.empty())
     return true;
 
-  BOOST_LOG_TRIVIAL(trace) << "Evaluating condition: " << condition;
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Evaluating condition: {}", condition);
+  }
 
   auto cachedValue = gameCache_->GetCachedCondition(condition);
   if (cachedValue.second)
@@ -272,7 +275,10 @@ bool ConditionEvaluator::compareVersions(const std::string & filePath, const std
   Version givenVersion = Version(testVersion);
   Version trueVersion = getVersion(filePath);
 
-  BOOST_LOG_TRIVIAL(trace) << "Version extracted: " << trueVersion.AsString();
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Version extracted: {}", trueVersion.AsString());
+  }
 
   return ((comparator == "==" && trueVersion == givenVersion)
           || (comparator == "!=" && trueVersion != givenVersion)
@@ -283,7 +289,10 @@ bool ConditionEvaluator::compareVersions(const std::string & filePath, const std
 }
 
 void ConditionEvaluator::validatePath(const boost::filesystem::path& path) {
-  BOOST_LOG_TRIVIAL(trace) << "Checking to see if the path \"" << path << "\" is safe.";
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Checking to see if the path \"{}\" is safe.", path.string());
+  }
 
   boost::filesystem::path temp;
   for (const auto& component : path) {
@@ -357,7 +366,10 @@ bool ConditionEvaluator::isRegexMatchInDataDirectory(const std::pair<boost::file
    // Now we have a valid parent path and a regex filename. Check that the
    // parent path exists and is a directory.
   if (!isGameSubdirectory(pathRegex.first)) {
-    BOOST_LOG_TRIVIAL(trace) << "The path \"" << pathRegex.first << "\" is not a game subdirectory.";
+    auto logger = getLogger();
+    if (logger) {
+      logger->trace("The path \"{}\" is not a game subdirectory.", pathRegex.first.string());
+    }
     return false;
   }
 

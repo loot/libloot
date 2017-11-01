@@ -30,9 +30,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/locale.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "api/game/game.h"
+#include "api/helpers/logging.h"
 
 using std::inserter;
 using std::regex;
@@ -50,7 +50,11 @@ PluginMetadata::PluginMetadata(const std::string& n) : name_(n), enabled_(true) 
 }
 
 void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
-  BOOST_LOG_TRIVIAL(trace) << "Merging metadata for: " << name_;
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Merging metadata for: {}", name_);
+  }
+
   if (plugin.HasNameOnly())
     return;
 
@@ -92,7 +96,11 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
 PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
   using std::set_difference;
 
-  BOOST_LOG_TRIVIAL(trace) << "Comparing new metadata for: " << name_;
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Comparing new metadata for: {}", name_);
+  }
+
   PluginMetadata p(*this);
 
   //Compare this plugin against the given plugin.

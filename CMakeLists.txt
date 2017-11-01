@@ -61,7 +61,7 @@ ELSE ()
     set(RUST_TARGET x86_64-unknown-linux-gnu)
 ENDIF ()
 
-find_package(Boost REQUIRED COMPONENTS atomic log log_setup regex locale thread date_time chrono filesystem system iostreams)
+find_package(Boost REQUIRED COMPONENTS locale filesystem system)
 
 ExternalProject_Add(GTest
                     PREFIX "external"
@@ -136,6 +136,15 @@ ExternalProject_Add(testing-plugins
                     CONFIGURE_COMMAND ""
                     BUILD_COMMAND ""
                     INSTALL_COMMAND "")
+
+ExternalProject_Add(spdlog
+                    PREFIX "external"
+                    URL "https://github.com/gabime/spdlog/archive/v0.14.0.tar.gz"
+                    CONFIGURE_COMMAND ""
+                    BUILD_COMMAND ""
+                    INSTALL_COMMAND "")
+ExternalProject_Get_Property(spdlog SOURCE_DIR)
+set(SPDLOG_INCLUDE_DIRS "${SOURCE_DIR}/include")
 
 ExternalProject_Add(yaml-cpp
                     PREFIX "external"
@@ -223,6 +232,7 @@ set (LOOT_API_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/src/api/plugin/plugin_sorter.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/git_helper.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.h"
+                      "${CMAKE_SOURCE_DIR}/src/api/helpers/logging.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/version.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/windows_encoding_converters.h")
 
@@ -277,6 +287,7 @@ include_directories ("${CMAKE_SOURCE_DIR}/src"
                      ${LIBGIT2_INCLUDE_DIRS}
                      ${ESPLUGIN_INCLUDE_DIRS}
                      ${Boost_INCLUDE_DIRS}
+                     ${SPDLOG_INCLUDE_DIRS}
                      ${YAML_CPP_INCLUDE_DIRS}
                      ${GTEST_INCLUDE_DIRS}
                      ${PSEUDOSEM_INCLUDE_DIRS})
@@ -339,12 +350,12 @@ ENDIF ()
 
 # Build tests.
 add_executable       (loot_api_internals_tests ${LOOT_API_SRC} ${LOOT_API_HEADERS} ${LOOT_TESTS_SRC} ${LOOT_TESTS_HEADERS})
-add_dependencies     (loot_api_internals_tests esplugin libgit2 libloadorder pseudosem yaml-cpp GTest testing-metadata testing-plugins)
+add_dependencies     (loot_api_internals_tests esplugin libgit2 libloadorder pseudosem spdlog yaml-cpp GTest testing-metadata testing-plugins)
 target_link_libraries(loot_api_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES})
 
 # Build API.
 add_library          (loot_api ${LOOT_API_SRC} ${LOOT_API_HEADERS})
-add_dependencies     (loot_api esplugin libgit2 libloadorder pseudosem yaml-cpp)
+add_dependencies     (loot_api esplugin libgit2 libloadorder pseudosem spdlog yaml-cpp)
 target_link_libraries(loot_api ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${YAML_CPP_LIBRARIES})
 
 # Build API tests.

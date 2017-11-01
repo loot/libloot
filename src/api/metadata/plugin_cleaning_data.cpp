@@ -26,10 +26,10 @@
 
 #include <boost/format.hpp>
 #include <boost/locale.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "api/game/game.h"
 #include "api/helpers/crc.h"
+#include "api/helpers/logging.h"
 
 namespace loot {
 PluginCleaningData::PluginCleaningData() : crc_(0), itm_(0), ref_(0), nav_(0) {}
@@ -78,7 +78,10 @@ std::vector<MessageContent> PluginCleaningData::GetInfo() const {
 }
 
 MessageContent PluginCleaningData::ChooseInfo(const std::string& language) const {
-  BOOST_LOG_TRIVIAL(trace) << "Choosing dirty info content.";
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Choosing dirty info content.");
+  }
   return MessageContent::Choose(info_, language);
 }
 }

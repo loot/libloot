@@ -29,11 +29,9 @@
 #include <cmath>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-#include <boost/locale.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "api/api_database.h"
+#include "api/helpers/logging.h"
 #include "api/plugin/plugin_sorter.h"
 #include "loot/exception/file_access_error.h"
 
@@ -66,7 +64,10 @@ Game::Game(const GameType gameType,
   localDataPath_(localDataPath),
   cache_(std::make_shared<GameCache>()),
   loadOrderHandler_(std::make_shared<LoadOrderHandler>()) {
-  BOOST_LOG_TRIVIAL(info) << "Initialising load order data for game of type " << (int)type_ << " at: " << gamePath_;
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("Initialising load order data for game of type {} at: {}", (int) type_, gamePath_.string());
+  }
 
   loadOrderHandler_->Init(type_, gamePath_, localDataPath_);
 
@@ -98,6 +99,7 @@ bool Game::IsValidPlugin(const std::string& plugin) const {
 }
 
 void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeadersOnly) {
+  auto logger = getLogger();
   uintmax_t meanFileSize = 0;
   std::multimap<uintmax_t, string> sizeMap;
 
@@ -125,15 +127,22 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
   // Divide the plugins up by thread.
   unsigned int pluginsPerThread = ceil((double)sizeMap.size() / threadsToUse);
   vector<vector<string>> pluginGroups(threadsToUse);
-  BOOST_LOG_TRIVIAL(info) << "Loading " << sizeMap.size() << " plugins using " << threadsToUse << " threads, with up to " << pluginsPerThread << " plugins per thread.";
+  if (logger) {
+    logger->info("Loading {} plugins using {} threads, with up to {} plugins per thread.", sizeMap.size(), threadsToUse, pluginsPerThread);
+  }
 
   // The plugins should be split between the threads so that the data
   // load is as evenly spread as possible.
   size_t currentGroup = 0;
   for (const auto& plugin : sizeMap) {
-    if (currentGroup == threadsToUse)
+    if (currentGroup == threadsToUse) {
       currentGroup = 0;
-    BOOST_LOG_TRIVIAL(trace) << "Adding plugin " << plugin.second << " to loading group " << currentGroup;
+    }
+
+    if (logger) {
+      logger->trace("Adding plugin {} to loading group {}", plugin.second, currentGroup);
+    }
+
     pluginGroups[currentGroup].push_back(plugin.second);
     ++currentGroup;
   }
@@ -143,18 +152,24 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
   loadOrderHandler_->LoadCurrentState();
 
   // Load the plugins.
-  BOOST_LOG_TRIVIAL(trace) << "Starting plugin loading.";
+  if (logger) {
+    logger->trace("Starting plugin loading.");
+  }
   vector<thread> threads;
   while (threads.size() < threadsToUse) {
     vector<string>& pluginGroup = pluginGroups[threads.size()];
     threads.push_back(thread([&]() {
       for (auto pluginName : pluginGroup) {
-        BOOST_LOG_TRIVIAL(trace) << "Loading " << pluginName;
+        if (logger) {
+          logger->trace("Loading {}", pluginName);
+        }
         const bool loadHeader = boost::iequals(pluginName, masterFile_) || loadHeadersOnly;
         try {
           cache_->AddPlugin(Plugin(Type(), DataPath(), loadOrderHandler_, pluginName, loadHeader));
         } catch(std::exception& e) {
-          BOOST_LOG_TRIVIAL(error) << "Caught exception while trying to add " << pluginName << " to the cache: " << e.what();
+          if (logger) {
+            logger->trace("Caught exception while trying to add {} to the cache: {}", pluginName, e.what());
+          }
         }
       }
     }));

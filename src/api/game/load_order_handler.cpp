@@ -26,9 +26,9 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include <boost/log/trivial.hpp>
 
 #include "loot/exception/error_categories.h"
+#include "api/helpers/logging.h"
 
 using boost::format;
 using std::string;
@@ -78,7 +78,10 @@ void LoadOrderHandler::Init(const GameType& gameType,
 }
 
 void LoadOrderHandler::LoadCurrentState() {
-  BOOST_LOG_TRIVIAL(debug) << "Loading the current load order state.";
+  auto logger = getLogger();
+  if (logger) {
+    logger->debug("Loading the current load order state.");
+  }
 
   unsigned int ret = lo_load_current_state(gh_);
 
@@ -86,7 +89,10 @@ void LoadOrderHandler::LoadCurrentState() {
 }
 
 bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
-  BOOST_LOG_TRIVIAL(debug) << "Checking if plugin \"" << pluginName << "\" is active.";
+  auto logger = getLogger();
+  if (logger) {
+    logger->debug("Checking if plugin \"{}\" is active.", pluginName);
+  }
 
   bool result = false;
   unsigned int ret = lo_get_plugin_active(gh_, pluginName.c_str(), &result);
@@ -97,7 +103,10 @@ bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
 }
 
 std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
-  BOOST_LOG_TRIVIAL(debug) << "Getting load order.";
+  auto logger = getLogger();
+  if (logger) {
+    logger->debug("Getting load order.");
+  }
 
   char ** pluginArr;
   size_t pluginArrSize;
@@ -113,12 +122,19 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
 }
 
 void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) const {
-  BOOST_LOG_TRIVIAL(info) << "Setting load order.";
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("Setting load order.");
+  }
+
   size_t pluginArrSize = loadOrder.size();
   char ** pluginArr = new char*[pluginArrSize];
   int i = 0;
   for (const auto &plugin : loadOrder) {
-    BOOST_LOG_TRIVIAL(info) << '\t' << '\t' << plugin;
+    if (logger) {
+      logger->info("\t\t{}", plugin);
+    }
+
     pluginArr[i] = new char[plugin.length() + 1];
     strcpy(pluginArr[i], plugin.c_str());
     ++i;
@@ -132,7 +148,9 @@ void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) c
 
   HandleError("set the load order", ret);
 
-  BOOST_LOG_TRIVIAL(info) << "Load order set successfully.";
+  if (logger) {
+    logger->info("Load order set successfully.");
+  }
 }
 
 void LoadOrderHandler::HandleError(const std::string& operation, unsigned int returnCode) const {
@@ -150,7 +168,11 @@ void LoadOrderHandler::HandleError(const std::string& operation, unsigned int re
     err = (format("libloadorder failed to " + operation + ". Details: %1%") % e).str();
   }
 
-  BOOST_LOG_TRIVIAL(error) << err;
+  auto logger = getLogger();
+  if (logger) {
+    logger->error(err);
+  }
+
   throw std::system_error(returnCode, libloadorder_category(), err);
 }
 }
