@@ -10,32 +10,40 @@ Added
 
 - Support for light master (``.esl``) plugins.
 - :cpp:any:`LoadCurrentLoadOrderState()` in :cpp:any:`loot::GameInterface` to
-  expose load order cache management to clients, as libloadorder no longer 
+  expose load order cache management to clients, as libloadorder no longer
   internally manages it.
-- :cpp:any:`loot::SetLoggingCallback()` to allow clients to handle the LOOT 
+- :cpp:any:`loot::SetLoggingCallback()` to allow clients to handle the LOOT
   API's logging statements themselves.
 - Logging of libloadorder error details.
 
 Changed
 -------
 
-- :cpp:any:`LoadPlugins()` now loads the current load order 
+- :cpp:any:`LoadPlugins()` now loads the current load order
   state before loading plugins.
-- Replaced libespm dependency with esplugin v1.0.5. This significantly improves
+- Added a `condition` string field to :cpp:any:`SimpleMessage`.
+- Replaced libespm dependency with esplugin v1.0.6. This significantly improves
   safety and sorting performance, especially for large load orders.
-- Updated libloadorder to v10.0.0. This significantly improves safety and the
-  performance of load order operations, at the expense of exposing cache 
+- Updated libloadorder to v10.0.3. This significantly improves safety and the
+  performance of load order operations, at the expense of exposing cache
   management to the client.
+- Replaced Boost.Log with spdlog v0.14.0, removing dependencies on several other
+  Boost libraries in the process.
 - Updated libgit2 to v0.26.0.
+- Update Boost to v1.65.1.
 
 Removed
 -------
 
-- ``DatabaseInterface::EvalLists()`` as it was superseded in v0.11.0 by the 
-  ability to evaluate conditions when getting general messages and individual 
+- ``DatabaseInterface::EvalLists()`` as it was superseded in v0.11.0 by the
+  ability to evaluate conditions when getting general messages and individual
   plugins' metadata, which is more efficient.
 - ``SetLoggingVerbosity()`` and ``SetLogFile()`` as they have been superseded
   by the new :cpp:any:`loot::SetLoggingCallback()` function.
+- The ``loot/yaml/*`` headers containing LOOT's internal YAML conversion
+  functions are no longer exposed alongside the API headers.
+- The ``loot/windows_encoding_converters.h`` header is no longer exposed
+  alongside the API headers.
 
 Fixed
 -----
