@@ -24,9 +24,6 @@
 
 #include "loot/metadata/plugin_cleaning_data.h"
 
-#include <boost/format.hpp>
-#include <boost/locale.hpp>
-
 #include "api/game/game.h"
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"

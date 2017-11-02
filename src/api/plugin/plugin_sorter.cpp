@@ -27,7 +27,6 @@
 #include <cstdlib>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/topological_sort.hpp>

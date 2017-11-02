@@ -31,7 +31,6 @@
 #include <type_traits>
 #include <vector>
 
-#include <boost/locale.hpp>
 #include <boost/algorithm/string.hpp>
 #include <esplugin.hpp>
 

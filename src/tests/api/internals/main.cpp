@@ -22,6 +22,8 @@
     <https://www.gnu.org/licenses/>.
     */
 
+#include <boost/locale.hpp>
+
 #include "tests/api/internals/game/game_test.h"
 #include "tests/api/internals/game/game_cache_test.h"
 #include "tests/api/internals/game/load_order_handler_test.h"

@@ -25,6 +25,7 @@
 #include "loot/api.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/locale.hpp>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
