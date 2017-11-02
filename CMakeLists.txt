@@ -298,7 +298,7 @@ include_directories ("${CMAKE_SOURCE_DIR}/src"
 
 # Settings when compiling for Windows.
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    add_definitions (-DUNICODE -D_UNICODE -DLIBLO_STATIC)
+    add_definitions (-DUNICODE -D_UNICODE)
 ENDIF ()
 
 IF (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
