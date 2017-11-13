@@ -31,20 +31,22 @@
 namespace loot {
 File::File() {}
 
-File::File(const std::string& name, const std::string& display, const std::string& condition)
-  : name_(name), display_(display), ConditionalMetadata(condition) {}
+File::File(const std::string& name,
+           const std::string& display,
+           const std::string& condition) :
+    name_(name),
+    display_(display),
+    ConditionalMetadata(condition) {}
 
-bool File::operator < (const File& rhs) const {
+bool File::operator<(const File& rhs) const {
   return boost::ilexicographical_compare(GetName(), rhs.GetName());
 }
 
-bool File::operator == (const File& rhs) const {
+bool File::operator==(const File& rhs) const {
   return boost::iequals(GetName(), rhs.GetName());
 }
 
-std::string File::GetName() const {
-  return name_;
-}
+std::string File::GetName() const { return name_; }
 
 std::string File::GetDisplayName() const {
   if (display_.empty())

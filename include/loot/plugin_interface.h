@@ -86,9 +86,9 @@ public:
   virtual bool IsMaster() const = 0;
 
   /**
-  * Check if the plugin is a light master.
-  * @return True if plugin is a light master, false otherwise.
-  */
+   * Check if the plugin is a light master.
+   * @return True if plugin is a light master, false otherwise.
+   */
   virtual bool IsLightMaster() const = 0;
 
   /**
@@ -125,7 +125,7 @@ struct hash<loot::PluginInterface> {
    * loot::PluginInterface.
    * @return The hash generated from the plugin's lowercased filename.
    */
-  size_t operator() (const loot::PluginInterface& plugin) const {
+  size_t operator()(const loot::PluginInterface& plugin) const {
     return hash<string>()(plugin.GetLowercasedName());
   }
 };

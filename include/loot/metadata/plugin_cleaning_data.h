@@ -87,13 +87,13 @@ public:
    * @returns True if this PluginCleaningData's CRC is less than the given
    *          PluginCleaningData's CRC, false otherwise.
    */
-  LOOT_API bool operator < (const PluginCleaningData& rhs) const;
+  LOOT_API bool operator<(const PluginCleaningData& rhs) const;
 
   /**
    * Check if two PluginCleaningData objects are equal by comparing their CRCs.
    * @returns True if the CRCs are equal, false otherwise.
    */
-  LOOT_API bool operator == (const PluginCleaningData& rhs) const;
+  LOOT_API bool operator==(const PluginCleaningData& rhs) const;
 
   /**
    * Get the CRC that identifies the plugin that the cleaning data is for.
@@ -143,6 +143,7 @@ public:
    *         does not exist, the English-language MessageContent object.
    */
   LOOT_API MessageContent ChooseInfo(const std::string& language) const;
+
 private:
   uint32_t crc_;
   unsigned int itm_;

@@ -79,36 +79,35 @@ public:
    * @return True if this Priority object's value is less than the given
    *         Priority object's value.
    */
-  LOOT_API bool operator < (const Priority& rhs) const;
+  LOOT_API bool operator<(const Priority& rhs) const;
 
   /**
    * Check if this Priority object is greater than another.
    * @return True if this Priority object's value is greater than the given
    *         Priority object's value, false otherwise.
    */
-  LOOT_API bool operator > (const Priority& rhs) const;
+  LOOT_API bool operator>(const Priority& rhs) const;
 
   /**
    * Check if this Priority object is greater than or equal to another.
    * @return True if this Priority object's value is greater than or equal to
    *         the given Priority object's value, false otherwise.
    */
-  LOOT_API bool operator >= (const Priority& rhs) const;
+  LOOT_API bool operator>=(const Priority& rhs) const;
 
   /**
    * Check if this Priority object is equal to another.
    * @return True if this Priority object's value is equal to the given
    *         Priority object's value, false otherwise.
    */
-  LOOT_API bool operator == (const Priority& rhs) const;
-
+  LOOT_API bool operator==(const Priority& rhs) const;
 
   /**
    * Check if this Priority object is greater than a given priority value.
    * @return True if this Priority object's value is greater than the given
    *         value, false otherwise.
    */
-  LOOT_API bool operator > (const uint8_t rhs) const;
+  LOOT_API bool operator>(const uint8_t rhs) const;
 
 private:
   bool isExplicitZeroValue_;

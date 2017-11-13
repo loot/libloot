@@ -33,26 +33,26 @@ namespace loot {
 namespace test {
 class LoadOrderHandlerTest : public CommonGameTestFixture {
 protected:
-  LoadOrderHandlerTest() : loadOrderToSet_({
-    masterFile,
-    blankEsm,
-    blankMasterDependentEsm,
-    blankDifferentEsm,
-    blankDifferentMasterDependentEsm,
-    blankDifferentEsp,
-    blankDifferentPluginDependentEsp,
-    blankEsp,
-    blankMasterDependentEsp,
-    blankDifferentMasterDependentEsp,
-    blankPluginDependentEsp,
-  }) {}
+  LoadOrderHandlerTest() :
+      loadOrderToSet_({
+          masterFile,
+          blankEsm,
+          blankMasterDependentEsm,
+          blankDifferentEsm,
+          blankDifferentMasterDependentEsm,
+          blankDifferentEsp,
+          blankDifferentPluginDependentEsp,
+          blankEsp,
+          blankMasterDependentEsp,
+          blankDifferentMasterDependentEsp,
+          blankPluginDependentEsp,
+      }) {}
 
-  void TearDown() {
-    CommonGameTestFixture::TearDown();
-  }
+  void TearDown() { CommonGameTestFixture::TearDown(); }
 
   void initialiseHandler() {
-    ASSERT_NO_THROW(loadOrderHandler_.Init(GetParam(), dataPath.parent_path(), localPath));
+    ASSERT_NO_THROW(
+        loadOrderHandler_.Init(GetParam(), dataPath.parent_path(), localPath));
   }
 
   LoadOrderHandler loadOrderHandler_;
@@ -63,36 +63,42 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         LoadOrderHandlerTest,
-                        ::testing::Values(
-                          GameType::tes4,
-                          GameType::tes5,
-                          GameType::fo3,
-                          GameType::fonv,
-                          GameType::fo4,
-                          GameType::tes5se));
+                        ::testing::Values(GameType::tes4,
+                                          GameType::tes5,
+                                          GameType::fo3,
+                                          GameType::fonv,
+                                          GameType::fo4,
+                                          GameType::tes5se));
 
 TEST_P(LoadOrderHandlerTest, initShouldThrowIfNoGamePathIsSet) {
   EXPECT_THROW(loadOrderHandler_.Init(GetParam(), ""), std::invalid_argument);
   EXPECT_THROW(loadOrderHandler_.Init(GetParam(), ""), std::invalid_argument);
-  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), "", localPath), std::invalid_argument);
-  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), "", localPath), std::invalid_argument);
+  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), "", localPath),
+               std::invalid_argument);
+  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), "", localPath),
+               std::invalid_argument);
 }
 
 #ifndef _WIN32
 TEST_P(LoadOrderHandlerTest, initShouldThrowOnLinuxIfNoLocalPathIsSet) {
-  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), dataPath.parent_path()), std::system_error);
+  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), dataPath.parent_path()),
+               std::system_error);
 }
 #endif
 
-TEST_P(LoadOrderHandlerTest, initShouldNotThrowIfAValidGameIdAndGamePathAndLocalPathAreSet) {
-  EXPECT_NO_THROW(loadOrderHandler_.Init(GetParam(), dataPath.parent_path(), localPath));
+TEST_P(LoadOrderHandlerTest,
+       initShouldNotThrowIfAValidGameIdAndGamePathAndLocalPathAreSet) {
+  EXPECT_NO_THROW(
+      loadOrderHandler_.Init(GetParam(), dataPath.parent_path(), localPath));
 }
 
-TEST_P(LoadOrderHandlerTest, isPluginActiveShouldThrowIfTheHandlerHasNotBeenInitialised) {
+TEST_P(LoadOrderHandlerTest,
+       isPluginActiveShouldThrowIfTheHandlerHasNotBeenInitialised) {
   EXPECT_THROW(loadOrderHandler_.IsPluginActive(masterFile), std::system_error);
 }
 
-TEST_P(LoadOrderHandlerTest, isPluginActiveShouldReturnFalseIfLoadOrderStateHasNotBeenLoaded) {
+TEST_P(LoadOrderHandlerTest,
+       isPluginActiveShouldReturnFalseIfLoadOrderStateHasNotBeenLoaded) {
   initialiseHandler();
 
   EXPECT_FALSE(loadOrderHandler_.IsPluginActive(masterFile));
@@ -100,7 +106,8 @@ TEST_P(LoadOrderHandlerTest, isPluginActiveShouldReturnFalseIfLoadOrderStateHasN
   EXPECT_FALSE(loadOrderHandler_.IsPluginActive(blankEsp));
 }
 
-TEST_P(LoadOrderHandlerTest, isPluginActiveShouldReturnCorrectPluginStatesAfterInitialisation) {
+TEST_P(LoadOrderHandlerTest,
+       isPluginActiveShouldReturnCorrectPluginStatesAfterInitialisation) {
   initialiseHandler();
   loadOrderHandler_.LoadCurrentState();
 
@@ -109,11 +116,13 @@ TEST_P(LoadOrderHandlerTest, isPluginActiveShouldReturnCorrectPluginStatesAfterI
   EXPECT_FALSE(loadOrderHandler_.IsPluginActive(blankEsp));
 }
 
-TEST_P(LoadOrderHandlerTest, getLoadOrderShouldThrowIfTheHandlerHasNotBeenInitialised) {
+TEST_P(LoadOrderHandlerTest,
+       getLoadOrderShouldThrowIfTheHandlerHasNotBeenInitialised) {
   EXPECT_THROW(loadOrderHandler_.GetLoadOrder(), std::system_error);
 }
 
-TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnAnEmptyVectorIfStateHasNotBeenLoaded) {
+TEST_P(LoadOrderHandlerTest,
+       getLoadOrderShouldReturnAnEmptyVectorIfStateHasNotBeenLoaded) {
   initialiseHandler();
 
   EXPECT_TRUE(loadOrderHandler_.GetLoadOrder().empty());
@@ -126,8 +135,10 @@ TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
   ASSERT_EQ(getLoadOrder(), loadOrderHandler_.GetLoadOrder());
 }
 
-TEST_P(LoadOrderHandlerTest, setLoadOrderShouldThrowIfTheHandlerHasNotBeenInitialised) {
-  EXPECT_THROW(loadOrderHandler_.SetLoadOrder(loadOrderToSet_), std::system_error);
+TEST_P(LoadOrderHandlerTest,
+       setLoadOrderShouldThrowIfTheHandlerHasNotBeenInitialised) {
+  EXPECT_THROW(loadOrderHandler_.SetLoadOrder(loadOrderToSet_),
+               std::system_error);
 }
 
 TEST_P(LoadOrderHandlerTest, setLoadOrderShouldSetTheLoadOrder) {

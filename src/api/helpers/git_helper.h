@@ -27,33 +27,33 @@
 
 #include <string>
 
-#include <boost/filesystem.hpp>
 #include <git2.h>
 #include <spdlog/spdlog.h>
+#include <boost/filesystem.hpp>
 
 namespace loot {
 class GitHelper {
 public:
   struct DiffPayload {
     bool fileFound;
-    const char * fileToFind;
+    const char* fileToFind;
   };
 
   struct GitData {
     GitData();
     ~GitData();
 
-    git_repository * repo;
-    git_remote * remote;
-    git_config * config;
-    git_object * object;
-    git_commit * commit;
-    git_reference * reference;
-    git_reference * reference2;
-    git_blob * blob;
-    git_annotated_commit * annotated_commit;
-    git_tree * tree;
-    git_diff * diff;
+    git_repository* repo;
+    git_remote* remote;
+    git_config* config;
+    git_object* object;
+    git_commit* commit;
+    git_reference* reference;
+    git_reference* reference2;
+    git_blob* blob;
+    git_annotated_commit* annotated_commit;
+    git_tree* tree;
+    git_diff* diff;
     git_buf buffer;
 
     git_checkout_options checkout_options;
@@ -66,8 +66,11 @@ public:
   void Call(int error_code);
 
   static bool IsRepository(const boost::filesystem::path& path);
-  static bool IsFileDifferent(const boost::filesystem::path& repoRoot, const std::string& filename);
-  static int DiffFileCallback(const git_diff_delta *delta, float progress, void * payload);
+  static bool IsFileDifferent(const boost::filesystem::path& repoRoot,
+                              const std::string& filename);
+  static int DiffFileCallback(const git_diff_delta* delta,
+                              float progress,
+                              void* payload);
 
   void Clone(const boost::filesystem::path& path, const std::string& url);
   void Fetch(const std::string& remote);
@@ -79,8 +82,8 @@ public:
   GitData& GetData();
 
 private:
-    // Removes the read-only flag from some files in git repositories
-    // created by libgit2.
+  // Removes the read-only flag from some files in git repositories
+  // created by libgit2.
   void FixRepoPermissions(const boost::filesystem::path& path);
 
   GitData data_;

@@ -37,8 +37,8 @@
 
 #include "api/metadata/yaml/file.h"
 #include "api/metadata/yaml/location.h"
-#include "api/metadata/yaml/message_content.h"
 #include "api/metadata/yaml/message.h"
+#include "api/metadata/yaml/message_content.h"
 #include "api/metadata/yaml/plugin_cleaning_data.h"
 #include "api/metadata/yaml/set.h"
 #include "api/metadata/yaml/tag.h"
@@ -81,9 +81,13 @@ struct convert<loot::PluginMetadata> {
 
   static bool decode(const Node& node, loot::PluginMetadata& rhs) {
     if (!node.IsMap())
-      throw RepresentationException(node.Mark(), "bad conversion: 'plugin metadata' object must be a map");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'plugin metadata' object must be a map");
     if (!node["name"])
-      throw RepresentationException(node.Mark(), "bad conversion: 'name' key missing from 'plugin metadata' object");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'name' key missing from 'plugin metadata' object");
 
     rhs = loot::PluginMetadata(node["name"].as<std::string>());
 
@@ -92,7 +96,10 @@ struct convert<loot::PluginMetadata> {
       try {
         std::regex(rhs.GetName(), std::regex::ECMAScript | std::regex::icase);
       } catch (std::regex_error& e) {
-        throw RepresentationException(node.Mark(), std::string("bad conversion: invalid regex in 'name' key: ") + e.what());
+        throw RepresentationException(
+            node.Mark(),
+            std::string("bad conversion: invalid regex in 'name' key: ") +
+                e.what());
       }
     }
 
@@ -121,15 +128,23 @@ struct convert<loot::PluginMetadata> {
       rhs.SetTags(node["tag"].as<std::set<loot::Tag>>());
     if (node["dirty"]) {
       if (rhs.IsRegexPlugin())
-        throw RepresentationException(node.Mark(), "bad conversion: 'dirty' key must not be present in a regex 'plugin metadata' object");
+        throw RepresentationException(node.Mark(),
+                                      "bad conversion: 'dirty' key must not be "
+                                      "present in a regex 'plugin metadata' "
+                                      "object");
       else
-        rhs.SetDirtyInfo(node["dirty"].as<std::set<loot::PluginCleaningData>>());
+        rhs.SetDirtyInfo(
+            node["dirty"].as<std::set<loot::PluginCleaningData>>());
     }
     if (node["clean"]) {
       if (rhs.IsRegexPlugin())
-        throw RepresentationException(node.Mark(), "bad conversion: 'clean' key must not be present in a regex 'plugin metadata' object");
+        throw RepresentationException(node.Mark(),
+                                      "bad conversion: 'clean' key must not be "
+                                      "present in a regex 'plugin metadata' "
+                                      "object");
       else
-        rhs.SetCleanInfo(node["clean"].as<std::set<loot::PluginCleaningData>>());
+        rhs.SetCleanInfo(
+            node["clean"].as<std::set<loot::PluginCleaningData>>());
     }
     if (node["url"])
       rhs.SetLocations(node["url"].as<std::set<loot::Location>>());
@@ -138,10 +153,10 @@ struct convert<loot::PluginMetadata> {
   }
 };
 
-inline Emitter& operator << (Emitter& out, const loot::PluginMetadata& rhs) {
+inline Emitter& operator<<(Emitter& out, const loot::PluginMetadata& rhs) {
   if (!rhs.HasNameOnly()) {
-    out << BeginMap
-      << Key << "name" << Value << YAML::SingleQuoted << rhs.GetName();
+    out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
+        << rhs.GetName();
 
     if (!rhs.IsEnabled())
       out << Key << "enabled" << Value << rhs.IsEnabled();
@@ -151,7 +166,8 @@ inline Emitter& operator << (Emitter& out, const loot::PluginMetadata& rhs) {
     }
 
     if (rhs.GetGlobalPriority().IsExplicit()) {
-      out << Key << "global_priority" << Value << rhs.GetGlobalPriority().GetValue();
+      out << Key << "global_priority" << Value
+          << rhs.GetGlobalPriority().GetValue();
     }
 
     if (!rhs.GetLoadAfterFiles().empty())

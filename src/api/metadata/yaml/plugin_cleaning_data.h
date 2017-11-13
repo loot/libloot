@@ -53,11 +53,16 @@ struct convert<loot::PluginCleaningData> {
 
   static bool decode(const Node& node, loot::PluginCleaningData& rhs) {
     if (!node.IsMap())
-      throw RepresentationException(node.Mark(), "bad conversion: 'cleaning data' object must be a map");
+      throw RepresentationException(
+          node.Mark(), "bad conversion: 'cleaning data' object must be a map");
     if (!node["crc"])
-      throw RepresentationException(node.Mark(), "bad conversion: 'crc' key missing from 'cleaning data' object");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'crc' key missing from 'cleaning data' object");
     if (!node["util"])
-      throw RepresentationException(node.Mark(), "bad conversion: 'util' key missing from 'cleaning data' object");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'util' key missing from 'cleaning data' object");
 
     uint32_t crc = node["crc"].as<uint32_t>();
     int itm = 0, ref = 0, nav = 0;
@@ -80,15 +85,18 @@ struct convert<loot::PluginCleaningData> {
       }
     }
 
-    //Check now that at least one item in info is English if there are multiple items.
+    // Check now that at least one item in info is English if there are multiple
+    // items.
     if (info.size() > 1) {
       bool found = false;
-      for (const auto &mc : info) {
+      for (const auto& mc : info) {
         if (mc.GetLanguage() == loot::MessageContent::defaultLanguage)
           found = true;
       }
       if (!found)
-        throw RepresentationException(node.Mark(), "bad conversion: multilingual messages must contain an English info string");
+        throw RepresentationException(node.Mark(),
+                                      "bad conversion: multilingual messages "
+                                      "must contain an English info string");
     }
 
     rhs = loot::PluginCleaningData(crc, utility, info, itm, ref, nav);
@@ -97,14 +105,14 @@ struct convert<loot::PluginCleaningData> {
   }
 };
 
-inline Emitter& operator << (Emitter& out, const loot::PluginCleaningData& rhs) {
-  out << BeginMap
-    << Key << "crc" << Value << Hex << rhs.GetCRC() << Dec
-    << Key << "util" << Value << YAML::SingleQuoted << rhs.GetCleaningUtility();
+inline Emitter& operator<<(Emitter& out, const loot::PluginCleaningData& rhs) {
+  out << BeginMap << Key << "crc" << Value << Hex << rhs.GetCRC() << Dec << Key
+      << "util" << Value << YAML::SingleQuoted << rhs.GetCleaningUtility();
 
   if (!rhs.GetInfo().empty()) {
     if (rhs.GetInfo().size() == 1)
-      out << Key << "info" << Value << YAML::SingleQuoted << rhs.GetInfo().front().GetText();
+      out << Key << "info" << Value << YAML::SingleQuoted
+          << rhs.GetInfo().front().GetText();
     else
       out << Key << "info" << Value << rhs.GetInfo();
   }

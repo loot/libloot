@@ -27,9 +27,9 @@
 #include <string>
 #include <vector>
 
+#include <yaml-cpp/yaml.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include <yaml-cpp/yaml.h>
 
 #include "loot/metadata/message.h"
 
@@ -55,11 +55,16 @@ struct convert<loot::Message> {
 
   static bool decode(const Node& node, loot::Message& rhs) {
     if (!node.IsMap())
-      throw RepresentationException(node.Mark(), "bad conversion: 'message' object must be a map");
+      throw RepresentationException(
+          node.Mark(), "bad conversion: 'message' object must be a map");
     if (!node["type"])
-      throw RepresentationException(node.Mark(), "bad conversion: 'type' key missing from 'message' object");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'type' key missing from 'message' object");
     if (!node["content"])
-      throw RepresentationException(node.Mark(), "bad conversion: 'content' key missing from 'message' object");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'content' key missing from 'message' object");
 
     std::string type;
     type = node["type"].as<std::string>();
@@ -72,25 +77,30 @@ struct convert<loot::Message> {
 
     std::vector<loot::MessageContent> content;
     if (node["content"].IsSequence())
-      content = node["content"].as< std::vector<loot::MessageContent> >();
+      content = node["content"].as<std::vector<loot::MessageContent>>();
     else {
-      content.push_back(loot::MessageContent(node["content"].as<std::string>()));
+      content.push_back(
+          loot::MessageContent(node["content"].as<std::string>()));
     }
 
-    //Check now that at least one item in content is English if there are multiple items.
+    // Check now that at least one item in content is English if there are
+    // multiple items.
     if (content.size() > 1) {
       bool found = false;
-      for (const auto &mc : content) {
+      for (const auto& mc : content) {
         if (mc.GetLanguage() == loot::MessageContent::defaultLanguage)
           found = true;
       }
       if (!found)
-        throw RepresentationException(node.Mark(), "bad conversion: multilingual messages must contain an English content string");
+        throw RepresentationException(node.Mark(),
+                                      "bad conversion: multilingual messages "
+                                      "must contain an English content string");
     }
 
     // Make any substitutions at this point.
     if (node["subs"]) {
-      std::vector<std::string> subs = node["subs"].as<std::vector<std::string>>();
+      std::vector<std::string> subs =
+          node["subs"].as<std::vector<std::string>>();
       for (auto& mc : content) {
         boost::format f(mc.GetText());
 
@@ -101,7 +111,10 @@ struct convert<loot::Message> {
         try {
           mc = loot::MessageContent(f.str(), mc.GetLanguage());
         } catch (boost::io::format_error& e) {
-          throw RepresentationException(node.Mark(), std::string("bad conversion: content substitution error: ") + e.what());
+          throw RepresentationException(
+              node.Mark(),
+              std::string("bad conversion: content substitution error: ") +
+                  e.what());
         }
       }
     }
@@ -116,14 +129,16 @@ struct convert<loot::Message> {
     try {
       rhs.ParseCondition();
     } catch (std::exception& e) {
-      throw RepresentationException(node.Mark(), std::string("bad conversion: invalid condition syntax: ") + e.what());
+      throw RepresentationException(
+          node.Mark(),
+          std::string("bad conversion: invalid condition syntax: ") + e.what());
     }
 
     return true;
   }
 };
 
-inline Emitter& operator << (Emitter& out, const loot::Message& rhs) {
+inline Emitter& operator<<(Emitter& out, const loot::Message& rhs) {
   out << BeginMap;
 
   if (rhs.GetType() == loot::MessageType::say)
@@ -134,12 +149,14 @@ inline Emitter& operator << (Emitter& out, const loot::Message& rhs) {
     out << Key << "type" << Value << "error";
 
   if (rhs.GetContent().size() == 1)
-    out << Key << "content" << Value << YAML::SingleQuoted << rhs.GetContent().front().GetText();
+    out << Key << "content" << Value << YAML::SingleQuoted
+        << rhs.GetContent().front().GetText();
   else
     out << Key << "content" << Value << rhs.GetContent();
 
   if (rhs.IsConditional())
-    out << Key << "condition" << Value << YAML::SingleQuoted << rhs.GetCondition();
+    out << Key << "condition" << Value << YAML::SingleQuoted
+        << rhs.GetCondition();
 
   out << EndMap;
 

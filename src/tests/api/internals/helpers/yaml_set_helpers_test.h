@@ -79,7 +79,8 @@ protected:
     return false;
   }
 
-  static bool isSequenceOf(const std::string& sequence, const std::vector<std::string>& values) {
+  static bool isSequenceOf(const std::string& sequence,
+                           const std::vector<std::string>& values) {
     std::set<std::string> sortedValues(std::begin(values), std::end(values));
 
     std::set<std::string> found;
@@ -107,17 +108,20 @@ TEST_F(unordered_set, encodingAsYamlShouldStoreAllValuesInUndefinedOrder) {
 
 TEST_F(unordered_set, decodingFromAYamlListShouldStoreValuesCorrectly) {
   YAML::Node node = YAML::Load("[a, b, c]");
-  std::unordered_set<std::string> stringSet = node.as<std::unordered_set<std::string>>();
+  std::unordered_set<std::string> stringSet =
+      node.as<std::unordered_set<std::string>>();
 
   EXPECT_EQ(1, stringSet.count("a"));
   EXPECT_EQ(1, stringSet.count("b"));
   EXPECT_EQ(1, stringSet.count("c"));
 }
 
-TEST_F(unordered_set, decodingFromAYamlListThatContainsDuplicateElementsShouldThrow) {
+TEST_F(unordered_set,
+       decodingFromAYamlListThatContainsDuplicateElementsShouldThrow) {
   YAML::Node node = YAML::Load("[a, b, c, c]");
 
-  EXPECT_THROW(node.as<std::unordered_set<std::string>>(), YAML::RepresentationException);
+  EXPECT_THROW(node.as<std::unordered_set<std::string>>(),
+               YAML::RepresentationException);
 }
 
 TEST_F(unordered_set, emittingAsYamlShouldOutputAYamlListContainingAllValues) {

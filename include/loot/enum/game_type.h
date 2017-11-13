@@ -25,7 +25,6 @@ along with LOOT.  If not, see
 #ifndef LOOT_GAME_TYPE
 #define LOOT_GAME_TYPE
 
-
 /**
  * The namespace used by the LOOT API.
  */

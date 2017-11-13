@@ -51,6 +51,7 @@ public:
   bool IsPluginActive(const std::string& pluginName) const;
 
   void SetLoadOrder(const std::vector<std::string>& loadOrder) const;
+
 private:
   void HandleError(const std::string& operation, unsigned int returnCode) const;
 

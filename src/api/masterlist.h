@@ -39,7 +39,8 @@ public:
               const std::string& repoURL,
               const std::string& repoBranch);
 
-  static MasterlistInfo GetInfo(const boost::filesystem::path& path, bool shortID);
+  static MasterlistInfo GetInfo(const boost::filesystem::path& path,
+                                bool shortID);
 
   static bool IsLatest(const boost::filesystem::path& path,
                        const std::string& repoBranch);

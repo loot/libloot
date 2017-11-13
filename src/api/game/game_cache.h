@@ -49,6 +49,7 @@ public:
 
   void ClearCachedConditions();
   void ClearCachedPlugins();
+
 private:
   std::unordered_map<std::string, bool> conditions_;
   std::unordered_map<std::string, std::shared_ptr<const Plugin>> plugins_;
@@ -60,8 +61,8 @@ private:
 namespace std {
 template<>
 struct less<std::shared_ptr<const loot::Plugin>> {
-  bool operator() (const std::shared_ptr<const loot::Plugin>& lhs,
-                   const std::shared_ptr<const loot::Plugin>& rhs) const {
+  bool operator()(const std::shared_ptr<const loot::Plugin>& lhs,
+                  const std::shared_ptr<const loot::Plugin>& rhs) const {
     return lhs->GetLowercasedName() < rhs->GetLowercasedName();
   }
 };

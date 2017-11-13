@@ -40,39 +40,44 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         ConditionalMetadataTest,
-                        ::testing::Values(
-                          GameType::tes4,
-                          GameType::tes5,
-                          GameType::fo3,
-                          GameType::fonv,
-                          GameType::fo4,
-                          GameType::tes5se));
+                        ::testing::Values(GameType::tes4,
+                                          GameType::tes5,
+                                          GameType::fo3,
+                                          GameType::fonv,
+                                          GameType::fo4,
+                                          GameType::tes5se));
 
-TEST_P(ConditionalMetadataTest, defaultConstructorShouldSetEmptyConditionString) {
+TEST_P(ConditionalMetadataTest,
+       defaultConstructorShouldSetEmptyConditionString) {
   EXPECT_TRUE(conditionalMetadata_.GetCondition().empty());
 }
 
-TEST_P(ConditionalMetadataTest, stringConstructorShouldSetConditionToGivenString) {
+TEST_P(ConditionalMetadataTest,
+       stringConstructorShouldSetConditionToGivenString) {
   std::string condition("condition");
   conditionalMetadata_ = ConditionalMetadata(condition);
 
   EXPECT_EQ(condition, conditionalMetadata_.GetCondition());
 }
 
-TEST_P(ConditionalMetadataTest, isConditionalShouldBeFalseForAnEmptyConditionString) {
+TEST_P(ConditionalMetadataTest,
+       isConditionalShouldBeFalseForAnEmptyConditionString) {
   EXPECT_FALSE(conditionalMetadata_.IsConditional());
 }
 
-TEST_P(ConditionalMetadataTest, isConditionalShouldBeTrueForANonEmptyConditionString) {
+TEST_P(ConditionalMetadataTest,
+       isConditionalShouldBeTrueForANonEmptyConditionString) {
   conditionalMetadata_ = ConditionalMetadata("condition");
   EXPECT_TRUE(conditionalMetadata_.IsConditional());
 }
 
-TEST_P(ConditionalMetadataTest, parseConditionShouldNotThrowForAnEmptyCondition) {
+TEST_P(ConditionalMetadataTest,
+       parseConditionShouldNotThrowForAnEmptyCondition) {
   EXPECT_NO_THROW(conditionalMetadata_.ParseCondition());
 }
 
-TEST_P(ConditionalMetadataTest, parseConditionShouldThrowForAnInvalidCondition) {
+TEST_P(ConditionalMetadataTest,
+       parseConditionShouldThrowForAnInvalidCondition) {
   conditionalMetadata_ = ConditionalMetadata("condition");
   EXPECT_THROW(conditionalMetadata_.ParseCondition(), ConditionSyntaxError);
 }
@@ -82,7 +87,8 @@ TEST_P(ConditionalMetadataTest, parseConditionShouldNotThrowForATrueCondition) {
   EXPECT_NO_THROW(conditionalMetadata_.ParseCondition());
 }
 
-TEST_P(ConditionalMetadataTest, parseConditionShouldNotThrowForAFalseCondition) {
+TEST_P(ConditionalMetadataTest,
+       parseConditionShouldNotThrowForAFalseCondition) {
   conditionalMetadata_ = ConditionalMetadata("file(\"" + missingEsp + "\")");
   EXPECT_NO_THROW(conditionalMetadata_.ParseCondition());
 }

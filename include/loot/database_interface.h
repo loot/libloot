@@ -136,8 +136,9 @@ public:
    *         character hash will be outputted.
    *  @returns The revision data.
    */
-  virtual MasterlistInfo GetMasterlistRevision(const std::string& masterlist_path,
-                                               const bool get_short_id) const = 0;
+  virtual MasterlistInfo GetMasterlistRevision(
+      const std::string& masterlist_path,
+      const bool get_short_id) const = 0;
 
   /**
    * Check if the given masterlist is the latest available for a given branch.
@@ -176,7 +177,8 @@ public:
    *  @returns A vector of messages supplied in the metadata lists but not
    *           attached to any particular plugin.
    */
-  virtual std::vector<Message> GetGeneralMessages(bool evaluateConditions = false) const = 0;
+  virtual std::vector<Message> GetGeneralMessages(
+      bool evaluateConditions = false) const = 0;
 
   /**
    *  @}
@@ -200,32 +202,34 @@ public:
    *           If the plugin has no metadata, PluginMetadata.IsNameOnly()
    *           will return true.
    */
-  virtual PluginMetadata GetPluginMetadata(const std::string& plugin,
-                                           bool includeUserMetadata = true,
-                                           bool evaluateConditions = false) const = 0;
+  virtual PluginMetadata GetPluginMetadata(
+      const std::string& plugin,
+      bool includeUserMetadata = true,
+      bool evaluateConditions = false) const = 0;
 
   /**
-  *  @brief Get a plugin's metadata loaded from the given userlist.
-  *  @param plugin
-  *         The filename of the plugin to look up user-added metadata for.
-  *  @param evaluateConditions
-  *         If true, any metadata conditions are evaluated before the metadata
-  *         is returned, otherwise unevaluated metadata is returned. Evaluating
-  *         plugin metadata conditions does not clear the condition cache.
-  *  @returns A PluginMetadata object containing the plugin's user-added
-  *           metadata. If the plugin has no metadata,
-  *           PluginMetadata.IsNameOnly() will return true.
-  */
-  virtual PluginMetadata GetPluginUserMetadata(const std::string& plugin,
-                                               bool evaluateConditions = false) const = 0;
+   *  @brief Get a plugin's metadata loaded from the given userlist.
+   *  @param plugin
+   *         The filename of the plugin to look up user-added metadata for.
+   *  @param evaluateConditions
+   *         If true, any metadata conditions are evaluated before the metadata
+   *         is returned, otherwise unevaluated metadata is returned. Evaluating
+   *         plugin metadata conditions does not clear the condition cache.
+   *  @returns A PluginMetadata object containing the plugin's user-added
+   *           metadata. If the plugin has no metadata,
+   *           PluginMetadata.IsNameOnly() will return true.
+   */
+  virtual PluginMetadata GetPluginUserMetadata(
+      const std::string& plugin,
+      bool evaluateConditions = false) const = 0;
 
   /**
-  *  @brief Sets a plugin's user metadata, overwriting any existing user
-  *         metadata.
-  *  @param pluginMetadata
-  *         The user metadata you want to set, with plugin.Name() being the
-  *         filename of the plugin the metadata is for.
-  */
+   *  @brief Sets a plugin's user metadata, overwriting any existing user
+   *         metadata.
+   *  @param pluginMetadata
+   *         The user metadata you want to set, with plugin.Name() being the
+   *         filename of the plugin the metadata is for.
+   */
   virtual void SetPluginUserMetadata(const PluginMetadata& pluginMetadata) = 0;
 
   /**
@@ -238,8 +242,8 @@ public:
   virtual void DiscardPluginUserMetadata(const std::string& plugin) = 0;
 
   /**
-   * @brief Discards all loaded user metadata for all plugins, and any user-added
-   *        general messages and known bash tags.
+   * @brief Discards all loaded user metadata for all plugins, and any
+   * user-added general messages and known bash tags.
    */
   virtual void DiscardAllUserMetadata() = 0;
 

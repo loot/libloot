@@ -72,7 +72,8 @@ public:
    *        file if it has been identified by a previous call to
    *        ``IdentifyMainMasterFile()``.
    */
-  virtual void LoadPlugins(const std::vector<std::string>& plugins, bool loadHeadersOnly) = 0;
+  virtual void LoadPlugins(const std::vector<std::string>& plugins,
+                           bool loadHeadersOnly) = 0;
 
   /**
    * @brief Get data for a loaded plugin.
@@ -83,7 +84,8 @@ public:
    *          until the ``LoadPlugins()`` or ``SortPlugins()`` functions are
    *          next called or this GameInterface is destroyed.
    */
-  virtual std::shared_ptr<const PluginInterface> GetPlugin(const std::string& pluginName) const = 0;
+  virtual std::shared_ptr<const PluginInterface> GetPlugin(
+      const std::string& pluginName) const = 0;
 
   /**
    * @brief Get a set of const references to all loaded plugins' PluginInterface
@@ -92,43 +94,45 @@ public:
    *          valid until the ``LoadPlugins()`` or ``SortPlugins()`` functions
    *          are next called or this GameInterface is destroyed.
    */
-  virtual std::set<std::shared_ptr<const PluginInterface>> GetLoadedPlugins() const = 0;
+  virtual std::set<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
+      const = 0;
 
   /**
-  *  @}
-  *  @name Sorting
-  *  @{
-  */
+   *  @}
+   *  @name Sorting
+   *  @{
+   */
 
   /**
-  *  @brief Identify the game's main master file.
-  *  @details When sorting, LOOT always only loads the headers of the game's
-  *           main master file as a performance optimisation.
-  */
+   *  @brief Identify the game's main master file.
+   *  @details When sorting, LOOT always only loads the headers of the game's
+   *           main master file as a performance optimisation.
+   */
   virtual void IdentifyMainMasterFile(const std::string& masterFile) = 0;
 
   /**
-  *  @brief Calculates a new load order for the game's installed plugins
-  *         (including inactive plugins) and outputs the sorted order.
-  *  @details Pulls metadata from the masterlist and userlist if they are
-  *           loaded, and reads the contents of each plugin. No changes are
-  *           applied to the load order used by the game. This function does
-  *           not load or evaluate the masterlist or userlist.
-  *  @param plugins
-  *         A vector of filenames of the plugins to sort.
-  *  @returns A vector of the given plugin filenames in their sorted load
-  *           order.
-  */
-  virtual std::vector<std::string> SortPlugins(const std::vector<std::string>& plugins) = 0;
+   *  @brief Calculates a new load order for the game's installed plugins
+   *         (including inactive plugins) and outputs the sorted order.
+   *  @details Pulls metadata from the masterlist and userlist if they are
+   *           loaded, and reads the contents of each plugin. No changes are
+   *           applied to the load order used by the game. This function does
+   *           not load or evaluate the masterlist or userlist.
+   *  @param plugins
+   *         A vector of filenames of the plugins to sort.
+   *  @returns A vector of the given plugin filenames in their sorted load
+   *           order.
+   */
+  virtual std::vector<std::string> SortPlugins(
+      const std::vector<std::string>& plugins) = 0;
 
   /**
-  *  @}
-  *  @name Load Order Interaction
-  *  @{
-  */
+   *  @}
+   *  @name Load Order Interaction
+   *  @{
+   */
 
   /**
-   * 
+   *
    * @brief Load the current load order state, discarding any previously held
    *        state.
    * @details This function should be called whenever the load order or active

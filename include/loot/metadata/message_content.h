@@ -77,13 +77,13 @@ public:
    *          lexicographically less than the given MessageContent's text, false
    *          otherwise.
    */
-  LOOT_API bool operator < (const MessageContent& rhs) const;
+  LOOT_API bool operator<(const MessageContent& rhs) const;
 
   /**
    * Check if two MessageContent objects are equal by comparing their texts.
    * @returns True if the texts are case-insensitively equal, false otherwise.
    */
-  LOOT_API bool operator == (const MessageContent& rhs) const;
+  LOOT_API bool operator==(const MessageContent& rhs) const;
 
   /**
    * Choose a MessageContent object from a vector given a language.
@@ -96,8 +96,10 @@ public:
    * @return A MessageContent object. If the given vector is empty, a
    *         default-constructed MessageContent is returned.
    */
-  LOOT_API static MessageContent Choose(const std::vector<MessageContent> content,
-                                        const std::string& language);
+  LOOT_API static MessageContent Choose(
+      const std::vector<MessageContent> content,
+      const std::string& language);
+
 private:
   std::string text_;
   std::string language_;

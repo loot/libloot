@@ -27,11 +27,11 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-#include "loot/exception/file_access_error.h"
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/plugin_metadata.h"
+#include "loot/exception/file_access_error.h"
 
 namespace loot {
 void MetadataList::Load(const boost::filesystem::path& filepath) {
@@ -50,7 +50,8 @@ void MetadataList::Load(const boost::filesystem::path& filepath) {
   in.close();
 
   if (!metadataList.IsMap())
-    throw FileAccessError("The root of the metadata file " + filepath.string() + " is not a YAML map.");
+    throw FileAccessError("The root of the metadata file " + filepath.string() +
+                          " is not a YAML map.");
 
   if (metadataList["plugins"]) {
     for (const auto& node : metadataList["plugins"]) {
@@ -58,7 +59,8 @@ void MetadataList::Load(const boost::filesystem::path& filepath) {
       if (plugin.IsRegexPlugin())
         regexPlugins_.push_back(plugin);
       else if (!plugins_.insert(plugin).second)
-        throw FileAccessError("More than one entry exists for \"" + plugin.GetName() + "\"");
+        throw FileAccessError("More than one entry exists for \"" +
+                              plugin.GetName() + "\"");
     }
   }
   if (metadataList["globals"])
@@ -115,18 +117,15 @@ void MetadataList::Clear() {
 std::list<PluginMetadata> MetadataList::Plugins() const {
   std::list<PluginMetadata> pluginList(plugins_.begin(), plugins_.end());
 
-  pluginList.insert(pluginList.end(), regexPlugins_.begin(), regexPlugins_.end());
+  pluginList.insert(
+      pluginList.end(), regexPlugins_.begin(), regexPlugins_.end());
 
   return pluginList;
 }
 
-std::vector<Message> MetadataList::Messages() const {
-  return messages_;
-}
+std::vector<Message> MetadataList::Messages() const { return messages_; }
 
-std::set<std::string> MetadataList::BashTags() const {
-  return bashTags_;
-}
+std::set<std::string> MetadataList::BashTags() const { return bashTags_; }
 
 // Merges multiple matching regex entries if any are found.
 PluginMetadata MetadataList::FindPlugin(const PluginMetadata& plugin) const {
@@ -137,7 +136,7 @@ PluginMetadata MetadataList::FindPlugin(const PluginMetadata& plugin) const {
   if (it != plugins_.end())
     match = *it;
 
-// Now we want to also match possibly multiple regex entries.
+  // Now we want to also match possibly multiple regex entries.
   auto regIt = find(regexPlugins_.begin(), regexPlugins_.end(), plugin);
   while (regIt != regexPlugins_.end()) {
     match.MergeMetadata(*regIt);
@@ -153,7 +152,9 @@ void MetadataList::AddPlugin(const PluginMetadata& plugin) {
     regexPlugins_.push_back(plugin);
   else {
     if (!plugins_.insert(plugin).second)
-      throw std::invalid_argument("Cannot add \"" + plugin.GetName() + "\" to the metadata list as another entry already exists.");
+      throw std::invalid_argument(
+          "Cannot add \"" + plugin.GetName() +
+          "\" to the metadata list as another entry already exists.");
   }
 }
 
@@ -172,7 +173,8 @@ void MetadataList::AppendMessage(const Message& message) {
   messages_.push_back(message);
 }
 
-void MetadataList::EvalAllConditions(const ConditionEvaluator& conditionEvaluator) {
+void MetadataList::EvalAllConditions(
+    const ConditionEvaluator& conditionEvaluator) {
   if (unevaluatedPlugins_.empty())
     unevaluatedPlugins_.swap(plugins_);
   else

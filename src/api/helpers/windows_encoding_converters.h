@@ -29,15 +29,15 @@
 
 #include <string>
 
-#   ifndef UNICODE
-#       define UNICODE
-#   endif
-#   ifndef _UNICODE
-#      define _UNICODE
-#   endif
-#   include "windows.h"
-#   include "shlobj.h"
-#   include "shlwapi.h"
+#ifndef UNICODE
+#define UNICODE
+#endif
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+#include "shlobj.h"
+#include "shlwapi.h"
+#include "windows.h"
 
 namespace loot {
 /**
@@ -66,9 +66,11 @@ inline std::wstring ToWinWide(const std::string& str) {
  * @return A string encoded in UTF-8.
  */
 inline std::string FromWinWide(const std::wstring& wstr) {
-  size_t len = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
+  size_t len = WideCharToMultiByte(
+      CP_UTF8, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
   std::string str(len, 0);
-  WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), &str[0], len, NULL, NULL);
+  WideCharToMultiByte(
+      CP_UTF8, 0, wstr.c_str(), wstr.length(), &str[0], len, NULL, NULL);
   return str;
 }
 }

@@ -66,7 +66,7 @@ public:
    *          lexicographically less than the given Tag's name, false
    *          otherwise.
    */
-  LOOT_API bool operator < (const Tag& rhs) const;
+  LOOT_API bool operator<(const Tag& rhs) const;
 
   /**
    * Check if two Tag objects are equal.
@@ -74,7 +74,7 @@ public:
    *          for removal, and the Tag names are case-insensitively equal, false
    *          otherwise.
    */
-  LOOT_API bool operator == (const Tag& rhs) const;
+  LOOT_API bool operator==(const Tag& rhs) const;
 
   /**
    * Check if the tag should be added.
@@ -87,6 +87,7 @@ public:
    * @return The tag's name.
    */
   LOOT_API std::string GetName() const;
+
 private:
   std::string name_;
   bool addTag_;

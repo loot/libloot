@@ -34,12 +34,11 @@ namespace test {
 class MetadataListTest : public CommonGameTestFixture {
 protected:
   MetadataListTest() :
-    metadataPath("./testing-metadata/masterlist.yaml"),
-    savedMetadataPath("./testing-metadata/saved.masterlist.yaml"),
-    missingMetadataPath("./missing-metadata.yaml"),
-    invalidMetadataPaths({
-      "./testing-metadata/invalid/non_map_root.yaml",
-      "./testing-metadata/invalid/non_unique.yaml"}) {}
+      metadataPath("./testing-metadata/masterlist.yaml"),
+      savedMetadataPath("./testing-metadata/saved.masterlist.yaml"),
+      missingMetadataPath("./missing-metadata.yaml"),
+      invalidMetadataPaths({"./testing-metadata/invalid/non_map_root.yaml",
+                            "./testing-metadata/invalid/non_unique.yaml"}) {}
 
   inline virtual void SetUp() {
     CommonGameTestFixture::SetUp();
@@ -75,18 +74,16 @@ protected:
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_CASE_P(,
-                        MetadataListTest,
-                        ::testing::Values(
-                          GameType::tes4));
+INSTANTIATE_TEST_CASE_P(, MetadataListTest, ::testing::Values(GameType::tes4));
 
 TEST_P(MetadataListTest, loadShouldLoadGlobalMessages) {
   MetadataList metadataList;
 
   EXPECT_NO_THROW(metadataList.Load(metadataPath));
   EXPECT_EQ(std::vector<Message>({
-      Message(MessageType::say, "A global message."),
-  }), metadataList.Messages());
+                Message(MessageType::say, "A global message."),
+            }),
+            metadataList.Messages());
 }
 
 TEST_P(MetadataListTest, loadShouldLoadPluginMetadata) {
@@ -98,27 +95,25 @@ TEST_P(MetadataListTest, loadShouldLoadPluginMetadata) {
   // comparison.
   std::list<PluginMetadata> result(metadataList.Plugins());
   std::set<std::string> names;
-  std::transform(begin(result),
-                 end(result),
-                 std::insert_iterator<std::set<std::string>>(names, begin(names)),
-                 &MetadataListTest::PluginMetadataToString);
+  std::transform(
+      begin(result),
+      end(result),
+      std::insert_iterator<std::set<std::string>>(names, begin(names)),
+      &MetadataListTest::PluginMetadataToString);
 
-  EXPECT_EQ(std::set<std::string>({
-      blankEsm,
-      blankEsp,
-      "Blank.+\\.esp",
-      "Blank.+(Different)?.*\\.esp",
-  }), names);
+  EXPECT_EQ(
+      std::set<std::string>({
+          blankEsm, blankEsp, "Blank.+\\.esp", "Blank.+(Different)?.*\\.esp",
+      }),
+      names);
 }
 
 TEST_P(MetadataListTest, loadShouldLoadBashTags) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
-  EXPECT_EQ(std::set<std::string>({
-      "C.Climate",
-      "Relev"
-  }), metadataList.BashTags());
+  EXPECT_EQ(std::set<std::string>({"C.Climate", "Relev"}),
+            metadataList.BashTags());
 }
 
 TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
@@ -128,7 +123,8 @@ TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
   }
 }
 
-TEST_P(MetadataListTest, loadShouldClearExistingDataIfAnInvalidMetadataFileIsGiven) {
+TEST_P(MetadataListTest,
+       loadShouldClearExistingDataIfAnInvalidMetadataFileIsGiven) {
   MetadataList metadataList;
 
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
@@ -142,7 +138,8 @@ TEST_P(MetadataListTest, loadShouldClearExistingDataIfAnInvalidMetadataFileIsGiv
   EXPECT_TRUE(metadataList.BashTags().empty());
 }
 
-TEST_P(MetadataListTest, loadShouldClearExistingDataIfAMissingMetadataFileIsGiven) {
+TEST_P(MetadataListTest,
+       loadShouldClearExistingDataIfAMissingMetadataFileIsGiven) {
   MetadataList metadataList;
 
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
@@ -167,30 +164,29 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   // Check the new file contains the same metadata.
   EXPECT_NO_THROW(metadataList.Load(savedMetadataPath));
 
-  EXPECT_EQ(std::set<std::string>({
-      "C.Climate",
-      "Relev"
-  }), metadataList.BashTags());
+  EXPECT_EQ(std::set<std::string>({"C.Climate", "Relev"}),
+            metadataList.BashTags());
 
   EXPECT_EQ(std::vector<Message>({
-      Message(MessageType::say, "A global message."),
-  }), metadataList.Messages());
+                Message(MessageType::say, "A global message."),
+            }),
+            metadataList.Messages());
 
   // Non-regex plugins can be outputted in any order, and regex entries can
   // match each other, so convert the list to a set of strings for
   // comparison.
   std::list<PluginMetadata> result(metadataList.Plugins());
   std::set<std::string> names;
-  std::transform(begin(result),
-                 end(result),
-                 std::insert_iterator<std::set<std::string>>(names, begin(names)),
-                 &MetadataListTest::PluginMetadataToString);
-  EXPECT_EQ(std::set<std::string>({
-      blankEsm,
-      blankEsp,
-      "Blank.+\\.esp",
-      "Blank.+(Different)?.*\\.esp",
-  }), names);
+  std::transform(
+      begin(result),
+      end(result),
+      std::insert_iterator<std::set<std::string>>(names, begin(names)),
+      &MetadataListTest::PluginMetadataToString);
+  EXPECT_EQ(
+      std::set<std::string>({
+          blankEsm, blankEsp, "Blank.+\\.esp", "Blank.+(Different)?.*\\.esp",
+      }),
+      names);
 }
 
 TEST_P(MetadataListTest, clearShouldClearLoadedData) {
@@ -206,33 +202,42 @@ TEST_P(MetadataListTest, clearShouldClearLoadedData) {
   EXPECT_TRUE(metadataList.BashTags().empty());
 }
 
-TEST_P(MetadataListTest, findPluginShouldReturnAnEmptyPluginObjectIfTheGivenPluginIsNotInTheMetadataList) {
+TEST_P(
+    MetadataListTest,
+    findPluginShouldReturnAnEmptyPluginObjectIfTheGivenPluginIsNotInTheMetadataList) {
   MetadataList metadataList;
-  PluginMetadata plugin = metadataList.FindPlugin(PluginMetadata(blankDifferentEsm));
+  PluginMetadata plugin =
+      metadataList.FindPlugin(PluginMetadata(blankDifferentEsm));
 
   EXPECT_EQ(blankDifferentEsm, plugin.GetName());
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(MetadataListTest, findPluginShouldReturnTheMetadataObjectInTheMetadataListIfOneExistsForTheGivenPlugin) {
+TEST_P(
+    MetadataListTest,
+    findPluginShouldReturnTheMetadataObjectInTheMetadataListIfOneExistsForTheGivenPlugin) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
-  PluginMetadata plugin = metadataList.FindPlugin(PluginMetadata(blankDifferentEsp));
+  PluginMetadata plugin =
+      metadataList.FindPlugin(PluginMetadata(blankDifferentEsp));
 
   EXPECT_EQ(blankDifferentEsp, plugin.GetName());
   EXPECT_EQ(std::set<File>({
-      File(blankEsm),
-  }), plugin.GetLoadAfterFiles());
+                File(blankEsm),
+            }),
+            plugin.GetLoadAfterFiles());
   EXPECT_EQ(std::set<File>({
-      File(blankEsp),
-  }), plugin.GetIncompatibilities());
+                File(blankEsp),
+            }),
+            plugin.GetIncompatibilities());
 }
 
 TEST_P(MetadataListTest, addPluginShouldStoreGivenSpecificPluginMetadata) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
-  ASSERT_TRUE(metadataList.FindPlugin(PluginMetadata(blankDifferentEsm)).HasNameOnly());
+  ASSERT_TRUE(
+      metadataList.FindPlugin(PluginMetadata(blankDifferentEsm)).HasNameOnly());
 
   PluginMetadata plugin(blankDifferentEsm);
   plugin.SetLocalPriority(Priority(100));
@@ -265,10 +270,12 @@ TEST_P(MetadataListTest, addPluginShouldThrowIfAMatchingPluginAlreadyExists) {
   ASSERT_EQ(blankEsm, plugin.GetName());
   ASSERT_FALSE(plugin.HasNameOnly());
 
-  EXPECT_THROW(metadataList.AddPlugin(PluginMetadata(blankEsm)), std::invalid_argument);
+  EXPECT_THROW(metadataList.AddPlugin(PluginMetadata(blankEsm)),
+               std::invalid_argument);
 }
 
-TEST_P(MetadataListTest, erasePluginShouldRemoveStoredMetadataForTheGivenPlugin) {
+TEST_P(MetadataListTest,
+       erasePluginShouldRemoveStoredMetadataForTheGivenPlugin) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
@@ -283,18 +290,26 @@ TEST_P(MetadataListTest, erasePluginShouldRemoveStoredMetadataForTheGivenPlugin)
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(MetadataListTest, evalAllConditionsShouldEvaluateTheConditionsForThePluginsStoredInTeMetadataList) {
+TEST_P(
+    MetadataListTest,
+    evalAllConditionsShouldEvaluateTheConditionsForThePluginsStoredInTeMetadataList) {
   Game game(GetParam(), dataPath.parent_path(), localPath);
-  ConditionEvaluator evaluator(game.Type(), game.DataPath(), game.GetCache(), game.GetLoadOrderHandler());
+  ConditionEvaluator evaluator(game.Type(),
+                               game.DataPath(),
+                               game.GetCache(),
+                               game.GetLoadOrderHandler());
 
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
   PluginMetadata plugin = metadataList.FindPlugin(PluginMetadata(blankEsm));
-  ASSERT_EQ(std::vector<Message>({
-      Message(MessageType::warn, "This is a warning."),
-      Message(MessageType::say, "This message should be removed when evaluating conditions."),
-  }), plugin.GetMessages());
+  ASSERT_EQ(
+      std::vector<Message>({
+          Message(MessageType::warn, "This is a warning."),
+          Message(MessageType::say,
+                  "This message should be removed when evaluating conditions."),
+      }),
+      plugin.GetMessages());
 
   plugin = metadataList.FindPlugin(PluginMetadata(blankEsp));
   ASSERT_EQ(blankEsp, plugin.GetName());
@@ -304,8 +319,9 @@ TEST_P(MetadataListTest, evalAllConditionsShouldEvaluateTheConditionsForThePlugi
 
   plugin = metadataList.FindPlugin(PluginMetadata(blankEsm));
   EXPECT_EQ(std::vector<Message>({
-      Message(MessageType::warn, "This is a warning."),
-  }), plugin.GetMessages());
+                Message(MessageType::warn, "This is a warning."),
+            }),
+            plugin.GetMessages());
 
   plugin = metadataList.FindPlugin(PluginMetadata(blankEsp));
   EXPECT_EQ(blankEsp, plugin.GetName());

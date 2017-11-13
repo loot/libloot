@@ -69,6 +69,7 @@ public:
    * @return The object's condition string.
    */
   LOOT_API std::string GetCondition() const;
+
 private:
   std::string condition_;
 };

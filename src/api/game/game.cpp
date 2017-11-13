@@ -25,8 +25,8 @@
 #include "api/game/game.h"
 
 #include <algorithm>
-#include <thread>
 #include <cmath>
+#include <thread>
 
 #include <boost/algorithm/string.hpp>
 
@@ -36,16 +36,16 @@
 #include "loot/exception/file_access_error.h"
 
 #ifdef _WIN32
-#   ifndef UNICODE
-#       define UNICODE
-#   endif
-#   ifndef _UNICODE
-#      define _UNICODE
-#   endif
-#   define NOMINMAX
-#   include "windows.h"
-#   include "shlobj.h"
-#   include "shlwapi.h"
+#ifndef UNICODE
+#define UNICODE
+#endif
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+#define NOMINMAX
+#include "shlobj.h"
+#include "shlwapi.h"
+#include "windows.h"
 #endif
 
 using std::list;
@@ -59,46 +59,42 @@ namespace loot {
 Game::Game(const GameType gameType,
            const boost::filesystem::path& gamePath,
            const boost::filesystem::path& localDataPath) :
-  type_(gameType),
-  gamePath_(gamePath),
-  localDataPath_(localDataPath),
-  cache_(std::make_shared<GameCache>()),
-  loadOrderHandler_(std::make_shared<LoadOrderHandler>()) {
+    type_(gameType),
+    gamePath_(gamePath),
+    localDataPath_(localDataPath),
+    cache_(std::make_shared<GameCache>()),
+    loadOrderHandler_(std::make_shared<LoadOrderHandler>()) {
   auto logger = getLogger();
   if (logger) {
-    logger->info("Initialising load order data for game of type {} at: {}", (int) type_, gamePath_.string());
+    logger->info("Initialising load order data for game of type {} at: {}",
+                 (int)type_,
+                 gamePath_.string());
   }
 
   loadOrderHandler_->Init(type_, gamePath_, localDataPath_);
 
-  database_ = std::make_shared<ApiDatabase>(Type(), DataPath(), GetCache(), GetLoadOrderHandler());
+  database_ = std::make_shared<ApiDatabase>(
+      Type(), DataPath(), GetCache(), GetLoadOrderHandler());
 }
 
-GameType Game::Type() const {
-  return type_;
-}
+GameType Game::Type() const { return type_; }
 
-boost::filesystem::path Game::DataPath() const {
-  return gamePath_ / "Data";
-}
+boost::filesystem::path Game::DataPath() const { return gamePath_ / "Data"; }
 
-std::shared_ptr<GameCache> Game::GetCache() {
-  return cache_;
-}
+std::shared_ptr<GameCache> Game::GetCache() { return cache_; }
 
 std::shared_ptr<LoadOrderHandler> Game::GetLoadOrderHandler() {
   return loadOrderHandler_;
 }
 
-std::shared_ptr<DatabaseInterface> Game::GetDatabase() {
-  return database_;
-}
+std::shared_ptr<DatabaseInterface> Game::GetDatabase() { return database_; }
 
 bool Game::IsValidPlugin(const std::string& plugin) const {
   return Plugin::IsValid(plugin, Type(), DataPath());
 }
 
-void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeadersOnly) {
+void Game::LoadPlugins(const std::vector<std::string>& plugins,
+                       bool loadHeadersOnly) {
   auto logger = getLogger();
   uintmax_t meanFileSize = 0;
   std::multimap<uintmax_t, string> sizeMap;
@@ -117,18 +113,24 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
     else
       sizeMap.emplace(fileSize, plugin);
   }
-  meanFileSize /= sizeMap.size();  //Rounding error, but not important.
+  meanFileSize /= sizeMap.size();  // Rounding error, but not important.
 
-                                   // Get the number of threads to use.
-                                   // hardware_concurrency() may be zero, if so then use only one thread.
-  size_t threadsToUse = ::std::min((size_t)thread::hardware_concurrency(), sizeMap.size());
+  // Get the number of threads to use.
+  // hardware_concurrency() may be zero, if so then use only one thread.
+  size_t threadsToUse =
+      ::std::min((size_t)thread::hardware_concurrency(), sizeMap.size());
   threadsToUse = ::std::max(threadsToUse, (size_t)1);
 
   // Divide the plugins up by thread.
   unsigned int pluginsPerThread = ceil((double)sizeMap.size() / threadsToUse);
   vector<vector<string>> pluginGroups(threadsToUse);
   if (logger) {
-    logger->info("Loading {} plugins using {} threads, with up to {} plugins per thread.", sizeMap.size(), threadsToUse, pluginsPerThread);
+    logger->info(
+        "Loading {} plugins using {} threads, with up to {} plugins per "
+        "thread.",
+        sizeMap.size(),
+        threadsToUse,
+        pluginsPerThread);
   }
 
   // The plugins should be split between the threads so that the data
@@ -140,7 +142,8 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
     }
 
     if (logger) {
-      logger->trace("Adding plugin {} to loading group {}", plugin.second, currentGroup);
+      logger->trace(
+          "Adding plugin {} to loading group {}", plugin.second, currentGroup);
     }
 
     pluginGroups[currentGroup].push_back(plugin.second);
@@ -163,12 +166,17 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
         if (logger) {
           logger->trace("Loading {}", pluginName);
         }
-        const bool loadHeader = boost::iequals(pluginName, masterFile_) || loadHeadersOnly;
+        const bool loadHeader =
+            boost::iequals(pluginName, masterFile_) || loadHeadersOnly;
         try {
-          cache_->AddPlugin(Plugin(Type(), DataPath(), loadOrderHandler_, pluginName, loadHeader));
-        } catch(std::exception& e) {
+          cache_->AddPlugin(Plugin(
+              Type(), DataPath(), loadOrderHandler_, pluginName, loadHeader));
+        } catch (std::exception& e) {
           if (logger) {
-            logger->trace("Caught exception while trying to add {} to the cache: {}", pluginName, e.what());
+            logger->trace(
+                "Caught exception while trying to add {} to the cache: {}",
+                pluginName,
+                e.what());
           }
         }
       }
@@ -182,14 +190,18 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins, bool loadHeaders
   }
 }
 
-std::shared_ptr<const PluginInterface> Game::GetPlugin(const std::string& pluginName) const {
-  return std::static_pointer_cast<const PluginInterface>(cache_->GetPlugin(pluginName));
+std::shared_ptr<const PluginInterface> Game::GetPlugin(
+    const std::string& pluginName) const {
+  return std::static_pointer_cast<const PluginInterface>(
+      cache_->GetPlugin(pluginName));
 }
 
-std::set<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins() const {
+std::set<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
+    const {
   std::set<std::shared_ptr<const PluginInterface>> interfacePointers;
   for (auto& plugin : cache_->GetPlugins()) {
-    interfacePointers.insert(std::static_pointer_cast<const PluginInterface>(plugin));
+    interfacePointers.insert(
+        std::static_pointer_cast<const PluginInterface>(plugin));
   }
 
   return interfacePointers;
@@ -199,10 +211,11 @@ void Game::IdentifyMainMasterFile(const std::string& masterFile) {
   masterFile_ = masterFile;
 }
 
-std::vector<std::string> Game::SortPlugins(const std::vector<std::string>& plugins) {
+std::vector<std::string> Game::SortPlugins(
+    const std::vector<std::string>& plugins) {
   LoadPlugins(plugins, false);
 
-  //Sort plugins into their load order.
+  // Sort plugins into their load order.
   PluginSorter sorter;
   return sorter.Sort(*this);
 }
@@ -213,7 +226,8 @@ void Game::LoadCurrentLoadOrderState() {
 
 bool Game::IsPluginActive(const std::string& plugin) const {
   try {
-    return std::static_pointer_cast<const Plugin>(GetPlugin(plugin))->IsActive();
+    return std::static_pointer_cast<const Plugin>(GetPlugin(plugin))
+        ->IsActive();
   } catch (...) {
     return loadOrderHandler_->IsPluginActive(plugin);
   }

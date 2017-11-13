@@ -45,7 +45,7 @@ size_t GetStreamSize(std::istream& stream) {
   return streamSize;
 }
 
-//Calculate the CRC of the given file for comparison purposes.
+// Calculate the CRC of the given file for comparison purposes.
 uint32_t GetCrc32(const boost::filesystem::path& filename) {
   try {
     auto logger = getLogger();
@@ -77,7 +77,10 @@ uint32_t GetCrc32(const boost::filesystem::path& filename) {
     return checksum;
 
   } catch (std::exception& e) {
-    throw FileAccessError((boost::format("Unable to open \"%1%\" for CRC calculation: %2%") % filename.string() % e.what()).str());
+    throw FileAccessError(
+        (boost::format("Unable to open \"%1%\" for CRC calculation: %2%") %
+         filename.string() % e.what())
+            .str());
   }
 }
 }

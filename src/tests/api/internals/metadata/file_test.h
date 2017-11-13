@@ -63,7 +63,8 @@ TEST(File, filesWithDifferentNamesShouldBeUnequal) {
   EXPECT_FALSE(file1 == file2);
 }
 
-TEST(File, lessThanOperatorShouldUseCaseInsensitiveLexicographicalNameComparison) {
+TEST(File,
+     lessThanOperatorShouldUseCaseInsensitiveLexicographicalNameComparison) {
   File file1("name", "display1", "condition1");
   File file2("Name", "display2", "condition2");
 
@@ -81,9 +82,9 @@ TEST(File, emittingAsYamlShouldSingleQuoteValues) {
   File file("name1", "display1", "condition1");
   YAML::Emitter emitter;
   emitter << file;
-  std::string expected = "name: '" + file.GetName() +
-    "'\ncondition: '" + file.GetCondition() +
-    "'\ndisplay: '" + file.GetDisplayName() + "'";
+  std::string expected = "name: '" + file.GetName() + "'\ncondition: '" +
+                         file.GetCondition() + "'\ndisplay: '" +
+                         file.GetDisplayName() + "'";
 
   EXPECT_EQ(expected, emitter.c_str());
 }
@@ -108,8 +109,8 @@ TEST(File, emittingAsYamlShouldOmitAnEmptyConditionString) {
   File file("name1", "display1");
   YAML::Emitter emitter;
   emitter << file;
-  std::string expected = "name: '" + file.GetName() +
-    "'\ndisplay: '" + file.GetDisplayName() + "'";
+  std::string expected = "name: '" + file.GetName() + "'\ndisplay: '" +
+                         file.GetDisplayName() + "'";
 
   EXPECT_EQ(expected, emitter.c_str());
 }
@@ -145,7 +146,8 @@ TEST(File, encodingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameField) {
 }
 
 TEST(File, decodingFromYamlShouldSetDataCorrectly) {
-  YAML::Node node = YAML::Load("{name: name1, display: display1, condition: 'file(\"Foo.esp\")'}");
+  YAML::Node node = YAML::Load(
+      "{name: name1, display: display1, condition: 'file(\"Foo.esp\")'}");
   File file = node.as<File>();
 
   EXPECT_EQ(node["name"].as<std::string>(), file.GetName());
@@ -153,7 +155,8 @@ TEST(File, decodingFromYamlShouldSetDataCorrectly) {
   EXPECT_EQ(node["condition"].as<std::string>(), file.GetCondition());
 }
 
-TEST(File, decodingFromYamlWithMissingConditionFieldShouldLeaveConditionStringEmpty) {
+TEST(File,
+     decodingFromYamlWithMissingConditionFieldShouldLeaveConditionStringEmpty) {
   YAML::Node node = YAML::Load("{name: name1, display: display1}");
   File file = node.as<File>();
 
@@ -162,7 +165,9 @@ TEST(File, decodingFromYamlWithMissingConditionFieldShouldLeaveConditionStringEm
   EXPECT_TRUE(file.GetCondition().empty());
 }
 
-TEST(File, decodingFromYamlScalarShouldUseNameValueForDisplayNameAndLeaveConditionEmpty) {
+TEST(
+    File,
+    decodingFromYamlScalarShouldUseNameValueForDisplayNameAndLeaveConditionEmpty) {
   YAML::Node node = YAML::Load("name1");
   File file = node.as<File>();
 

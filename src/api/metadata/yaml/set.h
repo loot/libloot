@@ -35,7 +35,7 @@ template<class T, class Compare>
 struct convert<std::set<T, Compare>> {
   static Node encode(const std::set<T, Compare>& rhs) {
     Node node;
-    for (const auto &element : rhs) {
+    for (const auto& element : rhs) {
       node.push_back(element);
     }
     return node;
@@ -43,21 +43,23 @@ struct convert<std::set<T, Compare>> {
 
   static bool decode(const Node& node, std::set<T, Compare>& rhs) {
     if (!node.IsSequence())
-      throw RepresentationException(node.Mark(), "bad conversion: set must be a sequence of elements");
+      throw RepresentationException(
+          node.Mark(), "bad conversion: set must be a sequence of elements");
 
     rhs.clear();
-    for (const auto &element : node) {
+    for (const auto& element : node) {
       if (!rhs.insert(element.template as<T>()).second)
-        throw RepresentationException(node.Mark(), "bad conversion: set elements must be unique");
+        throw RepresentationException(
+            node.Mark(), "bad conversion: set elements must be unique");
     }
     return true;
   }
 };
 
 template<class T, class Compare>
-Emitter& operator << (Emitter& out, const std::set<T, Compare>& rhs) {
+Emitter& operator<<(Emitter& out, const std::set<T, Compare>& rhs) {
   out << BeginSeq;
-  for (const auto &element : rhs) {
+  for (const auto& element : rhs) {
     out << element;
   }
   out << EndSeq;
@@ -69,7 +71,7 @@ template<class T, class Hash>
 struct convert<std::unordered_set<T, Hash>> {
   static Node encode(const std::unordered_set<T, Hash>& rhs) {
     Node node;
-    for (const auto &element : rhs) {
+    for (const auto& element : rhs) {
       node.push_back(element);
     }
     return node;
@@ -77,21 +79,25 @@ struct convert<std::unordered_set<T, Hash>> {
 
   static bool decode(const Node& node, std::unordered_set<T, Hash>& rhs) {
     if (!node.IsSequence())
-      throw RepresentationException(node.Mark(), "bad conversion: unordered set must be a sequence of elements");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: unordered set must be a sequence of elements");
 
     rhs.clear();
-    for (const auto &element : node) {
+    for (const auto& element : node) {
       if (!rhs.insert(element.template as<T>()).second)
-        throw RepresentationException(node.Mark(), "bad conversion: unordered set elements must be unique");
+        throw RepresentationException(
+            node.Mark(),
+            "bad conversion: unordered set elements must be unique");
     }
     return true;
   }
 };
 
 template<class T, class Hash>
-Emitter& operator << (Emitter& out, const std::unordered_set<T, Hash>& rhs) {
+Emitter& operator<<(Emitter& out, const std::unordered_set<T, Hash>& rhs) {
   out << BeginSeq;
-  for (const auto &element : rhs) {
+  for (const auto& element : rhs) {
     out << element;
   }
   out << EndSeq;

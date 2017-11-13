@@ -56,14 +56,16 @@ TEST(MessageContent, contentShouldBeEqualIfStringsAreCaseInsensitivelyEqual) {
   EXPECT_TRUE(content1 == content2);
 }
 
-TEST(MessageContent, contentShouldBeUnequalIfStringsAreNotCaseInsensitivelyEqual) {
+TEST(MessageContent,
+     contentShouldBeUnequalIfStringsAreNotCaseInsensitivelyEqual) {
   MessageContent content1("content1", french);
   MessageContent content2("content2", french);
 
   EXPECT_FALSE(content1 == content2);
 }
 
-TEST(MessageContent, LessThanOperatorShouldUseCaseInsensitiveLexicographicalComparison) {
+TEST(MessageContent,
+     LessThanOperatorShouldUseCaseInsensitiveLexicographicalComparison) {
   MessageContent content1("content");
   MessageContent content2("Content", french);
 
@@ -82,8 +84,8 @@ TEST(MessageContent, emittingAsYamlShouldOutputDataCorrectly) {
   YAML::Emitter emitter;
   emitter << content;
 
-  EXPECT_EQ("lang: " + french +
-            "\ntext: '" + content.GetText() + "'", emitter.c_str());
+  EXPECT_EQ("lang: " + french + "\ntext: '" + content.GetText() + "'",
+            emitter.c_str());
 }
 
 TEST(MessageContent, encodingAsYamlShouldOutputDataCorrectly) {

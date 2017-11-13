@@ -42,8 +42,10 @@ using std::vector;
 namespace loot {
 PluginMetadata::PluginMetadata() : enabled_(true) {}
 
-PluginMetadata::PluginMetadata(const std::string& n) : name_(n), enabled_(true) {
-    //If the name passed ends in '.ghost', that should be trimmed.
+PluginMetadata::PluginMetadata(const std::string& n) :
+    name_(n),
+    enabled_(true) {
+  // If the name passed ends in '.ghost', that should be trimmed.
   if (boost::iends_with(name_, ".ghost"))
     name_ = name_.substr(0, name_.length() - 6);
 }
@@ -57,8 +59,8 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   if (plugin.HasNameOnly())
     return;
 
-// For 'enabled' and 'priority' metadata, use the given plugin's values,
-// but if the 'priority' user value is not explicit, ignore it.
+  // For 'enabled' and 'priority' metadata, use the given plugin's values,
+  // but if the 'priority' user value is not explicit, ignore it.
   enabled_ = plugin.IsEnabled();
 
   if (plugin.localPriority_.IsExplicit()) {
@@ -76,14 +78,16 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   // these strings.
   loadAfter_.insert(begin(plugin.loadAfter_), end(plugin.loadAfter_));
   requirements_.insert(begin(plugin.requirements_), end(plugin.requirements_));
-  incompatibilities_.insert(begin(plugin.incompatibilities_), end(plugin.incompatibilities_));
+  incompatibilities_.insert(begin(plugin.incompatibilities_),
+                            end(plugin.incompatibilities_));
 
   // Merge Bash Tags too. Conditions are ignored during comparison, but
   // if a tag is added and removed, both instances will be in the set.
   tags_.insert(begin(plugin.tags_), end(plugin.tags_));
 
   // Messages are in an ordered list, and should be fully merged.
-  messages_.insert(end(messages_), begin(plugin.messages_), end(plugin.messages_));
+  messages_.insert(
+      end(messages_), begin(plugin.messages_), end(plugin.messages_));
 
   dirtyInfo_.insert(begin(plugin.dirtyInfo_), end(plugin.dirtyInfo_));
   cleanInfo_.insert(begin(plugin.cleanInfo_), end(plugin.cleanInfo_));
@@ -102,7 +106,7 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
 
   PluginMetadata p(*this);
 
-  //Compare this plugin against the given plugin.
+  // Compare this plugin against the given plugin.
   set<File> filesDiff;
   set_difference(begin(loadAfter_),
                  end(loadAfter_),
@@ -174,45 +178,29 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
   return p;
 }
 
-std::string PluginMetadata::GetName() const {
-  return name_;
-}
+std::string PluginMetadata::GetName() const { return name_; }
 
 std::string PluginMetadata::GetLowercasedName() const {
   return boost::locale::to_lower(name_);
 }
 
-bool PluginMetadata::IsEnabled() const {
-  return enabled_;
-}
+bool PluginMetadata::IsEnabled() const { return enabled_; }
 
-Priority PluginMetadata::GetLocalPriority() const {
-  return localPriority_;
-}
+Priority PluginMetadata::GetLocalPriority() const { return localPriority_; }
 
-Priority PluginMetadata::GetGlobalPriority() const {
-  return globalPriority_;
-}
+Priority PluginMetadata::GetGlobalPriority() const { return globalPriority_; }
 
-std::set<File> PluginMetadata::GetLoadAfterFiles() const {
-  return loadAfter_;
-}
+std::set<File> PluginMetadata::GetLoadAfterFiles() const { return loadAfter_; }
 
-std::set<File> PluginMetadata::GetRequirements() const {
-  return requirements_;
-}
+std::set<File> PluginMetadata::GetRequirements() const { return requirements_; }
 
 std::set<File> PluginMetadata::GetIncompatibilities() const {
   return incompatibilities_;
 }
 
-std::vector<Message> PluginMetadata::GetMessages() const {
-  return messages_;
-}
+std::vector<Message> PluginMetadata::GetMessages() const { return messages_; }
 
-std::set<Tag> PluginMetadata::GetTags() const {
-  return tags_;
-}
+std::set<Tag> PluginMetadata::GetTags() const { return tags_; }
 
 std::set<PluginCleaningData> PluginMetadata::GetDirtyInfo() const {
   return dirtyInfo_;
@@ -222,22 +210,22 @@ std::set<PluginCleaningData> PluginMetadata::GetCleanInfo() const {
   return cleanInfo_;
 }
 
-std::set<Location> PluginMetadata::GetLocations() const {
-  return locations_;
-}
+std::set<Location> PluginMetadata::GetLocations() const { return locations_; }
 
-std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(const std::string& language) const {
+std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(
+    const std::string& language) const {
   std::vector<SimpleMessage> simpleMessages(messages_.size());
-  std::transform(begin(messages_), end(messages_), begin(simpleMessages), [&](const Message& message) {
-    return message.ToSimpleMessage(language);
-  });
+  std::transform(begin(messages_),
+                 end(messages_),
+                 begin(simpleMessages),
+                 [&](const Message& message) {
+                   return message.ToSimpleMessage(language);
+                 });
 
   return simpleMessages;
 }
 
-void PluginMetadata::SetEnabled(const bool e) {
-  enabled_ = e;
-}
+void PluginMetadata::SetEnabled(const bool e) { enabled_ = e; }
 
 void PluginMetadata::SetLocalPriority(const Priority& priority) {
   localPriority_ = priority;
@@ -263,11 +251,10 @@ void PluginMetadata::SetMessages(const std::vector<Message>& m) {
   messages_ = m;
 }
 
-void PluginMetadata::SetTags(const std::set<Tag>& t) {
-  tags_ = t;
-}
+void PluginMetadata::SetTags(const std::set<Tag>& t) { tags_ = t; }
 
-void PluginMetadata::SetDirtyInfo(const std::set<PluginCleaningData>& dirtyInfo) {
+void PluginMetadata::SetDirtyInfo(
+    const std::set<PluginCleaningData>& dirtyInfo) {
   dirtyInfo_ = dirtyInfo;
 }
 
@@ -280,47 +267,44 @@ void PluginMetadata::SetLocations(const std::set<Location>& locations) {
 }
 
 bool PluginMetadata::HasNameOnly() const {
-  return !localPriority_.IsExplicit()
-    && !globalPriority_.IsExplicit()
-    && loadAfter_.empty()
-    && requirements_.empty()
-    && incompatibilities_.empty()
-    && messages_.empty()
-    && tags_.empty()
-    && dirtyInfo_.empty()
-    && cleanInfo_.empty()
-    && locations_.empty();
+  return !localPriority_.IsExplicit() && !globalPriority_.IsExplicit() &&
+         loadAfter_.empty() && requirements_.empty() &&
+         incompatibilities_.empty() && messages_.empty() && tags_.empty() &&
+         dirtyInfo_.empty() && cleanInfo_.empty() && locations_.empty();
 }
 
 bool PluginMetadata::IsRegexPlugin() const {
-    // Treat as regex if the plugin filename contains any of ":\*?|" as
-    // they are not valid Windows filename characters, but have meaning
-    // in regexes.
+  // Treat as regex if the plugin filename contains any of ":\*?|" as
+  // they are not valid Windows filename characters, but have meaning
+  // in regexes.
   return strpbrk(name_.c_str(), ":\\*?|") != nullptr;
 }
 
-bool PluginMetadata::operator == (const PluginMetadata& rhs) const {
+bool PluginMetadata::operator==(const PluginMetadata& rhs) const {
   if (IsRegexPlugin() == rhs.IsRegexPlugin())
     return boost::iequals(name_, rhs.GetName());
 
   if (IsRegexPlugin())
-    return regex_match(rhs.GetName(), regex(name_, regex::ECMAScript | regex::icase));
+    return regex_match(rhs.GetName(),
+                       regex(name_, regex::ECMAScript | regex::icase));
   else
-    return regex_match(name_, regex(rhs.GetName(), regex::ECMAScript | regex::icase));
+    return regex_match(name_,
+                       regex(rhs.GetName(), regex::ECMAScript | regex::icase));
 }
 
-bool PluginMetadata::operator != (const PluginMetadata& rhs) const {
+bool PluginMetadata::operator!=(const PluginMetadata& rhs) const {
   return !(*this == rhs);
 }
 
-bool PluginMetadata::operator == (const std::string& rhs) const {
+bool PluginMetadata::operator==(const std::string& rhs) const {
   if (IsRegexPlugin())
-    return regex_match(PluginMetadata(rhs).GetName(), regex(name_, regex::ECMAScript | regex::icase));
+    return regex_match(PluginMetadata(rhs).GetName(),
+                       regex(name_, regex::ECMAScript | regex::icase));
   else
     return boost::iequals(name_, PluginMetadata(rhs).GetName());
 }
 
-bool PluginMetadata::operator != (const std::string& rhs) const {
+bool PluginMetadata::operator!=(const std::string& rhs) const {
   return !(*this == rhs);
 }
 }

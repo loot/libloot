@@ -33,15 +33,12 @@ using std::string;
 namespace loot {
 ConditionalMetadata::ConditionalMetadata() {}
 
-ConditionalMetadata::ConditionalMetadata(const string& condition) : condition_(condition) {}
+ConditionalMetadata::ConditionalMetadata(const string& condition) :
+    condition_(condition) {}
 
-bool ConditionalMetadata::IsConditional() const {
-  return !condition_.empty();
-}
+bool ConditionalMetadata::IsConditional() const { return !condition_.empty(); }
 
-std::string ConditionalMetadata::GetCondition() const {
-  return condition_;
-}
+std::string ConditionalMetadata::GetCondition() const { return condition_; }
 
 void ConditionalMetadata::ParseCondition() const {
   if (!condition_.empty()) {

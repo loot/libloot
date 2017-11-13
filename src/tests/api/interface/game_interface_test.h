@@ -34,20 +34,20 @@ namespace test {
 class GameInterfaceTest : public ApiGameOperationsTest {
 protected:
   GameInterfaceTest() :
-    emptyFile("EmptyFile.esm"),
-    pluginsToLoad({
-      masterFile,
-      blankEsm,
-      blankDifferentEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
-    }) {}
+      emptyFile("EmptyFile.esm"),
+      pluginsToLoad({
+          masterFile,
+          blankEsm,
+          blankDifferentEsm,
+          blankMasterDependentEsm,
+          blankDifferentMasterDependentEsm,
+          blankEsp,
+          blankDifferentEsp,
+          blankMasterDependentEsp,
+          blankDifferentMasterDependentEsp,
+          blankPluginDependentEsp,
+          blankDifferentPluginDependentEsp,
+      }) {}
 
   void TearDown() {
     ApiGameOperationsTest::TearDown();
@@ -63,13 +63,12 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         GameInterfaceTest,
-                        ::testing::Values(
-                          GameType::tes4,
-                          GameType::tes5,
-                          GameType::fo3,
-                          GameType::fonv,
-                          GameType::fo4,
-                          GameType::tes5se));
+                        ::testing::Values(GameType::tes4,
+                                          GameType::tes5,
+                                          GameType::fo3,
+                                          GameType::fonv,
+                                          GameType::fo4,
+                                          GameType::tes5se));
 
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidPlugin) {
   EXPECT_TRUE(handle_->IsValidPlugin(blankEsm));
@@ -88,7 +87,9 @@ TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForAnEmptyFile) {
   EXPECT_FALSE(handle_->IsValidPlugin(emptyFile));
 }
 
-TEST_P(GameInterfaceTest, loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
+TEST_P(
+    GameInterfaceTest,
+    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
   handle_->LoadPlugins(pluginsToLoad, true);
   EXPECT_EQ(11, handle_->GetLoadedPlugins().size());
 
@@ -101,7 +102,8 @@ TEST_P(GameInterfaceTest, loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAl
   EXPECT_EQ(0, plugin->GetCRC());
 }
 
-TEST_P(GameInterfaceTest, loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
+TEST_P(GameInterfaceTest,
+       loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
   handle_->LoadPlugins(pluginsToLoad, false);
   EXPECT_EQ(11, handle_->GetLoadedPlugins().size());
 
@@ -118,51 +120,55 @@ TEST_P(GameInterfaceTest, getPluginThatIsNotCachedShouldThrow) {
   EXPECT_THROW(handle_->GetPlugin(blankEsm), std::invalid_argument);
 }
 
-TEST_P(GameInterfaceTest, gettingPluginsShouldReturnAnEmptySetIfNoneHaveBeenLoaded) {
+TEST_P(GameInterfaceTest,
+       gettingPluginsShouldReturnAnEmptySetIfNoneHaveBeenLoaded) {
   EXPECT_TRUE(handle_->GetLoadedPlugins().empty());
 }
 
 TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
   std::vector<std::string> expectedOrder = {
-    masterFile,
-    blankEsm,
-    blankMasterDependentEsm,
-    blankDifferentEsm,
-    blankDifferentMasterDependentEsm,
-    blankMasterDependentEsp,
-    blankDifferentMasterDependentEsp,
-    blankEsp,
-    blankPluginDependentEsp,
-    blankDifferentEsp,
-    blankDifferentPluginDependentEsp,
+      masterFile,
+      blankEsm,
+      blankMasterDependentEsm,
+      blankDifferentEsm,
+      blankDifferentMasterDependentEsm,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
+      blankEsp,
+      blankPluginDependentEsp,
+      blankDifferentEsp,
+      blankDifferentPluginDependentEsp,
   };
 
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(handle_->GetDatabase()->LoadLists(masterlistPath.string(), ""));
+  ASSERT_NO_THROW(
+      handle_->GetDatabase()->LoadLists(masterlistPath.string(), ""));
 
   std::vector<std::string> actualOrder = handle_->SortPlugins({
-    blankEsp,
-    blankPluginDependentEsp,
-    blankDifferentMasterDependentEsm,
-    blankMasterDependentEsp,
-    blankDifferentMasterDependentEsp,
-    blankDifferentEsp,
-    blankDifferentPluginDependentEsp,
-    masterFile,
-    blankEsm,
-    blankMasterDependentEsm,
-    blankDifferentEsm,
+      blankEsp,
+      blankPluginDependentEsp,
+      blankDifferentMasterDependentEsm,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
+      blankDifferentEsp,
+      blankDifferentPluginDependentEsp,
+      masterFile,
+      blankEsm,
+      blankMasterDependentEsm,
+      blankDifferentEsm,
   });
 
   EXPECT_EQ(expectedOrder, actualOrder);
 }
 
-TEST_P(GameInterfaceTest, isPluginActiveShouldReturnFalseIfTheGivenPluginIsNotActive) {
+TEST_P(GameInterfaceTest,
+       isPluginActiveShouldReturnFalseIfTheGivenPluginIsNotActive) {
   handle_->LoadCurrentLoadOrderState();
   EXPECT_TRUE(handle_->IsPluginActive(blankEsm));
 }
 
-TEST_P(GameInterfaceTest, isPluginActiveShouldReturnTrueIfTheGivenPluginIsActive) {
+TEST_P(GameInterfaceTest,
+       isPluginActiveShouldReturnTrueIfTheGivenPluginIsActive) {
   handle_->LoadCurrentLoadOrderState();
   EXPECT_FALSE(handle_->IsPluginActive(blankEsp));
 }
@@ -175,21 +181,20 @@ TEST_P(GameInterfaceTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
 TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
   handle_->LoadCurrentLoadOrderState();
   std::vector<std::string> loadOrder({
-    masterFile,
-    blankEsm,
-    blankMasterDependentEsm,
-    blankDifferentEsm,
-    blankDifferentMasterDependentEsm,
-    blankDifferentEsp,
-    blankDifferentPluginDependentEsp,
-    blankEsp,
-    blankMasterDependentEsp,
-    blankDifferentMasterDependentEsp,
-    blankPluginDependentEsp,
+      masterFile,
+      blankEsm,
+      blankMasterDependentEsm,
+      blankDifferentEsm,
+      blankDifferentMasterDependentEsm,
+      blankDifferentEsp,
+      blankDifferentPluginDependentEsp,
+      blankEsp,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
+      blankPluginDependentEsp,
   });
 
   EXPECT_NO_THROW(handle_->SetLoadOrder(loadOrder));
-
 
   EXPECT_EQ(loadOrder, handle_->GetLoadOrder());
 
@@ -198,7 +203,6 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
 
   EXPECT_EQ(loadOrder, getLoadOrder());
 }
-
 }
 }
 

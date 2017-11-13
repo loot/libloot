@@ -27,9 +27,9 @@
 
 #include <map>
 
+#include <spdlog/spdlog.h>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
-#include <spdlog/spdlog.h>
 
 #include "api/game/game.h"
 #include "api/plugin/plugin.h"
@@ -52,23 +52,31 @@ public:
   using PluginMetadata::SetGlobalPriority;
   using PluginMetadata::GetRequirements;
   using PluginMetadata::GetLoadAfterFiles;
+
 private:
   const Plugin& plugin_;
 };
 
-typedef boost::adjacency_list<boost::listS, boost::listS, boost::directedS, PluginSortingData> PluginGraph;
+typedef boost::adjacency_list<boost::listS,
+                              boost::listS,
+                              boost::directedS,
+                              PluginSortingData>
+    PluginGraph;
 typedef boost::graph_traits<PluginGraph>::vertex_descriptor vertex_t;
-typedef boost::associative_property_map<std::map<vertex_t, size_t>> vertex_map_t;
+typedef boost::associative_property_map<std::map<vertex_t, size_t>>
+    vertex_map_t;
 
 class PluginSorter {
 public:
   std::vector<std::string> Sort(Game& game);
+
 private:
   bool GetVertexByName(const std::string& name, vertex_t& vertex) const;
   void CheckForCycles() const;
   bool EdgeCreatesCycle(const vertex_t& u, const vertex_t& v) const;
 
-  int ComparePlugins(const std::string& plugin1, const std::string& plugin2) const;
+  int ComparePlugins(const std::string& plugin1,
+                     const std::string& plugin2) const;
 
   void PropagatePriorities();
 

@@ -31,50 +31,53 @@
 namespace loot {
 PluginCleaningData::PluginCleaningData() : crc_(0), itm_(0), ref_(0), nav_(0) {}
 
-PluginCleaningData::PluginCleaningData(uint32_t crc, const std::string& utility)
-  : crc_(crc), utility_(utility), itm_(0), ref_(0), nav_(0) {}
+PluginCleaningData::PluginCleaningData(uint32_t crc,
+                                       const std::string& utility) :
+    crc_(crc),
+    utility_(utility),
+    itm_(0),
+    ref_(0),
+    nav_(0) {}
 
 PluginCleaningData::PluginCleaningData(uint32_t crc,
                                        const std::string& utility,
                                        const std::vector<MessageContent>& info,
                                        unsigned int itm,
                                        unsigned int ref,
-                                       unsigned int nav)
-  : crc_(crc), itm_(itm), ref_(ref), nav_(nav), utility_(utility), info_(info) {}
+                                       unsigned int nav) :
+    crc_(crc),
+    itm_(itm),
+    ref_(ref),
+    nav_(nav),
+    utility_(utility),
+    info_(info) {}
 
-bool PluginCleaningData::operator < (const PluginCleaningData& rhs) const {
+bool PluginCleaningData::operator<(const PluginCleaningData& rhs) const {
   return crc_ < rhs.GetCRC();
 }
 
-bool PluginCleaningData::operator == (const PluginCleaningData& rhs) const {
+bool PluginCleaningData::operator==(const PluginCleaningData& rhs) const {
   return crc_ == rhs.GetCRC();
 }
 
-uint32_t PluginCleaningData::GetCRC() const {
-  return crc_;
-}
+uint32_t PluginCleaningData::GetCRC() const { return crc_; }
 
-unsigned int PluginCleaningData::GetITMCount() const {
-  return itm_;
-}
+unsigned int PluginCleaningData::GetITMCount() const { return itm_; }
 
 unsigned int PluginCleaningData::GetDeletedReferenceCount() const {
   return ref_;
 }
 
-unsigned int PluginCleaningData::GetDeletedNavmeshCount() const {
-  return nav_;
-}
+unsigned int PluginCleaningData::GetDeletedNavmeshCount() const { return nav_; }
 
-std::string PluginCleaningData::GetCleaningUtility() const {
-  return utility_;
-}
+std::string PluginCleaningData::GetCleaningUtility() const { return utility_; }
 
 std::vector<MessageContent> PluginCleaningData::GetInfo() const {
   return info_;
 }
 
-MessageContent PluginCleaningData::ChooseInfo(const std::string& language) const {
+MessageContent PluginCleaningData::ChooseInfo(
+    const std::string& language) const {
   auto logger = getLogger();
   if (logger) {
     logger->trace("Choosing dirty info content.");

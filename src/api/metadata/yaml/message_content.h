@@ -43,11 +43,17 @@ struct convert<loot::MessageContent> {
 
   static bool decode(const Node& node, loot::MessageContent& rhs) {
     if (!node.IsMap())
-      throw RepresentationException(node.Mark(), "bad conversion: 'message content' object must be a map");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'message content' object must be a map");
     if (!node["text"])
-      throw RepresentationException(node.Mark(), "bad conversion: 'text' key missing from 'message content' object");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'text' key missing from 'message content' object");
     if (!node["lang"])
-      throw RepresentationException(node.Mark(), "bad conversion: 'lang' key missing from 'message content' object");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'lang' key missing from 'message content' object");
 
     std::string text = node["text"].as<std::string>();
     std::string lang = node["lang"].as<std::string>();
@@ -58,7 +64,7 @@ struct convert<loot::MessageContent> {
   }
 };
 
-inline Emitter& operator << (Emitter& out, const loot::MessageContent& rhs) {
+inline Emitter& operator<<(Emitter& out, const loot::MessageContent& rhs) {
   out << BeginMap;
 
   out << Key << "lang" << Value << rhs.GetLanguage();

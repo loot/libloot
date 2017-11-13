@@ -42,7 +42,8 @@ std::string ResolvePath(const std::string& path) {
   return fs::read_symlink(path).string();
 }
 
-LOOT_API void SetLoggingCallback(std::function<void(LogLevel, const char*)> callback) {
+LOOT_API void SetLoggingCallback(
+    std::function<void(LogLevel, const char*)> callback) {
   auto sink = std::make_shared<SpdLoggingSink>(callback);
   auto logger = std::make_shared<spdlog::logger>(LOGGER_NAME, sink);
   logger->set_level(spdlog::level::level_enum::trace);
@@ -51,7 +52,9 @@ LOOT_API void SetLoggingCallback(std::function<void(LogLevel, const char*)> call
   spdlog::register_logger(logger);
 }
 
-LOOT_API bool IsCompatible(const unsigned int versionMajor, const unsigned int versionMinor, const unsigned int versionPatch) {
+LOOT_API bool IsCompatible(const unsigned int versionMajor,
+                           const unsigned int versionMinor,
+                           const unsigned int versionPatch) {
   if (versionMajor > 0)
     return versionMajor == loot::LootVersion::major;
   else
@@ -63,16 +66,19 @@ LOOT_API void InitialiseLocale(const std::string& id) {
   boost::filesystem::path::imbue(std::locale());
 }
 
-LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(const GameType game,
-                                                         const std::string& gamePath,
-                                                         const std::string& gameLocalPath) {
+LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
+    const GameType game,
+    const std::string& gamePath,
+    const std::string& gameLocalPath) {
   const std::string resolvedGamePath = ResolvePath(gamePath);
   if (!gamePath.empty() && !fs::is_directory(resolvedGamePath))
-    throw std::invalid_argument("Given game path \"" + gamePath + "\" does not resolve to a valid directory.");
+    throw std::invalid_argument("Given game path \"" + gamePath +
+                                "\" does not resolve to a valid directory.");
 
   const std::string resolvedGameLocalPath = ResolvePath(gameLocalPath);
   if (!gameLocalPath.empty() && !fs::is_directory(resolvedGameLocalPath))
-    throw std::invalid_argument("Given game path \"" + gameLocalPath + "\" does not resolve to a valid directory.");
+    throw std::invalid_argument("Given game path \"" + gameLocalPath +
+                                "\" does not resolve to a valid directory.");
 
   return std::make_shared<Game>(game, resolvedGamePath, resolvedGameLocalPath);
 }

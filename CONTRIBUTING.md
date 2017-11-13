@@ -21,13 +21,9 @@ When you do make a pull request, please do so from a branch which doesn't have t
 
 ## Code Style
 
-LOOT's JavaScript uses a slightly tweaked version of the Airbnb style, and can be automatically linted by ESLint, so isn't covered here.
+The LOOT API code style is based on the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html). Formatting style is codified in the repository's `.clang-format` file, but is not enforced.
 
-### C++ Code Style
-
-The [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) is used as the base, with deviations as listed below.
-
-#### C++ Features
+### C++ Features
 
 * Static variables may contain non-POD types.
 * Reference arguments don't need to be `const` (ie. they can be used for output variables).
@@ -36,12 +32,7 @@ The [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) 
 * There's no restriction on which Boost libraries can be used.
 * Specialising `std::hash` is allowed.
 
-#### Naming
+### Naming
 
 * Constant, enumerator and variable names should use `camelCase` or `underscore_separators`, but they should be consistent within the same scope.
 * Function names should use `PascalCase` or `camelCase`, but they should be consistent within the same scope.
-
-#### Formatting
-
-* Line length doesn't matter.
-* `public`, `protected` and `private` keywords should not be indented within a class declaration.

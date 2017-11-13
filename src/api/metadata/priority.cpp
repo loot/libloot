@@ -27,8 +27,7 @@
 namespace loot {
 Priority::Priority() : value_(0), isExplicitZeroValue_(false) {}
 
-Priority::Priority(const int value)
-  : isExplicitZeroValue_(true) {
+Priority::Priority(const int value) : isExplicitZeroValue_(true) {
   if (value > 127) {
     value_ = 127;
   } else if (value < -127) {
@@ -38,31 +37,27 @@ Priority::Priority(const int value)
   }
 }
 
-short Priority::GetValue() const {
-  return value_;
-}
+short Priority::GetValue() const { return value_; }
 
 bool Priority::IsExplicit() const {
   return value_ != 0 || isExplicitZeroValue_;
 }
 
-bool Priority::operator < (const Priority& rhs) const {
+bool Priority::operator<(const Priority& rhs) const {
   return value_ < rhs.value_;
 }
 
-bool Priority::operator > (const Priority& rhs) const {
+bool Priority::operator>(const Priority& rhs) const {
   return value_ > rhs.value_;
 }
 
-bool Priority::operator >= (const Priority& rhs) const {
+bool Priority::operator>=(const Priority& rhs) const {
   return value_ >= rhs.value_;
 }
 
-bool Priority::operator == (const Priority& rhs) const {
+bool Priority::operator==(const Priority& rhs) const {
   return value_ == rhs.value_;
 }
 
-bool Priority::operator > (const uint8_t rhs) const {
-  return value_ > rhs;
-}
+bool Priority::operator>(const uint8_t rhs) const { return value_ > rhs; }
 }

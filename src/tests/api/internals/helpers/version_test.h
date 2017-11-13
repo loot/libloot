@@ -34,7 +34,7 @@ namespace loot {
 namespace test {
 #ifdef _WIN32
 TEST(Version, shouldExtractVersionFromApiDll) {
-    // Use the API DLL built.
+  // Use the API DLL built.
   Version version(boost::filesystem::path("loot_api.dll"));
   std::string expected(LootVersion::string() + ".0");
   EXPECT_EQ(expected, version.AsString());
@@ -64,7 +64,8 @@ TEST(Version, shouldExtractASemanticVersion) {
   EXPECT_EQ("1.0.0-x.7.z.92", version.AsString());
 }
 
-TEST(Version, shouldExtractAPseudosemExtendedVersionStoppingAtTheFirstSpaceSeparator) {
+TEST(Version,
+     shouldExtractAPseudosemExtendedVersionStoppingAtTheFirstSpaceSeparator) {
   Version version(std::string("01.0.0_alpha:1-2 3"));
   EXPECT_EQ("01.0.0_alpha:1-2", version.AsString());
 }
@@ -80,84 +81,91 @@ TEST(Version, shouldBeEmptyIfInputStringContainedNoVersion) {
 }
 
 TEST(Version, shouldExtractTimestampWithForwardslashDateSeparators) {
-    // Found in a Bashed Patch. Though the timestamp isn't useful to
-    // LOOT, it is semantically a version, and extracting it is far
-    // easier than trying to skip it and the number of records changed.
-  Version version(std::string("Updated: 10/09/2016 13:15:18\r\n\r\nRecords Changed: 43"));
+  // Found in a Bashed Patch. Though the timestamp isn't useful to
+  // LOOT, it is semantically a version, and extracting it is far
+  // easier than trying to skip it and the number of records changed.
+  Version version(
+      std::string("Updated: 10/09/2016 13:15:18\r\n\r\nRecords Changed: 43"));
   EXPECT_EQ("10/09/2016 13:15:18", version.AsString());
 }
 
 TEST(Version, shouldNotExtractTrailingPeriods) {
-    // Found in <http://www.nexusmods.com/fallout4/mods/2955/>.
+  // Found in <http://www.nexusmods.com/fallout4/mods/2955/>.
   Version version(std::string("Version 0.2."));
   EXPECT_EQ("0.2", version.AsString());
 }
 
 TEST(Version, shouldExtractVersionAfterTextWhenPrecededByVersionColonString) {
-    // Found in <http://www.nexusmods.com/skyrim/mods/71214/>.
+  // Found in <http://www.nexusmods.com/skyrim/mods/71214/>.
   std::string testText("Legendary Edition\r\n\r\nVersion: 3.0.0");
   EXPECT_EQ("3.0.0", Version(testText).AsString());
 }
 
 TEST(Version, shouldIgnoreNumbersContainingCommas) {
-    // Found in <http://www.nexusmods.com/oblivion/mods/5296/>.
+  // Found in <http://www.nexusmods.com/oblivion/mods/5296/>.
   std::string testText("fixing over 2,300 bugs so far! Version: 3.5.3");
   EXPECT_EQ("3.5.3", Version(testText).AsString());
 }
 
 TEST(Version, shouldExtractVersionBeforeText) {
-    // Found in <http://www.nexusmods.com/fallout3/mods/19122/>.
+  // Found in <http://www.nexusmods.com/fallout3/mods/19122/>.
   std::string testText("Version: 2.1 The Unofficial Fallout 3 Patch");
   EXPECT_EQ("2.1", Version(testText).AsString());
 }
 
 TEST(Version, shouldExtractVersionWithPrecedingV) {
-    // Found in <http://www.nexusmods.com/oblivion/mods/22795/>.
+  // Found in <http://www.nexusmods.com/oblivion/mods/22795/>.
   std::string testText("V2.11\r\n\r\n{{BASH:Invent}}");
   EXPECT_EQ("2.11", Version(testText).AsString());
 }
 
 TEST(Version, shouldExtractVersionWithPrecedingColonPeriodWhitespace) {
-    // Found in <http://www.nexusmods.com/oblivion/mods/45570>.
+  // Found in <http://www.nexusmods.com/oblivion/mods/45570>.
   std::string testText("Version:. 1.09");
   EXPECT_EQ("1.09", Version(testText).AsString());
 }
 
 TEST(Version, shouldExtractVersionWithLettersImmediatelyAfterNumbers) {
-    // Found in <http://www.nexusmods.com/skyrim/mods/19>.
-  std::string testText("comprehensive bugfixing mod for The Elder Scrolls V: Skyrim\r\n\r\nVersion: 2.1.3b\r\n\r\n");
+  // Found in <http://www.nexusmods.com/skyrim/mods/19>.
+  std::string testText(
+      "comprehensive bugfixing mod for The Elder Scrolls V: "
+      "Skyrim\r\n\r\nVersion: 2.1.3b\r\n\r\n");
   EXPECT_EQ("2.1.3b", Version(testText).AsString());
 }
 
 TEST(Version, shouldExtractVersionWithPeriodAndNoPrecedingIdentifier) {
-    // Found in <http://www.nexusmods.com/skyrim/mods/3863>.
+  // Found in <http://www.nexusmods.com/skyrim/mods/3863>.
   std::string testText("SkyUI 5.1");
   EXPECT_EQ("5.1", Version(testText).AsString());
 }
 
 TEST(Version, shouldNotExtractSingleDigitInSentence) {
-    // Found in <http://www.nexusmods.com/skyrim/mods/4708>.
-  std::string testText("Adds 8 variants of Triss Merigold's outfit from \"The Witcher 2\"");
+  // Found in <http://www.nexusmods.com/skyrim/mods/4708>.
+  std::string testText(
+      "Adds 8 variants of Triss Merigold's outfit from \"The Witcher 2\"");
   EXPECT_EQ("", Version(testText).AsString());
 }
 
 TEST(Version, shouldPreferVersionPrefixedNumbersOverVersionsInSentence) {
-    // Found in <http://www.nexusmods.com/skyrim/mods/47327>
-  std::string testText("Requires Skyrim patch 1.9.32.0.8 or greater.\n"
-                       "Requires Unofficial Skyrim Legendary Edition Patch 3.0.0 or greater.\n"
-                       "Version 2.0.0");
+  // Found in <http://www.nexusmods.com/skyrim/mods/47327>
+  std::string testText(
+      "Requires Skyrim patch 1.9.32.0.8 or greater.\n"
+      "Requires Unofficial Skyrim Legendary Edition Patch 3.0.0 or greater.\n"
+      "Version 2.0.0");
   EXPECT_EQ("2.0.0", Version(testText).AsString());
 }
 
 TEST(Version, shouldExtractSingleDigitVersionPrecededByV) {
-    // Found in <http://www.nexusmods.com/skyrim/mods/19733>
+  // Found in <http://www.nexusmods.com/skyrim/mods/19733>
   std::string testText("Immersive Armors v8 Main Plugin");
   EXPECT_EQ("8", Version(testText).AsString());
 }
 
 TEST(Version, shouldPreferVersionPrefixedNumbersOverVPrefixedNumber) {
-    // Found in <http://www.nexusmods.com/skyrim/mods/43773>
-  std::string testText("Compatibility patch for AOS v2.5 and True Storms v1.5 (or later),\nPatch Version: 1.0");
+  // Found in <http://www.nexusmods.com/skyrim/mods/43773>
+  std::string testText(
+      "Compatibility patch for AOS v2.5 and True Storms v1.5 (or "
+      "later),\nPatch Version: 1.0");
   EXPECT_EQ("1.0", Version(testText).AsString());
 }
 

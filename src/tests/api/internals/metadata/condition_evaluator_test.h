@@ -35,11 +35,14 @@ namespace test {
 class ConditionEvaluatorTest : public CommonGameTestFixture {
 protected:
   ConditionEvaluatorTest() :
-    info_(std::vector<MessageContent>({
-      MessageContent("info"),
-  })),
-  game_(GetParam(), dataPath.parent_path(), localPath),
-  evaluator_(game_.Type(), game_.DataPath(), game_.GetCache(), game_.GetLoadOrderHandler()) {}
+      info_(std::vector<MessageContent>({
+          MessageContent("info"),
+      })),
+      game_(GetParam(), dataPath.parent_path(), localPath),
+      evaluator_(game_.Type(),
+                 game_.DataPath(),
+                 game_.GetCache(),
+                 game_.GetLoadOrderHandler()) {}
 
   const std::vector<MessageContent> info_;
 
@@ -51,15 +54,15 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         ConditionEvaluatorTest,
-                        ::testing::Values(
-                          GameType::tes4,
-                          GameType::tes5,
-                          GameType::fo3,
-                          GameType::fonv,
-                          GameType::fo4,
-                          GameType::tes5se));
+                        ::testing::Values(GameType::tes4,
+                                          GameType::tes5,
+                                          GameType::fo3,
+                                          GameType::fonv,
+                                          GameType::fo4,
+                                          GameType::tes5se));
 
-TEST_P(ConditionEvaluatorTest, evaluateShouldReturnTrueForAnEmptyConditionString) {
+TEST_P(ConditionEvaluatorTest,
+       evaluateShouldReturnTrueForAnEmptyConditionString) {
   EXPECT_TRUE(evaluator_.evaluate(""));
 }
 
@@ -67,27 +70,34 @@ TEST_P(ConditionEvaluatorTest, evaluateShouldThrowForAnInvalidConditionString) {
   EXPECT_THROW(evaluator_.evaluate("condition"), ConditionSyntaxError);
 }
 
-TEST_P(ConditionEvaluatorTest, evaluateShouldReturnTrueForAConditionThatIsTrue) {
+TEST_P(ConditionEvaluatorTest,
+       evaluateShouldReturnTrueForAConditionThatIsTrue) {
   EXPECT_TRUE(evaluator_.evaluate("file(\"" + blankEsm + "\")"));
 }
 
-TEST_P(ConditionEvaluatorTest, evaluateShouldReturnFalseForAConditionThatIsFalse) {
+TEST_P(ConditionEvaluatorTest,
+       evaluateShouldReturnFalseForAConditionThatIsFalse) {
   EXPECT_FALSE(evaluator_.evaluate("file(\"" + missingEsp + "\")"));
 }
 
-TEST_P(ConditionEvaluatorTest, evaluateConditionShouldBeTrueIfTheCrcInThePluginCleaningDataGivenMatchesTheRealPluginCrc) {
+TEST_P(
+    ConditionEvaluatorTest,
+    evaluateConditionShouldBeTrueIfTheCrcInThePluginCleaningDataGivenMatchesTheRealPluginCrc) {
   PluginCleaningData dirtyInfo(blankEsmCrc, "cleaner", info_, 2, 10, 30);
 
   EXPECT_TRUE(evaluator_.evaluate(dirtyInfo, blankEsm));
 }
 
-TEST_P(ConditionEvaluatorTest, evaluateShouldBeFalseIfTheCrcInThePluginCleaningDataGivenDoesNotMatchTheRealPluginCrc) {
+TEST_P(
+    ConditionEvaluatorTest,
+    evaluateShouldBeFalseIfTheCrcInThePluginCleaningDataGivenDoesNotMatchTheRealPluginCrc) {
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info_, 2, 10, 30);
 
   EXPECT_FALSE(evaluator_.evaluate(dirtyInfo, blankEsm));
 }
 
-TEST_P(ConditionEvaluatorTest, evaluateShouldBeFalseIfAnEmptyPluginFilenameIsGiven) {
+TEST_P(ConditionEvaluatorTest,
+       evaluateShouldBeFalseIfAnEmptyPluginFilenameIsGiven) {
   PluginCleaningData dirtyInfo(blankEsmCrc, "cleaner", info_, 2, 10, 30);
 
   EXPECT_FALSE(evaluator_.evaluate(dirtyInfo, ""));

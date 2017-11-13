@@ -35,8 +35,8 @@
 #include <esplugin.hpp>
 
 #include "api/game/load_order_handler.h"
-#include "loot/metadata/plugin_metadata.h"
 #include "loot/enum/game_type.h"
+#include "loot/metadata/plugin_metadata.h"
 #include "loot/plugin_interface.h"
 
 namespace loot {
@@ -63,31 +63,40 @@ public:
 
   bool IsActive() const;
 
-  //Load ordering functions.
+  // Load ordering functions.
   size_t NumOverrideFormIDs() const;
 
   // Validity checks.
-  static bool IsValid(const std::string& filename, const GameType gameType, const boost::filesystem::path& dataPath);
-  static uintmax_t GetFileSize(const std::string& filename, const boost::filesystem::path& dataPath);
+  static bool IsValid(const std::string& filename,
+                      const GameType gameType,
+                      const boost::filesystem::path& dataPath);
+  static uintmax_t GetFileSize(const std::string& filename,
+                               const boost::filesystem::path& dataPath);
 
-  bool operator < (const Plugin& rhs) const;
+  bool operator<(const Plugin& rhs) const;
+
 private:
-  void Load(const boost::filesystem::path& path, GameType gameType, bool headerOnly);
+  void Load(const boost::filesystem::path& path,
+            GameType gameType,
+            bool headerOnly);
   std::string GetDescription() const;
 
   static std::string GetArchiveFileExtension(const GameType gameType);
-  static bool LoadsArchive(const std::string& pluginName, const GameType gameType, const boost::filesystem::path& dataPath);
+  static bool LoadsArchive(const std::string& pluginName,
+                           const GameType gameType,
+                           const boost::filesystem::path& dataPath);
   static unsigned int GetEspluginGameId(GameType gameType);
 
-  bool isEmpty_;  // Does the plugin contain any records other than the TES4 header?
+  bool isEmpty_;  // Does the plugin contain any records other than the TES4
+                  // header?
   bool isActive_;
   bool loadsArchive_;
   const std::string name_;
-  std::string version_;  //Obtained from description field.
+  std::string version_;  // Obtained from description field.
   uint32_t crc_;
   std::set<Tag> tags_;
 
-  //Useful caches.
+  // Useful caches.
   size_t numOverrideRecords_;
 
   std::shared_ptr<std::remove_pointer<::Plugin>::type> esPlugin;

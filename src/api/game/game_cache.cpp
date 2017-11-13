@@ -39,8 +39,8 @@ namespace loot {
 GameCache::GameCache() {}
 
 GameCache::GameCache(const GameCache& cache) :
-  conditions_(cache.conditions_),
-  plugins_(cache.plugins_) {}
+    conditions_(cache.conditions_),
+    plugins_(cache.plugins_) {}
 
 GameCache& GameCache::operator=(const GameCache& cache) {
   if (&cache != this) {
@@ -56,7 +56,8 @@ void GameCache::CacheCondition(const std::string& condition, bool result) {
   conditions_.insert(pair<string, bool>(to_lower(condition), result));
 }
 
-std::pair<bool, bool> GameCache::GetCachedCondition(const std::string& condition) const {
+std::pair<bool, bool> GameCache::GetCachedCondition(
+    const std::string& condition) const {
   lock_guard<mutex> guard(mutex_);
 
   auto it = conditions_.find(to_lower(condition));
@@ -69,16 +70,19 @@ std::pair<bool, bool> GameCache::GetCachedCondition(const std::string& condition
 
 std::set<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
   std::set<std::shared_ptr<const Plugin>> output;
-  std::transform(begin(plugins_),
-                 end(plugins_),
-                 std::inserter<std::set<std::shared_ptr<const Plugin>>>(output, begin(output)),
-                 [](const pair<string, std::shared_ptr<const Plugin>>& pluginPair) {
-    return pluginPair.second;
-  });
+  std::transform(
+      begin(plugins_),
+      end(plugins_),
+      std::inserter<std::set<std::shared_ptr<const Plugin>>>(output,
+                                                             begin(output)),
+      [](const pair<string, std::shared_ptr<const Plugin>>& pluginPair) {
+        return pluginPair.second;
+      });
   return output;
 }
 
-std::shared_ptr<const Plugin> GameCache::GetPlugin(const std::string& pluginName) const {
+std::shared_ptr<const Plugin> GameCache::GetPlugin(
+    const std::string& pluginName) const {
   auto it = plugins_.find(to_lower(pluginName));
   if (it != end(plugins_))
     return it->second;
@@ -93,7 +97,8 @@ void GameCache::AddPlugin(const Plugin&& plugin) {
   if (it != end(plugins_))
     plugins_.erase(it);
 
-  plugins_.emplace(plugin.GetLowercasedName(), std::make_shared<Plugin>(std::move(plugin)));
+  plugins_.emplace(plugin.GetLowercasedName(),
+                   std::make_shared<Plugin>(std::move(plugin)));
 }
 
 void GameCache::ClearCachedConditions() {

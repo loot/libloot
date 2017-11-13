@@ -58,13 +58,13 @@ public:
    *          lexicographically less than the given Location's URL, false
    *          otherwise.
    */
-  LOOT_API bool operator < (const Location& rhs) const;
+  LOOT_API bool operator<(const Location& rhs) const;
 
   /**
    * Check if two Location objects are equal by comparing their URLs.
    * @returns True if the URLs are case-insensitively equal, false otherwise.
    */
-  LOOT_API bool operator == (const Location& rhs) const;
+  LOOT_API bool operator==(const Location& rhs) const;
 
   /**
    * Get the object's URL.
@@ -77,6 +77,7 @@ public:
    * @return The name of the location.
    */
   LOOT_API std::string GetName() const;
+
 private:
   std::string url_;
   std::string name_;

@@ -51,7 +51,8 @@ public:
    *         The File's condition string.
    * @return A File object.
    */
-  LOOT_API File(const std::string& name, const std::string& display = "",
+  LOOT_API File(const std::string& name,
+                const std::string& display = "",
                 const std::string& condition = "");
 
   /**
@@ -60,14 +61,14 @@ public:
    * @returns True if this File's name is case-insensitively lexicographically
    *          less than the given File's name, false otherwise.
    */
-  LOOT_API bool operator < (const File& rhs) const;
+  LOOT_API bool operator<(const File& rhs) const;
 
   /**
    * Check if two File objects are equal by comparing their filenames.
    * @returns True if the filenames are case-insensitively equal, false
    *          otherwise.
    */
-  LOOT_API bool operator == (const File& rhs) const;
+  LOOT_API bool operator==(const File& rhs) const;
 
   /**
    * Get the filename of the file.
@@ -80,6 +81,7 @@ public:
    * @return The file's display name.
    */
   LOOT_API std::string GetDisplayName() const;
+
 private:
   std::string name_;
   std::string display_;

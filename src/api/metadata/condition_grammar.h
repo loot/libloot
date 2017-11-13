@@ -33,81 +33,93 @@
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 #endif
 
-#include <cstdint>
-#include <regex>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/spirit/include/phoenix_bind.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
-#include <boost/spirit/include/phoenix_bind.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <cstdint>
+#include <regex>
 
-#include "loot/exception/condition_syntax_error.h"
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
 #include "api/helpers/version.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/plugin/plugin.h"
+#include "loot/exception/condition_syntax_error.h"
 
 namespace loot {
 template<typename Iterator, typename Skipper>
-class ConditionGrammar : public boost::spirit::qi::grammar < Iterator, bool(), Skipper > {
+class ConditionGrammar
+    : public boost::spirit::qi::grammar<Iterator, bool(), Skipper> {
 public:
-  ConditionGrammar(const ConditionEvaluator& evaluator) : ConditionGrammar::base_type(expression_, "condition grammar"), evaluator_(evaluator) {
+  ConditionGrammar(const ConditionEvaluator& evaluator) :
+      ConditionGrammar::base_type(expression_, "condition grammar"),
+      evaluator_(evaluator) {
     using boost::spirit::unicode::char_;
     using boost::spirit::unicode::string;
     namespace phoenix = boost::phoenix;
     namespace qi = boost::spirit::qi;
 
     expression_ =
-      qi::eps >
-      compound_[qi::labels::_val = qi::labels::_1]
-      >> *((qi::lit("or") >> compound_)[qi::labels::_val = qi::labels::_val || qi::labels::_1])
-      ;
+        qi::eps > compound_[qi::labels::_val = qi::labels::_1] >>
+        *((qi::lit("or") >>
+           compound_)[qi::labels::_val = qi::labels::_val || qi::labels::_1]);
 
     compound_ =
-      condition_[qi::labels::_val = qi::labels::_1]
-      >> *((qi::lit("and") >> condition_)[qi::labels::_val = qi::labels::_val && qi::labels::_1])
-      ;
+        condition_[qi::labels::_val = qi::labels::_1] >>
+        *((qi::lit("and") >>
+           condition_)[qi::labels::_val = qi::labels::_val && qi::labels::_1]);
 
     condition_ =
-      function_[qi::labels::_val = qi::labels::_1]
-      | (qi::lit("not") > condition_)[qi::labels::_val = !qi::labels::_1]
-      | ('(' > expression_ > ')')[qi::labels::_val = qi::labels::_1]
-      ;
+        function_[qi::labels::_val = qi::labels::_1] |
+        (qi::lit("not") > condition_)[qi::labels::_val = !qi::labels::_1] |
+        ('(' > expression_ > ')')[qi::labels::_val = qi::labels::_1];
 
     function_ =
-      ("file(" > quotedStr_ > ')')[phoenix::bind(&ConditionGrammar::CheckFile, this, qi::labels::_val, qi::labels::_1)]
-      | ("many(" > quotedStr_ > ')')[phoenix::bind(&ConditionGrammar::CheckMany, this, qi::labels::_val, qi::labels::_1)]
-      | ("checksum(" > filePath_ > ',' > qi::hex > ')')[phoenix::bind(&ConditionGrammar::CheckSum, this, qi::labels::_val, qi::labels::_1, qi::labels::_2)]
-      | ("version(" > filePath_ > ',' > quotedStr_ > ',' > comparator_ > ')')[phoenix::bind(&ConditionGrammar::CheckVersion, this, qi::labels::_val, qi::labels::_1, qi::labels::_2, qi::labels::_3)]
-      | ("active(" > quotedStr_ > ')')[phoenix::bind(&ConditionGrammar::CheckActive, this, qi::labels::_val, qi::labels::_1)]
-      | ("many_active(" > quotedStr_ > ')')[phoenix::bind(&ConditionGrammar::CheckManyActive, this, qi::labels::_val, qi::labels::_1)]
-      ;
+        ("file(" > quotedStr_ > ')')[phoenix::bind(&ConditionGrammar::CheckFile,
+                                                   this,
+                                                   qi::labels::_val,
+                                                   qi::labels::_1)] |
+        ("many(" > quotedStr_ > ')')[phoenix::bind(&ConditionGrammar::CheckMany,
+                                                   this,
+                                                   qi::labels::_val,
+                                                   qi::labels::_1)] |
+        ("checksum(" > filePath_ > ',' > qi::hex >
+         ')')[phoenix::bind(&ConditionGrammar::CheckSum,
+                            this,
+                            qi::labels::_val,
+                            qi::labels::_1,
+                            qi::labels::_2)] |
+        ("version(" > filePath_ > ',' > quotedStr_ > ',' > comparator_ >
+         ')')[phoenix::bind(&ConditionGrammar::CheckVersion,
+                            this,
+                            qi::labels::_val,
+                            qi::labels::_1,
+                            qi::labels::_2,
+                            qi::labels::_3)] |
+        ("active(" > quotedStr_ >
+         ')')[phoenix::bind(&ConditionGrammar::CheckActive,
+                            this,
+                            qi::labels::_val,
+                            qi::labels::_1)] |
+        ("many_active(" > quotedStr_ >
+         ')')[phoenix::bind(&ConditionGrammar::CheckManyActive,
+                            this,
+                            qi::labels::_val,
+                            qi::labels::_1)];
 
     quotedStr_ %= '"' > +(char_ - '"') > '"';
 
     filePath_ %= '"' > +(char_ - invalidPathChars_) > '"';
 
-    invalidPathChars_ %=
-      char_(':')
-      | char_('*')
-      | char_('?')
-      | char_('"')
-      | char_('<')
-      | char_('>')
-      | char_('|')
-      ;
+    invalidPathChars_ %= char_(':') | char_('*') | char_('?') | char_('"') |
+                         char_('<') | char_('>') | char_('|');
 
-    comparator_ %=
-      string("==")
-      | string("!=")
-      | string("<=")
-      | string(">=")
-      | string("<")
-      | string(">")
-      ;
+    comparator_ %= string("==") | string("!=") | string("<=") | string(">=") |
+                   string("<") | string(">");
 
     expression_.name("expression");
     compound_.name("compound condition");
@@ -118,14 +130,62 @@ public:
     comparator_.name("comparator");
     invalidPathChars_.name("invalid file path characters");
 
-    qi::on_error<qi::fail>(expression_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
-    qi::on_error<qi::fail>(compound_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
-    qi::on_error<qi::fail>(condition_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
-    qi::on_error<qi::fail>(function_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
-    qi::on_error<qi::fail>(quotedStr_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
-    qi::on_error<qi::fail>(filePath_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
-    qi::on_error<qi::fail>(comparator_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
-    qi::on_error<qi::fail>(invalidPathChars_, phoenix::bind(&ConditionGrammar::SyntaxError, this, qi::labels::_1, qi::labels::_2, qi::labels::_3, qi::labels::_4));
+    qi::on_error<qi::fail>(expression_,
+                           phoenix::bind(&ConditionGrammar::SyntaxError,
+                                         this,
+                                         qi::labels::_1,
+                                         qi::labels::_2,
+                                         qi::labels::_3,
+                                         qi::labels::_4));
+    qi::on_error<qi::fail>(compound_,
+                           phoenix::bind(&ConditionGrammar::SyntaxError,
+                                         this,
+                                         qi::labels::_1,
+                                         qi::labels::_2,
+                                         qi::labels::_3,
+                                         qi::labels::_4));
+    qi::on_error<qi::fail>(condition_,
+                           phoenix::bind(&ConditionGrammar::SyntaxError,
+                                         this,
+                                         qi::labels::_1,
+                                         qi::labels::_2,
+                                         qi::labels::_3,
+                                         qi::labels::_4));
+    qi::on_error<qi::fail>(function_,
+                           phoenix::bind(&ConditionGrammar::SyntaxError,
+                                         this,
+                                         qi::labels::_1,
+                                         qi::labels::_2,
+                                         qi::labels::_3,
+                                         qi::labels::_4));
+    qi::on_error<qi::fail>(quotedStr_,
+                           phoenix::bind(&ConditionGrammar::SyntaxError,
+                                         this,
+                                         qi::labels::_1,
+                                         qi::labels::_2,
+                                         qi::labels::_3,
+                                         qi::labels::_4));
+    qi::on_error<qi::fail>(filePath_,
+                           phoenix::bind(&ConditionGrammar::SyntaxError,
+                                         this,
+                                         qi::labels::_1,
+                                         qi::labels::_2,
+                                         qi::labels::_3,
+                                         qi::labels::_4));
+    qi::on_error<qi::fail>(comparator_,
+                           phoenix::bind(&ConditionGrammar::SyntaxError,
+                                         this,
+                                         qi::labels::_1,
+                                         qi::labels::_2,
+                                         qi::labels::_3,
+                                         qi::labels::_4));
+    qi::on_error<qi::fail>(invalidPathChars_,
+                           phoenix::bind(&ConditionGrammar::SyntaxError,
+                                         this,
+                                         qi::labels::_1,
+                                         qi::labels::_2,
+                                         qi::labels::_3,
+                                         qi::labels::_4));
 
     logger_ = getLogger();
   }
@@ -138,7 +198,7 @@ private:
     return strpbrk(file.c_str(), ":\\*?|") != nullptr;
   }
 
-  //Eval's exact paths. Check for files and ghosted plugins.
+  // Eval's exact paths. Check for files and ghosted plugins.
   void CheckFile(bool& result, const std::string& file) const {
     if (logger_) {
       logger_->trace("Checking to see if the file \"{}\" exists.", file);
@@ -157,14 +217,19 @@ private:
 
   void CheckMany(bool& result, const std::string& regexStr) const {
     if (logger_) {
-      logger_->trace("Checking to see if more than one file matching the regex \"{}\" exists.", regexStr);
+      logger_->trace(
+          "Checking to see if more than one file matching the regex \"{}\" "
+          "exists.",
+          regexStr);
     }
 
     result = false;
     result = evaluator_.regexMatchesExist(regexStr);
   }
 
-  void CheckSum(bool& result, const std::string& file, const uint32_t checksum) {
+  void CheckSum(bool& result,
+                const std::string& file,
+                const uint32_t checksum) {
     if (logger_) {
       logger_->trace("Checking the CRC of the file \"{}\".", file);
     }
@@ -173,7 +238,10 @@ private:
     result = evaluator_.checksumMatches(file, checksum);
   }
 
-  void CheckVersion(bool& result, const std::string&  file, const std::string& version, const std::string& comparator) const {
+  void CheckVersion(bool& result,
+                    const std::string& file,
+                    const std::string& version,
+                    const std::string& comparator) const {
     if (logger_) {
       logger_->trace("Checking the version of the file \"{}\".", file);
     }
@@ -200,23 +268,35 @@ private:
 
   void CheckManyActive(bool& result, const std::string& regexStr) const {
     if (logger_) {
-      logger_->trace("Checking to see if more than one file matching the regex \"{}\" is active.", regexStr);
+      logger_->trace(
+          "Checking to see if more than one file matching the regex \"{}\" is "
+          "active.",
+          regexStr);
     }
 
     result = false;
     result = evaluator_.arePluginsActive(regexStr);
   }
 
-  void SyntaxError(Iterator const& first, Iterator const& last, Iterator const& errorpos, boost::spirit::info const& what) {
+  void SyntaxError(Iterator const& first,
+                   Iterator const& last,
+                   Iterator const& errorpos,
+                   boost::spirit::info const& what) {
     std::string condition(first, last);
     std::string context(errorpos, last);
     boost::trim(context);
 
-    throw ConditionSyntaxError((boost::format("Failed to parse condition \"%1%\": expected \"%2%\" at \"%3%\".") % condition % what.tag % context).str());
+    throw ConditionSyntaxError(
+        (boost::format("Failed to parse condition \"%1%\": expected \"%2%\" at "
+                       "\"%3%\".") %
+         condition % what.tag % context)
+            .str());
   }
 
-  boost::spirit::qi::rule<Iterator, bool(), Skipper> expression_, compound_, condition_, function_;
-  boost::spirit::qi::rule<Iterator, std::string()> quotedStr_, filePath_, comparator_;
+  boost::spirit::qi::rule<Iterator, bool(), Skipper> expression_, compound_,
+      condition_, function_;
+  boost::spirit::qi::rule<Iterator, std::string()> quotedStr_, filePath_,
+      comparator_;
   boost::spirit::qi::rule<Iterator, char()> invalidPathChars_;
 
   const ConditionEvaluator& evaluator_;

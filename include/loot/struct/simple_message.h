@@ -27,7 +27,8 @@
 #include "loot/enum/message_type.h"
 
 namespace loot {
-/** @brief A structure that holds the type of a message and the message string itself. */
+/** @brief A structure that holds the type of a message and the message string
+ * itself. */
 struct SimpleMessage {
   /** @brief The type of the message. */
   MessageType type;
@@ -37,7 +38,8 @@ struct SimpleMessage {
 
   /**
    * @brief The message string, which may be formatted using
-   * [GitHub Flavored Markdown](https://help.github.com/articles/github-flavored-markdown).
+   * [GitHub Flavored
+   * Markdown](https://help.github.com/articles/github-flavored-markdown).
    */
   std::string text;
 

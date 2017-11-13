@@ -32,30 +32,28 @@
 #include <boost/graph/topological_sort.hpp>
 #include <boost/locale.hpp>
 
-#include "loot/exception/cyclic_interaction_error.h"
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
 #include "api/metadata/condition_evaluator.h"
+#include "loot/exception/cyclic_interaction_error.h"
 
 using std::list;
 using std::string;
 using std::vector;
 
 namespace loot {
-PluginSortingData::PluginSortingData(const Plugin& plugin, const PluginMetadata&& metadata)
-  : plugin_(plugin), PluginMetadata(metadata) {}
+PluginSortingData::PluginSortingData(const Plugin& plugin,
+                                     const PluginMetadata&& metadata) :
+    plugin_(plugin),
+    PluginMetadata(metadata) {}
 
-std::string PluginSortingData::GetName() const {
-  return plugin_.GetName();
-}
+std::string PluginSortingData::GetName() const { return plugin_.GetName(); }
 
 bool PluginSortingData::IsMaster() const {
   return plugin_.IsMaster() || plugin_.IsLightMaster();
 }
 
-bool PluginSortingData::LoadsArchive() const {
-  return plugin_.LoadsArchive();
-}
+bool PluginSortingData::LoadsArchive() const { return plugin_.LoadsArchive(); }
 
 std::vector<std::string> PluginSortingData::GetMasters() const {
   return plugin_.GetMasters();
@@ -65,7 +63,8 @@ size_t PluginSortingData::NumOverrideFormIDs() const {
   return plugin_.NumOverrideFormIDs();
 }
 
-bool PluginSortingData::DoFormIDsOverlap(const PluginSortingData& plugin) const {
+bool PluginSortingData::DoFormIDsOverlap(
+    const PluginSortingData& plugin) const {
   return plugin_.DoFormIDsOverlap(plugin.plugin_);
 }
 
@@ -85,8 +84,8 @@ public:
     auto it = find(begin(trail), end(trail), name);
 
     if (it != end(trail)) {
-        // Erase everything from this position onwards, as it doesn't
-        // contribute to a forward-cycle.
+      // Erase everything from this position onwards, as it doesn't
+      // contribute to a forward-cycle.
       trail.erase(it, end(trail));
     }
 
@@ -105,7 +104,8 @@ public:
     }
     backCycle.erase(backCycle.length() - 2);
 
-    throw CyclicInteractionError(graph[source].GetName(), graph[target].GetName(), backCycle);
+    throw CyclicInteractionError(
+        graph[source].GetName(), graph[target].GetName(), backCycle);
   }
 
 private:
@@ -144,12 +144,12 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   oldLoadOrder_ = game.GetLoadOrder();
   if (logger_) {
     logger_->info("Fetched existing load order: ");
-    for (const auto &plugin : oldLoadOrder_) {
+    for (const auto& plugin : oldLoadOrder_) {
       logger_->info("\t\t{}", plugin);
     }
   }
 
-  //Now add the interactions between plugins to the graph as edges.
+  // Now add the interactions between plugins to the graph as edges.
   if (logger_) {
     logger_->info("Adding edges to plugin graph.");
     logger_->debug("Adding non-overlap edges.");
@@ -178,17 +178,24 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   }
   CheckForCycles();
 
-  //Now we can sort.
+  // Now we can sort.
   if (logger_) {
     logger_->debug("Performing a topological sort.");
   }
   list<vertex_t> sortedVertices;
-  boost::topological_sort(graph_, std::front_inserter(sortedVertices), boost::vertex_index_map(vertexIndexMap_));
+  boost::topological_sort(graph_,
+                          std::front_inserter(sortedVertices),
+                          boost::vertex_index_map(vertexIndexMap_));
 
   // Check that the sorted path is Hamiltonian (ie. unique).
   for (auto it = sortedVertices.begin(); it != sortedVertices.end(); ++it) {
-    if (next(it) != sortedVertices.end() && !boost::edge(*it, *next(it), graph_).second && logger_) {
-      logger_->error("The calculated load order is not unique. No edge exists between {} and {}.", graph_[*it].GetName(), graph_[*next(it)].GetName());
+    if (next(it) != sortedVertices.end() &&
+        !boost::edge(*it, *next(it), graph_).second && logger_) {
+      logger_->error(
+          "The calculated load order is not unique. No edge exists between {} "
+          "and {}.",
+          graph_[*it].GetName(),
+          graph_[*next(it)].GetName());
     }
   }
 
@@ -197,7 +204,7 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
     logger_->info("Calculated order: ");
   }
   vector<std::string> plugins;
-  for (const auto &vertex : sortedVertices) {
+  for (const auto& vertex : sortedVertices) {
     plugins.push_back(graph_[vertex].GetName());
     if (logger_) {
       logger_->info("\t{}", plugins.back());
@@ -209,7 +216,9 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
 
 void PluginSorter::AddPluginVertices(Game& game) {
   if (logger_) {
-    logger_->info("Merging masterlist, userlist into plugin list, evaluating conditions and checking for install validity.");
+    logger_->info(
+        "Merging masterlist, userlist into plugin list, evaluating conditions "
+        "and checking for install validity.");
   }
 
   // The resolution of tie-breaks in the plugin graph may be dependent
@@ -233,29 +242,35 @@ void PluginSorter::AddPluginVertices(Game& game) {
   // Using a set of plugin names followed by finding the matching key
   // in the unordered map, as it's probably faster than copying the
   // full plugin objects then sorting them.
-  for (const auto &plugin : game.GetCache()->GetPlugins()) {
+  for (const auto& plugin : game.GetCache()->GetPlugins()) {
     if (logger_) {
-      logger_->trace("Getting and evaluating metadata for plugin {}", plugin->GetName());
+      logger_->trace("Getting and evaluating metadata for plugin {}",
+                     plugin->GetName());
     }
 
-    auto metadata = game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true);
+    auto metadata =
+        game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true);
 
     if (logger_) {
-      logger_->trace("Getting and evaluating metadata for plugin \"{}\"", plugin->GetName());
+      logger_->trace("Getting and evaluating metadata for plugin \"{}\"",
+                     plugin->GetName());
     }
 
-    vertex_t v = boost::add_vertex(PluginSortingData(*plugin, std::move(metadata)), graph_);
+    vertex_t v = boost::add_vertex(
+        PluginSortingData(*plugin, std::move(metadata)), graph_);
   }
 
   // Prebuild an index map, which std::list-based VertexList graphs don't have.
   vertexIndexMap_ = vertex_map_t(indexMap_);
   size_t i = 0;
   BGL_FORALL_VERTICES(v, graph_, PluginGraph)
-    put(vertexIndexMap_, v, i++);
+  put(vertexIndexMap_, v, i++);
 }
 
-bool PluginSorter::GetVertexByName(const std::string& name, vertex_t& vertexOut) const {
-  for (const auto& vertex : boost::make_iterator_range(boost::vertices(graph_))) {
+bool PluginSorter::GetVertexByName(const std::string& name,
+                                   vertex_t& vertexOut) const {
+  for (const auto& vertex :
+       boost::make_iterator_range(boost::vertices(graph_))) {
     if (boost::iequals(graph_[vertex].GetName(), name)) {
       vertexOut = vertex;
       return true;
@@ -266,12 +281,17 @@ bool PluginSorter::GetVertexByName(const std::string& name, vertex_t& vertexOut)
 }
 
 void PluginSorter::CheckForCycles() const {
-  boost::depth_first_search(graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap_));
+  boost::depth_first_search(
+      graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap_));
 }
 
-bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex, const vertex_t& toVertex) const {
+bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
+                                    const vertex_t& toVertex) const {
   try {
-    boost::breadth_first_search(graph_, toVertex, visitor(PathDetector(fromVertex)).vertex_index_map(vertexIndexMap_));
+    boost::breadth_first_search(
+        graph_,
+        toVertex,
+        visitor(PathDetector(fromVertex)).vertex_index_map(vertexIndexMap_));
   } catch (PathFoundException&) {
     return true;
   }
@@ -279,12 +299,12 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex, const vertex_t& 
 }
 
 void PluginSorter::PropagatePriorities() {
-    /* If a plugin has a priority value > 0, that value should be
-       inherited by all plugins that have edges coming from that
-       plugin, ie. those that load after it, unless the plugin being
-       compared itself has a larger value. */
+  /* If a plugin has a priority value > 0, that value should be
+     inherited by all plugins that have edges coming from that
+     plugin, ie. those that load after it, unless the plugin being
+     compared itself has a larger value. */
 
-    // Find all vertices with priorities > 0.
+  // Find all vertices with priorities > 0.
   std::vector<vertex_t> positivePriorityVertices;
   vertex_it vit, vitend;
   tie(vit, vitend) = boost::vertices(graph_);
@@ -292,77 +312,91 @@ void PluginSorter::PropagatePriorities() {
                vitend,
                std::back_inserter(positivePriorityVertices),
                [&](const vertex_t& vertex) {
-    return graph_[vertex].GetLocalPriority() > 0
-      || graph_[vertex].GetGlobalPriority() > 0;
-  });
+                 return graph_[vertex].GetLocalPriority() > 0 ||
+                        graph_[vertex].GetGlobalPriority() > 0;
+               });
 
   // To reduce the number of priorities that will need setting,
   // sort the vertices in order of decreasing priority.
   std::sort(begin(positivePriorityVertices),
             end(positivePriorityVertices),
             [&](const vertex_t& lhs, const vertex_t& rhs) {
-    return graph_[lhs].GetLocalPriority() > graph_[rhs].GetLocalPriority()
-      || graph_[lhs].GetGlobalPriority() > graph_[rhs].GetGlobalPriority();
-  });
+              return graph_[lhs].GetLocalPriority() >
+                         graph_[rhs].GetLocalPriority() ||
+                     graph_[lhs].GetGlobalPriority() >
+                         graph_[rhs].GetGlobalPriority();
+            });
 
   // Create a color map.
   std::vector<boost::default_color_type> colorVec(num_vertices(graph_));
-  boost::iterator_property_map<boost::default_color_type*, vertex_map_t> colorMap(&colorVec.front(), vertexIndexMap_);
+  boost::iterator_property_map<boost::default_color_type*, vertex_map_t>
+      colorMap(&colorVec.front(), vertexIndexMap_);
 
   // Now loop over the vertices. For each one, do a depth-first
   // search, setting priorities until an equal or larger value is
   // encountered.
   for (const vertex_t& vertex : positivePriorityVertices) {
     if (logger_) {
-      logger_->trace("Doing DFS for {} which has local priority {} and global priority {}",
-        graph_[vertex].GetName(),
-        graph_[vertex].GetLocalPriority().GetValue(),
-        graph_[vertex].GetGlobalPriority().GetValue());
+      logger_->trace(
+          "Doing DFS for {} which has local priority {} and global priority {}",
+          graph_[vertex].GetName(),
+          graph_[vertex].GetLocalPriority().GetValue(),
+          graph_[vertex].GetGlobalPriority().GetValue());
     }
     boost::dfs_visitor<> visitor;
-    boost::depth_first_visit(graph_,
-                             vertex,
-                             visitor,
-                             colorMap,
-                             [&](const vertex_t& currentVertex, const PluginGraph& graph) {
-      // depth_first_search takes a const graph, so cast it if modifying a vertex.
-      if (graph[currentVertex].GetLocalPriority() < graph[vertex].GetLocalPriority()) {
-        if (logger_) {
-          logger_->trace("Overriding local priority for {} from {} to {}",
-            graph[currentVertex].GetName(),
-            graph[currentVertex].GetLocalPriority().GetValue(),
-            graph[vertex].GetLocalPriority().GetValue());
-        }
-        const_cast<PluginGraph&>(graph)[currentVertex].SetLocalPriority(graph[vertex].GetLocalPriority());
+    boost::depth_first_visit(
+        graph_,
+        vertex,
+        visitor,
+        colorMap,
+        [&](const vertex_t& currentVertex, const PluginGraph& graph) {
+          // depth_first_search takes a const graph, so cast it if modifying a
+          // vertex.
+          if (graph[currentVertex].GetLocalPriority() <
+              graph[vertex].GetLocalPriority()) {
+            if (logger_) {
+              logger_->trace("Overriding local priority for {} from {} to {}",
+                             graph[currentVertex].GetName(),
+                             graph[currentVertex].GetLocalPriority().GetValue(),
+                             graph[vertex].GetLocalPriority().GetValue());
+            }
+            const_cast<PluginGraph&>(graph)[currentVertex].SetLocalPriority(
+                graph[vertex].GetLocalPriority());
 
-        return false;
-      }
+            return false;
+          }
 
-      if (graph[currentVertex].GetGlobalPriority() < graph[vertex].GetGlobalPriority()) {
-        if (logger_) {
-          logger_->trace("Overriding global priority for {} from {} to {}",
-            graph[currentVertex].GetName(),
-            graph[currentVertex].GetGlobalPriority().GetValue(),
-            graph[vertex].GetGlobalPriority().GetValue());
-        }
-        const_cast<PluginGraph&>(graph)[currentVertex].SetGlobalPriority(graph[vertex].GetGlobalPriority());
+          if (graph[currentVertex].GetGlobalPriority() <
+              graph[vertex].GetGlobalPriority()) {
+            if (logger_) {
+              logger_->trace(
+                  "Overriding global priority for {} from {} to {}",
+                  graph[currentVertex].GetName(),
+                  graph[currentVertex].GetGlobalPriority().GetValue(),
+                  graph[vertex].GetGlobalPriority().GetValue());
+            }
+            const_cast<PluginGraph&>(graph)[currentVertex].SetGlobalPriority(
+                graph[vertex].GetGlobalPriority());
 
-        return false;
-      }
+            return false;
+          }
 
-      return currentVertex != vertex
-        && graph[currentVertex].GetLocalPriority() >= graph[vertex].GetLocalPriority()
-        && graph[currentVertex].GetGlobalPriority() >= graph[vertex].GetGlobalPriority();
-    });
+          return currentVertex != vertex &&
+                 graph[currentVertex].GetLocalPriority() >=
+                     graph[vertex].GetLocalPriority() &&
+                 graph[currentVertex].GetGlobalPriority() >=
+                     graph[vertex].GetGlobalPriority();
+        });
   }
 }
 
-void PluginSorter::AddEdge(const vertex_t& fromVertex, const vertex_t& toVertex) {
+void PluginSorter::AddEdge(const vertex_t& fromVertex,
+                           const vertex_t& toVertex) {
   if (!boost::edge(fromVertex, toVertex, graph_).second) {
     if (logger_) {
       logger_->trace("Adding edge from \"{}\" to \"{}\".",
-        graph_[fromVertex].GetName(),
-        graph_[toVertex].GetName());
+                     graph_[fromVertex].GetName(),
+                     graph_[toVertex].GetName());
     }
 
     boost::add_edge(fromVertex, toVertex, graph_);
@@ -370,12 +404,13 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex, const vertex_t& toVertex)
 }
 
 void PluginSorter::AddSpecificEdges() {
-    //Add edges for all relationships that aren't overlaps or priority differences.
+  // Add edges for all relationships that aren't overlaps or priority
+  // differences.
   vertex_it vit, vitend;
   for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
     if (logger_) {
       logger_->trace("Adding specific edges to vertex for \"{}\".",
-        graph_[*vit].GetName());
+                     graph_[*vit].GetName());
       logger_->trace("Adding edges for master flag differences.");
     }
 
@@ -399,7 +434,7 @@ void PluginSorter::AddSpecificEdges() {
     if (logger_) {
       logger_->trace("Adding in-edges for masters.");
     }
-    for (const auto &master : graph_[*vit].GetMasters()) {
+    for (const auto& master : graph_[*vit].GetMasters()) {
       if (GetVertexByName(master, parentVertex))
         AddEdge(parentVertex, *vit);
     }
@@ -407,7 +442,7 @@ void PluginSorter::AddSpecificEdges() {
     if (logger_) {
       logger_->trace("Adding in-edges for requirements.");
     }
-    for (const auto &file : graph_[*vit].GetRequirements()) {
+    for (const auto& file : graph_[*vit].GetRequirements()) {
       if (GetVertexByName(file.GetName(), parentVertex))
         AddEdge(parentVertex, *vit);
     }
@@ -415,7 +450,7 @@ void PluginSorter::AddSpecificEdges() {
     if (logger_) {
       logger_->trace("Adding in-edges for 'load after's.");
     }
-    for (const auto &file : graph_[*vit].GetLoadAfterFiles()) {
+    for (const auto& file : graph_[*vit].GetLoadAfterFiles()) {
       if (GetVertexByName(file.GetName(), parentVertex))
         AddEdge(parentVertex, *vit);
     }
@@ -423,36 +458,44 @@ void PluginSorter::AddSpecificEdges() {
 }
 
 void PluginSorter::AddPriorityEdges() {
-  for (const auto& vertex : boost::make_iterator_range(boost::vertices(graph_))) {
+  for (const auto& vertex :
+       boost::make_iterator_range(boost::vertices(graph_))) {
     if (logger_) {
       logger_->trace("Adding priority difference edges to vertex for \"{}\".",
-        graph_[vertex].GetName());
+                     graph_[vertex].GetName());
     }
     // If the plugin has a global priority of zero and doesn't load
     // an archive and has no override records, skip it. Plugins without
     // override records can only conflict with plugins that override
     // the records they add, so any edge necessary will be added when
     // evaluating that plugin.
-    if (graph_[vertex].GetGlobalPriority().GetValue() == 0
-        && graph_[vertex].NumOverrideFormIDs() == 0
-        && !graph_[vertex].LoadsArchive()) {
+    if (graph_[vertex].GetGlobalPriority().GetValue() == 0 &&
+        graph_[vertex].NumOverrideFormIDs() == 0 &&
+        !graph_[vertex].LoadsArchive()) {
       continue;
     }
 
-    for (const auto& otherVertex : boost::make_iterator_range(boost::vertices(graph_))) {
-        // If the plugins have equal priority, or have non-global
-        // priorities but don't conflict, don't add a priority edge.
-      if ((graph_[vertex].GetLocalPriority() == graph_[otherVertex].GetLocalPriority() && graph_[vertex].GetGlobalPriority() == graph_[otherVertex].GetGlobalPriority())
-          || (graph_[vertex].GetGlobalPriority().GetValue() == 0
-              && graph_[otherVertex].GetGlobalPriority().GetValue() == 0
-              && !graph_[vertex].DoFormIDsOverlap(graph_[otherVertex]))) {
+    for (const auto& otherVertex :
+         boost::make_iterator_range(boost::vertices(graph_))) {
+      // If the plugins have equal priority, or have non-global
+      // priorities but don't conflict, don't add a priority edge.
+      if ((graph_[vertex].GetLocalPriority() ==
+               graph_[otherVertex].GetLocalPriority() &&
+           graph_[vertex].GetGlobalPriority() ==
+               graph_[otherVertex].GetGlobalPriority()) ||
+          (graph_[vertex].GetGlobalPriority().GetValue() == 0 &&
+           graph_[otherVertex].GetGlobalPriority().GetValue() == 0 &&
+           !graph_[vertex].DoFormIDsOverlap(graph_[otherVertex]))) {
         continue;
       }
 
       vertex_t toVertex, fromVertex;
-      if (graph_[vertex].GetGlobalPriority() < graph_[otherVertex].GetGlobalPriority()
-          || (graph_[vertex].GetGlobalPriority() == graph_[otherVertex].GetGlobalPriority()
-              && graph_[vertex].GetLocalPriority() < graph_[otherVertex].GetLocalPriority())) {
+      if (graph_[vertex].GetGlobalPriority() <
+              graph_[otherVertex].GetGlobalPriority() ||
+          (graph_[vertex].GetGlobalPriority() ==
+               graph_[otherVertex].GetGlobalPriority() &&
+           graph_[vertex].GetLocalPriority() <
+               graph_[otherVertex].GetLocalPriority())) {
         fromVertex = vertex;
         toVertex = otherVertex;
       } else {
@@ -467,31 +510,37 @@ void PluginSorter::AddPriorityEdges() {
 }
 
 void PluginSorter::AddOverlapEdges() {
-  for (const auto& vertex : boost::make_iterator_range(boost::vertices(graph_))) {
+  for (const auto& vertex :
+       boost::make_iterator_range(boost::vertices(graph_))) {
     if (logger_) {
       logger_->trace("Adding overlap edges to vertex for \"{}\".",
-        graph_[vertex].GetName());
+                     graph_[vertex].GetName());
     }
 
     if (graph_[vertex].NumOverrideFormIDs() == 0) {
       if (logger_) {
-        logger_->trace("Skipping vertex for \"{}\": the plugin contains no override records.",
-          graph_[vertex].GetName());
+        logger_->trace(
+            "Skipping vertex for \"{}\": the plugin contains no override "
+            "records.",
+            graph_[vertex].GetName());
       }
       continue;
     }
 
-    for (const auto& otherVertex : boost::make_iterator_range(boost::vertices(graph_))) {
+    for (const auto& otherVertex :
+         boost::make_iterator_range(boost::vertices(graph_))) {
       if (vertex == otherVertex ||
           boost::edge(vertex, otherVertex, graph_).second ||
           boost::edge(otherVertex, vertex, graph_).second ||
-          graph_[vertex].NumOverrideFormIDs() == graph_[otherVertex].NumOverrideFormIDs() ||
+          graph_[vertex].NumOverrideFormIDs() ==
+              graph_[otherVertex].NumOverrideFormIDs() ||
           !graph_[vertex].DoFormIDsOverlap(graph_[otherVertex])) {
         continue;
       }
 
       vertex_t toVertex, fromVertex;
-      if (graph_[vertex].NumOverrideFormIDs() > graph_[otherVertex].NumOverrideFormIDs()) {
+      if (graph_[vertex].NumOverrideFormIDs() >
+          graph_[otherVertex].NumOverrideFormIDs()) {
         fromVertex = vertex;
         toVertex = otherVertex;
       } else {
@@ -505,7 +554,8 @@ void PluginSorter::AddOverlapEdges() {
   }
 }
 
-int PluginSorter::ComparePlugins(const std::string& plugin1, const std::string& plugin2) const {
+int PluginSorter::ComparePlugins(const std::string& plugin1,
+                                 const std::string& plugin2) const {
   auto it1 = find(begin(oldLoadOrder_), end(oldLoadOrder_), plugin1);
   auto it2 = find(begin(oldLoadOrder_), end(oldLoadOrder_), plugin2);
 
@@ -514,15 +564,16 @@ int PluginSorter::ComparePlugins(const std::string& plugin1, const std::string& 
   else if (it1 == end(oldLoadOrder_) && it2 != end(oldLoadOrder_))
     return 1;
   else if (it1 != end(oldLoadOrder_) && it2 != end(oldLoadOrder_)) {
-    if (distance(begin(oldLoadOrder_), it1) < distance(begin(oldLoadOrder_), it2))
+    if (distance(begin(oldLoadOrder_), it1) <
+        distance(begin(oldLoadOrder_), it2))
       return -1;
     else
       return 1;
   } else {
-      // Neither plugin has a load order position. Need to use another
-      // comparison to get an ordering.
+    // Neither plugin has a load order position. Need to use another
+    // comparison to get an ordering.
 
-      // Compare plugin basenames.
+    // Compare plugin basenames.
     string name1 = boost::locale::to_lower(plugin1);
     name1 = name1.substr(0, name1.length() - 4);
     string name2 = boost::locale::to_lower(plugin2);
@@ -533,8 +584,8 @@ int PluginSorter::ComparePlugins(const std::string& plugin1, const std::string& 
     else if (name2 < name1)
       return 1;
     else {
-        // Could be a .esp and .esm plugin with the same basename,
-        // compare whole filenames.
+      // Could be a .esp and .esm plugin with the same basename,
+      // compare whole filenames.
       if (plugin1 < plugin2)
         return -1;
       else
@@ -545,20 +596,27 @@ int PluginSorter::ComparePlugins(const std::string& plugin1, const std::string& 
 }
 
 void PluginSorter::AddTieBreakEdges() {
-    // In order for the sort to be performed stably, there must be only one possible result.
-    // This can be enforced by adding edges between all vertices that aren't already linked.
-    // Use existing load order to decide the direction of these edges.
-  for (const auto& vertex : boost::make_iterator_range(boost::vertices(graph_))) {
+  // In order for the sort to be performed stably, there must be only one
+  // possible result. This can be enforced by adding edges between all vertices
+  // that aren't already linked. Use existing load order to decide the direction
+  // of these edges.
+  for (const auto& vertex :
+       boost::make_iterator_range(boost::vertices(graph_))) {
     if (logger_) {
-      logger_->trace("Adding tie-break edges to vertex for \"{}\"", graph_[vertex].GetName());
+      logger_->trace("Adding tie-break edges to vertex for \"{}\"",
+                     graph_[vertex].GetName());
     }
 
-    for (const auto& otherVertex : boost::make_iterator_range(boost::vertices(graph_))) {
-      if (vertex == otherVertex || boost::edge(vertex, otherVertex, graph_).second || boost::edge(otherVertex, vertex, graph_).second)
+    for (const auto& otherVertex :
+         boost::make_iterator_range(boost::vertices(graph_))) {
+      if (vertex == otherVertex ||
+          boost::edge(vertex, otherVertex, graph_).second ||
+          boost::edge(otherVertex, vertex, graph_).second)
         continue;
 
       vertex_t toVertex, fromVertex;
-      if (ComparePlugins(graph_[vertex].GetName(), graph_[otherVertex].GetName()) < 0) {
+      if (ComparePlugins(graph_[vertex].GetName(),
+                         graph_[otherVertex].GetName()) < 0) {
         fromVertex = vertex;
         toVertex = otherVertex;
       } else {

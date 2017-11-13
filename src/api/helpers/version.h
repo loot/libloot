@@ -31,7 +31,7 @@
 #include <boost/filesystem.hpp>
 
 namespace loot {
-    //Version class for more robust version comparisons.
+// Version class for more robust version comparisons.
 class Version {
 public:
   Version();
@@ -40,12 +40,13 @@ public:
 
   std::string AsString() const;
 
-  bool operator > (const Version&) const;
-  bool operator < (const Version&) const;
-  bool operator >= (const Version&) const;
-  bool operator <= (const Version&) const;
-  bool operator == (const Version&) const;
-  bool operator != (const Version&) const;
+  bool operator>(const Version&) const;
+  bool operator<(const Version&) const;
+  bool operator>=(const Version&) const;
+  bool operator<=(const Version&) const;
+  bool operator==(const Version&) const;
+  bool operator!=(const Version&) const;
+
 private:
   std::string verString_;
   static const std::vector<std::regex> versionRegexes;

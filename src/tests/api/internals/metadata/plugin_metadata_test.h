@@ -35,9 +35,10 @@ namespace loot {
 namespace test {
 class PluginMetadataTest : public CommonGameTestFixture {
 protected:
-  PluginMetadataTest() : info_(std::vector<MessageContent>({
-    MessageContent("info"),
-  })) {}
+  PluginMetadataTest() :
+      info_(std::vector<MessageContent>({
+          MessageContent("info"),
+      })) {}
 
   const std::vector<MessageContent> info_;
 };
@@ -46,24 +47,28 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         PluginMetadataTest,
-                        ::testing::Values(
-                          GameType::tes5));
+                        ::testing::Values(GameType::tes5));
 
-TEST_P(PluginMetadataTest, defaultConstructorShouldLeaveNameEmptyAndEnableMetadataAndLeaveAllOtherFieldsAtTheirDefaults) {
+TEST_P(
+    PluginMetadataTest,
+    defaultConstructorShouldLeaveNameEmptyAndEnableMetadataAndLeaveAllOtherFieldsAtTheirDefaults) {
   PluginMetadata plugin;
 
   EXPECT_TRUE(plugin.GetName().empty());
   EXPECT_TRUE(plugin.IsEnabled());
 }
 
-TEST_P(PluginMetadataTest, stringConstructorShouldSetNameToGivenStringAndEnableMetadataAndLeaveAllOtherFieldsAtTheirDefaults) {
+TEST_P(
+    PluginMetadataTest,
+    stringConstructorShouldSetNameToGivenStringAndEnableMetadataAndLeaveAllOtherFieldsAtTheirDefaults) {
   PluginMetadata plugin(blankEsm);
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.IsEnabled());
 }
 
-TEST_P(PluginMetadataTest, equalityOperatorShouldUseCaseInsensitiveNameComparisonForNonRegexNames) {
+TEST_P(PluginMetadataTest,
+       equalityOperatorShouldUseCaseInsensitiveNameComparisonForNonRegexNames) {
   PluginMetadata plugin1(blankEsm);
   PluginMetadata plugin2(boost::to_lower_copy(blankEsm));
   EXPECT_TRUE(plugin1 == plugin2);
@@ -73,7 +78,8 @@ TEST_P(PluginMetadataTest, equalityOperatorShouldUseCaseInsensitiveNameCompariso
   EXPECT_FALSE(plugin1 == plugin2);
 }
 
-TEST_P(PluginMetadataTest, equalityOperatorShouldUseCaseInsensitiveNameComparisonForTwoRegexNames) {
+TEST_P(PluginMetadataTest,
+       equalityOperatorShouldUseCaseInsensitiveNameComparisonForTwoRegexNames) {
   PluginMetadata plugin1("Blan.\\.esm");
   PluginMetadata plugin2("blan.\\.esm");
   EXPECT_TRUE(plugin1 == plugin2);
@@ -85,7 +91,8 @@ TEST_P(PluginMetadataTest, equalityOperatorShouldUseCaseInsensitiveNameCompariso
   EXPECT_FALSE(plugin2 == plugin1);
 }
 
-TEST_P(PluginMetadataTest, equalityOperatorShouldUseRegexMatchingForARegexNameAndANonRegexName) {
+TEST_P(PluginMetadataTest,
+       equalityOperatorShouldUseRegexMatchingForARegexNameAndANonRegexName) {
   PluginMetadata plugin1("Blank.esm");
   PluginMetadata plugin2("Blan.\\.esm");
   EXPECT_TRUE(plugin1 == plugin2);
@@ -106,7 +113,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldNotChangeName) {
   EXPECT_EQ(blankEsm, plugin1.GetName());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseMergedEnabledStateIfMergedMetadataIsEmpty) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldNotUseMergedEnabledStateIfMergedMetadataIsEmpty) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -117,7 +125,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseMergedEnabledStateIfMergedMe
   EXPECT_TRUE(plugin1.IsEnabled());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedEnabledStateIfMergedMetadataIsNotEmpty) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldUseMergedEnabledStateIfMergedMetadataIsNotEmpty) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -129,7 +138,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedEnabledStateIfMergedMetad
   EXPECT_FALSE(plugin1.IsEnabled());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedNonZeroLocalPriorityValue) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldUseMergedNonZeroLocalPriorityValue) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -140,7 +150,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedNonZeroLocalPriorityValue
   EXPECT_EQ(3, plugin1.GetLocalPriority().GetValue());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedNonZeroGlobalPriorityValue) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldUseMergedNonZeroGlobalPriorityValue) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -151,7 +162,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedNonZeroGlobalPriorityValu
   EXPECT_EQ(3, plugin1.GetGlobalPriority().GetValue());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseImplicitZeroLocalPriorityValue) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldNotUseImplicitZeroLocalPriorityValue) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -161,7 +173,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseImplicitZeroLocalPriorityVal
   EXPECT_EQ(5, plugin1.GetLocalPriority().GetValue());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseImplicitZeroGlobalPriorityValue) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldNotUseImplicitZeroGlobalPriorityValue) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -171,7 +184,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseImplicitZeroGlobalPriorityVa
   EXPECT_EQ(5, plugin1.GetGlobalPriority().GetValue());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeAnExplicitLocalPriorityValueOfZero) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldMergeAnExplicitLocalPriorityValueOfZero) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -183,7 +197,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeAnExplicitLocalPriorityValueO
   EXPECT_TRUE(plugin1.GetLocalPriority().IsExplicit());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeAnExplicitGlobalPriorityValueOfZero) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldMergeAnExplicitGlobalPriorityValueOfZero) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -270,7 +285,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
   plugin2.SetDirtyInfo({info1, info2});
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ(std::set<PluginCleaningData>({info1, info2}), plugin1.GetDirtyInfo());
+  EXPECT_EQ(std::set<PluginCleaningData>({info1, info2}),
+            plugin1.GetDirtyInfo());
 }
 TEST_P(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
   PluginMetadata plugin1;
@@ -282,7 +298,8 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
   plugin2.SetCleanInfo({info1, info2});
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ(std::set<PluginCleaningData>({info1, info2}), plugin1.GetCleanInfo());
+  EXPECT_EQ(std::set<PluginCleaningData>({info1, info2}),
+            plugin1.GetCleanInfo());
 }
 
 TEST_P(PluginMetadataTest, mergeMetadataShouldMergeLocationData) {
@@ -342,7 +359,8 @@ TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginGlobalPriority) {
   EXPECT_EQ(5, newMetadata.GetGlobalPriority().GetValue());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldOutputLoadAfterDataThatAreNotCommonToBothInputPlugins) {
+TEST_P(PluginMetadataTest,
+       newMetadataShouldOutputLoadAfterDataThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   File file1(blankEsm);
@@ -356,7 +374,9 @@ TEST_P(PluginMetadataTest, newMetadataShouldOutputLoadAfterDataThatAreNotCommonT
   EXPECT_EQ(std::set<File>({file2}), newMetadata.GetLoadAfterFiles());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldOutputRequirementsDataThatAreNotCommonToBothInputPlugins) {
+TEST_P(
+    PluginMetadataTest,
+    newMetadataShouldOutputRequirementsDataThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   File file1(blankEsm);
@@ -370,7 +390,9 @@ TEST_P(PluginMetadataTest, newMetadataShouldOutputRequirementsDataThatAreNotComm
   EXPECT_EQ(std::set<File>({file2}), newMetadata.GetRequirements());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldOutputIncompatibilityDataThatAreNotCommonToBothInputPlugins) {
+TEST_P(
+    PluginMetadataTest,
+    newMetadataShouldOutputIncompatibilityDataThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   File file1(blankEsm);
@@ -384,7 +406,8 @@ TEST_P(PluginMetadataTest, newMetadataShouldOutputIncompatibilityDataThatAreNotC
   EXPECT_EQ(std::set<File>({file2}), newMetadata.GetIncompatibilities());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldOutputMessagesThatAreNotCommonToBothInputPlugins) {
+TEST_P(PluginMetadataTest,
+       newMetadataShouldOutputMessagesThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Message message1(MessageType::say, "content1");
@@ -398,7 +421,8 @@ TEST_P(PluginMetadataTest, newMetadataShouldOutputMessagesThatAreNotCommonToBoth
   EXPECT_EQ(std::vector<Message>({message2}), newMetadata.GetMessages());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldOutputTagsThatAreNotCommonToBothInputPlugins) {
+TEST_P(PluginMetadataTest,
+       newMetadataShouldOutputTagsThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Tag tag1("Relev");
@@ -412,7 +436,9 @@ TEST_P(PluginMetadataTest, newMetadataShouldOutputTagsThatAreNotCommonToBothInpu
   EXPECT_EQ(std::set<Tag>({tag2}), newMetadata.GetTags());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldOutputDirtyInfoObjectsThatAreNotCommonToBothInputPlugins) {
+TEST_P(
+    PluginMetadataTest,
+    newMetadataShouldOutputDirtyInfoObjectsThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   PluginCleaningData info1(0x5, "utility", info_, 1, 2, 3);
@@ -426,7 +452,9 @@ TEST_P(PluginMetadataTest, newMetadataShouldOutputDirtyInfoObjectsThatAreNotComm
   EXPECT_EQ(std::set<PluginCleaningData>({info2}), newMetadata.GetDirtyInfo());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldOutputCleanInfoObjectsThatAreNotCommonToBothInputPlugins) {
+TEST_P(
+    PluginMetadataTest,
+    newMetadataShouldOutputCleanInfoObjectsThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   PluginCleaningData info1(0x5, "utility");
@@ -440,7 +468,8 @@ TEST_P(PluginMetadataTest, newMetadataShouldOutputCleanInfoObjectsThatAreNotComm
   EXPECT_EQ(std::set<PluginCleaningData>({info2}), newMetadata.GetCleanInfo());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldOutputLocationsThatAreNotCommonToBothInputPlugins) {
+TEST_P(PluginMetadataTest,
+       newMetadataShouldOutputLocationsThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Location location1("http://www.example.com/1");
@@ -457,9 +486,11 @@ TEST_P(PluginMetadataTest, newMetadataShouldOutputLocationsThatAreNotCommonToBot
 TEST_P(PluginMetadataTest, simpleMessagesShouldReturnMessagesAsSimpleMessages) {
   PluginMetadata plugin;
   plugin.SetMessages({
-    Message(MessageType::say, "content1"),
-    Message(MessageType::warn, {{"content2",french}, {"other content2", MessageContent::defaultLanguage}}),
-    Message(MessageType::error, "content3"),
+      Message(MessageType::say, "content1"),
+      Message(MessageType::warn,
+              {{"content2", french},
+               {"other content2", MessageContent::defaultLanguage}}),
+      Message(MessageType::error, "content3"),
   });
 
   auto simpleMessages = plugin.GetSimpleMessages(french);
@@ -476,33 +507,38 @@ TEST_P(PluginMetadataTest, simpleMessagesShouldReturnMessagesAsSimpleMessages) {
   EXPECT_EQ("content3", simpleMessages.back().text);
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeTrueForADefaultConstructedPluginMetadataObject) {
+TEST_P(PluginMetadataTest,
+       hasNameOnlyShouldBeTrueForADefaultConstructedPluginMetadataObject) {
   PluginMetadata plugin;
 
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeTrueForAPluginMetadataObjectConstructedWithAName) {
+TEST_P(PluginMetadataTest,
+       hasNameOnlyShouldBeTrueForAPluginMetadataObjectConstructedWithAName) {
   PluginMetadata plugin(blankEsp);
 
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeTrueIfThePluginMetadataIsDisabled) {
+TEST_P(PluginMetadataTest,
+       hasNameOnlyShouldBeTrueIfThePluginMetadataIsDisabled) {
   PluginMetadata plugin(blankEsp);
   plugin.SetEnabled(false);
 
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTheLocalPriorityIsExplicit) {
+TEST_P(PluginMetadataTest,
+       hasNameOnlyShouldBeFalseIfTheLocalPriorityIsExplicit) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLocalPriority(Priority(0));
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTheGlobalPriorityIsExplicit) {
+TEST_P(PluginMetadataTest,
+       hasNameOnlyShouldBeFalseIfTheGlobalPriorityIsExplicit) {
   PluginMetadata plugin(blankEsp);
   plugin.SetGlobalPriority(Priority(0));
 
@@ -516,14 +552,16 @@ TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfLoadAfterMetadataExists) {
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfRequirementMetadataExists) {
+TEST_P(PluginMetadataTest,
+       hasNameOnlyShouldBeFalseIfRequirementMetadataExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetRequirements({File(blankEsm)});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfIncompatibilityMetadataExists) {
+TEST_P(PluginMetadataTest,
+       hasNameOnlyShouldBeFalseIfIncompatibilityMetadataExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetIncompatibilities({File(blankEsm)});
 
@@ -577,37 +615,43 @@ TEST_P(PluginMetadataTest, isRegexPluginShouldBeFalseForAnExactPluginFilename) {
   EXPECT_FALSE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest, isRegexPluginShouldBeTrueIfThePluginNameContainsAColon) {
+TEST_P(PluginMetadataTest,
+       isRegexPluginShouldBeTrueIfThePluginNameContainsAColon) {
   PluginMetadata plugin("Blank:.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest, isRegexPluginShouldBeTrueIfThePluginNameContainsABackslash) {
+TEST_P(PluginMetadataTest,
+       isRegexPluginShouldBeTrueIfThePluginNameContainsABackslash) {
   PluginMetadata plugin("Blank\\.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest, isRegexPluginShouldBeTrueIfThePluginNameContainsAnAsterisk) {
+TEST_P(PluginMetadataTest,
+       isRegexPluginShouldBeTrueIfThePluginNameContainsAnAsterisk) {
   PluginMetadata plugin("Blank*.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest, isRegexPluginShouldBeTrueIfThePluginNameContainsAQuestionMark) {
+TEST_P(PluginMetadataTest,
+       isRegexPluginShouldBeTrueIfThePluginNameContainsAQuestionMark) {
   PluginMetadata plugin("Blank?.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest, isRegexPluginShouldBeTrueIfThePluginNameContainsAVerticalBar) {
+TEST_P(PluginMetadataTest,
+       isRegexPluginShouldBeTrueIfThePluginNameContainsAVerticalBar) {
   PluginMetadata plugin("Blank|.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithNoMetadataAsABlankString) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithNoMetadataAsABlankString) {
   PluginMetadata plugin(blankEsm);
   YAML::Emitter emitter;
   emitter << plugin;
@@ -615,29 +659,37 @@ TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithNoMetadataAsABla
   EXPECT_STREQ("", emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithAnExplicitLocalPriorityCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithAnExplicitLocalPriorityCorrectly) {
   PluginMetadata plugin(blankEsm);
   plugin.SetLocalPriority(Priority(0));
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esm'\n"
-               "priority: 0", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esm'\n"
+      "priority: 0",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithAnExplicitGlobalPriorityCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithAnExplicitGlobalPriorityCorrectly) {
   PluginMetadata plugin(blankEsm);
   plugin.SetGlobalPriority(Priority(0));
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esm'\n"
-               "global_priority: 0", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esm'\n"
+      "global_priority: 0",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginThatIsDisabledAndIsNotNameOnlyCorrectly) {
+TEST_P(
+    PluginMetadataTest,
+    emittingAsYamlShouldOutputAPluginThatIsDisabledAndIsNotNameOnlyCorrectly) {
   PluginMetadata plugin(blankEsm);
   plugin.SetGlobalPriority(Priority(0));
   plugin.SetEnabled(false);
@@ -645,12 +697,16 @@ TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginThatIsDisabledAndIsN
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esm'\n"
-               "enabled: false\n"
-               "global_priority: 0", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esm'\n"
+      "enabled: false\n"
+      "global_priority: 0",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginThatIsDisabledAndIsNameOnlyAsAnEmptyString) {
+TEST_P(
+    PluginMetadataTest,
+    emittingAsYamlShouldOutputAPluginThatIsDisabledAndIsNameOnlyAsAnEmptyString) {
   PluginMetadata plugin(blankEsm);
   plugin.SetEnabled(false);
 
@@ -660,53 +716,65 @@ TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginThatIsDisabledAndIsN
   EXPECT_STREQ("", emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithLoadAfterMetadataCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithLoadAfterMetadataCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLoadAfterFiles({File(blankEsm)});
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esp'\n"
-               "after:\n"
-               "  - 'Blank.esm'", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esp'\n"
+      "after:\n"
+      "  - 'Blank.esm'",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithRequirementsCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithRequirementsCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetRequirements({File(blankEsm)});
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esp'\n"
-               "req:\n"
-               "  - 'Blank.esm'", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esp'\n"
+      "req:\n"
+      "  - 'Blank.esm'",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithIncompatibilitiesCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithIncompatibilitiesCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetIncompatibilities({File(blankEsm)});
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esp'\n"
-               "inc:\n"
-               "  - 'Blank.esm'", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esp'\n"
+      "inc:\n"
+      "  - 'Blank.esm'",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithMessagesCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithMessagesCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetMessages({Message(MessageType::say, "content")});
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esp'\n"
-               "msg:\n"
-               "  - type: say\n"
-               "    content: 'content'", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esp'\n"
+      "msg:\n"
+      "  - type: say\n"
+      "    content: 'content'",
+      emitter.c_str());
 }
 
 TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithTagsCorrectly) {
@@ -716,50 +784,61 @@ TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithTagsCorrectly) {
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esp'\n"
-               "tag:\n"
-               "  - Relev", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esp'\n"
+      "tag:\n"
+      "  - Relev",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithDirtyInfoCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithDirtyInfoCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetDirtyInfo({PluginCleaningData(5, "utility", info_, 0, 1, 2)});
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esp'\n"
-               "dirty:\n"
-               "  - crc: 0x5\n"
-               "    util: 'utility'\n"
-               "    info: 'info'\n"
-               "    udr: 1\n"
-               "    nav: 2", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esp'\n"
+      "dirty:\n"
+      "  - crc: 0x5\n"
+      "    util: 'utility'\n"
+      "    info: 'info'\n"
+      "    udr: 1\n"
+      "    nav: 2",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithCleanInfoCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithCleanInfoCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetCleanInfo({PluginCleaningData(5, "utility")});
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esp'\n"
-               "clean:\n"
-               "  - crc: 0x5\n"
-               "    util: 'utility'", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esp'\n"
+      "clean:\n"
+      "  - crc: 0x5\n"
+      "    util: 'utility'",
+      emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithLocationsCorrectly) {
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithLocationsCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLocations({Location("http://www.example.com")});
 
   YAML::Emitter emitter;
   emitter << plugin;
 
-  EXPECT_STREQ("name: 'Blank.esp'\n"
-               "url:\n"
-               "  - 'http://www.example.com'", emitter.c_str());
+  EXPECT_STREQ(
+      "name: 'Blank.esp'\n"
+      "url:\n"
+      "  - 'http://www.example.com'",
+      emitter.c_str());
 }
 
 TEST_P(PluginMetadataTest, encodingAsYamlShouldOmitAllUnsetFields) {
@@ -780,7 +859,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldOmitAllUnsetFields) {
   EXPECT_FALSE(node["url"]);
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetPriorityFieldIfLocalPriorityIsExplicit) {
+TEST_P(PluginMetadataTest,
+       encodingAsYamlShouldSetPriorityFieldIfLocalPriorityIsExplicit) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLocalPriority(Priority(0));
   YAML::Node node;
@@ -789,7 +869,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetPriorityFieldIfLocalPriorityIs
   EXPECT_EQ(0, node["priority"].as<short>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetGlobalPriorityFieldIfGlobalPriorityIsExplicit) {
+TEST_P(PluginMetadataTest,
+       encodingAsYamlShouldSetGlobalPriorityFieldIfGlobalPriorityIsExplicit) {
   PluginMetadata plugin(blankEsp);
   plugin.SetGlobalPriority(Priority(0));
   YAML::Node node;
@@ -798,7 +879,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetGlobalPriorityFieldIfGlobalPri
   EXPECT_EQ(0, node["global_priority"].as<short>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldNotSetPriorityFieldIfLocalPriorityIsImplicit) {
+TEST_P(PluginMetadataTest,
+       encodingAsYamlShouldNotSetPriorityFieldIfLocalPriorityIsImplicit) {
   PluginMetadata plugin(blankEsp);
   YAML::Node node;
   node = plugin;
@@ -806,7 +888,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldNotSetPriorityFieldIfLocalPriorit
   EXPECT_FALSE(node["priority"]);
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldNotSetPriorityFieldIfGlobalPriorityIsImplicit) {
+TEST_P(PluginMetadataTest,
+       encodingAsYamlShouldNotSetPriorityFieldIfGlobalPriorityIsImplicit) {
   PluginMetadata plugin(blankEsp);
   YAML::Node node;
   node = plugin;
@@ -823,7 +906,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetEnabledFieldIfItIsFalse) {
   EXPECT_FALSE(node["enabled"].as<bool>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetAfterFieldIfLoadAfterMetadataExists) {
+TEST_P(PluginMetadataTest,
+       encodingAsYamlShouldSetAfterFieldIfLoadAfterMetadataExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLoadAfterFiles({File(blankEsm)});
   YAML::Node node;
@@ -841,7 +925,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetReqFieldIfRequirementsExist) {
   EXPECT_EQ(plugin.GetRequirements(), node["req"].as<std::set<File>>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetIncFieldIfIncompatibilitiesExist) {
+TEST_P(PluginMetadataTest,
+       encodingAsYamlShouldSetIncFieldIfIncompatibilitiesExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetIncompatibilities({File(blankEsm)});
   YAML::Node node;
@@ -874,7 +959,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetDirtyFieldIfDirtyInfoExists) {
   YAML::Node node;
   node = plugin;
 
-  EXPECT_EQ(plugin.GetDirtyInfo(), node["dirty"].as<std::set<PluginCleaningData>>());
+  EXPECT_EQ(plugin.GetDirtyInfo(),
+            node["dirty"].as<std::set<PluginCleaningData>>());
 }
 
 TEST_P(PluginMetadataTest, encodingAsYamlShouldSetCleanFieldIfCleanInfoExists) {
@@ -883,7 +969,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetCleanFieldIfCleanInfoExists) {
   YAML::Node node;
   node = plugin;
 
-  EXPECT_EQ(plugin.GetCleanInfo(), node["clean"].as<std::set<PluginCleaningData>>());
+  EXPECT_EQ(plugin.GetCleanInfo(),
+            node["clean"].as<std::set<PluginCleaningData>>());
 }
 
 TEST_P(PluginMetadataTest, encodingAsYamlShouldSetUrlFieldIfLocationsExist) {
@@ -895,7 +982,8 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetUrlFieldIfLocationsExist) {
   EXPECT_EQ(plugin.GetLocations(), node["url"].as<std::set<Location>>());
 }
 
-TEST_P(PluginMetadataTest, decodingFromYamlShouldSetDefaultPriorityValuesIfNoneAreSpecified) {
+TEST_P(PluginMetadataTest,
+       decodingFromYamlShouldSetDefaultPriorityValuesIfNoneAreSpecified) {
   YAML::Node node = YAML::Load("name: " + blankEsp);
   PluginMetadata plugin = node.as<PluginMetadata>();
 
@@ -907,89 +995,84 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldSetDefaultPriorityValuesIfNoneA
 }
 
 TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
-  YAML::Node node = YAML::Load("name: 'Blank.esp'\n"
-                               "enabled: false\n"
-                               "priority: 5\n"
-                               "global_priority: 3\n"
-                               "after:\n"
-                               "  - 'Blank.esm'\n"
-                               "req:\n"
-                               "  - 'Blank.esm'\n"
-                               "inc:\n"
-                               "  - 'Blank.esm'\n"
-                               "msg:\n"
-                               "  - type: say\n"
-                               "    content: 'content'\n"
-                               "tag:\n"
-                               "  - Relev\n"
-                               "dirty:\n"
-                               "  - crc: 0x5\n"
-                               "    util: 'utility'\n"
-                               "    udr: 1\n"
-                               "    nav: 2\n"
-                               "clean:\n"
-                               "  - crc: 0x6\n"
-                               "    util: 'utility'\n"
-                               "url:\n"
-                               "  - 'http://www.example.com'");
+  YAML::Node node = YAML::Load(
+      "name: 'Blank.esp'\n"
+      "enabled: false\n"
+      "priority: 5\n"
+      "global_priority: 3\n"
+      "after:\n"
+      "  - 'Blank.esm'\n"
+      "req:\n"
+      "  - 'Blank.esm'\n"
+      "inc:\n"
+      "  - 'Blank.esm'\n"
+      "msg:\n"
+      "  - type: say\n"
+      "    content: 'content'\n"
+      "tag:\n"
+      "  - Relev\n"
+      "dirty:\n"
+      "  - crc: 0x5\n"
+      "    util: 'utility'\n"
+      "    udr: 1\n"
+      "    nav: 2\n"
+      "clean:\n"
+      "  - crc: 0x6\n"
+      "    util: 'utility'\n"
+      "url:\n"
+      "  - 'http://www.example.com'");
   PluginMetadata plugin = node.as<PluginMetadata>();
 
   EXPECT_EQ("Blank.esp", plugin.GetName());
   EXPECT_EQ(5, plugin.GetLocalPriority().GetValue());
   EXPECT_EQ(3, plugin.GetGlobalPriority().GetValue());
-  EXPECT_EQ(std::set<File>({
-      File("Blank.esm")
-  }), plugin.GetLoadAfterFiles());
-  EXPECT_EQ(std::set<File>({
-      File("Blank.esm")
-  }), plugin.GetRequirements());
-  EXPECT_EQ(std::set<File>({
-      File("Blank.esm")
-  }), plugin.GetIncompatibilities());
-  EXPECT_EQ(std::vector<Message>({
-      Message(MessageType::say, "content")
-  }), plugin.GetMessages());
-  EXPECT_EQ(std::set<Tag>({
-      Tag("Relev")
-  }), plugin.GetTags());
-  EXPECT_EQ(std::set<PluginCleaningData>({
-      PluginCleaningData(5, "utility", info_, 0, 1, 2)
-  }), plugin.GetDirtyInfo());
-  EXPECT_EQ(std::set<PluginCleaningData>({
-    PluginCleaningData(6, "utility")
-  }), plugin.GetCleanInfo());
-  EXPECT_EQ(std::set<Location>({
-      Location("http://www.example.com")
-  }), plugin.GetLocations());
+  EXPECT_EQ(std::set<File>({File("Blank.esm")}), plugin.GetLoadAfterFiles());
+  EXPECT_EQ(std::set<File>({File("Blank.esm")}), plugin.GetRequirements());
+  EXPECT_EQ(std::set<File>({File("Blank.esm")}), plugin.GetIncompatibilities());
+  EXPECT_EQ(std::vector<Message>({Message(MessageType::say, "content")}),
+            plugin.GetMessages());
+  EXPECT_EQ(std::set<Tag>({Tag("Relev")}), plugin.GetTags());
+  EXPECT_EQ(std::set<PluginCleaningData>(
+                {PluginCleaningData(5, "utility", info_, 0, 1, 2)}),
+            plugin.GetDirtyInfo());
+  EXPECT_EQ(std::set<PluginCleaningData>({PluginCleaningData(6, "utility")}),
+            plugin.GetCleanInfo());
+  EXPECT_EQ(std::set<Location>({Location("http://www.example.com")}),
+            plugin.GetLocations());
 }
 
-TEST_P(PluginMetadataTest, decodingFromYamlWithDirtyInfoInARegexPluginMetadataObjectShouldThrow) {
-  YAML::Node node = YAML::Load("name: 'Blank\\.esp'\n"
-                               "dirty:\n"
-                               "  - crc: 0x5\n"
-                               "    util: 'utility'\n"
-                               "    udr: 1\n"
-                               "    nav: 2");
+TEST_P(PluginMetadataTest,
+       decodingFromYamlWithDirtyInfoInARegexPluginMetadataObjectShouldThrow) {
+  YAML::Node node = YAML::Load(
+      "name: 'Blank\\.esp'\n"
+      "dirty:\n"
+      "  - crc: 0x5\n"
+      "    util: 'utility'\n"
+      "    udr: 1\n"
+      "    nav: 2");
 
   EXPECT_THROW(node.as<PluginMetadata>(), YAML::RepresentationException);
 }
 
-TEST_P(PluginMetadataTest, decodingFromYamlWithCleanInfoInARegexPluginMetadataObjectShouldThrow) {
-  YAML::Node node = YAML::Load("name: 'Blank\\.esp'\n"
-                               "clean:\n"
-                               "  - crc: 0x5\n"
-                               "    util: 'utility'");
+TEST_P(PluginMetadataTest,
+       decodingFromYamlWithCleanInfoInARegexPluginMetadataObjectShouldThrow) {
+  YAML::Node node = YAML::Load(
+      "name: 'Blank\\.esp'\n"
+      "clean:\n"
+      "  - crc: 0x5\n"
+      "    util: 'utility'");
 
   EXPECT_THROW(node.as<PluginMetadata>(), YAML::RepresentationException);
 }
 
 TEST_P(PluginMetadataTest, decodingFromYamlWithAnInvalidRegexNameShouldThrow) {
-  YAML::Node node = YAML::Load("name: 'RagnvaldBook(Farengar(+Ragnvald)?)?\\.esp'\n"
-                               "dirty:\n"
-                               "  - crc: 0x5\n"
-                               "    util: 'utility'\n"
-                               "    udr: 1\n"
-                               "    nav: 2");
+  YAML::Node node = YAML::Load(
+      "name: 'RagnvaldBook(Farengar(+Ragnvald)?)?\\.esp'\n"
+      "dirty:\n"
+      "  - crc: 0x5\n"
+      "    util: 'utility'\n"
+      "    udr: 1\n"
+      "    nav: 2");
 
   EXPECT_THROW(node.as<PluginMetadata>(), YAML::RepresentationException);
 }

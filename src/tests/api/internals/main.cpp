@@ -24,35 +24,35 @@
 
 #include <boost/locale.hpp>
 
-#include "tests/api/internals/game/game_test.h"
 #include "tests/api/internals/game/game_cache_test.h"
+#include "tests/api/internals/game/game_test.h"
 #include "tests/api/internals/game/load_order_handler_test.h"
 #include "tests/api/internals/helpers/crc_test.h"
 #include "tests/api/internals/helpers/git_helper_test.h"
 #include "tests/api/internals/helpers/version_test.h"
 #include "tests/api/internals/helpers/yaml_set_helpers_test.h"
+#include "tests/api/internals/masterlist_test.h"
 #include "tests/api/internals/metadata/condition_evaluator_test.h"
 #include "tests/api/internals/metadata/condition_grammar_test.h"
 #include "tests/api/internals/metadata/conditional_metadata_test.h"
 #include "tests/api/internals/metadata/file_test.h"
 #include "tests/api/internals/metadata/location_test.h"
-#include "tests/api/internals/metadata/message_test.h"
 #include "tests/api/internals/metadata/message_content_test.h"
+#include "tests/api/internals/metadata/message_test.h"
 #include "tests/api/internals/metadata/plugin_cleaning_data_test.h"
 #include "tests/api/internals/metadata/plugin_metadata_test.h"
 #include "tests/api/internals/metadata/priority_test.h"
 #include "tests/api/internals/metadata/tag_test.h"
-#include "tests/api/internals/plugin/plugin_test.h"
-#include "tests/api/internals/plugin/plugin_sorter_test.h"
-#include "tests/api/internals/masterlist_test.h"
 #include "tests/api/internals/metadata_list_test.h"
+#include "tests/api/internals/plugin/plugin_sorter_test.h"
+#include "tests/api/internals/plugin/plugin_test.h"
 
 TEST(ModuloOperator, shouldConformToTheCpp11Standard) {
-    // C++11 defines the modulo operator more strongly
-    // (only x % 0 is left undefined), whereas C++03
-    // only defined the operator for positive first operand.
-    // Test that the modulo operator has been implemented
-    // according to C++11.
+  // C++11 defines the modulo operator more strongly
+  // (only x % 0 is left undefined), whereas C++03
+  // only defined the operator for positive first operand.
+  // Test that the modulo operator has been implemented
+  // according to C++11.
 
   EXPECT_EQ(0, 20 % 5);
   EXPECT_EQ(0, 20 % -5);
@@ -66,7 +66,7 @@ TEST(ModuloOperator, shouldConformToTheCpp11Standard) {
 }
 
 int main(int argc, char **argv) {
-    //Set the locale to get encoding conversions working correctly.
+  // Set the locale to get encoding conversions working correctly.
   std::locale::global(boost::locale::generator().generate(""));
   boost::filesystem::path::imbue(std::locale());
 

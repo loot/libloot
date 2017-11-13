@@ -34,19 +34,24 @@ namespace test {
 class ApiGameOperationsTest : public CommonGameTestFixture {
 protected:
   ApiGameOperationsTest() :
-    handle_(nullptr),
-    masterlistPath(localPath / "masterlist.yaml"),
-    noteMessage("Do not clean ITM records, they are intentional and required for the mod to function."),
-    warningMessage("Check you are using v2+. If not, Update. v1 has a severe bug with the Mystic Emporium disappearing."),
-    errorMessage("Obsolete. Remove this and install Enhanced Weather."),
-    generalMasterlistMessage("A general masterlist message.") {}
+      handle_(nullptr),
+      masterlistPath(localPath / "masterlist.yaml"),
+      noteMessage(
+          "Do not clean ITM records, they are intentional and required for "
+          "the mod to function."),
+      warningMessage(
+          "Check you are using v2+. If not, Update. v1 has a severe bug with "
+          "the Mystic Emporium disappearing."),
+      errorMessage("Obsolete. Remove this and install Enhanced Weather."),
+      generalMasterlistMessage("A general masterlist message.") {}
 
   virtual void SetUp() {
     CommonGameTestFixture::SetUp();
 
     ASSERT_FALSE(boost::filesystem::exists(masterlistPath));
 
-    handle_ = CreateGameHandle(GetParam(), dataPath.parent_path().string(), localPath.string());
+    handle_ = CreateGameHandle(
+        GetParam(), dataPath.parent_path().string(), localPath.string());
   }
 
   virtual void TearDown() {
@@ -60,55 +65,54 @@ protected:
     using std::endl;
 
     boost::filesystem::ofstream masterlist(masterlistPath);
-    masterlist
-      << "bash_tags:" << endl
-      << "  - Actors.ACBS" << endl
-      << "  - C.Climate" << endl
-      << "globals:" << endl
-      << "  - type: say" << endl
-      << "    content: '" << generalMasterlistMessage << "'" << endl
-      << "    condition: 'file(\"" << missingEsp << "\")'" << endl
-      << "plugins:" << endl
-      << "  - name: " << blankEsm << endl
-      << "    after:" << endl
-      << "      - " << masterFile << endl
-      << "    msg:" << endl
-      << "      - type: say" << endl
-      << "        content: '" << noteMessage << "'" << endl
-      << "        condition: 'file(\"" << missingEsp << "\")'" << endl
-      << "    tag:" << endl
-      << "      - Actors.ACBS" << endl
-      << "      - Actors.AIData" << endl
-      << "      - '-C.Water'" << endl
-      << "  - name: " << blankDifferentEsm << endl
-      << "    after:" << endl
-      << "      - " << blankMasterDependentEsm << endl
-      << "    msg:" << endl
-      << "      - type: warn" << endl
-      << "        content: '" << warningMessage << "'" << endl
-      << "    dirty:" << endl
-      << "      - crc: 0x7d22f9df" << endl
-      << "        util: TES4Edit" << endl
-      << "        udr: 4" << endl
-      << "  - name: " << blankDifferentEsp << endl
-      << "    after:" << endl
-      << "      - " << blankPluginDependentEsp << endl
-      << "    msg:" << endl
-      << "      - type: error" << endl
-      << "        content: '" << errorMessage << "'" << endl
-      << "  - name: " << blankEsp << endl
-      << "    after:" << endl
-      << "      - " << blankDifferentMasterDependentEsp << endl
-      << "  - name: " << blankDifferentMasterDependentEsp << endl
-      << "    after:" << endl
-      << "      - " << blankMasterDependentEsp << endl
-      << "    msg:" << endl
-      << "      - type: say" << endl
-      << "        content: '" << noteMessage << "'" << endl
-      << "      - type: warn" << endl
-      << "        content: '" << warningMessage << "'" << endl
-      << "      - type: error" << endl
-      << "        content: '" << errorMessage << "'" << endl;
+    masterlist << "bash_tags:" << endl
+               << "  - Actors.ACBS" << endl
+               << "  - C.Climate" << endl
+               << "globals:" << endl
+               << "  - type: say" << endl
+               << "    content: '" << generalMasterlistMessage << "'" << endl
+               << "    condition: 'file(\"" << missingEsp << "\")'" << endl
+               << "plugins:" << endl
+               << "  - name: " << blankEsm << endl
+               << "    after:" << endl
+               << "      - " << masterFile << endl
+               << "    msg:" << endl
+               << "      - type: say" << endl
+               << "        content: '" << noteMessage << "'" << endl
+               << "        condition: 'file(\"" << missingEsp << "\")'" << endl
+               << "    tag:" << endl
+               << "      - Actors.ACBS" << endl
+               << "      - Actors.AIData" << endl
+               << "      - '-C.Water'" << endl
+               << "  - name: " << blankDifferentEsm << endl
+               << "    after:" << endl
+               << "      - " << blankMasterDependentEsm << endl
+               << "    msg:" << endl
+               << "      - type: warn" << endl
+               << "        content: '" << warningMessage << "'" << endl
+               << "    dirty:" << endl
+               << "      - crc: 0x7d22f9df" << endl
+               << "        util: TES4Edit" << endl
+               << "        udr: 4" << endl
+               << "  - name: " << blankDifferentEsp << endl
+               << "    after:" << endl
+               << "      - " << blankPluginDependentEsp << endl
+               << "    msg:" << endl
+               << "      - type: error" << endl
+               << "        content: '" << errorMessage << "'" << endl
+               << "  - name: " << blankEsp << endl
+               << "    after:" << endl
+               << "      - " << blankDifferentMasterDependentEsp << endl
+               << "  - name: " << blankDifferentMasterDependentEsp << endl
+               << "    after:" << endl
+               << "      - " << blankMasterDependentEsp << endl
+               << "    msg:" << endl
+               << "      - type: say" << endl
+               << "        content: '" << noteMessage << "'" << endl
+               << "      - type: warn" << endl
+               << "        content: '" << warningMessage << "'" << endl
+               << "      - type: error" << endl
+               << "        content: '" << errorMessage << "'" << endl;
 
     masterlist.close();
   }

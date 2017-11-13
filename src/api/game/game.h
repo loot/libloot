@@ -56,9 +56,11 @@ public:
 
   bool IsValidPlugin(const std::string& plugin) const;
 
-  void LoadPlugins(const std::vector<std::string>& plugins, bool loadHeadersOnly);
+  void LoadPlugins(const std::vector<std::string>& plugins,
+                   bool loadHeadersOnly);
 
-  std::shared_ptr<const PluginInterface> GetPlugin(const std::string& pluginName) const;
+  std::shared_ptr<const PluginInterface> GetPlugin(
+      const std::string& pluginName) const;
 
   std::set<std::shared_ptr<const PluginInterface>> GetLoadedPlugins() const;
 
@@ -73,6 +75,7 @@ public:
   std::vector<std::string> GetLoadOrder() const;
 
   void SetLoadOrder(const std::vector<std::string>& loadOrder);
+
 private:
   std::shared_ptr<GameCache> cache_;
   std::shared_ptr<LoadOrderHandler> loadOrderHandler_;

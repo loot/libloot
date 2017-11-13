@@ -38,17 +38,17 @@ protected:
 
   void loadInstalledPlugins(Game& game_, bool headersOnly) {
     const std::vector<std::string> plugins({
-      masterFile,
-      blankEsm,
-      blankDifferentEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
+        masterFile,
+        blankEsm,
+        blankDifferentEsm,
+        blankMasterDependentEsm,
+        blankDifferentMasterDependentEsm,
+        blankEsp,
+        blankDifferentEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+        blankDifferentPluginDependentEsp,
     });
     game_.IdentifyMainMasterFile(masterFile);
     game_.LoadPlugins(plugins, headersOnly);
@@ -59,10 +59,7 @@ protected:
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_CASE_P(,
-                        PluginSorterTest,
-                        ::testing::Values(
-                          GameType::tes4));
+INSTANTIATE_TEST_CASE_P(, PluginSorterTest, ::testing::Values(GameType::tes4));
 
 TEST_P(PluginSorterTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
   PluginSorter sorter;
@@ -71,18 +68,21 @@ TEST_P(PluginSorterTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
   EXPECT_TRUE(sorted.empty());
 }
 
-TEST_P(PluginSorterTest, sortingShouldNotMakeUnnecessaryChangesToAnExistingLoadOrder) {
+TEST_P(PluginSorterTest,
+       sortingShouldNotMakeUnnecessaryChangesToAnExistingLoadOrder) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   PluginSorter ps;
   std::vector<std::string> expectedSortedOrder = getLoadOrder();
 
   std::vector<std::string> sorted = ps.Sort(game_);
-  EXPECT_TRUE(std::equal(begin(sorted), end(sorted), begin(expectedSortedOrder)));
+  EXPECT_TRUE(
+      std::equal(begin(sorted), end(sorted), begin(expectedSortedOrder)));
 
   // Check stability.
   sorted = ps.Sort(game_);
-  EXPECT_TRUE(std::equal(begin(sorted), end(sorted), begin(expectedSortedOrder)));
+  EXPECT_TRUE(
+      std::equal(begin(sorted), end(sorted), begin(expectedSortedOrder)));
 }
 
 TEST_P(PluginSorterTest, sortingShouldEvaluateRelativeGlobalPriorities) {
@@ -110,7 +110,9 @@ TEST_P(PluginSorterTest, sortingShouldEvaluateRelativeGlobalPriorities) {
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
-TEST_P(PluginSorterTest, sortingWithGlobalPrioritiesShouldInheritRecursivelyRegardlessOfEvaluationOrder) {
+TEST_P(
+    PluginSorterTest,
+    sortingWithGlobalPrioritiesShouldInheritRecursivelyRegardlessOfEvaluationOrder) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   // Set Blank.esp's priority.
@@ -122,7 +124,7 @@ TEST_P(PluginSorterTest, sortingWithGlobalPrioritiesShouldInheritRecursivelyRega
   // inherits Blank.esp's priority.
   plugin = PluginMetadata(blankMasterDependentEsp);
   plugin.SetLoadAfterFiles({
-    File(blankEsp),
+      File(blankEsp),
   });
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
@@ -130,7 +132,7 @@ TEST_P(PluginSorterTest, sortingWithGlobalPrioritiesShouldInheritRecursivelyRega
   // that it inherits its inherited priority.
   plugin = PluginMetadata(blankDifferentEsp);
   plugin.SetLoadAfterFiles({
-    File(blankMasterDependentEsp),
+      File(blankMasterDependentEsp),
   });
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
@@ -143,29 +145,29 @@ TEST_P(PluginSorterTest, sortingWithGlobalPrioritiesShouldInheritRecursivelyRega
 
   PluginSorter ps;
   std::vector<std::string> expectedSortedOrder({
-    masterFile,
-    blankEsm,
-    blankDifferentEsm,
-    blankMasterDependentEsm,
-    blankDifferentMasterDependentEsm,
-    blankDifferentMasterDependentEsp,
-    blankEsp,
-    blankMasterDependentEsp,
-    blankDifferentEsp,
-    blankPluginDependentEsp,
-    blankDifferentPluginDependentEsp,
+      masterFile,
+      blankEsm,
+      blankDifferentEsm,
+      blankMasterDependentEsm,
+      blankDifferentMasterDependentEsm,
+      blankDifferentMasterDependentEsp,
+      blankEsp,
+      blankMasterDependentEsp,
+      blankDifferentEsp,
+      blankPluginDependentEsp,
+      blankDifferentPluginDependentEsp,
   });
 
   std::vector<std::string> sorted = ps.Sort(game_);
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
-TEST_P(PluginSorterTest, sortingShouldUseLoadAfterMetadataWhenDecidingRelativePluginPositions) {
+TEST_P(PluginSorterTest,
+       sortingShouldUseLoadAfterMetadataWhenDecidingRelativePluginPositions) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
   PluginMetadata plugin(blankEsp);
   plugin.SetLoadAfterFiles({
-      File(blankDifferentEsp),
-      File(blankDifferentPluginDependentEsp),
+      File(blankDifferentEsp), File(blankDifferentPluginDependentEsp),
   });
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
@@ -188,12 +190,12 @@ TEST_P(PluginSorterTest, sortingShouldUseLoadAfterMetadataWhenDecidingRelativePl
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
-TEST_P(PluginSorterTest, sortingShouldUseRequirementMetadataWhenDecidingRelativePluginPositions) {
+TEST_P(PluginSorterTest,
+       sortingShouldUseRequirementMetadataWhenDecidingRelativePluginPositions) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
   PluginMetadata plugin(blankEsp);
   plugin.SetRequirements({
-      File(blankDifferentEsp),
-      File(blankDifferentPluginDependentEsp),
+      File(blankDifferentEsp), File(blankDifferentPluginDependentEsp),
   });
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 

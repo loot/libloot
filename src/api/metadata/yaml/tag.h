@@ -46,12 +46,15 @@ struct convert<loot::Tag> {
 
   static bool decode(const Node& node, loot::Tag& rhs) {
     if (!node.IsMap() && !node.IsScalar())
-      throw RepresentationException(node.Mark(), "bad conversion: 'tag' object must be a map or scalar");
+      throw RepresentationException(
+          node.Mark(), "bad conversion: 'tag' object must be a map or scalar");
 
     std::string condition, tag;
     if (node.IsMap()) {
       if (!node["name"])
-        throw RepresentationException(node.Mark(), "bad conversion: 'name' key missing from 'tag' map object");
+        throw RepresentationException(
+            node.Mark(),
+            "bad conversion: 'name' key missing from 'tag' map object");
 
       tag = node["name"].as<std::string>();
       if (node["condition"])
@@ -64,18 +67,20 @@ struct convert<loot::Tag> {
     else
       rhs = loot::Tag(tag, true, condition);
 
-  // Test condition syntax.
+    // Test condition syntax.
     try {
       rhs.ParseCondition();
     } catch (std::exception& e) {
-      throw RepresentationException(node.Mark(), std::string("bad conversion: invalid condition syntax: ") + e.what());
+      throw RepresentationException(
+          node.Mark(),
+          std::string("bad conversion: invalid condition syntax: ") + e.what());
     }
 
     return true;
   }
 };
 
-inline Emitter& operator << (Emitter& out, const loot::Tag& rhs) {
+inline Emitter& operator<<(Emitter& out, const loot::Tag& rhs) {
   if (!rhs.IsConditional()) {
     if (rhs.IsAddition())
       out << rhs.GetName();
@@ -88,8 +93,8 @@ inline Emitter& operator << (Emitter& out, const loot::Tag& rhs) {
     else
       out << Key << "name" << Value << ('-' + rhs.GetName());
 
-    out << Key << "condition" << Value << YAML::SingleQuoted << rhs.GetCondition()
-      << EndMap;
+    out << Key << "condition" << Value << YAML::SingleQuoted
+        << rhs.GetCondition() << EndMap;
   }
 
   return out;

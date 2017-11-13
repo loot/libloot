@@ -61,7 +61,8 @@ TEST(Location, locationsWithDifferentUrlsShouldBeUnequal) {
   EXPECT_FALSE(location1 == location2);
 }
 
-TEST(Location, lessThanOperatorShouldUseCaseInsensitiveLexicographicalUrlComparison) {
+TEST(Location,
+     lessThanOperatorShouldUseCaseInsensitiveLexicographicalUrlComparison) {
   Location location1("http://www.example.com", "example1");
   Location location2("HTTP://WWW.EXAMPLE.COM", "example2");
 
@@ -88,7 +89,9 @@ TEST(Location, emittingAsYamlShouldOutputAMapIfTheNameStringIsNotEmpty) {
   YAML::Emitter emitter;
   emitter << location;
 
-  EXPECT_EQ("link: '" + location.GetURL() + "'\nname: '" + location.GetName() + "'", emitter.c_str());
+  EXPECT_EQ(
+      "link: '" + location.GetURL() + "'\nname: '" + location.GetName() + "'",
+      emitter.c_str());
 }
 
 TEST(Location, encodingAsYamlShouldStoreDataCorrectly) {
@@ -117,7 +120,8 @@ TEST(Location, decodingFromYamlShouldSetDataCorrectly) {
   EXPECT_EQ(node["name"].as<std::string>(), location.GetName());
 }
 
-TEST(Location, decodingFromYamlScalarShouldSetUrlToScalarValueAndLeaveNameEmpty) {
+TEST(Location,
+     decodingFromYamlScalarShouldSetUrlToScalarValueAndLeaveNameEmpty) {
   YAML::Node node = YAML::Load("http://www.example.com");
   Location location = node.as<Location>();
 

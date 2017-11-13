@@ -28,9 +28,9 @@
 #include <vector>
 
 #include "loot/api_decorator.h"
+#include "loot/enum/message_type.h"
 #include "loot/metadata/conditional_metadata.h"
 #include "loot/metadata/message_content.h"
-#include "loot/enum/message_type.h"
 #include "loot/struct/simple_message.h"
 
 namespace loot {
@@ -57,7 +57,8 @@ public:
    *         A condition string.
    * @return A Message object.
    */
-  LOOT_API Message(const MessageType type, const std::string& content,
+  LOOT_API Message(const MessageType type,
+                   const std::string& content,
                    const std::string& condition = "");
 
   /**
@@ -71,7 +72,8 @@ public:
    *         A condition string.
    * @return A Message object.
    */
-  LOOT_API Message(const MessageType type, const std::vector<MessageContent>& content,
+  LOOT_API Message(const MessageType type,
+                   const std::vector<MessageContent>& content,
                    const std::string& condition = "");
 
   /**
@@ -83,13 +85,13 @@ public:
    *          Otherwise returns true if this Message has no content, and false
    *          otherwise.
    */
-  LOOT_API bool operator < (const Message& rhs) const;
+  LOOT_API bool operator<(const Message& rhs) const;
 
   /**
    * Check if two Message objects are equal by comparing their content.
    * @returns True if the contents are equal, false otherwise.
    */
-  LOOT_API bool operator == (const Message& rhs) const;
+  LOOT_API bool operator==(const Message& rhs) const;
 
   /**
    * Get the message type.
@@ -120,6 +122,7 @@ public:
    *         if message text is not available for the given language.
    */
   LOOT_API SimpleMessage ToSimpleMessage(const std::string& language) const;
+
 private:
   MessageType type_;
   std::vector<MessageContent> content_;

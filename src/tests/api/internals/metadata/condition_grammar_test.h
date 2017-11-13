@@ -33,14 +33,19 @@ namespace loot {
 namespace test {
 class ConditionGrammarTest : public CommonGameTestFixture {
 protected:
-  typedef ConditionGrammar<std::string::const_iterator, boost::spirit::qi::space_type> Grammar;
+  typedef ConditionGrammar<std::string::const_iterator,
+                           boost::spirit::qi::space_type>
+      Grammar;
 
   ConditionGrammarTest() :
-    resourcePath(dataPath / "resource" / "detail" / "resource.txt"),
-    game_(GetParam(), dataPath.parent_path(), localPath),
-    evaluator_(game_.Type(), game_.DataPath(), game_.GetCache(), game_.GetLoadOrderHandler()),
-    result_(false),
-    success_(false) {}
+      resourcePath(dataPath / "resource" / "detail" / "resource.txt"),
+      game_(GetParam(), dataPath.parent_path(), localPath),
+      evaluator_(game_.Type(),
+                 game_.DataPath(),
+                 game_.GetCache(),
+                 game_.GetLoadOrderHandler()),
+      result_(false),
+      success_(false) {}
 
   inline void SetUp() {
     CommonGameTestFixture::SetUp();
@@ -48,7 +53,8 @@ protected:
     game_.LoadCurrentLoadOrderState();
 
     // Write out an empty resource file.
-    ASSERT_NO_THROW(boost::filesystem::create_directories(resourcePath.parent_path()));
+    ASSERT_NO_THROW(
+        boost::filesystem::create_directories(resourcePath.parent_path()));
     boost::filesystem::ofstream out(resourcePath);
     out.close();
     ASSERT_TRUE(boost::filesystem::exists(resourcePath));
@@ -68,17 +74,17 @@ protected:
 
   void loadInstalledPlugins(Game& game_, bool headersOnly) {
     const std::vector<std::string> plugins({
-      masterFile,
-      blankEsm,
-      blankDifferentEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
+        masterFile,
+        blankEsm,
+        blankDifferentEsm,
+        blankMasterDependentEsm,
+        blankDifferentMasterDependentEsm,
+        blankEsp,
+        blankDifferentEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+        blankDifferentPluginDependentEsp,
     });
     game_.LoadPlugins(plugins, headersOnly);
   }
@@ -96,13 +102,12 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         ConditionGrammarTest,
-                        ::testing::Values(
-                          GameType::tes4,
-                          GameType::tes5,
-                          GameType::fo3,
-                          GameType::fonv,
-                          GameType::fo4,
-                          GameType::tes5se));
+                        ::testing::Values(GameType::tes4,
+                                          GameType::tes5,
+                                          GameType::fo3,
+                                          GameType::fonv,
+                                          GameType::fo4,
+                                          GameType::tes5se));
 
 TEST_P(ConditionGrammarTest, parsingInvalidSyntaxShouldThrow) {
   ConditionEvaluator evaluator;
@@ -113,7 +118,8 @@ TEST_P(ConditionGrammarTest, parsingInvalidSyntaxShouldThrow) {
                                                std::cend(condition),
                                                grammar,
                                                skipper_,
-                                               result_), ConditionSyntaxError);
+                                               result_),
+               ConditionSyntaxError);
 }
 
 TEST_P(ConditionGrammarTest, evaluatingInvalidSyntaxShouldThrow) {
@@ -124,7 +130,8 @@ TEST_P(ConditionGrammarTest, evaluatingInvalidSyntaxShouldThrow) {
                                                std::cend(condition),
                                                grammar,
                                                skipper_,
-                                               result_), ConditionSyntaxError);
+                                               result_),
+               ConditionSyntaxError);
 }
 
 TEST_P(ConditionGrammarTest, parsingAnEmptyConditionShouldThrow) {
@@ -136,7 +143,8 @@ TEST_P(ConditionGrammarTest, parsingAnEmptyConditionShouldThrow) {
                                                std::cend(condition),
                                                grammar,
                                                skipper_,
-                                               result_), ConditionSyntaxError);
+                                               result_),
+               ConditionSyntaxError);
 }
 
 TEST_P(ConditionGrammarTest, evaluatingAnEmptyConditionShouldThrow) {
@@ -147,36 +155,34 @@ TEST_P(ConditionGrammarTest, evaluatingAnEmptyConditionShouldThrow) {
                                                std::cend(condition),
                                                grammar,
                                                skipper_,
-                                               result_), ConditionSyntaxError);
+                                               result_),
+               ConditionSyntaxError);
 }
 
-TEST_P(ConditionGrammarTest, aFileConditionWithAPluginThatExistsShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       aFileConditionWithAPluginThatExistsShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"" + blankEsm + "\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aFileConditionWithAPluginThatDoesNotExistShouldEvaluateToFalse) {
+TEST_P(ConditionGrammarTest,
+       aFileConditionWithAPluginThatDoesNotExistShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"" + missingEsp + "\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, evaluatingAFileConditionForAnUnsafePathShouldThrow) {
+TEST_P(ConditionGrammarTest,
+       evaluatingAFileConditionForAnUnsafePathShouldThrow) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"../../" + blankEsm + "\")");
 
@@ -184,7 +190,8 @@ TEST_P(ConditionGrammarTest, evaluatingAFileConditionForAnUnsafePathShouldThrow)
                                                std::cend(condition),
                                                grammar,
                                                skipper_,
-                                               result_), ConditionSyntaxError);
+                                               result_),
+               ConditionSyntaxError);
 }
 
 TEST_P(ConditionGrammarTest, aFileConditionWithAnInvalidRegexShouldThrow) {
@@ -195,554 +202,504 @@ TEST_P(ConditionGrammarTest, aFileConditionWithAnInvalidRegexShouldThrow) {
                                                std::cend(condition),
                                                grammar,
                                                skipper_,
-                                               result_), ConditionSyntaxError);
+                                               result_),
+               ConditionSyntaxError);
 }
 
-TEST_P(ConditionGrammarTest, aFileConditionWithARegexMatchingAPluginThatExistsShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       aFileConditionWithARegexMatchingAPluginThatExistsShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"Blank.+\\.esm\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aFileConditionWithARegexMatchingAPluginThatDoesNotExistShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aFileConditionWithARegexMatchingAPluginThatDoesNotExistShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"Blank\\.m.+\\.esm\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aFileConditionWithARegexMatchingAFileInASubfolderThatExistsShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aFileConditionWithARegexMatchingAFileInASubfolderThatExistsShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"resource/detail/resource\\.txt\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aManyConditionWithARegexMatchingMoreThanOnePluginShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       aManyConditionWithARegexMatchingMoreThanOnePluginShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("many(\"Blank.+\\.esm\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aManyConditionWithARegexMatchingOnlyOnePluginShouldEvaluateToFalse) {
+TEST_P(ConditionGrammarTest,
+       aManyConditionWithARegexMatchingOnlyOnePluginShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("many(\"Blank\\.esm\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aChecksumConditionWithACrcThatMatchesTheActualPluginCrcShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aChecksumConditionWithACrcThatMatchesTheActualPluginCrcShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
-  std::string condition("checksum(\"" + blankEsm + "\", " + IntToHexString(blankEsmCrc) + ")");
+  std::string condition("checksum(\"" + blankEsm + "\", " +
+                        IntToHexString(blankEsmCrc) + ")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aChecksumConditionWithACrcThatMatchesTheActualCachedPluginCrcShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aChecksumConditionWithACrcThatMatchesTheActualCachedPluginCrcShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   Grammar grammar(evaluator_);
-  std::string condition("checksum(\"" + blankEsm + "\", " + IntToHexString(blankEsmCrc) + ")");
+  std::string condition("checksum(\"" + blankEsm + "\", " +
+                        IntToHexString(blankEsmCrc) + ")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aChecksumConditionWithACrcThatDoesNotMatchTheActualPluginCrcShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aChecksumConditionWithACrcThatDoesNotMatchTheActualPluginCrcShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("checksum(\"" + blankEsm + "\", DEADBEEF)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionEqualityConditionWithAVersionThatEqualsTheActualPluginVersionShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionEqualityConditionWithAVersionThatEqualsTheActualPluginVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"5.0\", ==)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionEqualityConditionWithAVersionThatDoesNotEqualTheActualPluginVersionShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionEqualityConditionWithAVersionThatDoesNotEqualTheActualPluginVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"6.0\", ==)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionEqualityConditionForAPluginWithNoVersionShouldEvaluateToFalse) {
+TEST_P(ConditionGrammarTest,
+       aVersionEqualityConditionForAPluginWithNoVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsp + "\", \"6.0\", ==)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionInequalityConditionWithAVersionThatDoesNotEqualTheActualPluginVersionShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionInequalityConditionWithAVersionThatDoesNotEqualTheActualPluginVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"6.0\", !=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionInequalityConditionWithAVersionThatEqualsTheActualPluginVersionShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionInequalityConditionWithAVersionThatEqualsTheActualPluginVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"5.0\", !=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionInequalityConditionForAPluginWithNoVersionShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       aVersionInequalityConditionForAPluginWithNoVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsp + "\", \"6.0\", !=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionLessThanConditionWithAnActualPluginVersionLessThanTheGivenVersionShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionLessThanConditionWithAnActualPluginVersionLessThanTheGivenVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"6.0\", <)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionLessThanConditionWithAnActualPluginVersionEqualToTheGivenVersionShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionLessThanConditionWithAnActualPluginVersionEqualToTheGivenVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"5.0\", <)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionLessThanConditionForAPluginWithNoVersionShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       aVersionLessThanConditionForAPluginWithNoVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsp + "\", \"5.0\", <)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionGreaterThanConditionWithAnActualPluginVersionGreaterThanTheGivenVersionShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionGreaterThanConditionWithAnActualPluginVersionGreaterThanTheGivenVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"4.0\", >)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionGreaterThanConditionWithAnActualPluginVersionEqualToTheGivenVersionShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionGreaterThanConditionWithAnActualPluginVersionEqualToTheGivenVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"5.0\", >)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionGreaterThanConditionForAPluginWithNoVersionShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionGreaterThanConditionForAPluginWithNoVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsp + "\", \"5.0\", >)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionLessThanOrEqualToConditionWithAnActualPluginVersionEqualToTheGivenVersionShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionLessThanOrEqualToConditionWithAnActualPluginVersionEqualToTheGivenVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"5.0\", <=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionLessThanOrEqualToConditionWithAnActualPluginVersionGreaterThanTheGivenVersionShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionLessThanOrEqualToConditionWithAnActualPluginVersionGreaterThanTheGivenVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"4.0\", <=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionLessThanOrEqualToConditionForAPluginWithNoVersionShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionLessThanOrEqualToConditionForAPluginWithNoVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsp + "\", \"5.0\", <=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionGreaterThanOrEqualToConditionWithAnActualPluginVersionEqualToTheGivenVersionShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionGreaterThanOrEqualToConditionWithAnActualPluginVersionEqualToTheGivenVersionShouldEvaluateToTrue) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"5.0\", >=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionGreaterThanOrEqualToConditionWithAnActualPluginVersionLessThanTheGivenVersionShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionGreaterThanOrEqualToConditionWithAnActualPluginVersionLessThanTheGivenVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsm + "\", \"6.0\", >=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aVersionGreaterThanOrEqualToConditionForAPluginWithNoVersionShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aVersionGreaterThanOrEqualToConditionForAPluginWithNoVersionShouldEvaluateToFalse) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, true));
 
   Grammar grammar(evaluator_);
   std::string condition("version(\"" + blankEsp + "\", \"5.0\", >=)");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, anActiveConditionWithAPluginThatIsActiveShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       anActiveConditionWithAPluginThatIsActiveShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("active(\"" + blankEsm + "\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, anActiveConditionWithAPluginThatIsNotActiveShouldEvaluateToFalse) {
+TEST_P(ConditionGrammarTest,
+       anActiveConditionWithAPluginThatIsNotActiveShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("active(\"" + blankEsp + "\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, anActiveConditionWithARegexMatchingAnActivePluginShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       anActiveConditionWithARegexMatchingAnActivePluginShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("active(\"Blank\\.esm\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, anActiveConditionWithARegexMatchingNoActivePluginsShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    anActiveConditionWithARegexMatchingNoActivePluginsShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("active(\"Blank\\.esp\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aManyActiveConditionWithARegexMatchingMoreThanOnePluginThatIsActiveShouldEvaluateToTrue) {
+TEST_P(
+    ConditionGrammarTest,
+    aManyActiveConditionWithARegexMatchingMoreThanOnePluginThatIsActiveShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
-  std::string condition("many_active(\"Blank( - Different Master Dependent)?\\.es(m|p)\")");
+  std::string condition(
+      "many_active(\"Blank( - Different Master Dependent)?\\.es(m|p)\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aManyActiveConditionWithARegexMatchingOnlyOnePluginThatIsActiveShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aManyActiveConditionWithARegexMatchingOnlyOnePluginThatIsActiveShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("many_active(\"Blank\\.esm\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aManyActiveConditionWithARegexMatchingNoPluginsThatAreActiveShouldEvaluateToFalse) {
+TEST_P(
+    ConditionGrammarTest,
+    aManyActiveConditionWithARegexMatchingNoPluginsThatAreActiveShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("many_active(\"Blank\\.esp\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aFalseConditionPrecededByANegatorShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       aFalseConditionPrecededByANegatorShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("not file(\"" + missingEsp + "\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aTrueConditionPrecededByANegatorShouldEvaluateToFalse) {
+TEST_P(ConditionGrammarTest,
+       aTrueConditionPrecededByANegatorShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("not file(\"" + blankEsm + "\")");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(condition),
-                                             std::cend(condition),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(condition), std::cend(condition), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, twoTrueConditionsJoinedByAnAndShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       twoTrueConditionsJoinedByAnAndShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"" + blankEsm + "\")");
   std::string compound(condition + " and " + condition);
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(compound),
-                                             std::cend(compound),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(compound), std::cend(compound), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aTrueAndAFalseConditionJoinedByAnAndShouldEvaluateToFalse) {
+TEST_P(ConditionGrammarTest,
+       aTrueAndAFalseConditionJoinedByAnAndShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"" + blankEsm + "\")");
   std::string compound(condition + " and not " + condition);
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(compound),
-                                             std::cend(compound),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(compound), std::cend(compound), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
 
-TEST_P(ConditionGrammarTest, aFalseAndATrueConditionJoinedByAnOrShouldEvaluateToTrue) {
+TEST_P(ConditionGrammarTest,
+       aFalseAndATrueConditionJoinedByAnOrShouldEvaluateToTrue) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"" + blankEsm + "\")");
   std::string compound("not " + condition + " or " + condition);
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(compound),
-                                             std::cend(compound),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(compound), std::cend(compound), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
 
-TEST_P(ConditionGrammarTest, twoFalseConditionsJoinedByAnOrShouldEvaluateToFalse) {
+TEST_P(ConditionGrammarTest,
+       twoFalseConditionsJoinedByAnOrShouldEvaluateToFalse) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"" + blankEsm + "\")");
   std::string compound("not " + condition + " or not " + condition);
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(compound),
-                                             std::cend(compound),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(compound), std::cend(compound), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }
@@ -750,13 +707,11 @@ TEST_P(ConditionGrammarTest, twoFalseConditionsJoinedByAnOrShouldEvaluateToFalse
 TEST_P(ConditionGrammarTest, andOperatorsShouldTakePrecedenceOverOrOperators) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"" + blankEsm + "\")");
-  std::string compound("not " + condition + " and " + condition + " or " + condition);
+  std::string compound("not " + condition + " and " + condition + " or " +
+                       condition);
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(compound),
-                                             std::cend(compound),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(compound), std::cend(compound), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_TRUE(result_);
 }
@@ -764,13 +719,11 @@ TEST_P(ConditionGrammarTest, andOperatorsShouldTakePrecedenceOverOrOperators) {
 TEST_P(ConditionGrammarTest, parenthesesShouldTakePrecedenceOverAndOperators) {
   Grammar grammar(evaluator_);
   std::string condition("file(\"" + blankEsm + "\")");
-  std::string compound("not " + condition + " and ( " + condition + " or " + condition + " )");
+  std::string compound("not " + condition + " and ( " + condition + " or " +
+                       condition + " )");
 
-  success_ = boost::spirit::qi::phrase_parse(std::cbegin(compound),
-                                             std::cend(compound),
-                                             grammar,
-                                             skipper_,
-                                             result_);
+  success_ = boost::spirit::qi::phrase_parse(
+      std::cbegin(compound), std::cend(compound), grammar, skipper_, result_);
   EXPECT_TRUE(success_);
   EXPECT_FALSE(result_);
 }

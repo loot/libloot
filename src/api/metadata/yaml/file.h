@@ -48,11 +48,14 @@ struct convert<loot::File> {
 
   static bool decode(const Node& node, loot::File& rhs) {
     if (!node.IsMap() && !node.IsScalar())
-      throw RepresentationException(node.Mark(), "bad conversion: 'file' object must be a map or scalar");
+      throw RepresentationException(
+          node.Mark(), "bad conversion: 'file' object must be a map or scalar");
 
     if (node.IsMap()) {
       if (!node["name"])
-        throw RepresentationException(node.Mark(), "bad conversion: 'name' key missing from 'file' map object");
+        throw RepresentationException(
+            node.Mark(),
+            "bad conversion: 'name' key missing from 'file' map object");
 
       std::string name = node["name"].as<std::string>();
       std::string condition, display;
@@ -64,29 +67,34 @@ struct convert<loot::File> {
     } else
       rhs = loot::File(node.as<std::string>());
 
-  // Test condition syntax.
+    // Test condition syntax.
     try {
       rhs.ParseCondition();
     } catch (std::exception& e) {
-      throw RepresentationException(node.Mark(), std::string("bad conversion: invalid condition syntax: ") + e.what());
+      throw RepresentationException(
+          node.Mark(),
+          std::string("bad conversion: invalid condition syntax: ") + e.what());
     }
 
     return true;
   }
 };
 
-inline Emitter& operator << (Emitter& out, const loot::File& rhs) {
-  if (!rhs.IsConditional() && (rhs.GetDisplayName().empty() || rhs.GetDisplayName() == rhs.GetName()))
+inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
+  if (!rhs.IsConditional() &&
+      (rhs.GetDisplayName().empty() || rhs.GetDisplayName() == rhs.GetName()))
     out << YAML::SingleQuoted << rhs.GetName();
   else {
-    out << BeginMap
-      << Key << "name" << Value << YAML::SingleQuoted << rhs.GetName();
+    out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
+        << rhs.GetName();
 
     if (rhs.IsConditional())
-      out << Key << "condition" << Value << YAML::SingleQuoted << rhs.GetCondition();
+      out << Key << "condition" << Value << YAML::SingleQuoted
+          << rhs.GetCondition();
 
     if (rhs.GetDisplayName() != rhs.GetName())
-      out << Key << "display" << Value << YAML::SingleQuoted << rhs.GetDisplayName();
+      out << Key << "display" << Value << YAML::SingleQuoted
+          << rhs.GetDisplayName();
 
     out << EndMap;
   }

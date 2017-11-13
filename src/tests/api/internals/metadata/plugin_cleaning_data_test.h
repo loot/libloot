@@ -35,9 +35,10 @@ namespace loot {
 namespace test {
 class PluginCleaningDataTest : public CommonGameTestFixture {
 protected:
-  PluginCleaningDataTest() : info_(std::vector<MessageContent>({
-    MessageContent("info"),
-  })) {}
+  PluginCleaningDataTest() :
+      info_(std::vector<MessageContent>({
+          MessageContent("info"),
+      })) {}
 
   const std::vector<MessageContent> info_;
 };
@@ -46,10 +47,10 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         PluginCleaningDataTest,
-                        ::testing::Values(
-                          GameType::tes4));
+                        ::testing::Values(GameType::tes4));
 
-TEST_P(PluginCleaningDataTest, defaultConstructorShouldLeaveAllCountsAtZeroAndTheUtilityStringEmpty) {
+TEST_P(PluginCleaningDataTest,
+       defaultConstructorShouldLeaveAllCountsAtZeroAndTheUtilityStringEmpty) {
   PluginCleaningData info;
   EXPECT_EQ(0, info.GetCRC());
   EXPECT_EQ(0, info.GetITMCount());
@@ -91,35 +92,41 @@ TEST_P(PluginCleaningDataTest, LessThanOperatorShouldCompareCrcValues) {
   EXPECT_FALSE(info2 < info1);
 }
 
-TEST_P(PluginCleaningDataTest, chooseInfoShouldCreateADefaultContentObjectIfNoneExists) {
-  PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", std::vector<MessageContent>(), 2, 10, 30);
-  EXPECT_EQ(MessageContent(), dirtyInfo.ChooseInfo(MessageContent::defaultLanguage));
+TEST_P(PluginCleaningDataTest,
+       chooseInfoShouldCreateADefaultContentObjectIfNoneExists) {
+  PluginCleaningData dirtyInfo(
+      0xDEADBEEF, "cleaner", std::vector<MessageContent>(), 2, 10, 30);
+  EXPECT_EQ(MessageContent(),
+            dirtyInfo.ChooseInfo(MessageContent::defaultLanguage));
 }
 
-TEST_P(PluginCleaningDataTest, chooseInfoShouldLeaveTheContentUnchangedIfOnlyOneStringExists) {
+TEST_P(PluginCleaningDataTest,
+       chooseInfoShouldLeaveTheContentUnchangedIfOnlyOneStringExists) {
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info_, 2, 10, 30);
 
   EXPECT_EQ(info_[0], dirtyInfo.ChooseInfo(french));
   EXPECT_EQ(info_[0], dirtyInfo.ChooseInfo(MessageContent::defaultLanguage));
 }
 
-TEST_P(PluginCleaningDataTest, chooseInfoShouldSelectTheEnglishStringIfNoStringExistsForTheGivenLanguage) {
+TEST_P(
+    PluginCleaningDataTest,
+    chooseInfoShouldSelectTheEnglishStringIfNoStringExistsForTheGivenLanguage) {
   MessageContent content("content1", MessageContent::defaultLanguage);
   std::vector<MessageContent> info({
-    content,
-    MessageContent("content1", german),
+      content, MessageContent("content1", german),
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 
   EXPECT_EQ(content, dirtyInfo.ChooseInfo(french));
 }
 
-TEST_P(PluginCleaningDataTest, chooseInfoShouldSelectTheStringForTheGivenLanguageIfOneExists) {
+TEST_P(PluginCleaningDataTest,
+       chooseInfoShouldSelectTheStringForTheGivenLanguageIfOneExists) {
   MessageContent frenchContent("content3", french);
   std::vector<MessageContent> info({
-    MessageContent("content1", german),
-    MessageContent("content2", MessageContent::defaultLanguage),
-    frenchContent,
+      MessageContent("content1", german),
+      MessageContent("content2", MessageContent::defaultLanguage),
+      frenchContent,
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 
@@ -131,7 +138,10 @@ TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {
   YAML::Emitter emitter;
   emitter << info;
 
-  EXPECT_STREQ("crc: 0x12345678\nutil: 'cleaner'\ninfo: 'info'\nitm: 2\nudr: 10\nnav: 30", emitter.c_str());
+  EXPECT_STREQ(
+      "crc: 0x12345678\nutil: 'cleaner'\ninfo: 'info'\nitm: 2\nudr: 10\nnav: "
+      "30",
+      emitter.c_str());
 }
 
 TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOmitAllZeroCounts) {
@@ -139,7 +149,8 @@ TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOmitAllZeroCounts) {
   YAML::Emitter emitter;
   emitter << info;
 
-  EXPECT_STREQ("crc: 0x12345678\nutil: 'cleaner'\ninfo: 'info'", emitter.c_str());
+  EXPECT_STREQ("crc: 0x12345678\nutil: 'cleaner'\ninfo: 'info'",
+               emitter.c_str());
 }
 
 TEST_P(PluginCleaningDataTest, encodingAsYamlShouldOmitAllZeroCountFields) {
@@ -155,7 +166,8 @@ TEST_P(PluginCleaningDataTest, encodingAsYamlShouldOmitAllZeroCountFields) {
   EXPECT_FALSE(node["nav"]);
 }
 
-TEST_P(PluginCleaningDataTest, encodingAsYamlShouldOutputAllNonZeroCountFields) {
+TEST_P(PluginCleaningDataTest,
+       encodingAsYamlShouldOutputAllNonZeroCountFields) {
   PluginCleaningData info(0x12345678, "cleaner", info_, 2, 10, 30);
   YAML::Node node;
   node = info;
@@ -168,7 +180,8 @@ TEST_P(PluginCleaningDataTest, encodingAsYamlShouldOutputAllNonZeroCountFields) 
   EXPECT_EQ(30, node["nav"].as<unsigned int>());
 }
 
-TEST_P(PluginCleaningDataTest, decodingFromYamlShouldLeaveMissingFieldsWithZeroValues) {
+TEST_P(PluginCleaningDataTest,
+       decodingFromYamlShouldLeaveMissingFieldsWithZeroValues) {
   YAML::Node node = YAML::Load("{crc: 0x12345678, util: cleaner}");
   PluginCleaningData info = node.as<PluginCleaningData>();
 
@@ -181,7 +194,8 @@ TEST_P(PluginCleaningDataTest, decodingFromYamlShouldLeaveMissingFieldsWithZeroV
 }
 
 TEST_P(PluginCleaningDataTest, decodingFromYamlShouldStoreAllNonZeroCounts) {
-  YAML::Node node = YAML::Load("{crc: 0x12345678, util: cleaner, info: info, itm: 2, udr: 10, nav: 30}");
+  YAML::Node node = YAML::Load(
+      "{crc: 0x12345678, util: cleaner, info: info, itm: 2, udr: 10, nav: 30}");
   PluginCleaningData info = node.as<PluginCleaningData>();
 
   EXPECT_EQ(0x12345678, info.GetCRC());

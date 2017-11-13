@@ -29,21 +29,19 @@
 namespace loot {
 Location::Location() {}
 
-Location::Location(const std::string& url, const std::string& name) : url_(url), name_(name) {}
+Location::Location(const std::string& url, const std::string& name) :
+    url_(url),
+    name_(name) {}
 
-bool Location::operator < (const Location& rhs) const {
+bool Location::operator<(const Location& rhs) const {
   return boost::ilexicographical_compare(url_, rhs.GetURL());
 }
 
-bool Location::operator == (const Location& rhs) const {
+bool Location::operator==(const Location& rhs) const {
   return boost::iequals(url_, rhs.GetURL());
 }
 
-std::string Location::GetURL() const {
-  return url_;
-}
+std::string Location::GetURL() const { return url_; }
 
-std::string Location::GetName() const {
-  return name_;
-}
+std::string Location::GetName() const { return name_; }
 }

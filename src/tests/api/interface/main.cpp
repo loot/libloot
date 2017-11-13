@@ -33,7 +33,7 @@
 #include <boost/locale.hpp>
 
 int main(int argc, char **argv) {
-  //Set the locale to get encoding conversions working correctly.
+  // Set the locale to get encoding conversions working correctly.
   std::locale::global(boost::locale::generator().generate(""));
   boost::filesystem::path::imbue(std::locale());
   loot::InitialiseLocale("");
@@ -46,15 +46,15 @@ namespace loot {
 namespace test {
 TEST(SetLoggingCallback, shouldWriteMessagesToGivenCallback) {
   std::string loggedMessages;
-  SetLoggingCallback([&](LogLevel level, const char * string) {
+  SetLoggingCallback([&](LogLevel level, const char *string) {
     loggedMessages += std::string(string);
   });
 
   try {
     CreateGameHandle(GameType::tes4, "", "");
-  }
-  catch (...) {
-    EXPECT_EQ("Initialising load order data for game of type 0 at: ", loggedMessages);
+  } catch (...) {
+    EXPECT_EQ("Initialising load order data for game of type 0 at: ",
+              loggedMessages);
 
     SetLoggingCallback([](LogLevel, const char *) {});
     return;

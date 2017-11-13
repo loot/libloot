@@ -33,7 +33,8 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-TEST(Tag, defaultConstructorShouldSetEmptyNameAndConditionStringsForATagAddition) {
+TEST(Tag,
+     defaultConstructorShouldSetEmptyNameAndConditionStringsForATagAddition) {
   Tag tag;
 
   EXPECT_TRUE(tag.GetName().empty());
@@ -49,7 +50,8 @@ TEST(Tag, dataConstructorShouldSetFieldsToGivenValues) {
   EXPECT_EQ("condition", tag.GetCondition());
 }
 
-TEST(Tag, tagsWithCaseInsensitiveEqualNamesAndEqualAdditionStatesShouldBeEqual) {
+TEST(Tag,
+     tagsWithCaseInsensitiveEqualNamesAndEqualAdditionStatesShouldBeEqual) {
   Tag tag1("Name", true, "condition1");
   Tag tag2("name", true, "condition2");
 
@@ -70,7 +72,9 @@ TEST(Tag, tagsWithUnequalAdditionStatesShouldNotBeEqual) {
   EXPECT_FALSE(tag1 == tag2);
 }
 
-TEST(Tag, lessThanOperatorShouldCaseInsensitivelyLexicographicallyCompareNameStrings) {
+TEST(
+    Tag,
+    lessThanOperatorShouldCaseInsensitivelyLexicographicallyCompareNameStrings) {
   Tag tag1("Name");
   Tag tag2("name");
 
@@ -92,7 +96,9 @@ TEST(Tag, lessThanOperatorShouldTreatTagAdditionsAsBeingLessThanRemovals) {
   EXPECT_FALSE(tag2 < tag1);
 }
 
-TEST(Tag, emittingAsYamlShouldOutputOnlyTheNameStringIfTheTagIsAnAdditionWithNoCondition) {
+TEST(
+    Tag,
+    emittingAsYamlShouldOutputOnlyTheNameStringIfTheTagIsAnAdditionWithNoCondition) {
   Tag tag("name1");
   YAML::Emitter emitter;
   emitter << tag;
@@ -100,7 +106,9 @@ TEST(Tag, emittingAsYamlShouldOutputOnlyTheNameStringIfTheTagIsAnAdditionWithNoC
   EXPECT_EQ(tag.GetName(), emitter.c_str());
 }
 
-TEST(Tag, emittingAsYamlShouldOutputOnlyTheNameStringPrefixedWithAHyphenIfTheTagIsARemovalWithNoCondition) {
+TEST(
+    Tag,
+    emittingAsYamlShouldOutputOnlyTheNameStringPrefixedWithAHyphenIfTheTagIsARemovalWithNoCondition) {
   Tag tag("name1", false);
   YAML::Emitter emitter;
   emitter << tag;
@@ -116,7 +124,8 @@ TEST(Tag, emittingAsYamlShouldOutputAMapIfTheTagHasACondition) {
   EXPECT_STREQ("name: -name1\ncondition: 'condition1'", emitter.c_str());
 }
 
-TEST(Tag, encodingAsYamlShouldOmitTheConditionFieldIfTheConditionStringIsEmpty) {
+TEST(Tag,
+     encodingAsYamlShouldOmitTheConditionFieldIfTheConditionStringIsEmpty) {
   Tag tag;
   YAML::Node node;
   node = tag;
@@ -132,7 +141,9 @@ TEST(Tag, encodingAsYamlShouldOutputTheNameFieldCorrectly) {
   EXPECT_EQ(tag.GetName(), node["name"].as<std::string>());
 }
 
-TEST(Tag, encodingAsYamlShouldOutputTheNameFieldWithAHyphenPrefixIfTheTagIsARemoval) {
+TEST(
+    Tag,
+    encodingAsYamlShouldOutputTheNameFieldWithAHyphenPrefixIfTheTagIsARemoval) {
   Tag tag("name1", false);
   YAML::Node node;
   node = tag;
@@ -140,7 +151,9 @@ TEST(Tag, encodingAsYamlShouldOutputTheNameFieldWithAHyphenPrefixIfTheTagIsARemo
   EXPECT_EQ("-" + tag.GetName(), node["name"].as<std::string>());
 }
 
-TEST(Tag, encodingAsYamlShouldOutputTheConditionFieldIfTheConditionStringIsNotEmpty) {
+TEST(
+    Tag,
+    encodingAsYamlShouldOutputTheConditionFieldIfTheConditionStringIsNotEmpty) {
   Tag tag("name1", true, "condition1");
   YAML::Node node;
   node = tag;

@@ -35,17 +35,17 @@ class GameTest : public CommonGameTestFixture {
 protected:
   void loadInstalledPlugins(Game& game, bool headersOnly) {
     const std::vector<std::string> plugins({
-      masterFile,
-      blankEsm,
-      blankDifferentEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
+        masterFile,
+        blankEsm,
+        blankDifferentEsm,
+        blankMasterDependentEsm,
+        blankDifferentMasterDependentEsm,
+        blankEsp,
+        blankDifferentEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+        blankDifferentPluginDependentEsp,
     });
     game.LoadPlugins(plugins, headersOnly);
   }
@@ -55,13 +55,12 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         GameTest,
-                        ::testing::Values(
-                          GameType::tes4,
-                          GameType::tes5,
-                          GameType::fo3,
-                          GameType::fonv,
-                          GameType::fo4,
-                          GameType::tes5se));
+                        ::testing::Values(GameType::tes4,
+                                          GameType::tes5,
+                                          GameType::fo3,
+                                          GameType::fonv,
+                                          GameType::fo4,
+                                          GameType::tes5se));
 
 TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
@@ -71,8 +70,8 @@ TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
 }
 
 #ifndef _WIN32
-        // Testing on Windows will find real game installs in the Registry, so cannot
-        // test autodetection fully unless on Linux.
+// Testing on Windows will find real game installs in the Registry, so cannot
+// test autodetection fully unless on Linux.
 TEST_P(GameTest, constructingShouldThrowOnLinuxIfGamePathIsNotGiven) {
   EXPECT_THROW(Game(GetParam(), "", localPath), std::invalid_argument);
 }
@@ -90,7 +89,9 @@ TEST_P(GameTest, constructingShouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
   EXPECT_NO_THROW(Game(GetParam(), dataPath.parent_path(), localPath));
 }
 
-TEST_P(GameTest, loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
+TEST_P(
+    GameTest,
+    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));
@@ -108,14 +109,16 @@ TEST_P(GameTest, loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalle
 TEST_P(GameTest, loadPluginsWithANonPluginShouldNotAddItToTheLoadedPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  ASSERT_THROW(game.LoadPlugins({ nonPluginFile }, false), std::invalid_argument);
+  ASSERT_THROW(game.LoadPlugins({nonPluginFile}, false), std::invalid_argument);
 
   ASSERT_TRUE(game.GetLoadedPlugins().empty());
 }
 
-TEST_P(GameTest, loadPluginsWithAnInvalidPluginShouldNotAddItToTheLoadedPlugins) {
+TEST_P(GameTest,
+       loadPluginsWithAnInvalidPluginShouldNotAddItToTheLoadedPlugins) {
   ASSERT_FALSE(boost::filesystem::exists(dataPath / invalidPlugin));
-  ASSERT_NO_THROW(boost::filesystem::copy_file(dataPath / blankEsm, dataPath / invalidPlugin));
+  ASSERT_NO_THROW(boost::filesystem::copy_file(dataPath / blankEsm,
+                                               dataPath / invalidPlugin));
   ASSERT_TRUE(boost::filesystem::exists(dataPath / invalidPlugin));
   boost::filesystem::ofstream out(dataPath / invalidPlugin, std::fstream::app);
   out << "GRUP0";
@@ -123,12 +126,13 @@ TEST_P(GameTest, loadPluginsWithAnInvalidPluginShouldNotAddItToTheLoadedPlugins)
 
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  ASSERT_NO_THROW(game.LoadPlugins({ invalidPlugin }, false));
+  ASSERT_NO_THROW(game.LoadPlugins({invalidPlugin}, false));
 
   ASSERT_TRUE(game.GetLoadedPlugins().empty());
 }
 
-TEST_P(GameTest, loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
+TEST_P(GameTest,
+       loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));

@@ -28,10 +28,10 @@ along with LOOT.  If not, see
 #include <map>
 #include <unordered_set>
 
+#include <gtest/gtest.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <gtest/gtest.h>
 
 #include "loot/enum/game_type.h"
 
@@ -40,27 +40,30 @@ namespace test {
 class CommonGameTestFixture : public ::testing::TestWithParam<GameType> {
 protected:
   CommonGameTestFixture() :
-    french("fr"),
-    german("de"),
-    missingPath("./missing"),
-    dataPath(getPluginsPath()),
-    localPath(getLocalPath()),
-    lootDataPath("./local/LOOT"),
-    masterFile(getMasterFile()),
-    missingEsp("Blank.missing.esp"),
-    nonPluginFile("NotAPlugin.esm"),
-    invalidPlugin("Invalid.esm"),
-    blankEsm("Blank.esm"),
-    blankDifferentEsm("Blank - Different.esm"),
-    blankMasterDependentEsm("Blank - Master Dependent.esm"),
-    blankDifferentMasterDependentEsm("Blank - Different Master Dependent.esm"),
-    blankEsp("Blank.esp"),
-    blankDifferentEsp("Blank - Different.esp"),
-    blankMasterDependentEsp("Blank - Master Dependent.esp"),
-    blankDifferentMasterDependentEsp("Blank - Different Master Dependent.esp"),
-    blankPluginDependentEsp("Blank - Plugin Dependent.esp"),
-    blankDifferentPluginDependentEsp("Blank - Different Plugin Dependent.esp"),
-    blankEsmCrc(getBlankEsmCrc()) {
+      french("fr"),
+      german("de"),
+      missingPath("./missing"),
+      dataPath(getPluginsPath()),
+      localPath(getLocalPath()),
+      lootDataPath("./local/LOOT"),
+      masterFile(getMasterFile()),
+      missingEsp("Blank.missing.esp"),
+      nonPluginFile("NotAPlugin.esm"),
+      invalidPlugin("Invalid.esm"),
+      blankEsm("Blank.esm"),
+      blankDifferentEsm("Blank - Different.esm"),
+      blankMasterDependentEsm("Blank - Master Dependent.esm"),
+      blankDifferentMasterDependentEsm(
+          "Blank - Different Master Dependent.esm"),
+      blankEsp("Blank.esp"),
+      blankDifferentEsp("Blank - Different.esp"),
+      blankMasterDependentEsp("Blank - Master Dependent.esp"),
+      blankDifferentMasterDependentEsp(
+          "Blank - Different Master Dependent.esp"),
+      blankPluginDependentEsp("Blank - Plugin Dependent.esp"),
+      blankDifferentPluginDependentEsp(
+          "Blank - Different Plugin Dependent.esp"),
+      blankEsmCrc(getBlankEsmCrc()) {
     assertInitialState();
   }
 
@@ -75,26 +78,34 @@ protected:
     ASSERT_TRUE(boost::filesystem::exists(dataPath / blankEsm));
     ASSERT_TRUE(boost::filesystem::exists(dataPath / blankDifferentEsm));
     ASSERT_TRUE(boost::filesystem::exists(dataPath / blankMasterDependentEsm));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankDifferentMasterDependentEsm));
+    ASSERT_TRUE(
+        boost::filesystem::exists(dataPath / blankDifferentMasterDependentEsm));
     ASSERT_TRUE(boost::filesystem::exists(dataPath / blankEsp));
     ASSERT_TRUE(boost::filesystem::exists(dataPath / blankDifferentEsp));
     ASSERT_TRUE(boost::filesystem::exists(dataPath / blankMasterDependentEsp));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankDifferentMasterDependentEsp));
+    ASSERT_TRUE(
+        boost::filesystem::exists(dataPath / blankDifferentMasterDependentEsp));
     ASSERT_TRUE(boost::filesystem::exists(dataPath / blankPluginDependentEsp));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankDifferentPluginDependentEsp));
+    ASSERT_TRUE(
+        boost::filesystem::exists(dataPath / blankDifferentPluginDependentEsp));
 
     // Make sure the game master file exists.
     ASSERT_FALSE(boost::filesystem::exists(dataPath / masterFile));
-    ASSERT_NO_THROW(boost::filesystem::copy_file(dataPath / blankEsm, dataPath / masterFile));
+    ASSERT_NO_THROW(boost::filesystem::copy_file(dataPath / blankEsm,
+                                                 dataPath / masterFile));
     ASSERT_TRUE(boost::filesystem::exists(dataPath / masterFile));
 
     // Set initial load order and active plugins.
     setLoadOrder(getInitialLoadOrder());
 
     // Ghost a plugin.
-    ASSERT_FALSE(boost::filesystem::exists(dataPath / (blankMasterDependentEsm + ".ghost")));
-    ASSERT_NO_THROW(boost::filesystem::rename(dataPath / blankMasterDependentEsm, dataPath / (blankMasterDependentEsm + ".ghost")));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / (blankMasterDependentEsm + ".ghost")));
+    ASSERT_FALSE(boost::filesystem::exists(
+        dataPath / (blankMasterDependentEsm + ".ghost")));
+    ASSERT_NO_THROW(boost::filesystem::rename(
+        dataPath / blankMasterDependentEsm,
+        dataPath / (blankMasterDependentEsm + ".ghost")));
+    ASSERT_TRUE(boost::filesystem::exists(
+        dataPath / (blankMasterDependentEsm + ".ghost")));
 
     // Write out an non-empty, non-plugin file.
     boost::filesystem::ofstream out(dataPath / nonPluginFile);
@@ -110,9 +121,13 @@ protected:
     ASSERT_NO_THROW(boost::filesystem::remove(dataPath / masterFile));
 
     // Unghost the ghosted plugin.
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / (blankMasterDependentEsm + ".ghost")));
-    ASSERT_NO_THROW(boost::filesystem::rename(dataPath / (blankMasterDependentEsm + ".ghost"), dataPath / blankMasterDependentEsm));
-    ASSERT_FALSE(boost::filesystem::exists(dataPath / (blankMasterDependentEsm + ".ghost")));
+    ASSERT_TRUE(boost::filesystem::exists(
+        dataPath / (blankMasterDependentEsm + ".ghost")));
+    ASSERT_NO_THROW(boost::filesystem::rename(
+        dataPath / (blankMasterDependentEsm + ".ghost"),
+        dataPath / blankMasterDependentEsm));
+    ASSERT_FALSE(boost::filesystem::exists(
+        dataPath / (blankMasterDependentEsm + ".ghost")));
 
     ASSERT_NO_THROW(boost::filesystem::remove(dataPath / nonPluginFile));
     ASSERT_NO_THROW(boost::filesystem::remove(dataPath / invalidPlugin));
@@ -138,19 +153,22 @@ protected:
     std::vector<std::string> actual;
     if (isLoadOrderTimestampBased(GetParam())) {
       std::map<time_t, std::string> loadOrder;
-      for (boost::filesystem::directory_iterator it(dataPath); it != boost::filesystem::directory_iterator(); ++it) {
+      for (boost::filesystem::directory_iterator it(dataPath);
+           it != boost::filesystem::directory_iterator();
+           ++it) {
         if (boost::filesystem::is_regular_file(it->status())) {
           std::string filename = it->path().filename().string();
           if (filename == nonPluginFile)
             continue;
           if (boost::ends_with(filename, ".ghost"))
             filename = it->path().stem().string();
-          if (boost::ends_with(filename, ".esp") || boost::ends_with(filename, ".esm"))
-            loadOrder.emplace(boost::filesystem::last_write_time(it->path()), filename);
+          if (boost::ends_with(filename, ".esp") ||
+              boost::ends_with(filename, ".esm"))
+            loadOrder.emplace(boost::filesystem::last_write_time(it->path()),
+                              filename);
         }
       }
-      for (const auto& plugin : loadOrder)
-        actual.push_back(plugin.second);
+      for (const auto& plugin : loadOrder) actual.push_back(plugin.second);
     } else if (GetParam() == GameType::tes5) {
       boost::filesystem::ifstream in(localPath / "loadorder.txt");
       while (in) {
@@ -173,17 +191,17 @@ protected:
 
   inline std::vector<std::pair<std::string, bool>> getInitialLoadOrder() const {
     return std::vector<std::pair<std::string, bool>>({
-      {masterFile, true},
-      {blankEsm, true},
-      {blankDifferentEsm, false},
-      {blankMasterDependentEsm, false},
-      {blankDifferentMasterDependentEsm, false},
-      {blankEsp, false},
-      {blankDifferentEsp, false},
-      {blankMasterDependentEsp, false},
-      {blankDifferentMasterDependentEsp, true},
-      {blankPluginDependentEsp, false},
-      {blankDifferentPluginDependentEsp, false},
+        {masterFile, true},
+        {blankEsm, true},
+        {blankDifferentEsm, false},
+        {blankMasterDependentEsm, false},
+        {blankDifferentMasterDependentEsm, false},
+        {blankEsp, false},
+        {blankDifferentEsp, false},
+        {blankMasterDependentEsp, false},
+        {blankDifferentMasterDependentEsp, true},
+        {blankPluginDependentEsp, false},
+        {blankDifferentPluginDependentEsp, false},
     });
   }
 
@@ -248,9 +266,10 @@ private:
       return 0x187BE342;
   }
 
-  void setLoadOrder(const std::vector<std::pair<std::string, bool>>& loadOrder) const {
+  void setLoadOrder(
+      const std::vector<std::pair<std::string, bool>>& loadOrder) const {
     boost::filesystem::ofstream out(localPath / "plugins.txt");
-    for (const auto &plugin : loadOrder) {
+    for (const auto& plugin : loadOrder) {
       if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
         if (plugin.second)
           out << '*';
@@ -262,23 +281,27 @@ private:
 
     if (isLoadOrderTimestampBased(GetParam())) {
       time_t modificationTime = time(NULL);  // Current time.
-      for (const auto &plugin : loadOrder) {
-        if (boost::filesystem::exists(dataPath / boost::filesystem::path(plugin.first + ".ghost"))) {
-          boost::filesystem::last_write_time(dataPath / boost::filesystem::path(plugin.first + ".ghost"), modificationTime);
+      for (const auto& plugin : loadOrder) {
+        if (boost::filesystem::exists(
+                dataPath / boost::filesystem::path(plugin.first + ".ghost"))) {
+          boost::filesystem::last_write_time(
+              dataPath / boost::filesystem::path(plugin.first + ".ghost"),
+              modificationTime);
         } else {
-          boost::filesystem::last_write_time(dataPath / plugin.first, modificationTime);
+          boost::filesystem::last_write_time(dataPath / plugin.first,
+                                             modificationTime);
         }
         modificationTime += 60;
       }
     } else if (GetParam() == GameType::tes5) {
       boost::filesystem::ofstream out(localPath / "loadorder.txt");
-      for (const auto &plugin : loadOrder)
-        out << plugin.first << std::endl;
+      for (const auto& plugin : loadOrder) out << plugin.first << std::endl;
     }
   }
 
   inline static bool isLoadOrderTimestampBased(GameType gameType) {
-    return gameType == GameType::tes4 || gameType == GameType::fo3 || gameType == GameType::fonv;
+    return gameType == GameType::tes4 || gameType == GameType::fo3 ||
+           gameType == GameType::fonv;
   }
 };
 }

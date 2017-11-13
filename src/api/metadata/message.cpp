@@ -31,44 +31,51 @@
 namespace loot {
 Message::Message() : type_(MessageType::say) {}
 
-Message::Message(const MessageType type, const std::string& content,
-                 const std::string& condition) : type_(type), ConditionalMetadata(condition) {
+Message::Message(const MessageType type,
+                 const std::string& content,
+                 const std::string& condition) :
+    type_(type),
+    ConditionalMetadata(condition) {
   content_.push_back(MessageContent(content));
 }
 
-Message::Message(const MessageType type, const std::vector<MessageContent>& content,
-                 const std::string& condition) : type_(type), content_(content), ConditionalMetadata(condition) {
+Message::Message(const MessageType type,
+                 const std::vector<MessageContent>& content,
+                 const std::string& condition) :
+    type_(type),
+    content_(content),
+    ConditionalMetadata(condition) {
   if (content.size() > 1) {
     bool englishStringExists = false;
-    for (const auto &mc : content) {
+    for (const auto& mc : content) {
       if (mc.GetLanguage() == MessageContent::defaultLanguage)
         englishStringExists = true;
     }
     if (!englishStringExists)
-      throw std::invalid_argument("bad conversion: multilingual messages must contain an English content string");
+      throw std::invalid_argument(
+          "bad conversion: multilingual messages must contain an English "
+          "content string");
   }
 }
 
-bool Message::operator < (const Message& rhs) const {
+bool Message::operator<(const Message& rhs) const {
   if (!content_.empty() && !rhs.GetContent().empty())
-    return boost::ilexicographical_compare(GetContent(MessageContent::defaultLanguage).GetText(), rhs.GetContent(MessageContent::defaultLanguage).GetText());
+    return boost::ilexicographical_compare(
+        GetContent(MessageContent::defaultLanguage).GetText(),
+        rhs.GetContent(MessageContent::defaultLanguage).GetText());
   else if (content_.empty() && !rhs.GetContent().empty())
     return true;
   else
     return false;
 }
 
-bool Message::operator == (const Message& rhs) const {
+bool Message::operator==(const Message& rhs) const {
   return (content_ == rhs.GetContent());
 }
 
-MessageType Message::GetType() const {
-  return type_;
-}
+MessageType Message::GetType() const { return type_; }
 
-std::vector<MessageContent> Message::GetContent() const {
-  return content_;
-}
+std::vector<MessageContent> Message::GetContent() const { return content_; }
 MessageContent Message::GetContent(const std::string& language) const {
   return MessageContent::Choose(content_, language);
 }

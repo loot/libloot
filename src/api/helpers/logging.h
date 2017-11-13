@@ -29,7 +29,7 @@
 #include "loot/enum/log_level.h"
 
 namespace loot {
-static const char * LOGGER_NAME = "loot_api_logger";
+static const char* LOGGER_NAME = "loot_api_logger";
 
 inline std::shared_ptr<spdlog::logger> getLogger() {
   return spdlog::get(LOGGER_NAME);

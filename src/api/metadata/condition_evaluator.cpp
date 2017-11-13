@@ -35,15 +35,19 @@
 using boost::format;
 
 namespace loot {
-ConditionEvaluator::ConditionEvaluator() : gameType_(GameType::tes4), gameCache_(nullptr), loadOrderHandler_(nullptr) {}
-ConditionEvaluator::ConditionEvaluator(const GameType gameType,
-                                       const boost::filesystem::path& dataPath,
-                                       std::shared_ptr<GameCache> gameCache,
-                                       std::shared_ptr<LoadOrderHandler> loadOrderHandler) :
-  gameType_(gameType),
-  dataPath_(dataPath),
-  gameCache_(gameCache),
-  loadOrderHandler_(loadOrderHandler) {}
+ConditionEvaluator::ConditionEvaluator() :
+    gameType_(GameType::tes4),
+    gameCache_(nullptr),
+    loadOrderHandler_(nullptr) {}
+ConditionEvaluator::ConditionEvaluator(
+    const GameType gameType,
+    const boost::filesystem::path& dataPath,
+    std::shared_ptr<GameCache> gameCache,
+    std::shared_ptr<LoadOrderHandler> loadOrderHandler) :
+    gameType_(gameType),
+    dataPath_(dataPath),
+    gameCache_(gameCache),
+    loadOrderHandler_(loadOrderHandler) {}
 
 bool ConditionEvaluator::evaluate(const std::string& condition) const {
   if (shouldParseOnly()) {
@@ -71,7 +75,8 @@ bool ConditionEvaluator::evaluate(const std::string& condition) const {
   return result;
 }
 
-bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData, const std::string& pluginName) const {
+bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData,
+                                  const std::string& pluginName) const {
   if (shouldParseOnly() || pluginName.empty())
     return false;
 
@@ -81,7 +86,8 @@ bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData, const 
   // Get the CRC from the game plugin cache if possible.
   try {
     crc = gameCache_->GetPlugin(pluginName)->GetCRC();
-  } catch (...) {}
+  } catch (...) {
+  }
 
   // Otherwise calculate it from the file.
   if (crc == 0) {
@@ -95,7 +101,8 @@ bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData, const 
   return cleaningData.GetCRC() == crc;
 }
 
-PluginMetadata ConditionEvaluator::evaluateAll(const PluginMetadata& pluginMetadata) const {
+PluginMetadata ConditionEvaluator::evaluateAll(
+    const PluginMetadata& pluginMetadata) const {
   if (shouldParseOnly())
     return pluginMetadata;
 
@@ -178,14 +185,15 @@ bool ConditionEvaluator::fileExists(const std::string& filePath) const {
   } catch (...) {
     // Not a loaded plugin, check the filesystem.
     if (hasPluginFileExtension(filePath, gameType_))
-      return boost::filesystem::exists(dataPath_ / filePath)
-      || boost::filesystem::exists(dataPath_ / (filePath + ".ghost"));
+      return boost::filesystem::exists(dataPath_ / filePath) ||
+             boost::filesystem::exists(dataPath_ / (filePath + ".ghost"));
     else
       return boost::filesystem::exists(dataPath_ / filePath);
   }
 }
 
-bool ConditionEvaluator::regexMatchExists(const std::string& regexString) const {
+bool ConditionEvaluator::regexMatchExists(
+    const std::string& regexString) const {
   auto pathRegex = splitRegex(regexString);
 
   if (shouldParseOnly())
@@ -195,14 +203,15 @@ bool ConditionEvaluator::regexMatchExists(const std::string& regexString) const 
                                      [](const std::string&) { return true; });
 }
 
-bool ConditionEvaluator::regexMatchesExist(const std::string& regexString) const {
+bool ConditionEvaluator::regexMatchesExist(
+    const std::string& regexString) const {
   auto pathRegex = splitRegex(regexString);
 
   if (shouldParseOnly())
     return false;
 
-  return areRegexMatchesInDataDirectory(pathRegex,
-                                        [](const std::string&) { return true; });
+  return areRegexMatchesInDataDirectory(
+      pathRegex, [](const std::string&) { return true; });
 }
 
 bool ConditionEvaluator::isPluginActive(const std::string& pluginName) const {
@@ -217,31 +226,34 @@ bool ConditionEvaluator::isPluginActive(const std::string& pluginName) const {
   return loadOrderHandler_->IsPluginActive(pluginName);
 }
 
-bool ConditionEvaluator::isPluginMatchingRegexActive(const std::string& regexString) const {
+bool ConditionEvaluator::isPluginMatchingRegexActive(
+    const std::string& regexString) const {
   auto pathRegex = splitRegex(regexString);
 
   if (shouldParseOnly())
     return false;
 
-  return isRegexMatchInDataDirectory(pathRegex,
-                                     [&](const std::string& filename) {
-    return loadOrderHandler_->IsPluginActive(filename);
-  });
+  return isRegexMatchInDataDirectory(
+      pathRegex, [&](const std::string& filename) {
+        return loadOrderHandler_->IsPluginActive(filename);
+      });
 }
 
-bool ConditionEvaluator::arePluginsActive(const std::string& regexString) const {
+bool ConditionEvaluator::arePluginsActive(
+    const std::string& regexString) const {
   auto pathRegex = splitRegex(regexString);
 
   if (shouldParseOnly())
     return false;
 
-  return areRegexMatchesInDataDirectory(pathRegex,
-                                        [&](const std::string& filename) {
-    return loadOrderHandler_->IsPluginActive(filename);
-  });
+  return areRegexMatchesInDataDirectory(
+      pathRegex, [&](const std::string& filename) {
+        return loadOrderHandler_->IsPluginActive(filename);
+      });
 }
 
-bool ConditionEvaluator::checksumMatches(const std::string& filePath, const uint32_t checksum) const {
+bool ConditionEvaluator::checksumMatches(const std::string& filePath,
+                                         const uint32_t checksum) const {
   validatePath(filePath);
 
   if (shouldParseOnly())
@@ -255,12 +267,14 @@ bool ConditionEvaluator::checksumMatches(const std::string& filePath, const uint
     // Get the CRC from the game plugin cache if possible.
     try {
       realChecksum = gameCache_->GetPlugin(filePath)->GetCRC();
-    } catch (...) {}
+    } catch (...) {
+    }
 
     if (realChecksum == 0) {
       if (boost::filesystem::exists(dataPath_ / filePath))
         realChecksum = GetCrc32(dataPath_ / filePath);
-      else if (hasPluginFileExtension(filePath, gameType_) && boost::filesystem::exists(dataPath_ / (filePath + ".ghost")))
+      else if (hasPluginFileExtension(filePath, gameType_) &&
+               boost::filesystem::exists(dataPath_ / (filePath + ".ghost")))
         realChecksum = GetCrc32(dataPath_ / (filePath + ".ghost"));
     }
   }
@@ -268,7 +282,9 @@ bool ConditionEvaluator::checksumMatches(const std::string& filePath, const uint
   return checksum == realChecksum;
 }
 
-bool ConditionEvaluator::compareVersions(const std::string & filePath, const std::string & testVersion, const std::string & comparator) const {
+bool ConditionEvaluator::compareVersions(const std::string& filePath,
+                                         const std::string& testVersion,
+                                         const std::string& comparator) const {
   if (!fileExists(filePath))
     return comparator == "!=" || comparator == "<" || comparator == "<=";
 
@@ -280,12 +296,12 @@ bool ConditionEvaluator::compareVersions(const std::string & filePath, const std
     logger->trace("Version extracted: {}", trueVersion.AsString());
   }
 
-  return ((comparator == "==" && trueVersion == givenVersion)
-          || (comparator == "!=" && trueVersion != givenVersion)
-          || (comparator == "<" && trueVersion < givenVersion)
-          || (comparator == ">" && trueVersion > givenVersion)
-          || (comparator == "<=" && trueVersion <= givenVersion)
-          || (comparator == ">=" && trueVersion >= givenVersion));
+  return ((comparator == "==" && trueVersion == givenVersion) ||
+          (comparator == "!=" && trueVersion != givenVersion) ||
+          (comparator == "<" && trueVersion < givenVersion) ||
+          (comparator == ">" && trueVersion > givenVersion) ||
+          (comparator == "<=" && trueVersion <= givenVersion) ||
+          (comparator == ">=" && trueVersion >= givenVersion));
 }
 
 void ConditionEvaluator::validatePath(const boost::filesystem::path& path) {
@@ -300,7 +316,8 @@ void ConditionEvaluator::validatePath(const boost::filesystem::path& path) {
       continue;
 
     if (component == ".." && temp.filename() == "..") {
-      throw ConditionSyntaxError((format("Invalid file path: %1%") % path.string()).str());
+      throw ConditionSyntaxError(
+          (format("Invalid file path: %1%") % path.string()).str());
     }
 
     temp /= component;
@@ -310,11 +327,14 @@ void ConditionEvaluator::validateRegex(const std::string& regexString) {
   try {
     std::regex(regexString, std::regex::ECMAScript | std::regex::icase);
   } catch (std::regex_error& e) {
-    throw ConditionSyntaxError((format("Invalid regex string \"%1%\": %2%") % regexString % e.what()).str());
+    throw ConditionSyntaxError(
+        (format("Invalid regex string \"%1%\": %2%") % regexString % e.what())
+            .str());
   }
 }
 
-boost::filesystem::path ConditionEvaluator::getRegexParentPath(const std::string& regexString) {
+boost::filesystem::path ConditionEvaluator::getRegexParentPath(
+    const std::string& regexString) {
   size_t pos = regexString.rfind('/');
 
   if (pos == std::string::npos)
@@ -323,7 +343,8 @@ boost::filesystem::path ConditionEvaluator::getRegexParentPath(const std::string
   return boost::filesystem::path(regexString.substr(0, pos));
 }
 
-std::string ConditionEvaluator::getRegexFilename(const std::string& regexString) {
+std::string ConditionEvaluator::getRegexFilename(
+    const std::string& regexString) {
   size_t pos = regexString.rfind('/');
 
   if (pos == std::string::npos)
@@ -332,11 +353,12 @@ std::string ConditionEvaluator::getRegexFilename(const std::string& regexString)
   return regexString.substr(pos + 1);
 }
 
-std::pair<boost::filesystem::path, std::regex> ConditionEvaluator::splitRegex(const std::string& regexString) {
-  // Can't support a regex string where all path components may be regex, since this could
-  // lead to massive scanning if an unfortunately-named directory is encountered.
-  // As such, only the filename portion can be a regex. Need to separate that from the rest
-  // of the string.
+std::pair<boost::filesystem::path, std::regex> ConditionEvaluator::splitRegex(
+    const std::string& regexString) {
+  // Can't support a regex string where all path components may be regex, since
+  // this could lead to massive scanning if an unfortunately-named directory is
+  // encountered. As such, only the filename portion can be a regex. Need to
+  // separate that from the rest of the string.
 
   validateRegex(regexString);
 
@@ -349,67 +371,83 @@ std::pair<boost::filesystem::path, std::regex> ConditionEvaluator::splitRegex(co
   try {
     reg = std::regex(filename, std::regex::ECMAScript | std::regex::icase);
   } catch (std::regex_error& e) {
-    throw ConditionSyntaxError((format("Invalid regex string \"%1%\": %2%") % filename % e.what()).str());
+    throw ConditionSyntaxError(
+        (format("Invalid regex string \"%1%\": %2%") % filename % e.what())
+            .str());
   }
 
   return std::pair<boost::filesystem::path, std::regex>(parent, reg);
 }
 
-bool ConditionEvaluator::isGameSubdirectory(const boost::filesystem::path& path) const {
+bool ConditionEvaluator::isGameSubdirectory(
+    const boost::filesystem::path& path) const {
   boost::filesystem::path parentPath = dataPath_ / path;
 
-  return boost::filesystem::exists(parentPath) && boost::filesystem::is_directory(parentPath);
+  return boost::filesystem::exists(parentPath) &&
+         boost::filesystem::is_directory(parentPath);
 }
 
-bool ConditionEvaluator::isRegexMatchInDataDirectory(const std::pair<boost::filesystem::path, std::regex>& pathRegex,
-                                                     const std::function<bool(const std::string&)> condition) const {
-   // Now we have a valid parent path and a regex filename. Check that the
-   // parent path exists and is a directory.
+bool ConditionEvaluator::isRegexMatchInDataDirectory(
+    const std::pair<boost::filesystem::path, std::regex>& pathRegex,
+    const std::function<bool(const std::string&)> condition) const {
+  // Now we have a valid parent path and a regex filename. Check that the
+  // parent path exists and is a directory.
   if (!isGameSubdirectory(pathRegex.first)) {
     auto logger = getLogger();
     if (logger) {
-      logger->trace("The path \"{}\" is not a game subdirectory.", pathRegex.first.string());
+      logger->trace("The path \"{}\" is not a game subdirectory.",
+                    pathRegex.first.string());
     }
     return false;
   }
 
-  return std::any_of(boost::filesystem::directory_iterator(dataPath_ / pathRegex.first),
-                     boost::filesystem::directory_iterator(),
-                     [&](const boost::filesystem::directory_entry& entry) {
-    const std::string filename = entry.path().filename().string();
-    return std::regex_match(filename, pathRegex.second) && condition(filename);
-  });
+  return std::any_of(
+      boost::filesystem::directory_iterator(dataPath_ / pathRegex.first),
+      boost::filesystem::directory_iterator(),
+      [&](const boost::filesystem::directory_entry& entry) {
+        const std::string filename = entry.path().filename().string();
+        return std::regex_match(filename, pathRegex.second) &&
+               condition(filename);
+      });
 }
 
-bool ConditionEvaluator::areRegexMatchesInDataDirectory(const std::pair<boost::filesystem::path, std::regex>& pathRegex,
-                                                        const std::function<bool(const std::string&)> condition) const {
+bool ConditionEvaluator::areRegexMatchesInDataDirectory(
+    const std::pair<boost::filesystem::path, std::regex>& pathRegex,
+    const std::function<bool(const std::string&)> condition) const {
   bool foundOneFile = false;
 
-  return isRegexMatchInDataDirectory(pathRegex, [&](const std::string& filename) {
-    if (condition(filename)) {
-      if (foundOneFile)
-        return true;
+  return isRegexMatchInDataDirectory(pathRegex,
+                                     [&](const std::string& filename) {
+                                       if (condition(filename)) {
+                                         if (foundOneFile)
+                                           return true;
 
-      foundOneFile = true;
-    }
+                                         foundOneFile = true;
+                                       }
 
-    return false;
-  });
+                                       return false;
+                                     });
 }
-bool ConditionEvaluator::parseCondition(const std::string & condition) const {
+bool ConditionEvaluator::parseCondition(const std::string& condition) const {
   if (condition.empty())
     return true;
 
-  ConditionGrammar<std::string::const_iterator, boost::spirit::qi::space_type> grammar(*this);
+  ConditionGrammar<std::string::const_iterator, boost::spirit::qi::space_type>
+      grammar(*this);
   boost::spirit::qi::space_type skipper;
   std::string::const_iterator begin = condition.begin();
   std::string::const_iterator end = condition.end();
   bool evaluation;
 
-  bool parseResult = boost::spirit::qi::phrase_parse(begin, end, grammar, skipper, evaluation);
+  bool parseResult =
+      boost::spirit::qi::phrase_parse(begin, end, grammar, skipper, evaluation);
 
   if (!parseResult || begin != end) {
-    throw ConditionSyntaxError((boost::format("Failed to parse condition \"%1%\": only partially matched expected syntax.") % condition).str());
+    throw ConditionSyntaxError(
+        (boost::format("Failed to parse condition \"%1%\": only partially "
+                       "matched expected syntax.") %
+         condition)
+            .str());
   }
 
   return evaluation;
@@ -428,7 +466,9 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
       // if it appears to be valid, otherwise treat it as a non
       // plugin file.
       if (Plugin::IsValid(filePath, gameType_, dataPath_))
-        return Version(Plugin(gameType_, dataPath_, loadOrderHandler_, filePath, true).GetVersion());
+        return Version(
+            Plugin(gameType_, dataPath_, loadOrderHandler_, filePath, true)
+                .GetVersion());
 
       return Version(dataPath_ / filePath);
     }

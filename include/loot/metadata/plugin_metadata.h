@@ -60,8 +60,9 @@ public:
    */
   LOOT_API PluginMetadata(const std::string& name);
 
-  //Merges from the given plugin into this one, unless there is already equal metadata present.
-  //For 'enabled' and 'priority' metadata, use the given plugin's values, but if the 'priority' user value is zero, ignore it.
+  // Merges from the given plugin into this one, unless there is already equal
+  // metadata present.  For 'enabled' and 'priority' metadata, use the given
+  // plugin's values, but if the 'priority' user value is zero, ignore it.
   /**
    * Merge metadata from the given PluginMetadata object into this object.
    *
@@ -75,8 +76,9 @@ public:
   LOOT_API void MergeMetadata(const PluginMetadata& plugin);
 
   // Returns metadata in this plugin not in the given plugin.
-  //For 'enabled', use this plugin's value.
-  //For 'priority', use 0 if the two plugin priorities are equal, and make it not explicit. Otherwise use this plugin's value.
+  // For 'enabled', use this plugin's value.
+  // For 'priority', use 0 if the two plugin priorities are equal, and make it
+  // not explicit. Otherwise use this plugin's value.
 
   /**
    * Get metadata in this object that isn't present in the given PluginMetadata
@@ -176,7 +178,8 @@ public:
    *        The language to create the SimpleMessage objects for.
    * @return The plugin's messages as SimpleMessage objects.
    */
-  LOOT_API std::vector<SimpleMessage> GetSimpleMessages(const std::string& language) const;
+  LOOT_API std::vector<SimpleMessage> GetSimpleMessages(
+      const std::string& language) const;
 
   /**
    * Set whether the plugin metadata is enabled for use during sorting or not.
@@ -275,7 +278,7 @@ public:
    * @returns True if the plugin names are case-insensitively equal, false
    *          otherwise.
    */
-  LOOT_API bool operator == (const PluginMetadata& rhs) const;
+  LOOT_API bool operator==(const PluginMetadata& rhs) const;
 
   /**
    * Check if two PluginMetadata objects are not equal by comparing their name
@@ -283,22 +286,22 @@ public:
    * @returns True if the plugin names are not case-insensitively equal, false
    *          otherwise.
    */
-  LOOT_API bool operator != (const PluginMetadata& rhs) const;
-
+  LOOT_API bool operator!=(const PluginMetadata& rhs) const;
 
   /**
    * Check if object's name value is equal to the given string.
    * @returns True if the plugin name is case-insensitively equal to the given
    *          string, false otherwise.
    */
-  LOOT_API bool operator == (const std::string& rhs) const;
+  LOOT_API bool operator==(const std::string& rhs) const;
 
   /**
    * Check if object's name value is not equal to the given string.
    * @returns True if the plugin name is not case-insensitively equal to the
    *          given string, false otherwise.
    */
-  LOOT_API bool operator != (const std::string& rhs) const;
+  LOOT_API bool operator!=(const std::string& rhs) const;
+
 private:
   std::string name_;
   bool enabled_;
@@ -326,7 +329,7 @@ struct hash<loot::PluginMetadata> {
    * loot::PluginMetadata.
    * @return The hash generated from the plugin's lowercased filename.
    */
-  size_t operator() (const loot::PluginMetadata& plugin) const {
+  size_t operator()(const loot::PluginMetadata& plugin) const {
     return hash<string>()(plugin.GetLowercasedName());
   }
 };

@@ -29,28 +29,28 @@ along with LOOT.  If not, see
 
 #include <gtest/gtest.h>
 
+#include "api/metadata/message_content.h"
+#include "api/plugin/plugin.h"
 #include "loot/metadata/file.h"
 #include "loot/metadata/location.h"
 #include "loot/metadata/message.h"
-#include "api/metadata/message_content.h"
 #include "loot/metadata/plugin_cleaning_data.h"
 #include "loot/metadata/plugin_metadata.h"
 #include "loot/metadata/tag.h"
-#include "api/plugin/plugin.h"
 
 namespace loot {
 namespace test {
 void PrintTo(const File& value, ::std::ostream* os) {
   *os << "File(\"" << value.GetName() << "\", "
-    << "\"" << value.GetDisplayName() << "\", "
-    << "\"" << value.GetCondition() << "\""
-    << ")";
+      << "\"" << value.GetDisplayName() << "\", "
+      << "\"" << value.GetCondition() << "\""
+      << ")";
 }
 
 void PrintTo(const Location& value, ::std::ostream* os) {
   *os << "Location(\"" << value.GetURL() << "\", "
-    << "\"" << value.GetName() << "\", "
-    << ")";
+      << "\"" << value.GetName() << "\", "
+      << ")";
 }
 
 void PrintTo(const Message& value, ::std::ostream* os) {
@@ -63,27 +63,24 @@ void PrintTo(const Message& value, ::std::ostream* os) {
     type = "say";
 
   *os << "Message(\"" << type << "\", "
-    << ::testing::PrintToString(value.GetContent()) << ", "
-    << "\"" << value.GetCondition() << "\""
-    << ")";
+      << ::testing::PrintToString(value.GetContent()) << ", "
+      << "\"" << value.GetCondition() << "\""
+      << ")";
 }
 
 void PrintTo(const MessageContent& value, ::std::ostream* os) {
   *os << "MessageContent(\"" << value.GetText() << "\", "
-    << "\"" << Language(value.GetLanguage()).GetName() << "\""
-    << ")";
+      << "\"" << Language(value.GetLanguage()).GetName() << "\""
+      << ")";
 }
 
 void PrintTo(const PluginCleaningData& value, ::std::ostream* os) {
-  *os << "PluginCleaningData(0x"
-    << std::hex << std::uppercase
-    << value.GetCRC()
-    << std::nouppercase << std::dec << ", "
-    << value.GetITMCount() << ", "
-    << value.GetDeletedReferenceCount() << ", "
-    << value.GetDeletedNavmeshCount() << ", "
-    << "\"" << value.GetCleaningUtility() << "\""
-    << ")";
+  *os << "PluginCleaningData(0x" << std::hex << std::uppercase << value.GetCRC()
+      << std::nouppercase << std::dec << ", " << value.GetITMCount() << ", "
+      << value.GetDeletedReferenceCount() << ", "
+      << value.GetDeletedNavmeshCount() << ", "
+      << "\"" << value.GetCleaningUtility() << "\""
+      << ")";
 }
 
 void PrintTo(const PluginMetadata& value, ::std::ostream* os) {
@@ -91,10 +88,9 @@ void PrintTo(const PluginMetadata& value, ::std::ostream* os) {
 }
 
 void PrintTo(const Tag& value, ::std::ostream* os) {
-  *os << "Tag(\"" << value.GetName() << "\", "
-    << value.IsAddition() << ", "
-    << "\"" << value.GetCondition() << "\""
-    << ")";
+  *os << "Tag(\"" << value.GetName() << "\", " << value.IsAddition() << ", "
+      << "\"" << value.GetCondition() << "\""
+      << ")";
 }
 
 void PrintTo(const Plugin& value, ::std::ostream* os) {

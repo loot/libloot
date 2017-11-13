@@ -27,8 +27,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
-#include "loot/exception/error_categories.h"
 #include "api/helpers/logging.h"
+#include "loot/exception/error_categories.h"
 
 using boost::format;
 using std::string;
@@ -36,9 +36,7 @@ using std::string;
 namespace loot {
 LoadOrderHandler::LoadOrderHandler() : gh_(nullptr) {}
 
-LoadOrderHandler::~LoadOrderHandler() {
-  lo_destroy_handle(gh_);
-}
+LoadOrderHandler::~LoadOrderHandler() { lo_destroy_handle(gh_); }
 
 void LoadOrderHandler::Init(const GameType& gameType,
                             const boost::filesystem::path& gamePath,
@@ -47,7 +45,7 @@ void LoadOrderHandler::Init(const GameType& gameType,
     throw std::invalid_argument("Game path is not initialised.");
   }
 
-  const char * gameLocalDataPath = nullptr;
+  const char* gameLocalDataPath = nullptr;
   string tempPathString = gameLocalAppData.string();
   if (!tempPathString.empty())
     gameLocalDataPath = tempPathString.c_str();
@@ -60,17 +58,23 @@ void LoadOrderHandler::Init(const GameType& gameType,
 
   int ret;
   if (gameType == GameType::tes4)
-    ret = lo_create_handle(&gh_, LIBLO_GAME_TES4, gamePath.string().c_str(), gameLocalDataPath);
+    ret = lo_create_handle(
+        &gh_, LIBLO_GAME_TES4, gamePath.string().c_str(), gameLocalDataPath);
   else if (gameType == GameType::tes5)
-    ret = lo_create_handle(&gh_, LIBLO_GAME_TES5, gamePath.string().c_str(), gameLocalDataPath);
+    ret = lo_create_handle(
+        &gh_, LIBLO_GAME_TES5, gamePath.string().c_str(), gameLocalDataPath);
   else if (gameType == GameType::tes5se)
-    ret = lo_create_handle(&gh_, LIBLO_GAME_TES5SE, gamePath.string().c_str(), gameLocalDataPath);
+    ret = lo_create_handle(
+        &gh_, LIBLO_GAME_TES5SE, gamePath.string().c_str(), gameLocalDataPath);
   else if (gameType == GameType::fo3)
-    ret = lo_create_handle(&gh_, LIBLO_GAME_FO3, gamePath.string().c_str(), gameLocalDataPath);
+    ret = lo_create_handle(
+        &gh_, LIBLO_GAME_FO3, gamePath.string().c_str(), gameLocalDataPath);
   else if (gameType == GameType::fonv)
-    ret = lo_create_handle(&gh_, LIBLO_GAME_FNV, gamePath.string().c_str(), gameLocalDataPath);
+    ret = lo_create_handle(
+        &gh_, LIBLO_GAME_FNV, gamePath.string().c_str(), gameLocalDataPath);
   else if (gameType == GameType::fo4)
-    ret = lo_create_handle(&gh_, LIBLO_GAME_FO4, gamePath.string().c_str(), gameLocalDataPath);
+    ret = lo_create_handle(
+        &gh_, LIBLO_GAME_FO4, gamePath.string().c_str(), gameLocalDataPath);
   else
     ret = LIBLO_ERROR_INVALID_ARGS;
 
@@ -108,7 +112,7 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
     logger->debug("Getting load order.");
   }
 
-  char ** pluginArr;
+  char** pluginArr;
   size_t pluginArrSize;
 
   unsigned int ret = lo_get_load_order(gh_, &pluginArr, &pluginArrSize);
@@ -121,16 +125,17 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
   return loadOrder;
 }
 
-void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) const {
+void LoadOrderHandler::SetLoadOrder(
+    const std::vector<std::string>& loadOrder) const {
   auto logger = getLogger();
   if (logger) {
     logger->info("Setting load order.");
   }
 
   size_t pluginArrSize = loadOrder.size();
-  char ** pluginArr = new char*[pluginArrSize];
+  char** pluginArr = new char*[pluginArrSize];
   int i = 0;
-  for (const auto &plugin : loadOrder) {
+  for (const auto& plugin : loadOrder) {
     if (logger) {
       logger->info("\t\t{}", plugin);
     }
@@ -142,8 +147,7 @@ void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) c
 
   unsigned int ret = lo_set_load_order(gh_, pluginArr, pluginArrSize);
 
-  for (size_t i = 0; i < pluginArrSize; i++)
-    delete[] pluginArr[i];
+  for (size_t i = 0; i < pluginArrSize; i++) delete[] pluginArr[i];
   delete[] pluginArr;
 
   HandleError("set the load order", ret);
@@ -153,19 +157,21 @@ void LoadOrderHandler::SetLoadOrder(const std::vector<std::string>& loadOrder) c
   }
 }
 
-void LoadOrderHandler::HandleError(const std::string& operation, unsigned int returnCode) const {
+void LoadOrderHandler::HandleError(const std::string& operation,
+                                   unsigned int returnCode) const {
   if (returnCode == LIBLO_OK || returnCode == LIBLO_WARN_LO_MISMATCH) {
     return;
   }
 
-  const char * e = nullptr;
+  const char* e = nullptr;
   string err;
   lo_get_error_message(&e);
   if (e == nullptr) {
-    err = "libloadorder failed to " + operation + ". Details could not be fetched.";
-  }
-  else {
-    err = (format("libloadorder failed to " + operation + ". Details: %1%") % e).str();
+    err = "libloadorder failed to " + operation +
+          ". Details could not be fetched.";
+  } else {
+    err = (format("libloadorder failed to " + operation + ". Details: %1%") % e)
+              .str();
   }
 
   auto logger = getLogger();

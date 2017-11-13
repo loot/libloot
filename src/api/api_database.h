@@ -31,9 +31,9 @@
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
+#include "api/masterlist.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata_list.h"
-#include "api/masterlist.h"
 #include "loot/database_interface.h"
 #include "loot/enum/game_type.h"
 
@@ -65,7 +65,8 @@ struct ApiDatabase : public DatabaseInterface {
 
   std::set<std::string> GetKnownBashTags() const;
 
-  std::vector<Message> GetGeneralMessages(bool evaluateConditions = false) const;
+  std::vector<Message> GetGeneralMessages(
+      bool evaluateConditions = false) const;
 
   PluginMetadata GetPluginMetadata(const std::string& plugin,
                                    bool includeUserMetadata = true,
@@ -79,6 +80,7 @@ struct ApiDatabase : public DatabaseInterface {
   void DiscardPluginUserMetadata(const std::string& plugin);
 
   void DiscardAllUserMetadata();
+
 private:
   std::shared_ptr<GameCache> gameCache_;
   ConditionEvaluator conditionEvaluator_;

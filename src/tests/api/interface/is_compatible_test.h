@@ -31,12 +31,16 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-TEST(IsCompatible, shouldReturnTrueWithEqualMajorAndMinorVersionsAndUnequalPatchVersion) {
-  EXPECT_TRUE(IsCompatible(LootVersion::major, LootVersion::minor, LootVersion::patch + 1));
+TEST(IsCompatible,
+     shouldReturnTrueWithEqualMajorAndMinorVersionsAndUnequalPatchVersion) {
+  EXPECT_TRUE(IsCompatible(
+      LootVersion::major, LootVersion::minor, LootVersion::patch + 1));
 }
 
-TEST(IsCompatible, shouldReturnFalseWithEqualMajorVersionAndUnequalMinorAndPatchVersions) {
-  EXPECT_FALSE(IsCompatible(LootVersion::major, LootVersion::minor + 1, LootVersion::patch + 1));
+TEST(IsCompatible,
+     shouldReturnFalseWithEqualMajorVersionAndUnequalMinorAndPatchVersions) {
+  EXPECT_FALSE(IsCompatible(
+      LootVersion::major, LootVersion::minor + 1, LootVersion::patch + 1));
 }
 }
 }

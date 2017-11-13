@@ -36,21 +36,29 @@ namespace test {
 class CreateGameHandleTest : public CommonGameTestFixture {
 protected:
   CreateGameHandleTest() :
-    handle_(nullptr),
-    gamePathSymlink(dataPath.parent_path().string() + ".symlink"),
-    localPathSymlink(localPath.string() + ".symlink"),
-    gamePathJunctionLink(dataPath.parent_path().string() + ".junction"),
-    localPathJunctionLink(localPath.string() + ".junction") {}
+      handle_(nullptr),
+      gamePathSymlink(dataPath.parent_path().string() + ".symlink"),
+      localPathSymlink(localPath.string() + ".symlink"),
+      gamePathJunctionLink(dataPath.parent_path().string() + ".junction"),
+      localPathJunctionLink(localPath.string() + ".junction") {}
 
   void SetUp() {
     CommonGameTestFixture::SetUp();
 
-    boost::filesystem::create_directory_symlink(dataPath.parent_path(), gamePathSymlink);
+    boost::filesystem::create_directory_symlink(dataPath.parent_path(),
+                                                gamePathSymlink);
     boost::filesystem::create_directory_symlink(localPath, localPathSymlink);
 
 #ifdef _WIN32
-    system(("mklink /J \"" + boost::filesystem::absolute(gamePathJunctionLink).string() + "\" \"" + boost::filesystem::absolute(dataPath).parent_path().string() + "\"").c_str());
-    system(("mklink /J \"" + boost::filesystem::absolute(localPathJunctionLink).string() + "\" \"" + boost::filesystem::absolute(localPath).string() + "\"").c_str());
+    system(("mklink /J \"" +
+            boost::filesystem::absolute(gamePathJunctionLink).string() +
+            "\" \"" +
+            boost::filesystem::absolute(dataPath).parent_path().string() + "\"")
+               .c_str());
+    system(("mklink /J \"" +
+            boost::filesystem::absolute(localPathJunctionLink).string() +
+            "\" \"" + boost::filesystem::absolute(localPath).string() + "\"")
+               .c_str());
 #endif
   }
 
@@ -75,50 +83,67 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         CreateGameHandleTest,
-                        ::testing::Values(
-                          GameType::tes4,
-                          GameType::tes5,
-                          GameType::fo3,
-                          GameType::fonv,
-                          GameType::fo4,
-                          GameType::tes5se));
+                        ::testing::Values(GameType::tes4,
+                                          GameType::tes5,
+                                          GameType::fo3,
+                                          GameType::fonv,
+                                          GameType::fo4,
+                                          GameType::tes5se));
 
-TEST_P(CreateGameHandleTest, shouldSucceedIfPassedValidParametersWithRelativePaths) {
-  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), dataPath.parent_path().string(), localPath.string()));
+TEST_P(CreateGameHandleTest,
+       shouldSucceedIfPassedValidParametersWithRelativePaths) {
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
+                                             dataPath.parent_path().string(),
+                                             localPath.string()));
   EXPECT_NE(nullptr, handle_);
 }
 
-TEST_P(CreateGameHandleTest, shouldSucceedIfPassedValidParametersWithAbsolutePaths) {
-  boost::filesystem::path game = boost::filesystem::current_path() / dataPath.parent_path();
+TEST_P(CreateGameHandleTest,
+       shouldSucceedIfPassedValidParametersWithAbsolutePaths) {
+  boost::filesystem::path game =
+      boost::filesystem::current_path() / dataPath.parent_path();
   boost::filesystem::path local = boost::filesystem::current_path() / localPath;
 
-  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), dataPath.parent_path().string(), localPath.string()));
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
+                                             dataPath.parent_path().string(),
+                                             localPath.string()));
   EXPECT_NE(nullptr, handle_);
 }
 
 TEST_P(CreateGameHandleTest, shouldThrowIfPassedAGamePathThatDoesNotExist) {
-  EXPECT_THROW(CreateGameHandle(GetParam(), missingPath.string(), localPath.string()), std::invalid_argument);
+  EXPECT_THROW(
+      CreateGameHandle(GetParam(), missingPath.string(), localPath.string()),
+      std::invalid_argument);
 }
 
 TEST_P(CreateGameHandleTest, shouldThrowIfPassedALocalPathThatDoesNotExist) {
-  EXPECT_THROW(CreateGameHandle(GetParam(), dataPath.parent_path().string(), missingPath.string()), std::invalid_argument);
+  EXPECT_THROW(
+      CreateGameHandle(
+          GetParam(), dataPath.parent_path().string(), missingPath.string()),
+      std::invalid_argument);
 }
 
 #ifdef _WIN32
 TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedAnEmptyLocalPathString) {
-  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), dataPath.parent_path().string(), ""));
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(
+                      GetParam(), dataPath.parent_path().string(), ""));
   EXPECT_NE(nullptr, handle_);
 }
 #endif
 
 TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathSymlinks) {
-  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), gamePathSymlink.string(), localPathSymlink.string()));
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
+                                             gamePathSymlink.string(),
+                                             localPathSymlink.string()));
   EXPECT_NE(nullptr, handle_);
 }
 
 #ifdef _WIN32
-TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathJunctionLinks) {
-  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), gamePathJunctionLink.string(), localPathJunctionLink.string()));
+TEST_P(CreateGameHandleTest,
+       shouldReturnOkIfPassedGameAndLocalPathJunctionLinks) {
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
+                                             gamePathJunctionLink.string(),
+                                             localPathJunctionLink.string()));
   EXPECT_NE(nullptr, handle_);
 }
 #endif

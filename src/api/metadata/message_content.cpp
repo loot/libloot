@@ -31,21 +31,20 @@ const std::string MessageContent::defaultLanguage = "en";
 
 MessageContent::MessageContent() : language_(MessageContent::defaultLanguage) {}
 
-MessageContent::MessageContent(const std::string& text, const std::string& language) : text_(text), language_(language) {}
+MessageContent::MessageContent(const std::string& text,
+                               const std::string& language) :
+    text_(text),
+    language_(language) {}
 
-std::string MessageContent::GetText() const {
-  return text_;
-}
+std::string MessageContent::GetText() const { return text_; }
 
-std::string MessageContent::GetLanguage() const {
-  return language_;
-}
+std::string MessageContent::GetLanguage() const { return language_; }
 
-bool MessageContent::operator < (const MessageContent& rhs) const {
+bool MessageContent::operator<(const MessageContent& rhs) const {
   return boost::ilexicographical_compare(text_, rhs.GetText());
 }
 
-bool MessageContent::operator == (const MessageContent& rhs) const {
+bool MessageContent::operator==(const MessageContent& rhs) const {
   return (boost::iequals(text_, rhs.GetText()));
 }
 MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
@@ -56,7 +55,7 @@ MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
     return content[0];
   else {
     MessageContent english;
-    for (const auto &mc : content) {
+    for (const auto& mc : content) {
       if (mc.GetLanguage() == language) {
         return mc;
       } else if (mc.GetLanguage() == MessageContent::defaultLanguage)

@@ -46,14 +46,18 @@ struct convert<loot::Location> {
 
   static bool decode(const Node& node, loot::Location& rhs) {
     if (!node.IsMap() && !node.IsScalar())
-      throw RepresentationException(node.Mark(), "bad conversion: 'location' object must be a map or scalar");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'location' object must be a map or scalar");
 
     std::string url;
     std::string name;
 
     if (node.IsMap()) {
       if (!node["link"])
-        throw RepresentationException(node.Mark(), "bad conversion: 'link' key missing from 'location' map object");
+        throw RepresentationException(
+            node.Mark(),
+            "bad conversion: 'link' key missing from 'location' map object");
 
       url = node["link"].as<std::string>();
       if (node["name"])
@@ -67,14 +71,13 @@ struct convert<loot::Location> {
   }
 };
 
-inline Emitter& operator << (Emitter& out, const loot::Location& rhs) {
+inline Emitter& operator<<(Emitter& out, const loot::Location& rhs) {
   if (rhs.GetName().empty())
     out << YAML::SingleQuoted << rhs.GetURL();
   else {
-    out << BeginMap
-      << Key << "link" << Value << YAML::SingleQuoted << rhs.GetURL()
-      << Key << "name" << Value << YAML::SingleQuoted << rhs.GetName()
-      << EndMap;
+    out << BeginMap << Key << "link" << Value << YAML::SingleQuoted
+        << rhs.GetURL() << Key << "name" << Value << YAML::SingleQuoted
+        << rhs.GetName() << EndMap;
   }
   return out;
 }
