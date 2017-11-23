@@ -2,6 +2,20 @@
 Version History
 ***************
 
+0.12.1 - 2017-11-23
+===================
+
+Added
+-----
+
+- Support for identifying Creation Club plugins using ``Skyrim.ccc`` and ``Fallout4.ccc`` (via libloadorder).
+
+Changed
+-------
+
+- Update esplugin to v1.0.7.
+- Update libloadorder to v10.0.4.
+
 0.12.0 - 2017-11-03
 ===================
 
