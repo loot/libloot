@@ -11,11 +11,6 @@ platform:
 matrix:
   fast_finish: true
 
-cache:
-  - C:\projects\boost_1_65_1\boost
-  - C:\projects\boost_1_65_1\stage\32\lib
-  - C:\projects\boost_1_65_1\stage\64\lib
-
 environment:
   github_auth_token:
     secure: V1GojGQfrAiQtUWtNNXfm3samiH+1yNF5UYhkn8B8mbif20IGTGWNlBS9E4S0SUC
@@ -29,10 +24,8 @@ install:
   - rustup target add i686-pc-windows-msvc
   - choco install -y doxygen.portable
   - python -m pip install -r docs/requirements.txt
-  - ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.1.0/install_boost.py', "$env:APPVEYOR_BUILD_FOLDER\install_boost.py")
   - ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.2.0/delete_old_bintray_versions.py', "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py")
   - ps: if ($env:PLATFORM -eq "Win32") { $env:ADDRESS_MODEL = '32' } else { $env:ADDRESS_MODEL = '64' }
-  - ps: python $env:APPVEYOR_BUILD_FOLDER\install_boost.py -d C:\projects -b 1.65.1 -a $env:ADDRESS_MODEL filesystem locale system
 
 before_build:
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -40,9 +33,9 @@ before_build:
   - cd build
   - ps: |
       if ($env:PLATFORM -eq 'Win32') {
-        cmake .. -G "Visual Studio 14 2015" -DBOOST_ROOT="C:/projects/boost_1_65_1" -DBOOST_LIBRARYDIR="C:/projects/boost_1_65_1/stage/32/lib"
+        cmake .. -G "Visual Studio 14 2015" -DBOOST_ROOT="C:\Libraries\boost_1_63_0" -DBOOST_LIBRARYDIR="C:\Libraries\boost_1_63_0\lib32-msvc-14.0"
       } else {
-        cmake .. -G "Visual Studio 14 2015 Win64" -DBOOST_ROOT="C:/projects/boost_1_65_1" -DBOOST_LIBRARYDIR="C:/projects/boost_1_65_1/stage/64/lib"
+        cmake .. -G "Visual Studio 14 2015 Win64" -DBOOST_ROOT="C:\Libraries\boost_1_63_0" -DBOOST_LIBRARYDIR="C:\Libraries\boost_1_63_0\lib64-msvc-14.0"
       }
 
 build:
