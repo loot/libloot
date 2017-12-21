@@ -34,10 +34,20 @@ namespace loot {
 namespace test {
 class PluginSorterTest : public CommonGameTestFixture {
 protected:
-  PluginSorterTest() : game_(GetParam(), dataPath.parent_path(), localPath) {}
+  PluginSorterTest() : 
+    game_(GetParam(), dataPath.parent_path(), localPath),
+    blankEslEsp("Blank.esl.esp") {}
+
+  void TearDown() {
+    CommonGameTestFixture::TearDown();
+
+    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+      boost::filesystem::remove(dataPath / blankEslEsp);
+    }
+  }
 
   void loadInstalledPlugins(Game& game_, bool headersOnly) {
-    const std::vector<std::string> plugins({
+    std::vector<std::string> plugins({
         masterFile,
         blankEsm,
         blankDifferentEsm,
@@ -50,22 +60,56 @@ protected:
         blankPluginDependentEsp,
         blankDifferentPluginDependentEsp,
     });
+
+    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+      plugins.push_back(blankEsl);
+
+      if (boost::filesystem::exists(dataPath / blankEslEsp)) {
+        plugins.push_back(blankEslEsp);
+      }
+    }
+
     game_.IdentifyMainMasterFile(masterFile);
     game_.LoadPlugins(plugins, headersOnly);
   }
 
   Game game_;
+  const std::string blankEslEsp;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_CASE_P(, PluginSorterTest, ::testing::Values(GameType::tes4));
+INSTANTIATE_TEST_CASE_P(, PluginSorterTest, ::testing::Values(GameType::tes4, GameType::fo4));
 
 TEST_P(PluginSorterTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
   PluginSorter sorter;
   std::vector<std::string> sorted = sorter.Sort(game_);
 
   EXPECT_TRUE(sorted.empty());
+}
+
+TEST_P(PluginSorterTest,
+       lightMasterFlaggedEspFilesShouldNotBeTreatedAsMasters) {
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    ASSERT_NO_THROW(
+      boost::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
+  }
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  auto esp = PluginSortingData(*dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp).get()), PluginMetadata());
+  EXPECT_FALSE(esp.IsMaster());
+
+  auto master = PluginSortingData(*dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm).get()), PluginMetadata());
+  EXPECT_TRUE(master.IsMaster());
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    auto lightMaster = PluginSortingData(*dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl).get()), PluginMetadata());
+    EXPECT_TRUE(lightMaster.IsMaster());
+
+    auto lightMasterEsp = PluginSortingData(*dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp).get()), PluginMetadata());
+    EXPECT_FALSE(lightMasterEsp.IsMaster());
+  }
 }
 
 TEST_P(PluginSorterTest,
@@ -105,6 +149,10 @@ TEST_P(PluginSorterTest, sortingShouldEvaluateRelativeGlobalPriorities) {
       blankPluginDependentEsp,
       blankDifferentPluginDependentEsp,
   });
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  }
 
   std::vector<std::string> sorted = ps.Sort(game_);
   EXPECT_EQ(expectedSortedOrder, sorted);
@@ -158,6 +206,10 @@ TEST_P(
       blankDifferentPluginDependentEsp,
   });
 
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  }
+
   std::vector<std::string> sorted = ps.Sort(game_);
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
@@ -186,6 +238,10 @@ TEST_P(PluginSorterTest,
       blankPluginDependentEsp,
   });
 
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  }
+
   std::vector<std::string> sorted = ps.Sort(game_);
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
@@ -213,6 +269,10 @@ TEST_P(PluginSorterTest,
       blankEsp,
       blankPluginDependentEsp,
   });
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  }
 
   std::vector<std::string> sorted = ps.Sort(game_);
   EXPECT_EQ(expectedSortedOrder, sorted);
