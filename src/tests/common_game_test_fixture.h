@@ -55,6 +55,7 @@ protected:
       blankMasterDependentEsm("Blank - Master Dependent.esm"),
       blankDifferentMasterDependentEsm(
           "Blank - Different Master Dependent.esm"),
+      blankEsl("Blank.esl"),
       blankEsp("Blank.esp"),
       blankDifferentEsp("Blank - Different.esp"),
       blankMasterDependentEsp("Blank - Master Dependent.esp"),
@@ -190,7 +191,7 @@ protected:
   }
 
   inline std::vector<std::pair<std::string, bool>> getInitialLoadOrder() const {
-    return std::vector<std::pair<std::string, bool>>({
+    auto loadOrder = std::vector<std::pair<std::string, bool>>({
         {masterFile, true},
         {blankEsm, true},
         {blankDifferentEsm, false},
@@ -203,6 +204,12 @@ protected:
         {blankPluginDependentEsp, false},
         {blankDifferentPluginDependentEsp, false},
     });
+
+    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+      loadOrder.insert(loadOrder.begin() + 5, std::make_pair(blankEsl, false));
+    }
+
+    return loadOrder;
   }
 
 protected:
@@ -222,6 +229,7 @@ protected:
   const std::string blankDifferentEsm;
   const std::string blankMasterDependentEsm;
   const std::string blankDifferentMasterDependentEsm;
+  const std::string blankEsl;
   const std::string blankEsp;
   const std::string blankDifferentEsp;
   const std::string blankMasterDependentEsp;
@@ -235,6 +243,8 @@ private:
   inline boost::filesystem::path getLocalPath() const {
     if (GetParam() == GameType::tes4)
       return "./local/Oblivion";
+    else if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
+      return "./local/SkyrimSE";
     else
       return "./local/Skyrim";
   }
@@ -242,6 +252,8 @@ private:
   inline boost::filesystem::path getPluginsPath() const {
     if (GetParam() == GameType::tes4)
       return "./Oblivion/Data";
+    else if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
+      return "./SkyrimSE/Data";
     else
       return "./Skyrim/Data";
   }
@@ -263,7 +275,7 @@ private:
     if (GetParam() == GameType::tes4)
       return 0x374E2A6F;
     else
-      return 0x187BE342;
+      return 0x6A1273DC;
   }
 
   void setLoadOrder(

@@ -140,23 +140,33 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
       blankDifferentPluginDependentEsp,
   };
 
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedOrder.insert(expectedOrder.begin() + 5, blankEsl);
+  }
+
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(
       handle_->GetDatabase()->LoadLists(masterlistPath.string(), ""));
 
-  std::vector<std::string> actualOrder = handle_->SortPlugins({
-      blankEsp,
-      blankPluginDependentEsp,
-      blankDifferentMasterDependentEsm,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankDifferentEsp,
-      blankDifferentPluginDependentEsp,
-      masterFile,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankDifferentEsm,
+  std::vector<std::string> pluginsToSort({
+    blankEsp,
+    blankPluginDependentEsp,
+    blankDifferentMasterDependentEsm,
+    blankMasterDependentEsp,
+    blankDifferentMasterDependentEsp,
+    blankDifferentEsp,
+    blankDifferentPluginDependentEsp,
+    masterFile,
+    blankEsm,
+    blankMasterDependentEsm,
+    blankDifferentEsm,
   });
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    pluginsToSort.push_back(blankEsl);
+  }
+
+  std::vector<std::string> actualOrder = handle_->SortPlugins(pluginsToSort);
 
   EXPECT_EQ(expectedOrder, actualOrder);
 }
@@ -193,6 +203,10 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
       blankDifferentMasterDependentEsp,
       blankPluginDependentEsp,
   });
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    loadOrder.insert(loadOrder.begin() + 5, blankEsl);
+  }
 
   EXPECT_NO_THROW(handle_->SetLoadOrder(loadOrder));
 

@@ -37,7 +37,6 @@ protected:
   PluginTest() :
       emptyFile("EmptyFile.esm"),
       lowercaseBlankEsp("blank.esp"),
-      blankEsl("blank.esl"),
       game_(GetParam(), dataPath.parent_path(), localPath),
       blankArchive("Blank" + GetArchiveFileExtension(game_.Type())),
       blankSuffixArchive("Blank - Different - suffix" +
@@ -58,8 +57,10 @@ protected:
                                             dataPath / lowercaseBlankEsp));
 #endif
 
-    ASSERT_NO_THROW(
+    if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
+      ASSERT_NO_THROW(
         boost::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
+    }
 
     // Create dummy archive files.
     out.open(dataPath / blankArchive);
@@ -75,16 +76,18 @@ protected:
 #ifndef _WIN32
     boost::filesystem::remove(dataPath / lowercaseBlankEsp);
 #endif
-    boost::filesystem::remove(dataPath / blankEsl);
     boost::filesystem::remove(dataPath / blankArchive);
     boost::filesystem::remove(dataPath / blankSuffixArchive);
+
+    if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
+      boost::filesystem::remove(dataPath / blankEsl);
+    }
   }
 
   Game game_;
 
   const std::string emptyFile;
   const std::string lowercaseBlankEsp;
-  const std::string blankEsl;
   const std::string blankArchive;
   const std::string blankSuffixArchive;
 

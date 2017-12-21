@@ -46,7 +46,11 @@ protected:
           blankMasterDependentEsp,
           blankDifferentMasterDependentEsp,
           blankPluginDependentEsp,
-      }) {}
+      }) {
+    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+      loadOrderToSet_.insert(loadOrderToSet_.begin() + 5, blankEsl);
+    }
+  }
 
   void TearDown() { CommonGameTestFixture::TearDown(); }
 

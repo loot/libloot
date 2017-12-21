@@ -132,7 +132,7 @@ ExternalProject_Add(testing-metadata
 
 ExternalProject_Add(testing-plugins
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/testing-plugins/archive/1.0.0.tar.gz"
+                    URL "https://github.com/WrinklyNinja/testing-plugins/archive/1.4.1.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_COMMAND ""
                     INSTALL_COMMAND "")
