@@ -2,6 +2,21 @@
 Version History
 ***************
 
+0.12.2 - 2017-12-24
+===================
+
+Fixed
+-----
+
+- Plugins with a ``.esp`` file extension that have the light master flag set are
+  no longer treated as masters when sorting, so they can have other ``.esp``
+  files as masters without causing cyclic interaction sorting errors.
+
+Changed
+-------
+
+- Downgraded Boost to 1.63.0 to take advantage of pre-built binaries on AppVeyor.
+
 0.12.1 - 2017-11-23
 ===================
 
