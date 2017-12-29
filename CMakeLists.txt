@@ -61,7 +61,7 @@ ELSE ()
     set(RUST_TARGET x86_64-unknown-linux-gnu)
 ENDIF ()
 
-find_package(Boost REQUIRED COMPONENTS locale filesystem system)
+find_package(Boost REQUIRED COMPONENTS locale filesystem system thread)
 
 ExternalProject_Add(GTest
                     PREFIX "external"
@@ -312,7 +312,11 @@ IF (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
                    z
                    crypto
                    rt
-                   pthread)
+                   pthread
+                   icuuc
+                   icui18n
+                   ssh2
+                   http_parser)
 
     IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         set (LOOT_LIBS ${LOOT_LIBS} supc++)
