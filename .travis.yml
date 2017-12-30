@@ -8,6 +8,8 @@ addons:
     packages:
       - libbz2-dev
       - libssl-dev
+      - libhttp-parser-dev
+      - libssh2-1-dev
       - gcc-6
       - g++-6
 
