@@ -99,9 +99,10 @@ LOOT_API bool IsCompatible(const unsigned int major,
  *
  * This sets the global locale up so that the library's UTF-8 support can
  * function.
- * @param id A locale ID.
+ * @param id A locale ID. The default value is a blank string, which will
+ *           use the system default locale.
  */
-LOOT_API void InitialiseLocale(const std::string& id);
+LOOT_API void InitialiseLocale(const std::string& id = "");
 
 /**
  *  @brief Initialise a new game handle.
