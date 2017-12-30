@@ -111,10 +111,8 @@ LOOT_API void InitialiseLocale(const std::string& id = "");
  *  @param game
  *         A game code for which to create the handle.
  *  @param game_path
- *         The relative or absolute path to the game folder, or an empty string.
- *         If an empty string, the API will attempt to detect the data path of
- *         the specified game by searching for the game's main master file in a
- *         sibling Data folder and by searching for the game's Registry entry.
+ *         The relative or absolute path to the directory containing the
+ *         game's executable.
  *  @param game_local_path
  *         The relative or absolute path to the game's folder in
  *         `%%LOCALAPPDATA%` or an empty string. If an empty string, the API
@@ -125,7 +123,7 @@ LOOT_API void InitialiseLocale(const std::string& id = "");
  */
 LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
     const GameType game,
-    const std::string& game_path = "",
+    const std::string& game_path,
     const std::string& game_local_path = "");
 }
 

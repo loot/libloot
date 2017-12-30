@@ -37,7 +37,7 @@ namespace loot {
 class Game : public GameInterface {
 public:
   Game(const GameType gameType,
-       const boost::filesystem::path& gamePath = "",
+       const boost::filesystem::path& gamePath,
        const boost::filesystem::path& gameLocalDataPath = "");
 
   // Internal Methods //

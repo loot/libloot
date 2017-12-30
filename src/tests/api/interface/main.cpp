@@ -51,10 +51,11 @@ TEST(SetLoggingCallback, shouldWriteMessagesToGivenCallback) {
   });
 
   try {
-    CreateGameHandle(GameType::tes4, "", "");
+    CreateGameHandle(GameType::tes4, "dummy");
   } catch (...) {
-    EXPECT_EQ("Initialising load order data for game of type 0 at: ",
-              loggedMessages);
+    EXPECT_EQ("Attempting to create a game handle with game path \"dummy\" "
+      "and local path \"\"",
+      loggedMessages);
 
     SetLoggingCallback([](LogLevel, const char *) {});
     return;
