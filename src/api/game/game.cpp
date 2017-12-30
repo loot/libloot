@@ -61,7 +61,6 @@ Game::Game(const GameType gameType,
            const boost::filesystem::path& localDataPath) :
     type_(gameType),
     gamePath_(gamePath),
-    localDataPath_(localDataPath),
     cache_(std::make_shared<GameCache>()),
     loadOrderHandler_(std::make_shared<LoadOrderHandler>()) {
   auto logger = getLogger();
@@ -71,7 +70,7 @@ Game::Game(const GameType gameType,
                  gamePath_.string());
   }
 
-  loadOrderHandler_->Init(type_, gamePath_, localDataPath_);
+  loadOrderHandler_->Init(type_, gamePath_, localDataPath);
 
   database_ = std::make_shared<ApiDatabase>(
       Type(), DataPath(), GetCache(), GetLoadOrderHandler());

@@ -83,7 +83,6 @@ private:
 
   const GameType type_;
   const boost::filesystem::path gamePath_;
-  const boost::filesystem::path localDataPath_;
 
   std::string masterFile_;
 };
