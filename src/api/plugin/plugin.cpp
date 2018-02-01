@@ -306,7 +306,7 @@ std::string Plugin::GetDescription() const {
 }
 
 std::string Plugin::GetArchiveFileExtension(const GameType gameType) {
-  if (gameType == GameType::fo4)
+  if (gameType == GameType::fo4 || gameType == GameType::fo4vr)
     return ".ba2";
   else
     return ".bsa";
@@ -362,7 +362,8 @@ bool hasPluginFileExtension(const std::string& filename, GameType gameType) {
   bool espOrEsm = boost::iends_with(filename, ".esp") ||
                   boost::iends_with(filename, ".esm");
   bool lightMaster =
-      (gameType == GameType::fo4 || gameType == GameType::tes5se) &&
+      (gameType == GameType::fo4 || gameType == GameType::fo4vr || 
+       gameType == GameType::tes5se) &&
       boost::iends_with(filename, ".esl");
 
   return espOrEsm || lightMaster;

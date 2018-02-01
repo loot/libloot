@@ -75,6 +75,9 @@ void LoadOrderHandler::Init(const GameType& gameType,
   else if (gameType == GameType::fo4)
     ret = lo_create_handle(
         &gh_, LIBLO_GAME_FO4, gamePath.string().c_str(), gameLocalDataPath);
+  else if (gameType == GameType::fo4vr)
+    ret = lo_create_handle(
+      &gh_, LIBLO_GAME_FO4VR, gamePath.string().c_str(), gameLocalDataPath);
   else
     ret = LIBLO_ERROR_INVALID_ARGS;
 
