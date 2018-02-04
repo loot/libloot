@@ -2,6 +2,30 @@
 Version History
 ***************
 
+0.12.3 - 2018-02-04
+===================
+
+Added
+-----
+
+- Support for Fallout 4 VR via the new :cpp:any:`loot::GameType::fo4vr` game type.
+
+Fixed
+-----
+
+- :cpp:any:`loot::CreateGameHandle()` no longer accepts an empty game path
+  string, and no longer has a default value for its game path parameter, as
+  using an empty string as the game path is invalid and always causes an
+  exception to be thrown.
+
+Changed
+-------
+
+- Added an empty string as the default value of
+  :cpp:any:`loot::InitialiseLocale()`'s string parameter.
+- Updated esplugin to v1.0.8.
+- Updated libloadorder to v10.1.0.
+
 0.12.2 - 2017-12-24
 ===================
 
