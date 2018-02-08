@@ -68,7 +68,7 @@ Plugin::Plugin(const GameType gameType,
     auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
     if (ret != ESP_OK) {
       throw FileAccessError(name +
-                            " : Libespm error code: " + std::to_string(ret));
+                            " : esplugin error code: " + std::to_string(ret));
     }
 
     if (!headerOnly) {
@@ -84,7 +84,7 @@ Plugin::Plugin(const GameType gameType,
                                               &numOverrideRecords_);
       if (ret != ESP_OK) {
         throw FileAccessError(name +
-                              " : Libespm error code: " + std::to_string(ret));
+                              " : esplugin error code: " + std::to_string(ret));
       }
     }
 
@@ -151,7 +151,7 @@ std::vector<std::string> Plugin::GetMasters() const {
   auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
-                          " : Libespm error code: " + std::to_string(ret));
+                          " : esplugin error code: " + std::to_string(ret));
   }
 
   std::vector<std::string> mastersVec(masters, masters + numMasters);
@@ -169,7 +169,7 @@ bool Plugin::IsMaster() const {
   auto ret = esp_plugin_is_master(esPlugin.get(), &isMaster);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
-                          " : Libespm error code: " + std::to_string(ret));
+                          " : esplugin error code: " + std::to_string(ret));
   }
 
   return isMaster;
@@ -180,7 +180,7 @@ bool Plugin::IsLightMaster() const {
   auto ret = esp_plugin_is_light_master(esPlugin.get(), &isLightMaster);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
-                          " : Libespm error code: " + std::to_string(ret));
+                          " : esplugin error code: " + std::to_string(ret));
   }
 
   return isLightMaster;
@@ -199,7 +199,7 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
         esPlugin.get(), otherPlugin.esPlugin.get(), &doPluginsOverlap);
     if (ret != ESP_OK) {
       throw FileAccessError(name_ +
-                            " : Libespm error code: " + std::to_string(ret));
+                            " : esplugin error code: " + std::to_string(ret));
     }
 
     return doPluginsOverlap;
@@ -275,7 +275,7 @@ void Plugin::Load(const boost::filesystem::path& path,
       &plugin, GetEspluginGameId(gameType), path.string().c_str());
   if (ret != ESP_OK) {
     throw FileAccessError(path.string() +
-                          " : Libespm error code: " + std::to_string(ret));
+                          " : esplugin error code: " + std::to_string(ret));
   }
 
   esPlugin = std::shared_ptr<std::remove_pointer<::Plugin>::type>(
@@ -284,7 +284,7 @@ void Plugin::Load(const boost::filesystem::path& path,
   ret = esp_plugin_parse(esPlugin.get(), headerOnly);
   if (ret != ESP_OK) {
     throw FileAccessError(path.string() +
-                          " : Libespm error code: " + std::to_string(ret));
+                          " : esplugin error code: " + std::to_string(ret));
   }
 }
 
@@ -293,7 +293,7 @@ std::string Plugin::GetDescription() const {
   auto ret = esp_plugin_description(esPlugin.get(), &description);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
-                          " : Libespm error code: " + std::to_string(ret));
+                          " : esplugin error code: " + std::to_string(ret));
   }
   if (description == nullptr) {
     return "";
@@ -362,7 +362,7 @@ bool hasPluginFileExtension(const std::string& filename, GameType gameType) {
   bool espOrEsm = boost::iends_with(filename, ".esp") ||
                   boost::iends_with(filename, ".esm");
   bool lightMaster =
-      (gameType == GameType::fo4 || gameType == GameType::fo4vr || 
+      (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
        gameType == GameType::tes5se) &&
       boost::iends_with(filename, ".esl");
 
