@@ -172,7 +172,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
               Type(), DataPath(), loadOrderHandler_, pluginName, loadHeader));
         } catch (std::exception& e) {
           if (logger) {
-            logger->trace(
+            logger->error(
                 "Caught exception while trying to add {} to the cache: {}",
                 pluginName,
                 e.what());
