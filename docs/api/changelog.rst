@@ -2,6 +2,34 @@
 Version History
 ***************
 
+0.12.4 - 2018-02-17
+===================
+
+Fixed
+-----
+
+- Loading or saving a load order could be very slow because the plugins
+  directory was scanned recursively, which is unnecessary. In the reported case,
+  this fix caused saving a load order to go from 23 seconds to 43 milliseconds
+  (via libloadorder).
+- Plugin parsing errors were being logged with trace severity, they are now
+  logged as errors.
+- Saving a load order for Oblivion, Fallout 3 or Fallout: New Vegas now updates
+  plugin access times to the current time for correctness (via libloadorder).
+
+Changed
+-------
+
+- ``GameInterface::SetLoadOrder()`` now errors if passed a load order that does
+  not contain all installed plugins. The previous behaviour was to append any
+  missing plugins, but this was undefined and could cause unexpected results
+  (via libloadorder).
+- Performance improvements for load order operations, benchmarked at 2x to 150x
+  faster (via libloadorder).
+- Updated mentions of libespm in error messages to mention esplugin instead.
+- Updated libloadorder to v11.0.1.
+- Updated spdlog to v0.16.3.
+
 0.12.3 - 2018-02-04
 ===================
 
