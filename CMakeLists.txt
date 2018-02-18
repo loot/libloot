@@ -61,7 +61,7 @@ ELSE ()
     set(RUST_TARGET x86_64-unknown-linux-gnu)
 ENDIF ()
 
-find_package(Boost REQUIRED COMPONENTS locale filesystem system thread)
+find_package(Boost REQUIRED COMPONENTS locale filesystem system)
 
 ExternalProject_Add(GTest
                     PREFIX "external"
