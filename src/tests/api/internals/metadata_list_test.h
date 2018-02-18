@@ -101,11 +101,13 @@ TEST_P(MetadataListTest, loadShouldLoadPluginMetadata) {
       std::insert_iterator<std::set<std::string>>(names, begin(names)),
       &MetadataListTest::PluginMetadataToString);
 
-  EXPECT_EQ(
-      std::set<std::string>({
-          blankEsm, blankEsp, "Blank.+\\.esp", "Blank.+(Different)?.*\\.esp",
-      }),
-      names);
+  EXPECT_EQ(std::set<std::string>({
+                blankEsm,
+                blankEsp,
+                "Blank.+\\.esp",
+                "Blank.+(Different)?.*\\.esp",
+            }),
+            names);
 }
 
 TEST_P(MetadataListTest, loadShouldLoadBashTags) {
@@ -182,11 +184,13 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
       end(result),
       std::insert_iterator<std::set<std::string>>(names, begin(names)),
       &MetadataListTest::PluginMetadataToString);
-  EXPECT_EQ(
-      std::set<std::string>({
-          blankEsm, blankEsp, "Blank.+\\.esp", "Blank.+(Different)?.*\\.esp",
-      }),
-      names);
+  EXPECT_EQ(std::set<std::string>({
+                blankEsm,
+                blankEsp,
+                "Blank.+\\.esp",
+                "Blank.+(Different)?.*\\.esp",
+            }),
+            names);
 }
 
 TEST_P(MetadataListTest, clearShouldClearLoadedData) {

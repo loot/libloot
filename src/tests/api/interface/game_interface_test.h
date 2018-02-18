@@ -149,17 +149,17 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
       handle_->GetDatabase()->LoadLists(masterlistPath.string(), ""));
 
   std::vector<std::string> pluginsToSort({
-    blankEsp,
-    blankPluginDependentEsp,
-    blankDifferentMasterDependentEsm,
-    blankMasterDependentEsp,
-    blankDifferentMasterDependentEsp,
-    blankDifferentEsp,
-    blankDifferentPluginDependentEsp,
-    masterFile,
-    blankEsm,
-    blankMasterDependentEsm,
-    blankDifferentEsm,
+      blankEsp,
+      blankPluginDependentEsp,
+      blankDifferentMasterDependentEsm,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
+      blankDifferentEsp,
+      blankDifferentPluginDependentEsp,
+      masterFile,
+      blankEsm,
+      blankMasterDependentEsm,
+      blankDifferentEsm,
   });
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {

@@ -46,12 +46,12 @@ public:
   size_t NumOverrideFormIDs() const;
   bool DoFormIDsOverlap(const PluginSortingData& plugin) const;
 
-  using PluginMetadata::GetLocalPriority;
-  using PluginMetadata::SetLocalPriority;
   using PluginMetadata::GetGlobalPriority;
-  using PluginMetadata::SetGlobalPriority;
-  using PluginMetadata::GetRequirements;
   using PluginMetadata::GetLoadAfterFiles;
+  using PluginMetadata::GetLocalPriority;
+  using PluginMetadata::GetRequirements;
+  using PluginMetadata::SetGlobalPriority;
+  using PluginMetadata::SetLocalPriority;
 
 private:
   const Plugin& plugin_;

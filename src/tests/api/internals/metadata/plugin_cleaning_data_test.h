@@ -113,7 +113,8 @@ TEST_P(
     chooseInfoShouldSelectTheEnglishStringIfNoStringExistsForTheGivenLanguage) {
   MessageContent content("content1", MessageContent::defaultLanguage);
   std::vector<MessageContent> info({
-      content, MessageContent("content1", german),
+      content,
+      MessageContent("content1", german),
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 

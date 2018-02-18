@@ -50,7 +50,8 @@ PluginSortingData::PluginSortingData(const Plugin& plugin,
 std::string PluginSortingData::GetName() const { return plugin_.GetName(); }
 
 bool PluginSortingData::IsMaster() const {
-  return plugin_.IsMaster() || (plugin_.IsLightMaster() && !boost::iends_with(plugin_.GetName(), ".esp"));
+  return plugin_.IsMaster() || (plugin_.IsLightMaster() &&
+                                !boost::iends_with(plugin_.GetName(), ".esp"));
 }
 
 bool PluginSortingData::LoadsArchive() const { return plugin_.LoadsArchive(); }

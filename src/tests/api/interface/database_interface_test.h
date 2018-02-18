@@ -407,7 +407,10 @@ TEST_P(DatabaseInterfaceTest,
   auto tags = db_->GetKnownBashTags();
 
   std::set<std::string> expectedTags({
-      "RaceRelations", "C.Lighting", "Actors.ACBS", "C.Climate",
+      "RaceRelations",
+      "C.Lighting",
+      "Actors.ACBS",
+      "C.Climate",
   });
   EXPECT_EQ(expectedTags, tags);
 }
@@ -458,7 +461,8 @@ TEST_P(
   auto metadata = db_->GetPluginMetadata(blankEsm, true);
 
   std::set<File> expectedLoadAfter({
-      File(masterFile), File(blankDifferentEsm),
+      File(masterFile),
+      File(blankDifferentEsm),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
 }
@@ -648,7 +652,10 @@ TEST_P(DatabaseInterfaceTest,
   auto tags = db_->GetKnownBashTags();
 
   std::set<std::string> expectedTags({
-      "RaceRelations", "C.Lighting", "Actors.ACBS", "C.Climate",
+      "RaceRelations",
+      "C.Lighting",
+      "Actors.ACBS",
+      "C.Climate",
   });
   EXPECT_EQ(expectedTags, tags);
 }
@@ -686,7 +693,8 @@ TEST_P(
   auto tags = db_->GetKnownBashTags();
 
   std::set<std::string> expectedTags({
-      "Actors.ACBS", "C.Climate",
+      "Actors.ACBS",
+      "C.Climate",
   });
   EXPECT_EQ(expectedTags, tags);
 }

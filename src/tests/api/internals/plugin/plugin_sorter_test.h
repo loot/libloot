@@ -34,9 +34,9 @@ namespace loot {
 namespace test {
 class PluginSorterTest : public CommonGameTestFixture {
 protected:
-  PluginSorterTest() : 
-    game_(GetParam(), dataPath.parent_path(), localPath),
-    blankEslEsp("Blank.esl.esp") {}
+  PluginSorterTest() :
+      game_(GetParam(), dataPath.parent_path(), localPath),
+      blankEslEsp("Blank.esl.esp") {}
 
   void TearDown() {
     CommonGameTestFixture::TearDown();
@@ -46,7 +46,7 @@ protected:
     }
   }
 
-  void loadInstalledPlugins(Game& game_, bool headersOnly) {
+  void loadInstalledPlugins(Game &game_, bool headersOnly) {
     std::vector<std::string> plugins({
         masterFile,
         blankEsm,
@@ -79,7 +79,9 @@ protected:
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_CASE_P(, PluginSorterTest, ::testing::Values(GameType::tes4, GameType::fo4));
+INSTANTIATE_TEST_CASE_P(,
+                        PluginSorterTest,
+                        ::testing::Values(GameType::tes4, GameType::fo4));
 
 TEST_P(PluginSorterTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
   PluginSorter sorter;
@@ -92,22 +94,30 @@ TEST_P(PluginSorterTest,
        lightMasterFlaggedEspFilesShouldNotBeTreatedAsMasters) {
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     ASSERT_NO_THROW(
-      boost::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
+        boost::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
   }
 
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
-  auto esp = PluginSortingData(*dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp).get()), PluginMetadata());
+  auto esp = PluginSortingData(
+      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp).get()),
+      PluginMetadata());
   EXPECT_FALSE(esp.IsMaster());
 
-  auto master = PluginSortingData(*dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm).get()), PluginMetadata());
+  auto master = PluginSortingData(
+      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm).get()),
+      PluginMetadata());
   EXPECT_TRUE(master.IsMaster());
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    auto lightMaster = PluginSortingData(*dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl).get()), PluginMetadata());
+    auto lightMaster = PluginSortingData(
+        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl).get()),
+        PluginMetadata());
     EXPECT_TRUE(lightMaster.IsMaster());
 
-    auto lightMasterEsp = PluginSortingData(*dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp).get()), PluginMetadata());
+    auto lightMasterEsp = PluginSortingData(
+        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp).get()),
+        PluginMetadata());
     EXPECT_FALSE(lightMasterEsp.IsMaster());
   }
 }
@@ -219,7 +229,8 @@ TEST_P(PluginSorterTest,
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
   PluginMetadata plugin(blankEsp);
   plugin.SetLoadAfterFiles({
-      File(blankDifferentEsp), File(blankDifferentPluginDependentEsp),
+      File(blankDifferentEsp),
+      File(blankDifferentPluginDependentEsp),
   });
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
@@ -251,7 +262,8 @@ TEST_P(PluginSorterTest,
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
   PluginMetadata plugin(blankEsp);
   plugin.SetRequirements({
-      File(blankDifferentEsp), File(blankDifferentPluginDependentEsp),
+      File(blankDifferentEsp),
+      File(blankDifferentPluginDependentEsp),
   });
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 

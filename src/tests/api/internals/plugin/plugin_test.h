@@ -59,7 +59,7 @@ protected:
 
     if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
       ASSERT_NO_THROW(
-        boost::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
+          boost::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
     }
 
     // Create dummy archive files.

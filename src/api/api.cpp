@@ -72,8 +72,11 @@ LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
     const std::string& gameLocalPath) {
   auto logger = getLogger();
   if (logger) {
-    logger->info("Attempting to create a game handle with game path \"{}\" "
-      "and local path \"{}\"", gamePath, gameLocalPath);
+    logger->info(
+        "Attempting to create a game handle with game path \"{}\" "
+        "and local path \"{}\"",
+        gamePath,
+        gameLocalPath);
   }
 
   const std::string resolvedGamePath = ResolvePath(gamePath);

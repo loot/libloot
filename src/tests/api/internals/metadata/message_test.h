@@ -61,7 +61,8 @@ TEST_P(MessageTest,
 TEST_P(MessageTest,
        vectorContentConstructorShouldCreateAMessageWithGivenContentStrings) {
   MessageContents contents({
-      MessageContent("content1"), MessageContent("content2", french),
+      MessageContent("content1"),
+      MessageContent("content2", french),
   });
   Message message(MessageType::error, contents, "condition1");
 
@@ -74,7 +75,8 @@ TEST_P(
     MessageTest,
     vectorContentConstructorShouldThrowIfMultipleContentStringsAreGivenAndNoneAreEnglish) {
   MessageContents contents({
-      MessageContent("content1", german), MessageContent("content2", french),
+      MessageContent("content1", german),
+      MessageContent("content2", french),
   });
   EXPECT_THROW(Message(MessageType::error, contents, "condition1"),
                std::invalid_argument);
@@ -125,11 +127,11 @@ TEST_P(MessageTest, getContentShouldReturnADefaultContentObjectIfNoneExists) {
 TEST_P(
     MessageTest,
     getContentShouldSelectTheEnglishStringIfThereIsNoStringForTheGivenLanguage) {
-  Message message(
-      MessageType::say,
-      MessageContents({
-          MessageContent("content1", german), MessageContent("content2"),
-      }));
+  Message message(MessageType::say,
+                  MessageContents({
+                      MessageContent("content1", german),
+                      MessageContent("content2"),
+                  }));
 
   EXPECT_EQ("content2", message.GetContent(french).GetText());
 }
@@ -284,7 +286,8 @@ TEST_P(MessageTest, encodingAsYamlShouldStoreASingleContentStringInAVector) {
 
 TEST_P(MessageTest, encodingAsYamlShouldMultipleContentStringsInAVector) {
   MessageContents contents({
-      MessageContent("content1"), MessageContent("content2", french),
+      MessageContent("content1"),
+      MessageContent("content2", french),
   });
   Message message(MessageType::say, contents);
   YAML::Node node;
@@ -370,7 +373,8 @@ TEST_P(MessageTest, decodingFromYamlShouldStoreAListOfContentStringsCorrectly) {
   Message message = node.as<Message>();
 
   EXPECT_EQ(MessageContents({
-                MessageContent("content1"), MessageContent("content2", french),
+                MessageContent("content1"),
+                MessageContent("content2", french),
             }),
             message.GetContent());
 }
