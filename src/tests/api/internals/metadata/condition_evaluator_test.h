@@ -105,6 +105,7 @@ TEST_P(ConditionEvaluatorTest,
 
 TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
   PluginMetadata plugin(blankEsm);
+  plugin.SetGroup("group1");
 
   File file1(blankEsp);
   File file2(blankDifferentEsm, "", "file(\"" + missingEsp + "\")");
@@ -128,6 +129,8 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
   EXPECT_NO_THROW(plugin = evaluator_.evaluateAll(plugin));
 
   std::set<File> expectedFiles({file1});
+  EXPECT_EQ("group1", plugin.GetGroup());
+  EXPECT_TRUE(plugin.IsGroupExplicit());
   EXPECT_EQ(expectedFiles, plugin.GetLoadAfterFiles());
   EXPECT_EQ(expectedFiles, plugin.GetRequirements());
   EXPECT_EQ(expectedFiles, plugin.GetIncompatibilities());
@@ -135,6 +138,14 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
   EXPECT_EQ(std::set<Tag>({tag1}), plugin.GetTags());
   EXPECT_EQ(std::set<PluginCleaningData>({info1}), plugin.GetDirtyInfo());
   EXPECT_EQ(std::set<PluginCleaningData>({info1}), plugin.GetCleanInfo());
+}
+
+TEST_P(ConditionEvaluatorTest, evaluateAllShouldPreserveGroupExplicitness) {
+  PluginMetadata plugin(blankEsm);
+
+  EXPECT_NO_THROW(plugin = evaluator_.evaluateAll(plugin));
+  EXPECT_EQ("default", plugin.GetGroup());
+  EXPECT_FALSE(plugin.IsGroupExplicit());
 }
 }
 }

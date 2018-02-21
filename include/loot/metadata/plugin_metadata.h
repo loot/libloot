@@ -60,25 +60,18 @@ public:
    */
   LOOT_API PluginMetadata(const std::string& name);
 
-  // Merges from the given plugin into this one, unless there is already equal
-  // metadata present.  For 'enabled' and 'priority' metadata, use the given
-  // plugin's values, but if the 'priority' user value is zero, ignore it.
   /**
    * Merge metadata from the given PluginMetadata object into this object.
    *
    * If an equal metadata object already exists in this PluginMetadata object,
    * it is not duplicated. This object's priorities are replaced if the given
    * PluginMetadata object's priorities are explicit. This object's enabled
-   * state is replaced by the given object's state.
+   * state is replaced by the given object's state. This object's group is
+   * replaced by the given object's group if the latter is explicit.
    * @param plugin
    *        The plugin metadata to merge.
    */
   LOOT_API void MergeMetadata(const PluginMetadata& plugin);
-
-  // Returns metadata in this plugin not in the given plugin.
-  // For 'enabled', use this plugin's value.
-  // For 'priority', use 0 if the two plugin priorities are equal, and make it
-  // not explicit. Otherwise use this plugin's value.
 
   /**
    * Get metadata in this object that isn't present in the given PluginMetadata
@@ -87,8 +80,8 @@ public:
    *         The PluginMetadata object to compare against.
    * @return A PluginMetadata object containing the metadata in this object that
    *         is not in the given object. The returned object inherits this
-   *         object's enabled state. The returned object also inherits this
-   *         plugin's priorities, unless a priority is equal to the given
+   *         object's enabled state and group. The returned object also inherits
+   *         this plugin's priorities, unless a priority is equal to the given
    *         object's priority, in which case the returned object is given
    *         an implicit zero priority instead.
    */
@@ -111,6 +104,19 @@ public:
    * @return True if the metadata will be used during sorting, false otherwise.
    */
   LOOT_API bool IsEnabled() const;
+
+  /**
+   * Get the plugin's group.
+   * @return The name of the group this plugin belongs to.
+   */
+  LOOT_API std::string GetGroup() const;
+
+  /**
+   * Check if the plugin's group was set explicitly or if the default value was
+   * implied.
+   * @return True if the plugin's group was set explicitly, false otherwise.
+   */
+  LOOT_API bool IsGroupExplicit() const;
 
   /**
    * Get the plugin's local priority metadata.
@@ -189,6 +195,13 @@ public:
   LOOT_API void SetEnabled(const bool enabled);
 
   /**
+   * Set the plugin's group.
+   * @param group
+   *        The name of the group this plugin belongs to.
+   */
+  LOOT_API void SetGroup(const std::string& group);
+
+  /**
    * Set the plugin's local priority.
    * @param priority
    *        The value to set.
@@ -260,8 +273,8 @@ public:
 
   /**
    * Check if no plugin metadata is set.
-   * @return True if the local and global priorities are implicit and the
-   *         metadata containers are all empty, false otherwise.
+   * @return True if the group and local and global priorities are implicit and
+   *         the metadata containers are all empty, false otherwise.
    */
   LOOT_API bool HasNameOnly() const;
 
@@ -305,6 +318,8 @@ public:
 private:
   std::string name_;
   bool enabled_;
+  std::string group_;
+  bool isGroupExplicit_;
   Priority localPriority_;
   Priority globalPriority_;
   std::set<File> loadAfter_;

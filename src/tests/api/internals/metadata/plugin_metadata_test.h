@@ -51,20 +51,22 @@ INSTANTIATE_TEST_CASE_P(,
 
 TEST_P(
     PluginMetadataTest,
-    defaultConstructorShouldLeaveNameEmptyAndEnableMetadataAndLeaveAllOtherFieldsAtTheirDefaults) {
+    defaultConstructorShouldLeaveNameEmptyAndEnableMetadataAndSetGroupToDefault) {
   PluginMetadata plugin;
 
   EXPECT_TRUE(plugin.GetName().empty());
   EXPECT_TRUE(plugin.IsEnabled());
+  EXPECT_EQ("default", plugin.GetGroup());
 }
 
 TEST_P(
     PluginMetadataTest,
-    stringConstructorShouldSetNameToGivenStringAndEnableMetadataAndLeaveAllOtherFieldsAtTheirDefaults) {
+    stringConstructorShouldSetNameToGivenStringAndEnableMetadataAndSetGroupToDefault) {
   PluginMetadata plugin(blankEsm);
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.IsEnabled());
+  EXPECT_EQ("default", plugin.GetGroup());
 }
 
 TEST_P(PluginMetadataTest,
@@ -136,6 +138,27 @@ TEST_P(PluginMetadataTest,
   plugin1.MergeMetadata(plugin2);
 
   EXPECT_FALSE(plugin1.IsEnabled());
+}
+
+TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedGroupIfItIsExplicit) {
+  PluginMetadata plugin1;
+  PluginMetadata plugin2;
+
+  plugin1.SetGroup("group1");
+  plugin2.SetGroup("group2");
+  plugin1.MergeMetadata(plugin2);
+
+  EXPECT_EQ("group2", plugin1.GetGroup());
+}
+
+TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseMergedGroupIfItIsImplicit) {
+  PluginMetadata plugin1;
+  PluginMetadata plugin2;
+
+  plugin1.SetGroup("group1");
+  plugin1.MergeMetadata(plugin2);
+
+  EXPECT_EQ("group1", plugin1.GetGroup());
 }
 
 TEST_P(PluginMetadataTest,
@@ -530,6 +553,14 @@ TEST_P(PluginMetadataTest,
 }
 
 TEST_P(PluginMetadataTest,
+       hasNameOnlyShouldBeFalseIfTheGroupIsExplicit) {
+  PluginMetadata plugin;
+  plugin.SetGroup("group");
+
+  EXPECT_FALSE(plugin.HasNameOnly());
+}
+
+TEST_P(PluginMetadataTest,
        hasNameOnlyShouldBeFalseIfTheLocalPriorityIsExplicit) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLocalPriority(Priority(0));
@@ -657,6 +688,35 @@ TEST_P(PluginMetadataTest,
   emitter << plugin;
 
   EXPECT_STREQ("", emitter.c_str());
+}
+
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginOmittingAnImplicitGroup) {
+  PluginMetadata plugin(blankEsm);
+  plugin.SetLoadAfterFiles({ File(blankEsm) });
+  
+  YAML::Emitter emitter;
+  emitter << plugin;
+
+  EXPECT_STREQ(
+    "name: 'Blank.esm'\n"
+    "after:\n"
+    "  - 'Blank.esm'",
+    emitter.c_str());
+}
+
+TEST_P(PluginMetadataTest,
+       emittingAsYamlShouldOutputAPluginWithAnExplicitGroup) {
+  PluginMetadata plugin(blankEsm);
+  plugin.SetGroup("group1");
+
+  YAML::Emitter emitter;
+  emitter << plugin;
+
+  EXPECT_STREQ(
+    "name: 'Blank.esm'\n"
+    "group: 'group1'",
+    emitter.c_str());
 }
 
 TEST_P(PluginMetadataTest,

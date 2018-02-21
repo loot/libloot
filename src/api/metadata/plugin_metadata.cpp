@@ -40,11 +40,16 @@ using std::set;
 using std::vector;
 
 namespace loot {
-PluginMetadata::PluginMetadata() : enabled_(true) {}
+PluginMetadata::PluginMetadata() : 
+    enabled_(true), 
+    group_("default"), 
+    isGroupExplicit_(false) {}
 
 PluginMetadata::PluginMetadata(const std::string& n) :
     name_(n),
-    enabled_(true) {
+    enabled_(true),
+    group_("default"),
+    isGroupExplicit_(false) {
   // If the name passed ends in '.ghost', that should be trimmed.
   if (boost::iends_with(name_, ".ghost"))
     name_ = name_.substr(0, name_.length() - 6);
@@ -62,6 +67,11 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   // For 'enabled' and 'priority' metadata, use the given plugin's values,
   // but if the 'priority' user value is not explicit, ignore it.
   enabled_ = plugin.IsEnabled();
+
+  if (plugin.IsGroupExplicit()) {
+    group_ = plugin.GetGroup();
+    isGroupExplicit_ = true;
+  }
 
   if (plugin.localPriority_.IsExplicit()) {
     SetLocalPriority(plugin.localPriority_);
@@ -186,6 +196,12 @@ std::string PluginMetadata::GetLowercasedName() const {
 
 bool PluginMetadata::IsEnabled() const { return enabled_; }
 
+std::string PluginMetadata::GetGroup() const { return group_; }
+
+bool PluginMetadata::IsGroupExplicit() const {
+  return isGroupExplicit_;
+}
+
 Priority PluginMetadata::GetLocalPriority() const { return localPriority_; }
 
 Priority PluginMetadata::GetGlobalPriority() const { return globalPriority_; }
@@ -227,6 +243,11 @@ std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(
 
 void PluginMetadata::SetEnabled(const bool e) { enabled_ = e; }
 
+void PluginMetadata::SetGroup(const std::string& group) {
+  group_ = group;
+  isGroupExplicit_ = true;
+}
+
 void PluginMetadata::SetLocalPriority(const Priority& priority) {
   localPriority_ = priority;
 }
@@ -267,7 +288,8 @@ void PluginMetadata::SetLocations(const std::set<Location>& locations) {
 }
 
 bool PluginMetadata::HasNameOnly() const {
-  return !localPriority_.IsExplicit() && !globalPriority_.IsExplicit() &&
+  return !IsGroupExplicit() && !localPriority_.IsExplicit() && 
+         !globalPriority_.IsExplicit() &&
          loadAfter_.empty() && requirements_.empty() &&
          incompatibilities_.empty() && messages_.empty() && tags_.empty() &&
          dirtyInfo_.empty() && cleanInfo_.empty() && locations_.empty();

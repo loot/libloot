@@ -53,6 +53,9 @@ struct convert<loot::PluginMetadata> {
     if (!rhs.IsEnabled())
       node["enabled"] = rhs.IsEnabled();
 
+    if (rhs.IsGroupExplicit())
+      node["group"] = rhs.GetGroup();
+
     if (rhs.GetLocalPriority().IsExplicit())
       node["priority"] = rhs.GetLocalPriority().GetValue();
 
@@ -105,6 +108,9 @@ struct convert<loot::PluginMetadata> {
 
     if (node["enabled"])
       rhs.SetEnabled(node["enabled"].as<bool>());
+
+    if (node["group"])
+      rhs.SetGroup(node["group"].as<std::string>());
 
     // Read priority values as int to prevent values that are too large from
     // being converted to -128.
@@ -160,6 +166,9 @@ inline Emitter& operator<<(Emitter& out, const loot::PluginMetadata& rhs) {
 
     if (!rhs.IsEnabled())
       out << Key << "enabled" << Value << rhs.IsEnabled();
+
+    if (rhs.IsGroupExplicit())
+      out << Key << "group" << Value << YAML::SingleQuoted << rhs.GetGroup();
 
     if (rhs.GetLocalPriority().IsExplicit()) {
       out << Key << "priority" << Value << rhs.GetLocalPriority().GetValue();

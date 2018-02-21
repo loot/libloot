@@ -112,6 +112,10 @@ PluginMetadata ConditionEvaluator::evaluateAll(
   evaluatedMetadata.SetGlobalPriority(pluginMetadata.GetGlobalPriority());
   evaluatedMetadata.SetLocations(pluginMetadata.GetLocations());
 
+  if (pluginMetadata.IsGroupExplicit()) {
+    evaluatedMetadata.SetGroup(pluginMetadata.GetGroup());
+  }
+
   std::set<File> fileSet;
   for (const auto& file : pluginMetadata.GetLoadAfterFiles()) {
     if (evaluate(file.GetCondition()))
