@@ -54,6 +54,9 @@ Classes
 .. doxygenclass:: loot::File
    :members:
 
+.. doxygenclass:: loot::Group
+   :members:
+
 .. doxygenclass:: loot::Location
    :members:
 

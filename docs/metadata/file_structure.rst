@@ -10,12 +10,17 @@ The root of a metadata file is a key-value map. LOOT will recognise the followin
 
   A list of Bash Tags that are supported by the masterlist's game. These Bash Tags are used to provide autocomplete suggestions in LOOT's metadata editor.
 
-
 .. describe:: globals
 
   message list
 
   A list of message data structures for messages that are displayed independently of any plugin.
+
+.. describe:: groups
+
+  group set
+
+  A set of group data structures that represent the groups that plugins can belong to.
 
 .. describe:: plugins
 
@@ -33,20 +38,29 @@ Example
   bash_tags:
     - 'C.Climate'
     - 'Relev'
+
   globals:
     - type: say
       content: 'You are using the latest version of LOOT.'
- condition: 'version("LOOT", "0.5.0.0", ==)'
-    plugins:
-      - name: 'Armamentarium.esm'
-        tag:
-          - Relev
-      - name: 'ArmamentariumFran.esm'
-        tag:
-          - Relev
-      - name: 'Beautiful People 2ch-Ed.esm'
-        tag:
-          - Eyes
-          - Graphics
-          - Hair
-          - R.Relations
+      condition: 'version("LOOT", "0.5.0.0", ==)'
+
+  groups:
+    - name: 'Map Markers'
+      after:
+        - 'default'
+
+  plugins:
+    - name: 'Armamentarium.esm'
+      tag:
+        - Relev
+    - name: 'ArmamentariumFran.esm'
+      tag:
+        - Relev
+    - name: 'Beautiful People 2ch-Ed.esm'
+      tag:
+        - Eyes
+        - Graphics
+        - Hair
+        - R.Relations
+    - name: 'More Map Markers.esp'
+      group: 'Map Markers'

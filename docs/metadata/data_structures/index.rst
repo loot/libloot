@@ -9,6 +9,7 @@ LOOT expects metadata to be laid out using a certain set of data structures, des
 
   tag
   file
+  group
   localised_content
   message
   location

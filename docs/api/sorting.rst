@@ -25,7 +25,8 @@ Create plugin graph vertices
 
 Once loaded, a directed graph is created and the plugins are added to it in
 lexicographical order as vertices. Any metadata a plugin has in the masterlist
-and userlist are then merged into its vertex's data store.
+and userlist are then merged into its vertex's data store. Plugin group
+dependencies are also resolved and added as additional load after plugins.
 
 Create plugin graph edges
 ==============================
