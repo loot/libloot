@@ -36,6 +36,7 @@
 #include "tests/api/internals/metadata/condition_grammar_test.h"
 #include "tests/api/internals/metadata/conditional_metadata_test.h"
 #include "tests/api/internals/metadata/file_test.h"
+#include "tests/api/internals/metadata/group_test.h"
 #include "tests/api/internals/metadata/location_test.h"
 #include "tests/api/internals/metadata/message_content_test.h"
 #include "tests/api/internals/metadata/message_test.h"
