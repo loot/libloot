@@ -29,7 +29,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "api/plugin/plugin.h"
+#include "api/plugin.h"
 
 namespace loot {
 class GameCache {

@@ -22,10 +22,10 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_PLUGIN_PLUGIN_SORTER_TEST
-#define LOOT_TESTS_API_INTERNALS_PLUGIN_PLUGIN_SORTER_TEST
+#ifndef LOOT_TESTS_API_INTERNALS_SORTING_PLUGIN_SORTER_TEST
+#define LOOT_TESTS_API_INTERNALS_SORTING_PLUGIN_SORTER_TEST
 
-#include "api/plugin/plugin_sorter.h"
+#include "api/sorting/plugin_sorter.h"
 
 #include "loot/exception/cyclic_interaction_error.h"
 #include "tests/common_game_test_fixture.h"

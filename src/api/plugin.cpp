@@ -22,7 +22,7 @@
     <https://www.gnu.org/licenses/>.
     */
 
-#include "api/plugin/plugin.h"
+#include "api/plugin.h"
 
 #include <regex>
 

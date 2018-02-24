@@ -42,33 +42,6 @@ using std::string;
 using std::vector;
 
 namespace loot {
-PluginSortingData::PluginSortingData(const Plugin& plugin,
-                                     const PluginMetadata&& metadata) :
-    plugin_(plugin),
-    PluginMetadata(metadata) {}
-
-std::string PluginSortingData::GetName() const { return plugin_.GetName(); }
-
-bool PluginSortingData::IsMaster() const {
-  return plugin_.IsMaster() || (plugin_.IsLightMaster() &&
-                                !boost::iends_with(plugin_.GetName(), ".esp"));
-}
-
-bool PluginSortingData::LoadsArchive() const { return plugin_.LoadsArchive(); }
-
-std::vector<std::string> PluginSortingData::GetMasters() const {
-  return plugin_.GetMasters();
-}
-
-size_t PluginSortingData::NumOverrideFormIDs() const {
-  return plugin_.NumOverrideFormIDs();
-}
-
-bool PluginSortingData::DoFormIDsOverlap(
-    const PluginSortingData& plugin) const {
-  return plugin_.DoFormIDsOverlap(plugin.plugin_);
-}
-
 typedef boost::graph_traits<PluginGraph>::vertex_iterator vertex_it;
 typedef boost::graph_traits<PluginGraph>::edge_descriptor edge_t;
 typedef boost::graph_traits<PluginGraph>::edge_iterator edge_it;

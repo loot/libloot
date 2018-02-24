@@ -32,7 +32,7 @@
 
 #include "api/api_database.h"
 #include "api/helpers/logging.h"
-#include "api/plugin/plugin_sorter.h"
+#include "api/sorting/plugin_sorter.h"
 #include "loot/exception/file_access_error.h"
 
 #ifdef _WIN32

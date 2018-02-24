@@ -22,10 +22,10 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_PLUGIN_PLUGIN_TEST
-#define LOOT_TESTS_API_INTERNALS_PLUGIN_PLUGIN_TEST
+#ifndef LOOT_TESTS_API_INTERNALS_PLUGIN_TEST
+#define LOOT_TESTS_API_INTERNALS_PLUGIN_TEST
 
-#include "api/plugin/plugin.h"
+#include "api/plugin.h"
 
 #include "api/game/game.h"
 #include "tests/common_game_test_fixture.h"

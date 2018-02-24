@@ -45,8 +45,8 @@
 #include "tests/api/internals/metadata/priority_test.h"
 #include "tests/api/internals/metadata/tag_test.h"
 #include "tests/api/internals/metadata_list_test.h"
-#include "tests/api/internals/plugin/plugin_sorter_test.h"
-#include "tests/api/internals/plugin/plugin_test.h"
+#include "tests/api/internals/sorting/plugin_sorter_test.h"
+#include "tests/api/internals/plugin_test.h"
 
 TEST(ModuloOperator, shouldConformToTheCpp11Standard) {
   // C++11 defines the modulo operator more strongly

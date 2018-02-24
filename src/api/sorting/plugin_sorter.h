@@ -22,8 +22,8 @@
     <https://www.gnu.org/licenses/>.
     */
 
-#ifndef LOOT_API_PLUGIN_PLUGIN_SORTER
-#define LOOT_API_PLUGIN_PLUGIN_SORTER
+#ifndef LOOT_API_SORTING_PLUGIN_SORTER
+#define LOOT_API_SORTING_PLUGIN_SORTER
 
 #include <map>
 
@@ -32,31 +32,10 @@
 #include <boost/graph/graph_traits.hpp>
 
 #include "api/game/game.h"
-#include "api/plugin/plugin.h"
+#include "api/plugin.h"
+#include "api/sorting/plugin_sorting_data.h"
 
 namespace loot {
-class PluginSortingData : private PluginMetadata {
-public:
-  PluginSortingData(const Plugin& plugin, const PluginMetadata&& metadata);
-
-  std::string GetName() const;
-  bool IsMaster() const;
-  bool LoadsArchive() const;
-  std::vector<std::string> GetMasters() const;
-  size_t NumOverrideFormIDs() const;
-  bool DoFormIDsOverlap(const PluginSortingData& plugin) const;
-
-  using PluginMetadata::GetGlobalPriority;
-  using PluginMetadata::GetLoadAfterFiles;
-  using PluginMetadata::GetLocalPriority;
-  using PluginMetadata::GetRequirements;
-  using PluginMetadata::SetGlobalPriority;
-  using PluginMetadata::SetLocalPriority;
-
-private:
-  const Plugin& plugin_;
-};
-
 typedef boost::adjacency_list<boost::listS,
                               boost::listS,
                               boost::directedS,

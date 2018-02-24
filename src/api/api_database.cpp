@@ -32,7 +32,7 @@
 #include "api/game/game.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/plugin_metadata.h"
-#include "api/plugin/plugin_sorter.h"
+#include "api/sorting/plugin_sorter.h"
 #include "loot/metadata/group.h"
 #include "loot/exception/file_access_error.h"
 

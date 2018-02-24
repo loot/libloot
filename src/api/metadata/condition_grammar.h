@@ -47,7 +47,7 @@
 #include "api/helpers/logging.h"
 #include "api/helpers/version.h"
 #include "api/metadata/condition_evaluator.h"
-#include "api/plugin/plugin.h"
+#include "api/plugin.h"
 #include "loot/exception/condition_syntax_error.h"
 
 namespace loot {

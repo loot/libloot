@@ -30,7 +30,7 @@ along with LOOT.  If not, see
 #include <gtest/gtest.h>
 
 #include "api/metadata/message_content.h"
-#include "api/plugin/plugin.h"
+#include "api/plugin.h"
 #include "loot/metadata/file.h"
 #include "loot/metadata/location.h"
 #include "loot/metadata/message.h"
