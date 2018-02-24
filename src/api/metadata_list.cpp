@@ -30,6 +30,7 @@
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
 #include "api/metadata/condition_evaluator.h"
+#include "api/metadata/yaml/group.h"
 #include "api/metadata/yaml/plugin_metadata.h"
 #include "loot/exception/file_access_error.h"
 
@@ -69,6 +70,11 @@ void MetadataList::Load(const boost::filesystem::path& filepath) {
   if (metadataList["bash_tags"])
     bashTags_ = metadataList["bash_tags"].as<std::set<std::string>>();
 
+  if (metadataList["groups"])
+    groups_ = metadataList["groups"].as<std::unordered_set<Group>>();
+
+  groups_.insert(Group());
+
   if (logger) {
     logger->debug("File loaded successfully.");
   }
@@ -85,6 +91,9 @@ void MetadataList::Save(const boost::filesystem::path& filepath) const {
 
   if (!bashTags_.empty())
     emitter << YAML::Key << "bash_tags" << YAML::Value << bashTags_;
+
+  if (!groups_.empty())
+    emitter << YAML::Key << "groups" << YAML::Value << groups_;
 
   if (!messages_.empty())
     emitter << YAML::Key << "globals" << YAML::Value << messages_;
@@ -126,6 +135,13 @@ std::list<PluginMetadata> MetadataList::Plugins() const {
 std::vector<Message> MetadataList::Messages() const { return messages_; }
 
 std::set<std::string> MetadataList::BashTags() const { return bashTags_; }
+
+std::unordered_set<Group> MetadataList::Groups() const { return groups_; }
+
+void MetadataList::SetGroups(const std::unordered_set<Group>& groups) {
+  groups_ = groups;
+  groups_.insert(Group());
+}
 
 // Merges multiple matching regex entries if any are found.
 PluginMetadata MetadataList::FindPlugin(const PluginMetadata& plugin) const {

@@ -68,6 +68,7 @@ protected:
 
   const boost::filesystem::path metadataPath;
   const boost::filesystem::path savedMetadataPath;
+  const boost::filesystem::path groupMetadataPath;
   const boost::filesystem::path missingMetadataPath;
   const std::vector<boost::filesystem::path> invalidMetadataPaths;
 };
@@ -116,6 +117,24 @@ TEST_P(MetadataListTest, loadShouldLoadBashTags) {
 
   EXPECT_EQ(std::set<std::string>({"C.Climate", "Relev"}),
             metadataList.BashTags());
+}
+
+TEST_P(MetadataListTest, loadShouldLoadGroups) {
+  MetadataList metadataList;
+  ASSERT_NO_THROW(metadataList.Load(metadataPath));
+
+  auto groups = metadataList.Groups();
+
+  EXPECT_EQ(3, groups.size());
+
+  EXPECT_EQ(1, groups.count(Group("default")));
+  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+
+  EXPECT_EQ(1, groups.count(Group("group1")));
+  EXPECT_EQ(std::unordered_set<std::string>({ "group2" }), groups.find(Group("group1"))->GetAfterGroups());
+
+  EXPECT_EQ(1, groups.count(Group("group2")));
+  EXPECT_EQ(std::unordered_set<std::string>({ "default" }), groups.find(Group("group2"))->GetAfterGroups());
 }
 
 TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
@@ -169,6 +188,9 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   EXPECT_EQ(std::set<std::string>({"C.Climate", "Relev"}),
             metadataList.BashTags());
 
+  EXPECT_EQ(std::unordered_set<Group>({ Group("default"), Group("group1"), Group("group2") }),
+    metadataList.Groups());
+
   EXPECT_EQ(std::vector<Message>({
                 Message(MessageType::say, "A global message."),
             }),
@@ -204,6 +226,25 @@ TEST_P(MetadataListTest, clearShouldClearLoadedData) {
   EXPECT_TRUE(metadataList.Messages().empty());
   EXPECT_TRUE(metadataList.Plugins().empty());
   EXPECT_TRUE(metadataList.BashTags().empty());
+}
+
+TEST_P(MetadataListTest, setGroupsShouldReplaceExistingGroups) {
+  MetadataList metadataList;
+  ASSERT_NO_THROW(metadataList.Load(metadataPath));
+
+  metadataList.SetGroups({
+    Group("group4")
+  });
+
+  auto groups = metadataList.Groups();
+
+  EXPECT_EQ(2, groups.size());
+
+  EXPECT_EQ(1, groups.count(Group("default")));
+  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+
+  EXPECT_EQ(1, groups.count(Group("group4")));
+  EXPECT_TRUE(groups.find(Group("group4"))->GetAfterGroups().empty());
 }
 
 TEST_P(
@@ -329,7 +370,7 @@ TEST_P(
 
   plugin = metadataList.FindPlugin(PluginMetadata(blankEsp));
   EXPECT_EQ(blankEsp, plugin.GetName());
-  EXPECT_TRUE(plugin.HasNameOnly());
+  EXPECT_TRUE(plugin.GetDirtyInfo().empty());
 }
 }
 }

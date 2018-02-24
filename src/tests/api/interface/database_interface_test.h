@@ -103,6 +103,13 @@ protected:
     userlist << "bash_tags:" << endl
              << "  - RaceRelations" << endl
              << "  - C.Lighting" << endl
+             << "groups:" << endl
+             << "  - name: group2" << endl
+             << "    after:" << endl
+             << "      - default" << endl
+             << "  - name: group3" << endl
+             << "    after:" << endl
+             << "      - group1" << endl
              << "globals:" << endl
              << "  - type: say" << endl
              << "    content: '" << generalUserlistMessage << "'" << endl
@@ -394,6 +401,108 @@ TEST_P(
       db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
 
   EXPECT_TRUE(db_->IsLatestMasterlist(masterlistPath.string(), branch_));
+}
+
+TEST_P(DatabaseInterfaceTest,
+       getGroupsShouldReturnAllGroupsListedInTheLoadedMetadata) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+
+  ASSERT_NO_THROW(
+      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+
+  auto groups = db_->GetGroups();
+
+  EXPECT_EQ(4, groups.size());
+
+  EXPECT_EQ(1, groups.count(Group("default")));
+  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+
+  EXPECT_EQ(1, groups.count(Group("group1")));
+  EXPECT_TRUE(groups.find(Group("group1"))->GetAfterGroups().empty());
+
+  EXPECT_EQ(1, groups.count(Group("group2")));
+  EXPECT_EQ(std::unordered_set<std::string>({ "group1", "default" }), groups.find(Group("group2"))->GetAfterGroups());
+
+  EXPECT_EQ(1, groups.count(Group("group3")));
+  EXPECT_EQ(std::unordered_set<std::string>({ "group1" }), groups.find(Group("group3"))->GetAfterGroups());
+}
+
+TEST_P(DatabaseInterfaceTest,
+       getGroupsShouldReturnDefaultGroupEvenIfNoMetadataIsLoaded) {
+  auto groups = db_->GetGroups();
+
+  EXPECT_EQ(1, groups.size());
+
+  EXPECT_EQ("default", groups.begin()->GetName());
+  EXPECT_TRUE(groups.begin()->GetAfterGroups().empty());
+}
+
+TEST_P(DatabaseInterfaceTest,
+  getGroupsShouldNotIncludeUserlistMetadataIfParameterIsFalse) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+
+  ASSERT_NO_THROW(
+    db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+
+  auto groups = db_->GetGroups(false);
+
+  EXPECT_EQ(3, groups.size());
+
+  EXPECT_EQ(1, groups.count(Group("default")));
+  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+
+  EXPECT_EQ(1, groups.count(Group("group1")));
+  EXPECT_TRUE(groups.find(Group("group1"))->GetAfterGroups().empty());
+
+  EXPECT_EQ(1, groups.count(Group("group2")));
+  EXPECT_EQ(std::unordered_set<std::string>({ "group1" }), groups.find(Group("group2"))->GetAfterGroups());
+}
+
+TEST_P(DatabaseInterfaceTest,
+  getUserGroupsShouldReturnOnlyGroupMetadataFromTheUserlist) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+
+  ASSERT_NO_THROW(
+    db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+
+  auto groups = db_->GetUserGroups();
+
+  EXPECT_EQ(3, groups.size());
+
+  EXPECT_EQ(1, groups.count(Group("default")));
+  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+
+  EXPECT_EQ(1, groups.count(Group("group2")));
+  EXPECT_EQ(std::unordered_set<std::string>({ "default" }), groups.find(Group("group2"))->GetAfterGroups());
+
+  EXPECT_EQ(1, groups.count(Group("group3")));
+  EXPECT_EQ(std::unordered_set<std::string>({ "group1" }), groups.find(Group("group3"))->GetAfterGroups());
+}
+
+TEST_P(DatabaseInterfaceTest,
+  setUserGroupsShouldReplaceExistingUserGroupMetadataWithTheGivenMetadata) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+
+  ASSERT_NO_THROW(
+    db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+
+  db_->SetUserGroups(std::unordered_set<Group>({
+    Group("group4"),
+  }));
+
+  auto groups = db_->GetUserGroups();
+
+  EXPECT_EQ(2, groups.size());
+
+  EXPECT_EQ(1, groups.count(Group("default")));
+  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+
+  EXPECT_EQ(1, groups.count(Group("group4")));
+  EXPECT_TRUE(groups.find(Group("group4"))->GetAfterGroups().empty());
 }
 
 TEST_P(DatabaseInterfaceTest,

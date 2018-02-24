@@ -33,6 +33,7 @@
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/plugin_metadata.h"
 #include "api/plugin/plugin_sorter.h"
+#include "loot/metadata/group.h"
 #include "loot/exception/file_access_error.h"
 
 namespace loot {
@@ -158,6 +159,41 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(
   }
 
   return masterlistMessages;
+}
+
+std::unordered_set<Group> ApiDatabase::GetGroups(bool includeUserMetadata) const {
+  if (!includeUserMetadata) {
+    return masterlist_.Groups();
+  }
+
+  std::unordered_set<Group> mergedGroups;
+
+  auto userlistGroups = userlist_.Groups();
+  for (const auto& group : masterlist_.Groups()) {
+    auto userlistGroup = userlistGroups.find(group.GetName());
+    if (userlistGroup != userlistGroups.end()) {
+      auto afterGroups = group.GetAfterGroups();
+      auto userlistAfterGroups = userlistGroup->GetAfterGroups();
+
+      afterGroups.insert(userlistAfterGroups.begin(), userlistAfterGroups.end());
+      mergedGroups.insert(Group(group.GetName(), afterGroups));
+    } else {
+      mergedGroups.insert(group);
+    }
+  }
+  mergedGroups.insert(userlistGroups.begin(), userlistGroups.end());
+
+  // Insert the default group if it's not already present.
+  mergedGroups.insert(Group());
+
+  return mergedGroups;
+}
+
+std::unordered_set<Group> ApiDatabase::GetUserGroups() const {
+  return userlist_.Groups();
+}
+void ApiDatabase::SetUserGroups(const std::unordered_set<Group>& groups) {
+  userlist_.SetGroups(groups);
 }
 
 PluginMetadata ApiDatabase::GetPluginMetadata(const std::string& plugin,

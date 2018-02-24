@@ -72,6 +72,11 @@ protected:
                << "  - type: say" << endl
                << "    content: '" << generalMasterlistMessage << "'" << endl
                << "    condition: 'file(\"" << missingEsp << "\")'" << endl
+               << "groups:" << endl
+               << "  - name: group1" << endl
+               << "  - name: group2" << endl
+               << "    after:" << endl
+               << "      - group1" << endl
                << "plugins:" << endl
                << "  - name: " << blankEsm << endl
                << "    after:" << endl

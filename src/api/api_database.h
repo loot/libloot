@@ -68,6 +68,10 @@ struct ApiDatabase : public DatabaseInterface {
   std::vector<Message> GetGeneralMessages(
       bool evaluateConditions = false) const;
 
+  std::unordered_set<Group> GetGroups(bool includeUserMetadata = true) const;
+  std::unordered_set<Group> GetUserGroups() const;
+  void SetUserGroups(const std::unordered_set<Group>& groups);
+
   PluginMetadata GetPluginMetadata(const std::string& plugin,
                                    bool includeUserMetadata = true,
                                    bool evaluateConditions = false) const;

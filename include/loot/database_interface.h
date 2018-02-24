@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 
+#include "loot/metadata/group.h"
 #include "loot/metadata/message.h"
 #include "loot/metadata/plugin_metadata.h"
 #include "loot/struct/masterlist_info.h"
@@ -179,6 +180,33 @@ public:
    */
   virtual std::vector<Message> GetGeneralMessages(
       bool evaluateConditions = false) const = 0;
+
+  /**
+   * @brief Gets the groups that are defined in the loaded metadata lists.
+   * @returns An unordered set of Group objects.
+   */
+  virtual std::unordered_set<Group> GetGroups(bool includeUserMetadata = true) const = 0;
+
+  /**
+   * @brief Gets the groups that are defined or extended in the loaded userlist.
+   * @param includeUserMetadata
+   *        If true, any group metadata present in the userlist is included in
+   *        the returned metadata, otherwise the metadata returned only includes
+   *        metadata from the masterlist.
+   * @returns An unordered set of Group objects.
+   */
+  virtual std::unordered_set<Group> GetUserGroups() const = 0;
+
+  /**
+   * @brief Sets the group definitions to store in the userlist, overwriting any
+   *        existing definitions there.
+   * @param groups
+   *        The unordered set of Group objects to set.
+   */
+  virtual void SetUserGroups(const std::unordered_set<Group>& groups) = 0;
+
+  /**
+   * @brief Set the groups
 
   /**
    *  @}

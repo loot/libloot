@@ -33,6 +33,7 @@
 
 #include "api/metadata/condition_evaluator.h"
 #include "loot/metadata/plugin_metadata.h"
+#include "loot/metadata/group.h"
 
 namespace loot {
 class MetadataList {
@@ -44,6 +45,9 @@ public:
   std::list<PluginMetadata> Plugins() const;
   std::vector<Message> Messages() const;
   std::set<std::string> BashTags() const;
+  std::unordered_set<Group> Groups() const;
+
+  void SetGroups(const std::unordered_set<Group>& groups);
 
   // Merges multiple matching regex entries if any are found.
   PluginMetadata FindPlugin(const PluginMetadata& plugin) const;
@@ -59,6 +63,7 @@ public:
   void EvalAllConditions(const ConditionEvaluator& conditionEvaluator);
 
 protected:
+  std::unordered_set<Group> groups_;
   std::set<std::string> bashTags_;
   std::unordered_set<PluginMetadata> plugins_;
   std::list<PluginMetadata> regexPlugins_;
