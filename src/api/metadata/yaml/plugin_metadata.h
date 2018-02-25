@@ -56,12 +56,6 @@ struct convert<loot::PluginMetadata> {
     if (rhs.IsGroupExplicit())
       node["group"] = rhs.GetGroup();
 
-    if (rhs.GetLocalPriority().IsExplicit())
-      node["priority"] = rhs.GetLocalPriority().GetValue();
-
-    if (rhs.GetGlobalPriority().IsExplicit())
-      node["global_priority"] = rhs.GetGlobalPriority().GetValue();
-
     if (!rhs.GetLoadAfterFiles().empty())
       node["after"] = rhs.GetLoadAfterFiles();
     if (!rhs.GetRequirements().empty())
@@ -112,16 +106,6 @@ struct convert<loot::PluginMetadata> {
     if (node["group"])
       rhs.SetGroup(node["group"].as<std::string>());
 
-    // Read priority values as int to prevent values that are too large from
-    // being converted to -128.
-    if (node["priority"]) {
-      rhs.SetLocalPriority(loot::Priority(node["priority"].as<int>()));
-    }
-
-    if (node["global_priority"]) {
-      rhs.SetGlobalPriority(loot::Priority(node["global_priority"].as<int>()));
-    }
-
     if (node["after"])
       rhs.SetLoadAfterFiles(node["after"].as<std::set<loot::File>>());
     if (node["req"])
@@ -169,15 +153,6 @@ inline Emitter& operator<<(Emitter& out, const loot::PluginMetadata& rhs) {
 
     if (rhs.IsGroupExplicit())
       out << Key << "group" << Value << YAML::SingleQuoted << rhs.GetGroup();
-
-    if (rhs.GetLocalPriority().IsExplicit()) {
-      out << Key << "priority" << Value << rhs.GetLocalPriority().GetValue();
-    }
-
-    if (rhs.GetGlobalPriority().IsExplicit()) {
-      out << Key << "global_priority" << Value
-          << rhs.GetGlobalPriority().GetValue();
-    }
 
     if (!rhs.GetLoadAfterFiles().empty())
       out << Key << "after" << Value << rhs.GetLoadAfterFiles();

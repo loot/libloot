@@ -52,31 +52,6 @@ the group-derived plugin to the plugin would cause a cycle, and if not the edge
 is recorded. Once all potential edges have been checked, the recorded edges are
 added to the graph.
 
-At this point, all explicit interdependencies have been graphed. Plugin priority
-metadata values must now be propagated down the dependency trees to ensure that
-priority edges are added correctly later in the process. To do this:
-
-1. Create a list of all vertices with a global or non-global priority value
-   greater than zero.
-2. Sort the list in order of decreasing priority value.
-3. For each vertex, perform a depth-first search, setting priorities at each
-   vertex visited until equal or larger values are encountered.
-
-Now that the priorities have been propagated, the priority edges can be added.
-For each plugin, if it has a global priority value of zero, overrides no records
-and loads no archive, skip it, otherwise iterate over all other plugins and:
-
-* If the other plugin's global and non-global priority values equal the
-  plugin's own values, or if both plugins have a global priority of zero and
-  have no FormIDs in common, skip the other plugin.
-* Otherwise, add an edge from the plugin with lower global priority to the
-  plugin with higher global priority, if that edge does not cause a cycle. A
-  cycle is caused if a circular dependency is introduced, for example for two
-  vertices A and B, A -> B -> A is a cycle.
-
-  If the global priorities are equal, compare the non-global priorities
-  instead.
-
 Plugin overlap edges are then added. Two plugins overlap if they contain the
 same FormID, i.e. if they both edit the same record or if one edits a record the
 other plugin adds.

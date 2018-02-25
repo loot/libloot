@@ -108,8 +108,6 @@ PluginMetadata ConditionEvaluator::evaluateAll(
 
   PluginMetadata evaluatedMetadata(pluginMetadata.GetName());
   evaluatedMetadata.SetEnabled(pluginMetadata.IsEnabled());
-  evaluatedMetadata.SetLocalPriority(pluginMetadata.GetLocalPriority());
-  evaluatedMetadata.SetGlobalPriority(pluginMetadata.GetGlobalPriority());
   evaluatedMetadata.SetLocations(pluginMetadata.GetLocations());
 
   if (pluginMetadata.IsGroupExplicit()) {

@@ -40,9 +40,9 @@ using std::set;
 using std::vector;
 
 namespace loot {
-PluginMetadata::PluginMetadata() : 
-    enabled_(true), 
-    group_("default"), 
+PluginMetadata::PluginMetadata() :
+    enabled_(true),
+    group_("default"),
     isGroupExplicit_(false) {}
 
 PluginMetadata::PluginMetadata(const std::string& n) :
@@ -64,21 +64,13 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   if (plugin.HasNameOnly())
     return;
 
-  // For 'enabled' and 'priority' metadata, use the given plugin's values,
-  // but if the 'priority' user value is not explicit, ignore it.
+  // For 'enabled' and 'group' metadata, use the given plugin's values,
+  // but if the 'group' value is not explicit, ignore it.
   enabled_ = plugin.IsEnabled();
 
   if (plugin.IsGroupExplicit()) {
     group_ = plugin.GetGroup();
     isGroupExplicit_ = true;
-  }
-
-  if (plugin.localPriority_.IsExplicit()) {
-    SetLocalPriority(plugin.localPriority_);
-  }
-
-  if (plugin.globalPriority_.IsExplicit()) {
-    SetGlobalPriority(plugin.globalPriority_);
   }
 
   // Merge the following. If any files in the source already exist in the
@@ -202,10 +194,6 @@ bool PluginMetadata::IsGroupExplicit() const {
   return isGroupExplicit_;
 }
 
-Priority PluginMetadata::GetLocalPriority() const { return localPriority_; }
-
-Priority PluginMetadata::GetGlobalPriority() const { return globalPriority_; }
-
 std::set<File> PluginMetadata::GetLoadAfterFiles() const { return loadAfter_; }
 
 std::set<File> PluginMetadata::GetRequirements() const { return requirements_; }
@@ -248,14 +236,6 @@ void PluginMetadata::SetGroup(const std::string& group) {
   isGroupExplicit_ = true;
 }
 
-void PluginMetadata::SetLocalPriority(const Priority& priority) {
-  localPriority_ = priority;
-}
-
-void PluginMetadata::SetGlobalPriority(const Priority& priority) {
-  globalPriority_ = priority;
-}
-
 void PluginMetadata::SetLoadAfterFiles(const std::set<File>& l) {
   loadAfter_ = l;
 }
@@ -288,8 +268,7 @@ void PluginMetadata::SetLocations(const std::set<Location>& locations) {
 }
 
 bool PluginMetadata::HasNameOnly() const {
-  return !IsGroupExplicit() && !localPriority_.IsExplicit() && 
-         !globalPriority_.IsExplicit() &&
+  return !IsGroupExplicit() &&
          loadAfter_.empty() && requirements_.empty() &&
          incompatibilities_.empty() && messages_.empty() && tags_.empty() &&
          dirtyInfo_.empty() && cleanInfo_.empty() && locations_.empty();

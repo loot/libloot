@@ -36,7 +36,6 @@
 #include "loot/metadata/location.h"
 #include "loot/metadata/message.h"
 #include "loot/metadata/plugin_cleaning_data.h"
-#include "loot/metadata/priority.h"
 #include "loot/metadata/tag.h"
 
 namespace loot {
@@ -64,10 +63,9 @@ public:
    * Merge metadata from the given PluginMetadata object into this object.
    *
    * If an equal metadata object already exists in this PluginMetadata object,
-   * it is not duplicated. This object's priorities are replaced if the given
-   * PluginMetadata object's priorities are explicit. This object's enabled
-   * state is replaced by the given object's state. This object's group is
-   * replaced by the given object's group if the latter is explicit.
+   * it is not duplicated. This object's enabled state is replaced by the given
+   * object's state. This object's group is replaced by the given object's group
+   * if the latter is explicit.
    * @param plugin
    *        The plugin metadata to merge.
    */
@@ -80,10 +78,7 @@ public:
    *         The PluginMetadata object to compare against.
    * @return A PluginMetadata object containing the metadata in this object that
    *         is not in the given object. The returned object inherits this
-   *         object's enabled state and group. The returned object also inherits
-   *         this plugin's priorities, unless a priority is equal to the given
-   *         object's priority, in which case the returned object is given
-   *         an implicit zero priority instead.
+   *         object's enabled state and group.
    */
   LOOT_API PluginMetadata NewMetadata(const PluginMetadata& plugin) const;
 
@@ -117,18 +112,6 @@ public:
    * @return True if the plugin's group was set explicitly, false otherwise.
    */
   LOOT_API bool IsGroupExplicit() const;
-
-  /**
-   * Get the plugin's local priority metadata.
-   * @return The plugin's local priority metadata.
-   */
-  LOOT_API Priority GetLocalPriority() const;
-
-  /**
-   * Get the plugin's global priority metadata.
-   * @return The plugin's global priority metadata.
-   */
-  LOOT_API Priority GetGlobalPriority() const;
 
   /**
    * Get the plugins that the plugin must load after.
@@ -202,20 +185,6 @@ public:
   LOOT_API void SetGroup(const std::string& group);
 
   /**
-   * Set the plugin's local priority.
-   * @param priority
-   *        The value to set.
-   */
-  LOOT_API void SetLocalPriority(const Priority& priority);
-
-  /**
-   * Set the plugin's local priority.
-   * @param priority
-   *        The value to set.
-   */
-  LOOT_API void SetGlobalPriority(const Priority& priority);
-
-  /**
    * Set the files that the plugin must load after.
    * @param after
    *        The files to set.
@@ -273,8 +242,8 @@ public:
 
   /**
    * Check if no plugin metadata is set.
-   * @return True if the group and local and global priorities are implicit and
-   *         the metadata containers are all empty, false otherwise.
+   * @return True if the group is implicit and the metadata containers are all
+   *         empty, false otherwise.
    */
   LOOT_API bool HasNameOnly() const;
 
@@ -320,8 +289,6 @@ private:
   bool enabled_;
   std::string group_;
   bool isGroupExplicit_;
-  Priority localPriority_;
-  Priority globalPriority_;
   std::set<File> loadAfter_;
   std::set<File> requirements_;
   std::set<File> incompatibilities_;

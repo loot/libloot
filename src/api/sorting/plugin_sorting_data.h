@@ -43,13 +43,9 @@ public:
   std::unordered_set<std::string> GetAfterGroupPlugins() const;
   void SetAfterGroupPlugins(std::unordered_set<std::string> plugins);
 
-  using PluginMetadata::GetGlobalPriority;
   using PluginMetadata::GetGroup;
   using PluginMetadata::GetLoadAfterFiles;
-  using PluginMetadata::GetLocalPriority;
   using PluginMetadata::GetRequirements;
-  using PluginMetadata::SetGlobalPriority;
-  using PluginMetadata::SetLocalPriority;
 
 private:
   const Plugin& plugin_;

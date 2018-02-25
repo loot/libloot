@@ -53,24 +53,6 @@ This is the structure that brings all the others together, and forms the main co
   dependency when combined in isolation with the third rule, but having all
   three rules applied causes a cycle.
 
-.. describe:: priority
-
-  ``integer``
-
-  Modifies plugin position relative to others that change one or more of the same records, but which are otherwise unrelated (ie. neither plugin lists the other as a master, requirement, or in its ``after`` list). Plugins that don't change any of the same records are not compared, unless one of the plugins contains only a header record.
-
-  A plugin with a higher ``priority`` value will load after a plugin with a lower ``priority`` value. The value can be anything in the range ``-127`` to ``127`` inclusive, and if unspecified defaults to ``0``.
-
-.. describe:: global_priority
-
-  ``integer``
-
-  Modifies plugin position relative to all unrelated plugins (ie. neither plugin lists the other as a master, requirement, or in its ``after`` list).
-
-  A plugin with a higher ``global_priority`` value will load after a plugin with a lower priority value. The value can be anything in the range ``-127`` to ``127`` inclusive, and if unspecified defaults to ``0``.
-
-  ``global_priority`` takes precedence over ``priority`` when comparing two plugins' priorities: the ``priority`` value is only compared if the two plugins have the same ``global_priority`` value.
-
 .. describe:: after
 
   ``file set``
@@ -138,8 +120,6 @@ Key               Merge Behaviour (merging B into A)
 name              Not merged.
 enabled           Replaced by B's value.
 group             Replaced by B's value.
-priority          Replaced by B's value, unless that value is ``0`` and it was not explicitly set.
-global_priority   Replaced by B's value, unless that value is ``0`` and it was not explicitly set.
 after             Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.
 req               Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.
 inc               Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.

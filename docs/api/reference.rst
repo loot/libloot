@@ -75,9 +75,6 @@ Classes
 .. doxygenclass:: loot::PluginMetadata
    :members:
 
-.. doxygenclass:: loot::Priority
-   :members:
-
 .. doxygenclass:: loot::Tag
    :members:
 

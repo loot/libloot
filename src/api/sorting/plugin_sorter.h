@@ -57,12 +57,9 @@ private:
   int ComparePlugins(const std::string& plugin1,
                      const std::string& plugin2) const;
 
-  void PropagatePriorities();
-
   void AddPluginVertices(Game& game);
   void AddSpecificEdges();
   void AddGroupEdges();
-  void AddPriorityEdges();
   void AddOverlapEdges();
   void AddTieBreakEdges();
 

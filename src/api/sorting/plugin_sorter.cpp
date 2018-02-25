@@ -134,13 +134,6 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
 
   AddGroupEdges();
 
-  PropagatePriorities();
-
-  if (logger_) {
-    logger_->debug("Adding priority edges.");
-  }
-  AddPriorityEdges();
-
   if (logger_) {
     logger_->debug("Adding overlap edges.");
   }
@@ -318,98 +311,6 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
   return false;
 }
 
-void PluginSorter::PropagatePriorities() {
-  /* If a plugin has a priority value > 0, that value should be
-     inherited by all plugins that have edges coming from that
-     plugin, ie. those that load after it, unless the plugin being
-     compared itself has a larger value. */
-
-  // Find all vertices with priorities > 0.
-  std::vector<vertex_t> positivePriorityVertices;
-  vertex_it vit, vitend;
-  tie(vit, vitend) = boost::vertices(graph_);
-  std::copy_if(vit,
-               vitend,
-               std::back_inserter(positivePriorityVertices),
-               [&](const vertex_t& vertex) {
-                 return graph_[vertex].GetLocalPriority() > 0 ||
-                        graph_[vertex].GetGlobalPriority() > 0;
-               });
-
-  // To reduce the number of priorities that will need setting,
-  // sort the vertices in order of decreasing priority.
-  std::sort(begin(positivePriorityVertices),
-            end(positivePriorityVertices),
-            [&](const vertex_t& lhs, const vertex_t& rhs) {
-              return graph_[lhs].GetLocalPriority() >
-                         graph_[rhs].GetLocalPriority() ||
-                     graph_[lhs].GetGlobalPriority() >
-                         graph_[rhs].GetGlobalPriority();
-            });
-
-  // Create a color map.
-  std::vector<boost::default_color_type> colorVec(num_vertices(graph_));
-  boost::iterator_property_map<boost::default_color_type*, vertex_map_t>
-      colorMap(&colorVec.front(), vertexIndexMap_);
-
-  // Now loop over the vertices. For each one, do a depth-first
-  // search, setting priorities until an equal or larger value is
-  // encountered.
-  for (const vertex_t& vertex : positivePriorityVertices) {
-    if (logger_) {
-      logger_->trace(
-          "Doing DFS for {} which has local priority {} and global priority {}",
-          graph_[vertex].GetName(),
-          graph_[vertex].GetLocalPriority().GetValue(),
-          graph_[vertex].GetGlobalPriority().GetValue());
-    }
-    boost::dfs_visitor<> visitor;
-    boost::depth_first_visit(
-        graph_,
-        vertex,
-        visitor,
-        colorMap,
-        [&](const vertex_t& currentVertex, const PluginGraph& graph) {
-          // depth_first_search takes a const graph, so cast it if modifying a
-          // vertex.
-          if (graph[currentVertex].GetLocalPriority() <
-              graph[vertex].GetLocalPriority()) {
-            if (logger_) {
-              logger_->trace("Overriding local priority for {} from {} to {}",
-                             graph[currentVertex].GetName(),
-                             graph[currentVertex].GetLocalPriority().GetValue(),
-                             graph[vertex].GetLocalPriority().GetValue());
-            }
-            const_cast<PluginGraph&>(graph)[currentVertex].SetLocalPriority(
-                graph[vertex].GetLocalPriority());
-
-            return false;
-          }
-
-          if (graph[currentVertex].GetGlobalPriority() <
-              graph[vertex].GetGlobalPriority()) {
-            if (logger_) {
-              logger_->trace(
-                  "Overriding global priority for {} from {} to {}",
-                  graph[currentVertex].GetName(),
-                  graph[currentVertex].GetGlobalPriority().GetValue(),
-                  graph[vertex].GetGlobalPriority().GetValue());
-            }
-            const_cast<PluginGraph&>(graph)[currentVertex].SetGlobalPriority(
-                graph[vertex].GetGlobalPriority());
-
-            return false;
-          }
-
-          return currentVertex != vertex &&
-                 graph[currentVertex].GetLocalPriority() >=
-                     graph[vertex].GetLocalPriority() &&
-                 graph[currentVertex].GetGlobalPriority() >=
-                     graph[vertex].GetGlobalPriority();
-        });
-  }
-}
-
 void PluginSorter::AddEdge(const vertex_t& fromVertex,
                            const vertex_t& toVertex) {
   if (!boost::edge(fromVertex, toVertex, graph_).second) {
@@ -424,8 +325,7 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex,
 }
 
 void PluginSorter::AddSpecificEdges() {
-  // Add edges for all relationships that aren't overlaps or priority
-  // differences.
+  // Add edges for all relationships that aren't overlaps.
   vertex_it vit, vitend;
   for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
     if (logger_) {
@@ -511,58 +411,6 @@ void PluginSorter::AddGroupEdges() {
   }
   for (const auto& edgePair : acyclicEdgePairs) {
     AddEdge(edgePair.first, edgePair.second);
-  }
-}
-
-void PluginSorter::AddPriorityEdges() {
-  for (const auto& vertex :
-       boost::make_iterator_range(boost::vertices(graph_))) {
-    if (logger_) {
-      logger_->trace("Adding priority difference edges to vertex for \"{}\".",
-                     graph_[vertex].GetName());
-    }
-    // If the plugin has a global priority of zero and doesn't load
-    // an archive and has no override records, skip it. Plugins without
-    // override records can only conflict with plugins that override
-    // the records they add, so any edge necessary will be added when
-    // evaluating that plugin.
-    if (graph_[vertex].GetGlobalPriority().GetValue() == 0 &&
-        graph_[vertex].NumOverrideFormIDs() == 0 &&
-        !graph_[vertex].LoadsArchive()) {
-      continue;
-    }
-
-    for (const auto& otherVertex :
-         boost::make_iterator_range(boost::vertices(graph_))) {
-      // If the plugins have equal priority, or have non-global
-      // priorities but don't conflict, don't add a priority edge.
-      if ((graph_[vertex].GetLocalPriority() ==
-               graph_[otherVertex].GetLocalPriority() &&
-           graph_[vertex].GetGlobalPriority() ==
-               graph_[otherVertex].GetGlobalPriority()) ||
-          (graph_[vertex].GetGlobalPriority().GetValue() == 0 &&
-           graph_[otherVertex].GetGlobalPriority().GetValue() == 0 &&
-           !graph_[vertex].DoFormIDsOverlap(graph_[otherVertex]))) {
-        continue;
-      }
-
-      vertex_t toVertex, fromVertex;
-      if (graph_[vertex].GetGlobalPriority() <
-              graph_[otherVertex].GetGlobalPriority() ||
-          (graph_[vertex].GetGlobalPriority() ==
-               graph_[otherVertex].GetGlobalPriority() &&
-           graph_[vertex].GetLocalPriority() <
-               graph_[otherVertex].GetLocalPriority())) {
-        fromVertex = vertex;
-        toVertex = otherVertex;
-      } else {
-        fromVertex = otherVertex;
-        toVertex = vertex;
-      }
-
-      if (!EdgeCreatesCycle(fromVertex, toVertex))
-        AddEdge(fromVertex, toVertex);
-    }
   }
 }
 

@@ -42,7 +42,6 @@
 #include "tests/api/internals/metadata/message_test.h"
 #include "tests/api/internals/metadata/plugin_cleaning_data_test.h"
 #include "tests/api/internals/metadata/plugin_metadata_test.h"
-#include "tests/api/internals/metadata/priority_test.h"
 #include "tests/api/internals/metadata/tag_test.h"
 #include "tests/api/internals/metadata_list_test.h"
 #include "tests/api/internals/sorting/group_sort_test.h"

@@ -285,13 +285,13 @@ TEST_P(MetadataListTest, addPluginShouldStoreGivenSpecificPluginMetadata) {
       metadataList.FindPlugin(PluginMetadata(blankDifferentEsm)).HasNameOnly());
 
   PluginMetadata plugin(blankDifferentEsm);
-  plugin.SetLocalPriority(Priority(100));
+  plugin.SetGroup("group1");
   metadataList.AddPlugin(plugin);
 
   plugin = metadataList.FindPlugin(plugin);
 
   EXPECT_EQ(blankDifferentEsm, plugin.GetName());
-  EXPECT_EQ(100, plugin.GetLocalPriority().GetValue());
+  EXPECT_EQ("group1", plugin.GetGroup());
 }
 
 TEST_P(MetadataListTest, addPluginShouldStoreGivenRegexPluginMetadata) {
@@ -299,12 +299,12 @@ TEST_P(MetadataListTest, addPluginShouldStoreGivenRegexPluginMetadata) {
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
   PluginMetadata plugin(".+Dependent\\.esp");
-  plugin.SetLocalPriority(Priority(-10));
+  plugin.SetGroup("group1");
   metadataList.AddPlugin(plugin);
 
   plugin = metadataList.FindPlugin(PluginMetadata(blankPluginDependentEsp));
 
-  EXPECT_EQ(-10, plugin.GetLocalPriority().GetValue());
+  EXPECT_EQ("group1", plugin.GetGroup());
 }
 
 TEST_P(MetadataListTest, addPluginShouldThrowIfAMatchingPluginAlreadyExists) {
