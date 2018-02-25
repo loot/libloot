@@ -45,6 +45,7 @@
 #include "tests/api/internals/metadata/priority_test.h"
 #include "tests/api/internals/metadata/tag_test.h"
 #include "tests/api/internals/metadata_list_test.h"
+#include "tests/api/internals/sorting/group_sort_test.h"
 #include "tests/api/internals/sorting/plugin_sorter_test.h"
 #include "tests/api/internals/plugin_test.h"
 
