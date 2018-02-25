@@ -36,6 +36,7 @@ class PluginSorterTest : public CommonGameTestFixture {
 protected:
   PluginSorterTest() :
       game_(GetParam(), dataPath.parent_path(), localPath),
+      masterlistPath_("./userlist.yaml"),
       blankEslEsp("Blank.esl.esp") {}
 
   void TearDown() {
@@ -44,6 +45,8 @@ protected:
     if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
       boost::filesystem::remove(dataPath / blankEslEsp);
     }
+
+    boost::filesystem::remove(masterlistPath_);
   }
 
   void loadInstalledPlugins(Game &game_, bool headersOnly) {
@@ -73,8 +76,25 @@ protected:
     game_.LoadPlugins(plugins, headersOnly);
   }
 
+  void GenerateMasterlist() {
+    using std::endl;
+
+    boost::filesystem::ofstream masterlist(masterlistPath_);
+    masterlist << "groups:" << endl
+      << "  - name: group1" << endl
+      << "  - name: group2" << endl
+      << "    after:" << endl
+      << "      - group1" << endl
+      << "  - name: group3" << endl
+      << "    after:" << endl
+      << "      - group2" << endl;
+
+    masterlist.close();
+  }
+
   Game game_;
   const std::string blankEslEsp;
+  const boost::filesystem::path masterlistPath_;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -137,6 +157,73 @@ TEST_P(PluginSorterTest,
   sorted = ps.Sort(game_);
   EXPECT_TRUE(
       std::equal(begin(sorted), end(sorted), begin(expectedSortedOrder)));
+}
+
+TEST_P(PluginSorterTest, sortingShouldResolveGroupsAsTransitiveLoadAfterSets) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  GenerateMasterlist();
+  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+
+  PluginMetadata plugin(blankDifferentEsm);
+  plugin.SetGroup("group1");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  plugin = PluginMetadata(blankEsm);
+  plugin.SetGroup("group3");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  PluginSorter ps;
+  std::vector<std::string> expectedSortedOrder({
+    masterFile,
+    blankDifferentEsm,
+    blankEsm,
+    blankMasterDependentEsm,
+    blankDifferentMasterDependentEsm,
+    blankEsp,
+    blankDifferentEsp,
+    blankMasterDependentEsp,
+    blankDifferentMasterDependentEsp,
+    blankPluginDependentEsp,
+    blankDifferentPluginDependentEsp,
+    });
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  }
+
+  std::vector<std::string> sorted = ps.Sort(game_);
+  EXPECT_EQ(expectedSortedOrder, sorted);
+}
+
+TEST_P(PluginSorterTest, sortingShouldThrowIfAPluginHasAGroupThatDoesNotExist) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  PluginMetadata plugin(blankDifferentEsm);
+  plugin.SetGroup("group1");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  PluginSorter ps;
+  EXPECT_THROW(ps.Sort(game_), std::invalid_argument);
+}
+
+TEST_P(PluginSorterTest, sortingShouldThrowIfAGroupIntroducesACycle) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  GenerateMasterlist();
+  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+
+  PluginMetadata plugin(blankDifferentEsm);
+  plugin.SetGroup("group1");
+  plugin.SetLoadAfterFiles({ File(blankEsm) });
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  plugin = PluginMetadata(blankEsm);
+  plugin.SetGroup("group3");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  PluginSorter ps;
+  EXPECT_THROW(ps.Sort(game_), CyclicInteractionError);
 }
 
 TEST_P(PluginSorterTest, sortingShouldEvaluateRelativeGlobalPriorities) {

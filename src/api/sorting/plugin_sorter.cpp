@@ -35,6 +35,7 @@
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
 #include "api/metadata/condition_evaluator.h"
+#include "api/sorting/group_sort.h"
 #include "loot/exception/cyclic_interaction_error.h"
 
 using std::list;
@@ -216,6 +217,8 @@ void PluginSorter::AddPluginVertices(Game& game) {
   // Using a set of plugin names followed by finding the matching key
   // in the unordered map, as it's probably faster than copying the
   // full plugin objects then sorting them.
+  std::map<std::string, std::vector<std::string>> groupPlugins;
+
   for (const auto& plugin : game.GetCache()->GetPlugins()) {
     if (logger_) {
       logger_->trace("Getting and evaluating metadata for plugin {}",
@@ -225,13 +228,52 @@ void PluginSorter::AddPluginVertices(Game& game) {
     auto metadata =
         game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true);
 
+    auto groupIt = groupPlugins.find(metadata.GetGroup());
+    if (groupIt == groupPlugins.end()) {
+      groupPlugins.emplace(metadata.GetGroup(), std::vector<std::string>({ plugin->GetName() }));
+    }
+    else {
+      groupIt->second.push_back(plugin->GetName());
+    }
+
     if (logger_) {
       logger_->trace("Getting and evaluating metadata for plugin \"{}\"",
                      plugin->GetName());
     }
 
-    vertex_t v = boost::add_vertex(
-        PluginSortingData(*plugin, std::move(metadata)), graph_);
+    boost::add_vertex(PluginSortingData(*plugin, std::move(metadata)), graph_);
+  }
+
+  // Map sets of transitive group dependencies to sets of transitive plugin
+  // dependencies.
+  auto groups = GetTransitiveAfterGroups(game.GetDatabase()->GetGroups());
+  for (auto& group : groups) {
+    std::unordered_set<std::string> transitivePlugins;
+    for (const auto& afterGroup : group.second) {
+      auto pluginsIt = groupPlugins.find(afterGroup);
+      if (pluginsIt != groupPlugins.end()) {
+        transitivePlugins.insert(pluginsIt->second.begin(), pluginsIt->second.end());
+      }
+    }
+    group.second = transitivePlugins;
+  }
+
+  // Add all transitive plugin dependencies for a group to the plugin's load
+  // after metadata.
+  for (const auto& vertex : boost::make_iterator_range(boost::vertices(graph_))) {
+    PluginSortingData& plugin = graph_[vertex];
+    auto groupsIt = groups.find(plugin.GetGroup());
+    if (groupsIt == groups.end()) {
+      throw std::invalid_argument("The group \"" + plugin.GetGroup() +
+        "\" set for plugin \"" + plugin.GetName() + "\" does not exist.");
+    }
+    else {
+      auto loadAfter = plugin.GetLoadAfterFiles();
+      for (const auto& afterPlugin : groupsIt->second) {
+        loadAfter.insert(File(afterPlugin));
+      }
+      plugin.SetLoadAfterFiles(loadAfter);
+    }
   }
 
   // Prebuild an index map, which std::list-based VertexList graphs don't have.
