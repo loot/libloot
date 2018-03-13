@@ -2,6 +2,16 @@
 Version History
 ***************
 
+0.12.5 - 2018-02-17
+===================
+
+Changed
+-------
+
+- Updated esplugin to v1.0.9.
+- Updated libgit2 to v0.26.3. This enables TLS 1.2 support on Windows 7, so
+  users shouldn't need to manually enable it themselves.
+
 0.12.4 - 2018-02-17
 ===================
 
