@@ -65,6 +65,8 @@ after_success:
 
 deploy:
   - provider: bintray
+    edge:
+      branch: v1.8.47
     file: scripts/travis/loot-api.bintray.json
     user: wrinklyninja
     key:
