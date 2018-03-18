@@ -131,6 +131,8 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   }
   AddSpecificEdges();
 
+  AddGroupEdges();
+
   PropagatePriorities();
 
   if (logger_) {
@@ -268,11 +270,7 @@ void PluginSorter::AddPluginVertices(Game& game) {
         "\" set for plugin \"" + plugin.GetName() + "\" does not exist.");
     }
     else {
-      auto loadAfter = plugin.GetLoadAfterFiles();
-      for (const auto& afterPlugin : groupsIt->second) {
-        loadAfter.insert(File(afterPlugin));
-      }
-      plugin.SetLoadAfterFiles(loadAfter);
+      plugin.SetAfterGroupPlugins(groupsIt->second);
     }
   }
 
@@ -470,6 +468,41 @@ void PluginSorter::AddSpecificEdges() {
       if (GetVertexByName(file.GetName(), parentVertex))
         AddEdge(parentVertex, *vit);
     }
+  }
+}
+
+void PluginSorter::AddGroupEdges() {
+  std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
+  for (const vertex_t& vertex :
+       boost::make_iterator_range(boost::vertices(graph_))) {
+    if (logger_) {
+      logger_->trace("Checking group edges for \"{}\".",
+        graph_[vertex].GetName());
+    }
+    for (const auto& pluginName : graph_[vertex].GetAfterGroupPlugins()) {
+      vertex_t parentVertex;
+      if (GetVertexByName(pluginName, parentVertex)) {
+        if (EdgeCreatesCycle(parentVertex, vertex)) {
+          if (logger_) {
+            logger_->trace("Skipping edge from \"{}\" to \"{}\" as it would "
+              "create a cycle and one or both plugins belongs to the default "
+              "group.",
+              graph_[parentVertex].GetName(),
+              graph_[vertex].GetName());
+          }
+          continue;
+        }
+
+        acyclicEdgePairs.push_back(std::make_pair(parentVertex, vertex));
+      }
+    }
+  }
+
+  if (logger_) {
+    logger_->trace("Adding group edges that don't individually introduce cycles.");
+  }
+  for (const auto& edgePair : acyclicEdgePairs) {
+    AddEdge(edgePair.first, edgePair.second);
   }
 }
 

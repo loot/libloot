@@ -26,7 +26,7 @@ Create plugin graph vertices
 Once loaded, a directed graph is created and the plugins are added to it in
 lexicographical order as vertices. Any metadata a plugin has in the masterlist
 and userlist are then merged into its vertex's data store. Plugin group
-dependencies are also resolved and added as additional load after plugins.
+dependencies are also resolved and added as group-derived plugins.
 
 Create plugin graph edges
 ==============================
@@ -45,6 +45,12 @@ For each plugin:
    have no edges added.
 4. Add edges coming from all the plugin's load after files that are installed
    plugins.
+
+Group-derived interdependencies are then evaluated. Each plugin's group-derived
+plugins are iterated over and individually checked to see if adding an edge from
+the group-derived plugin to the plugin would cause a cycle, and if not the edge
+is recorded. Once all potential edges have been checked, the recorded edges are
+added to the graph.
 
 At this point, all explicit interdependencies have been graphed. Plugin priority
 metadata values must now be propagated down the dependency trees to ensure that

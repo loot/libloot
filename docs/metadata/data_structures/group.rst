@@ -19,8 +19,12 @@ This structure can be used to hold group definitions. It is a key-value map.
   The names of groups that this group loads after. Group names are
   case-sensitive. If undefined, the set is empty. The named groups must be
   defined when LOOT sorts plugins, but they don't need to be defined in the same
-  metadata file. If at sort time a group is defined to load after a group that
-  does not exist, a sorting error will occur.
+  metadata file.
+
+  Sorting errors will occur if:
+
+  - A group loads after another group that does not exist.
+  - Group loading is cyclic (e.g. A loads after B and B loads after A).
 
 Merging Groups
 --------------

@@ -51,4 +51,12 @@ bool PluginSortingData::DoFormIDsOverlap(
     const PluginSortingData& plugin) const {
   return plugin_.DoFormIDsOverlap(plugin.plugin_);
 }
+
+std::unordered_set<std::string> PluginSortingData::GetAfterGroupPlugins() const {
+  return afterGroupPlugins_;
+}
+
+void PluginSortingData::SetAfterGroupPlugins(std::unordered_set<std::string> plugins) {
+  afterGroupPlugins_ = plugins;
+}
 }

@@ -40,6 +40,9 @@ public:
   size_t NumOverrideFormIDs() const;
   bool DoFormIDsOverlap(const PluginSortingData& plugin) const;
 
+  std::unordered_set<std::string> GetAfterGroupPlugins() const;
+  void SetAfterGroupPlugins(std::unordered_set<std::string> plugins);
+
   using PluginMetadata::GetGlobalPriority;
   using PluginMetadata::GetGroup;
   using PluginMetadata::GetLoadAfterFiles;
@@ -47,10 +50,10 @@ public:
   using PluginMetadata::GetRequirements;
   using PluginMetadata::SetGlobalPriority;
   using PluginMetadata::SetLocalPriority;
-  using PluginMetadata::SetLoadAfterFiles;
 
 private:
   const Plugin& plugin_;
+  std::unordered_set<std::string> afterGroupPlugins_;
 };
 }
 
