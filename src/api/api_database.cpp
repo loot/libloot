@@ -163,7 +163,12 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(
 
 std::unordered_set<Group> ApiDatabase::GetGroups(bool includeUserMetadata) const {
   if (!includeUserMetadata) {
-    return masterlist_.Groups();
+    auto groups = masterlist_.Groups();
+
+    //Insert the default group in case the masterlist hasn't been loaded.
+    groups.insert(Group());
+
+    return groups;
   }
 
   std::unordered_set<Group> mergedGroups;

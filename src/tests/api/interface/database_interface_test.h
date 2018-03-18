@@ -461,6 +461,16 @@ TEST_P(DatabaseInterfaceTest,
 }
 
 TEST_P(DatabaseInterfaceTest,
+  getGroupsShouldReturnDefaultGroupIfNoMasterlistIsLoadedAndUserlistMetadataIsNotIncluded) {
+  auto groups = db_->GetGroups(false);
+
+  EXPECT_EQ(1, groups.size());
+
+  EXPECT_EQ("default", groups.begin()->GetName());
+  EXPECT_TRUE(groups.begin()->GetAfterGroups().empty());
+}
+
+TEST_P(DatabaseInterfaceTest,
   getUserGroupsShouldReturnOnlyGroupMetadataFromTheUserlist) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
