@@ -485,8 +485,7 @@ void PluginSorter::AddGroupEdges() {
         if (EdgeCreatesCycle(parentVertex, vertex)) {
           if (logger_) {
             logger_->trace("Skipping edge from \"{}\" to \"{}\" as it would "
-              "create a cycle and one or both plugins belongs to the default "
-              "group.",
+              "create a cycle.",
               graph_[parentVertex].GetName(),
               graph_[vertex].GetName());
           }
