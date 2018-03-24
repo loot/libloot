@@ -96,6 +96,9 @@ Exceptions
 .. doxygenclass:: loot::FileAccessError
    :members:
 
+.. doxygenclass:: loot::UndefinedGroupError
+   :members:
+
 Error Categories
 ================
 

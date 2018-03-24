@@ -30,6 +30,7 @@ along with LOOT.  If not, see
 #include <gtest/gtest.h>
 
 #include "loot/exception/cyclic_interaction_error.h"
+#include "loot/exception/undefined_group_error.h"
 
 namespace loot {
 namespace test {
@@ -52,7 +53,7 @@ TEST(GetTransitiveAfterGroups, shouldThrowIfAnAfterGroupDoesNotExist) {
     Group("b", std::unordered_set<std::string>({ "a" }))
   });
 
-  EXPECT_THROW(GetTransitiveAfterGroups(groups), std::invalid_argument);
+  EXPECT_THROW(GetTransitiveAfterGroups(groups), UndefinedGroupError);
 }
 
 TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {

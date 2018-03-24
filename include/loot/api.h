@@ -37,6 +37,7 @@
 #include "loot/exception/error_categories.h"
 #include "loot/exception/file_access_error.h"
 #include "loot/exception/git_state_error.h"
+#include "loot/exception/undefined_group_error.h"
 #include "loot/game_interface.h"
 #include "loot/loot_version.h"
 

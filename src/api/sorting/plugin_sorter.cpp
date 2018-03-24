@@ -37,6 +37,7 @@
 #include "api/metadata/condition_evaluator.h"
 #include "api/sorting/group_sort.h"
 #include "loot/exception/cyclic_interaction_error.h"
+#include "loot/exception/undefined_group_error.h"
 
 using std::list;
 using std::string;
@@ -266,8 +267,7 @@ void PluginSorter::AddPluginVertices(Game& game) {
     PluginSortingData& plugin = graph_[vertex];
     auto groupsIt = groups.find(plugin.GetGroup());
     if (groupsIt == groups.end()) {
-      throw std::invalid_argument("The group \"" + plugin.GetGroup() +
-        "\" set for plugin \"" + plugin.GetName() + "\" does not exist.");
+      throw UndefinedGroupError(plugin.GetGroup());
     }
     else {
       plugin.SetAfterGroupPlugins(groupsIt->second);

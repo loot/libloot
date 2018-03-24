@@ -28,6 +28,7 @@ along with LOOT.  If not, see
 #include "api/sorting/plugin_sorter.h"
 
 #include "loot/exception/cyclic_interaction_error.h"
+#include "loot/exception/undefined_group_error.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -207,7 +208,7 @@ TEST_P(PluginSorterTest, sortingShouldThrowIfAPluginHasAGroupThatDoesNotExist) {
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   PluginSorter ps;
-  EXPECT_THROW(ps.Sort(game_), std::invalid_argument);
+  EXPECT_THROW(ps.Sort(game_), UndefinedGroupError);
 }
 
 TEST_P(PluginSorterTest, sortingShouldThrowIfAddingTwoGroupEdgesIntroducesACycle) {

@@ -29,6 +29,7 @@
 #include <boost/graph/depth_first_search.hpp>
 
 #include "loot/exception/cyclic_interaction_error.h"
+#include "loot/exception/undefined_group_error.h"
 
 namespace loot {
 typedef boost::adjacency_list<boost::vecS,
@@ -104,7 +105,7 @@ std::unordered_map<std::string, std::unordered_set<std::string>> GetTransitiveAf
     for (const auto& otherGroupName : group.GetAfterGroups()) {
       auto otherVertex = groupVertices.find(otherGroupName);
       if (otherVertex == groupVertices.end()) {
-        throw std::invalid_argument("The group \"" + otherGroupName + "\" does not exist");
+        throw UndefinedGroupError(otherGroupName);
       }
 
       auto vertex = groupVertices[group.GetName()];
