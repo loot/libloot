@@ -90,7 +90,7 @@ ENDIF ()
 
 ExternalProject_Add(libgit2
                     PREFIX "external"
-                    URL "https://github.com/libgit2/libgit2/archive/v0.26.3.tar.gz"
+                    URL "https://github.com/libgit2/libgit2/archive/v0.27.0.tar.gz"
                     CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DSTATIC_CRT=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
                     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target git2 --config $(CONFIGURATION)
                     INSTALL_COMMAND "")
