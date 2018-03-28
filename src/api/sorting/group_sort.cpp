@@ -30,6 +30,7 @@
 
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/undefined_group_error.h"
+#include "api/helpers/logging.h"
 
 namespace loot {
 typedef boost::adjacency_list<boost::vecS,
@@ -92,8 +93,22 @@ private:
   std::unordered_set<std::string>& visitedGroups_;
 };
 
+std::string join(const std::unordered_set<std::string> set) {
+  std::string output;
+  for (const auto& element : set) {
+    output += element + ", ";
+  }
+
+  return output.substr(0, output.length() - 2);
+}
+
 std::unordered_map<std::string, std::unordered_set<std::string>> GetTransitiveAfterGroups(const std::unordered_set<Group> groups) {
   GroupGraph graph;
+
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("Sorting groups according to their load after data");
+  }
 
   std::unordered_map<std::string, vertex_t> groupVertices;
   for (const auto& group : groups) {
@@ -102,6 +117,10 @@ std::unordered_map<std::string, std::unordered_set<std::string>> GetTransitiveAf
   }
 
   for (const auto& group : groups) {
+    if (logger) {
+      logger->trace("Group \"{}\" directly loads after groups \"{}\"",
+        group.GetName(), join(group.GetAfterGroups()));
+    }
     for (const auto& otherGroupName : group.GetAfterGroups()) {
       auto otherVertex = groupVertices.find(otherGroupName);
       if (otherVertex == groupVertices.end()) {
@@ -114,6 +133,9 @@ std::unordered_map<std::string, std::unordered_set<std::string>> GetTransitiveAf
   }
 
   // Check for cycles.
+  if (logger) {
+    logger->trace("Checking for cycles in the group graph");
+  }
   boost::depth_first_search(graph, visitor(GroupCycleDetector()));
 
   std::unordered_map<std::string, std::unordered_set<std::string>> transitiveAfterGroups;
@@ -129,6 +151,11 @@ std::unordered_map<std::string, std::unordered_set<std::string>> GetTransitiveAf
 
     boost::depth_first_visit(graph, vertex, afterGroupsVisitor, colorMap);
     transitiveAfterGroups[graph[vertex]] = visitedGroups;
+
+    if (logger) {
+      logger->trace("Group \"{}\" transitively loads after groups \"{}\"",
+        graph[vertex], join(visitedGroups));
+    }
   }
 
   return transitiveAfterGroups;

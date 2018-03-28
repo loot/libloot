@@ -265,6 +265,12 @@ void PluginSorter::AddPluginVertices(Game& game) {
   // after metadata.
   for (const auto& vertex : boost::make_iterator_range(boost::vertices(graph_))) {
     PluginSortingData& plugin = graph_[vertex];
+
+    if (logger_) {
+      logger_->trace("Plugin \"{}\" belongs to group \"{}\", setting after group plugins",
+        plugin.GetName(), plugin.GetGroup());
+    }
+
     auto groupsIt = groups.find(plugin.GetGroup());
     if (groupsIt == groups.end()) {
       throw UndefinedGroupError(plugin.GetGroup());
@@ -472,6 +478,9 @@ void PluginSorter::AddSpecificEdges() {
 }
 
 void PluginSorter::AddGroupEdges() {
+  if (logger_) {
+    logger_->trace("Adding group edges.");
+  }
   std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
   for (const vertex_t& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
