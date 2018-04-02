@@ -74,6 +74,7 @@ protected:
     }
 
     game_.IdentifyMainMasterFile(masterFile);
+    game_.LoadCurrentLoadOrderState();
     game_.LoadPlugins(plugins, headersOnly);
   }
 

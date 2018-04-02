@@ -166,6 +166,7 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
     pluginsToSort.push_back(blankEsl);
   }
 
+  handle_->LoadCurrentLoadOrderState();
   std::vector<std::string> actualOrder = handle_->SortPlugins(pluginsToSort);
 
   EXPECT_EQ(expectedOrder, actualOrder);
