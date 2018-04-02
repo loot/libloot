@@ -4,6 +4,22 @@ Version History
 
 The version history of the metadata syntax is given below.
 
+0.13
+====
+
+Added
+-----
+
+- The ``Group`` data structure.
+- The ``groups`` list to the root of the metadata file format.
+- The ``group`` key to the plugin data structure.
+
+Removed
+-------
+
+- The ``priority`` field from the plugin data structure.
+- The ``global_priority`` field from the plugin data structure.
+
 0.10 - 2016-11-06
 =================
 
