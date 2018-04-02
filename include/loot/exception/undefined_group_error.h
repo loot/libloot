@@ -34,11 +34,8 @@ namespace loot {
 class UndefinedGroupError : public std::runtime_error {
 public:
   /**
-   * @brief Construct an exception detailing a plugin graph cycle.
-   * @param firstPlugin A plugin in the cycle.
-   * @param lastPlugin Another plugin in the cycle.
-   * @param backCycle A string describing the path from lastPlugin to
-   *                  firstPlugin.
+   * @brief Construct an exception for an undefined group.
+   * @param groupName The name of the group that is undefined.
    */
   UndefinedGroupError(const std::string& groupName) :
       std::runtime_error("The group \"" + groupName + "\" does not exist"),

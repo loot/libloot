@@ -183,16 +183,16 @@ public:
 
   /**
    * @brief Gets the groups that are defined in the loaded metadata lists.
+   * @param includeUserMetadata
+   *        If true, any group metadata present in the userlist is included in
+   *        the returned metadata, otherwise the metadata returned only includes
+   *        metadata from the masterlist.
    * @returns An unordered set of Group objects.
    */
   virtual std::unordered_set<Group> GetGroups(bool includeUserMetadata = true) const = 0;
 
   /**
    * @brief Gets the groups that are defined or extended in the loaded userlist.
-   * @param includeUserMetadata
-   *        If true, any group metadata present in the userlist is included in
-   *        the returned metadata, otherwise the metadata returned only includes
-   *        metadata from the masterlist.
    * @returns An unordered set of Group objects.
    */
   virtual std::unordered_set<Group> GetUserGroups() const = 0;
