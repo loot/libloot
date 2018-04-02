@@ -2,6 +2,62 @@
 Version History
 ***************
 
+0.13.0 - 2018-04-02
+===================
+
+Added
+-----
+
+- Group metadata as a replacement for priority metadata. Each plugin belongs to
+  a group, and a group can load after other groups. Plugins belong to the
+  ``default`` group by default.
+
+  - Added the :cpp:any:`loot::Group` class to represent a group.
+  - Added :cpp:any:`loot::UndefinedGroupError`.
+  - Added :cpp:any:`GetGroups()`, :cpp:any:`GetUserGroups()` and :cpp:any:`SetUserGroups()`.
+  - Added :cpp:any:`GetGroup()`, :cpp:any:`IsGroupExplicit()`
+    and :cpp:any:`SetGroup()`.
+  - Updated :cpp:any:`MergeMetadata()` to replace the existing
+    group with the given object's group if the latter is explicit.
+  - Updated :cpp:any:`NewMetadata()` to return an object using
+    the called object's group.
+  - Updated :cpp:any:`HasNameOnly()` to check the group is
+    implicit.
+  - Updated :cpp:any:`SortPlugins()` to take into account plugin
+    groups.
+
+Changed
+-------
+
+- :cpp:any:`LoadPlugins()` and
+  :cpp:any:`SortPlugins()` no longer load the current load order
+  state, so :cpp:any:`LoadCurrentLoadOrderState()` must be called
+  separately.
+- Updated libgit2 to v0.27.0.
+- Updated libloadorder to v11.1.0.
+
+Removed
+-------
+
+- Support for local and global plugin priorities.
+
+  - Removed the ``loot::Priority`` class.
+  - Removed ``PluginMetadata::GetLocalPriority()``,
+    ``PluginMetadata::GetGlobalPriority()``,
+    ``PluginMetadata::SetLocalPriority()`` and
+    ``PluginMetadata::SetGlobalPriority()``
+  - Priorities are no longer taken into account when sorting plugins.
+
+Fixed
+-----
+
+- An error when applying a load order for Morrowind, Oblivion, Fallout 3 or
+  Fallout: New Vegas when a plugin had a timestamp earlier than 1970-01-01
+  00:00:00 UTC (via libloadorder).
+- An error when loading the current load order for Skyrim with a
+  ``loadorder.txt`` incorrectly encoded in Windows-1252 (via libloadorder).
+
+
 0.12.5 - 2018-02-17
 ===================
 
