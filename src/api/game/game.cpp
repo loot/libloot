@@ -151,7 +151,6 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
 
   // Clear the existing plugin cache.
   cache_->ClearCachedPlugins();
-  loadOrderHandler_->LoadCurrentState();
 
   // Load the plugins.
   if (logger) {

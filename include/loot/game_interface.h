@@ -63,7 +63,7 @@ public:
   /**
    * @brief Parses plugins and loads their data.
    * @details Any previously-loaded plugin data is discarded when this function
-   *          is called. This function also loads the current load order state.
+   *          is called.
    * @param plugins
    *        The filenames of the plugins to load.
    * @param loadHeadersOnly
