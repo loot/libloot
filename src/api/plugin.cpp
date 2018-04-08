@@ -363,7 +363,7 @@ bool hasPluginFileExtension(const std::string& filename, GameType gameType) {
                   boost::iends_with(filename, ".esm");
   bool lightMaster =
       (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
-       gameType == GameType::tes5se) &&
+       gameType == GameType::tes5se || gameType == GameType::tes5vr) &&
       boost::iends_with(filename, ".esl");
 
   return espOrEsm || lightMaster;

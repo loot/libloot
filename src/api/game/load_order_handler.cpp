@@ -34,6 +34,29 @@ using boost::format;
 using std::string;
 
 namespace loot {
+unsigned int mapGameId(GameType gameType) {
+  switch (gameType) {
+  case GameType::tes4:
+    return LIBLO_GAME_TES4;
+  case GameType::tes5:
+    return LIBLO_GAME_TES5;
+  case GameType::tes5se:
+    return LIBLO_GAME_TES5SE;
+  case GameType::tes5vr:
+    return LIBLO_GAME_TES5VR;
+  case GameType::fo3:
+    return LIBLO_GAME_FO3;
+  case GameType::fonv:
+    return LIBLO_GAME_FNV;
+  case GameType::fo4:
+    return LIBLO_GAME_FO4;
+  case GameType::fo4vr:
+    return LIBLO_GAME_FO4VR;
+  default:
+    return (unsigned int)-1;
+  }
+}
+
 LoadOrderHandler::LoadOrderHandler() : gh_(nullptr) {}
 
 LoadOrderHandler::~LoadOrderHandler() { lo_destroy_handle(gh_); }
@@ -56,30 +79,8 @@ void LoadOrderHandler::Init(const GameType& gameType,
     gh_ = nullptr;
   }
 
-  int ret;
-  if (gameType == GameType::tes4)
-    ret = lo_create_handle(
-        &gh_, LIBLO_GAME_TES4, gamePath.string().c_str(), gameLocalDataPath);
-  else if (gameType == GameType::tes5)
-    ret = lo_create_handle(
-        &gh_, LIBLO_GAME_TES5, gamePath.string().c_str(), gameLocalDataPath);
-  else if (gameType == GameType::tes5se)
-    ret = lo_create_handle(
-        &gh_, LIBLO_GAME_TES5SE, gamePath.string().c_str(), gameLocalDataPath);
-  else if (gameType == GameType::fo3)
-    ret = lo_create_handle(
-        &gh_, LIBLO_GAME_FO3, gamePath.string().c_str(), gameLocalDataPath);
-  else if (gameType == GameType::fonv)
-    ret = lo_create_handle(
-        &gh_, LIBLO_GAME_FNV, gamePath.string().c_str(), gameLocalDataPath);
-  else if (gameType == GameType::fo4)
-    ret = lo_create_handle(
-        &gh_, LIBLO_GAME_FO4, gamePath.string().c_str(), gameLocalDataPath);
-  else if (gameType == GameType::fo4vr)
-    ret = lo_create_handle(
-        &gh_, LIBLO_GAME_FO4VR, gamePath.string().c_str(), gameLocalDataPath);
-  else
-    ret = LIBLO_ERROR_INVALID_ARGS;
+  int ret = lo_create_handle(
+    &gh_, mapGameId(gameType), gamePath.string().c_str(), gameLocalDataPath);
 
   HandleError("create a game handle", ret);
 }
