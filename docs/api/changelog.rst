@@ -2,6 +2,19 @@
 Version History
 ***************
 
+0.13.1 - 2018-04-09
+===================
+
+Added
+-----
+
+- Support for Skyrim VR using ``GameType::tes5vr``.
+
+Changed
+-------
+
+- Updated libloadorder to v11.2.0.
+
 0.13.0 - 2018-04-02
 ===================
 
