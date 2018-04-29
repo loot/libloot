@@ -2,6 +2,20 @@
 Version History
 ***************
 
+0.13.2 - 2018-04-29
+===================
+
+Changed
+-------
+
+- Updated libloadorder to v11.2.1.
+
+Fixed
+-----
+
+- Incorrect load order positions were given for light-master-flagged ``.esp``
+  plugins when getting the load order (via libloadorder).
+
 0.13.1 - 2018-04-09
 ===================
 
