@@ -2,7 +2,7 @@ os: Visual Studio 2015
 
 version: "{build}-{branch}"
 
-configuration: Release
+configuration: RelWithDebInfo
 
 platform:
   - Win32
@@ -55,7 +55,7 @@ after_test:
   - C:\Python27\Scripts\sphinx-build -b html docs build\docs\html
   - ps:  $env:GIT_DESCRIBE = ((git describe --tags --long --always --abbrev=7) | Out-String) -replace "`n|`r", ""
   - cd build
-  - cpack
+  - cpack -C %CONFIGURATION%
 
 artifacts:
   - path: build\package\loot_api-$(GIT_DESCRIBE)_$(APPVEYOR_REPO_BRANCH)-win$(ADDRESS_MODEL).7z

@@ -331,8 +331,9 @@ IF (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 ENDIF ()
 
 IF (MSVC)
-    # Set /bigobj to allow building Debug tests
+    # Set /bigobj to allow building Debug and RelWithDebInfo tests
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /bigobj")
 
     # Update compiler flags.
     IF (MSVC_STATIC_RUNTIME)
@@ -420,6 +421,13 @@ add_custom_command(TARGET loot_api_tests POST_BUILD
 
 install(TARGETS loot_api
         DESTINATION ".")
+
+IF (MSVC)
+    install(FILES $<TARGET_PDB_FILE:loot_api>
+    DESTINATION .
+    OPTIONAL
+    CONFIGURATIONS RelWithDebInfo)
+ENDIF ()
 
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include"
         DESTINATION ".")
