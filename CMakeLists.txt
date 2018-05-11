@@ -77,7 +77,7 @@ ExternalProject_Add(esplugin
                     URL "https://github.com/WrinklyNinja/esplugin/archive/1.0.9.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
-                    BUILD_COMMAND cargo build --release --all --all-features --target ${RUST_TARGET}
+                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --features ffi-headers --target ${RUST_TARGET}
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(esplugin SOURCE_DIR)
 set (ESPLUGIN_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
@@ -103,7 +103,7 @@ ExternalProject_Add(libloadorder
                     URL "https://github.com/WrinklyNinja/libloadorder/archive/11.2.1.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
-                    BUILD_COMMAND cargo build --release --all --all-features --target ${RUST_TARGET}
+                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --features ffi-headers --target ${RUST_TARGET}
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(libloadorder SOURCE_DIR)
 set(LIBLOADORDER_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
