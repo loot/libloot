@@ -465,8 +465,12 @@ std::unordered_set<std::string> getGroupsInPaths(
   // lastGroup, but not the other way around.
   auto lastGroup = *groups.find(Group(lastGroupName));
 
-  return pathfinder(
+  auto groupsInPaths = pathfinder(
       lastGroup, firstGroupName, groups, std::unordered_set<std::string>());
+
+  groupsInPaths.erase(lastGroupName);
+
+  return groupsInPaths;
 }
 
 void PluginSorter::AddGroupEdges() {

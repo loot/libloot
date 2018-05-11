@@ -212,7 +212,8 @@ TEST_P(PluginSorterTest, sortingShouldThrowIfAPluginHasAGroupThatDoesNotExist) {
   EXPECT_THROW(ps.Sort(game_), UndefinedGroupError);
 }
 
-TEST_P(PluginSorterTest, sortingShouldIgnoreAGroupEdgeIfItWouldCauseACycleInIsolation) {
+TEST_P(PluginSorterTest,
+       sortingShouldIgnoreAGroupEdgeIfItWouldCauseACycleInIsolation) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
@@ -245,8 +246,9 @@ TEST_P(PluginSorterTest, sortingShouldIgnoreAGroupEdgeIfItWouldCauseACycleInIsol
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
-TEST_P(PluginSorterTest,
-  sortingShouldIgnoreGroupsThatContradictAnotherGroupInCombinationWithMoreSpecificMetadata) {
+TEST_P(
+    PluginSorterTest,
+    sortingShouldIgnoreGroupsThatContradictAnotherGroupInCombinationWithMoreSpecificMetadata) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
@@ -286,6 +288,45 @@ TEST_P(PluginSorterTest,
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  }
+
+  std::vector<std::string> sorted = ps.Sort(game_);
+  EXPECT_EQ(expectedSortedOrder, sorted);
+}
+
+TEST_P(
+    PluginSorterTest,
+    sortingShouldNotIgnorePluginsInTheSameGroupAsTheTargetPluginOfAGroupEdgeThatCausesACycleInIsolation) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  GenerateMasterlist();
+  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+
+  PluginMetadata plugin(blankEsm);
+  plugin.SetGroup("group4");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  plugin = PluginMetadata(blankDifferentMasterDependentEsm);
+  plugin.SetGroup("group4");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  PluginSorter ps;
+  std::vector<std::string> expectedSortedOrder({
+      masterFile,
+      blankDifferentEsm,
+      blankEsm,
+      blankMasterDependentEsm,
+      blankDifferentMasterDependentEsm,
+      blankEsp,
+      blankDifferentEsp,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
+      blankPluginDependentEsp,
+      blankDifferentPluginDependentEsp,
+  });
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 2, blankEsl);
   }
 
   std::vector<std::string> sorted = ps.Sort(game_);
