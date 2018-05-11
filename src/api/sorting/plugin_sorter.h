@@ -70,6 +70,7 @@ private:
   vertex_map_t vertexIndexMap_;
   std::vector<std::string> oldLoadOrder_;
   std::shared_ptr<spdlog::logger> logger_;
+  std::unordered_set<Group> groups_;
 };
 }
 

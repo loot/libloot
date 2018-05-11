@@ -226,9 +226,9 @@ void PluginSorter::AddPluginVertices(Game& game) {
 
     auto groupIt = groupPlugins.find(metadata.GetGroup());
     if (groupIt == groupPlugins.end()) {
-      groupPlugins.emplace(metadata.GetGroup(), std::vector<std::string>({ plugin->GetName() }));
-    }
-    else {
+      groupPlugins.emplace(metadata.GetGroup(),
+                           std::vector<std::string>({plugin->GetName()}));
+    } else {
       groupIt->second.push_back(plugin->GetName());
     }
 
@@ -242,13 +242,15 @@ void PluginSorter::AddPluginVertices(Game& game) {
 
   // Map sets of transitive group dependencies to sets of transitive plugin
   // dependencies.
-  auto groups = GetTransitiveAfterGroups(game.GetDatabase()->GetGroups());
+  groups_ = game.GetDatabase()->GetGroups();
+  auto groups = GetTransitiveAfterGroups(groups_);
   for (auto& group : groups) {
     std::unordered_set<std::string> transitivePlugins;
     for (const auto& afterGroup : group.second) {
       auto pluginsIt = groupPlugins.find(afterGroup);
       if (pluginsIt != groupPlugins.end()) {
-        transitivePlugins.insert(pluginsIt->second.begin(), pluginsIt->second.end());
+        transitivePlugins.insert(pluginsIt->second.begin(),
+                                 pluginsIt->second.end());
       }
     }
     group.second = transitivePlugins;
@@ -256,19 +258,21 @@ void PluginSorter::AddPluginVertices(Game& game) {
 
   // Add all transitive plugin dependencies for a group to the plugin's load
   // after metadata.
-  for (const auto& vertex : boost::make_iterator_range(boost::vertices(graph_))) {
+  for (const auto& vertex :
+       boost::make_iterator_range(boost::vertices(graph_))) {
     PluginSortingData& plugin = graph_[vertex];
 
     if (logger_) {
-      logger_->trace("Plugin \"{}\" belongs to group \"{}\", setting after group plugins",
-        plugin.GetName(), plugin.GetGroup());
+      logger_->trace(
+          "Plugin \"{}\" belongs to group \"{}\", setting after group plugins",
+          plugin.GetName(),
+          plugin.GetGroup());
     }
 
     auto groupsIt = groups.find(plugin.GetGroup());
     if (groupsIt == groups.end()) {
       throw UndefinedGroupError(plugin.GetGroup());
-    }
-    else {
+    } else {
       plugin.SetAfterGroupPlugins(groupsIt->second);
     }
   }
@@ -377,27 +381,133 @@ void PluginSorter::AddSpecificEdges() {
   }
 }
 
+bool shouldIgnorePlugin(
+    const std::string& group,
+    const std::string& pluginName,
+    const std::map<std::string, std::unordered_set<std::string>>&
+        groupPluginsToIgnore) {
+  auto pluginsToIgnore = groupPluginsToIgnore.find(group);
+  if (pluginsToIgnore != groupPluginsToIgnore.end()) {
+    return pluginsToIgnore->second.count(boost::to_lower_copy(pluginName)) > 0;
+  }
+
+  return false;
+}
+
+void ignorePlugin(const std::string& pluginName,
+                  const std::unordered_set<std::string>& groups,
+                  std::map<std::string, std::unordered_set<std::string>>&
+                      groupPluginsToIgnore) {
+  auto lowercasePluginName = boost::to_lower_copy(pluginName);
+
+  for (const auto& group : groups) {
+    auto pluginsToIgnore = groupPluginsToIgnore.find(group);
+    if (pluginsToIgnore != groupPluginsToIgnore.end()) {
+      pluginsToIgnore->second.insert(lowercasePluginName);
+    } else {
+      groupPluginsToIgnore.emplace(
+          group, std::unordered_set<std::string>({lowercasePluginName}));
+    }
+  }
+}
+
+// Look for paths to targetGroupName from group. Don't pass visitedGroups by
+// reference as each after group should be able to record paths independently.
+std::unordered_set<std::string> pathfinder(
+    const Group& group,
+    const std::string& targetGroupName,
+    const std::unordered_set<Group>& groups,
+    std::unordered_set<std::string> visitedGroups) {
+  // If the current group is the target group, return the set of groups in the
+  // path leading to it.
+  if (group.GetName() == targetGroupName) {
+    return visitedGroups;
+  }
+
+  if (group.GetAfterGroups().empty()) {
+    return std::unordered_set<std::string>();
+  }
+
+  visitedGroups.insert(group.GetName());
+
+  // Call pathfinder on each after group. We want to find all paths, so merge
+  // all return values.
+  std::unordered_set<std::string> mergedVisitedGroups;
+  for (const auto& afterGroupName : group.GetAfterGroups()) {
+    auto afterGroup = *groups.find(Group(afterGroupName));
+
+    auto recursedVisitedGroups =
+        pathfinder(afterGroup, targetGroupName, groups, visitedGroups);
+
+    mergedVisitedGroups.insert(recursedVisitedGroups.begin(),
+                               recursedVisitedGroups.end());
+  }
+
+  // Return mergedVisitedGroups if it is empty, to indicate the current group's
+  // after groups had no path to the target group.
+  if (mergedVisitedGroups.empty()) {
+    return mergedVisitedGroups;
+  }
+
+  // If any after groups had paths to the target group, mergedVisitedGroups
+  // will be non-empty. To ensure that it contains full paths, merge it
+  // with visitedGroups and return that merged set.
+  visitedGroups.insert(mergedVisitedGroups.begin(), mergedVisitedGroups.end());
+
+  return visitedGroups;
+}
+
+std::unordered_set<std::string> getGroupsInPaths(
+    const std::unordered_set<Group>& groups,
+    const std::string& firstGroupName,
+    const std::string& lastGroupName) {
+  // Groups are linked in reverse order, i.e. firstGroup can be found from
+  // lastGroup, but not the other way around.
+  auto lastGroup = *groups.find(Group(lastGroupName));
+
+  return pathfinder(
+      lastGroup, firstGroupName, groups, std::unordered_set<std::string>());
+}
+
 void PluginSorter::AddGroupEdges() {
   if (logger_) {
     logger_->trace("Adding group edges.");
   }
   std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
+  std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
   for (const vertex_t& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
     if (logger_) {
       logger_->trace("Checking group edges for \"{}\".",
-        graph_[vertex].GetName());
+                     graph_[vertex].GetName());
     }
     for (const auto& pluginName : graph_[vertex].GetAfterGroupPlugins()) {
       vertex_t parentVertex;
       if (GetVertexByName(pluginName, parentVertex)) {
-        if (EdgeCreatesCycle(parentVertex, vertex)) {
+        bool ignore = shouldIgnorePlugin(graph_[vertex].GetGroup(),
+                                         graph_[parentVertex].GetName(),
+                                         groupPluginsToIgnore);
+
+        if (ignore || EdgeCreatesCycle(parentVertex, vertex)) {
           if (logger_) {
-            logger_->trace("Skipping edge from \"{}\" to \"{}\" as it would "
-              "create a cycle.",
-              graph_[parentVertex].GetName(),
-              graph_[vertex].GetName());
+            logger_->trace(
+                "Skipping edge from \"{}\" to \"{}\" as it would "
+                "create a cycle.",
+                graph_[parentVertex].GetName(),
+                graph_[vertex].GetName());
           }
+          // Get the groups of the two plugins, and find all groups that are
+          // in paths that sit between those two groups. Group-derived edges
+          // from the plugin at parentVertex to any plugins in those groups
+          // should then be ignored as they also create cycles.
+          auto groupsInPaths = getGroupsInPaths(groups_,
+                                                graph_[parentVertex].GetGroup(),
+                                                graph_[vertex].GetGroup());
+
+          ignorePlugin(graph_[parentVertex].GetName(),
+                       groupsInPaths,
+                       groupPluginsToIgnore);
+
           continue;
         }
 
@@ -407,10 +517,22 @@ void PluginSorter::AddGroupEdges() {
   }
 
   if (logger_) {
-    logger_->trace("Adding group edges that don't individually introduce cycles.");
+    logger_->trace(
+        "Adding group edges that don't individually introduce cycles.");
   }
   for (const auto& edgePair : acyclicEdgePairs) {
-    AddEdge(edgePair.first, edgePair.second);
+    bool ignore = shouldIgnorePlugin(graph_[edgePair.second].GetGroup(),
+                                     graph_[edgePair.first].GetName(),
+                                     groupPluginsToIgnore);
+    if (!ignore) {
+      AddEdge(edgePair.first, edgePair.second);
+    } else if (logger_) {
+      logger_->trace(
+          "Skipping edge from \"{}\" to \"{}\" as it would "
+          "create a multi-group cycle.",
+          graph_[edgePair.first].GetName(),
+          graph_[edgePair.second].GetName());
+    }
   }
 }
 
