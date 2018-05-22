@@ -394,6 +394,17 @@ bool shouldIgnorePlugin(
   return false;
 }
 
+bool shouldIgnoreGroupEdge(
+    const PluginSortingData& fromPlugin,
+    const PluginSortingData& toPlugin,
+    const std::map<std::string, std::unordered_set<std::string>>&
+        groupPluginsToIgnore) {
+  return shouldIgnorePlugin(
+             fromPlugin.GetGroup(), toPlugin.GetName(), groupPluginsToIgnore) ||
+         shouldIgnorePlugin(
+             toPlugin.GetGroup(), fromPlugin.GetName(), groupPluginsToIgnore);
+}
+
 void ignorePlugin(const std::string& pluginName,
                   const std::unordered_set<std::string>& groups,
                   std::map<std::string, std::unordered_set<std::string>>&
@@ -488,29 +499,38 @@ void PluginSorter::AddGroupEdges() {
     for (const auto& pluginName : graph_[vertex].GetAfterGroupPlugins()) {
       vertex_t parentVertex;
       if (GetVertexByName(pluginName, parentVertex)) {
-        bool ignore = shouldIgnorePlugin(graph_[vertex].GetGroup(),
-                                         graph_[parentVertex].GetName(),
-                                         groupPluginsToIgnore);
+        if (EdgeCreatesCycle(parentVertex, vertex)) {
+          auto& fromPlugin = graph_[parentVertex];
+          auto& toPlugin = graph_[vertex];
 
-        if (ignore || EdgeCreatesCycle(parentVertex, vertex)) {
           if (logger_) {
             logger_->trace(
                 "Skipping edge from \"{}\" to \"{}\" as it would "
                 "create a cycle.",
-                graph_[parentVertex].GetName(),
-                graph_[vertex].GetName());
+                fromPlugin.GetName(),
+                toPlugin.GetName());
           }
-          // Get the groups of the two plugins, and find all groups that are
-          // in paths that sit between those two groups. Group-derived edges
-          // from the plugin at parentVertex to any plugins in those groups
-          // should then be ignored as they also create cycles.
-          auto groupsInPaths = getGroupsInPaths(groups_,
-                                                graph_[parentVertex].GetGroup(),
-                                                graph_[vertex].GetGroup());
 
-          ignorePlugin(graph_[parentVertex].GetName(),
-                       groupsInPaths,
-                       groupPluginsToIgnore);
+          // The default group is a special case, as it's given to plugins
+          // with no metadata. If a plugin in the default group causes
+          // a cycle due to its group, ignore that plugin's group for all
+          // groups in the group graph paths between default and the other
+          // plugin's group.
+          std::string pluginToIgnore;
+          if (toPlugin.GetGroup() == Group().GetName()) {
+            pluginToIgnore = toPlugin.GetName();
+          } else if (fromPlugin.GetGroup() == Group().GetName()) {
+            pluginToIgnore = fromPlugin.GetName();
+          } else {
+            // If neither plugin is in the default group, it's impossible
+            // to decide which group to ignore, so ignore neither of them.
+            continue;
+          }
+
+          auto groupsInPaths = getGroupsInPaths(
+              groups_, fromPlugin.GetGroup(), toPlugin.GetGroup());
+
+          ignorePlugin(pluginToIgnore, groupsInPaths, groupPluginsToIgnore);
 
           continue;
         }
@@ -525,17 +545,19 @@ void PluginSorter::AddGroupEdges() {
         "Adding group edges that don't individually introduce cycles.");
   }
   for (const auto& edgePair : acyclicEdgePairs) {
-    bool ignore = shouldIgnorePlugin(graph_[edgePair.second].GetGroup(),
-                                     graph_[edgePair.first].GetName(),
-                                     groupPluginsToIgnore);
+    auto& fromPlugin = graph_[edgePair.first];
+    auto& toPlugin = graph_[edgePair.second];
+    bool ignore =
+        shouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
+
     if (!ignore) {
       AddEdge(edgePair.first, edgePair.second);
     } else if (logger_) {
       logger_->trace(
           "Skipping edge from \"{}\" to \"{}\" as it would "
           "create a multi-group cycle.",
-          graph_[edgePair.first].GetName(),
-          graph_[edgePair.second].GetName());
+          fromPlugin.GetName(),
+          toPlugin.GetName());
     }
   }
 }

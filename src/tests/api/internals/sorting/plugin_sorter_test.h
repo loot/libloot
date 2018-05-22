@@ -83,6 +83,13 @@ protected:
 
     boost::filesystem::ofstream masterlist(masterlistPath_);
     masterlist << "groups:" << endl
+               << "  - name: earliest" << endl
+               << "  - name: earlier" << endl
+               << "    after:" << endl
+               << "      - earliest" << endl
+               << "  - name: default" << endl
+               << "    after:" << endl
+               << "      - earlier" << endl
                << "  - name: group1" << endl
                << "  - name: group2" << endl
                << "    after:" << endl
@@ -248,27 +255,24 @@ TEST_P(PluginSorterTest,
 
 TEST_P(
     PluginSorterTest,
-    sortingShouldIgnoreGroupsThatContradictAnotherGroupInCombinationWithMoreSpecificMetadata) {
+    sortingShouldIgnoreGroupEdgesInvolvedInABackCycleOfAGroupEdgeFromADefaultGroupPlugin) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
   game_.GetDatabase()->LoadLists(masterlistPath_.string());
 
   PluginMetadata plugin(blankEsp);
-  plugin.SetGroup("group1");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankDifferentMasterDependentEsp);
-  plugin.SetGroup("group1");
   plugin.SetLoadAfterFiles(std::set<File>({File(blankMasterDependentEsp)}));
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankDifferentEsp);
-  plugin.SetGroup("group2");
+  plugin.SetGroup("group1");
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankMasterDependentEsp);
-  plugin.SetGroup("group3");
+  plugin.SetGroup("group2");
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   PluginSorter ps;
@@ -292,6 +296,69 @@ TEST_P(
 
   std::vector<std::string> sorted = ps.Sort(game_);
   EXPECT_EQ(expectedSortedOrder, sorted);
+}
+
+TEST_P(
+    PluginSorterTest,
+    sortingShouldIgnoreGroupEdgesInvolvedInABackCycleOfAGroupEdgeToADefaultGroupPlugin) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  GenerateMasterlist();
+  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+
+  PluginMetadata plugin(blankMasterDependentEsm);
+  plugin.SetGroup("earliest");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  plugin = PluginMetadata(blankDifferentEsm);
+  plugin.SetGroup("earlier");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  PluginSorter ps;
+  std::vector<std::string> expectedSortedOrder({
+      blankEsm,
+      blankMasterDependentEsm,
+      blankDifferentEsm,
+      masterFile,
+      blankDifferentMasterDependentEsm,
+      blankEsp,
+      blankDifferentEsp,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
+      blankPluginDependentEsp,
+      blankDifferentPluginDependentEsp,
+  });
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  }
+
+  std::vector<std::string> sorted = ps.Sort(game_);
+  EXPECT_EQ(expectedSortedOrder, sorted);
+}
+
+TEST_P(
+    PluginSorterTest,
+    sortingShouldThrowForAGroupEdgeThatCausesAMultiGroupCycleBetweenTwoNonDefaultGroups) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  GenerateMasterlist();
+  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+
+  PluginMetadata plugin(blankMasterDependentEsm);
+  plugin.SetGroup("earliest");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  plugin = PluginMetadata(blankDifferentEsm);
+  plugin.SetGroup("earlier");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  plugin = PluginMetadata(blankEsm);
+  plugin.SetGroup("group4");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  PluginSorter ps;
+  EXPECT_THROW(ps.Sort(game_), CyclicInteractionError);
 }
 
 TEST_P(
