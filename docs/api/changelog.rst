@@ -2,6 +2,34 @@
 Version History
 ***************
 
+0.13.3 - 2018-05-26
+===================
+
+Changed
+-------
+
+- Improved cycle avoidance when resolving evaluating plugin groups during
+  sorting. If enforcing the group difference between two plugins would cause a
+  cycle and one of the plugins' groups is the default group, that plugin's group
+  will be ignored for all plugins in groups between default and the other
+  plugin's group.
+- The masterlist repository cloning process no longer moves LOOT's game folders,
+  so if something goes wrong the process fails more safely.
+- The LOOT API is now built with debugging information on Windows, and its PDB
+  is included in build archives.
+- Updated libloadorder to v11.2.2.
+
+Fixed
+-----
+
+- Various filesystem-related issues that could be encountered when updating
+  masterlists, including failure due to file handles being left open while
+  attempting to remove.
+- Building the esplugin and libloadorder dependencies using Rust 1.26.0, which
+  included a `regression`_ to workspace builds.
+
+.. regression: https://github.com/rust-lang/cargo/issues/5518
+
 0.13.2 - 2018-04-29
 ===================
 
