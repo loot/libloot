@@ -82,10 +82,6 @@ private:
   }
 };
 
-TEST_F(GitHelperTest, repoShouldInitialiseAsANullPointer) {
-  EXPECT_EQ(nullptr, git_.GetData().repo);
-}
-
 TEST_F(GitHelperTest, destructorShouldCallLibgit2CleanupFunction) {
   ASSERT_EQ(2, git_libgit2_init());
 
@@ -94,15 +90,6 @@ TEST_F(GitHelperTest, destructorShouldCallLibgit2CleanupFunction) {
 
   delete gitPointer;
   EXPECT_EQ(2, git_libgit2_shutdown());
-}
-
-TEST_F(GitHelperTest, callShouldNotThrowIfPassedAZeroValue) {
-  EXPECT_NO_THROW(git_.Call(0));
-}
-
-TEST_F(GitHelperTest, callShouldThrowIfPassedANonZeroValue) {
-  EXPECT_THROW(git_.Call(1), std::system_error);
-  EXPECT_THROW(git_.Call(-1), std::system_error);
 }
 
 TEST_F(GitHelperTest, isRepositoryShouldReturnTrueForARepositoryRoot) {

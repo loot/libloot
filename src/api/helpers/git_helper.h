@@ -34,6 +34,35 @@
 namespace loot {
 class GitHelper {
 public:
+  GitHelper();
+  ~GitHelper();
+
+  void InitialiseOptions(const std::string& branch,
+                         const std::string& filenameToCheckout);
+  void Open(const boost::filesystem::path& repoRoot);
+  void SetRemoteUrl(const std::string& remote, const std::string& url);
+
+  static bool IsRepository(const boost::filesystem::path& path);
+  static bool IsFileDifferent(const boost::filesystem::path& repoRoot,
+                              const std::string& filename);
+
+  void Clone(const boost::filesystem::path& path, const std::string& url);
+  void Fetch(const std::string& remote);
+
+  void CheckoutNewBranch(const std::string& remote, const std::string& branch);
+  void CheckoutRevision(const std::string& revision);
+
+  // Deletes the branch, detaching HEAD if it's currently set to the branch.
+  void DeleteBranch(const std::string& branch);
+
+  bool BranchExists(const std::string& branch);
+  bool IsBranchUpToDate(const std::string& branch);
+  bool IsBranchCheckedOut(const std::string& branch);
+
+  std::string GetHeadCommitId(bool shortId);
+  std::string GetHeadCommitDate();
+
+private:
   struct DiffPayload {
     bool fileFound;
     const char* fileToFind;
@@ -60,31 +89,17 @@ public:
     git_clone_options clone_options;
   };
 
-  GitHelper();
-  ~GitHelper();
-
-  void Call(int error_code);
-
-  static bool IsRepository(const boost::filesystem::path& path);
-  static bool IsFileDifferent(const boost::filesystem::path& repoRoot,
-                              const std::string& filename);
   static int DiffFileCallback(const git_diff_delta* delta,
                               float progress,
                               void* payload);
 
-  void Clone(const boost::filesystem::path& path, const std::string& url);
-  void Fetch(const std::string& remote);
-
-  void CheckoutNewBranch(const std::string& remote, const std::string& branch);
-  void CheckoutRevision(const std::string& revision);
-
-  std::string GetHeadShortId();
-  GitData& GetData();
-
-private:
   // Removes the read-only flag from some files in git repositories
   // created by libgit2.
   void FixRepoPermissions(const boost::filesystem::path& path);
+
+  void Call(int error_code);
+
+  const git_oid* GetCommitId(git_reference* reference);
 
   GitData data_;
   std::shared_ptr<spdlog::logger> logger_;

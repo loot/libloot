@@ -24,6 +24,9 @@
 
 #include "api/helpers/git_helper.h"
 
+#include <iomanip>
+#include <sstream>
+
 #include <boost/format.hpp>
 
 #include "api/helpers/logging.h"
@@ -87,13 +90,56 @@ GitHelper::GitData::~GitData() {
   git_tree_free(tree);
   git_diff_free(diff);
   git_buf_free(&buffer);
-
-  // Also free any path strings in the checkout options.
-  for (size_t i = 0; i < checkout_options.paths.count; ++i) {
-    delete[] checkout_options.paths.strings[i];
-  }
+  git_strarray_free(&checkout_options.paths);
 
   git_libgit2_shutdown();
+}
+
+void GitHelper::InitialiseOptions(const std::string& branch,
+                                  const std::string& filenameToCheckout) {
+  if (logger_) {
+    logger_->debug(
+        "Setting up checkout options uUsing branch {} and filename {}.",
+        branch,
+        filenameToCheckout);
+  }
+
+  data_.checkout_options.checkout_strategy =
+      GIT_CHECKOUT_FORCE | GIT_CHECKOUT_DONT_REMOVE_EXISTING;
+
+  char** paths = new char*[1];
+  paths[0] = new char[filenameToCheckout.length() + 1];
+  strcpy(paths[0], filenameToCheckout.c_str());
+
+  data_.checkout_options.paths.strings = paths;
+  data_.checkout_options.paths.count = 1;
+
+  // Initialise clone options.
+  data_.clone_options.checkout_opts = data_.checkout_options;
+  data_.clone_options.bare = 0;
+  data_.clone_options.checkout_branch = branch.c_str();
+}
+
+void GitHelper::Open(const boost::filesystem::path& repoRoot) {
+  if (logger_) {
+    logger_->info("Attempting to open Git repository at: {}",
+                  repoRoot.string());
+  }
+  Call(git_repository_open(&data_.repo, repoRoot.string().c_str()));
+}
+
+void GitHelper::SetRemoteUrl(const std::string& remote,
+                             const std::string& url) {
+  if (data_.repo == nullptr) {
+    throw GitStateError(
+        "Cannot set remote URL for repository that has not been opened.");
+  }
+
+  if (logger_) {
+    logger_->info("Setting URL for remote {} to {}", remote, url);
+  }
+
+  Call(git_remote_set_url(data_.repo, remote.c_str(), url.c_str()));
 }
 
 void GitHelper::Call(int error_code) {
@@ -332,7 +378,140 @@ void GitHelper::CheckoutRevision(const std::string& revision) {
   data_.object = nullptr;
 }
 
-std::string GitHelper::GetHeadShortId() {
+void GitHelper::DeleteBranch(const std::string& branch) {
+  if (data_.repo == nullptr) {
+    throw GitStateError(
+        "Cannot delete branch for repository that has not been opened.");
+  } else if (data_.reference != nullptr) {
+    throw GitStateError(
+        "Cannot delete branch, reference memory already allocated.");
+  }
+
+  Call(git_branch_lookup(
+      &data_.reference, data_.repo, branch.c_str(), GIT_BRANCH_LOCAL));
+
+  int ret = git_branch_is_head(data_.reference);
+  if (ret == 1) {
+    if (logger_) {
+      logger_->debug("Detaching HEAD before deleting branch.");
+    }
+    git_repository_detach_head(data_.repo);
+  } else {
+    Call(ret);
+  }
+
+  if (logger_) {
+    logger_->debug("Deleting branch.");
+  }
+
+  Call(git_branch_delete(data_.reference));
+
+  git_reference_free(data_.reference);
+  data_.reference = nullptr;
+}
+
+bool GitHelper::BranchExists(const std::string& branch) {
+  if (data_.repo == nullptr) {
+    throw GitStateError(
+        "Cannot check branch existence for repository that has not been "
+        "opened.");
+  } else if (data_.reference != nullptr) {
+    throw GitStateError(
+        "Cannot check branch existence, reference memory already allocated.");
+  }
+
+  int ret = git_branch_lookup(
+      &data_.reference, data_.repo, branch.c_str(), GIT_BRANCH_LOCAL);
+  if (ret != GIT_ENOTFOUND) {
+    // Handle other errors from preceding branch lookup.
+    Call(ret);
+
+    git_reference_free(data_.reference);
+    data_.reference = nullptr;
+
+    return true;
+  }
+
+  return false;
+}
+
+bool GitHelper::IsBranchUpToDate(const std::string& branch) {
+  if (data_.repo == nullptr) {
+    throw GitStateError(
+        "Cannot check branch existence for repository that has not been "
+        "opened.");
+  } else if (data_.reference != nullptr) {
+    throw GitStateError(
+        "Cannot check branch existence, reference memory already allocated.");
+  } else if (data_.reference2 != nullptr) {
+    throw GitStateError(
+        "Cannot check branch existence, reference2 memory already allocated.");
+  }
+
+  Call(git_branch_lookup(
+      &data_.reference, data_.repo, branch.c_str(), GIT_BRANCH_LOCAL));
+
+  // Get remote branch reference.
+  Call(git_branch_lookup(&data_.reference2,
+                         data_.repo,
+                         ("origin/" + branch).c_str(),
+                         GIT_BRANCH_REMOTE));
+
+  // Get the branch tips' commit IDs.
+  auto local_commit_id = GetCommitId(data_.reference);
+  auto remote_commit_id = GetCommitId(data_.reference2);
+
+  bool upToDate = memcmp(local_commit_id->id, remote_commit_id->id, 20) == 0;
+
+  // Free the remote branch reference.
+  git_reference_free(data_.reference2);
+  data_.reference2 = nullptr;
+
+  git_reference_free(data_.reference);
+  data_.reference = nullptr;
+
+  return upToDate;
+}
+
+bool GitHelper::IsBranchCheckedOut(const std::string& branch) {
+  if (data_.repo == nullptr) {
+    throw GitStateError(
+        "Cannot check branch existence for repository that has not been "
+        "opened.");
+  } else if (data_.reference != nullptr) {
+    throw GitStateError(
+        "Cannot check branch existence, reference memory already allocated.");
+  }
+
+  Call(git_branch_lookup(
+      &data_.reference, data_.repo, branch.c_str(), GIT_BRANCH_LOCAL));
+
+  bool isCheckedOut = git_branch_is_checked_out(data_.reference);
+
+  git_reference_free(data_.reference);
+  data_.reference = nullptr;
+
+  return isCheckedOut;
+}
+
+const git_oid* GitHelper::GetCommitId(git_reference* reference) {
+  if (reference == nullptr)
+    throw GitStateError(
+        "Cannot get the commit ID of a null git_reference pointer.");
+  else if (data_.object != nullptr)
+    throw GitStateError(
+        "Cannot fetch repository updates, object memory already allocated.");
+
+  Call(git_reference_peel(&data_.object, reference, GIT_OBJ_COMMIT));
+  const git_oid* remote_commit_id = git_object_id(data_.object);
+
+  git_object_free(data_.object);
+  data_.object = nullptr;
+
+  return remote_commit_id;
+}
+
+std::string GitHelper::GetHeadCommitId(bool shortId) {
   if (data_.repo == nullptr)
     throw GitStateError(
         "Cannot checkout revision for repository that has not been opened.");
@@ -350,25 +529,70 @@ std::string GitHelper::GetHeadShortId() {
     logger_->trace("Getting the Git object for HEAD.");
   }
   Call(git_repository_head(&data_.reference, data_.repo));
-  Call(git_reference_peel(&data_.object, data_.reference, GIT_OBJ_COMMIT));
 
-  if (logger_) {
-    logger_->trace("Generating hex string for Git object ID.");
+  std::string id;
+  if (shortId) {
+    Call(git_reference_peel(&data_.object, data_.reference, GIT_OBJ_COMMIT));
+
+    if (logger_) {
+      logger_->trace("Generating hex string for Git object ID.");
+    }
+    Call(git_object_short_id(&data_.buffer, data_.object));
+    id = data_.buffer.ptr;
+
+    git_object_free(data_.object);
+    git_buf_free(&data_.buffer);
+    data_.object = nullptr;
+    data_.buffer = {0};
+  } else {
+    auto commit_id = GetCommitId(data_.reference);
+    char c_rev[GIT_OID_HEXSZ + 1];
+
+    id = git_oid_tostr(c_rev, GIT_OID_HEXSZ + 1, commit_id);
   }
-  Call(git_object_short_id(&data_.buffer, data_.object));
-  string revision = data_.buffer.ptr;
 
   git_reference_free(data_.reference);
-  git_object_free(data_.object);
-  git_buf_free(&data_.buffer);
   data_.reference = nullptr;
-  data_.object = nullptr;
-  data_.buffer = {0};
 
-  return revision;
+  return id;
 }
 
-GitHelper::GitData& GitHelper::GetData() { return data_; }
+std::string GitHelper::GetHeadCommitDate() {
+  if (data_.repo == nullptr) {
+    throw GitStateError(
+        "Cannot get HEAD commit date for repository that has not been opened.");
+  } else if (data_.commit != nullptr) {
+    throw GitStateError(
+        "Cannot get HEAD commit date, commit memory already allocated.");
+  } else if (data_.reference != nullptr) {
+    throw GitStateError(
+        "Cannot get HEAD commit date, reference memory already allocated.");
+  }
+
+  if (logger_) {
+    logger_->trace("Getting the Git reference for HEAD.");
+  }
+  Call(git_repository_head(&data_.reference, data_.repo));
+
+  auto commit_id = GetCommitId(data_.reference);
+
+  git_reference_free(data_.reference);
+  data_.reference = nullptr;
+
+  if (logger_) {
+    logger_->trace("Getting commit for ID.");
+  }
+
+  Call(git_commit_lookup(&data_.commit, data_.repo, commit_id));
+  git_time_t time = git_commit_time(data_.commit);
+
+  git_commit_free(data_.commit);
+  data_.commit = nullptr;
+
+  std::ostringstream out;
+  out << std::put_time(std::gmtime(&time), "%Y-%m-%d");
+  return out.str();
+}
 
 bool GitHelper::IsFileDifferent(const boost::filesystem::path& repoRoot,
                                 const std::string& filename) {
