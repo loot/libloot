@@ -95,7 +95,7 @@ private:
 
   // Removes the read-only flag from some files in git repositories
   // created by libgit2.
-  void FixRepoPermissions(const boost::filesystem::path& path);
+  void GrantWritePermissions(const boost::filesystem::path& path);
 
   void Call(int error_code);
 

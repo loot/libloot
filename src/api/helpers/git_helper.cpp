@@ -46,7 +46,7 @@ GitHelper::~GitHelper() {
 
     if (!path.empty()) {
       try {
-        FixRepoPermissions(path);
+        GrantWritePermissions(path);
       } catch (std::exception&) {
       }
     }
@@ -169,7 +169,7 @@ bool GitHelper::IsRepository(const boost::filesystem::path& path) {
 
 // Removes the read-only flag from some files in git repositories created by
 // libgit2.
-void GitHelper::FixRepoPermissions(const boost::filesystem::path& path) {
+void GitHelper::GrantWritePermissions(const boost::filesystem::path& path) {
   if (logger_) {
     logger_->trace("Recursively setting write permission on directory: {}",
                    path.string());
@@ -218,49 +218,60 @@ void GitHelper::Clone(const boost::filesystem::path& path,
     logger_->info("Repository doesn't exist, cloning the remote repository.");
   }
 
-  fs::path tempPath = path.parent_path() / fs::unique_path();
+  fs::create_directories(path.parent_path());
 
-  // Delete temporary folder in case it already exists.
-  fs::remove_all(tempPath);
-
-  if (!fs::is_empty(path)) {
-    // Directory is non-empty. Delete the masterlist file and
-    // .git folder, then move any remaining files to a temporary
-    // folder while the repo is cloned, before moving them back.
+  // If the target path is not an empty directory, clone into a temporary
+  // directory.
+  fs::path repoPath;
+  if (fs::exists(path) && !fs::is_empty(path)) {
     if (logger_) {
-      logger_->trace("Repo path not empty, renaming folder.");
+      logger_->trace("Target repo path not empty, cloning into temporary directory.");
     }
+    auto directory = "LOOT-" + path.filename().string() + "-" + fs::unique_path().string();
+    repoPath = fs::temp_directory_path() / directory;
 
-    // Clear any read-only flags first.
-    FixRepoPermissions(path);
-
-    // Now move to temp path.
-    fs::rename(path, tempPath);
-
-    // Recreate the game folder so that we don't inadvertently
-    // cause any other errors (everything past LOOT init assumes
-    // it exists).
-    fs::create_directory(path);
+    // Remove path in case it already exists.
+    fs::remove_all(repoPath);
+  } else {
+    repoPath = path;
   }
 
   // Perform the clone.
-  Call(git_clone(
-      &data_.repo, url.c_str(), path.string().c_str(), &data_.clone_options));
+  Call(git_clone(&data_.repo,
+                 url.c_str(),
+                 repoPath.string().c_str(),
+                 &data_.clone_options));
 
-  if (fs::exists(tempPath)) {
-    // Move contents back in.
+  // If repo was cloned into a temporary directory, move it into the target
+  // path.
+  if (repoPath != path) {
+    // Free the repository to ensure all file handles are closed.
+    git_repository_free(data_.repo);
+    data_.repo = nullptr;
+
     if (logger_) {
-      logger_->trace("Repo path wasn't empty, moving previous files back in.");
+      logger_->trace(
+          "Target repo path not empty, renaming and moving previous content "
+          "back in.");
     }
-    for (fs::directory_iterator it(tempPath); it != fs::directory_iterator();
+
+    GrantWritePermissions(path);
+    GrantWritePermissions(repoPath);
+
+    for (fs::directory_iterator it(repoPath);
+         it != fs::directory_iterator();
          ++it) {
-      if (!fs::exists(path / it->path().filename())) {
-        // No conflict, OK to move back in.
-        fs::rename(it->path(), path / it->path().filename());
+      auto targetPath = path / it->path().filename();
+      if (fs::exists(targetPath)) {
+        fs::remove_all(targetPath);
       }
+      fs::rename(it->path(), targetPath);
     }
-    // Delete temporary folder.
-    fs::remove_all(tempPath);
+
+    fs::remove_all(repoPath);
+
+    // Open the repo again.
+    Open(path);
   }
 }
 
