@@ -2,6 +2,16 @@
 Version History
 ***************
 
+0.13.4 - 2018-06-02
+===================
+
+Fixed
+-----
+
+- :cpp:any:`NewMetadata()` now uses the passed plugin's group if the calling
+  plugin's group is implicit, and sets the group to be implicit if the two
+  plugins' groups are equal.
+
 0.13.3 - 2018-05-26
 ===================
 
