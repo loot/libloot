@@ -2,6 +2,22 @@
 Version History
 ***************
 
+0.13.5 - 2018-06-02
+===================
+
+Changed
+-------
+
+- Sorting now enforces hardcoded plugin positions, sourcing them through
+  libloadorder. This avoids the need for often very verbose metadata entries,
+  particularly for Creation Club plugins.
+- Updated libgit2 to v0.27.1. This includes a security fix for CVE-2018-11235,
+  but LOOT API's usage is not susceptible. libgit2 is not susceptible to
+  CVE-2018-11233, another Git vulnerability which was published on the same day.
+- Updated libloadorder to v11.3.0.
+- Updated spdlog to v0.17.0.
+- Updated esplugin to v1.0.10.
+
 0.13.4 - 2018-06-02
 ===================
 
