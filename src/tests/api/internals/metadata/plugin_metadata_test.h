@@ -290,6 +290,47 @@ TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginEnabledState) {
   EXPECT_FALSE(newMetadata.IsEnabled());
 }
 
+TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginGroupExplicitlyIfItIsExplicit) {
+  PluginMetadata plugin1;
+  PluginMetadata plugin2;
+
+  plugin1.SetGroup("group1");
+  plugin2.SetGroup("group2");
+
+  PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
+
+  EXPECT_EQ("group1", newMetadata.GetGroup());
+  EXPECT_TRUE(newMetadata.IsGroupExplicit());
+}
+
+TEST_P(PluginMetadataTest,
+       newMetadataShouldUseGivenPluginGroupImplicitlyIfTheSourcePluginGroupIsNotExplicit) {
+  PluginMetadata plugin1;
+  PluginMetadata plugin2;
+
+  plugin2.SetGroup("group2");
+
+  PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
+
+  EXPECT_EQ("group2", newMetadata.GetGroup());
+  EXPECT_FALSE(newMetadata.IsGroupExplicit());
+}
+
+TEST_P(
+    PluginMetadataTest,
+    newMetadataShouldUseSourcePluginGroupImplicitlyIfTheGroupsAreTheSame) {
+  PluginMetadata plugin1;
+  PluginMetadata plugin2;
+
+  plugin1.SetGroup("group1");
+  plugin2.SetGroup("group1");
+
+  PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
+
+  EXPECT_EQ("group1", newMetadata.GetGroup());
+  EXPECT_FALSE(newMetadata.IsGroupExplicit());
+}
+
 TEST_P(PluginMetadataTest,
        newMetadataShouldOutputLoadAfterDataThatAreNotCommonToBothInputPlugins) {
   PluginMetadata plugin1;
@@ -460,8 +501,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest,
-       hasNameOnlyShouldBeFalseIfTheGroupIsExplicit) {
+TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTheGroupIsExplicit) {
   PluginMetadata plugin;
   plugin.SetGroup("group");
 
@@ -585,16 +625,16 @@ TEST_P(PluginMetadataTest,
 TEST_P(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginOmittingAnImplicitGroup) {
   PluginMetadata plugin(blankEsm);
-  plugin.SetLoadAfterFiles({ File(blankEsm) });
+  plugin.SetLoadAfterFiles({File(blankEsm)});
 
   YAML::Emitter emitter;
   emitter << plugin;
 
   EXPECT_STREQ(
-    "name: 'Blank.esm'\n"
-    "after:\n"
-    "  - 'Blank.esm'",
-    emitter.c_str());
+      "name: 'Blank.esm'\n"
+      "after:\n"
+      "  - 'Blank.esm'",
+      emitter.c_str());
 }
 
 TEST_P(PluginMetadataTest,
@@ -606,9 +646,9 @@ TEST_P(PluginMetadataTest,
   emitter << plugin;
 
   EXPECT_STREQ(
-    "name: 'Blank.esm'\n"
-    "group: 'group1'",
-    emitter.c_str());
+      "name: 'Blank.esm'\n"
+      "group: 'group1'",
+      emitter.c_str());
 }
 
 TEST_P(

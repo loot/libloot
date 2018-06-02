@@ -108,6 +108,13 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
 
   PluginMetadata p(*this);
 
+  if (!p.IsGroupExplicit()) {
+    p.group_ = plugin.group_;
+  }
+  if (p.group_ == plugin.group_) {
+    p.isGroupExplicit_ = false;
+  }
+
   // Compare this plugin against the given plugin.
   set<File> filesDiff;
   set_difference(begin(loadAfter_),
