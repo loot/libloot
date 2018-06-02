@@ -42,7 +42,8 @@ public:
 
   std::unordered_set<std::string> GetAfterGroupPlugins() const;
   void SetAfterGroupPlugins(std::unordered_set<std::string> plugins);
-
+  
+  using PluginMetadata::GetLowercasedName;
   using PluginMetadata::GetGroup;
   using PluginMetadata::GetLoadAfterFiles;
   using PluginMetadata::GetRequirements;

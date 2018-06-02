@@ -132,6 +132,8 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   }
   AddSpecificEdges();
 
+  AddHardcodedPluginEdges(game);
+
   AddGroupEdges();
 
   if (logger_) {
@@ -325,6 +327,51 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex,
     }
 
     boost::add_edge(fromVertex, toVertex, graph_);
+  }
+}
+
+void PluginSorter::AddHardcodedPluginEdges(Game& game) {
+  if (logger_) {
+    logger_->trace("Adding hardcoded plugin edges.");
+  }
+
+  auto implicitlyActivePlugins =
+      game.GetLoadOrderHandler()->GetImplicitlyActivePlugins();
+
+  std::set<std::string> processedPlugins;
+  for (const auto& plugin : implicitlyActivePlugins) {
+    auto lowercasedName = boost::locale::to_lower(plugin);
+    processedPlugins.insert(lowercasedName);
+
+    if (game.Type() == GameType::tes5 && lowercasedName == "update.esm") {
+      if (logger_) {
+        logger_->trace(
+            "Skipping adding hardcoded plugin edges for Update.esm as it does "
+            "not have a hardcoded position for Skyrim.");
+        continue;
+      }
+    }
+
+    vertex_t pluginVertex;
+
+    if (!GetVertexByName(plugin, pluginVertex)) {
+      if (logger_) {
+        logger_->trace(
+            "Skipping adding harcoded plugin edges for \"{}\" as it is not "
+            "installed.",
+            plugin);
+      }
+      continue;
+    }
+
+    vertex_it vit, vitend;
+    for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
+      auto& graphPlugin = graph_[*vit];
+
+      if (processedPlugins.count(graphPlugin.GetLowercasedName()) == 0) {
+        AddEdge(pluginVertex, *vit);
+      }
+    }
   }
 }
 

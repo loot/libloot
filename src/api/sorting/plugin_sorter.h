@@ -59,6 +59,7 @@ private:
 
   void AddPluginVertices(Game& game);
   void AddSpecificEdges();
+  void AddHardcodedPluginEdges(Game& game);
   void AddGroupEdges();
   void AddOverlapEdges();
   void AddTieBreakEdges();

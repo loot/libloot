@@ -59,6 +59,38 @@ protected:
         loadOrderHandler_.Init(GetParam(), dataPath.parent_path(), localPath));
   }
 
+  std::vector<std::string> getImplicitlyActivePlugins() {
+    switch (GetParam()) {
+      case GameType::tes5:
+        return {"Skyrim.esm", "Update.esm"};
+      case GameType::tes5se:
+        return {"Skyrim.esm",
+                "Update.esm",
+                "Dawnguard.esm",
+                "Hearthfires.esm",
+                "Dragonborn.esm"};
+      case GameType::tes5vr:
+        return {"Skyrim.esm",
+                "Update.esm",
+                "Dawnguard.esm",
+                "Hearthfires.esm",
+                "Dragonborn.esm",
+                "SkyrimVR.esm"};
+      case GameType::fo4:
+        return {"Fallout4.esm",
+                "DLCRobot.esm",
+                "DLCworkshop01.esm",
+                "DLCCoast.esm",
+                "DLCworkshop02.esm",
+                "DLCworkshop03.esm",
+                "DLCNukaWorld.esm"};
+      case GameType::fo4vr:
+        return {"Fallout4.esm", "Fallout4_VR.esm"};
+      default:
+        return {};
+    }
+  }
+
   LoadOrderHandler loadOrderHandler_;
   std::vector<std::string> loadOrderToSet_;
 };
@@ -137,6 +169,25 @@ TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
   loadOrderHandler_.LoadCurrentState();
 
   ASSERT_EQ(getLoadOrder(), loadOrderHandler_.GetLoadOrder());
+}
+
+TEST_P(LoadOrderHandlerTest,
+       getImplicitlyActivePluginsShouldThrowIfTheHandlerHasNotBeenInitialised) {
+  EXPECT_THROW(loadOrderHandler_.GetImplicitlyActivePlugins(),
+               std::system_error);
+}
+TEST_P(
+    LoadOrderHandlerTest,
+    getImplicitlyActivePluginsShouldReturnValidDataEvenIfStateHasNotBeenLoaded) {
+  initialiseHandler();
+
+  ASSERT_EQ(getImplicitlyActivePlugins(),
+            loadOrderHandler_.GetImplicitlyActivePlugins());
+
+  loadOrderHandler_.LoadCurrentState();
+
+  ASSERT_EQ(getImplicitlyActivePlugins(),
+            loadOrderHandler_.GetImplicitlyActivePlugins());
 }
 
 TEST_P(LoadOrderHandlerTest,

@@ -38,6 +38,7 @@ protected:
   PluginSorterTest() :
       game_(GetParam(), dataPath.parent_path(), localPath),
       masterlistPath_("./userlist.yaml"),
+      cccPath_(dataPath.parent_path() / getCCCFilename()),
       blankEslEsp("Blank.esl.esp") {}
 
   void TearDown() {
@@ -48,6 +49,7 @@ protected:
     }
 
     boost::filesystem::remove(masterlistPath_);
+    boost::filesystem::remove(cccPath_);
   }
 
   void loadInstalledPlugins(Game &game_, bool headersOnly) {
@@ -104,9 +106,32 @@ protected:
     masterlist.close();
   }
 
+  std::string getCCCFilename() {
+    if (GetParam() == GameType::fo4) {
+      return "Fallout4.ccc";
+    }
+    else {
+      // Not every game has a .ccc file, but Skyrim SE does, so just assume that.
+      return "Skyrim.ccc";
+    }
+  }
+
+  void GenerateCCCFile() {
+    using std::endl;
+
+    if (GetParam() == GameType::fo4) {
+      boost::filesystem::ofstream ccc(cccPath_);
+      ccc << blankDifferentEsm << endl
+          << blankDifferentMasterDependentEsm << endl;
+
+      ccc.close();
+    }
+  }
+
   Game game_;
   const std::string blankEslEsp;
   const boost::filesystem::path masterlistPath_;
+  const boost::filesystem::path cccPath_;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -319,7 +344,6 @@ TEST_P(
       blankEsm,
       blankMasterDependentEsm,
       blankDifferentEsm,
-      masterFile,
       blankDifferentMasterDependentEsm,
       blankEsp,
       blankDifferentEsp,
@@ -330,7 +354,10 @@ TEST_P(
   });
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin(), masterFile);
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  } else {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 3, masterFile);
   }
 
   std::vector<std::string> sorted = ps.Sort(game_);
@@ -463,6 +490,38 @@ TEST_P(PluginSorterTest,
   }
 
   std::vector<std::string> sorted = ps.Sort(game_);
+  EXPECT_EQ(expectedSortedOrder, sorted);
+}
+
+TEST_P(PluginSorterTest,
+       sortingShouldUseTheGameCCCFileToEnforceHardcodedLoadOrderPositions) {
+  if (GetParam() != GameType::fo4) {
+    return;
+  }
+
+  // Need to generate CCC file then recreate game object as the file is only
+  // read during intialisation.
+  GenerateCCCFile();
+  Game newGame(GetParam(), dataPath.parent_path(), localPath);
+  ASSERT_NO_THROW(loadInstalledPlugins(newGame, false));
+
+  PluginSorter ps;
+  std::vector<std::string> expectedSortedOrder({
+      masterFile,
+      blankDifferentEsm,
+      blankDifferentMasterDependentEsm,
+      blankEsm,
+      blankMasterDependentEsm,
+      blankEsl,
+      blankEsp,
+      blankDifferentEsp,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
+      blankPluginDependentEsp,
+      blankDifferentPluginDependentEsp,
+  });
+
+  std::vector<std::string> sorted = ps.Sort(newGame);
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
