@@ -258,6 +258,7 @@ void GitHelper::Clone(const boost::filesystem::path& path,
     GrantWritePermissions(path);
     GrantWritePermissions(repoPath);
 
+    std::vector<boost::filesystem::path> filenamesToMove;
     for (fs::directory_iterator it(repoPath);
          it != fs::directory_iterator();
          ++it) {
@@ -265,7 +266,11 @@ void GitHelper::Clone(const boost::filesystem::path& path,
       if (fs::exists(targetPath)) {
         fs::remove_all(targetPath);
       }
-      fs::rename(it->path(), targetPath);
+      filenamesToMove.push_back(it->path().filename());
+    }
+
+    for (const auto& filename : filenamesToMove) {
+      fs::rename(repoPath / filename, path / filename);
     }
 
     fs::remove_all(repoPath);
