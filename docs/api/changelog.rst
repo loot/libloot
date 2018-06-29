@@ -2,6 +2,18 @@
 Version History
 ***************
 
+0.13.6 - 2018-06-29
+===================
+
+Changed
+-------
+
+- Tweaked masterlist repository cloning to avoid undefined behaviour.
+- Updated Boost to v1.67.0.
+- Updated esplugin to v2.0.0.
+- Updated libgit2 to v0.27.2.
+- Updated libloadorder to v11.4.0.
+
 0.13.5 - 2018-06-02
 ===================
 
