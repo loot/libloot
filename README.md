@@ -14,7 +14,7 @@ The LOOT API provides access to LOOT's metadata and sorting functionality, and t
 
 ## Downloads
 
-Releases are hosted on [GitHub](https://github.com/loot/loot-api/releases), and snapshot builds are available on [Bintray](https://bintray.com/wrinklyninja/loot/loot-api). The snapshot build archives are named like so:
+Releases are hosted on [GitHub](https://github.com/loot/loot-api/releases), and snapshot builds are available on [Bintray](https://bintray.com/loot/snapshots/loot-api). The snapshot build archives are named like so:
 
 ```
 loot_api-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.7z
