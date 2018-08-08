@@ -93,7 +93,7 @@ deploy:
       appveyor_repo_tag: true
 
 on_success:
-  - ps: python "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py" -o loot -g loot-api -u wrinklyninja -b loot -p loot-api -t $env:bintray_auth_token -a $env:github_auth_token -n 30
+  - ps: python "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py" -o loot -g loot-api -u loot -b snapshots -p loot-api -t $env:bintray_auth_token -a $env:github_auth_token -n 30
 
 on_finish:
   - ps: (New-Object System.Net.WebClient).UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:CONFIGURATION)\loot_api_internals_tests.xml")
