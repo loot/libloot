@@ -13,9 +13,9 @@ matrix:
 
 environment:
   github_auth_token:
-    secure: V1GojGQfrAiQtUWtNNXfm3samiH+1yNF5UYhkn8B8mbif20IGTGWNlBS9E4S0SUC
+    secure: yDqT5l/e5MntbW99V6+MHlfFgNv+UIogFfeyUVqtFk5lFRB/dAraLLwKCLl6y+DH
   bintray_auth_token:
-    secure: fBQJmUDK/EgEUWjjbo6bWcitczeFTJZT4OZ3ZZ4FoUT6soBsTWPQJnr8YEVMFhGP
+    secure: PgsEA6TjHVf718zMnK7J/fT1hUAVNKBeWhpYgYaeCyeZk37VT4Ics6j7+B7ElLEr
 
 install:
   - curl -sSf -o rustup-init.exe https://win.rustup.rs
@@ -65,7 +65,7 @@ deploy:
   - provider: BinTray
     username: wrinklyninja
     api_key:
-      secure: fBQJmUDK/EgEUWjjbo6bWcitczeFTJZT4OZ3ZZ4FoUT6soBsTWPQJnr8YEVMFhGP
+      secure: PgsEA6TjHVf718zMnK7J/fT1hUAVNKBeWhpYgYaeCyeZk37VT4Ics6j7+B7ElLEr
     subject: loot
     repo: snapshots
     package: loot-api
@@ -85,7 +85,7 @@ deploy:
 
       *Note: The files below with `tar.xz` extensions contain Linux binaries. They won't work on Windows computers.*
     auth_token:
-      secure: V1GojGQfrAiQtUWtNNXfm3samiH+1yNF5UYhkn8B8mbif20IGTGWNlBS9E4S0SUC
+      secure: yDqT5l/e5MntbW99V6+MHlfFgNv+UIogFfeyUVqtFk5lFRB/dAraLLwKCLl6y+DH
     artifact: API
     draft: false
     force_update: true
