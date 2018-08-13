@@ -25,6 +25,8 @@
 #ifndef LOOT_API_SORTING_PLUGIN_SORTER
 #define LOOT_API_SORTING_PLUGIN_SORTER
 
+#define FMT_NO_FMT_STRING_ALIAS
+
 #include <map>
 
 #include <spdlog/spdlog.h>

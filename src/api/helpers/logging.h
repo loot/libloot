@@ -25,6 +25,7 @@
 #define LOOT_API_HELPERS_LOGGING
 
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/base_sink.h>
 
 #include "loot/enum/log_level.h"
 
@@ -42,11 +43,11 @@ public:
   }
 
 protected:
-  void _sink_it(const spdlog::details::log_msg& msg) override {
-    callback(mapFromSpdlog(msg.level), msg.raw.str().c_str());
+  void sink_it_(const spdlog::details::log_msg& msg) override {
+    callback(mapFromSpdlog(msg.level), fmt::to_string(msg.raw).c_str());
   }
 
-  void _flush() override {}
+  void flush_() override {}
 
 private:
   std::function<void(LogLevel, const char*)> callback;
