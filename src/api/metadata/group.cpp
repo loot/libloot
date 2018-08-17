@@ -29,18 +29,20 @@
 namespace loot {
 Group::Group() : name_("default") {}
 
-Group::Group(const std::string& name) : name_(name) {}
-
 Group::Group(const std::string& name,
-           const std::unordered_set<std::string>& afterGroups) :
+             const std::unordered_set<std::string>& afterGroups,
+             const std::string& description) :
     name_(name),
-    afterGroups_(afterGroups) {}
+    afterGroups_(afterGroups),
+    description_(description) {}
 
 bool Group::operator==(const Group& rhs) const {
   return name_ == rhs.name_;
 }
 
 std::string Group::GetName() const { return name_; }
+
+std::string Group::GetDescription() const { return description_; }
 
 std::unordered_set<std::string> Group::GetAfterGroups() const {
   return afterGroups_;

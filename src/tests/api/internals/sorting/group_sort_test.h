@@ -38,7 +38,7 @@ TEST(GetTransitiveAfterGroups, shouldMapGroupsToTheirTransitiveAfterGroups) {
   std::unordered_set<Group> groups({
     Group("a"),
     Group("b", std::unordered_set<std::string>({ "a" })),
-    Group("c", std::unordered_set<std::string>({ "b" }))
+    Group("c", std::unordered_set<std::string>({"b"}))
   });
 
   auto mapped = GetTransitiveAfterGroups(groups);

@@ -41,6 +41,10 @@ struct convert<loot::Group> {
     Node node;
     node["name"] = rhs.GetName();
 
+    if (!rhs.GetDescription().empty()) {
+      node["description"] = rhs.GetDescription();
+    }
+
     auto afterGroups = rhs.GetAfterGroups();
     if (!afterGroups.empty())
       node["after"] = afterGroups;
@@ -54,29 +58,40 @@ struct convert<loot::Group> {
           node.Mark(), "bad conversion: 'group' object must be a map");
 
     if (!node["name"])
-    throw RepresentationException(
-        node.Mark(),
-        "bad conversion: 'name' key missing from 'file' map object");
+      throw RepresentationException(
+          node.Mark(),
+          "bad conversion: 'name' key missing from 'file' map object");
 
     std::string name = node["name"].as<std::string>();
+    std::string description;
+    std::unordered_set<std::string> afterGroups;
+
+    if (node["description"]) {
+      description = node["description"].as<std::string>();
+    }
 
     if (node["after"]) {
-        rhs = loot::Group(name, node["after"].as<std::unordered_set<std::string>>());
-    } else {
-        rhs = loot::Group(name);
+      afterGroups = node["after"].as<std::unordered_set<std::string>>();
     }
+
+    rhs = loot::Group(name, afterGroups, description);
 
     return true;
   }
 };
 
 inline Emitter& operator<<(Emitter& out, const loot::Group& rhs) {
-  out << BeginMap
-    << Key << "name" << Value << YAML::SingleQuoted << rhs.GetName();
+  out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
+      << rhs.GetName();
+
+  if (!rhs.GetDescription().empty()) {
+    out << Key << "description" << Value << YAML::SingleQuoted
+        << rhs.GetDescription();
+  }
 
   auto afterGroups = rhs.GetAfterGroups();
   if (!afterGroups.empty()) {
-      out << Key << "after" << Value << afterGroups;
+    out << Key << "after" << Value << afterGroups;
   }
 
   out << EndMap;

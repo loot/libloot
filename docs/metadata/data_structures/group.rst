@@ -12,6 +12,13 @@ This structure can be used to hold group definitions. It is a key-value map.
 
   **Required.** A case-sensitive name that identifies the group.
 
+.. describe:: description
+
+  ``string``
+
+  A description of the group, e.g. what sort of plugins it contains. If
+  undefined, the description is an empty string.
+
 .. describe:: after
 
   ``string set``
@@ -30,7 +37,8 @@ Merging Groups
 --------------
 
 When a group definition for an already-defined group is encountered, the
-``after`` sets of the two definitions are merged.
+``description`` field is replaced if the new value is not an empty string, and
+the ``after`` sets of the two definitions are merged.
 
 The ``default`` Group
 ---------------------
@@ -55,6 +63,7 @@ Examples
   # Create a group for map marker plugins that loads after the predefined
   # 'default' group.
   name: 'Map Markers'
+  description: 'A group for map marker plugins that need to load late.'
   after:
     - 'default'
 

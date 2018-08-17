@@ -40,18 +40,23 @@ TEST(Group, defaultConstructorShouldCreateDefaultGroup) {
   EXPECT_TRUE(group.GetAfterGroups().empty());
 }
 
-TEST(Group, nameConstructorShouldCreateNamedGroup) {
+TEST(Group,
+     allArgsConstructorShouldSetDescriptionAndAfterGroupsDefaultsAsEmpty) {
   Group group("group1");
 
   EXPECT_EQ("group1", group.GetName());
+  EXPECT_TRUE(group.GetDescription().empty());
   EXPECT_TRUE(group.GetAfterGroups().empty());
 }
 
 TEST(Group, allArgsConstructorShouldStoreGivenValues) {
-  Group group("group1", std::unordered_set<std::string>({"other_group"}));
+  Group group(
+      "group1", std::unordered_set<std::string>({"other_group"}), "test");
 
   EXPECT_EQ("group1", group.GetName());
-  EXPECT_EQ(std::unordered_set<std::string>({"other_group"}), group.GetAfterGroups());
+  EXPECT_EQ("test", group.GetDescription());
+  EXPECT_EQ(std::unordered_set<std::string>({"other_group"}),
+            group.GetAfterGroups());
 }
 
 TEST(Group, groupsWithCaseInsensitiveEqualNameStringsShouldNotBeEqual) {
@@ -84,17 +89,47 @@ TEST(Group, emittingAsYamlShouldOmitAfterKeyIfAfterGroupsIsEmpty) {
   EXPECT_STREQ("name: 'default'", emitter.c_str());
 }
 
-TEST(Group, emittingAsYamlShouldIncludeAfterKeyIfAfterGroupsIsNotEmpty) {
-  Group group("group1", std::unordered_set<std::string>({ "other_group" }));
+TEST(Group, emittingAsYamlShouldIncludeDescriptionKeyIfDescriptionIsNotEmpty) {
+  Group group("group1", {}, "test");
 
   YAML::Emitter emitter;
   emitter << group;
 
   EXPECT_STREQ(
-    "name: 'group1'\n"
-    "after:\n"
-    "  - other_group", 
-    emitter.c_str());
+      "name: 'group1'\n"
+      "description: 'test'",
+      emitter.c_str());
+}
+
+TEST(Group, emittingAsYamlShouldIncludeAfterKeyIfAfterGroupsIsNotEmpty) {
+  Group group("group1", std::unordered_set<std::string>({"other_group"}));
+
+  YAML::Emitter emitter;
+  emitter << group;
+
+  EXPECT_STREQ(
+      "name: 'group1'\n"
+      "after:\n"
+      "  - other_group",
+      emitter.c_str());
+}
+
+TEST(Group, encodingAsYamlShouldOmitDescriptionKeyIfDescriptionIsEmpty) {
+  Group group;
+  YAML::Node node;
+  node = group;
+
+  EXPECT_EQ("default", node["name"].as<std::string>());
+  EXPECT_FALSE(node["description"]);
+}
+
+TEST(Group, encodingAsYamlShouldIncludeDescriptionKeyIfDescriptionIsNotEmpty) {
+  Group group("group1", {}, "test");
+  YAML::Node node;
+  node = group;
+
+  EXPECT_EQ("group1", node["name"].as<std::string>());
+  EXPECT_EQ("test", node["description"].as<std::string>());
 }
 
 TEST(Group, encodingAsYamlShouldOmitAfterKeyIfAfterGroupsIsEmpty) {
@@ -107,13 +142,14 @@ TEST(Group, encodingAsYamlShouldOmitAfterKeyIfAfterGroupsIsEmpty) {
 }
 
 TEST(Group, encodingAsYamlShouldIncludeAfterKeyIfAfterGroupsIsNotEmpty) {
-  Group group("group1", std::unordered_set<std::string>({ "other_group" }));
+  Group group("group1", std::unordered_set<std::string>({"other_group"}));
   YAML::Node node;
   node = group;
 
-  std::unordered_set<std::string> expectedAfterGroups = { "other_group" };
+  std::unordered_set<std::string> expectedAfterGroups = {"other_group"};
   EXPECT_EQ("group1", node["name"].as<std::string>());
-  EXPECT_EQ(expectedAfterGroups, node["after"].as<std::unordered_set<std::string>>());
+  EXPECT_EQ(expectedAfterGroups,
+            node["after"].as<std::unordered_set<std::string>>());
 }
 
 TEST(Group, decodingFromYamlShouldSetGivenName) {
@@ -124,11 +160,19 @@ TEST(Group, decodingFromYamlShouldSetGivenName) {
   EXPECT_TRUE(group.GetAfterGroups().empty());
 }
 
+TEST(Group, decodingFromYamlShouldSetDescriptionIfOneIsGiven) {
+  YAML::Node node = YAML::Load("{name: group1, description: test}");
+  Group group = node.as<Group>();
+
+  EXPECT_EQ("group1", group.GetName());
+  EXPECT_EQ("test", group.GetDescription());
+}
+
 TEST(Group, decodingFromYamlShouldSetAfterGroupsIfAnyAreGiven) {
   YAML::Node node = YAML::Load("{name: group1, after: [ other_group ]}");
   Group group = node.as<Group>();
 
-  std::unordered_set<std::string> expectedAfterGroups = { "other_group" };
+  std::unordered_set<std::string> expectedAfterGroups = {"other_group"};
   EXPECT_EQ("group1", group.GetName());
   EXPECT_EQ(expectedAfterGroups, group.GetAfterGroups());
 }

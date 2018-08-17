@@ -43,24 +43,19 @@ public:
   LOOT_API Group();
 
   /**
-   * Construct a File with the given name and an empty set of groups to load
-   * after.
-   * @param  name
-   *         The group name.
-   * @return A Group object.
-   */
-  LOOT_API Group(const std::string& name);
-
-  /**
-   * Construct a File with the given name and set of groups to load after.
+   * Construct a Group with the given name, description and set of groups to
+   * load after.
    * @param  name
    *         The group name.
    * @param  afterGroups
    *         The names of groups this group loads after.
+   * @param  description
+   *         A description of the group.
    * @return A Group object.
    */
   LOOT_API Group(const std::string& name,
-                 const std::unordered_set<std::string>& afterGroups);
+                 const std::unordered_set<std::string>& afterGroups = {},
+                 const std::string& description = "");
 
   /**
    * Check if two Group objects are equal by comparing their names.
@@ -75,6 +70,12 @@ public:
   LOOT_API std::string GetName() const;
 
   /**
+   * Get the description of the group.
+   * @return The group's description.
+   */
+  LOOT_API std::string GetDescription() const;
+
+  /**
    * Get the set of groups this group loads after.
    * @return A set of group names.
    */
@@ -82,6 +83,7 @@ public:
 
 private:
   std::string name_;
+  std::string description_;
   std::unordered_set<std::string> afterGroups_;
 };
 }
