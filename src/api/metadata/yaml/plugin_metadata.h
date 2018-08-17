@@ -119,24 +119,12 @@ struct convert<loot::PluginMetadata> {
     if (node["tag"])
       rhs.SetTags(node["tag"].as<std::set<loot::Tag>>());
     if (node["dirty"]) {
-      if (rhs.IsRegexPlugin())
-        throw RepresentationException(node.Mark(),
-                                      "bad conversion: 'dirty' key must not be "
-                                      "present in a regex 'plugin metadata' "
-                                      "object");
-      else
-        rhs.SetDirtyInfo(
-            node["dirty"].as<std::set<loot::PluginCleaningData>>());
+      rhs.SetDirtyInfo(
+          node["dirty"].as<std::set<loot::PluginCleaningData>>());
     }
     if (node["clean"]) {
-      if (rhs.IsRegexPlugin())
-        throw RepresentationException(node.Mark(),
-                                      "bad conversion: 'clean' key must not be "
-                                      "present in a regex 'plugin metadata' "
-                                      "object");
-      else
-        rhs.SetCleanInfo(
-            node["clean"].as<std::set<loot::PluginCleaningData>>());
+       rhs.SetCleanInfo(
+          node["clean"].as<std::set<loot::PluginCleaningData>>());
     }
     if (node["url"])
       rhs.SetLocations(node["url"].as<std::set<loot::Location>>());

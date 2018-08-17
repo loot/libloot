@@ -959,8 +959,12 @@ TEST_P(PluginMetadataTest,
       "    util: 'utility'\n"
       "    udr: 1\n"
       "    nav: 2");
+  PluginMetadata plugin = node.as<PluginMetadata>();
 
-  EXPECT_THROW(node.as<PluginMetadata>(), YAML::RepresentationException);
+  EXPECT_EQ("Blank\\.esp", plugin.GetName());
+  EXPECT_EQ(std::set<PluginCleaningData>(
+                {PluginCleaningData(5, "utility", info_, 0, 1, 2)}),
+            plugin.GetDirtyInfo());
 }
 
 TEST_P(PluginMetadataTest,
@@ -970,8 +974,12 @@ TEST_P(PluginMetadataTest,
       "clean:\n"
       "  - crc: 0x5\n"
       "    util: 'utility'");
+  PluginMetadata plugin = node.as<PluginMetadata>();
 
-  EXPECT_THROW(node.as<PluginMetadata>(), YAML::RepresentationException);
+  EXPECT_EQ("Blank\\.esp", plugin.GetName());
+  EXPECT_EQ(std::set<PluginCleaningData>(
+                {PluginCleaningData(5, "utility")}),
+            plugin.GetCleanInfo());
 }
 
 TEST_P(PluginMetadataTest, decodingFromYamlWithAnInvalidRegexNameShouldThrow) {
