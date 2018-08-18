@@ -89,11 +89,11 @@ TEST_P(
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(handle_->GetPlugin(masterFile));
-  auto plugin = handle_->GetPlugin(masterFile);
-  EXPECT_EQ("5.0", plugin->GetVersion());
+  auto plugin = handle_->GetPlugin(masterFile).value();
+  EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that only the header has been read.
-  EXPECT_EQ(0, plugin->GetCRC());
+  EXPECT_FALSE(plugin->GetCRC());
 }
 
 TEST_P(GameInterfaceTest,
@@ -103,15 +103,15 @@ TEST_P(GameInterfaceTest,
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(handle_->GetPlugin(masterFile));
-  auto plugin = handle_->GetPlugin(masterFile);
-  EXPECT_EQ("5.0", plugin->GetVersion());
+  auto plugin = handle_->GetPlugin(masterFile).value();
+  EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that not only the header has been read.
-  EXPECT_EQ(blankEsmCrc, plugin->GetCRC());
+  EXPECT_EQ(blankEsmCrc, plugin->GetCRC().value());
 }
 
-TEST_P(GameInterfaceTest, getPluginThatIsNotCachedShouldThrow) {
-  EXPECT_THROW(handle_->GetPlugin(blankEsm), std::invalid_argument);
+TEST_P(GameInterfaceTest, getPluginThatIsNotCachedShouldReturnAnEmptyOptional) {
+  EXPECT_FALSE(handle_->GetPlugin(blankEsm));
 }
 
 TEST_P(GameInterfaceTest,

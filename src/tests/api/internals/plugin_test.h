@@ -92,12 +92,12 @@ class OtherPluginType : public PluginInterface {
 public:
   std::string GetName() const { return ""; }
   std::string GetLowercasedName() const { return ""; }
-  std::string GetVersion() const { return ""; }
+  std::optional<std::string> GetVersion() const { return std::nullopt; }
   std::vector<std::string> GetMasters() const {
     return std::vector<std::string>();
   }
   std::set<Tag> GetBashTags() const { return std::set<Tag>(); }
-  uint32_t GetCRC() const { return 0; }
+  std::optional<uint32_t> GetCRC() const { return std::nullopt; }
 
   bool IsMaster() const { return false; }
   bool IsLightMaster() const { return false; }
@@ -140,7 +140,7 @@ TEST_P(PluginTest, loadingHeaderOnlyShouldNotReadFieldsOrCalculateCrc) {
                 blankEsm,
                 true);
 
-  EXPECT_EQ(0, plugin.GetCRC());
+  EXPECT_FALSE(plugin.GetCRC());
 }
 
 TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {

@@ -156,19 +156,17 @@ bool ConditionEvaluator::fileExists(const std::string& filePath) const {
 
   // Try first checking the plugin cache, as most file entries are
   // for plugins.
-  try {
-    // GetPlugin throws if it can't find an entry.
-    gameCache_->GetPlugin(filePath);
-
+  auto plugin = gameCache_->GetPlugin(filePath);
+  if (plugin) {
     return true;
-  } catch (...) {
-    // Not a loaded plugin, check the filesystem.
-    if (hasPluginFileExtension(filePath, gameType_))
-      return boost::filesystem::exists(dataPath_ / filePath) ||
-             boost::filesystem::exists(dataPath_ / (filePath + ".ghost"));
-    else
-      return boost::filesystem::exists(dataPath_ / filePath);
   }
+
+  // Not a loaded plugin, check the filesystem.
+  if (hasPluginFileExtension(filePath, gameType_))
+    return boost::filesystem::exists(dataPath_ / filePath) ||
+            boost::filesystem::exists(dataPath_ / (filePath + ".ghost"));
+  else
+    return boost::filesystem::exists(dataPath_ / filePath);
 }
 
 bool ConditionEvaluator::regexMatchExists(
@@ -412,19 +410,22 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
     // If the file is a plugin, its version needs to be extracted
     // from its description field. Try getting an entry from the
     // plugin cache.
-    try {
-      return Version(gameCache_->GetPlugin(filePath)->GetVersion());
-    } catch (...) {
-      // The file wasn't in the plugin cache, load it as a plugin
-      // if it appears to be valid, otherwise treat it as a non
-      // plugin file.
-      if (Plugin::IsValid(filePath, gameType_, dataPath_))
-        return Version(
-            Plugin(gameType_, dataPath_, gameCache_, loadOrderHandler_, filePath, true)
-                .GetVersion());
 
-      return Version(dataPath_ / filePath);
+    auto plugin = gameCache_->GetPlugin(filePath);
+    if (plugin) {
+      return Version(plugin.value()->GetVersion().value_or(""));
     }
+
+    // The file wasn't in the plugin cache, load it as a plugin
+    // if it appears to be valid, otherwise treat it as a non
+    // plugin file.
+    if (Plugin::IsValid(filePath, gameType_, dataPath_))
+      return Version(
+          Plugin(gameType_, dataPath_, gameCache_, loadOrderHandler_, filePath, true)
+              .GetVersion()
+              .value_or(""));
+
+    return Version(dataPath_ / filePath);
   }
 }
 bool ConditionEvaluator::shouldParseOnly() const {
@@ -445,9 +446,9 @@ uint32_t ConditionEvaluator::getCrc(const std::string & file) const {
   }
 
   // Get the CRC from the game plugin cache if possible.
-  try {
-    crc = gameCache_->GetPlugin(file)->GetCRC();
-  } catch (...) {
+  auto plugin = gameCache_->GetPlugin(file);
+  if (plugin) {
+    crc = plugin.value()->GetCRC().value_or(0);
   }
 
   // Otherwise calculate it from the file.

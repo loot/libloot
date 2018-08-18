@@ -25,6 +25,7 @@
 #define LOOT_PLUGIN_INTERFACE
 
 #include <cstdint>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -53,12 +54,13 @@ public:
   /**
    * Get the plugin's version number from its description field.
    *
-   * If no version number is found in the description field, an empty string is
-   * returned. The description field parsing may fail to extract the version
-   * number correctly, though it functions correctly in all known cases.
-   * @return A string containing a version number, or an empty string.
+   * The description field may not contain a version number, or LOOT may be
+   * unable to detect it. The description field parsing may fail to extract the
+   * version number correctly, though it functions correctly in all known cases.
+   * @return An optional containing a version string if one is found, otherwise
+   *         an optional containing no value.
    */
-  virtual std::string GetVersion() const = 0;
+  virtual std::optional<std::string> GetVersion() const = 0;
 
   /**
    * Get the plugin's masters.
@@ -75,10 +77,10 @@ public:
 
   /**
    * Get the plugin's CRC-32 checksum.
-   * @return The plugin's CRC-32 checksum if it has been fully read. If only the
-   *         plugin's header has been read, ``0`` will be returned.
+   * @return An optional containing the plugin's CRC-32 checksum if the plugin
+   *         has been fully loaded, otherwise an optional containing no value.
    */
-  virtual uint32_t GetCRC() const = 0;
+  virtual std::optional<uint32_t> GetCRC() const = 0;
 
   /**
    * Check if the plugin's master flag is set.

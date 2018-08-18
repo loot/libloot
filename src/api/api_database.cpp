@@ -199,29 +199,34 @@ void ApiDatabase::SetUserGroups(const std::unordered_set<Group>& groups) {
   userlist_.SetGroups(groups);
 }
 
-PluginMetadata ApiDatabase::GetPluginMetadata(const std::string& plugin,
+std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(const std::string& plugin,
                                               bool includeUserMetadata,
                                               bool evaluateConditions) const {
-  PluginMetadata metadata = masterlist_.FindPlugin(plugin);
+  auto metadata = masterlist_.FindPlugin(plugin);
 
   if (includeUserMetadata) {
-    metadata.MergeMetadata(userlist_.FindPlugin(plugin));
+    auto userMetadata = userlist_.FindPlugin(plugin);
+    if (metadata && userMetadata) {
+      metadata.value().MergeMetadata(userMetadata.value());
+    } else if (userMetadata) {
+      metadata = userMetadata;
+    }
   }
 
-  if (evaluateConditions) {
-    return conditionEvaluator_.evaluateAll(metadata);
+  if (evaluateConditions && metadata) {
+    return conditionEvaluator_.evaluateAll(metadata.value());
   }
 
   return metadata;
 }
 
-PluginMetadata ApiDatabase::GetPluginUserMetadata(
+std::optional<PluginMetadata> ApiDatabase::GetPluginUserMetadata(
     const std::string& plugin,
     bool evaluateConditions) const {
-  PluginMetadata metadata = userlist_.FindPlugin(plugin);
+  auto metadata = userlist_.FindPlugin(plugin);
 
-  if (evaluateConditions) {
-    return conditionEvaluator_.evaluateAll(metadata);
+  if (evaluateConditions && metadata) {
+    return conditionEvaluator_.evaluateAll(metadata.value());
   }
 
   return metadata;

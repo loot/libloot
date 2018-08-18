@@ -86,7 +86,7 @@ TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           true));
-  EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm)->GetName());
+  EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm).value()->GetName());
 }
 
 TEST_P(GameCacheTest,
@@ -97,7 +97,7 @@ TEST_P(GameCacheTest,
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           true));
-  EXPECT_EQ(0, cache_.GetPlugin(blankEsm)->GetCRC());
+  EXPECT_FALSE(cache_.GetPlugin(blankEsm).value()->GetCRC());
 
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
@@ -105,11 +105,11 @@ TEST_P(GameCacheTest,
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           false));
-  EXPECT_EQ(blankEsmCrc, cache_.GetPlugin(blankEsm)->GetCRC());
+  EXPECT_EQ(blankEsmCrc, cache_.GetPlugin(blankEsm).value()->GetCRC().value());
 }
 
-TEST_P(GameCacheTest, gettingAPluginThatIsNotCachedShouldThrow) {
-  EXPECT_THROW(cache_.GetPlugin(blankEsm), std::invalid_argument);
+TEST_P(GameCacheTest, gettingAPluginThatIsNotCachedShouldReturnAnEmptyOptional) {
+  EXPECT_FALSE(cache_.GetPlugin(blankEsm));
 }
 
 TEST_P(GameCacheTest, gettingAPluginShouldBeCaseInsensitive) {
@@ -119,7 +119,7 @@ TEST_P(GameCacheTest, gettingAPluginShouldBeCaseInsensitive) {
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           true));
-  EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm)->GetName());
+  EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm).value()->GetName());
 }
 
 TEST_P(GameCacheTest,

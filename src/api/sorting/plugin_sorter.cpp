@@ -210,7 +210,7 @@ void PluginSorter::AddPluginVertices(Game& game) {
     }
 
     auto metadata =
-        game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true);
+        game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true).value_or(PluginMetadata(plugin->GetName()));
 
     auto groupIt = groupPlugins.find(metadata.GetGroup());
     if (groupIt == groupPlugins.end()) {

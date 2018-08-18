@@ -192,10 +192,9 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   }
 }
 
-std::shared_ptr<const PluginInterface> Game::GetPlugin(
+std::optional<std::shared_ptr<const PluginInterface>> Game::GetPlugin(
     const std::string& pluginName) const {
-  return std::static_pointer_cast<const PluginInterface>(
-      cache_->GetPlugin(pluginName));
+  return cache_->GetPlugin(pluginName);
 }
 
 std::set<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
@@ -226,13 +225,14 @@ void Game::LoadCurrentLoadOrderState() {
   loadOrderHandler_->LoadCurrentState();
 }
 
-bool Game::IsPluginActive(const std::string& plugin) const {
-  try {
-    return std::static_pointer_cast<const Plugin>(GetPlugin(plugin))
-        ->IsActive();
-  } catch (...) {
-    return loadOrderHandler_->IsPluginActive(plugin);
+bool Game::IsPluginActive(const std::string& pluginName) const {
+  auto plugin = cache_->GetPlugin(pluginName);
+
+  if (plugin) {
+    return plugin.value()->IsActive();
   }
+
+  return loadOrderHandler_->IsPluginActive(pluginName);
 }
 
 std::vector<std::string> Game::GetLoadOrder() const {

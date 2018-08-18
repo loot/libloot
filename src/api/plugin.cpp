@@ -51,7 +51,6 @@ Plugin::Plugin(const GameType gameType,
     isEmpty_(true),
     isActive_(false),
     loadsArchive_(false),
-    crc_(0),
     numOverrideRecords_(0) {
   auto logger = getLogger();
 
@@ -139,8 +138,13 @@ std::string Plugin::GetLowercasedName() const {
   return boost::locale::to_lower(name_);
 }
 
-std::string Plugin::GetVersion() const {
-  return Version(GetDescription()).AsString();
+std::optional<std::string> Plugin::GetVersion() const {
+  std::string version = Version(GetDescription()).AsString();
+  if (version.empty()) {
+    return std::nullopt;
+  }
+
+  return version;
 }
 
 std::vector<std::string> Plugin::GetMasters() const {
@@ -160,7 +164,7 @@ std::vector<std::string> Plugin::GetMasters() const {
 
 std::set<Tag> Plugin::GetBashTags() const { return tags_; }
 
-uint32_t Plugin::GetCRC() const { return crc_; }
+std::optional<uint32_t> Plugin::GetCRC() const { return crc_; }
 
 bool Plugin::IsMaster() const {
   bool isMaster;

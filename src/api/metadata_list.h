@@ -25,6 +25,7 @@
 #ifndef LOOT_API_METADATA_LIST
 #define LOOT_API_METADATA_LIST
 
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -32,8 +33,8 @@
 #include <boost/filesystem.hpp>
 
 #include "api/metadata/condition_evaluator.h"
-#include "loot/metadata/plugin_metadata.h"
 #include "loot/metadata/group.h"
+#include "loot/metadata/plugin_metadata.h"
 
 namespace loot {
 class MetadataList {
@@ -50,7 +51,7 @@ public:
   void SetGroups(const std::unordered_set<Group>& groups);
 
   // Merges multiple matching regex entries if any are found.
-  PluginMetadata FindPlugin(const PluginMetadata& plugin) const;
+  std::optional<PluginMetadata> FindPlugin(const std::string& plugin) const;
   void AddPlugin(const PluginMetadata& plugin);
 
   // Doesn't erase matching regex entries, because they might also

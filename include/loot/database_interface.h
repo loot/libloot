@@ -24,6 +24,7 @@
 #ifndef LOOT_DATABASE_INTERFACE
 #define LOOT_DATABASE_INTERFACE
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -226,11 +227,10 @@ public:
    *         If true, any metadata conditions are evaluated before the metadata
    *         is returned, otherwise unevaluated metadata is returned. Evaluating
    *         plugin metadata conditions does not clear the condition cache.
-   *  @returns A PluginMetadata object containing all the plugin's metadata.
-   *           If the plugin has no metadata, PluginMetadata.IsNameOnly()
-   *           will return true.
+   *  @returns If the plugin has metadata, an optional containing that metadata,
+   *           otherwise an optional containing no value.
    */
-  virtual PluginMetadata GetPluginMetadata(
+  virtual std::optional<PluginMetadata> GetPluginMetadata(
       const std::string& plugin,
       bool includeUserMetadata = true,
       bool evaluateConditions = false) const = 0;
@@ -243,11 +243,10 @@ public:
    *         If true, any metadata conditions are evaluated before the metadata
    *         is returned, otherwise unevaluated metadata is returned. Evaluating
    *         plugin metadata conditions does not clear the condition cache.
-   *  @returns A PluginMetadata object containing the plugin's user-added
-   *           metadata. If the plugin has no metadata,
-   *           PluginMetadata.IsNameOnly() will return true.
+   *  @returns If the plugin has user-added metadata, an optional containing
+   *           that metadata, otherwise an optional containing no value.
    */
-  virtual PluginMetadata GetPluginUserMetadata(
+  virtual std::optional<PluginMetadata> GetPluginUserMetadata(
       const std::string& plugin,
       bool evaluateConditions = false) const = 0;
 

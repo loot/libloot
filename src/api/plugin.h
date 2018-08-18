@@ -52,10 +52,10 @@ public:
 
   std::string GetName() const;
   std::string GetLowercasedName() const;
-  std::string GetVersion() const;
+  std::optional<std::string> GetVersion() const;
   std::vector<std::string> GetMasters() const;
   std::set<Tag> GetBashTags() const;
-  uint32_t GetCRC() const;
+  std::optional<uint32_t> GetCRC() const;
 
   bool IsMaster() const;
   bool IsLightMaster() const;
@@ -94,8 +94,8 @@ private:
   bool isActive_;
   bool loadsArchive_;
   const std::string name_;
-  std::string version_;  // Obtained from description field.
-  uint32_t crc_;
+  std::optional<std::string> version_;  // Obtained from description field.
+  std::optional<uint32_t> crc_;
   std::set<Tag> tags_;
 
   // Useful caches.

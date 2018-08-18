@@ -72,12 +72,14 @@ struct ApiDatabase : public DatabaseInterface {
   std::unordered_set<Group> GetUserGroups() const;
   void SetUserGroups(const std::unordered_set<Group>& groups);
 
-  PluginMetadata GetPluginMetadata(const std::string& plugin,
-                                   bool includeUserMetadata = true,
-                                   bool evaluateConditions = false) const;
+  std::optional<PluginMetadata> GetPluginMetadata(
+      const std::string& plugin,
+      bool includeUserMetadata = true,
+      bool evaluateConditions = false) const;
 
-  PluginMetadata GetPluginUserMetadata(const std::string& plugin,
-                                       bool evaluateConditions = false) const;
+  std::optional<PluginMetadata> GetPluginUserMetadata(
+      const std::string& plugin,
+      bool evaluateConditions = false) const;
 
   void SetPluginUserMetadata(const PluginMetadata& pluginMetadata);
 

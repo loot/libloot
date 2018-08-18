@@ -143,8 +143,9 @@ void MetadataList::SetGroups(const std::unordered_set<Group>& groups) {
 }
 
 // Merges multiple matching regex entries if any are found.
-PluginMetadata MetadataList::FindPlugin(const PluginMetadata& plugin) const {
-  PluginMetadata match(plugin.GetName());
+std::optional<PluginMetadata> MetadataList::FindPlugin(
+    const std::string& plugin) const {
+  PluginMetadata match(plugin);
 
   auto it = plugins_.find(plugin);
 
@@ -157,6 +158,10 @@ PluginMetadata MetadataList::FindPlugin(const PluginMetadata& plugin) const {
     match.MergeMetadata(*regIt);
 
     regIt = find(++regIt, regexPlugins_.end(), plugin);
+  }
+
+  if (match.HasNameOnly()) {
+    return std::nullopt;
   }
 
   return match;

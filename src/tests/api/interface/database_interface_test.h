@@ -544,10 +544,8 @@ TEST_P(
 
 TEST_P(
     DatabaseInterfaceTest,
-    getPluginMetadataShouldReturnAnEmptyPluginMetadataObjectIfThePluginHasNoMetadata) {
-  auto metadata = db_->GetPluginMetadata(blankEsm);
-
-  EXPECT_TRUE(metadata.HasNameOnly());
+    getPluginMetadataShouldReturnAnEmptyOptionalIfThePluginHasNoMetadata) {
+  EXPECT_FALSE(db_->GetPluginMetadata(blankEsm));
 }
 
 TEST_P(
@@ -558,7 +556,7 @@ TEST_P(
   ASSERT_NO_THROW(
       db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
 
-  auto metadata = db_->GetPluginMetadata(blankEsm, true);
+  auto metadata = db_->GetPluginMetadata(blankEsm, true).value();
 
   std::set<File> expectedLoadAfter({
       File(masterFile),
@@ -575,7 +573,7 @@ TEST_P(
   ASSERT_NO_THROW(
       db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
 
-  auto metadata = db_->GetPluginMetadata(blankEsm, false);
+  auto metadata = db_->GetPluginMetadata(blankEsm, false).value();
 
   std::set<File> expectedLoadAfter({
       File(masterFile),
@@ -589,7 +587,7 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
 
-  auto metadata = db_->GetPluginMetadata(blankEsm, false, true);
+  auto metadata = db_->GetPluginMetadata(blankEsm, false, true).value();
 
   EXPECT_TRUE(metadata.GetMessages().empty());
 }
@@ -602,9 +600,7 @@ TEST_P(
   ASSERT_NO_THROW(
       db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
 
-  auto metadata = db_->GetPluginUserMetadata(blankDifferentEsm);
-
-  EXPECT_TRUE(metadata.HasNameOnly());
+  EXPECT_FALSE(db_->GetPluginUserMetadata(blankDifferentEsm));
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -614,7 +610,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(
       db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
 
-  auto metadata = db_->GetPluginUserMetadata(blankEsm);
+  auto metadata = db_->GetPluginUserMetadata(blankEsm).value();
 
   std::set<File> expectedLoadAfter({
       File(blankDifferentEsm),
@@ -630,7 +626,7 @@ TEST_P(
   ASSERT_NO_THROW(
       db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
 
-  auto metadata = db_->GetPluginMetadata(blankEsm, false, true);
+  auto metadata = db_->GetPluginMetadata(blankEsm, false, true).value();
 
   EXPECT_TRUE(metadata.GetMessages().empty());
 }
@@ -648,7 +644,7 @@ TEST_P(
 
   db_->SetPluginUserMetadata(newMetadata);
 
-  auto metadata = db_->GetPluginUserMetadata(blankDifferentEsp);
+  auto metadata = db_->GetPluginUserMetadata(blankDifferentEsp).value();
 
   std::set<File> expectedLoadAfter({
       File(blankDifferentEsm),
@@ -669,7 +665,7 @@ TEST_P(DatabaseInterfaceTest,
 
   db_->SetPluginUserMetadata(newMetadata);
 
-  auto metadata = db_->GetPluginMetadata(blankEsm);
+  auto metadata = db_->GetPluginMetadata(blankEsm).value();
 
   std::set<File> expectedLoadAfter({
       File(masterFile),
@@ -686,8 +682,7 @@ TEST_P(DatabaseInterfaceTest,
 
   db_->DiscardPluginUserMetadata(blankEsm);
 
-  auto metadata = db_->GetPluginUserMetadata(blankEsm);
-  EXPECT_TRUE(metadata.HasNameOnly());
+  EXPECT_FALSE(db_->GetPluginUserMetadata(blankEsm));
 }
 
 TEST_P(
@@ -700,7 +695,7 @@ TEST_P(
 
   db_->DiscardPluginUserMetadata(blankEsm);
 
-  auto metadata = db_->GetPluginMetadata(blankEsm);
+  auto metadata = db_->GetPluginMetadata(blankEsm).value();
 
   std::set<File> expectedLoadAfter({
       File(masterFile),
@@ -719,7 +714,7 @@ TEST_P(DatabaseInterfaceTest,
 
   auto metadata = db_->GetPluginUserMetadata(blankDifferentEsp);
 
-  EXPECT_FALSE(metadata.HasNameOnly());
+  EXPECT_TRUE(metadata);
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -770,13 +765,10 @@ TEST_P(
 
   db_->DiscardAllUserMetadata();
 
-  auto metadata = db_->GetPluginUserMetadata(blankEsm);
-  EXPECT_TRUE(metadata.HasNameOnly());
+  EXPECT_FALSE(db_->GetPluginUserMetadata(blankEsm));
+  EXPECT_FALSE(db_->GetPluginUserMetadata(blankDifferentEsp));
 
-  metadata = db_->GetPluginUserMetadata(blankDifferentEsp);
-  EXPECT_TRUE(metadata.HasNameOnly());
-
-  metadata = db_->GetPluginMetadata(blankEsm);
+  auto metadata = db_->GetPluginMetadata(blankEsm).value();
 
   std::set<File> expectedLoadAfter({
       File(masterFile),
