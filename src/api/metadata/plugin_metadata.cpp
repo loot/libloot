@@ -24,10 +24,10 @@
 
 #include "loot/metadata/plugin_metadata.h"
 
+#include <filesystem>
 #include <regex>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/locale.hpp>
 
 #include "api/game/game.h"

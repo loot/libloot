@@ -51,8 +51,8 @@ public:
       const std::string& pluginName) const;
   void AddPlugin(const Plugin&& plugin);
 
-  std::set<boost::filesystem::path> GetArchivePaths() const;
-  void CacheArchivePath(const boost::filesystem::path& path);
+  std::set<std::filesystem::path> GetArchivePaths() const;
+  void CacheArchivePath(const std::filesystem::path& path);
 
   void ClearCachedConditions();
   void ClearCachedPlugins();
@@ -62,7 +62,7 @@ private:
   std::unordered_map<std::string, bool> conditions_;
   std::unordered_map<std::string, uint32_t> crcs_;
   std::unordered_map<std::string, std::shared_ptr<const Plugin>> plugins_;
-  std::set<boost::filesystem::path> archivePaths_;
+  std::set<std::filesystem::path> archivePaths_;
 
   mutable std::mutex mutex_;
 };

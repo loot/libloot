@@ -25,10 +25,9 @@
 #ifndef LOOT_API_HELPERS_VERSION
 #define LOOT_API_HELPERS_VERSION
 
+#include <filesystem>
 #include <regex>
 #include <string>
-
-#include <boost/filesystem.hpp>
 
 namespace loot {
 // Version class for more robust version comparisons.
@@ -36,7 +35,7 @@ class Version {
 public:
   Version();
   Version(const std::string& ver);
-  Version(const boost::filesystem::path& file);
+  Version(const std::filesystem::path& file);
 
   std::string AsString() const;
 

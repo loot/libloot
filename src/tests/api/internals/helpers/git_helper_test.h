@@ -45,32 +45,32 @@ protected:
     untrackedFile("untracked.txt") {}
 
   inline void SetUp() {
-    using boost::filesystem::exists;
+    using std::filesystem::exists;
 
-    copy(boost::filesystem::absolute("./testing-metadata"), repoRoot);
+    copy(std::filesystem::absolute("./testing-metadata"), repoRoot);
     ASSERT_TRUE(exists(repoRoot));
     ASSERT_TRUE(exists(repoSubdirectory));
-    ASSERT_TRUE(boost::filesystem::exists(repoRoot / unchangedFile));
+    ASSERT_TRUE(std::filesystem::exists(repoRoot / unchangedFile));
 
     // Run git reset --hard to ensure there are no changes in the working copy.
     // The initial checkout can detect changes due to line ending mismatch.
-    auto currentPath = boost::filesystem::current_path();
-    boost::filesystem::current_path(repoRoot);
+    auto currentPath = std::filesystem::current_path();
+    std::filesystem::current_path(repoRoot);
     system("git reset --hard");
-    boost::filesystem::current_path(currentPath);
+    std::filesystem::current_path(currentPath);
 
     // Edit a tracked file
-    boost::filesystem::ofstream changedOut(repoRoot / changedFile);
+    std::ofstream changedOut(repoRoot / changedFile);
     changedOut.close();
     ASSERT_TRUE(exists(repoRoot / changedFile));
 
     // Create a new file in the repository
-    boost::filesystem::ofstream untrackedOut(repoRoot / untrackedFile);
+    std::ofstream untrackedOut(repoRoot / untrackedFile);
     untrackedOut.close();
     ASSERT_TRUE(exists(repoRoot / untrackedFile));
 
     // Create a new file outside the repository
-    boost::filesystem::ofstream outOfRepoOut(rootTestPath / untrackedFile);
+    std::ofstream outOfRepoOut(rootTestPath / untrackedFile);
     outOfRepoOut.close();
     ASSERT_TRUE(exists(rootTestPath / untrackedFile));
   }
@@ -78,31 +78,31 @@ protected:
   inline void TearDown() {
     // Grant write permissions to everything in rootTestPath
     // in case the test made anything read only.
-    for (const auto& path : boost::filesystem::recursive_directory_iterator(rootTestPath)) {
-      boost::filesystem::permissions(path, boost::filesystem::perms::all_all | boost::filesystem::perms::add_perms);
+    for (const auto& path : std::filesystem::recursive_directory_iterator(rootTestPath)) {
+      std::filesystem::permissions(path, std::filesystem::perms::all);
     }
-    boost::filesystem::remove_all(rootTestPath);
+    std::filesystem::remove_all(rootTestPath);
   }
 
   GitHelper git_;
 
-  const boost::filesystem::path rootTestPath;
-  const boost::filesystem::path repoRoot;
-  const boost::filesystem::path repoSubdirectory;
+  const std::filesystem::path rootTestPath;
+  const std::filesystem::path repoRoot;
+  const std::filesystem::path repoSubdirectory;
 
   const std::string changedFile;
   const std::string unchangedFile;
   const std::string untrackedFile;
 
 private:
-  void copy(const boost::filesystem::path& from, const boost::filesystem::path& to) {
-    if (boost::filesystem::is_directory(from)) {
-      boost::filesystem::create_directories(to);
-      for (auto entry : boost::filesystem::directory_iterator(from)) {
+  void copy(const std::filesystem::path& from, const std::filesystem::path& to) {
+    if (std::filesystem::is_directory(from)) {
+      std::filesystem::create_directories(to);
+      for (auto entry : std::filesystem::directory_iterator(from)) {
         copy(entry.path(), to / entry.path().filename());
       }
     } else {
-      boost::filesystem::copy(from, to);
+      std::filesystem::copy(from, to);
     }
   }
 };

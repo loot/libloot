@@ -36,7 +36,7 @@
 
 namespace loot {
 ApiDatabase::ApiDatabase(const GameType gameType,
-                         const boost::filesystem::path& dataPath,
+                         const std::filesystem::path& dataPath,
                          std::shared_ptr<GameCache> gameCache,
                          std::shared_ptr<LoadOrderHandler> loadOrderHandler) :
     gameCache_(gameCache),
@@ -52,7 +52,7 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
   MetadataList userTemp;
 
   if (!masterlistPath.empty()) {
-    if (boost::filesystem::exists(masterlistPath)) {
+    if (std::filesystem::exists(masterlistPath)) {
       temp.Load(masterlistPath);
     } else {
       throw FileAccessError("The given masterlist path does not exist: " +
@@ -61,7 +61,7 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
   }
 
   if (!userlistPath.empty()) {
-    if (boost::filesystem::exists(userlistPath)) {
+    if (std::filesystem::exists(userlistPath)) {
       userTemp.Load(userlistPath);
     } else {
       throw FileAccessError("The given userlist path does not exist: " +
@@ -75,11 +75,11 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
 
 void ApiDatabase::WriteUserMetadata(const std::string& outputFile,
                                     const bool overwrite) const {
-  if (!boost::filesystem::exists(
-          boost::filesystem::path(outputFile).parent_path()))
+  if (!std::filesystem::exists(
+          std::filesystem::path(outputFile).parent_path()))
     throw std::invalid_argument("Output directory does not exist.");
 
-  if (boost::filesystem::exists(outputFile) && !overwrite)
+  if (std::filesystem::exists(outputFile) && !overwrite)
     throw FileAccessError(
         "Output file exists but overwrite is not set to true.");
 
@@ -93,8 +93,8 @@ void ApiDatabase::WriteUserMetadata(const std::string& outputFile,
 bool ApiDatabase::UpdateMasterlist(const std::string& masterlistPath,
                                    const std::string& remoteURL,
                                    const std::string& remoteBranch) {
-  if (!boost::filesystem::is_directory(
-          boost::filesystem::path(masterlistPath).parent_path()))
+  if (!std::filesystem::is_directory(
+          std::filesystem::path(masterlistPath).parent_path()))
     throw std::invalid_argument("Given masterlist path \"" + masterlistPath +
                                 "\" does not have a valid parent directory.");
 
@@ -250,11 +250,11 @@ void ApiDatabase::DiscardAllUserMetadata() { userlist_.Clear(); }
 // will only be overwritten if overwrite is true.
 void ApiDatabase::WriteMinimalList(const std::string& outputFile,
                                    const bool overwrite) const {
-  if (!boost::filesystem::exists(
-          boost::filesystem::path(outputFile).parent_path()))
+  if (!std::filesystem::exists(
+          std::filesystem::path(outputFile).parent_path()))
     throw std::invalid_argument("Output directory does not exist.");
 
-  if (boost::filesystem::exists(outputFile) && !overwrite)
+  if (std::filesystem::exists(outputFile) && !overwrite)
     throw FileAccessError(
         "Output file exists but overwrite is not set to true.");
 

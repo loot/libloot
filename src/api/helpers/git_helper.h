@@ -25,11 +25,11 @@
 #ifndef LOOT_API_HELPERS_GIT_HELPER
 #define LOOT_API_HELPERS_GIT_HELPER
 
+#include <filesystem>
 #include <string>
 
 #include <git2.h>
 #include <spdlog/spdlog.h>
-#include <boost/filesystem.hpp>
 
 namespace loot {
 class GitHelper {
@@ -38,14 +38,14 @@ public:
 
   void InitialiseOptions(const std::string& branch,
                          const std::string& filenameToCheckout);
-  void Open(const boost::filesystem::path& repoRoot);
+  void Open(const std::filesystem::path& repoRoot);
   void SetRemoteUrl(const std::string& remote, const std::string& url);
 
-  static bool IsRepository(const boost::filesystem::path& path);
-  static bool IsFileDifferent(const boost::filesystem::path& repoRoot,
+  static bool IsRepository(const std::filesystem::path& path);
+  static bool IsFileDifferent(const std::filesystem::path& repoRoot,
                               const std::string& filename);
 
-  void Clone(const boost::filesystem::path& path, const std::string& url);
+  void Clone(const std::filesystem::path& path, const std::string& url);
   void Fetch(const std::string& remote);
 
   void CheckoutNewBranch(const std::string& remote, const std::string& branch);
@@ -94,7 +94,7 @@ private:
 
   // Removes the read-only flag from some files in git repositories
   // created by libgit2.
-  void GrantWritePermissions(const boost::filesystem::path& path);
+  void GrantWritePermissions(const std::filesystem::path& path);
 
   void Call(int error_code);
 

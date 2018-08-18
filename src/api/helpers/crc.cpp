@@ -24,8 +24,9 @@
 
 #include "api/helpers/crc.h"
 
+#include <fstream>
+
 #include <boost/crc.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 #include "api/helpers/logging.h"
 
@@ -46,14 +47,14 @@ size_t GetStreamSize(std::istream& stream) {
 }
 
 // Calculate the CRC of the given file for comparison purposes.
-uint32_t GetCrc32(const boost::filesystem::path& filename) {
+uint32_t GetCrc32(const std::filesystem::path& filename) {
   try {
     auto logger = getLogger();
     if (logger) {
       logger->trace("Calculating CRC for: {}", filename.string());
     }
 
-    boost::filesystem::ifstream ifile(filename, std::ios::binary);
+    std::ifstream ifile(filename, std::ios::binary);
     ifile.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 
     static const size_t bufferSize = 8192;

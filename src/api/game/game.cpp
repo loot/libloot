@@ -53,12 +53,10 @@ using std::string;
 using std::thread;
 using std::vector;
 
-namespace fs = boost::filesystem;
-
 namespace loot {
 Game::Game(const GameType gameType,
-           const boost::filesystem::path& gamePath,
-           const boost::filesystem::path& localDataPath) :
+           const std::filesystem::path& gamePath,
+           const std::filesystem::path& localDataPath) :
     type_(gameType),
     gamePath_(gamePath),
     cache_(std::make_shared<GameCache>()),
@@ -78,7 +76,7 @@ Game::Game(const GameType gameType,
 
 GameType Game::Type() const { return type_; }
 
-boost::filesystem::path Game::DataPath() const { return gamePath_ / "Data"; }
+std::filesystem::path Game::DataPath() const { return gamePath_ / "Data"; }
 
 std::shared_ptr<GameCache> Game::GetCache() { return cache_; }
 
@@ -246,8 +244,8 @@ void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
 void Game::CacheArchives() {
   const auto archiveFileExtension = GetArchiveFileExtension(Type());
 
-  for (boost::filesystem::directory_iterator it(DataPath());
-    it != boost::filesystem::directory_iterator();
+  for (std::filesystem::directory_iterator it(DataPath());
+    it != std::filesystem::directory_iterator();
     ++it) {
     // Check if the path is an archive by checking if replacing its
     // file extension with the archive extension resolves to the same file.

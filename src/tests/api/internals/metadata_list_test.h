@@ -44,8 +44,8 @@ protected:
   inline virtual void SetUp() {
     CommonGameTestFixture::SetUp();
 
-    using boost::filesystem::copy;
-    using boost::filesystem::exists;
+    using std::filesystem::copy;
+    using std::filesystem::exists;
 
     auto sourceDirectory = getSourceMetadataFilesPath();
 
@@ -59,21 +59,21 @@ protected:
     ASSERT_FALSE(exists(missingMetadataPath));
   }
 
-  void copyInvalidMetadataFile(const boost::filesystem::path& sourceDirectory, const std::string& file) {
-    boost::filesystem::create_directories(metadataFilesPath / "invalid");
-    boost::filesystem::copy(sourceDirectory / "invalid" / file, metadataFilesPath / "invalid" / file);
-    ASSERT_TRUE(boost::filesystem::exists(metadataFilesPath / "invalid" / file));
+  void copyInvalidMetadataFile(const std::filesystem::path& sourceDirectory, const std::string& file) {
+    std::filesystem::create_directories(metadataFilesPath / "invalid");
+    std::filesystem::copy(sourceDirectory / "invalid" / file, metadataFilesPath / "invalid" / file);
+    ASSERT_TRUE(std::filesystem::exists(metadataFilesPath / "invalid" / file));
   }
 
   static std::string PluginMetadataToString(const PluginMetadata& metadata) {
     return metadata.GetName();
   }
 
-  const boost::filesystem::path metadataPath;
-  const boost::filesystem::path savedMetadataPath;
-  const boost::filesystem::path groupMetadataPath;
-  const boost::filesystem::path missingMetadataPath;
-  const std::vector<boost::filesystem::path> invalidMetadataPaths;
+  const std::filesystem::path metadataPath;
+  const std::filesystem::path savedMetadataPath;
+  const std::filesystem::path groupMetadataPath;
+  const std::filesystem::path missingMetadataPath;
+  const std::vector<std::filesystem::path> invalidMetadataPaths;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -145,7 +145,7 @@ TEST_P(MetadataListTest, loadShouldLoadGroups) {
 TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
   using std::endl;
 
-  boost::filesystem::ofstream out(metadataPath);
+  std::ofstream out(metadataPath);
   out << "common:" << endl
     << "  - &earlier" << endl
     << "    name: earlier" << endl
@@ -212,7 +212,7 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
 
   EXPECT_NO_THROW(metadataList.Save(savedMetadataPath));
 
-  EXPECT_TRUE(boost::filesystem::exists(savedMetadataPath));
+  EXPECT_TRUE(std::filesystem::exists(savedMetadataPath));
 
   // Check the new file contains the same metadata.
   EXPECT_NO_THROW(metadataList.Load(savedMetadataPath));

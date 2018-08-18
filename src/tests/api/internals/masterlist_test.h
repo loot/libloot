@@ -43,19 +43,19 @@ protected:
     CommonGameTestFixture::SetUp();
 
     auto sourceDirectory = getSourceMetadataFilesPath();
-    boost::filesystem::copy(sourceDirectory / "masterlist.yaml",
+    std::filesystem::copy(sourceDirectory / "masterlist.yaml",
                           metadataFilesPath / "masterlist.yaml");
-    ASSERT_TRUE(boost::filesystem::exists(metadataFilesPath / "masterlist.yaml"));
+    ASSERT_TRUE(std::filesystem::exists(metadataFilesPath / "masterlist.yaml"));
 
-    ASSERT_FALSE(boost::filesystem::exists(masterlistPath));
-    ASSERT_FALSE(boost::filesystem::exists(localPath / ".git"));
+    ASSERT_FALSE(std::filesystem::exists(masterlistPath));
+    ASSERT_FALSE(std::filesystem::exists(localPath / ".git"));
   }
 
   const std::string repoUrl;
   const std::string repoBranch;
   const std::string oldBranch;
 
-  const boost::filesystem::path masterlistPath;
+  const std::filesystem::path masterlistPath;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -73,14 +73,14 @@ TEST_P(MasterlistTest, updateShouldThrowIfAnInvalidPathIsGiven) {
   Masterlist masterlist;
 
   EXPECT_THROW(masterlist.Update(";//\?", repoUrl, repoBranch),
-               boost::filesystem::filesystem_error);
+               std::system_error);
 }
 
 TEST_P(MasterlistTest, updateShouldThrowIfABlankPathIsGiven) {
   Masterlist masterlist;
 
   EXPECT_THROW(masterlist.Update("", repoUrl, repoBranch),
-               boost::filesystem::filesystem_error);
+               std::invalid_argument);
 }
 
 TEST_P(MasterlistTest, updateShouldThrowIfABranchThatDoesNotExistIsGiven) {
@@ -130,11 +130,11 @@ TEST_P(MasterlistTest,
   Masterlist masterlist;
   ASSERT_TRUE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
 
-  auto testPath = boost::filesystem::current_path();
-  boost::filesystem::current_path(masterlistPath.parent_path());
+  auto testPath = std::filesystem::current_path();
+  std::filesystem::current_path(masterlistPath.parent_path());
   system("git config commit.gpgsign false");
   system("git commit --amend -m \"changing local history\"");
-  boost::filesystem::current_path(testPath);
+  std::filesystem::current_path(testPath);
 
   EXPECT_TRUE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
 }
@@ -146,7 +146,7 @@ TEST_P(MasterlistTest, getInfoShouldThrowIfNoMasterlistExistsAtTheGivenPath) {
 
 TEST_P(MasterlistTest,
        getInfoShouldThrowIfTheGivenPathDoesNotBelongToAGitRepository) {
-  ASSERT_NO_THROW(boost::filesystem::copy(metadataFilesPath / "masterlist.yaml",
+  ASSERT_NO_THROW(std::filesystem::copy(metadataFilesPath / "masterlist.yaml",
                                         masterlistPath));
 
   Masterlist masterlist;
@@ -183,7 +183,7 @@ TEST_P(
     getInfoShouldAppendSuffixesToReturnedStringsIfTheMasterlistHasBeenEdited) {
   Masterlist masterlist;
   ASSERT_TRUE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
-  boost::filesystem::ofstream out(masterlistPath);
+  std::ofstream out(masterlistPath);
   out.close();
 
   MasterlistInfo info = masterlist.GetInfo(masterlistPath, false);
@@ -194,7 +194,7 @@ TEST_P(
 
 TEST_P(MasterlistTest,
        isLatestShouldThrowIfTheGivenPathDoesNotBelongToAGitRepository) {
-  ASSERT_NO_THROW(boost::filesystem::copy(metadataFilesPath / "masterlist.yaml",
+  ASSERT_NO_THROW(std::filesystem::copy(metadataFilesPath / "masterlist.yaml",
                                         masterlistPath));
 
   EXPECT_THROW(Masterlist::IsLatest(masterlistPath, repoBranch), GitStateError);

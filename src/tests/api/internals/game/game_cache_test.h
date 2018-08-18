@@ -155,7 +155,7 @@ TEST_P(GameCacheTest,
   cache_.CacheArchivePath(game_.DataPath() / blankEsm);
   cache_.CacheArchivePath(game_.DataPath() / blankMasterDependentEsm);
 
-  auto expected = std::set<boost::filesystem::path>({
+  auto expected = std::set<std::filesystem::path>({
     game_.DataPath() / blankEsm,
     game_.DataPath() / blankMasterDependentEsm,
   });

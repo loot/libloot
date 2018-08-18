@@ -40,7 +40,7 @@
 namespace loot {
 struct ApiDatabase : public DatabaseInterface {
   ApiDatabase(const GameType gameType,
-              const boost::filesystem::path& dataPath,
+              const std::filesystem::path& dataPath,
               std::shared_ptr<GameCache> gameCache,
               std::shared_ptr<LoadOrderHandler> loadOrderHandler);
 

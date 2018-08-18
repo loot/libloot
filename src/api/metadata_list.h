@@ -25,12 +25,11 @@
 #ifndef LOOT_API_METADATA_LIST
 #define LOOT_API_METADATA_LIST
 
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
-
-#include <boost/filesystem.hpp>
 
 #include "api/metadata/condition_evaluator.h"
 #include "loot/metadata/group.h"
@@ -39,8 +38,8 @@
 namespace loot {
 class MetadataList {
 public:
-  void Load(const boost::filesystem::path& filepath);
-  void Save(const boost::filesystem::path& filepath) const;
+  void Load(const std::filesystem::path& filepath);
+  void Save(const std::filesystem::path& filepath) const;
   void Clear();
 
   std::list<PluginMetadata> Plugins() const;

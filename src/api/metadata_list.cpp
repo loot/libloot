@@ -24,7 +24,8 @@
 
 #include "api/metadata_list.h"
 
-#include <boost/filesystem/fstream.hpp>
+#include <filesystem>
+#include <fstream>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
@@ -34,7 +35,7 @@
 #include "loot/exception/file_access_error.h"
 
 namespace loot {
-void MetadataList::Load(const boost::filesystem::path& filepath) {
+void MetadataList::Load(const std::filesystem::path& filepath) {
   Clear();
 
   auto logger = getLogger();
@@ -42,7 +43,7 @@ void MetadataList::Load(const boost::filesystem::path& filepath) {
     logger->debug("Loading file: {}", filepath.string());
   }
 
-  boost::filesystem::ifstream in(filepath);
+  std::ifstream in(filepath);
   if (!in.good())
     throw FileAccessError("Cannot open " + filepath.string());
 
@@ -79,7 +80,7 @@ void MetadataList::Load(const boost::filesystem::path& filepath) {
   }
 }
 
-void MetadataList::Save(const boost::filesystem::path& filepath) const {
+void MetadataList::Save(const std::filesystem::path& filepath) const {
   auto logger = getLogger();
   if (logger) {
     logger->trace("Saving metadata list to: {}", filepath.string());
@@ -107,7 +108,7 @@ void MetadataList::Save(const boost::filesystem::path& filepath) const {
 
   emitter << YAML::EndMap;
 
-  boost::filesystem::ofstream out(filepath);
+  std::ofstream out(filepath);
   if (out.fail())
     throw FileAccessError("Couldn't open output file.");
 

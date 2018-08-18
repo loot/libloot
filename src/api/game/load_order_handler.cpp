@@ -58,8 +58,8 @@ LoadOrderHandler::LoadOrderHandler() : gh_(nullptr) {}
 LoadOrderHandler::~LoadOrderHandler() { lo_destroy_handle(gh_); }
 
 void LoadOrderHandler::Init(const GameType& gameType,
-                            const boost::filesystem::path& gamePath,
-                            const boost::filesystem::path& gameLocalAppData) {
+                            const std::filesystem::path& gamePath,
+                            const std::filesystem::path& gameLocalAppData) {
   if (gamePath.empty()) {
     throw std::invalid_argument("Game path is not initialised.");
   }
@@ -138,7 +138,7 @@ std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
       lo_get_implicitly_active_plugins(gh_, &pluginArr, &pluginArrSize);
 
   HandleError("get implicitly active plugins", ret);
-  
+
   std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
   lo_free_string_array(pluginArr, pluginArrSize);
 

@@ -25,9 +25,8 @@
 #ifndef LOOT_API_MASTERLIST
 #define LOOT_API_MASTERLIST
 
+#include <filesystem>
 #include <string>
-
-#include <boost/filesystem.hpp>
 
 #include "api/metadata_list.h"
 #include "loot/struct/masterlist_info.h"
@@ -35,14 +34,14 @@
 namespace loot {
 class Masterlist : public MetadataList {
 public:
-  bool Update(const boost::filesystem::path& path,
+  bool Update(const std::filesystem::path& path,
               const std::string& repoURL,
               const std::string& repoBranch);
 
-  static MasterlistInfo GetInfo(const boost::filesystem::path& path,
+  static MasterlistInfo GetInfo(const std::filesystem::path& path,
                                 bool shortID);
 
-  static bool IsLatest(const boost::filesystem::path& path,
+  static bool IsLatest(const std::filesystem::path& path,
                        const std::string& repoBranch);
 };
 }

@@ -94,7 +94,7 @@ Version::Version(const std::string& ver) {
   }
 }
 
-Version::Version(const boost::filesystem::path& file) {
+Version::Version(const std::filesystem::path& file) {
 #ifdef _WIN32
   DWORD dummy = 0;
   DWORD size = GetFileVersionInfoSize(ToWinWide(file.string()).c_str(), &dummy);

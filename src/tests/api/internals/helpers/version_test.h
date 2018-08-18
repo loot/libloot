@@ -35,7 +35,7 @@ namespace test {
 #ifdef _WIN32
 TEST(Version, shouldExtractVersionFromApiDll) {
   // Use the API DLL built.
-  Version version(boost::filesystem::path("loot_api.dll"));
+  Version version(std::filesystem::path("loot_api.dll"));
   std::string expected(LootVersion::string() + ".0");
   EXPECT_EQ(expected, version.AsString());
 }

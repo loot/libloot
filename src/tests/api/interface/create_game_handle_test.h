@@ -43,31 +43,36 @@ protected:
       localPathJunctionLink(localPath.string() + ".junction") {}
 
   void SetUp() {
+    using std::filesystem::status;
+    using std::filesystem::file_type;
     CommonGameTestFixture::SetUp();
 
-    boost::filesystem::create_directory_symlink(dataPath.parent_path(),
-                                                gamePathSymlink);
-    boost::filesystem::create_directory_symlink(localPath, localPathSymlink);
+    std::filesystem::create_directory_symlink(dataPath.parent_path(),
+                                              gamePathSymlink);
+    ASSERT_EQ(file_type::directory, status(gamePathSymlink).type());
+
+    std::filesystem::create_directory_symlink(localPath, localPathSymlink);
+    ASSERT_EQ(file_type::directory, status(localPathSymlink).type());
 
 #ifdef _WIN32
     system(("mklink /J \"" +
-            boost::filesystem::absolute(gamePathJunctionLink).string() +
+            std::filesystem::absolute(gamePathJunctionLink).string() +
             "\" \"" +
-            boost::filesystem::absolute(dataPath).parent_path().string() + "\"")
+            std::filesystem::absolute(dataPath).parent_path().string() + "\"")
                .c_str());
     system(("mklink /J \"" +
-            boost::filesystem::absolute(localPathJunctionLink).string() +
-            "\" \"" + boost::filesystem::absolute(localPath).string() + "\"")
+            std::filesystem::absolute(localPathJunctionLink).string() +
+            "\" \"" + std::filesystem::absolute(localPath).string() + "\"")
                .c_str());
 #endif
   }
 
   std::shared_ptr<GameInterface> handle_;
 
-  const boost::filesystem::path gamePathSymlink;
-  const boost::filesystem::path localPathSymlink;
-  const boost::filesystem::path gamePathJunctionLink;
-  const boost::filesystem::path localPathJunctionLink;
+  const std::filesystem::path gamePathSymlink;
+  const std::filesystem::path localPathSymlink;
+  const std::filesystem::path gamePathJunctionLink;
+  const std::filesystem::path localPathJunctionLink;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -83,7 +88,7 @@ INSTANTIATE_TEST_CASE_P(,
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {
-  using boost::filesystem::relative;
+  using std::filesystem::relative;
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
                                              relative(dataPath.parent_path()).string(),
                                              relative(localPath).string()));

@@ -32,10 +32,10 @@
 
 using std::string;
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace loot {
-MasterlistInfo Masterlist::GetInfo(const boost::filesystem::path& path,
+MasterlistInfo Masterlist::GetInfo(const std::filesystem::path& path,
                                    bool shortID) {
   // Compare HEAD and working copy, and get revision info.
   GitHelper git;
@@ -71,7 +71,7 @@ MasterlistInfo Masterlist::GetInfo(const boost::filesystem::path& path,
   return info;
 }
 
-bool Masterlist::IsLatest(const boost::filesystem::path& path,
+bool Masterlist::IsLatest(const std::filesystem::path& path,
                           const std::string& repoBranch) {
   if (repoBranch.empty())
     throw std::invalid_argument("Repository branch must not be empty.");
@@ -96,7 +96,7 @@ bool Masterlist::IsLatest(const boost::filesystem::path& path,
          git.IsBranchCheckedOut(repoBranch);
 }
 
-bool Masterlist::Update(const boost::filesystem::path& path,
+bool Masterlist::Update(const std::filesystem::path& path,
                         const std::string& repoUrl,
                         const std::string& repoBranch) {
   GitHelper git;
@@ -104,8 +104,8 @@ bool Masterlist::Update(const boost::filesystem::path& path,
   fs::path repoPath = path.parent_path();
   string filename = path.filename().string();
 
-  if (repoUrl.empty() || repoBranch.empty())
-    throw std::invalid_argument("Repository URL and branch must not be empty.");
+  if (path.empty() || repoUrl.empty() || repoBranch.empty())
+    throw std::invalid_argument("Repository path, URL and branch must not be empty.");
 
   if (logger) {
     logger->debug("Setting up checkout options.");

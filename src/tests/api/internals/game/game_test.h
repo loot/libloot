@@ -36,7 +36,7 @@ protected:
   GameTest() :
     blankArchive("Blank" + GetArchiveFileExtension(GetParam())) {
 
-    boost::filesystem::ofstream out(dataPath / blankArchive);
+    std::ofstream out(dataPath / blankArchive);
     out.close();
   }
 
@@ -125,11 +125,11 @@ TEST_P(GameTest, loadPluginsWithANonPluginShouldNotAddItToTheLoadedPlugins) {
 
 TEST_P(GameTest,
        loadPluginsWithAnInvalidPluginShouldNotAddItToTheLoadedPlugins) {
-  ASSERT_FALSE(boost::filesystem::exists(dataPath / invalidPlugin));
-  ASSERT_NO_THROW(boost::filesystem::copy_file(dataPath / blankEsm,
+  ASSERT_FALSE(std::filesystem::exists(dataPath / invalidPlugin));
+  ASSERT_NO_THROW(std::filesystem::copy_file(dataPath / blankEsm,
                                                dataPath / invalidPlugin));
-  ASSERT_TRUE(boost::filesystem::exists(dataPath / invalidPlugin));
-  boost::filesystem::ofstream out(dataPath / invalidPlugin, std::fstream::app);
+  ASSERT_TRUE(std::filesystem::exists(dataPath / invalidPlugin));
+  std::ofstream out(dataPath / invalidPlugin, std::fstream::app);
   out << "GRUP0";
   out.close();
 
@@ -162,7 +162,7 @@ TEST_P(GameTest,
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
 
-  auto expected = std::set<boost::filesystem::path>({
+  auto expected = std::set<std::filesystem::path>({
     dataPath / blankArchive
   });
   EXPECT_EQ(expected, game.GetCache()->GetArchivePaths());

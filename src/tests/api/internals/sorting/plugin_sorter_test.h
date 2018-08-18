@@ -59,7 +59,7 @@ protected:
     if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
       plugins.push_back(blankEsl);
 
-      if (boost::filesystem::exists(dataPath / blankEslEsp)) {
+      if (std::filesystem::exists(dataPath / blankEslEsp)) {
         plugins.push_back(blankEslEsp);
       }
     }
@@ -72,7 +72,7 @@ protected:
   void GenerateMasterlist() {
     using std::endl;
 
-    boost::filesystem::ofstream masterlist(masterlistPath_);
+    std::ofstream masterlist(masterlistPath_);
     masterlist << "groups:" << endl
                << "  - name: earliest" << endl
                << "  - name: earlier" << endl
@@ -109,7 +109,7 @@ protected:
     using std::endl;
 
     if (GetParam() == GameType::fo4) {
-      boost::filesystem::ofstream ccc(cccPath_);
+      std::ofstream ccc(cccPath_);
       ccc << blankDifferentEsm << endl
           << blankDifferentMasterDependentEsm << endl;
 
@@ -119,8 +119,8 @@ protected:
 
   Game game_;
   const std::string blankEslEsp;
-  const boost::filesystem::path masterlistPath_;
-  const boost::filesystem::path cccPath_;
+  const std::filesystem::path masterlistPath_;
+  const std::filesystem::path cccPath_;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -140,7 +140,7 @@ TEST_P(PluginSorterTest,
        lightMasterFlaggedEspFilesShouldNotBeTreatedAsMasters) {
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     ASSERT_NO_THROW(
-        boost::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
+        std::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
   }
 
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));

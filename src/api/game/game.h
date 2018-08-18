@@ -25,9 +25,8 @@
 #ifndef LOOT_API_GAME_GAME
 #define LOOT_API_GAME_GAME
 
+#include <filesystem>
 #include <string>
-
-#include <boost/filesystem.hpp>
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
@@ -37,14 +36,14 @@ namespace loot {
 class Game : public GameInterface {
 public:
   Game(const GameType gameType,
-       const boost::filesystem::path& gamePath,
-       const boost::filesystem::path& gameLocalDataPath = "");
+       const std::filesystem::path& gamePath,
+       const std::filesystem::path& gameLocalDataPath = "");
 
   // Internal Methods //
   //////////////////////
 
   GameType Type() const;
-  boost::filesystem::path DataPath() const;
+  std::filesystem::path DataPath() const;
 
   std::shared_ptr<GameCache> GetCache();
   std::shared_ptr<LoadOrderHandler> GetLoadOrderHandler();
@@ -85,7 +84,7 @@ private:
   std::shared_ptr<DatabaseInterface> database_;
 
   const GameType type_;
-  const boost::filesystem::path gamePath_;
+  const std::filesystem::path gamePath_;
 
   std::string masterFile_;
 };

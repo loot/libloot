@@ -27,13 +27,17 @@
 #include <iomanip>
 #include <sstream>
 
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 #include "api/helpers/logging.h"
 #include "loot/exception/error_categories.h"
 #include "loot/exception/git_state_error.h"
 
 using std::string;
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace loot {
 GitHelper::GitHelper() : logger_(getLogger()) {}
@@ -105,7 +109,7 @@ void GitHelper::InitialiseOptions(const std::string& branch,
   data_.clone_options.checkout_branch = branch.c_str();
 }
 
-void GitHelper::Open(const boost::filesystem::path& repoRoot) {
+void GitHelper::Open(const std::filesystem::path& repoRoot) {
   if (logger_) {
     logger_->info("Attempting to open Git repository at: {}",
                   repoRoot.string());
@@ -144,7 +148,7 @@ void GitHelper::Call(int error_code) {
   throw std::system_error(error_code, libgit2_category(), message);
 }
 
-bool GitHelper::IsRepository(const boost::filesystem::path& path) {
+bool GitHelper::IsRepository(const std::filesystem::path& path) {
   return git_repository_open_ext(NULL,
                                  path.string().c_str(),
                                  GIT_REPOSITORY_OPEN_NO_SEARCH,
@@ -171,7 +175,7 @@ int GitHelper::DiffFileCallback(const git_diff_delta* delta,
 }
 
 // Clones a repository and opens it.
-void GitHelper::Clone(const boost::filesystem::path& path,
+void GitHelper::Clone(const std::filesystem::path& path,
                       const std::string& url) {
   if (data_.repo != nullptr)
     throw GitStateError(
@@ -191,7 +195,8 @@ void GitHelper::Clone(const boost::filesystem::path& path,
     if (logger_) {
       logger_->trace("Target repo path not empty, cloning into temporary directory.");
     }
-    auto directory = "LOOT-" + path.filename().string() + "-" + fs::unique_path().string();
+    auto directory = "LOOT-" + path.filename().string() + "-" +
+                     boost::lexical_cast<std::string>((boost::uuids::random_generator())());
     repoPath = fs::temp_directory_path() / directory;
 
     // Remove path in case it already exists.
@@ -218,7 +223,7 @@ void GitHelper::Clone(const boost::filesystem::path& path,
           "Target repo path not empty, moving cloned files in.");
     }
 
-    std::vector<boost::filesystem::path> filenamesToMove;
+    std::vector<std::filesystem::path> filenamesToMove;
     for (fs::directory_iterator it(repoPath);
          it != fs::directory_iterator();
          ++it) {
@@ -570,7 +575,7 @@ std::string GitHelper::GetHeadCommitDate() {
   return out.str();
 }
 
-bool GitHelper::IsFileDifferent(const boost::filesystem::path& repoRoot,
+bool GitHelper::IsFileDifferent(const std::filesystem::path& repoRoot,
                                 const std::string& filename) {
   auto logger = getLogger();
 

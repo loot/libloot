@@ -48,18 +48,18 @@ protected:
     game_.LoadCurrentLoadOrderState();
 
     // Write out an empty file.
-    boost::filesystem::ofstream out(dataPath / emptyFile);
+    std::ofstream out(dataPath / emptyFile);
     out.close();
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / emptyFile));
+    ASSERT_TRUE(std::filesystem::exists(dataPath / emptyFile));
 
 #ifndef _WIN32
-    ASSERT_NO_THROW(boost::filesystem::copy(dataPath / blankEsp,
+    ASSERT_NO_THROW(std::filesystem::copy(dataPath / blankEsp,
                                             dataPath / lowercaseBlankEsp));
 #endif
 
     if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
       ASSERT_NO_THROW(
-          boost::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
+          std::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
     }
 
     // Create dummy archive files.

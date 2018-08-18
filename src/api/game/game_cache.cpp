@@ -117,12 +117,12 @@ void GameCache::AddPlugin(const Plugin&& plugin) {
                    std::make_shared<Plugin>(std::move(plugin)));
 }
 
-std::set<boost::filesystem::path> GameCache::GetArchivePaths() const
+std::set<std::filesystem::path> GameCache::GetArchivePaths() const
 {
   return archivePaths_;
 }
 
-void GameCache::CacheArchivePath(const boost::filesystem::path& path)
+void GameCache::CacheArchivePath(const std::filesystem::path& path)
 {
   lock_guard<mutex> lock(mutex_);
 

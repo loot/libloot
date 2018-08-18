@@ -23,7 +23,7 @@ install:
   - export CXX="g++-8" CC="gcc-8"
   # Build Boost.
   - wget https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/1.5.0/install_boost.py
-  - python install_boost.py --directory ~ --boost-version 1.67.0 -a 64 -t gcc-8 filesystem locale system thread
+  - python install_boost.py --directory ~ --boost-version 1.67.0 -a 64 -t gcc-8 locale system
   # Install packages for generating documentation
   - pip install --user -r docs/requirements.txt
   # Add sphinx-build to PATH

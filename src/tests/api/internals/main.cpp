@@ -44,9 +44,9 @@
 #include "tests/api/internals/metadata/plugin_metadata_test.h"
 #include "tests/api/internals/metadata/tag_test.h"
 #include "tests/api/internals/metadata_list_test.h"
+#include "tests/api/internals/plugin_test.h"
 #include "tests/api/internals/sorting/group_sort_test.h"
 #include "tests/api/internals/sorting/plugin_sorter_test.h"
-#include "tests/api/internals/plugin_test.h"
 
 TEST(ModuloOperator, shouldConformToTheCpp11Standard) {
   // C++11 defines the modulo operator more strongly
@@ -72,10 +72,88 @@ TEST(YamlCpp, shouldSupportMergeKeys) {
   EXPECT_EQ(1, node["a"].as<int>());
 }
 
+#ifdef _WIN32
+TEST(Filesystem,
+     pathStringConstructorDoesNotConvertCharacterEncodingFromUtf8ToNative) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path(utf8);
+
+  EXPECT_EQ(utf8, path.string());
+  EXPECT_NE(utf8, path.u8string());
+  EXPECT_NE(utf16, path.u16string());
+}
+#endif
+
+// This relies on the global locale being set up correctly on Windows (see the
+// main method).
+TEST(Filesystem,
+     pathStringAndLocaleConstructorConvertsCharacterEncodingFromUtf8ToNative) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path(utf8, std::locale());
+
+#ifdef _WIN32
+  EXPECT_NE(utf8, path.string());
+#else
+  EXPECT_EQ(utf8, path.string());
+#endif
+
+  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf16, path.u16string());
+}
+
+TEST(Filesystem, u8pathConvertsCharacterEncodingFromUtf8ToNative) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path = std::filesystem::u8path(utf8);
+
+#ifdef _WIN32
+  EXPECT_NE(utf8, path.string());
+#else
+  EXPECT_EQ(utf8, path.string());
+#endif
+
+  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf16, path.u16string());
+}
+
+TEST(Filesystem, shouldBeAbleToWriteToAndReadFromAUtf8Path) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  auto path = std::filesystem::u8path(utf8);
+  std::string output = u8"Test cont\u00E9nt";
+
+  std::ofstream out(path);
+  out << output;
+  out.close();
+
+  EXPECT_TRUE(std::filesystem::exists(path));
+
+  std::string input;
+  std::ifstream in(path);
+  std::getline(in, input);
+  in.close();
+
+  EXPECT_EQ(output, input);
+
+  std::filesystem::remove(path);
+}
+
 int main(int argc, char **argv) {
   // Set the locale to get encoding conversions working correctly.
   std::locale::global(boost::locale::generator().generate(""));
-  boost::filesystem::path::imbue(std::locale());
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -36,7 +36,7 @@ ConditionEvaluator::ConditionEvaluator() :
     loadOrderHandler_(nullptr) {}
 ConditionEvaluator::ConditionEvaluator(
     const GameType gameType,
-    const boost::filesystem::path& dataPath,
+    const std::filesystem::path& dataPath,
     std::shared_ptr<GameCache> gameCache,
     std::shared_ptr<LoadOrderHandler> loadOrderHandler) :
     gameType_(gameType),
@@ -163,10 +163,10 @@ bool ConditionEvaluator::fileExists(const std::string& filePath) const {
 
   // Not a loaded plugin, check the filesystem.
   if (hasPluginFileExtension(filePath, gameType_))
-    return boost::filesystem::exists(dataPath_ / filePath) ||
-            boost::filesystem::exists(dataPath_ / (filePath + ".ghost"));
+    return std::filesystem::exists(dataPath_ / filePath) ||
+            std::filesystem::exists(dataPath_ / (filePath + ".ghost"));
   else
-    return boost::filesystem::exists(dataPath_ / filePath);
+    return std::filesystem::exists(dataPath_ / filePath);
 }
 
 bool ConditionEvaluator::regexMatchExists(
@@ -261,13 +261,13 @@ bool ConditionEvaluator::compareVersions(const std::string& filePath,
           (comparator == ">=" && trueVersion >= givenVersion));
 }
 
-void ConditionEvaluator::validatePath(const boost::filesystem::path& path) {
+void ConditionEvaluator::validatePath(const std::filesystem::path& path) {
   auto logger = getLogger();
   if (logger) {
     logger->trace("Checking to see if the path \"{}\" is safe.", path.string());
   }
 
-  boost::filesystem::path temp;
+  std::filesystem::path temp;
   for (const auto& component : path) {
     if (component == ".")
       continue;
@@ -288,14 +288,14 @@ void ConditionEvaluator::validateRegex(const std::string& regexString) {
   }
 }
 
-boost::filesystem::path ConditionEvaluator::getRegexParentPath(
+std::filesystem::path ConditionEvaluator::getRegexParentPath(
     const std::string& regexString) {
   size_t pos = regexString.rfind('/');
 
   if (pos == std::string::npos)
-    return boost::filesystem::path();
+    return std::filesystem::path();
 
-  return boost::filesystem::path(regexString.substr(0, pos));
+  return std::filesystem::path(regexString.substr(0, pos));
 }
 
 std::string ConditionEvaluator::getRegexFilename(
@@ -308,7 +308,7 @@ std::string ConditionEvaluator::getRegexFilename(
   return regexString.substr(pos + 1);
 }
 
-std::pair<boost::filesystem::path, std::regex> ConditionEvaluator::splitRegex(
+std::pair<std::filesystem::path, std::regex> ConditionEvaluator::splitRegex(
     const std::string& regexString) {
   // Can't support a regex string where all path components may be regex, since
   // this could lead to massive scanning if an unfortunately-named directory is
@@ -318,7 +318,7 @@ std::pair<boost::filesystem::path, std::regex> ConditionEvaluator::splitRegex(
   validateRegex(regexString);
 
   std::string filename = getRegexFilename(regexString);
-  boost::filesystem::path parent = getRegexParentPath(regexString);
+  std::filesystem::path parent = getRegexParentPath(regexString);
 
   validatePath(parent);
 
@@ -330,19 +330,19 @@ std::pair<boost::filesystem::path, std::regex> ConditionEvaluator::splitRegex(
                                "\": " + e.what());
   }
 
-  return std::pair<boost::filesystem::path, std::regex>(parent, reg);
+  return std::pair<std::filesystem::path, std::regex>(parent, reg);
 }
 
 bool ConditionEvaluator::isGameSubdirectory(
-    const boost::filesystem::path& path) const {
-  boost::filesystem::path parentPath = dataPath_ / path;
+    const std::filesystem::path& path) const {
+  std::filesystem::path parentPath = dataPath_ / path;
 
-  return boost::filesystem::exists(parentPath) &&
-         boost::filesystem::is_directory(parentPath);
+  return std::filesystem::exists(parentPath) &&
+         std::filesystem::is_directory(parentPath);
 }
 
 bool ConditionEvaluator::isRegexMatchInDataDirectory(
-    const std::pair<boost::filesystem::path, std::regex>& pathRegex,
+    const std::pair<std::filesystem::path, std::regex>& pathRegex,
     const std::function<bool(const std::string&)> condition) const {
   // Now we have a valid parent path and a regex filename. Check that the
   // parent path exists and is a directory.
@@ -356,9 +356,9 @@ bool ConditionEvaluator::isRegexMatchInDataDirectory(
   }
 
   return std::any_of(
-      boost::filesystem::directory_iterator(dataPath_ / pathRegex.first),
-      boost::filesystem::directory_iterator(),
-      [&](const boost::filesystem::directory_entry& entry) {
+      std::filesystem::directory_iterator(dataPath_ / pathRegex.first),
+      std::filesystem::directory_iterator(),
+      [&](const std::filesystem::directory_entry& entry) {
         const std::string filename = entry.path().filename().string();
         return std::regex_match(filename, pathRegex.second) &&
                condition(filename);
@@ -366,7 +366,7 @@ bool ConditionEvaluator::isRegexMatchInDataDirectory(
 }
 
 bool ConditionEvaluator::areRegexMatchesInDataDirectory(
-    const std::pair<boost::filesystem::path, std::regex>& pathRegex,
+    const std::pair<std::filesystem::path, std::regex>& pathRegex,
     const std::function<bool(const std::string&)> condition) const {
   bool foundOneFile = false;
 
@@ -405,7 +405,7 @@ bool ConditionEvaluator::parseCondition(const std::string& condition) const {
 }
 Version ConditionEvaluator::getVersion(const std::string& filePath) const {
   if (filePath == "LOOT")
-    return Version(boost::filesystem::absolute("LOOT.exe"));
+    return Version(std::filesystem::absolute("LOOT.exe"));
   else {
     // If the file is a plugin, its version needs to be extracted
     // from its description field. Try getting an entry from the
@@ -440,7 +440,7 @@ uint32_t ConditionEvaluator::getCrc(const std::string & file) const {
   }
 
   if (file == "LOOT") {
-    crc = GetCrc32(boost::filesystem::absolute("LOOT.exe"));
+    crc = GetCrc32(std::filesystem::absolute("LOOT.exe"));
     gameCache_->CacheCrc(file, crc);
     return crc;
   }
@@ -453,11 +453,11 @@ uint32_t ConditionEvaluator::getCrc(const std::string & file) const {
 
   // Otherwise calculate it from the file.
   if (crc == 0) {
-    if (boost::filesystem::exists(dataPath_ / file)) {
+    if (std::filesystem::exists(dataPath_ / file)) {
       crc = GetCrc32(dataPath_ / file);
     }
     else if (hasPluginFileExtension(file, gameType_) &&
-      boost::filesystem::exists(dataPath_ / (file + ".ghost"))) {
+      std::filesystem::exists(dataPath_ / (file + ".ghost"))) {
       crc = GetCrc32(dataPath_ / (file + ".ghost"));
     }
   }

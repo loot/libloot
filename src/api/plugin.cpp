@@ -24,10 +24,10 @@
 
 #include "api/plugin.h"
 
+#include <filesystem>
 #include <regex>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/locale.hpp>
 
 #include "api/game/game.h"
@@ -41,7 +41,7 @@ using std::string;
 
 namespace loot {
 Plugin::Plugin(const GameType gameType,
-               const boost::filesystem::path& dataPath,
+               const std::filesystem::path& dataPath,
                std::shared_ptr<GameCache> gameCache,
                std::shared_ptr<LoadOrderHandler> loadOrderHandler,
                const std::string& name,
@@ -55,11 +55,11 @@ Plugin::Plugin(const GameType gameType,
   auto logger = getLogger();
 
   try {
-    boost::filesystem::path filepath = dataPath / name_;
+    std::filesystem::path filepath = dataPath / name_;
 
     // In case the plugin is ghosted.
-    if (!boost::filesystem::exists(filepath) &&
-        boost::filesystem::exists(filepath.string() + ".ghost"))
+    if (!std::filesystem::exists(filepath) &&
+        std::filesystem::exists(filepath.string() + ".ghost"))
       filepath += ".ghost";
 
     Load(filepath, gameType, headerOnly);
@@ -221,7 +221,7 @@ size_t Plugin::NumOverrideFormIDs() const { return numOverrideRecords_; }
 
 bool Plugin::IsValid(const std::string& filename,
                      const GameType gameType,
-                     const boost::filesystem::path& dataPath) {
+                     const std::filesystem::path& dataPath) {
   auto logger = getLogger();
   if (logger) {
     logger->trace("Checking to see if \"{}\" is a valid plugin.", filename);
@@ -254,12 +254,12 @@ bool Plugin::IsValid(const std::string& filename,
 }
 
 uintmax_t Plugin::GetFileSize(const std::string& filename,
-                              const boost::filesystem::path& dataPath) {
-  boost::filesystem::path realPath = dataPath / filename;
-  if (!boost::filesystem::exists(realPath))
+                              const std::filesystem::path& dataPath) {
+  std::filesystem::path realPath = dataPath / filename;
+  if (!std::filesystem::exists(realPath))
     realPath += ".ghost";
 
-  return boost::filesystem::file_size(realPath);
+  return std::filesystem::file_size(realPath);
 }
 
 bool Plugin::operator<(const Plugin& rhs) const {
@@ -269,7 +269,7 @@ bool Plugin::operator<(const Plugin& rhs) const {
 
 bool Plugin::IsActive() const { return isActive_; }
 
-void Plugin::Load(const boost::filesystem::path& path,
+void Plugin::Load(const std::filesystem::path& path,
                   GameType gameType,
                   bool headerOnly) {
   ::Plugin* plugin;
@@ -317,13 +317,13 @@ std::string GetArchiveFileExtension(const GameType gameType) {
 bool Plugin::LoadsArchive(const std::string& pluginName,
                           const GameType gameType,
                           const std::shared_ptr<GameCache> gameCache,
-                          const boost::filesystem::path& dataPath) {
+                          const std::filesystem::path& dataPath) {
   // Get whether the plugin loads an archive (BSA/BA2) or not.
   const string archiveExtension = GetArchiveFileExtension(gameType);
 
   if (gameType == GameType::tes5) {
     // Skyrim plugins only load BSAs that exactly match their basename.
-    return boost::filesystem::exists(
+    return std::filesystem::exists(
         dataPath /
         (pluginName.substr(0, pluginName.length() - 4) + archiveExtension));
   } else if (gameType != GameType::tes4 ||

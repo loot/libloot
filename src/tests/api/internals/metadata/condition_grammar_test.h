@@ -54,10 +54,10 @@ protected:
 
     // Write out an empty resource file.
     ASSERT_NO_THROW(
-        boost::filesystem::create_directories(resourcePath.parent_path()));
-    boost::filesystem::ofstream out(resourcePath);
+        std::filesystem::create_directories(resourcePath.parent_path()));
+    std::ofstream out(resourcePath);
     out.close();
-    ASSERT_TRUE(boost::filesystem::exists(resourcePath));
+    ASSERT_TRUE(std::filesystem::exists(resourcePath));
   }
 
   std::string IntToHexString(const uint32_t value) {
@@ -83,7 +83,7 @@ protected:
     game_.LoadPlugins(plugins, headersOnly);
   }
 
-  const boost::filesystem::path resourcePath;
+  const std::filesystem::path resourcePath;
 
   Game game_;
   ConditionEvaluator evaluator_;

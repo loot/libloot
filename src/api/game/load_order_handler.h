@@ -25,11 +25,11 @@
 #ifndef LOOT_API_GAME_LOAD_ORDER_HANDLER
 #define LOOT_API_GAME_LOAD_ORDER_HANDLER
 
+#include <filesystem>
 #include <list>
 #include <string>
 #include <unordered_set>
 
-#include <boost/filesystem.hpp>
 #include <libloadorder.hpp>
 
 #include "loot/enum/game_type.h"
@@ -41,8 +41,8 @@ public:
   ~LoadOrderHandler();
 
   void Init(const GameType& game,
-            const boost::filesystem::path& gamePath,
-            const boost::filesystem::path& gameLocalAppData = "");
+            const std::filesystem::path& gamePath,
+            const std::filesystem::path& gameLocalAppData = "");
 
   void LoadCurrentState();
 

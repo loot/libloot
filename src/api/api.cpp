@@ -24,22 +24,21 @@
 
 #include "loot/api.h"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
+
 #include <boost/locale.hpp>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace loot {
 std::string ResolvePath(const std::string& path) {
-  // NTFS junction links show up as symlinks and directories, but resolving
-  // them just appends their target path.
-  if (path.empty() || !fs::is_symlink(path) || fs::is_directory(path))
-    return path;
+  if (fs::is_symlink(path))
+    return fs::read_symlink(path).string();
 
-  return fs::read_symlink(path).string();
+  return path;
 }
 
 LOOT_API void SetLoggingCallback(
@@ -63,7 +62,6 @@ LOOT_API bool IsCompatible(const unsigned int versionMajor,
 
 LOOT_API void InitialiseLocale(const std::string& id) {
   std::locale::global(boost::locale::generator().generate(id));
-  boost::filesystem::path::imbue(std::locale());
 }
 
 LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(

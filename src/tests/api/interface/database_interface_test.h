@@ -47,7 +47,7 @@ protected:
 
     db_ = handle_->GetDatabase();
 
-    ASSERT_FALSE(boost::filesystem::exists(minimalOutputPath_));
+    ASSERT_FALSE(std::filesystem::exists(minimalOutputPath_));
   }
 
   std::string GetExpectedMinimalContent() const {
@@ -69,8 +69,8 @@ protected:
     return expectedContent.str();
   }
 
-  std::string GetFileContent(const boost::filesystem::path& file) {
-    boost::filesystem::ifstream stream(file);
+  std::string GetFileContent(const std::filesystem::path& file) {
+    std::ifstream stream(file);
     std::stringstream content;
     content << stream.rdbuf();
 
@@ -80,7 +80,7 @@ protected:
   void GenerateUserlist() {
     using std::endl;
 
-    boost::filesystem::ofstream userlist(userlistPath_);
+    std::ofstream userlist(userlistPath_);
     userlist << "bash_tags:" << endl
              << "  - RaceRelations" << endl
              << "  - C.Lighting" << endl
@@ -108,8 +108,8 @@ protected:
     userlist.close();
   }
 
-  const boost::filesystem::path userlistPath_;
-  const boost::filesystem::path minimalOutputPath_;
+  const std::filesystem::path userlistPath_;
+  const std::filesystem::path minimalOutputPath_;
   const std::string url_;
   const std::string branch_;
   const std::string oldBranch_;
@@ -163,7 +163,7 @@ TEST_P(
 TEST_P(DatabaseInterfaceTest,
        loadListsShouldSucceedIfTheMasterlistAndUserlistAreBothPresent) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(boost::filesystem::copy(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(std::filesystem::copy(masterlistPath, userlistPath_));
 
   EXPECT_NO_THROW(
       db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
@@ -173,7 +173,7 @@ TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldThrowIfTheFileAlreadyExistsAndTheOverwriteArgumentIsFalse) {
   ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false));
-  ASSERT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
   EXPECT_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false),
                FileAccessError);
@@ -183,14 +183,14 @@ TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldReturnOkAndWriteToFileIfTheArgumentsAreValidAndTheOverwriteArgumentIsTrue) {
   EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true));
-  EXPECT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldReturnOkIfTheFileAlreadyExistsAndTheOverwriteArgumentIsTrue) {
   ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false));
-  ASSERT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
   EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true));
 }
@@ -198,11 +198,11 @@ TEST_P(
 TEST_P(DatabaseInterfaceTest,
        writeUserMetadataShouldThrowIfPathGivenExistsAndIsReadOnly) {
   ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false));
-  ASSERT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
-  boost::filesystem::permissions(minimalOutputPath_,
-                                 boost::filesystem::perms::remove_perms |
-                                     boost::filesystem::perms::owner_write);
+  std::filesystem::permissions(minimalOutputPath_,
+                               std::filesystem::perms::owner_read,
+                               std::filesystem::perm_options::replace);
 
   EXPECT_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true),
                FileAccessError);
@@ -220,9 +220,9 @@ TEST_P(DatabaseInterfaceTest,
 
 TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(boost::filesystem::copy(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(std::filesystem::copy(masterlistPath, userlistPath_));
 
-  boost::filesystem::ofstream masterlist(masterlistPath);
+  std::ofstream masterlist(masterlistPath);
   masterlist << "bash_tags:\n  []\nglobals:\n  []\nplugins:\n  []";
   masterlist.close();
 
@@ -237,7 +237,7 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
 TEST_P(DatabaseInterfaceTest,
        updateMasterlistShouldThrowIfTheMasterlistPathGivenIsInvalid) {
   EXPECT_THROW(db_->UpdateMasterlist(";//\?", url_, branch_),
-               std::invalid_argument);
+               std::exception);
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -280,7 +280,7 @@ TEST_P(
   EXPECT_NO_THROW(
       updated = db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
   EXPECT_TRUE(updated);
-  EXPECT_TRUE(boost::filesystem::exists(masterlistPath));
+  EXPECT_TRUE(std::filesystem::exists(masterlistPath));
 }
 
 TEST_P(
@@ -294,7 +294,7 @@ TEST_P(
   EXPECT_NO_THROW(
       updated = db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
   EXPECT_FALSE(updated);
-  EXPECT_TRUE(boost::filesystem::exists(masterlistPath));
+  EXPECT_TRUE(std::filesystem::exists(masterlistPath));
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -794,14 +794,14 @@ TEST_P(
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldReturnOkAndWriteToFileIfArgumentsGivenAreValid) {
   EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false));
-  EXPECT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldThrowIfTheFileAlreadyExistsAndTheOverwriteArgumentIsFalse) {
   ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false));
-  ASSERT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
   EXPECT_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false),
                FileAccessError);
@@ -811,14 +811,14 @@ TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldReturnOkAndWriteToFileIfTheArgumentsAreValidAndTheOverwriteArgumentIsTrue) {
   EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), true));
-  EXPECT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldReturnOkIfTheFileAlreadyExistsAndTheOverwriteArgumentIsTrue) {
   ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false));
-  ASSERT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
   EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), true));
 }
@@ -826,11 +826,11 @@ TEST_P(
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldThrowIfPathGivenExistsAndIsReadOnly) {
   ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false));
-  ASSERT_TRUE(boost::filesystem::exists(minimalOutputPath_));
+  ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
-  boost::filesystem::permissions(minimalOutputPath_,
-                                 boost::filesystem::perms::remove_perms |
-                                     boost::filesystem::perms::owner_write);
+  std::filesystem::permissions(minimalOutputPath_,
+                               std::filesystem::perms::owner_read,
+                               std::filesystem::perm_options::replace);
 
   EXPECT_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), true),
                FileAccessError);

@@ -25,10 +25,9 @@
 #ifndef LOOT_API_METADATA_CONDITION_EVALUATOR
 #define LOOT_API_METADATA_CONDITION_EVALUATOR
 
+#include <filesystem>
 #include <regex>
 #include <string>
-
-#include <boost/filesystem.hpp>
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
@@ -41,7 +40,7 @@ class ConditionEvaluator {
 public:
   ConditionEvaluator();
   ConditionEvaluator(const GameType gameType,
-                     const boost::filesystem::path& dataPath,
+                     const std::filesystem::path& dataPath,
                      std::shared_ptr<GameCache> gameCache,
                      std::shared_ptr<LoadOrderHandler> loadOrderHandler);
 
@@ -66,24 +65,24 @@ public:
                        const std::string& comparator) const;
 
 private:
-  static void validatePath(const boost::filesystem::path& path);
+  static void validatePath(const std::filesystem::path& path);
   static void validateRegex(const std::string& regexString);
 
-  static boost::filesystem::path getRegexParentPath(
+  static std::filesystem::path getRegexParentPath(
       const std::string& regexString);
   static std::string getRegexFilename(const std::string& regexString);
 
   // Split a regex string into the non-regex filesystem parent path, and the
   // regex filename.
-  static std::pair<boost::filesystem::path, std::regex> splitRegex(
+  static std::pair<std::filesystem::path, std::regex> splitRegex(
       const std::string& regexString);
 
-  bool isGameSubdirectory(const boost::filesystem::path& path) const;
+  bool isGameSubdirectory(const std::filesystem::path& path) const;
   bool isRegexMatchInDataDirectory(
-      const std::pair<boost::filesystem::path, std::regex>& pathRegex,
+      const std::pair<std::filesystem::path, std::regex>& pathRegex,
       const std::function<bool(const std::string&)> condition) const;
   bool areRegexMatchesInDataDirectory(
-      const std::pair<boost::filesystem::path, std::regex>& pathRegex,
+      const std::pair<std::filesystem::path, std::regex>& pathRegex,
       const std::function<bool(const std::string&)> condition) const;
 
   bool parseCondition(const std::string& condition) const;
@@ -95,7 +94,7 @@ private:
   uint32_t getCrc(const std::string& file) const;
 
   const GameType gameType_;
-  const boost::filesystem::path dataPath_;
+  const std::filesystem::path dataPath_;
   const std::shared_ptr<GameCache> gameCache_;
   const std::shared_ptr<LoadOrderHandler> loadOrderHandler_;
 };

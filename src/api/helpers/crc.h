@@ -26,11 +26,10 @@
 #define LOOT_API_HELPERS_CRC
 
 #include <cstdint>
-
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace loot {
-uint32_t GetCrc32(const boost::filesystem::path& filename);
+uint32_t GetCrc32(const std::filesystem::path& filename);
 }
 
 #endif

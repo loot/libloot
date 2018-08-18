@@ -27,6 +27,8 @@ along with LOOT.  If not, see
 
 #include "loot/api.h"
 
+#include <fstream>
+
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -48,7 +50,7 @@ protected:
   virtual void SetUp() {
     CommonGameTestFixture::SetUp();
 
-    ASSERT_FALSE(boost::filesystem::exists(masterlistPath));
+    ASSERT_FALSE(std::filesystem::exists(masterlistPath));
 
     handle_ = CreateGameHandle(
         GetParam(), dataPath.parent_path().string(), localPath.string());
@@ -57,7 +59,7 @@ protected:
   void GenerateMasterlist() {
     using std::endl;
 
-    boost::filesystem::ofstream masterlist(masterlistPath);
+    std::ofstream masterlist(masterlistPath);
     masterlist << "bash_tags:" << endl
                << "  - Actors.ACBS" << endl
                << "  - C.Climate" << endl
@@ -117,7 +119,7 @@ protected:
 
   std::shared_ptr<GameInterface> handle_;
 
-  const boost::filesystem::path masterlistPath;
+  const std::filesystem::path masterlistPath;
 
   const std::string noteMessage;
   const std::string warningMessage;
