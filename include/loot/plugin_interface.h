@@ -25,6 +25,7 @@
 #define LOOT_PLUGIN_INTERFACE
 
 #include <cstdint>
+#include <set>
 #include <string>
 #include <vector>
 
