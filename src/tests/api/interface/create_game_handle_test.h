@@ -87,7 +87,7 @@ TEST_P(CreateGameHandleTest,
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
                                              relative(dataPath.parent_path()).string(),
                                              relative(localPath).string()));
-  EXPECT_NE(nullptr, handle_);
+  EXPECT_TRUE(handle_);
 }
 
 TEST_P(CreateGameHandleTest,
@@ -95,7 +95,7 @@ TEST_P(CreateGameHandleTest,
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
                                              dataPath.parent_path().string(),
                                              localPath.string()));
-  EXPECT_NE(nullptr, handle_);
+  EXPECT_TRUE(handle_);
 }
 
 TEST_P(CreateGameHandleTest, shouldThrowIfPassedAGamePathThatDoesNotExist) {
@@ -115,7 +115,7 @@ TEST_P(CreateGameHandleTest, shouldThrowIfPassedALocalPathThatDoesNotExist) {
 TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedAnEmptyLocalPathString) {
   EXPECT_NO_THROW(handle_ = CreateGameHandle(
                       GetParam(), dataPath.parent_path().string(), ""));
-  EXPECT_NE(nullptr, handle_);
+  EXPECT_TRUE(handle_);
 }
 #endif
 
@@ -123,7 +123,7 @@ TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathSymlinks) {
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
                                              gamePathSymlink.string(),
                                              localPathSymlink.string()));
-  EXPECT_NE(nullptr, handle_);
+  EXPECT_TRUE(handle_);
 }
 
 #ifdef _WIN32
@@ -132,7 +132,7 @@ TEST_P(CreateGameHandleTest,
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
                                              gamePathJunctionLink.string(),
                                              localPathJunctionLink.string()));
-  EXPECT_NE(nullptr, handle_);
+  EXPECT_TRUE(handle_);
 }
 #endif
 }

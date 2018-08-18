@@ -13,6 +13,8 @@ ELSE()
 ENDIF()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ##############################
 # Get Build Revision
@@ -61,7 +63,7 @@ ELSE ()
     set(RUST_TARGET x86_64-unknown-linux-gnu)
 ENDIF ()
 
-find_package(Boost REQUIRED COMPONENTS locale filesystem system)
+find_package(Boost REQUIRED COMPONENTS filesystem locale system)
 
 ExternalProject_Add(GTest
                     PREFIX "external"
@@ -323,8 +325,6 @@ ENDIF ()
 IF (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};.")
     set (CMAKE_BUILD_WITH_INSTALL_RPATH ON)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -std=c++14")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++14")
 
     set (LOOT_LIBS ssl
                    curl
@@ -343,6 +343,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 ENDIF ()
 
 IF (MSVC)
+    # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive-")
     # Set /bigobj to allow building Debug and RelWithDebInfo tests
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /bigobj")

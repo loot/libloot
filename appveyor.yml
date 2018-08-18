@@ -1,4 +1,4 @@
-os: Visual Studio 2015
+os: Visual Studio 2017
 
 version: "{build}-{branch}"
 
@@ -33,9 +33,9 @@ before_build:
   - cd build
   - ps: |
       if ($env:PLATFORM -eq 'Win32') {
-        cmake .. -G "Visual Studio 14 2015" -DBOOST_ROOT="C:\Libraries\boost_1_67_0" -DBOOST_LIBRARYDIR="C:\Libraries\boost_1_67_0\lib32-msvc-14.0"
+        cmake .. -G "Visual Studio 15 2017" -DBOOST_ROOT="C:\Libraries\boost_1_67_0" -DBOOST_LIBRARYDIR="C:\Libraries\boost_1_67_0\lib32-msvc-14.1"
       } else {
-        cmake .. -G "Visual Studio 14 2015 Win64" -DBOOST_ROOT="C:\Libraries\boost_1_67_0" -DBOOST_LIBRARYDIR="C:\Libraries\boost_1_67_0\lib64-msvc-14.0"
+        cmake .. -G "Visual Studio 15 2017 Win64" -DBOOST_ROOT="C:\Libraries\boost_1_67_0" -DBOOST_LIBRARYDIR="C:\Libraries\boost_1_67_0\lib64-msvc-14.1"
       }
 
 build:
@@ -77,7 +77,7 @@ deploy:
     tag: $(APPVEYOR_REPO_TAG_NAME)
     release: LOOT API v$(APPVEYOR_REPO_TAG_NAME)
     description: |
-      Requires Windows 7 or later and the [MSVC 2015 x86 redistributable](https://download.microsoft.com/download/6/A/A/6AA4EDFF-645B-48C5-81CC-ED5963AEAD48/vc_redist.x86.exe), and [7-Zip](http://www.7-zip.org/) to extract the archives.
+      Requires Windows 7 or later and the [MSVC 2017 x86 redistributable](https://download.visualstudio.microsoft.com/download/pr/12192785/88b50ce70017bf10f2d56d60fcba6ab1/VC_redist.x86.exe), and [7-Zip](http://www.7-zip.org/) to extract the archives.
 
       ## Change Logs
       - [API](https://loot-api.readthedocs.io/en/$(APPVEYOR_REPO_TAG_NAME)/api/changelog.html)
