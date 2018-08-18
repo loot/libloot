@@ -34,9 +34,9 @@
 namespace fs = std::filesystem;
 
 namespace loot {
-std::string ResolvePath(const std::string& path) {
+std::filesystem::path ResolvePath(const std::filesystem::path& path) {
   if (fs::is_symlink(path))
-    return fs::read_symlink(path).string();
+    return fs::read_symlink(path);
 
   return path;
 }
@@ -66,25 +66,25 @@ LOOT_API void InitialiseLocale(const std::string& id) {
 
 LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
     const GameType game,
-    const std::string& gamePath,
-    const std::string& gameLocalPath) {
+    const std::filesystem::path& gamePath,
+    const std::filesystem::path& gameLocalPath) {
   auto logger = getLogger();
   if (logger) {
     logger->info(
         "Attempting to create a game handle with game path \"{}\" "
         "and local path \"{}\"",
-        gamePath,
-        gameLocalPath);
+        gamePath.string(),
+        gameLocalPath.string());
   }
 
-  const std::string resolvedGamePath = ResolvePath(gamePath);
+  auto resolvedGamePath = ResolvePath(gamePath);
   if (!fs::is_directory(resolvedGamePath))
-    throw std::invalid_argument("Given game path \"" + gamePath +
+    throw std::invalid_argument("Given game path \"" + gamePath.string() +
                                 "\" does not resolve to a valid directory.");
 
-  const std::string resolvedGameLocalPath = ResolvePath(gameLocalPath);
+  auto resolvedGameLocalPath = ResolvePath(gameLocalPath);
   if (!gameLocalPath.empty() && !fs::is_directory(resolvedGameLocalPath))
-    throw std::invalid_argument("Given game path \"" + gameLocalPath +
+    throw std::invalid_argument("Given game local path \"" + gameLocalPath.string() +
                                 "\" does not resolve to a valid directory.");
 
   return std::make_shared<Game>(game, resolvedGamePath, resolvedGameLocalPath);

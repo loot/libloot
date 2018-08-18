@@ -140,7 +140,7 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
 
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(
-      handle_->GetDatabase()->LoadLists(masterlistPath.string(), ""));
+      handle_->GetDatabase()->LoadLists(masterlistPath, ""));
 
   std::vector<std::string> pluginsToSort({
       blankEsp,

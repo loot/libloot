@@ -44,23 +44,24 @@ struct ApiDatabase : public DatabaseInterface {
               std::shared_ptr<GameCache> gameCache,
               std::shared_ptr<LoadOrderHandler> loadOrderHandler);
 
-  void LoadLists(const std::string& masterlist_path,
-                 const std::string& userlist_path = "");
+  void LoadLists(const std::filesystem::path& masterlist_path,
+                 const std::filesystem::path& userlist_path = "");
 
-  void WriteUserMetadata(const std::string& outputFile,
+  void WriteUserMetadata(const std::filesystem::path& outputFile,
                          const bool overwrite) const;
 
-  void WriteMinimalList(const std::string& outputFile,
+  void WriteMinimalList(const std::filesystem::path& outputFile,
                         const bool overwrite) const;
 
-  bool UpdateMasterlist(const std::string& masterlist_path,
+  bool UpdateMasterlist(const std::filesystem::path& masterlist_path,
                         const std::string& remote_url,
                         const std::string& remote_branch);
 
-  MasterlistInfo GetMasterlistRevision(const std::string& masterlist_path,
-                                       const bool get_short_id) const;
+  MasterlistInfo GetMasterlistRevision(
+      const std::filesystem::path& masterlist_path,
+      const bool get_short_id) const;
 
-  bool IsLatestMasterlist(const std::string& masterlist_path,
+  bool IsLatestMasterlist(const std::filesystem::path& masterlist_path,
                           const std::string& branch) const;
 
   std::set<std::string> GetKnownBashTags() const;

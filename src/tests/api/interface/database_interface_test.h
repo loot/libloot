@@ -132,23 +132,23 @@ INSTANTIATE_TEST_CASE_P(,
 TEST_P(DatabaseInterfaceTest,
        loadListsShouldSucceedEvenIfGameHandleIsDiscarded) {
   db_ = CreateGameHandle(
-            GetParam(), dataPath.parent_path().string(), localPath.string())
+            GetParam(), dataPath.parent_path(), localPath)
             ->GetDatabase();
 
   ASSERT_NO_THROW(GenerateMasterlist());
 
-  EXPECT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
+  EXPECT_NO_THROW(db_->LoadLists(masterlistPath, ""));
 }
 
 TEST_P(DatabaseInterfaceTest, loadListsShouldThrowIfNoMasterlistIsPresent) {
-  EXPECT_THROW(db_->LoadLists(masterlistPath.string(), ""), FileAccessError);
+  EXPECT_THROW(db_->LoadLists(masterlistPath, ""), FileAccessError);
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     loadListsShouldThrowIfAMasterlistIsPresentButAUserlistDoesNotExistAtTheGivenPath) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  EXPECT_THROW(db_->LoadLists(masterlistPath.string(), userlistPath_.string()),
+  EXPECT_THROW(db_->LoadLists(masterlistPath, userlistPath_),
                FileAccessError);
 }
 
@@ -157,7 +157,7 @@ TEST_P(
     loadListsShouldSucceedIfTheMasterlistIsPresentAndTheUserlistPathIsAnEmptyString) {
   ASSERT_NO_THROW(GenerateMasterlist());
 
-  EXPECT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
+  EXPECT_NO_THROW(db_->LoadLists(masterlistPath, ""));
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -166,54 +166,54 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(std::filesystem::copy(masterlistPath, userlistPath_));
 
   EXPECT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldThrowIfTheFileAlreadyExistsAndTheOverwriteArgumentIsFalse) {
-  ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false));
+  ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_, false));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
-  EXPECT_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false),
+  EXPECT_THROW(db_->WriteUserMetadata(minimalOutputPath_, false),
                FileAccessError);
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldReturnOkAndWriteToFileIfTheArgumentsAreValidAndTheOverwriteArgumentIsTrue) {
-  EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true));
+  EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_, true));
   EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldReturnOkIfTheFileAlreadyExistsAndTheOverwriteArgumentIsTrue) {
-  ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false));
+  ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_, false));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
-  EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true));
+  EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_, true));
 }
 
 TEST_P(DatabaseInterfaceTest,
        writeUserMetadataShouldThrowIfPathGivenExistsAndIsReadOnly) {
-  ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), false));
+  ASSERT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_, false));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
   std::filesystem::permissions(minimalOutputPath_,
                                std::filesystem::perms::owner_read,
                                std::filesystem::perm_options::replace);
 
-  EXPECT_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true),
+  EXPECT_THROW(db_->WriteUserMetadata(minimalOutputPath_, true),
                FileAccessError);
 }
 
 TEST_P(DatabaseInterfaceTest,
        writeUserMetadataShouldShouldNotWriteMasterlistMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
+  ASSERT_NO_THROW(db_->LoadLists(masterlistPath, ""));
 
-  EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true));
+  EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_, true));
 
   EXPECT_EQ("{}", GetFileContent(minimalOutputPath_));
 }
@@ -227,9 +227,9 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
   masterlist.close();
 
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
-  EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_.string(), true));
+  EXPECT_NO_THROW(db_->WriteUserMetadata(minimalOutputPath_, true));
 
   EXPECT_FALSE(GetFileContent(minimalOutputPath_).empty());
 }
@@ -248,7 +248,7 @@ TEST_P(DatabaseInterfaceTest,
 TEST_P(DatabaseInterfaceTest,
        updateMasterlistShouldThrowIfTheRepositoryUrlGivenCannotBeFound) {
   EXPECT_THROW(db_->UpdateMasterlist(
-                   masterlistPath.string(),
+                   masterlistPath,
                    "https://github.com/loot/oblivion-does-not-exist.git",
                    branch_),
                std::system_error);
@@ -256,20 +256,20 @@ TEST_P(DatabaseInterfaceTest,
 
 TEST_P(DatabaseInterfaceTest,
        updateMasterlistShouldThrowIfTheRepositoryUrlGivenIsEmpty) {
-  EXPECT_THROW(db_->UpdateMasterlist(masterlistPath.string(), "", branch_),
+  EXPECT_THROW(db_->UpdateMasterlist(masterlistPath, "", branch_),
                std::invalid_argument);
 }
 
 TEST_P(DatabaseInterfaceTest,
        updateMasterlistShouldThrowIfTheRepositoryBranchGivenCannotBeFound) {
   EXPECT_THROW(
-      db_->UpdateMasterlist(masterlistPath.string(), url_, "missing-branch"),
+      db_->UpdateMasterlist(masterlistPath, url_, "missing-branch"),
       std::system_error);
 }
 
 TEST_P(DatabaseInterfaceTest,
        updateMasterlistShouldThrowIfTheRepositoryBranchGivenIsEmpty) {
-  EXPECT_THROW(db_->UpdateMasterlist(masterlistPath.string(), url_, ""),
+  EXPECT_THROW(db_->UpdateMasterlist(masterlistPath, url_, ""),
                std::invalid_argument);
 }
 
@@ -278,7 +278,7 @@ TEST_P(
     updateMasterlistShouldSucceedIfPassedValidParametersAndOutputTrueIfTheMasterlistWasUpdated) {
   bool updated = false;
   EXPECT_NO_THROW(
-      updated = db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
+      updated = db_->UpdateMasterlist(masterlistPath, url_, branch_));
   EXPECT_TRUE(updated);
   EXPECT_TRUE(std::filesystem::exists(masterlistPath));
 }
@@ -288,11 +288,11 @@ TEST_P(
     updateMasterlistShouldSucceedIfCalledRepeatedlyButOnlyOutputTrueForTheFirstCall) {
   bool updated = false;
   EXPECT_NO_THROW(
-      updated = db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
+      updated = db_->UpdateMasterlist(masterlistPath, url_, branch_));
   EXPECT_TRUE(updated);
 
   EXPECT_NO_THROW(
-      updated = db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
+      updated = db_->UpdateMasterlist(masterlistPath, url_, branch_));
   EXPECT_FALSE(updated);
   EXPECT_TRUE(std::filesystem::exists(masterlistPath));
 }
@@ -301,7 +301,7 @@ TEST_P(DatabaseInterfaceTest,
        getMasterlistRevisionShouldThrowIfNoMasterlistIsPresent) {
   MasterlistInfo info;
   EXPECT_THROW(
-      info = db_->GetMasterlistRevision(masterlistPath.string(), false),
+      info = db_->GetMasterlistRevision(masterlistPath, false),
       FileAccessError);
   EXPECT_TRUE(info.revision_id.empty());
   EXPECT_TRUE(info.revision_date.empty());
@@ -315,7 +315,7 @@ TEST_P(
 
   MasterlistInfo info;
   EXPECT_THROW(
-      info = db_->GetMasterlistRevision(masterlistPath.string(), false),
+      info = db_->GetMasterlistRevision(masterlistPath, false),
       GitStateError);
   EXPECT_TRUE(info.revision_id.empty());
   EXPECT_TRUE(info.revision_date.empty());
@@ -326,11 +326,11 @@ TEST_P(
     DatabaseInterfaceTest,
     getMasterlistRevisionShouldOutputLongStringsAndBooleanFalseIfAVersionControlledMasterlistIsPresentAndGetShortIdParameterIsFalse) {
   ASSERT_NO_THROW(
-      db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
+      db_->UpdateMasterlist(masterlistPath, url_, branch_));
 
   MasterlistInfo info;
   EXPECT_NO_THROW(
-      info = db_->GetMasterlistRevision(masterlistPath.string(), false));
+      info = db_->GetMasterlistRevision(masterlistPath, false));
   EXPECT_EQ(40, info.revision_id.length());
   EXPECT_EQ(10, info.revision_date.length());
   EXPECT_FALSE(info.is_modified);
@@ -340,11 +340,11 @@ TEST_P(
     DatabaseInterfaceTest,
     getMasterlistRevisionShouldOutputShortStringsAndBooleanFalseIfAVersionControlledMasterlistIsPresentAndGetShortIdParameterIsTrue) {
   ASSERT_NO_THROW(
-      db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
+      db_->UpdateMasterlist(masterlistPath, url_, branch_));
 
   MasterlistInfo info;
   EXPECT_NO_THROW(
-      info = db_->GetMasterlistRevision(masterlistPath.string(), false));
+      info = db_->GetMasterlistRevision(masterlistPath, false));
   EXPECT_GE(size_t(40), info.revision_id.length());
   EXPECT_LE(size_t(7), info.revision_id.length());
   EXPECT_EQ(10, info.revision_date.length());
@@ -355,12 +355,12 @@ TEST_P(
     DatabaseInterfaceTest,
     getMasterlistRevisionShouldSucceedIfAnEditedVersionControlledMasterlistIsPresent) {
   ASSERT_NO_THROW(
-      db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
+      db_->UpdateMasterlist(masterlistPath, url_, branch_));
   ASSERT_NO_THROW(GenerateMasterlist());
 
   MasterlistInfo info;
   EXPECT_NO_THROW(
-      info = db_->GetMasterlistRevision(masterlistPath.string(), false));
+      info = db_->GetMasterlistRevision(masterlistPath, false));
   EXPECT_EQ(40, info.revision_id.length());
   EXPECT_EQ(10, info.revision_date.length());
   EXPECT_TRUE(info.is_modified);
@@ -370,18 +370,18 @@ TEST_P(
     DatabaseInterfaceTest,
     isLatestMasterlistShouldReturnFalseIfTheCurrentRevisionIsNotTheLatestRevisionInTheGivenBranch) {
   ASSERT_NO_THROW(
-      db_->UpdateMasterlist(masterlistPath.string(), url_, oldBranch_));
+      db_->UpdateMasterlist(masterlistPath, url_, oldBranch_));
 
-  EXPECT_FALSE(db_->IsLatestMasterlist(masterlistPath.string(), branch_));
+  EXPECT_FALSE(db_->IsLatestMasterlist(masterlistPath, branch_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     isLatestMasterlistShouldReturnTrueIfTheCurrentRevisionIsTheLatestRevisioninTheGivenBranch) {
   ASSERT_NO_THROW(
-      db_->UpdateMasterlist(masterlistPath.string(), url_, branch_));
+      db_->UpdateMasterlist(masterlistPath, url_, branch_));
 
-  EXPECT_TRUE(db_->IsLatestMasterlist(masterlistPath.string(), branch_));
+  EXPECT_TRUE(db_->IsLatestMasterlist(masterlistPath, branch_));
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -390,7 +390,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateUserlist());
 
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   auto groups = db_->GetGroups();
 
@@ -425,7 +425,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateUserlist());
 
   ASSERT_NO_THROW(
-    db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+    db_->LoadLists(masterlistPath, userlistPath_));
 
   auto groups = db_->GetGroups(false);
 
@@ -457,7 +457,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateUserlist());
 
   ASSERT_NO_THROW(
-    db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+    db_->LoadLists(masterlistPath, userlistPath_));
 
   auto groups = db_->GetUserGroups();
 
@@ -479,7 +479,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateUserlist());
 
   ASSERT_NO_THROW(
-    db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+    db_->LoadLists(masterlistPath, userlistPath_));
 
   db_->SetUserGroups(std::unordered_set<Group>({
     Group("group4"),
@@ -502,7 +502,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateUserlist());
 
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   auto tags = db_->GetKnownBashTags();
 
@@ -520,7 +520,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   auto messages = db_->GetGeneralMessages();
 
@@ -535,7 +535,7 @@ TEST_P(
     DatabaseInterfaceTest,
     getGeneralMessagesShouldReturnOnlyValidMessagesIfConditionsAreEvaluated) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
+  ASSERT_NO_THROW(db_->LoadLists(masterlistPath, ""));
 
   auto messages = db_->GetGeneralMessages(true);
 
@@ -554,7 +554,7 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   auto metadata = db_->GetPluginMetadata(blankEsm, true).value();
 
@@ -571,7 +571,7 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   auto metadata = db_->GetPluginMetadata(blankEsm, false).value();
 
@@ -585,7 +585,7 @@ TEST_P(
     DatabaseInterfaceTest,
     getPluginMetadataShouldReturnOnlyValidMetadataForTheGivenPluginIfConditionsAreEvaluated) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
+  ASSERT_NO_THROW(db_->LoadLists(masterlistPath, ""));
 
   auto metadata = db_->GetPluginMetadata(blankEsm, false, true).value();
 
@@ -598,7 +598,7 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   EXPECT_FALSE(db_->GetPluginUserMetadata(blankDifferentEsm));
 }
@@ -608,7 +608,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   auto metadata = db_->GetPluginUserMetadata(blankEsm).value();
 
@@ -624,7 +624,7 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   auto metadata = db_->GetPluginMetadata(blankEsm, false, true).value();
 
@@ -637,7 +637,7 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   PluginMetadata newMetadata(blankDifferentEsp);
   newMetadata.SetRequirements(std::set<File>({File(masterFile)}));
@@ -658,7 +658,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   PluginMetadata newMetadata(blankEsm);
   newMetadata.SetRequirements(std::set<File>({File(masterFile)}));
@@ -678,7 +678,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   db_->DiscardPluginUserMetadata(blankEsm);
 
@@ -691,7 +691,7 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   db_->DiscardPluginUserMetadata(blankEsm);
 
@@ -708,7 +708,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   db_->DiscardPluginUserMetadata(blankEsm);
 
@@ -722,7 +722,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   db_->DiscardPluginUserMetadata(blankEsm);
 
@@ -740,7 +740,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   db_->DiscardPluginUserMetadata(blankEsm);
 
@@ -761,7 +761,7 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
   ASSERT_NO_THROW(
-      db_->LoadLists(masterlistPath.string(), userlistPath_.string()));
+      db_->LoadLists(masterlistPath, userlistPath_));
 
   db_->DiscardAllUserMetadata();
 
@@ -793,55 +793,55 @@ TEST_P(
 
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldReturnOkAndWriteToFileIfArgumentsGivenAreValid) {
-  EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false));
+  EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_, false));
   EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldThrowIfTheFileAlreadyExistsAndTheOverwriteArgumentIsFalse) {
-  ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false));
+  ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_, false));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
-  EXPECT_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false),
+  EXPECT_THROW(db_->WriteMinimalList(minimalOutputPath_, false),
                FileAccessError);
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldReturnOkAndWriteToFileIfTheArgumentsAreValidAndTheOverwriteArgumentIsTrue) {
-  EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), true));
+  EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_, true));
   EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldReturnOkIfTheFileAlreadyExistsAndTheOverwriteArgumentIsTrue) {
-  ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false));
+  ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_, false));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
-  EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), true));
+  EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_, true));
 }
 
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldThrowIfPathGivenExistsAndIsReadOnly) {
-  ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), false));
+  ASSERT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_, false));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
   std::filesystem::permissions(minimalOutputPath_,
                                std::filesystem::perms::owner_read,
                                std::filesystem::perm_options::replace);
 
-  EXPECT_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), true),
+  EXPECT_THROW(db_->WriteMinimalList(minimalOutputPath_, true),
                FileAccessError);
 }
 
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldWriteOnlyBashTagsAndDirtyInfo) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(db_->LoadLists(masterlistPath.string(), ""));
+  ASSERT_NO_THROW(db_->LoadLists(masterlistPath, ""));
 
-  EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_.string(), true));
+  EXPECT_NO_THROW(db_->WriteMinimalList(minimalOutputPath_, true));
 
   EXPECT_EQ(GetExpectedMinimalContent(), GetFileContent(minimalOutputPath_));
 }

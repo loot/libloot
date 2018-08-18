@@ -90,44 +90,44 @@ TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {
   using std::filesystem::relative;
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
-                                             relative(dataPath.parent_path()).string(),
-                                             relative(localPath).string()));
+                                             relative(dataPath.parent_path()),
+                                             relative(localPath)));
   EXPECT_TRUE(handle_);
 }
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithAbsolutePaths) {
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
-                                             dataPath.parent_path().string(),
-                                             localPath.string()));
+                                             dataPath.parent_path(),
+                                             localPath));
   EXPECT_TRUE(handle_);
 }
 
 TEST_P(CreateGameHandleTest, shouldThrowIfPassedAGamePathThatDoesNotExist) {
   EXPECT_THROW(
-      CreateGameHandle(GetParam(), missingPath.string(), localPath.string()),
+      CreateGameHandle(GetParam(), missingPath, localPath),
       std::invalid_argument);
 }
 
 TEST_P(CreateGameHandleTest, shouldThrowIfPassedALocalPathThatDoesNotExist) {
   EXPECT_THROW(
       CreateGameHandle(
-          GetParam(), dataPath.parent_path().string(), missingPath.string()),
+          GetParam(), dataPath.parent_path(), missingPath),
       std::invalid_argument);
 }
 
 #ifdef _WIN32
 TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedAnEmptyLocalPathString) {
   EXPECT_NO_THROW(handle_ = CreateGameHandle(
-                      GetParam(), dataPath.parent_path().string(), ""));
+                      GetParam(), dataPath.parent_path(), ""));
   EXPECT_TRUE(handle_);
 }
 #endif
 
 TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathSymlinks) {
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
-                                             gamePathSymlink.string(),
-                                             localPathSymlink.string()));
+                                             gamePathSymlink,
+                                             localPathSymlink));
   EXPECT_TRUE(handle_);
 }
 
@@ -135,8 +135,8 @@ TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathSymlinks) {
 TEST_P(CreateGameHandleTest,
        shouldReturnOkIfPassedGameAndLocalPathJunctionLinks) {
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
-                                             gamePathJunctionLink.string(),
-                                             localPathJunctionLink.string()));
+                                             gamePathJunctionLink,
+                                             localPathJunctionLink));
   EXPECT_TRUE(handle_);
 }
 #endif

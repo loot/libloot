@@ -25,6 +25,7 @@
 #ifndef LOOT_API_H
 #define LOOT_API_H
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <string>
@@ -116,16 +117,16 @@ LOOT_API void InitialiseLocale(const std::string& id = "");
  *         game's executable.
  *  @param game_local_path
  *         The relative or absolute path to the game's folder in
- *         `%%LOCALAPPDATA%` or an empty string. If an empty string, the API
- * will attempt to look up the path that `%%LOCALAPPDATA%` corresponds to. This
- * parameter is provided so that systems lacking that environmental
+ *         `%%LOCALAPPDATA%` or an empty path. If an empty path, the API will
+ *         attempt to look up the path that `%%LOCALAPPDATA%` corresponds to.
+ *         This parameter is provided so that systems lacking that environmental
  *         variable (eg. Linux) can still use the API.
  *  @returns The new game handle.
  */
 LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
     const GameType game,
-    const std::string& game_path,
-    const std::string& game_local_path = "");
+    const std::filesystem::path& game_path,
+    const std::filesystem::path& game_local_path = "");
 }
 
 #endif

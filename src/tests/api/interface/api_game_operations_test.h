@@ -53,7 +53,7 @@ protected:
     ASSERT_FALSE(std::filesystem::exists(masterlistPath));
 
     handle_ = CreateGameHandle(
-        GetParam(), dataPath.parent_path().string(), localPath.string());
+        GetParam(), dataPath.parent_path(), localPath);
   }
 
   void GenerateMasterlist() {

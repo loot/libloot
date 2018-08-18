@@ -189,7 +189,7 @@ TEST_P(PluginSorterTest, sortingShouldResolveGroupsAsTransitiveLoadAfterSets) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+  game_.GetDatabase()->LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankDifferentEsm);
   plugin.SetGroup("group1");
@@ -238,7 +238,7 @@ TEST_P(PluginSorterTest,
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+  game_.GetDatabase()->LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankEsm);
   plugin.SetGroup("group4");
@@ -273,7 +273,7 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+  game_.GetDatabase()->LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankEsp);
 
@@ -318,7 +318,7 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+  game_.GetDatabase()->LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankMasterDependentEsm);
   plugin.SetGroup("earliest");
@@ -359,7 +359,7 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+  game_.GetDatabase()->LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankMasterDependentEsm);
   plugin.SetGroup("earliest");
@@ -383,7 +383,7 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_.string());
+  game_.GetDatabase()->LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankEsm);
   plugin.SetGroup("group4");

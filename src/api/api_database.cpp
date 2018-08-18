@@ -46,8 +46,8 @@ ApiDatabase::ApiDatabase(const GameType gameType,
 // Database Loading Functions
 ///////////////////////////////////
 
-void ApiDatabase::LoadLists(const std::string& masterlistPath,
-                            const std::string& userlistPath) {
+void ApiDatabase::LoadLists(const std::filesystem::path& masterlistPath,
+                            const std::filesystem::path& userlistPath) {
   Masterlist temp;
   MetadataList userTemp;
 
@@ -56,7 +56,7 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
       temp.Load(masterlistPath);
     } else {
       throw FileAccessError("The given masterlist path does not exist: " +
-                            masterlistPath);
+                            masterlistPath.string());
     }
   }
 
@@ -65,7 +65,7 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
       userTemp.Load(userlistPath);
     } else {
       throw FileAccessError("The given userlist path does not exist: " +
-                            userlistPath);
+                            userlistPath.string());
     }
   }
 
@@ -73,10 +73,9 @@ void ApiDatabase::LoadLists(const std::string& masterlistPath,
   userlist_ = userTemp;
 }
 
-void ApiDatabase::WriteUserMetadata(const std::string& outputFile,
+void ApiDatabase::WriteUserMetadata(const std::filesystem::path& outputFile,
                                     const bool overwrite) const {
-  if (!std::filesystem::exists(
-          std::filesystem::path(outputFile).parent_path()))
+  if (!std::filesystem::exists(outputFile.parent_path()))
     throw std::invalid_argument("Output directory does not exist.");
 
   if (std::filesystem::exists(outputFile) && !overwrite)
@@ -90,12 +89,11 @@ void ApiDatabase::WriteUserMetadata(const std::string& outputFile,
 // LOOT Functionality Functions
 ////////////////////////////////////
 
-bool ApiDatabase::UpdateMasterlist(const std::string& masterlistPath,
+bool ApiDatabase::UpdateMasterlist(const std::filesystem::path& masterlistPath,
                                    const std::string& remoteURL,
                                    const std::string& remoteBranch) {
-  if (!std::filesystem::is_directory(
-          std::filesystem::path(masterlistPath).parent_path()))
-    throw std::invalid_argument("Given masterlist path \"" + masterlistPath +
+  if (!std::filesystem::is_directory(masterlistPath.parent_path()))
+    throw std::invalid_argument("Given masterlist path \"" + masterlistPath.string() +
                                 "\" does not have a valid parent directory.");
 
   Masterlist masterlist;
@@ -108,12 +106,13 @@ bool ApiDatabase::UpdateMasterlist(const std::string& masterlistPath,
 }
 
 MasterlistInfo ApiDatabase::GetMasterlistRevision(
-    const std::string& masterlistPath,
+    const std::filesystem::path& masterlistPath,
     const bool getShortID) const {
   return Masterlist::GetInfo(masterlistPath, getShortID);
 }
 
-bool ApiDatabase::IsLatestMasterlist(const std::string& masterlist_path,
+bool ApiDatabase::IsLatestMasterlist(
+    const std::filesystem::path& masterlist_path,
                                      const std::string& branch) const {
   return Masterlist::IsLatest(masterlist_path, branch);
 }
@@ -248,10 +247,9 @@ void ApiDatabase::DiscardAllUserMetadata() { userlist_.Clear(); }
 // themselves and their conditions, in order to create the Wrye Bash taglist.
 // outputFile is the path to use for output. If outputFile already exists, it
 // will only be overwritten if overwrite is true.
-void ApiDatabase::WriteMinimalList(const std::string& outputFile,
+void ApiDatabase::WriteMinimalList(const std::filesystem::path& outputFile,
                                    const bool overwrite) const {
-  if (!std::filesystem::exists(
-          std::filesystem::path(outputFile).parent_path()))
+  if (!std::filesystem::exists(outputFile.parent_path()))
     throw std::invalid_argument("Output directory does not exist.");
 
   if (std::filesystem::exists(outputFile) && !overwrite)
