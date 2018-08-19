@@ -24,13 +24,9 @@
 
 #include "api/game/load_order_handler.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-
 #include "api/helpers/logging.h"
 #include "loot/exception/error_categories.h"
 
-using boost::format;
 using std::string;
 
 namespace loot {
@@ -194,8 +190,7 @@ void LoadOrderHandler::HandleError(const std::string& operation,
     err = "libloadorder failed to " + operation +
           ". Details could not be fetched.";
   } else {
-    err = (format("libloadorder failed to " + operation + ". Details: %1%") % e)
-              .str();
+    err = "libloadorder failed to " + operation + ". Details: " + e;
   }
 
   auto logger = getLogger();

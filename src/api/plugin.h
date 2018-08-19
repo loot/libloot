@@ -31,7 +31,6 @@
 #include <type_traits>
 #include <vector>
 
-#include <boost/algorithm/string.hpp>
 #include <esplugin.hpp>
 
 #include "api/game/load_order_handler.h"

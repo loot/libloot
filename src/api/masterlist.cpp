@@ -24,15 +24,12 @@
 
 #include "api/masterlist.h"
 
-#include <boost/format.hpp>
-
 #include "api/game/game.h"
 #include "api/helpers/git_helper.h"
 #include "api/helpers/logging.h"
 #include "loot/exception/file_access_error.h"
 #include "loot/exception/git_state_error.h"
 
-using boost::format;
 using std::string;
 
 namespace fs = boost::filesystem;

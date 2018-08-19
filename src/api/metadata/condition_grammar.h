@@ -33,15 +33,15 @@
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 #endif
 
+#include <cstdint>
+#include <regex>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/spirit/include/phoenix_bind.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <cstdint>
-#include <regex>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
@@ -286,11 +286,9 @@ private:
     std::string context(errorpos, last);
     boost::trim(context);
 
-    throw ConditionSyntaxError(
-        (boost::format("Failed to parse condition \"%1%\": expected \"%2%\" at "
-                       "\"%3%\".") %
-         condition % what.tag % context)
-            .str());
+    throw ConditionSyntaxError("Failed to parse condition \"" + condition +
+                               "\": expected \"" + what.tag + "\" at \"" +
+                               context + "\".");
   }
 
   boost::spirit::qi::rule<Iterator, bool(), Skipper> expression_, compound_,

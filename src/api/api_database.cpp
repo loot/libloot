@@ -27,8 +27,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <boost/algorithm/string.hpp>
-
 #include "api/game/game.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/plugin_metadata.h"

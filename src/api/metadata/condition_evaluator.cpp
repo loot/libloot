@@ -24,15 +24,10 @@
 
 #include "api/metadata/condition_evaluator.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"
 #include "api/metadata/condition_grammar.h"
 #include "loot/exception/condition_syntax_error.h"
-
-using boost::format;
 
 namespace loot {
 ConditionEvaluator::ConditionEvaluator() :
@@ -318,8 +313,7 @@ void ConditionEvaluator::validatePath(const boost::filesystem::path& path) {
       continue;
 
     if (component == ".." && temp.filename() == "..") {
-      throw ConditionSyntaxError(
-          (format("Invalid file path: %1%") % path.string()).str());
+      throw ConditionSyntaxError("Invalid file path: " + path.string());
     }
 
     temp /= component;
@@ -329,9 +323,8 @@ void ConditionEvaluator::validateRegex(const std::string& regexString) {
   try {
     std::regex(regexString, std::regex::ECMAScript | std::regex::icase);
   } catch (std::regex_error& e) {
-    throw ConditionSyntaxError(
-        (format("Invalid regex string \"%1%\": %2%") % regexString % e.what())
-            .str());
+    throw ConditionSyntaxError("Invalid regex string \"" + regexString +
+                               "\": " + e.what());
   }
 }
 
@@ -373,9 +366,8 @@ std::pair<boost::filesystem::path, std::regex> ConditionEvaluator::splitRegex(
   try {
     reg = std::regex(filename, std::regex::ECMAScript | std::regex::icase);
   } catch (std::regex_error& e) {
-    throw ConditionSyntaxError(
-        (format("Invalid regex string \"%1%\": %2%") % filename % e.what())
-            .str());
+    throw ConditionSyntaxError("Invalid regex string \"" + filename +
+                               "\": " + e.what());
   }
 
   return std::pair<boost::filesystem::path, std::regex>(parent, reg);
@@ -445,11 +437,8 @@ bool ConditionEvaluator::parseCondition(const std::string& condition) const {
       boost::spirit::qi::phrase_parse(begin, end, grammar, skipper, evaluation);
 
   if (!parseResult || begin != end) {
-    throw ConditionSyntaxError(
-        (boost::format("Failed to parse condition \"%1%\": only partially "
-                       "matched expected syntax.") %
-         condition)
-            .str());
+    throw ConditionSyntaxError("Failed to parse condition \"" + condition +
+                               "\": only partially matched expected syntax.");
   }
 
   return evaluation;

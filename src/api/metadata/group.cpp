@@ -24,8 +24,6 @@
 
 #include "loot/metadata/group.h"
 
-#include <boost/algorithm/string.hpp>
-
 #include "api/metadata/yaml/group.h"
 
 namespace loot {

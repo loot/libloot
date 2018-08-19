@@ -27,8 +27,6 @@
 #include <iomanip>
 #include <sstream>
 
-#include <boost/format.hpp>
-
 #include "api/helpers/logging.h"
 #include "loot/exception/error_categories.h"
 #include "loot/exception/git_state_error.h"
@@ -154,8 +152,7 @@ void GitHelper::Call(int error_code) {
     gitError = std::to_string(error_code) + "; " + last_error->message;
   giterr_clear();
 
-  auto message =
-      (boost::format("Git operation failed. Details: %1%") % gitError).str();
+  auto message = "Git operation failed. Details: " + gitError;
 
   throw std::system_error(error_code, libgit2_category(), message);
 }

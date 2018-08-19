@@ -24,6 +24,8 @@
 
 #include "plugin_sorting_data.h"
 
+#include <boost/algorithm/string.hpp>
+
 namespace loot {
 PluginSortingData::PluginSortingData(const Plugin& plugin,
                                      const PluginMetadata&& metadata) :

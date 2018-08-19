@@ -24,7 +24,6 @@
 
 #include "api/metadata_list.h"
 
-#include <boost/algorithm/string.hpp>
 #include <boost/filesystem/fstream.hpp>
 
 #include "api/game/game.h"

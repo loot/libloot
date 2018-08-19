@@ -26,7 +26,6 @@
 
 #include <thread>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/locale.hpp>
 
 using boost::locale::to_lower;

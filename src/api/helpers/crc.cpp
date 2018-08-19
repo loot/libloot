@@ -26,7 +26,7 @@
 
 #include <boost/crc.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/format.hpp>
+
 #include "api/helpers/logging.h"
 
 #include "loot/exception/file_access_error.h"
@@ -77,10 +77,8 @@ uint32_t GetCrc32(const boost::filesystem::path& filename) {
     return checksum;
 
   } catch (std::exception& e) {
-    throw FileAccessError(
-        (boost::format("Unable to open \"%1%\" for CRC calculation: %2%") %
-         filename.string() % e.what())
-            .str());
+    throw FileAccessError("Unable to open \"" + filename.string() +
+                          "\" for CRC calulation: " + e.what());
   }
 }
 }

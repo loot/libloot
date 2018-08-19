@@ -28,7 +28,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/locale.hpp>
 
 #include "api/game/game.h"
@@ -125,9 +124,7 @@ Plugin::Plugin(const GameType gameType,
       logger->error(
           "Cannot read plugin file \"{}\". Details: {}", name_, e.what());
     }
-    throw FileAccessError(
-        (boost::format("Cannot read \"%1%\". Details: %2%") % name % e.what())
-            .str());
+    throw FileAccessError("Cannot read \"" + name + "\". Details: " + e.what());
   }
 
   if (logger) {

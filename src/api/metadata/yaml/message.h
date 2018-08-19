@@ -28,7 +28,6 @@
 #include <vector>
 
 #include <yaml-cpp/yaml.h>
-#include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
 #include "loot/metadata/message.h"
@@ -70,9 +69,9 @@ struct convert<loot::Message> {
     type = node["type"].as<std::string>();
 
     loot::MessageType typeNo = loot::MessageType::say;
-    if (boost::iequals(type, "warn"))
+    if (type == "warn")
       typeNo = loot::MessageType::warn;
-    else if (boost::iequals(type, "error"))
+    else if (type == "error")
       typeNo = loot::MessageType::error;
 
     std::vector<loot::MessageContent> content;
