@@ -133,6 +133,7 @@ TEST_P(MasterlistTest,
 
   auto testPath = boost::filesystem::current_path();
   boost::filesystem::current_path(masterlistPath.parent_path());
+  system("git config commit.gpgsign false");
   system("git commit --amend -m \"changing local history\"");
   boost::filesystem::current_path(testPath);
 
