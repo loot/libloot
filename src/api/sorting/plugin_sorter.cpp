@@ -212,9 +212,10 @@ void PluginSorter::AddPluginVertices(Game& game) {
     auto metadata =
         game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true).value_or(PluginMetadata(plugin->GetName()));
 
-    auto groupIt = groupPlugins.find(metadata.GetGroup());
+    auto groupName = metadata.GetGroup().value_or(Group().GetName());
+    auto groupIt = groupPlugins.find(groupName);
     if (groupIt == groupPlugins.end()) {
-      groupPlugins.emplace(metadata.GetGroup(),
+      groupPlugins.emplace(groupName,
                            std::vector<std::string>({plugin->GetName()}));
     } else {
       groupIt->second.push_back(plugin->GetName());

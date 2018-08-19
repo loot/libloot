@@ -129,8 +129,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
   EXPECT_NO_THROW(plugin = evaluator_.evaluateAll(plugin));
 
   std::set<File> expectedFiles({file1});
-  EXPECT_EQ("group1", plugin.GetGroup());
-  EXPECT_TRUE(plugin.IsGroupExplicit());
+  EXPECT_EQ("group1", plugin.GetGroup().value());
   EXPECT_EQ(expectedFiles, plugin.GetLoadAfterFiles());
   EXPECT_EQ(expectedFiles, plugin.GetRequirements());
   EXPECT_EQ(expectedFiles, plugin.GetIncompatibilities());
@@ -144,8 +143,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldPreserveGroupExplicitness) {
   PluginMetadata plugin(blankEsm);
 
   EXPECT_NO_THROW(plugin = evaluator_.evaluateAll(plugin));
-  EXPECT_EQ("default", plugin.GetGroup());
-  EXPECT_FALSE(plugin.IsGroupExplicit());
+  EXPECT_FALSE(plugin.GetGroup());
 }
 }
 }

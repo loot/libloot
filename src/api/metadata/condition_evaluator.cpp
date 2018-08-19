@@ -87,8 +87,8 @@ PluginMetadata ConditionEvaluator::evaluateAll(
   evaluatedMetadata.SetEnabled(pluginMetadata.IsEnabled());
   evaluatedMetadata.SetLocations(pluginMetadata.GetLocations());
 
-  if (pluginMetadata.IsGroupExplicit()) {
-    evaluatedMetadata.SetGroup(pluginMetadata.GetGroup());
+  if (pluginMetadata.GetGroup()) {
+    evaluatedMetadata.SetGroup(pluginMetadata.GetGroup().value());
   }
 
   std::set<File> fileSet;

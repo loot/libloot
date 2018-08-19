@@ -26,6 +26,7 @@
 
 #include <cstdint>
 #include <list>
+#include <optional>
 #include <regex>
 #include <set>
 #include <string>
@@ -102,16 +103,11 @@ public:
 
   /**
    * Get the plugin's group.
-   * @return The name of the group this plugin belongs to.
+   * @return An optional containing the name of the group this plugin belongs to
+   *         if it was explicitly set, otherwise an optional containing no
+   *         value.
    */
-  LOOT_API std::string GetGroup() const;
-
-  /**
-   * Check if the plugin's group was set explicitly or if the default value was
-   * implied.
-   * @return True if the plugin's group was set explicitly, false otherwise.
-   */
-  LOOT_API bool IsGroupExplicit() const;
+  LOOT_API std::optional<std::string> GetGroup() const;
 
   /**
    * Get the plugins that the plugin must load after.
@@ -287,8 +283,7 @@ public:
 private:
   std::string name_;
   bool enabled_;
-  std::string group_;
-  bool isGroupExplicit_;
+  std::optional<std::string> group_;
   std::set<File> loadAfter_;
   std::set<File> requirements_;
   std::set<File> incompatibilities_;

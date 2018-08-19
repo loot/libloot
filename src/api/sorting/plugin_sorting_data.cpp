@@ -26,11 +26,14 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <loot/metadata/group.h>
+
 namespace loot {
 PluginSortingData::PluginSortingData(const Plugin& plugin,
                                      const PluginMetadata&& metadata) :
     plugin_(plugin),
-    PluginMetadata(metadata) {}
+    PluginMetadata(metadata),
+    group_(metadata.GetGroup().value_or(Group().GetName())) {}
 
 std::string PluginSortingData::GetName() const { return plugin_.GetName(); }
 
@@ -53,6 +56,8 @@ bool PluginSortingData::DoFormIDsOverlap(
     const PluginSortingData& plugin) const {
   return plugin_.DoFormIDsOverlap(plugin.plugin_);
 }
+
+std::string PluginSortingData::GetGroup() const { return group_; }
 
 std::unordered_set<std::string> PluginSortingData::GetAfterGroupPlugins() const {
   return afterGroupPlugins_;

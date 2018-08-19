@@ -41,15 +41,11 @@ using std::vector;
 
 namespace loot {
 PluginMetadata::PluginMetadata() :
-    enabled_(true),
-    group_("default"),
-    isGroupExplicit_(false) {}
+    enabled_(true) {}
 
 PluginMetadata::PluginMetadata(const std::string& n) :
     name_(n),
-    enabled_(true),
-    group_("default"),
-    isGroupExplicit_(false) {
+    enabled_(true) {
   // If the name passed ends in '.ghost', that should be trimmed.
   if (boost::iends_with(name_, ".ghost"))
     name_ = name_.substr(0, name_.length() - 6);
@@ -68,9 +64,8 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   // but if the 'group' value is not explicit, ignore it.
   enabled_ = plugin.IsEnabled();
 
-  if (plugin.IsGroupExplicit()) {
+  if (plugin.GetGroup()) {
     group_ = plugin.GetGroup();
-    isGroupExplicit_ = true;
   }
 
   // Merge the following. If any files in the source already exist in the
@@ -108,11 +103,8 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
 
   PluginMetadata p(*this);
 
-  if (!p.IsGroupExplicit()) {
-    p.group_ = plugin.group_;
-  }
   if (p.group_ == plugin.group_) {
-    p.isGroupExplicit_ = false;
+    p.group_ = std::nullopt;
   }
 
   // Compare this plugin against the given plugin.
@@ -195,11 +187,7 @@ std::string PluginMetadata::GetLowercasedName() const {
 
 bool PluginMetadata::IsEnabled() const { return enabled_; }
 
-std::string PluginMetadata::GetGroup() const { return group_; }
-
-bool PluginMetadata::IsGroupExplicit() const {
-  return isGroupExplicit_;
-}
+std::optional<std::string> PluginMetadata::GetGroup() const { return group_; }
 
 std::set<File> PluginMetadata::GetLoadAfterFiles() const { return loadAfter_; }
 
@@ -240,7 +228,6 @@ void PluginMetadata::SetEnabled(const bool e) { enabled_ = e; }
 
 void PluginMetadata::SetGroup(const std::string& group) {
   group_ = group;
-  isGroupExplicit_ = true;
 }
 
 void PluginMetadata::SetLoadAfterFiles(const std::set<File>& l) {
@@ -275,7 +262,7 @@ void PluginMetadata::SetLocations(const std::set<Location>& locations) {
 }
 
 bool PluginMetadata::HasNameOnly() const {
-  return !IsGroupExplicit() &&
+  return !group_.has_value() &&
          loadAfter_.empty() && requirements_.empty() &&
          incompatibilities_.empty() && messages_.empty() && tags_.empty() &&
          dirtyInfo_.empty() && cleanInfo_.empty() && locations_.empty();

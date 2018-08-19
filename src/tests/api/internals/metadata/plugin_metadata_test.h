@@ -51,22 +51,22 @@ INSTANTIATE_TEST_CASE_P(,
 
 TEST_P(
     PluginMetadataTest,
-    defaultConstructorShouldLeaveNameEmptyAndEnableMetadataAndSetGroupToDefault) {
+    defaultConstructorShouldLeaveNameEmptyAndEnableMetadataAndLeaveGroupUnset) {
   PluginMetadata plugin;
 
   EXPECT_TRUE(plugin.GetName().empty());
   EXPECT_TRUE(plugin.IsEnabled());
-  EXPECT_EQ("default", plugin.GetGroup());
+  EXPECT_FALSE(plugin.GetGroup());
 }
 
 TEST_P(
     PluginMetadataTest,
-    stringConstructorShouldSetNameToGivenStringAndEnableMetadataAndSetGroupToDefault) {
+    stringConstructorShouldSetNameToGivenStringAndEnableMetadataAndLeaveGroupUnset) {
   PluginMetadata plugin(blankEsm);
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.IsEnabled());
-  EXPECT_EQ("default", plugin.GetGroup());
+  EXPECT_FALSE(plugin.GetGroup());
 }
 
 TEST_P(PluginMetadataTest,
@@ -299,8 +299,7 @@ TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginGroupExplicitlyIfItIs
 
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
-  EXPECT_EQ("group1", newMetadata.GetGroup());
-  EXPECT_TRUE(newMetadata.IsGroupExplicit());
+  EXPECT_EQ("group1", newMetadata.GetGroup().value());
 }
 
 TEST_P(PluginMetadataTest,
@@ -312,8 +311,7 @@ TEST_P(PluginMetadataTest,
 
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
-  EXPECT_EQ("group2", newMetadata.GetGroup());
-  EXPECT_FALSE(newMetadata.IsGroupExplicit());
+  EXPECT_FALSE(newMetadata.GetGroup());
 }
 
 TEST_P(
@@ -327,8 +325,7 @@ TEST_P(
 
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
-  EXPECT_EQ("group1", newMetadata.GetGroup());
-  EXPECT_FALSE(newMetadata.IsGroupExplicit());
+  EXPECT_FALSE(newMetadata.GetGroup());
 }
 
 TEST_P(PluginMetadataTest,

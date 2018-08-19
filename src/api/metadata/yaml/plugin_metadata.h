@@ -55,8 +55,8 @@ struct convert<loot::PluginMetadata> {
     if (!rhs.IsEnabled())
       node["enabled"] = rhs.IsEnabled();
 
-    if (rhs.IsGroupExplicit())
-      node["group"] = rhs.GetGroup();
+    if (rhs.GetGroup())
+      node["group"] = rhs.GetGroup().value();
 
     if (!rhs.GetLoadAfterFiles().empty())
       node["after"] = rhs.GetLoadAfterFiles();
@@ -141,8 +141,8 @@ inline Emitter& operator<<(Emitter& out, const loot::PluginMetadata& rhs) {
     if (!rhs.IsEnabled())
       out << Key << "enabled" << Value << rhs.IsEnabled();
 
-    if (rhs.IsGroupExplicit())
-      out << Key << "group" << Value << YAML::SingleQuoted << rhs.GetGroup();
+    if (rhs.GetGroup())
+      out << Key << "group" << Value << YAML::SingleQuoted << rhs.GetGroup().value();
 
     if (!rhs.GetLoadAfterFiles().empty())
       out << Key << "after" << Value << rhs.GetLoadAfterFiles();
