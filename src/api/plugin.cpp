@@ -276,7 +276,7 @@ void Plugin::Load(const std::filesystem::path& path,
   int ret = esp_plugin_new(
       &plugin, GetEspluginGameId(gameType), path.u8string().c_str());
   if (ret != ESP_OK) {
-    throw FileAccessError(path.string() +
+    throw FileAccessError(path.u8string() +
                           " : esplugin error code: " + std::to_string(ret));
   }
 
@@ -285,7 +285,7 @@ void Plugin::Load(const std::filesystem::path& path,
 
   ret = esp_plugin_parse(esPlugin.get(), headerOnly);
   if (ret != ESP_OK) {
-    throw FileAccessError(path.string() +
+    throw FileAccessError(path.u8string() +
                           " : esplugin error code: " + std::to_string(ret));
   }
 }

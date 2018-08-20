@@ -48,12 +48,12 @@ MasterlistInfo Masterlist::GetInfo(const std::filesystem::path& path,
       logger->info("Unknown masterlist revision: No masterlist present.");
     }
     throw FileAccessError(string("N/A: No masterlist present at ") +
-                          path.string());
+                          path.u8string());
   } else if (!git.IsRepository(path.parent_path())) {
     if (logger) {
       logger->info("Unknown masterlist revision: Git repository missing.");
     }
-    throw GitStateError(string("Unknown: \"") + path.parent_path().string() +
+    throw GitStateError(string("Unknown: \"") + path.parent_path().u8string() +
                         "\" is not a Git repository.");
   }
 
@@ -84,7 +84,7 @@ bool Masterlist::IsLatest(const std::filesystem::path& path,
       logger->info(
           "Cannot get latest masterlist revision: Git repository missing.");
     }
-    throw GitStateError(string("Unknown: \"") + path.parent_path().string() +
+    throw GitStateError(string("Unknown: \"") + path.parent_path().u8string() +
                         "\" is not a Git repository.");
   }
 
@@ -115,7 +115,7 @@ bool Masterlist::Update(const std::filesystem::path& path,
 
   // Now try to access the repository if it exists, or clone one if it doesn't.
   if (logger) {
-    logger->trace("Checking for Git repository at: {}", repoPath.string());
+    logger->trace("Checking for Git repository at: {}", repoPath.u8string());
   }
   if (!GitHelper::IsRepository(repoPath)) {
     git.Clone(repoPath, repoUrl);

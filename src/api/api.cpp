@@ -73,18 +73,18 @@ LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
     logger->info(
         "Attempting to create a game handle with game path \"{}\" "
         "and local path \"{}\"",
-        gamePath.string(),
-        gameLocalPath.string());
+        gamePath.u8string(),
+        gameLocalPath.u8string());
   }
 
   auto resolvedGamePath = ResolvePath(gamePath);
   if (!fs::is_directory(resolvedGamePath))
-    throw std::invalid_argument("Given game path \"" + gamePath.string() +
+    throw std::invalid_argument("Given game path \"" + gamePath.u8string() +
                                 "\" does not resolve to a valid directory.");
 
   auto resolvedGameLocalPath = ResolvePath(gameLocalPath);
   if (!gameLocalPath.empty() && !fs::is_directory(resolvedGameLocalPath))
-    throw std::invalid_argument("Given game local path \"" + gameLocalPath.string() +
+    throw std::invalid_argument("Given game local path \"" + gameLocalPath.u8string() +
                                 "\" does not resolve to a valid directory.");
 
   return std::make_shared<Game>(game, resolvedGamePath, resolvedGameLocalPath);

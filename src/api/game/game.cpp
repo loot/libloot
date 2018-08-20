@@ -65,7 +65,7 @@ Game::Game(const GameType gameType,
   if (logger) {
     logger->info("Initialising load order data for game of type {} at: {}",
                  (int)type_,
-                 gamePath_.string());
+                 gamePath_.u8string());
   }
 
   loadOrderHandler_->Init(type_, gamePath_, localDataPath);

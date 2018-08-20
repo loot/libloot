@@ -56,7 +56,7 @@ void ApiDatabase::LoadLists(const std::filesystem::path& masterlistPath,
       temp.Load(masterlistPath);
     } else {
       throw FileAccessError("The given masterlist path does not exist: " +
-                            masterlistPath.string());
+                            masterlistPath.u8string());
     }
   }
 
@@ -65,7 +65,7 @@ void ApiDatabase::LoadLists(const std::filesystem::path& masterlistPath,
       userTemp.Load(userlistPath);
     } else {
       throw FileAccessError("The given userlist path does not exist: " +
-                            userlistPath.string());
+                            userlistPath.u8string());
     }
   }
 
@@ -93,7 +93,7 @@ bool ApiDatabase::UpdateMasterlist(const std::filesystem::path& masterlistPath,
                                    const std::string& remoteURL,
                                    const std::string& remoteBranch) {
   if (!std::filesystem::is_directory(masterlistPath.parent_path()))
-    throw std::invalid_argument("Given masterlist path \"" + masterlistPath.string() +
+    throw std::invalid_argument("Given masterlist path \"" + masterlistPath.u8string() +
                                 "\" does not have a valid parent directory.");
 
   Masterlist masterlist;

@@ -51,7 +51,7 @@ uint32_t GetCrc32(const std::filesystem::path& filename) {
   try {
     auto logger = getLogger();
     if (logger) {
-      logger->trace("Calculating CRC for: {}", filename.string());
+      logger->trace("Calculating CRC for: {}", filename.u8string());
     }
 
     std::ifstream ifile(filename, std::ios::binary);
@@ -73,12 +73,12 @@ uint32_t GetCrc32(const std::filesystem::path& filename) {
 
     uint32_t checksum = result.checksum();
     if (logger) {
-      logger->debug("CRC32(\"{}\"): {:x}", filename.string(), checksum);
+      logger->debug("CRC32(\"{}\"): {:x}", filename.u8string(), checksum);
     }
     return checksum;
 
   } catch (std::exception& e) {
-    throw FileAccessError("Unable to open \"" + filename.string() +
+    throw FileAccessError("Unable to open \"" + filename.u8string() +
                           "\" for CRC calulation: " + e.what());
   }
 }

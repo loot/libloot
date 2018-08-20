@@ -40,18 +40,18 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
 
   auto logger = getLogger();
   if (logger) {
-    logger->debug("Loading file: {}", filepath.string());
+    logger->debug("Loading file: {}", filepath.u8string());
   }
 
   std::ifstream in(filepath);
   if (!in.good())
-    throw FileAccessError("Cannot open " + filepath.string());
+    throw FileAccessError("Cannot open " + filepath.u8string());
 
   YAML::Node metadataList = YAML::Load(in);
   in.close();
 
   if (!metadataList.IsMap())
-    throw FileAccessError("The root of the metadata file " + filepath.string() +
+    throw FileAccessError("The root of the metadata file " + filepath.u8string() +
                           " is not a YAML map.");
 
   if (metadataList["plugins"]) {
@@ -83,7 +83,7 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
 void MetadataList::Save(const std::filesystem::path& filepath) const {
   auto logger = getLogger();
   if (logger) {
-    logger->trace("Saving metadata list to: {}", filepath.string());
+    logger->trace("Saving metadata list to: {}", filepath.u8string());
   }
   YAML::Emitter emitter;
   emitter.SetIndent(2);

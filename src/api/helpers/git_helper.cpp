@@ -112,7 +112,7 @@ void GitHelper::InitialiseOptions(const std::string& branch,
 void GitHelper::Open(const std::filesystem::path& repoRoot) {
   if (logger_) {
     logger_->info("Attempting to open Git repository at: {}",
-                  repoRoot.string());
+                  repoRoot.u8string());
   }
   Call(git_repository_open(&data_.repo, repoRoot.u8string().c_str()));
 }

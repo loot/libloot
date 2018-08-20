@@ -264,7 +264,7 @@ bool ConditionEvaluator::compareVersions(const std::string& filePath,
 void ConditionEvaluator::validatePath(const std::filesystem::path& path) {
   auto logger = getLogger();
   if (logger) {
-    logger->trace("Checking to see if the path \"{}\" is safe.", path.string());
+    logger->trace("Checking to see if the path \"{}\" is safe.", path.u8string());
   }
 
   std::filesystem::path temp;
@@ -273,7 +273,7 @@ void ConditionEvaluator::validatePath(const std::filesystem::path& path) {
       continue;
 
     if (component == ".." && temp.filename() == "..") {
-      throw ConditionSyntaxError("Invalid file path: " + path.string());
+      throw ConditionSyntaxError("Invalid file path: " + path.u8string());
     }
 
     temp /= component;
@@ -350,7 +350,7 @@ bool ConditionEvaluator::isRegexMatchInDataDirectory(
     auto logger = getLogger();
     if (logger) {
       logger->trace("The path \"{}\" is not a game subdirectory.",
-                    pathRegex.first.string());
+                    pathRegex.first.u8string());
     }
     return false;
   }
