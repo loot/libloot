@@ -52,8 +52,6 @@ protected:
     }
   }
 
-  void TearDown() { CommonGameTestFixture::TearDown(); }
-
   void initialiseHandler() {
     ASSERT_NO_THROW(
         loadOrderHandler_.Init(GetParam(), dataPath.parent_path(), localPath));

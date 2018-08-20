@@ -32,20 +32,33 @@ along with LOOT.  If not, see
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include "loot/enum/game_type.h"
 
 namespace loot {
 namespace test {
+
+boost::filesystem::path getRootTestPath() {
+  auto directoryName = "LOOT-" + boost::lexical_cast<std::string>(
+                                      (boost::uuids::random_generator())());
+
+  return boost::filesystem::absolute(boost::filesystem::temp_directory_path() /
+                                    directoryName);
+}
+
 class CommonGameTestFixture : public ::testing::TestWithParam<GameType> {
 protected:
   CommonGameTestFixture() :
       french("fr"),
       german("de"),
-      missingPath("./missing"),
-      dataPath(getPluginsPath()),
-      localPath(getLocalPath()),
-      lootDataPath("./local/LOOT"),
+      rootTestPath(getRootTestPath()),
+      missingPath(rootTestPath / "missing"),
+      dataPath(rootTestPath / "game" / "Data"),
+      localPath(rootTestPath / "local" / "game"),
+      metadataFilesPath(rootTestPath / "metadata"),
       masterFile(getMasterFile()),
       missingEsp("Blank.missing.esp"),
       nonPluginFile("NotAPlugin.esm"),
@@ -69,69 +82,73 @@ protected:
   }
 
   void assertInitialState() {
-    ASSERT_NO_THROW(boost::filesystem::create_directories(localPath));
-    ASSERT_NO_THROW(boost::filesystem::create_directories(lootDataPath));
-    ASSERT_TRUE(boost::filesystem::exists(localPath));
+    using boost::filesystem::create_directories;
+    using boost::filesystem::exists;
 
-    ASSERT_FALSE(boost::filesystem::exists(missingPath));
-    ASSERT_FALSE(boost::filesystem::exists(dataPath / missingEsp));
+    create_directories(dataPath);
+    ASSERT_TRUE(exists(dataPath));
 
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankEsm));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankDifferentEsm));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankMasterDependentEsm));
-    ASSERT_TRUE(
-        boost::filesystem::exists(dataPath / blankDifferentMasterDependentEsm));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankEsp));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankDifferentEsp));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankMasterDependentEsp));
-    ASSERT_TRUE(
-        boost::filesystem::exists(dataPath / blankDifferentMasterDependentEsp));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / blankPluginDependentEsp));
-    ASSERT_TRUE(
-        boost::filesystem::exists(dataPath / blankDifferentPluginDependentEsp));
+    create_directories(localPath);
+    ASSERT_TRUE(exists(localPath));
+
+    create_directories(metadataFilesPath);
+    ASSERT_TRUE(exists(metadataFilesPath));
+
+    auto sourcePluginsPath = getSourcePluginsPath();
+
+    copyPlugin(sourcePluginsPath, blankEsm);
+    copyPlugin(sourcePluginsPath, blankDifferentEsm);
+    copyPlugin(sourcePluginsPath, blankMasterDependentEsm);
+    copyPlugin(sourcePluginsPath, blankDifferentMasterDependentEsm);
+    copyPlugin(sourcePluginsPath, blankEsp);
+    copyPlugin(sourcePluginsPath, blankDifferentEsp);
+    copyPlugin(sourcePluginsPath, blankMasterDependentEsp);
+    copyPlugin(sourcePluginsPath, blankDifferentMasterDependentEsp);
+    copyPlugin(sourcePluginsPath, blankPluginDependentEsp);
+    copyPlugin(sourcePluginsPath, blankDifferentPluginDependentEsp);
+
+    if (GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
+        GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr) {
+      copyPlugin(sourcePluginsPath, blankEsl);
+    }
 
     // Make sure the game master file exists.
-    ASSERT_FALSE(boost::filesystem::exists(dataPath / masterFile));
-    ASSERT_NO_THROW(boost::filesystem::copy_file(dataPath / blankEsm,
-                                                 dataPath / masterFile));
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / masterFile));
+    ASSERT_NO_THROW(
+        boost::filesystem::copy_file(dataPath / blankEsm, dataPath / masterFile));
+    ASSERT_TRUE(exists(dataPath / masterFile));
 
     // Set initial load order and active plugins.
     setLoadOrder(getInitialLoadOrder());
 
     // Ghost a plugin.
-    ASSERT_FALSE(boost::filesystem::exists(
-        dataPath / (blankMasterDependentEsm + ".ghost")));
     ASSERT_NO_THROW(boost::filesystem::rename(
         dataPath / blankMasterDependentEsm,
         dataPath / (blankMasterDependentEsm + ".ghost")));
-    ASSERT_TRUE(boost::filesystem::exists(
-        dataPath / (blankMasterDependentEsm + ".ghost")));
+    ASSERT_FALSE(exists(dataPath / blankMasterDependentEsm));
+    ASSERT_TRUE(exists(dataPath / (blankMasterDependentEsm + ".ghost")));
 
     // Write out an non-empty, non-plugin file.
     boost::filesystem::ofstream out(dataPath / nonPluginFile);
     out << "This isn't a valid plugin file.";
     out.close();
-    ASSERT_TRUE(boost::filesystem::exists(dataPath / nonPluginFile));
+    ASSERT_TRUE(exists(dataPath / nonPluginFile));
+
+    ASSERT_FALSE(exists(missingPath));
+    ASSERT_FALSE(exists(dataPath / missingEsp));
+  }
+
+  void copyPlugin(const boost::filesystem::path& sourceParentPath, const std::string& filename) {
+    boost::filesystem::copy_file(sourceParentPath / filename, dataPath / filename);
+    ASSERT_TRUE(boost::filesystem::exists(dataPath / filename));
   }
 
   void TearDown() {
-    ASSERT_NO_THROW(boost::filesystem::remove_all(localPath));
-    ASSERT_NO_THROW(boost::filesystem::remove_all(lootDataPath));
-
-    ASSERT_NO_THROW(boost::filesystem::remove(dataPath / masterFile));
-
-    // Unghost the ghosted plugin.
-    ASSERT_TRUE(boost::filesystem::exists(
-        dataPath / (blankMasterDependentEsm + ".ghost")));
-    ASSERT_NO_THROW(boost::filesystem::rename(
-        dataPath / (blankMasterDependentEsm + ".ghost"),
-        dataPath / blankMasterDependentEsm));
-    ASSERT_FALSE(boost::filesystem::exists(
-        dataPath / (blankMasterDependentEsm + ".ghost")));
-
-    ASSERT_NO_THROW(boost::filesystem::remove(dataPath / nonPluginFile));
-    ASSERT_NO_THROW(boost::filesystem::remove(dataPath / invalidPlugin));
+    // Grant write permissions to everything in rootTestPath
+    // in case the test made anything read only.
+    for (const auto& path : boost::filesystem::recursive_directory_iterator(rootTestPath)) {
+      boost::filesystem::permissions(path, boost::filesystem::perms::all_all | boost::filesystem::perms::add_perms);
+    }
+    boost::filesystem::remove_all(rootTestPath);
   }
 
   std::vector<std::string> readFileLines(const boost::filesystem::path& file) {
@@ -212,6 +229,9 @@ protected:
     return loadOrder;
   }
 
+private:
+  const boost::filesystem::path rootTestPath;
+
 protected:
   const std::string french;
   const std::string german;
@@ -219,7 +239,7 @@ protected:
   const boost::filesystem::path missingPath;
   const boost::filesystem::path dataPath;
   const boost::filesystem::path localPath;
-  const boost::filesystem::path lootDataPath;
+  const boost::filesystem::path metadataFilesPath;
 
   const std::string masterFile;
   const std::string missingEsp;
@@ -239,17 +259,13 @@ protected:
 
   const uint32_t blankEsmCrc;
 
-private:
-  inline boost::filesystem::path getLocalPath() const {
-    if (GetParam() == GameType::tes4)
-      return "./local/Oblivion";
-    else if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
-      return "./local/SkyrimSE";
-    else
-      return "./local/Skyrim";
+  static boost::filesystem::path getSourceMetadataFilesPath() {
+    return boost::filesystem::absolute("./testing-metadata");
   }
 
-  inline boost::filesystem::path getPluginsPath() const {
+private:
+  boost::filesystem::path getSourcePluginsPath() const {
+    using boost::filesystem::absolute;
     if (GetParam() == GameType::tes4)
       return "./Oblivion/Data";
     else if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)

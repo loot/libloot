@@ -42,14 +42,13 @@ protected:
   void SetUp() {
     CommonGameTestFixture::SetUp();
 
+    auto sourceDirectory = getSourceMetadataFilesPath();
+    boost::filesystem::copy(sourceDirectory / "masterlist.yaml",
+                          metadataFilesPath / "masterlist.yaml");
+    ASSERT_TRUE(boost::filesystem::exists(metadataFilesPath / "masterlist.yaml"));
+
     ASSERT_FALSE(boost::filesystem::exists(masterlistPath));
     ASSERT_FALSE(boost::filesystem::exists(localPath / ".git"));
-  }
-
-  void TearDown() {
-    CommonGameTestFixture::TearDown();
-
-    ASSERT_NO_THROW(boost::filesystem::remove(masterlistPath));
   }
 
   const std::string repoUrl;
@@ -147,8 +146,8 @@ TEST_P(MasterlistTest, getInfoShouldThrowIfNoMasterlistExistsAtTheGivenPath) {
 
 TEST_P(MasterlistTest,
        getInfoShouldThrowIfTheGivenPathDoesNotBelongToAGitRepository) {
-  ASSERT_NO_THROW(boost::filesystem::copy("./testing-metadata/masterlist.yaml",
-                                          masterlistPath));
+  ASSERT_NO_THROW(boost::filesystem::copy(metadataFilesPath / "masterlist.yaml",
+                                        masterlistPath));
 
   Masterlist masterlist;
   EXPECT_THROW(masterlist.GetInfo(masterlistPath, false), GitStateError);
@@ -195,8 +194,8 @@ TEST_P(
 
 TEST_P(MasterlistTest,
        isLatestShouldThrowIfTheGivenPathDoesNotBelongToAGitRepository) {
-  ASSERT_NO_THROW(boost::filesystem::copy("./testing-metadata/masterlist.yaml",
-                                          masterlistPath));
+  ASSERT_NO_THROW(boost::filesystem::copy(metadataFilesPath / "masterlist.yaml",
+                                        masterlistPath));
 
   EXPECT_THROW(Masterlist::IsLatest(masterlistPath, repoBranch), GitStateError);
 }

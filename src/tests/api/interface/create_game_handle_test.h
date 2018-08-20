@@ -62,15 +62,6 @@ protected:
 #endif
   }
 
-  void TearDown() {
-    CommonGameTestFixture::TearDown();
-
-    boost::filesystem::remove(gamePathSymlink);
-    boost::filesystem::remove(localPathSymlink);
-    boost::filesystem::remove(gamePathJunctionLink);
-    boost::filesystem::remove(localPathJunctionLink);
-  }
-
   std::shared_ptr<GameInterface> handle_;
 
   const boost::filesystem::path gamePathSymlink;
@@ -92,18 +83,15 @@ INSTANTIATE_TEST_CASE_P(,
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {
+  using boost::filesystem::relative;
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
-                                             dataPath.parent_path().string(),
-                                             localPath.string()));
+                                             relative(dataPath.parent_path()).string(),
+                                             relative(localPath).string()));
   EXPECT_NE(nullptr, handle_);
 }
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithAbsolutePaths) {
-  boost::filesystem::path game =
-      boost::filesystem::current_path() / dataPath.parent_path();
-  boost::filesystem::path local = boost::filesystem::current_path() / localPath;
-
   EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
                                              dataPath.parent_path().string(),
                                              localPath.string()));

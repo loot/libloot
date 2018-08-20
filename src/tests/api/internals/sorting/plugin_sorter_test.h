@@ -37,20 +37,9 @@ class PluginSorterTest : public CommonGameTestFixture {
 protected:
   PluginSorterTest() :
       game_(GetParam(), dataPath.parent_path(), localPath),
-      masterlistPath_("./userlist.yaml"),
+      masterlistPath_(metadataFilesPath / "userlist.yaml"),
       cccPath_(dataPath.parent_path() / getCCCFilename()),
       blankEslEsp("Blank.esl.esp") {}
-
-  void TearDown() {
-    CommonGameTestFixture::TearDown();
-
-    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-      boost::filesystem::remove(dataPath / blankEslEsp);
-    }
-
-    boost::filesystem::remove(masterlistPath_);
-    boost::filesystem::remove(cccPath_);
-  }
 
   void loadInstalledPlugins(Game &game_, bool headersOnly) {
     std::vector<std::string> plugins({

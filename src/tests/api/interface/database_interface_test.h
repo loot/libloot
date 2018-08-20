@@ -50,25 +50,6 @@ protected:
     ASSERT_FALSE(boost::filesystem::exists(minimalOutputPath_));
   }
 
-  void TearDown() {
-    if (boost::filesystem::exists(minimalOutputPath_)) {
-      boost::filesystem::permissions(minimalOutputPath_,
-                                     boost::filesystem::perms::add_perms |
-                                         boost::filesystem::perms::owner_write);
-    }
-
-    ApiGameOperationsTest::TearDown();
-
-    // The userlist may have been created during the test, so delete it.
-    ASSERT_NO_THROW(boost::filesystem::remove(userlistPath_));
-
-    // Also remove the ".git" folder if it has been created.
-    ASSERT_NO_THROW(
-        boost::filesystem::remove_all(masterlistPath.parent_path() / ".git"));
-
-    ASSERT_NO_THROW(boost::filesystem::remove(minimalOutputPath_));
-  }
-
   std::string GetExpectedMinimalContent() const {
     using std::endl;
 

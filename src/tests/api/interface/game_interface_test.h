@@ -49,12 +49,6 @@ protected:
           blankDifferentPluginDependentEsp,
       }) {}
 
-  void TearDown() {
-    ApiGameOperationsTest::TearDown();
-
-    boost::filesystem::remove(dataPath / emptyFile);
-  }
-
   const std::string emptyFile;
   const std::vector<std::string> pluginsToLoad;
 };

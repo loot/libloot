@@ -54,13 +54,6 @@ protected:
         GetParam(), dataPath.parent_path().string(), localPath.string());
   }
 
-  virtual void TearDown() {
-    CommonGameTestFixture::TearDown();
-
-    // The masterlist may have been created during the test, so delete it.
-    ASSERT_NO_THROW(boost::filesystem::remove(masterlistPath));
-  }
-
   void GenerateMasterlist() {
     using std::endl;
 

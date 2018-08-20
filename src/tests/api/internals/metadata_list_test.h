@@ -34,32 +34,35 @@ namespace test {
 class MetadataListTest : public CommonGameTestFixture {
 protected:
   MetadataListTest() :
-      metadataPath("./testing-metadata/masterlist.yaml"),
-      savedMetadataPath("./testing-metadata/saved.masterlist.yaml"),
-      missingMetadataPath("./missing-metadata.yaml"),
-      invalidMetadataPaths({"./testing-metadata/invalid/non_map_root.yaml",
-                            "./testing-metadata/invalid/non_unique.yaml"}) {}
+      metadataPath(metadataFilesPath / "masterlist.yaml"),
+      savedMetadataPath(metadataFilesPath / "saved.masterlist.yaml"),
+      missingMetadataPath(metadataFilesPath / "missing-metadata.yaml"),
+      invalidMetadataPaths(
+          {metadataFilesPath / "invalid" / "non_map_root.yaml",
+           metadataFilesPath / "invalid" / "non_unique.yaml"}) {}
 
   inline virtual void SetUp() {
     CommonGameTestFixture::SetUp();
 
-    ASSERT_TRUE(boost::filesystem::exists(metadataPath));
-    ASSERT_FALSE(boost::filesystem::exists(savedMetadataPath));
+    using boost::filesystem::copy;
+    using boost::filesystem::exists;
 
-    for (const auto& path : invalidMetadataPaths) {
-      ASSERT_TRUE(boost::filesystem::exists(path));
-    }
+    auto sourceDirectory = getSourceMetadataFilesPath();
+
+    copy(sourceDirectory / "masterlist.yaml", metadataPath);
+    ASSERT_TRUE(exists(metadataPath));
+
+    copyInvalidMetadataFile(sourceDirectory, "non_map_root.yaml");
+    copyInvalidMetadataFile(sourceDirectory, "non_unique.yaml");
+
+    ASSERT_FALSE(exists(savedMetadataPath));
+    ASSERT_FALSE(exists(missingMetadataPath));
   }
 
-  inline virtual void TearDown() {
-    CommonGameTestFixture::TearDown();
-
-    ASSERT_TRUE(boost::filesystem::exists(metadataPath));
-    ASSERT_NO_THROW(boost::filesystem::remove(savedMetadataPath));
-
-    for (const auto& path : invalidMetadataPaths) {
-      ASSERT_TRUE(boost::filesystem::exists(path));
-    }
+  void copyInvalidMetadataFile(const boost::filesystem::path& sourceDirectory, const std::string& file) {
+    boost::filesystem::create_directories(metadataFilesPath / "invalid");
+    boost::filesystem::copy(sourceDirectory / "invalid" / file, metadataFilesPath / "invalid" / file);
+    ASSERT_TRUE(boost::filesystem::exists(metadataFilesPath / "invalid" / file));
   }
 
   static std::string PluginMetadataToString(const PluginMetadata& metadata) {
@@ -131,10 +134,12 @@ TEST_P(MetadataListTest, loadShouldLoadGroups) {
   EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
 
   EXPECT_EQ(1, groups.count(Group("group1")));
-  EXPECT_EQ(std::unordered_set<std::string>({ "group2" }), groups.find(Group("group1"))->GetAfterGroups());
+  EXPECT_EQ(std::unordered_set<std::string>({"group2"}),
+            groups.find(Group("group1"))->GetAfterGroups());
 
   EXPECT_EQ(1, groups.count(Group("group2")));
-  EXPECT_EQ(std::unordered_set<std::string>({ "default" }), groups.find(Group("group2"))->GetAfterGroups());
+  EXPECT_EQ(std::unordered_set<std::string>({"default"}),
+            groups.find(Group("group2"))->GetAfterGroups());
 }
 
 TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
@@ -188,8 +193,9 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   EXPECT_EQ(std::set<std::string>({"C.Climate", "Relev"}),
             metadataList.BashTags());
 
-  EXPECT_EQ(std::unordered_set<Group>({ Group("default"), Group("group1"), Group("group2") }),
-    metadataList.Groups());
+  EXPECT_EQ(std::unordered_set<Group>(
+                {Group("default"), Group("group1"), Group("group2")}),
+            metadataList.Groups());
 
   EXPECT_EQ(std::vector<Message>({
                 Message(MessageType::say, "A global message."),
@@ -232,9 +238,7 @@ TEST_P(MetadataListTest, setGroupsShouldReplaceExistingGroups) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
-  metadataList.SetGroups({
-    Group("group4")
-  });
+  metadataList.SetGroups({Group("group4")});
 
   auto groups = metadataList.Groups();
 

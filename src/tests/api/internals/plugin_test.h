@@ -69,21 +69,6 @@ protected:
     out.close();
   }
 
-  void TearDown() {
-    CommonGameTestFixture::TearDown();
-
-    boost::filesystem::remove(dataPath / emptyFile);
-#ifndef _WIN32
-    boost::filesystem::remove(dataPath / lowercaseBlankEsp);
-#endif
-    boost::filesystem::remove(dataPath / blankArchive);
-    boost::filesystem::remove(dataPath / blankSuffixArchive);
-
-    if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
-      boost::filesystem::remove(dataPath / blankEsl);
-    }
-  }
-
   Game game_;
 
   const std::string emptyFile;

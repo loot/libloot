@@ -60,12 +60,6 @@ protected:
     ASSERT_TRUE(boost::filesystem::exists(resourcePath));
   }
 
-  inline void TearDown() {
-    CommonGameTestFixture::TearDown();
-
-    ASSERT_NO_THROW(boost::filesystem::remove(resourcePath));
-  }
-
   std::string IntToHexString(const uint32_t value) {
     std::stringstream stream;
     stream << std::hex << value;
