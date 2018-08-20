@@ -58,9 +58,9 @@ Plugin::Plugin(const GameType gameType,
     std::filesystem::path filepath = dataPath / name_;
 
     // In case the plugin is ghosted.
-    if (!std::filesystem::exists(filepath) &&
-        std::filesystem::exists(filepath.string() + ".ghost"))
+    if (!std::filesystem::exists(filepath)) {
       filepath += ".ghost";
+    }
 
     Load(filepath, gameType, headerOnly);
 
@@ -241,7 +241,7 @@ bool Plugin::IsValid(const std::string& filename,
   bool isValid;
   auto path = dataPath / filename;
   int ret = esp_plugin_is_valid(
-      GetEspluginGameId(gameType), path.string().c_str(), true, &isValid);
+      GetEspluginGameId(gameType), path.u8string().c_str(), true, &isValid);
 
   if (ret != ESP_OK || !isValid) {
     if (logger) {
@@ -274,7 +274,7 @@ void Plugin::Load(const std::filesystem::path& path,
                   bool headerOnly) {
   ::Plugin* plugin;
   int ret = esp_plugin_new(
-      &plugin, GetEspluginGameId(gameType), path.string().c_str());
+      &plugin, GetEspluginGameId(gameType), path.u8string().c_str());
   if (ret != ESP_OK) {
     throw FileAccessError(path.string() +
                           " : esplugin error code: " + std::to_string(ret));

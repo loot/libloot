@@ -65,7 +65,7 @@ void LoadOrderHandler::Init(const GameType& gameType,
   }
 
   const char* gameLocalDataPath = nullptr;
-  string tempPathString = gameLocalAppData.string();
+  string tempPathString = gameLocalAppData.u8string();
   if (!tempPathString.empty())
     gameLocalDataPath = tempPathString.c_str();
 
@@ -76,7 +76,7 @@ void LoadOrderHandler::Init(const GameType& gameType,
   }
 
   int ret = lo_create_handle(
-    &gh_, mapGameId(gameType), gamePath.string().c_str(), gameLocalDataPath);
+    &gh_, mapGameId(gameType), gamePath.u8string().c_str(), gameLocalDataPath);
 
   HandleError("create a game handle", ret);
 }

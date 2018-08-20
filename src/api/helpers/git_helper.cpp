@@ -114,7 +114,7 @@ void GitHelper::Open(const std::filesystem::path& repoRoot) {
     logger_->info("Attempting to open Git repository at: {}",
                   repoRoot.string());
   }
-  Call(git_repository_open(&data_.repo, repoRoot.string().c_str()));
+  Call(git_repository_open(&data_.repo, repoRoot.u8string().c_str()));
 }
 
 void GitHelper::SetRemoteUrl(const std::string& remote,
@@ -150,7 +150,7 @@ void GitHelper::Call(int error_code) {
 
 bool GitHelper::IsRepository(const std::filesystem::path& path) {
   return git_repository_open_ext(NULL,
-                                 path.string().c_str(),
+                                 path.u8string().c_str(),
                                  GIT_REPOSITORY_OPEN_NO_SEARCH,
                                  NULL) == 0;
 }
@@ -208,7 +208,7 @@ void GitHelper::Clone(const std::filesystem::path& path,
   // Perform the clone.
   Call(git_clone(&data_.repo,
                  url.c_str(),
-                 repoPath.string().c_str(),
+                 repoPath.u8string().c_str(),
                  &data_.clone_options));
 
   // If repo was cloned into a temporary directory, move it into the target
@@ -591,7 +591,7 @@ bool GitHelper::IsFileDifferent(const std::filesystem::path& repoRoot,
     logger->trace("Existing repository found, attempting to open it.");
   }
   GitHelper git;
-  git.Call(git_repository_open(&git.data_.repo, repoRoot.string().c_str()));
+  git.Call(git_repository_open(&git.data_.repo, repoRoot.u8string().c_str()));
 
   // Perform a git diff, then iterate the deltas to see if one exists for the
   // masterlist.
