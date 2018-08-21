@@ -176,11 +176,11 @@ protected:
            it != std::filesystem::directory_iterator();
            ++it) {
         if (std::filesystem::is_regular_file(it->status())) {
-          std::string filename = it->path().filename().string();
+          std::string filename = it->path().filename().u8string();
           if (filename == nonPluginFile)
             continue;
           if (boost::ends_with(filename, ".ghost"))
-            filename = it->path().stem().string();
+            filename = it->path().stem().u8string();
           if (boost::ends_with(filename, ".esp") ||
               boost::ends_with(filename, ".esm"))
             loadOrder.emplace(std::filesystem::last_write_time(it->path()),
