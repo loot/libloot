@@ -29,6 +29,8 @@
 #include "api/metadata/condition_grammar.h"
 #include "loot/exception/condition_syntax_error.h"
 
+using std::filesystem::u8path;
+
 namespace loot {
 ConditionEvaluator::ConditionEvaluator() :
     gameType_(GameType::tes4),
@@ -163,10 +165,10 @@ bool ConditionEvaluator::fileExists(const std::string& filePath) const {
 
   // Not a loaded plugin, check the filesystem.
   if (hasPluginFileExtension(filePath, gameType_))
-    return std::filesystem::exists(dataPath_ / filePath) ||
-            std::filesystem::exists(dataPath_ / (filePath + ".ghost"));
+    return std::filesystem::exists(dataPath_ / u8path(filePath)) ||
+            std::filesystem::exists(dataPath_ / u8path(filePath + ".ghost"));
   else
-    return std::filesystem::exists(dataPath_ / filePath);
+    return std::filesystem::exists(dataPath_ / u8path(filePath));
 }
 
 bool ConditionEvaluator::regexMatchExists(
@@ -295,7 +297,7 @@ std::filesystem::path ConditionEvaluator::getRegexParentPath(
   if (pos == std::string::npos)
     return std::filesystem::path();
 
-  return std::filesystem::path(regexString.substr(0, pos));
+  return u8path(regexString.substr(0, pos));
 }
 
 std::string ConditionEvaluator::getRegexFilename(
@@ -359,7 +361,7 @@ bool ConditionEvaluator::isRegexMatchInDataDirectory(
       std::filesystem::directory_iterator(dataPath_ / pathRegex.first),
       std::filesystem::directory_iterator(),
       [&](const std::filesystem::directory_entry& entry) {
-        const std::string filename = entry.path().filename().string();
+        const std::string filename = entry.path().filename().u8string();
         return std::regex_match(filename, pathRegex.second) &&
                condition(filename);
       });
@@ -425,7 +427,7 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
               .GetVersion()
               .value_or(""));
 
-    return Version(dataPath_ / filePath);
+    return Version(dataPath_ / u8path(filePath));
   }
 }
 bool ConditionEvaluator::shouldParseOnly() const {
@@ -453,12 +455,12 @@ uint32_t ConditionEvaluator::getCrc(const std::string & file) const {
 
   // Otherwise calculate it from the file.
   if (crc == 0) {
-    if (std::filesystem::exists(dataPath_ / file)) {
-      crc = GetCrc32(dataPath_ / file);
+    if (std::filesystem::exists(dataPath_ / u8path(file))) {
+      crc = GetCrc32(dataPath_ / u8path(file));
     }
     else if (hasPluginFileExtension(file, gameType_) &&
-      std::filesystem::exists(dataPath_ / (file + ".ghost"))) {
-      crc = GetCrc32(dataPath_ / (file + ".ghost"));
+      std::filesystem::exists(dataPath_ / u8path(file + ".ghost"))) {
+      crc = GetCrc32(dataPath_ / u8path(file + ".ghost"));
     }
   }
 

@@ -37,6 +37,7 @@ protected:
   PluginTest() :
       emptyFile("EmptyFile.esm"),
       lowercaseBlankEsp("blank.esp"),
+      nonAsciiEsp(u8"non\u00C1scii.esp"),
       game_(GetParam(), dataPath.parent_path(), localPath),
       blankArchive("Blank" + GetArchiveFileExtension(game_.Type())),
       blankSuffixArchive("Blank - Different - suffix" +
@@ -57,6 +58,10 @@ protected:
                                             dataPath / lowercaseBlankEsp));
 #endif
 
+    // Make sure the plugin with a non-ASCII filename exists.
+    ASSERT_NO_THROW(std::filesystem::copy_file(dataPath / blankEsp,
+      dataPath / std::filesystem::u8path(nonAsciiEsp)));
+
     if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
       ASSERT_NO_THROW(
           std::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
@@ -68,14 +73,34 @@ protected:
     out.open(dataPath / blankSuffixArchive);
     out.close();
 
+    auto nonAsciiArchivePath = dataPath / std::filesystem::u8path(u8"non\u00C1scii" + GetArchiveFileExtension(game_.Type()));
+    out.open(nonAsciiArchivePath);
+    out.close();
+
     game_.GetCache()->CacheArchivePath(dataPath / blankArchive);
     game_.GetCache()->CacheArchivePath(dataPath / blankSuffixArchive);
+    game_.GetCache()->CacheArchivePath(dataPath / nonAsciiArchivePath);
+  }
+
+  uintmax_t getGhostedPluginFileSize() {
+    if (GetParam() == GameType::tes4)
+      return 390;
+    else
+      return 1358;
+  }
+
+  uintmax_t getNonAsciiEspFileSize() {
+    if (GetParam() == GameType::tes4)
+      return 55;
+    else
+      return 1019;
   }
 
   Game game_;
 
   const std::string emptyFile;
   const std::string lowercaseBlankEsp;
+  const std::string nonAsciiEsp;
   const std::string blankArchive;
   const std::string blankSuffixArchive;
 
@@ -116,6 +141,18 @@ INSTANTIATE_TEST_CASE_P(,
                                           GameType::fonv,
                                           GameType::fo4,
                                           GameType::tes5se));
+
+TEST_P(PluginTest, loadingShouldHandleNonAsciiFilenamesCorrectly) {
+  Plugin plugin(game_.Type(),
+    game_.DataPath(),
+    game_.GetCache(),
+    game_.GetLoadOrderHandler(),
+    nonAsciiEsp,
+    true);
+
+  EXPECT_EQ(nonAsciiEsp, plugin.GetName());
+  EXPECT_EQ(nonAsciiEsp, plugin.GetName());
+}
 
 TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
   Plugin plugin(game_.Type(),
@@ -259,14 +296,26 @@ TEST_P(
 
 TEST_P(
     PluginTest,
-    loadsArchiveForAnArchiveThatExactlyMatchesAnEspFileBasenameShouldReturnTrue) {
+    loadsArchiveForAnArchiveThatExactlyMatchesANonAsciiEspFileBasenameShouldReturnTrue) {
   EXPECT_TRUE(Plugin(game_.Type(),
                      game_.DataPath(),
                 game_.GetCache(),
                      game_.GetLoadOrderHandler(),
-                     blankEsp,
+                     nonAsciiEsp,
                      true)
                   .LoadsArchive());
+}
+
+TEST_P(
+  PluginTest,
+  loadsArchiveForAnArchiveThatExactlyMatchesAnEspFileBasenameShouldReturnTrue) {
+  EXPECT_TRUE(Plugin(game_.Type(),
+    game_.DataPath(),
+    game_.GetCache(),
+    game_.GetLoadOrderHandler(),
+    blankEsp,
+    true)
+    .LoadsArchive());
 }
 
 TEST_P(
@@ -318,12 +367,28 @@ TEST_P(PluginTest, isValidShouldReturnTrueForAValidPlugin) {
   EXPECT_TRUE(Plugin::IsValid(blankEsm, game_.Type(), game_.DataPath()));
 }
 
+TEST_P(PluginTest, isValidShouldReturnTrueForAValidNonAsciiPlugin) {
+  EXPECT_TRUE(Plugin::IsValid(nonAsciiEsp, game_.Type(), game_.DataPath()));
+}
+
 TEST_P(PluginTest, isValidShouldReturnFalseForANonPluginFile) {
   EXPECT_FALSE(Plugin::IsValid(nonPluginFile, game_.Type(), game_.DataPath()));
 }
 
 TEST_P(PluginTest, isValidShouldReturnFalseForAnEmptyFile) {
   EXPECT_FALSE(Plugin::IsValid(emptyFile, game_.Type(), game_.DataPath()));
+}
+
+TEST_P(PluginTest, getFileSizeShouldThrowForAMissingPlugin) {
+  EXPECT_THROW(Plugin::GetFileSize(missingEsp, game_.DataPath()), std::filesystem::filesystem_error);
+}
+
+TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAPlugin) {
+  EXPECT_EQ(getNonAsciiEspFileSize(), Plugin::GetFileSize(nonAsciiEsp, game_.DataPath()));
+}
+
+TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAGhostedPlugin) {
+  EXPECT_EQ(getGhostedPluginFileSize(), Plugin::GetFileSize(blankMasterDependentEsm, game_.DataPath()));
 }
 
 TEST_P(PluginTest, isActiveShouldReturnTrueForAPluginThatIsActive) {

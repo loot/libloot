@@ -42,9 +42,29 @@ protected:
       evaluator_(game_.Type(),
                  game_.DataPath(),
                  game_.GetCache(),
-                 game_.GetLoadOrderHandler()) {}
+                 game_.GetLoadOrderHandler()),
+      nonAsciiEsm(u8"non\u00C1scii.esm"),
+      nonAsciiNestedFile(u8"non\u00C1scii/test.txt") {
+    // Make sure the plugin with a non-ASCII filename exists.
+    std::filesystem::copy_file(dataPath / blankEsm,
+      dataPath / std::filesystem::u8path(nonAsciiEsm));
+
+    auto nonAsciiPath = dataPath / std::filesystem::u8path(nonAsciiNestedFile);
+    std::filesystem::create_directory(nonAsciiPath.parent_path());
+
+    std::ofstream out(nonAsciiPath);
+    out.close();
+  }
+
+  std::string IntToHexString(const uint32_t value) {
+    std::stringstream stream;
+    stream << std::hex << value;
+    return stream.str();
+  }
 
   const std::vector<MessageContent> info_;
+  const std::string nonAsciiEsm;
+  const std::string nonAsciiNestedFile;
 
   Game game_;
   ConditionEvaluator evaluator_;
@@ -76,6 +96,36 @@ TEST_P(ConditionEvaluatorTest,
 }
 
 TEST_P(ConditionEvaluatorTest,
+  evaluateFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
+  EXPECT_TRUE(evaluator_.evaluate("file(\"" + nonAsciiEsm + "\")"));
+}
+
+TEST_P(ConditionEvaluatorTest,
+  evaluateChecksumConditionShouldBeAbleToGetTheCrcOfANonAsciiFile) {
+  std::string condition("checksum(\"" + nonAsciiEsm + "\", " +
+    IntToHexString(blankEsmCrc) + ")");
+  EXPECT_TRUE(evaluator_.evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
+  evaluateVersionConditionShouldBeAbleToGetTheVersionOfANonAsciiFile) {
+  std::string condition("version(\"" + nonAsciiEsm + "\", \"5.0\", ==)");
+  EXPECT_TRUE(evaluator_.evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
+  evaluateRegexFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
+  std::string condition(u8"file(\"non\u00C1scii.*\\.esm\")");
+  EXPECT_TRUE(evaluator_.evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
+  evaluateRegexFileConditionShouldReturnTrueForANonAsciiNestedFileThatExists) {
+  std::string condition(u8"file(\"non\u00C1scii/.+\\.txt\")");
+  EXPECT_TRUE(evaluator_.evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
        evaluateShouldReturnFalseForAConditionThatIsFalse) {
   EXPECT_FALSE(evaluator_.evaluate("file(\"" + missingEsp + "\")"));
 }
@@ -86,6 +136,14 @@ TEST_P(
   PluginCleaningData dirtyInfo(blankEsmCrc, "cleaner", info_, 2, 10, 30);
 
   EXPECT_TRUE(evaluator_.evaluate(dirtyInfo, blankEsm));
+}
+
+TEST_P(
+  ConditionEvaluatorTest,
+  evaluateShouldBeTrueIfTheCrcInTheCleaningDataMatchesTheCrcOfANonAsciiPlugin) {
+  PluginCleaningData dirtyInfo(blankEsmCrc, "cleaner", info_, 2, 10, 30);
+
+  EXPECT_TRUE(evaluator_.evaluate(dirtyInfo, nonAsciiEsm));
 }
 
 TEST_P(

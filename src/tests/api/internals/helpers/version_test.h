@@ -33,6 +33,32 @@ along with LOOT.  If not, see
 namespace loot {
 namespace test {
 #ifdef _WIN32
+class VersionTest : public CommonGameTestFixture {
+protected:
+  VersionTest() : nonAsciiDll(u8"loot_ap\u00ED.dll") {}
+
+  void SetUp() {
+    CommonGameTestFixture::SetUp();
+
+    ASSERT_NO_THROW(std::filesystem::copy_file("loot_api.dll",
+      dataPath / std::filesystem::u8path(nonAsciiDll)));
+  }
+
+  const std::string nonAsciiDll;
+};
+
+// Pass an empty first argument, as it's a prefix for the test instantation,
+// but we only have the one so no prefix is necessary.
+// Just test with one game because if it works for one it will work for them
+// all.
+INSTANTIATE_TEST_CASE_P(, VersionTest, ::testing::Values(GameType::tes5));
+
+TEST_P(VersionTest, shouldExtractVersionFromNonAsciiDll) {
+  Version version(dataPath / std::filesystem::u8path(nonAsciiDll));
+  std::string expected(LootVersion::string() + ".0");
+  EXPECT_EQ(expected, version.AsString());
+}
+
 TEST(Version, shouldExtractVersionFromApiDll) {
   // Use the API DLL built.
   Version version(std::filesystem::path("loot_api.dll"));
@@ -40,6 +66,7 @@ TEST(Version, shouldExtractVersionFromApiDll) {
   EXPECT_EQ(expected, version.AsString());
 }
 #endif
+
 TEST(Version, defaultConstructorShouldSetEmptyVersionString) {
   EXPECT_EQ("", Version().AsString());
 }

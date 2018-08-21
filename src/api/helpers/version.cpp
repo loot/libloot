@@ -28,8 +28,6 @@
 #include <pseudosem.h>
 #include <boost/algorithm/string.hpp>
 
-#include "api/helpers/windows_encoding_converters.h"
-
 #ifdef _WIN32
 #ifndef UNICODE
 #define UNICODE
@@ -97,14 +95,14 @@ Version::Version(const std::string& ver) {
 Version::Version(const std::filesystem::path& file) {
 #ifdef _WIN32
   DWORD dummy = 0;
-  DWORD size = GetFileVersionInfoSize(ToWinWide(file.string()).c_str(), &dummy);
+  DWORD size = GetFileVersionInfoSize(file.wstring().c_str(), &dummy);
 
   if (size > 0) {
     LPBYTE point = new BYTE[size];
     UINT uLen;
     VS_FIXEDFILEINFO* info;
 
-    GetFileVersionInfo(ToWinWide(file.string()).c_str(), 0, size, point);
+    GetFileVersionInfo(file.wstring().c_str(), 0, size, point);
 
     VerQueryValue(point, L"\\", (LPVOID*)&info, &uLen);
 
@@ -122,11 +120,11 @@ Version::Version(const std::filesystem::path& file) {
 #else
   // ensure filename has no quote characters in it to avoid command injection
   // attacks
-  if (std::string::npos != file.string().find('"')) {
+  if (std::string::npos != file.u8string().find('"')) {
     // command mostly borrowed from the gnome-exe-thumbnailer.sh script
     // wrestool is part of the icoutils package
     std::string cmd =
-        "wrestool --extract --raw --type=version \"" + file.string() +
+        "wrestool --extract --raw --type=version \"" + file.u8string() +
         "\" | tr '\\0, ' '\\t.\\0' | sed 's/\\t\\t/_/g' | tr -c -d '[:print:]' "
         "| sed -r 's/.*Version[^0-9]*([0-9]+(\\.[0-9]+)+).*/\\1/'";
 

@@ -66,7 +66,7 @@ MasterlistInfo Masterlist::GetInfo(const std::filesystem::path& path,
     logger->trace("Diffing masterlist HEAD and working copy.");
   }
   info.is_modified =
-      GitHelper::IsFileDifferent(path.parent_path(), path.filename().string());
+      GitHelper::IsFileDifferent(path.parent_path(), path.filename().u8string());
 
   return info;
 }
@@ -102,7 +102,7 @@ bool Masterlist::Update(const std::filesystem::path& path,
   GitHelper git;
   auto logger = getLogger();
   fs::path repoPath = path.parent_path();
-  string filename = path.filename().string();
+  string filename = path.filename().u8string();
 
   if (path.empty() || repoUrl.empty() || repoBranch.empty())
     throw std::invalid_argument("Repository path, URL and branch must not be empty.");

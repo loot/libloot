@@ -55,7 +55,7 @@ Plugin::Plugin(const GameType gameType,
   auto logger = getLogger();
 
   try {
-    std::filesystem::path filepath = dataPath / name_;
+    std::filesystem::path filepath = dataPath / std::filesystem::u8path(name_);
 
     // In case the plugin is ghosted.
     if (!std::filesystem::exists(filepath)) {
@@ -239,7 +239,7 @@ bool Plugin::IsValid(const std::string& filename,
     return false;
 
   bool isValid;
-  auto path = dataPath / filename;
+  auto path = dataPath / std::filesystem::u8path(filename);
   int ret = esp_plugin_is_valid(
       GetEspluginGameId(gameType), path.u8string().c_str(), true, &isValid);
 
@@ -255,7 +255,7 @@ bool Plugin::IsValid(const std::string& filename,
 
 uintmax_t Plugin::GetFileSize(const std::string& filename,
                               const std::filesystem::path& dataPath) {
-  std::filesystem::path realPath = dataPath / filename;
+  std::filesystem::path realPath = dataPath / std::filesystem::u8path(filename);
   if (!std::filesystem::exists(realPath))
     realPath += ".ghost";
 
@@ -323,16 +323,15 @@ bool Plugin::LoadsArchive(const std::string& pluginName,
 
   if (gameType == GameType::tes5) {
     // Skyrim plugins only load BSAs that exactly match their basename.
-    return std::filesystem::exists(
-        dataPath /
-        (pluginName.substr(0, pluginName.length() - 4) + archiveExtension));
+    auto filename = pluginName.substr(0, pluginName.length() - 4) + archiveExtension;
+    return std::filesystem::exists(dataPath / std::filesystem::u8path(filename));
   } else if (gameType != GameType::tes4 ||
              boost::iends_with(pluginName, ".esp")) {
     // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
     // begin with the plugin basename.
     string basename = pluginName.substr(0, pluginName.length() - 4);
     for (const auto& archivePath : gameCache->GetArchivePaths()) {
-      if (boost::istarts_with(archivePath.filename().string(), basename)) {
+      if (boost::istarts_with(archivePath.filename().u8string(), basename)) {
         return true;
       }
     }

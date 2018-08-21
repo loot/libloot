@@ -195,7 +195,7 @@ void GitHelper::Clone(const std::filesystem::path& path,
     if (logger_) {
       logger_->trace("Target repo path not empty, cloning into temporary directory.");
     }
-    auto directory = "LOOT-" + path.filename().string() + "-" +
+    auto directory = "LOOT-" + path.filename().u8string() + "-" +
                      boost::lexical_cast<std::string>((boost::uuids::random_generator())());
     repoPath = fs::temp_directory_path() / directory;
 

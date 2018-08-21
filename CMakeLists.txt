@@ -128,7 +128,7 @@ set(PSEUDOSEM_INCLUDE_DIRS "${SOURCE_DIR}/include")
 ExternalProject_Add(testing-metadata
                     PREFIX "external"
                     GIT_REPOSITORY "https://github.com/loot/testing-metadata"
-                    GIT_TAG "1.3.0"
+                    GIT_TAG "1.4.0"
                     CONFIGURE_COMMAND ""
                     BUILD_COMMAND ""
                     INSTALL_COMMAND "")
@@ -253,8 +253,7 @@ set (LOOT_API_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/git_helper.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/logging.h"
-                      "${CMAKE_SOURCE_DIR}/src/api/helpers/version.h"
-                      "${CMAKE_SOURCE_DIR}/src/api/helpers/windows_encoding_converters.h")
+                      "${CMAKE_SOURCE_DIR}/src/api/helpers/version.h")
 
 set (LOOT_TESTS_SRC "${CMAKE_SOURCE_DIR}/src/tests/api/internals/main.cpp")
 

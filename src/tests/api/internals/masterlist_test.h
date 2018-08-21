@@ -37,7 +37,8 @@ protected:
       repoBranch("master"),
       oldBranch("old-branch"),
       repoUrl("https://github.com/loot/testing-metadata.git"),
-      masterlistPath(localPath / "masterlist.yaml") {}
+      masterlistPath(localPath / "masterlist.yaml"),
+      nonAsciiMasterlistPath(localPath / std::filesystem::u8path(u8"masterl\u00EDst.yaml")) {}
 
   void SetUp() {
     CommonGameTestFixture::SetUp();
@@ -48,7 +49,15 @@ protected:
     ASSERT_TRUE(std::filesystem::exists(metadataFilesPath / "masterlist.yaml"));
 
     ASSERT_FALSE(std::filesystem::exists(masterlistPath));
+    ASSERT_FALSE(std::filesystem::exists(nonAsciiMasterlistPath));
     ASSERT_FALSE(std::filesystem::exists(localPath / ".git"));
+  }
+
+  void runRepoCommand(const std::string& command) {
+    auto testPath = std::filesystem::current_path();
+    std::filesystem::current_path(masterlistPath.parent_path());
+    system(command.c_str());
+    std::filesystem::current_path(testPath);
   }
 
   const std::string repoUrl;
@@ -56,6 +65,7 @@ protected:
   const std::string oldBranch;
 
   const std::filesystem::path masterlistPath;
+  const std::filesystem::path nonAsciiMasterlistPath;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -125,16 +135,23 @@ TEST_P(MasterlistTest, updateShouldReturnFalseIfAnUpToDateMasterlistExists) {
   EXPECT_FALSE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
 }
 
+TEST_P(MasterlistTest, updateShouldReturnFalseIfAnUpToDateMasterlistWithANonAsciiFilenameExists) {
+  Masterlist masterlist;
+
+  EXPECT_TRUE(masterlist.Update(nonAsciiMasterlistPath, repoUrl, repoBranch));
+  EXPECT_TRUE(std::filesystem::exists(nonAsciiMasterlistPath));
+
+  EXPECT_FALSE(masterlist.Update(nonAsciiMasterlistPath, repoUrl, repoBranch));
+  EXPECT_TRUE(std::filesystem::exists(nonAsciiMasterlistPath));
+}
+
 TEST_P(MasterlistTest,
        updateShouldDiscardLocalHistoryIfRemoteHistoryIsDifferent) {
   Masterlist masterlist;
   ASSERT_TRUE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
 
-  auto testPath = std::filesystem::current_path();
-  std::filesystem::current_path(masterlistPath.parent_path());
-  system("git config commit.gpgsign false");
-  system("git commit --amend -m \"changing local history\"");
-  std::filesystem::current_path(testPath);
+  runRepoCommand("git config commit.gpgsign false");
+  runRepoCommand("git commit --amend -m \"changing local history\"");
 
   EXPECT_TRUE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
 }
@@ -187,6 +204,24 @@ TEST_P(
   out.close();
 
   MasterlistInfo info = masterlist.GetInfo(masterlistPath, false);
+  EXPECT_EQ(40, info.revision_id.length());
+  EXPECT_EQ(10, info.revision_date.length());
+  EXPECT_TRUE(info.is_modified);
+}
+
+TEST_P(MasterlistTest,
+  getInfoShouldDetectWhenAMasterlistWithANonAsciiFilenameHasBeenEdited) {
+  Masterlist masterlist;
+  ASSERT_TRUE(masterlist.Update(masterlistPath, repoUrl, repoBranch));
+
+  auto nonAsciiPath = masterlistPath.parent_path() / std::filesystem::u8path(u8"non\u00C1scii.yaml");
+  std::filesystem::copy_file(masterlistPath, nonAsciiPath);
+
+  runRepoCommand("git add " + nonAsciiPath.string());
+  std::ofstream out(nonAsciiPath);
+  out.close();
+
+  MasterlistInfo info = masterlist.GetInfo(nonAsciiPath, false);
   EXPECT_EQ(40, info.revision_id.length());
   EXPECT_EQ(10, info.revision_date.length());
   EXPECT_TRUE(info.is_modified);
