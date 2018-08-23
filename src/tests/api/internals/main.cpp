@@ -66,6 +66,12 @@ TEST(ModuloOperator, shouldConformToTheCpp11Standard) {
   EXPECT_EQ(-2, -9 % -7);
 }
 
+TEST(YamlCpp, shouldSupportMergeKeys) {
+  YAML::Node node = YAML::Load("{<<: {a: 1}}");
+  ASSERT_TRUE(node["a"]);
+  EXPECT_EQ(1, node["a"].as<int>());
+}
+
 int main(int argc, char **argv) {
   // Set the locale to get encoding conversions working correctly.
   std::locale::global(boost::locale::generator().generate(""));

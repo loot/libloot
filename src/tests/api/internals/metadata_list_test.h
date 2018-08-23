@@ -142,6 +142,33 @@ TEST_P(MetadataListTest, loadShouldLoadGroups) {
             groups.find(Group("group2"))->GetAfterGroups());
 }
 
+TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
+  using std::endl;
+
+  boost::filesystem::ofstream out(metadataPath);
+  out << "common:" << endl
+    << "  - &earlier" << endl
+    << "    name: earlier" << endl
+    << "    after:" << endl
+    << "      - earliest" << endl
+    << "groups:" << endl
+    << "  - name: default" << endl
+    << "    <<: *earlier" << endl;
+
+  out.close();
+
+  MetadataList metadataList;
+  ASSERT_NO_THROW(metadataList.Load(metadataPath));
+
+  auto groups = metadataList.Groups();
+
+  EXPECT_EQ(1, groups.size());
+
+  EXPECT_EQ(1, groups.count(Group("default")));
+  EXPECT_EQ(std::unordered_set<std::string>({ "earliest" }),
+    groups.find(Group("default"))->GetAfterGroups());
+}
+
 TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
   MetadataList ml;
   for (const auto& path : invalidMetadataPaths) {
