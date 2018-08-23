@@ -44,10 +44,9 @@ class GameCache;
 class Plugin : public PluginInterface {
 public:
   Plugin(const GameType gameType,
-         const std::filesystem::path& dataPath,
          std::shared_ptr<GameCache> gameCache,
          std::shared_ptr<LoadOrderHandler> loadOrderHandler,
-         const std::string& name,
+         std::filesystem::path pluginPath,
          const bool headerOnly);
 
   std::string GetName() const;
@@ -69,11 +68,9 @@ public:
   size_t NumOverrideFormIDs() const;
 
   // Validity checks.
-  static bool IsValid(const std::string& filename,
-                      const GameType gameType,
-                      const std::filesystem::path& dataPath);
-  static uintmax_t GetFileSize(const std::string& filename,
-                               const std::filesystem::path& dataPath);
+  static bool IsValid(const GameType gameType,
+                      const std::filesystem::path& pluginPath);
+  static uintmax_t GetFileSize(std::filesystem::path pluginPath);
 
   bool operator<(const Plugin& rhs) const;
 
@@ -83,10 +80,9 @@ private:
             bool headerOnly);
   std::string GetDescription() const;
 
-  static bool LoadsArchive(const std::string& pluginName,
-                           const GameType gameType,
+  static bool LoadsArchive(const GameType gameType,
                            const std::shared_ptr<GameCache> gameCache,
-                           const std::filesystem::path& dataPath);
+                           const std::filesystem::path& pluginPath);
   static unsigned int GetEspluginGameId(GameType gameType);
 
   bool isEmpty_;  // Does the plugin contain any records other than the TES4

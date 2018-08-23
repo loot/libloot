@@ -421,13 +421,14 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
     // The file wasn't in the plugin cache, load it as a plugin
     // if it appears to be valid, otherwise treat it as a non
     // plugin file.
-    if (Plugin::IsValid(filePath, gameType_, dataPath_))
+    auto pluginPath = dataPath_ / u8path(filePath);
+    if (Plugin::IsValid(gameType_, pluginPath))
       return Version(
-          Plugin(gameType_, dataPath_, gameCache_, loadOrderHandler_, filePath, true)
+          Plugin(gameType_, gameCache_, loadOrderHandler_, pluginPath, true)
               .GetVersion()
               .value_or(""));
 
-    return Version(dataPath_ / u8path(filePath));
+    return Version(pluginPath);
   }
 }
 bool ConditionEvaluator::shouldParseOnly() const {

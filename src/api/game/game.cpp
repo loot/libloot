@@ -48,6 +48,7 @@
 #include "windows.h"
 #endif
 
+using std::filesystem::u8path;
 using std::list;
 using std::string;
 using std::thread;
@@ -87,11 +88,12 @@ std::shared_ptr<LoadOrderHandler> Game::GetLoadOrderHandler() {
 std::shared_ptr<DatabaseInterface> Game::GetDatabase() { return database_; }
 
 bool Game::IsValidPlugin(const std::string& plugin) const {
-  return Plugin::IsValid(plugin, Type(), DataPath());
+  return Plugin::IsValid(Type(), DataPath() / u8path(plugin));
 }
 
 void Game::LoadPlugins(const std::vector<std::string>& plugins,
                        bool loadHeadersOnly) {
+
   auto logger = getLogger();
   uintmax_t meanFileSize = 0;
   std::multimap<uintmax_t, string> sizeMap;
@@ -101,7 +103,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
     if (!IsValidPlugin(plugin))
       throw std::invalid_argument("\"" + plugin + "\" is not a valid plugin");
 
-    uintmax_t fileSize = Plugin::GetFileSize(plugin, DataPath());
+    uintmax_t fileSize = Plugin::GetFileSize(DataPath() / u8path(plugin));
     meanFileSize += fileSize;
 
     // Trim .ghost extension if present.
@@ -170,7 +172,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
             boost::iequals(pluginName, masterFile_) || loadHeadersOnly;
         try {
           cache_->AddPlugin(Plugin(
-              Type(), DataPath(), cache_, loadOrderHandler_, pluginName, loadHeader));
+              Type(),  cache_, loadOrderHandler_, DataPath() / u8path(pluginName), loadHeader));
         } catch (std::exception& e) {
           if (logger) {
             logger->error(

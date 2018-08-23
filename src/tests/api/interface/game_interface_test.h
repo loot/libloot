@@ -35,6 +35,7 @@ class GameInterfaceTest : public ApiGameOperationsTest {
 protected:
   GameInterfaceTest() :
       emptyFile("EmptyFile.esm"),
+      nonAsciiEsm(u8"non\u00C1scii.esm"),
       pluginsToLoad({
           masterFile,
           blankEsm,
@@ -47,9 +48,14 @@ protected:
           blankDifferentMasterDependentEsp,
           blankPluginDependentEsp,
           blankDifferentPluginDependentEsp,
-      }) {}
+      }) {
+    // Make sure the plugin with a non-ASCII filename exists.
+    std::filesystem::copy_file(dataPath / blankEsm,
+      dataPath / std::filesystem::u8path(nonAsciiEsm));
+  }
 
   const std::string emptyFile;
+  const std::string nonAsciiEsm;
   const std::vector<std::string> pluginsToLoad;
 };
 
@@ -66,6 +72,10 @@ INSTANTIATE_TEST_CASE_P(,
 
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidPlugin) {
   EXPECT_TRUE(handle_->IsValidPlugin(blankEsm));
+}
+
+TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidNonAsciiPlugin) {
+  EXPECT_TRUE(handle_->IsValidPlugin(nonAsciiEsm));
 }
 
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForANonPluginFile) {
@@ -104,6 +114,18 @@ TEST_P(GameInterfaceTest,
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(handle_->GetPlugin(masterFile));
   auto plugin = handle_->GetPlugin(masterFile).value();
+  EXPECT_EQ("5.0", plugin->GetVersion().value());
+
+  // Check that not only the header has been read.
+  EXPECT_EQ(blankEsmCrc, plugin->GetCRC().value());
+}
+
+TEST_P(GameInterfaceTest, loadPluginsWithANonAsciiPluginShouldLoadIt) {
+  handle_->LoadPlugins({ nonAsciiEsm }, false);
+  EXPECT_EQ(1, handle_->GetLoadedPlugins().size());
+
+  // Check that one plugin's header has been read.
+  auto plugin = handle_->GetPlugin(nonAsciiEsm).value();
   EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that not only the header has been read.
@@ -179,11 +201,17 @@ TEST_P(GameInterfaceTest,
 }
 
 TEST_P(GameInterfaceTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
+  // Remove the non-ASCII duplicate plugin.
+  std::filesystem::remove(dataPath / std::filesystem::u8path(nonAsciiEsm));
+
   handle_->LoadCurrentLoadOrderState();
   ASSERT_EQ(getLoadOrder(), handle_->GetLoadOrder());
 }
 
 TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
+  // Remove the non-ASCII duplicate plugin.
+  std::filesystem::remove(dataPath / std::filesystem::u8path(nonAsciiEsm));
+
   handle_->LoadCurrentLoadOrderState();
   std::vector<std::string> loadOrder({
       masterFile,

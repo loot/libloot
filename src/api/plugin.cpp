@@ -41,12 +41,11 @@ using std::string;
 
 namespace loot {
 Plugin::Plugin(const GameType gameType,
-               const std::filesystem::path& dataPath,
                std::shared_ptr<GameCache> gameCache,
                std::shared_ptr<LoadOrderHandler> loadOrderHandler,
-               const std::string& name,
+               std::filesystem::path pluginPath,
                const bool headerOnly) :
-    name_(name),
+    name_(pluginPath.filename().u8string()),
     esPlugin(nullptr),
     isEmpty_(true),
     isActive_(false),
@@ -55,18 +54,16 @@ Plugin::Plugin(const GameType gameType,
   auto logger = getLogger();
 
   try {
-    std::filesystem::path filepath = dataPath / std::filesystem::u8path(name_);
-
     // In case the plugin is ghosted.
-    if (!std::filesystem::exists(filepath)) {
-      filepath += ".ghost";
+    if (!std::filesystem::exists(pluginPath)) {
+      pluginPath += ".ghost";
     }
 
-    Load(filepath, gameType, headerOnly);
+    Load(pluginPath, gameType, headerOnly);
 
     auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
     if (ret != ESP_OK) {
-      throw FileAccessError(name +
+      throw FileAccessError(name_ +
                             " : esplugin error code: " + std::to_string(ret));
     }
 
@@ -74,7 +71,7 @@ Plugin::Plugin(const GameType gameType,
       if (logger) {
         logger->trace("{}: Caching CRC value.", name_);
       }
-      crc_ = GetCrc32(filepath);
+      crc_ = GetCrc32(pluginPath);
 
       if (logger) {
         logger->trace("{}: Counting override FormIDs.", name_);
@@ -82,7 +79,7 @@ Plugin::Plugin(const GameType gameType,
       ret = esp_plugin_count_override_records(esPlugin.get(),
                                               &numOverrideRecords_);
       if (ret != ESP_OK) {
-        throw FileAccessError(name +
+        throw FileAccessError(name_ +
                               " : esplugin error code: " + std::to_string(ret));
       }
     }
@@ -118,13 +115,13 @@ Plugin::Plugin(const GameType gameType,
     // Get whether the plugin is active or not.
     isActive_ = loadOrderHandler->IsPluginActive(name_);
 
-    loadsArchive_ = LoadsArchive(name_, gameType, gameCache, dataPath);
+    loadsArchive_ = LoadsArchive(gameType, gameCache, pluginPath);
   } catch (std::exception& e) {
     if (logger) {
       logger->error(
           "Cannot read plugin file \"{}\". Details: {}", name_, e.what());
     }
-    throw FileAccessError("Cannot read \"" + name + "\". Details: " + e.what());
+    throw FileAccessError("Cannot read \"" + name_ + "\". Details: " + e.what());
   }
 
   if (logger) {
@@ -219,47 +216,50 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
 
 size_t Plugin::NumOverrideFormIDs() const { return numOverrideRecords_; }
 
-bool Plugin::IsValid(const std::string& filename,
-                     const GameType gameType,
-                     const std::filesystem::path& dataPath) {
+bool Plugin::IsValid(const GameType gameType,
+                     const std::filesystem::path& pluginPath) {
   auto logger = getLogger();
   if (logger) {
-    logger->trace("Checking to see if \"{}\" is a valid plugin.", filename);
+    logger->trace("Checking to see if \"{}\" is a valid plugin.", pluginPath.filename().u8string());
   }
 
   // If the filename passed ends in '.ghost', that should be trimmed.
-  std::string name;
-  if (boost::iends_with(filename, ".ghost"))
-    name = filename.substr(0, filename.length() - 6);
-  else
-    name = filename;
+  std::string trimmedFilename = pluginPath.filename().u8string();
+  if (boost::iends_with(trimmedFilename, ".ghost")) {
+    trimmedFilename = trimmedFilename.substr(0, trimmedFilename.length() - 6);
+  }
 
   // Check that the file has a valid extension.
-  if (!hasPluginFileExtension(name, gameType))
+  if (!hasPluginFileExtension(trimmedFilename, gameType))
     return false;
 
   bool isValid;
-  auto path = dataPath / std::filesystem::u8path(filename);
   int ret = esp_plugin_is_valid(
-      GetEspluginGameId(gameType), path.u8string().c_str(), true, &isValid);
+      GetEspluginGameId(gameType), pluginPath.u8string().c_str(), true, &isValid);
+
+  if (ret != ESP_OK || !isValid) {
+    // Try adding .ghost extension.
+    auto ghostedPath = pluginPath;
+    ghostedPath += ".ghost";
+
+    ret = esp_plugin_is_valid(
+      GetEspluginGameId(gameType), ghostedPath.u8string().c_str(), true, &isValid);
+  }
 
   if (ret != ESP_OK || !isValid) {
     if (logger) {
-      logger->warn("The file \"{}\" is not a valid plugin.", filename);
+      logger->warn("The file \"{}\" is not a valid plugin.", pluginPath.filename().u8string());
     }
   }
 
-  return (ret == ESP_OK && isValid) ||
-         Plugin::IsValid(filename + ".ghost", gameType, dataPath);
+  return ret == ESP_OK && isValid;
 }
 
-uintmax_t Plugin::GetFileSize(const std::string& filename,
-                              const std::filesystem::path& dataPath) {
-  std::filesystem::path realPath = dataPath / std::filesystem::u8path(filename);
-  if (!std::filesystem::exists(realPath))
-    realPath += ".ghost";
+uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
+  if (!std::filesystem::exists(pluginPath))
+    pluginPath += ".ghost";
 
-  return std::filesystem::file_size(realPath);
+  return std::filesystem::file_size(pluginPath);
 }
 
 bool Plugin::operator<(const Plugin& rhs) const {
@@ -314,17 +314,17 @@ std::string GetArchiveFileExtension(const GameType gameType) {
     return ".bsa";
 }
 
-bool Plugin::LoadsArchive(const std::string& pluginName,
-                          const GameType gameType,
+bool Plugin::LoadsArchive(const GameType gameType,
                           const std::shared_ptr<GameCache> gameCache,
-                          const std::filesystem::path& dataPath) {
+                          const std::filesystem::path& pluginPath) {
   // Get whether the plugin loads an archive (BSA/BA2) or not.
   const string archiveExtension = GetArchiveFileExtension(gameType);
+  auto pluginName = pluginPath.filename().u8string();
 
   if (gameType == GameType::tes5) {
     // Skyrim plugins only load BSAs that exactly match their basename.
     auto filename = pluginName.substr(0, pluginName.length() - 4) + archiveExtension;
-    return std::filesystem::exists(dataPath / std::filesystem::u8path(filename));
+    return std::filesystem::exists(pluginPath.parent_path() / std::filesystem::u8path(filename));
   } else if (gameType != GameType::tes4 ||
              boost::iends_with(pluginName, ".esp")) {
     // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which

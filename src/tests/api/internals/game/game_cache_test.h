@@ -81,10 +81,9 @@ TEST_P(GameCacheTest, gettingAnUncachedCrcShouldReturnZero) {
 
 TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
   cache_.AddPlugin(Plugin(game_.Type(),
-                          game_.DataPath(),
                           std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
-                          blankEsm,
+                          game_.DataPath() / blankEsm,
                           true));
   EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm).value()->GetName());
 }
@@ -92,18 +91,16 @@ TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
 TEST_P(GameCacheTest,
        addingAPluginThatIsAlreadyCachedShouldOverwriteExistingEntry) {
   cache_.AddPlugin(Plugin(game_.Type(),
-                          game_.DataPath(),
                           std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
-                          blankEsm,
+                          game_.DataPath() / blankEsm,
                           true));
   EXPECT_FALSE(cache_.GetPlugin(blankEsm).value()->GetCRC());
 
   cache_.AddPlugin(Plugin(game_.Type(),
-                          game_.DataPath(),
                           std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
-                          blankEsm,
+                          game_.DataPath() / blankEsm,
                           false));
   EXPECT_EQ(blankEsmCrc, cache_.GetPlugin(blankEsm).value()->GetCRC().value());
 }
@@ -114,10 +111,9 @@ TEST_P(GameCacheTest, gettingAPluginThatIsNotCachedShouldReturnAnEmptyOptional) 
 
 TEST_P(GameCacheTest, gettingAPluginShouldBeCaseInsensitive) {
   cache_.AddPlugin(Plugin(game_.Type(),
-                          game_.DataPath(),
                           std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
-                          blankEsm,
+                          game_.DataPath() / blankEsm,
                           true));
   EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm).value()->GetName());
 }
@@ -130,16 +126,14 @@ TEST_P(GameCacheTest,
 TEST_P(GameCacheTest,
        gettingPluginsShouldReturnASetOfCachedPluginsIfPluginsHaveBeenCached) {
   cache_.AddPlugin(Plugin(game_.Type(),
-                          game_.DataPath(),
                           std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
-                          blankEsm,
+                          game_.DataPath() / blankEsm,
                           true));
   cache_.AddPlugin(Plugin(game_.Type(),
-                          game_.DataPath(),
                           std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
-                          blankMasterDependentEsm,
+                          game_.DataPath() / blankMasterDependentEsm,
                           true));
 
   EXPECT_FALSE(cache_.GetPlugins().empty());
@@ -185,10 +179,9 @@ TEST_P(GameCacheTest, clearingCachedPluginsShouldNotThrowIfNoPluginsAreCached) {
 
 TEST_P(GameCacheTest, clearingCachedPluginsShouldClearAnyCachedPlugins) {
   cache_.AddPlugin(Plugin(game_.Type(),
-                          game_.DataPath(),
                           std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
-                          blankEsm,
+                          game_.DataPath() / blankEsm,
                           true));
   cache_.ClearCachedPlugins();
 
