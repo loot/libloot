@@ -24,6 +24,8 @@
 #ifndef LOOT_YAML_MESSAGE
 #define LOOT_YAML_MESSAGE
 
+#define YAML_CPP_SUPPORT_MERGE_KEYS
+
 #include <string>
 #include <vector>
 

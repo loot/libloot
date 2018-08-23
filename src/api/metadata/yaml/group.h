@@ -24,6 +24,8 @@
 #ifndef LOOT_YAML_GROUP
 #define LOOT_YAML_GROUP
 
+#define YAML_CPP_SUPPORT_MERGE_KEYS
+
 #include <set>
 #include <string>
 

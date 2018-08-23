@@ -24,6 +24,8 @@
 #ifndef LOOT_YAML_TAG
 #define LOOT_YAML_TAG
 
+#define YAML_CPP_SUPPORT_MERGE_KEYS
+
 #include <string>
 
 #include <yaml-cpp/yaml.h>

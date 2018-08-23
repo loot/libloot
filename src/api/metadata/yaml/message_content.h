@@ -24,6 +24,8 @@
 #ifndef LOOT_YAML_MESSAGE_CONTENT
 #define LOOT_YAML_MESSAGE_CONTENT
 
+#define YAML_CPP_SUPPORT_MERGE_KEYS
+
 #include <string>
 
 #include <yaml-cpp/yaml.h>

@@ -24,6 +24,8 @@
 #ifndef LOOT_YAML_PLUGIN_METADATA
 #define LOOT_YAML_PLUGIN_METADATA
 
+#define YAML_CPP_SUPPORT_MERGE_KEYS
+
 #include <cstdint>
 #include <list>
 #include <regex>

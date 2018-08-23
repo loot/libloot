@@ -25,6 +25,8 @@
 #ifndef LOOT_YAML_PLUGIN_CLEANING_DATA
 #define LOOT_YAML_PLUGIN_CLEANING_DATA
 
+#define YAML_CPP_SUPPORT_MERGE_KEYS
+
 #include <cstdint>
 #include <string>
 

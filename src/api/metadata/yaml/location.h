@@ -24,6 +24,8 @@
 #ifndef LOOT_YAML_LOCATION
 #define LOOT_YAML_LOCATION
 
+#define YAML_CPP_SUPPORT_MERGE_KEYS
+
 #include <string>
 #include <vector>
 

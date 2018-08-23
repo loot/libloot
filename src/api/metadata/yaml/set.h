@@ -25,6 +25,8 @@
 #ifndef LOOT_YAML_SET
 #define LOOT_YAML_SET
 
+#define YAML_CPP_SUPPORT_MERGE_KEYS
+
 #include <set>
 #include <unordered_set>
 
