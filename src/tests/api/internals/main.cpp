@@ -151,6 +151,66 @@ TEST(Filesystem, shouldBeAbleToWriteToAndReadFromAUtf8Path) {
   std::filesystem::remove(path);
 }
 
+TEST(Filesystem, equalityShouldBeCaseSensitive) {
+  auto upper = std::filesystem::path("LICENSE");
+  auto lower = std::filesystem::path("license");
+
+  EXPECT_NE(lower, upper);
+}
+
+#ifdef _WIN32
+TEST(Filesystem, equivalentShouldRequireThatBothPathsExist) {
+  auto upper = std::filesystem::path("LICENSE");
+  auto lower = std::filesystem::path("license2");
+
+  EXPECT_THROW(std::filesystem::equivalent(lower, upper), std::filesystem::filesystem_error);
+}
+#else
+TEST(Filesystem, equivalentShouldNotRequireThatBothPathsExist) {
+  auto upper = std::filesystem::path("LICENSE");
+  auto lower = std::filesystem::path("license2");
+
+  EXPECT_FALSE(std::filesystem::equivalent(lower, upper));
+}
+#endif
+
+TEST(Filesystem, canonicalShouldRequireThatThePathExists) {
+  EXPECT_THROW(std::filesystem::canonical("license2"), std::filesystem::filesystem_error);
+}
+
+#ifdef _WIN32
+TEST(Filesystem, equivalentShouldBeCaseInsensitive) {
+  auto upper = std::filesystem::path("LICENSE");
+  auto lower = std::filesystem::path("license");
+
+  EXPECT_TRUE(std::filesystem::equivalent(lower, upper));
+}
+
+TEST(Filesystem, canonicalShouldFoldCase) {
+  auto upper = std::filesystem::canonical("LICENSE");
+  auto lower = std::filesystem::canonical("license");
+
+  EXPECT_EQ(lower, upper);
+}
+#else
+TEST(Filesystem, equivalentShouldBeCaseSensitive) {
+  auto upper = std::filesystem::path("LICENSE");
+  auto lower = std::filesystem::path("license");
+
+  EXPECT_FALSE(std::filesystem::equivalent(lower, upper));
+}
+
+TEST(Filesystem, canonicalShouldNotFoldCase) {
+  std::ofstream out("license");
+  out.close();
+
+  auto upper = std::filesystem::canonical("LICENSE");
+  auto lower = std::filesystem::canonical("license");
+
+  EXPECT_NE(lower, upper);
+}
+#endif
+
 int main(int argc, char **argv) {
   // Set the locale to get encoding conversions working correctly.
   std::locale::global(boost::locale::generator().generate(""));
