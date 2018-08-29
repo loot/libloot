@@ -51,9 +51,14 @@ TEST(MessageContent, contentConstructorShouldStoreGivenStringAndLanguage) {
 
 TEST(MessageContent, contentShouldBeEqualIfStringsAreCaseInsensitivelyEqual) {
   MessageContent content1("content");
-  MessageContent content2("Content", french);
+  MessageContent content2("content", french);
 
   EXPECT_TRUE(content1 == content2);
+
+  content1 = MessageContent("content");
+  content2 = MessageContent("Content", french);
+
+  EXPECT_FALSE(content1 == content2);
 }
 
 TEST(MessageContent,
@@ -65,12 +70,18 @@ TEST(MessageContent,
 }
 
 TEST(MessageContent,
-     LessThanOperatorShouldUseCaseInsensitiveLexicographicalComparison) {
+     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparison) {
   MessageContent content1("content");
-  MessageContent content2("Content", french);
+  MessageContent content2("content", french);
 
   EXPECT_FALSE(content1 < content2);
   EXPECT_FALSE(content2 < content1);
+
+  content1 = MessageContent("content", french);
+  content2 = MessageContent("Content");
+
+  EXPECT_FALSE(content1 < content2);
+  EXPECT_TRUE(content2 < content1);
 
   content1 = MessageContent("content1", french);
   content2 = MessageContent("content2");

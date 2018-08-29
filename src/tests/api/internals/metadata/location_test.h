@@ -47,11 +47,16 @@ TEST(Location, stringsConstructorShouldStoreGivenStrings) {
   EXPECT_EQ("example", location.GetName());
 }
 
-TEST(Location, locationsWithCaseInsensitiveEqualUrlsShouldBeEqual) {
+TEST(Location, locationsWithCaseSensitiveEqualUrlsShouldBeEqual) {
   Location location1("http://www.example.com", "example1");
-  Location location2("HTTP://WWW.EXAMPLE.COM", "example2");
+  Location location2("http://www.example.com", "example2");
 
   EXPECT_TRUE(location1 == location2);
+
+  location1 = Location("http://www.example.com");
+  location2 = Location("HTTP://WWW.EXAMPLE.COM");
+
+  EXPECT_FALSE(location1 == location2);
 }
 
 TEST(Location, locationsWithDifferentUrlsShouldBeUnequal) {
@@ -62,12 +67,18 @@ TEST(Location, locationsWithDifferentUrlsShouldBeUnequal) {
 }
 
 TEST(Location,
-     lessThanOperatorShouldUseCaseInsensitiveLexicographicalUrlComparison) {
+     lessThanOperatorShouldUseCaseSensitiveLexicographicalUrlComparison) {
   Location location1("http://www.example.com", "example1");
-  Location location2("HTTP://WWW.EXAMPLE.COM", "example2");
+  Location location2("http://www.example.com", "example2");
 
   EXPECT_FALSE(location1 < location2);
   EXPECT_FALSE(location2 < location1);
+
+  location1 = Location("http://www.example.com");
+  location2 = Location("HTTP://WWW.EXAMPLE.COM");
+
+  EXPECT_FALSE(location1 < location2);
+  EXPECT_TRUE(location2 < location1);
 
   location1 = Location("http://www.example1.com");
   location2 = Location("http://www.example2.com");

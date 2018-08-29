@@ -24,8 +24,6 @@
 
 #include "loot/metadata/location.h"
 
-#include <boost/algorithm/string.hpp>
-
 namespace loot {
 Location::Location() {}
 
@@ -34,11 +32,11 @@ Location::Location(const std::string& url, const std::string& name) :
     name_(name) {}
 
 bool Location::operator<(const Location& rhs) const {
-  return boost::ilexicographical_compare(url_, rhs.GetURL());
+  return url_ < rhs.url_;
 }
 
 bool Location::operator==(const Location& rhs) const {
-  return boost::iequals(url_, rhs.GetURL());
+  return url_ == rhs.url_;
 }
 
 std::string Location::GetURL() const { return url_; }

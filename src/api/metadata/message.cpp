@@ -59,18 +59,11 @@ Message::Message(const MessageType type,
 }
 
 bool Message::operator<(const Message& rhs) const {
-  if (!content_.empty() && !rhs.GetContent().empty())
-    return boost::ilexicographical_compare(
-        GetContent(MessageContent::defaultLanguage).GetText(),
-        rhs.GetContent(MessageContent::defaultLanguage).GetText());
-  else if (content_.empty() && !rhs.GetContent().empty())
-    return true;
-  else
-    return false;
+  return content_ < rhs.GetContent();
 }
 
 bool Message::operator==(const Message& rhs) const {
-  return (content_ == rhs.GetContent());
+  return content_ == rhs.GetContent();
 }
 
 MessageType Message::GetType() const { return type_; }

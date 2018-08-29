@@ -57,12 +57,8 @@ If a message's ``content`` value is a string, the message will use the string as
 Equality
 --------
 
-The equality of two message data structures is determined by comparing the values of their ``content`` keys. As the values of the keys can be different types, a comparison value is selected for each message using the following logic:
-
-* If a value's type is a localised content list, then the English content string in that list is selected as the comparison value.
-* If a value's type is a string, then that string is selected as the comparison value.
-
-The two message data structures are then equal if their lowercased comparison values are identical.
+The equality of two message data structures is determined by comparing the values of their ``content`` keys. If a content key is a string, it is treated as a localised content list
+containing a single English-language string. The two message data structures are then equal if their localised content lists are identical.
 
 Examples
 --------

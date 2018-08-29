@@ -54,15 +54,14 @@ public:
   /**
    * A less-than operator implemented with no semantics so that Location objects
    * can be stored in sets.
-   * @returns True if this Location's URL is case-insensitively
-   *          lexicographically less than the given Location's URL, false
-   *          otherwise.
+   * @returns True if this Location's URL string is lexicographically less than
+   *          the given Location's URL string, false otherwise.
    */
   LOOT_API bool operator<(const Location& rhs) const;
 
   /**
    * Check if two Location objects are equal by comparing their URLs.
-   * @returns True if the URLs are case-insensitively equal, false otherwise.
+   * @returns True if the URL strings are equal, false otherwise.
    */
   LOOT_API bool operator==(const Location& rhs) const;
 

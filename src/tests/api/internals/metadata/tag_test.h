@@ -52,10 +52,15 @@ TEST(Tag, dataConstructorShouldSetFieldsToGivenValues) {
 
 TEST(Tag,
      tagsWithCaseInsensitiveEqualNamesAndEqualAdditionStatesShouldBeEqual) {
-  Tag tag1("Name", true, "condition1");
+  Tag tag1("name", true, "condition1");
   Tag tag2("name", true, "condition2");
 
   EXPECT_TRUE(tag1 == tag2);
+
+  tag1 = Tag("name");
+  tag2 = Tag("Name");
+
+  EXPECT_FALSE(tag1 == tag2);
 }
 
 TEST(Tags, tagsWithUnequalNamesShouldNotBeEqual) {
@@ -74,12 +79,18 @@ TEST(Tag, tagsWithUnequalAdditionStatesShouldNotBeEqual) {
 
 TEST(
     Tag,
-    lessThanOperatorShouldCaseInsensitivelyLexicographicallyCompareNameStrings) {
-  Tag tag1("Name");
+    lessThanOperatorShouldCaseSensitivelyLexicographicallyCompareNameStrings) {
+  Tag tag1("name");
   Tag tag2("name");
 
   EXPECT_FALSE(tag1 < tag2);
   EXPECT_FALSE(tag2 < tag1);
+
+  tag1 = Tag("name");
+  tag2 = Tag("Name");
+
+  EXPECT_FALSE(tag1 < tag2);
+  EXPECT_TRUE(tag2 < tag1);
 
   tag1 = Tag("name1");
   tag2 = Tag("name2");

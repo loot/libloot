@@ -79,11 +79,8 @@ public:
   /**
    * A less-than operator implemented with no semantics so that Message objects
    * can be stored in sets.
-   * @returns If both messages have content, returns true if this Message's
-   *          English text is case-insensitively lexicographically less than the
-   *          given Message's English text, and false otherwise.
-   *          Otherwise returns true if this Message has no content, and false
-   *          otherwise.
+   * @returns Returns true if this Message's content is lexicographically less
+   *          than the given Message's content, and false otherwise.
    */
   LOOT_API bool operator<(const Message& rhs) const;
 

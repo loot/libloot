@@ -41,11 +41,11 @@ std::string MessageContent::GetText() const { return text_; }
 std::string MessageContent::GetLanguage() const { return language_; }
 
 bool MessageContent::operator<(const MessageContent& rhs) const {
-  return boost::ilexicographical_compare(text_, rhs.GetText());
+  return text_ < rhs.text_;
 }
 
 bool MessageContent::operator==(const MessageContent& rhs) const {
-  return (boost::iequals(text_, rhs.GetText()));
+  return text_ == rhs.text_;
 }
 MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
                                       const std::string& language) {

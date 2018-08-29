@@ -62,17 +62,15 @@ public:
    * can be stored in sets.
    * @returns True if this Tag is suggested for addition and the other is not.
    *          If both Tags are suggested for addition or both are suggested for
-   *          removal, returns true if this Tag's name is case-insensitively
-   *          lexicographically less than the given Tag's name, false
-   *          otherwise.
+   *          removal, returns true if this Tag's name is lexicographically less
+   *          than the given Tag's name, false otherwise.
    */
   LOOT_API bool operator<(const Tag& rhs) const;
 
   /**
    * Check if two Tag objects are equal.
    * @returns True if both Tags are suggested for addition or both are suggested
-   *          for removal, and the Tag names are case-insensitively equal, false
-   *          otherwise.
+   *          for removal, and the Tag names are equal, false otherwise.
    */
   LOOT_API bool operator==(const Tag& rhs) const;
 
