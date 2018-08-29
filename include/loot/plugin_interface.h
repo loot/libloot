@@ -46,12 +46,6 @@ public:
   virtual std::string GetName() const = 0;
 
   /**
-   * Get the plugin's filename in lowercase characters.
-   * @return The lowercased plugin filename.
-   */
-  virtual std::string GetLowercasedName() const = 0;
-
-  /**
    * Get the plugin's version number from its description field.
    *
    * The description field may not contain a version number, or LOOT may be
@@ -114,23 +108,6 @@ public:
    *         FormID, false otherwise.
    */
   virtual bool DoFormIDsOverlap(const PluginInterface& plugin) const = 0;
-};
-}
-
-namespace std {
-/**
- * A specialisation of std::hash for loot::PluginInterface.
- */
-template<>
-struct hash<loot::PluginInterface> {
-  /**
-   * Calculate a hash value for an object of a class that implements
-   * loot::PluginInterface.
-   * @return The hash generated from the plugin's lowercased filename.
-   */
-  size_t operator()(const loot::PluginInterface& plugin) const {
-    return hash<string>()(plugin.GetLowercasedName());
-  }
 };
 }
 
