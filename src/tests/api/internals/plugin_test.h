@@ -38,6 +38,7 @@ protected:
       emptyFile("EmptyFile.esm"),
       lowercaseBlankEsp("blank.esp"),
       nonAsciiEsp(u8"non\u00C1scii.esp"),
+      otherNonAsciiEsp(u8"other non\u00C1scii.esp"),
       game_(GetParam(), dataPath.parent_path(), localPath),
       blankArchive("Blank" + GetArchiveFileExtension(game_.Type())),
       blankSuffixArchive("Blank - Different - suffix" +
@@ -58,9 +59,11 @@ protected:
                                             dataPath / lowercaseBlankEsp));
 #endif
 
-    // Make sure the plugin with a non-ASCII filename exists.
+    // Make sure the plugins with non-ASCII filenames exists.
     ASSERT_NO_THROW(std::filesystem::copy_file(dataPath / blankEsp,
       dataPath / std::filesystem::u8path(nonAsciiEsp)));
+    ASSERT_NO_THROW(std::filesystem::copy_file(dataPath / blankEsp,
+      dataPath / std::filesystem::u8path(otherNonAsciiEsp)));
 
     if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
       ASSERT_NO_THROW(
@@ -73,13 +76,18 @@ protected:
     out.open(dataPath / blankSuffixArchive);
     out.close();
 
-    auto nonAsciiArchivePath = dataPath / std::filesystem::u8path(u8"non\u00C1scii" + GetArchiveFileExtension(game_.Type()));
+    auto nonAsciiArchivePath = dataPath / std::filesystem::u8path(u8"non\u00E1scii" + GetArchiveFileExtension(game_.Type()));
     out.open(nonAsciiArchivePath);
+    out.close();
+
+    auto nonAsciiPrefixArchivePath = dataPath / std::filesystem::u8path(u8"other non\u00E1scii2 - suffix" + GetArchiveFileExtension(game_.Type()));
+    out.open(nonAsciiPrefixArchivePath);
     out.close();
 
     game_.GetCache()->CacheArchivePath(dataPath / blankArchive);
     game_.GetCache()->CacheArchivePath(dataPath / blankSuffixArchive);
     game_.GetCache()->CacheArchivePath(dataPath / nonAsciiArchivePath);
+    game_.GetCache()->CacheArchivePath(dataPath / nonAsciiPrefixArchivePath);
   }
 
   uintmax_t getGhostedPluginFileSize() {
@@ -101,6 +109,7 @@ protected:
   const std::string emptyFile;
   const std::string lowercaseBlankEsp;
   const std::string nonAsciiEsp;
+  const std::string otherNonAsciiEsp;
   const std::string blankArchive;
   const std::string blankSuffixArchive;
 
@@ -281,6 +290,7 @@ TEST_P(
     EXPECT_TRUE(loadsArchive);
 }
 
+#ifdef _WIN32
 TEST_P(
     PluginTest,
     loadsArchiveForAnArchiveThatExactlyMatchesANonAsciiEspFileBasenameShouldReturnTrue) {
@@ -291,6 +301,7 @@ TEST_P(
                      true)
                   .LoadsArchive());
 }
+#endif
 
 TEST_P(
   PluginTest,
@@ -334,6 +345,24 @@ TEST_P(
   else
     EXPECT_TRUE(loadsArchive);
 }
+
+#ifdef _WIN32
+TEST_P(
+  PluginTest,
+  loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheNonAsciiEspFileBasenameShouldReturnTrueForAllGamesExceptSkyrim) {
+  bool loadsArchive = Plugin(game_.Type(),
+    game_.GetCache(),
+    game_.GetLoadOrderHandler(),
+    game_.DataPath() / std::filesystem::u8path(otherNonAsciiEsp),
+    true)
+    .LoadsArchive();
+
+  if (GetParam() == GameType::tes5)
+    EXPECT_FALSE(loadsArchive);
+  else
+    EXPECT_TRUE(loadsArchive);
+}
+#endif
 
 TEST_P(PluginTest,
        loadsArchiveShouldReturnFalseForAPluginThatDoesNotLoadAnArchive) {

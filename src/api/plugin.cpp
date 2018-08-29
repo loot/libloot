@@ -264,7 +264,6 @@ uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
 
 bool Plugin::operator<(const Plugin& rhs) const {
   return boost::ilexicographical_compare(name_, rhs.name_);
-  ;
 }
 
 bool Plugin::IsActive() const { return isActive_; }
@@ -314,24 +313,48 @@ std::string GetArchiveFileExtension(const GameType gameType) {
     return ".bsa";
 }
 
+std::filesystem::path replaceExtension(std::filesystem::path path, const std::string& newExtension) {
+  return path.replace_extension(std::filesystem::u8path(newExtension));
+}
+
+bool equivalent(const std::filesystem::path& path1, const std::filesystem::path& path2) {
+  try {
+    return std::filesystem::equivalent(path1, path2);
+  } catch (std::filesystem::filesystem_error) {
+    // One of the paths checked for equivalence doesn't exist,
+    // so they can't be equivalent.
+    return false;
+  }
+}
+
+// Get whether the plugin loads an archive (BSA/BA2) or not.
 bool Plugin::LoadsArchive(const GameType gameType,
                           const std::shared_ptr<GameCache> gameCache,
                           const std::filesystem::path& pluginPath) {
-  // Get whether the plugin loads an archive (BSA/BA2) or not.
   const string archiveExtension = GetArchiveFileExtension(gameType);
-  auto pluginName = pluginPath.filename().u8string();
 
   if (gameType == GameType::tes5) {
     // Skyrim plugins only load BSAs that exactly match their basename.
-    auto filename = pluginName.substr(0, pluginName.length() - 4) + archiveExtension;
-    return std::filesystem::exists(pluginPath.parent_path() / std::filesystem::u8path(filename));
+    return std::filesystem::exists(replaceExtension(pluginPath, archiveExtension));
   } else if (gameType != GameType::tes4 ||
-             boost::iends_with(pluginName, ".esp")) {
+             boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
     // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
     // begin with the plugin basename.
-    string basename = pluginName.substr(0, pluginName.length() - 4);
+
+    auto basenameLength = pluginPath.stem().native().length();
+    auto pluginExtension = pluginPath.extension().native();
+
     for (const auto& archivePath : gameCache->GetArchivePaths()) {
-      if (boost::istarts_with(archivePath.filename().u8string(), basename)) {
+      // Need to check if it starts with the given plugin's basename,
+      // but case insensitively. This is hard to do accurately, so
+      // instead check if the plugin with the same length basename and
+      // and the given plugin's file extension is equivalent.
+      auto bsaPluginFilename =
+          archivePath.filename().native().substr(0, basenameLength) +
+          pluginExtension;
+      auto bsaPluginPath =
+          pluginPath.parent_path() / bsaPluginFilename;
+      if (loot::equivalent(pluginPath, bsaPluginPath)) {
         return true;
       }
     }

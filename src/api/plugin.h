@@ -103,6 +103,10 @@ private:
 std::string GetArchiveFileExtension(const GameType gameType);
 
 bool hasPluginFileExtension(const std::string& filename, GameType gameType);
+
+bool equivalent(const std::filesystem::path& path1, const std::filesystem::path& path2);
+
+std::filesystem::path replaceExtension(std::filesystem::path path, const std::string& newExtension);
 }
 
 #endif

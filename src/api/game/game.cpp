@@ -253,7 +253,7 @@ void Game::CacheArchives() {
     // file extension with the archive extension resolves to the same file.
     // Could use boost::iends_with, but it's less obvious here that the
     // test string is ASCII-only.
-    if (boost::iequals(it->path().extension().u8string(), archiveFileExtension)) {
+    if (loot::equivalent(it->path(), replaceExtension(it->path(), archiveFileExtension))) {
       cache_->CacheArchivePath(it->path());
     }
   }
