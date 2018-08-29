@@ -24,7 +24,7 @@
 
 #include "loot/metadata/file.h"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/locale.hpp>
 
 #include "api/metadata/yaml/file.h"
 
@@ -39,11 +39,11 @@ File::File(const std::string& name,
     ConditionalMetadata(condition) {}
 
 bool File::operator<(const File& rhs) const {
-  return boost::ilexicographical_compare(GetName(), rhs.GetName());
+  return boost::locale::to_lower(name_) < boost::locale::to_lower(rhs.name_);
 }
 
 bool File::operator==(const File& rhs) const {
-  return boost::iequals(GetName(), rhs.GetName());
+  return boost::locale::to_lower(name_) == boost::locale::to_lower(rhs.name_);
 }
 
 std::string File::GetName() const { return name_; }

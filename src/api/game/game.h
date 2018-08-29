@@ -86,7 +86,7 @@ private:
   const GameType type_;
   const std::filesystem::path gamePath_;
 
-  std::string masterFile_;
+  std::string lowercasedMasterFilename_;
 };
 }
 #endif

@@ -276,8 +276,9 @@ bool PluginMetadata::IsRegexPlugin() const {
 }
 
 bool PluginMetadata::operator==(const PluginMetadata& rhs) const {
-  if (IsRegexPlugin() == rhs.IsRegexPlugin())
-    return boost::iequals(name_, rhs.GetName());
+  if (IsRegexPlugin() == rhs.IsRegexPlugin()) {
+    return GetLowercasedName() == rhs.GetLowercasedName();
+  }
 
   if (IsRegexPlugin())
     return regex_match(rhs.GetName(),
@@ -292,11 +293,7 @@ bool PluginMetadata::operator!=(const PluginMetadata& rhs) const {
 }
 
 bool PluginMetadata::operator==(const std::string& rhs) const {
-  if (IsRegexPlugin())
-    return regex_match(PluginMetadata(rhs).GetName(),
-                       regex(name_, regex::ECMAScript | regex::icase));
-  else
-    return boost::iequals(name_, PluginMetadata(rhs).GetName());
+  return *this == PluginMetadata(rhs);
 }
 
 bool PluginMetadata::operator!=(const std::string& rhs) const {

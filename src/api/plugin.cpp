@@ -263,7 +263,7 @@ uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
 }
 
 bool Plugin::operator<(const Plugin& rhs) const {
-  return boost::ilexicographical_compare(name_, rhs.name_);
+  return GetLowercasedName() < rhs.GetLowercasedName();
 }
 
 bool Plugin::IsActive() const { return isActive_; }

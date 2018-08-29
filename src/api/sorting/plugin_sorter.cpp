@@ -275,9 +275,10 @@ void PluginSorter::AddPluginVertices(Game& game) {
 
 bool PluginSorter::GetVertexByName(const std::string& name,
                                    vertex_t& vertexOut) const {
+  auto lowercasedName = boost::locale::to_lower(name);
   for (const auto& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
-    if (boost::iequals(graph_[vertex].GetName(), name)) {
+    if (graph_[vertex].GetLowercasedName() == lowercasedName) {
       vertexOut = vertex;
       return true;
     }

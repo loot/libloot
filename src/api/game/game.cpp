@@ -29,6 +29,7 @@
 #include <thread>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/locale.hpp>
 
 #include "api/api_database.h"
 #include "api/helpers/logging.h"
@@ -169,7 +170,8 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
           logger->trace("Loading {}", pluginName);
         }
         const bool loadHeader =
-            boost::iequals(pluginName, masterFile_) || loadHeadersOnly;
+            loadHeadersOnly ||
+            boost::locale::to_lower(pluginName) == lowercasedMasterFilename_;
         try {
           cache_->AddPlugin(Plugin(
               Type(),  cache_, loadOrderHandler_, DataPath() / u8path(pluginName), loadHeader));
@@ -209,7 +211,7 @@ std::set<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
 }
 
 void Game::IdentifyMainMasterFile(const std::string& masterFile) {
-  masterFile_ = masterFile;
+  lowercasedMasterFilename_ = boost::locale::to_lower(masterFile);
 }
 
 std::vector<std::string> Game::SortPlugins(
