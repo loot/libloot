@@ -56,14 +56,21 @@ TEST_P(GameCacheTest, gettingATrueConditionShouldReturnATrueTruePair) {
   EXPECT_NO_THROW(cache_.CacheCondition(condition, true));
 
   EXPECT_EQ(std::make_pair(true, true),
-            cache_.GetCachedCondition(conditionLowercase));
+            cache_.GetCachedCondition(condition));
 }
 
 TEST_P(GameCacheTest, gettingAFalseConditionShouldReturnAFalseTruePair) {
   EXPECT_NO_THROW(cache_.CacheCondition(condition, false));
 
   EXPECT_EQ(std::make_pair(false, true),
-            cache_.GetCachedCondition(conditionLowercase));
+            cache_.GetCachedCondition(condition));
+}
+
+TEST_P(GameCacheTest, gettingACachedConditionShouldBeCaseSensitive) {
+  EXPECT_NO_THROW(cache_.CacheCondition(condition, false));
+
+  EXPECT_EQ(std::make_pair(false, false),
+    cache_.GetCachedCondition(conditionLowercase));
 }
 
 TEST_P(GameCacheTest, gettingANonCachedConditionShouldReturnAFalseFalsePair) {

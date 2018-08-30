@@ -52,14 +52,14 @@ GameCache& GameCache::operator=(const GameCache& cache) {
 
 void GameCache::CacheCondition(const std::string& condition, bool result) {
   lock_guard<mutex> guard(mutex_);
-  conditions_.insert(pair<string, bool>(to_lower(condition), result));
+  conditions_.insert(pair<string, bool>(condition, result));
 }
 
 std::pair<bool, bool> GameCache::GetCachedCondition(
     const std::string& condition) const {
   lock_guard<mutex> guard(mutex_);
 
-  auto it = conditions_.find(to_lower(condition));
+  auto it = conditions_.find(condition);
 
   if (it != conditions_.end())
     return pair<bool, bool>(it->second, true);
