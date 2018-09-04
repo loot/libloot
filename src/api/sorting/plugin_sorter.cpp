@@ -457,7 +457,7 @@ bool shouldIgnorePlugin(
         groupPluginsToIgnore) {
   auto pluginsToIgnore = groupPluginsToIgnore.find(group);
   if (pluginsToIgnore != groupPluginsToIgnore.end()) {
-    return pluginsToIgnore->second.count(boost::to_lower_copy(pluginName)) > 0;
+    return pluginsToIgnore->second.count(pluginName) > 0;
   }
 
   return false;
@@ -478,15 +478,13 @@ void ignorePlugin(const std::string& pluginName,
                   const std::unordered_set<std::string>& groups,
                   std::map<std::string, std::unordered_set<std::string>>&
                       groupPluginsToIgnore) {
-  auto lowercasePluginName = boost::to_lower_copy(pluginName);
-
   for (const auto& group : groups) {
     auto pluginsToIgnore = groupPluginsToIgnore.find(group);
     if (pluginsToIgnore != groupPluginsToIgnore.end()) {
-      pluginsToIgnore->second.insert(lowercasePluginName);
+      pluginsToIgnore->second.insert(pluginName);
     } else {
       groupPluginsToIgnore.emplace(
-          group, std::unordered_set<std::string>({lowercasePluginName}));
+          group, std::unordered_set<std::string>({ pluginName }));
     }
   }
 }
