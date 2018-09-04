@@ -73,7 +73,15 @@ template<>
 struct less<std::shared_ptr<const loot::Plugin>> {
   bool operator()(const std::shared_ptr<const loot::Plugin>& lhs,
                   const std::shared_ptr<const loot::Plugin>& rhs) const {
-    return lhs->GetLowercasedName() < rhs->GetLowercasedName();
+    if (!lhs) {
+      return false;
+    }
+
+    if (!rhs) {
+      return true;
+    }
+
+    return *lhs < *rhs;
   }
 };
 }

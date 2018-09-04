@@ -50,7 +50,6 @@ public:
          const bool headerOnly);
 
   std::string GetName() const;
-  std::string GetLowercasedName() const;
   std::optional<std::string> GetVersion() const;
   std::vector<std::string> GetMasters() const;
   std::set<Tag> GetBashTags() const;

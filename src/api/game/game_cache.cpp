@@ -109,11 +109,13 @@ std::optional<std::shared_ptr<const Plugin>> GameCache::GetPlugin(
 void GameCache::AddPlugin(const Plugin&& plugin) {
   lock_guard<mutex> lock(mutex_);
 
-  auto it = plugins_.find(plugin.GetLowercasedName());
+  auto lowercasedName = to_lower(plugin.GetName());
+
+  auto it = plugins_.find(lowercasedName);
   if (it != end(plugins_))
     plugins_.erase(it);
 
-  plugins_.emplace(plugin.GetLowercasedName(),
+  plugins_.emplace(lowercasedName,
                    std::make_shared<Plugin>(std::move(plugin)));
 }
 

@@ -131,10 +131,6 @@ Plugin::Plugin(const GameType gameType,
 
 std::string Plugin::GetName() const { return name_; }
 
-std::string Plugin::GetLowercasedName() const {
-  return boost::locale::to_lower(name_);
-}
-
 std::optional<std::string> Plugin::GetVersion() const {
   std::string version = Version(GetDescription()).AsString();
   if (version.empty()) {
@@ -263,7 +259,7 @@ uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
 }
 
 bool Plugin::operator<(const Plugin& rhs) const {
-  return GetLowercasedName() < rhs.GetLowercasedName();
+  return boost::locale::to_lower(name_) < boost::locale::to_lower(rhs.name_);
 }
 
 bool Plugin::IsActive() const { return isActive_; }
