@@ -125,7 +125,6 @@ private:
 class OtherPluginType : public PluginInterface {
 public:
   std::string GetName() const { return ""; }
-  std::string GetLowercasedName() const { return ""; }
   std::optional<std::string> GetVersion() const { return std::nullopt; }
   std::vector<std::string> GetMasters() const {
     return std::vector<std::string>();
