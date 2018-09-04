@@ -353,6 +353,7 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex,
 }
 
 void PluginSorter::AddHardcodedPluginEdges(Game& game) {
+  using std::filesystem::u8path;
   if (logger_) {
     logger_->trace("Adding hardcoded plugin edges.");
   }
@@ -360,12 +361,24 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
   auto implicitlyActivePlugins =
       game.GetLoadOrderHandler()->GetImplicitlyActivePlugins();
 
-  std::set<std::string> processedPlugins;
+  std::set<std::filesystem::path> processedPluginPaths;
   for (const auto& plugin : implicitlyActivePlugins) {
-    auto lowercasedName = boost::locale::to_lower(plugin);
-    processedPlugins.insert(lowercasedName);
+    auto pluginPath = game.DataPath() / u8path(plugin);
 
-    if (game.Type() == GameType::tes5 && lowercasedName == "update.esm") {
+    try {
+      processedPluginPaths.insert(std::filesystem::canonical(pluginPath));
+    }
+    catch (std::filesystem::filesystem_error&) {
+      if (logger_) {
+        logger_->trace(
+          "Skipping adding hardcoded plugin edges for \"{}\" as it is not "
+          "installed.",
+          plugin);
+      }
+      continue;
+    }
+
+    if (game.Type() == GameType::tes5 && loot::equivalent(plugin, "update.esm")) {
       if (logger_) {
         logger_->trace(
             "Skipping adding hardcoded plugin edges for Update.esm as it does "
@@ -379,7 +392,7 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
     if (!GetVertexByName(plugin, pluginVertex)) {
       if (logger_) {
         logger_->trace(
-            "Skipping adding harcoded plugin edges for \"{}\" as it is not "
+            "Skipping adding hardcoded plugin edges for \"{}\" as it is not "
             "installed.",
             plugin);
       }
@@ -390,7 +403,16 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
     for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
       auto& graphPlugin = graph_[*vit];
 
-      if (processedPlugins.count(graphPlugin.GetLowercasedName()) == 0) {
+      auto graphPluginPath = game.DataPath() / u8path(graphPlugin.GetName());
+      if (!std::filesystem::exists(graphPluginPath)) {
+        graphPluginPath += ".ghost";
+      }
+
+      if (!std::filesystem::exists(graphPluginPath)) {
+        continue;
+      }
+
+      if (processedPluginPaths.count(std::filesystem::canonical(graphPluginPath)) == 0) {
         AddEdge(pluginVertex, *vit);
       }
     }
