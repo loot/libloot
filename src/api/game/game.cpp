@@ -29,7 +29,6 @@
 #include <thread>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/locale.hpp>
 
 #include "api/api_database.h"
 #include "api/helpers/logging.h"
@@ -161,6 +160,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   if (logger) {
     logger->trace("Starting plugin loading.");
   }
+  auto masterPath = DataPath() / u8path(masterFilename_);
   vector<thread> threads;
   while (threads.size() < threadsToUse) {
     vector<string>& pluginGroup = pluginGroups[threads.size()];
@@ -169,12 +169,12 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
         if (logger) {
           logger->trace("Loading {}", pluginName);
         }
+        auto pluginPath = DataPath() / u8path(pluginName);
         const bool loadHeader =
-            loadHeadersOnly ||
-            boost::locale::to_lower(pluginName) == lowercasedMasterFilename_;
+          loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
         try {
           cache_->AddPlugin(Plugin(
-              Type(),  cache_, loadOrderHandler_, DataPath() / u8path(pluginName), loadHeader));
+              Type(), cache_, loadOrderHandler_, pluginPath, loadHeader));
         } catch (std::exception& e) {
           if (logger) {
             logger->error(
@@ -211,7 +211,7 @@ std::set<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
 }
 
 void Game::IdentifyMainMasterFile(const std::string& masterFile) {
-  lowercasedMasterFilename_ = boost::locale::to_lower(masterFile);
+  masterFilename_ = masterFile;
 }
 
 std::vector<std::string> Game::SortPlugins(
