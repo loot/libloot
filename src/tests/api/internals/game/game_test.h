@@ -33,6 +33,13 @@ namespace loot {
 namespace test {
 class GameTest : public CommonGameTestFixture {
 protected:
+  GameTest() :
+    blankArchive("Blank" + GetArchiveFileExtension(GetParam())) {
+
+    boost::filesystem::ofstream out(dataPath / blankArchive);
+    out.close();
+  }
+
   void loadInstalledPlugins(Game& game, bool headersOnly) {
     const std::vector<std::string> plugins({
         masterFile,
@@ -49,6 +56,8 @@ protected:
     });
     game.LoadPlugins(plugins, headersOnly);
   }
+
+  const std::string blankArchive;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -145,6 +154,27 @@ TEST_P(GameTest,
 
   // Check that not only the header has been read.
   EXPECT_EQ(blankEsmCrc, plugin->GetCRC());
+}
+
+TEST_P(GameTest,
+  loadPluginsShouldFindAndCacheArchivesForLoadDetectionWhenLoadingPlugins) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  EXPECT_NO_THROW(loadInstalledPlugins(game, false));
+
+  auto expected = std::set<boost::filesystem::path>({
+    dataPath / blankArchive
+  });
+  EXPECT_EQ(expected, game.GetCache()->GetArchivePaths());
+}
+
+TEST_P(GameTest,
+  loadPluginsShouldClearTheArchivesCacheBeforeFindingArchives) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  EXPECT_NO_THROW(loadInstalledPlugins(game, false));
+  EXPECT_NO_THROW(loadInstalledPlugins(game, false));
+  EXPECT_EQ(1, game.GetCache()->GetArchivePaths().size());
 }
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasNotBeenLoaded) {

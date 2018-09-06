@@ -100,6 +100,18 @@ void GameCache::AddPlugin(const Plugin&& plugin) {
                    std::make_shared<Plugin>(std::move(plugin)));
 }
 
+std::set<boost::filesystem::path> GameCache::GetArchivePaths() const
+{
+  return archivePaths_;
+}
+
+void GameCache::CacheArchivePath(const boost::filesystem::path& path)
+{
+  lock_guard<mutex> lock(mutex_);
+
+  archivePaths_.insert(path);
+}
+
 void GameCache::ClearCachedConditions() {
   lock_guard<mutex> guard(mutex_);
 
@@ -110,5 +122,11 @@ void GameCache::ClearCachedPlugins() {
   lock_guard<mutex> guard(mutex_);
 
   plugins_.clear();
+}
+
+void GameCache::ClearCachedArchivePaths() {
+  lock_guard<mutex> guard(mutex_);
+
+  archivePaths_.clear();
 }
 }

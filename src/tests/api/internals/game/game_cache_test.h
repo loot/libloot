@@ -73,6 +73,7 @@ TEST_P(GameCacheTest, gettingANonCachedConditionShouldReturnAFalseFalsePair) {
 TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
+                          std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           true));
@@ -83,6 +84,7 @@ TEST_P(GameCacheTest,
        addingAPluginThatIsAlreadyCachedShouldOverwriteExistingEntry) {
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
+                          std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           true));
@@ -90,6 +92,7 @@ TEST_P(GameCacheTest,
 
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
+                          std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           false));
@@ -103,6 +106,7 @@ TEST_P(GameCacheTest, gettingAPluginThatIsNotCachedShouldThrow) {
 TEST_P(GameCacheTest, gettingAPluginShouldBeCaseInsensitive) {
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
+                          std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           true));
@@ -118,16 +122,36 @@ TEST_P(GameCacheTest,
        gettingPluginsShouldReturnASetOfCachedPluginsIfPluginsHaveBeenCached) {
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
+                          std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           true));
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
+                          std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
                           blankMasterDependentEsm,
                           true));
 
   EXPECT_FALSE(cache_.GetPlugins().empty());
+}
+
+TEST_P(GameCacheTest,
+  gettingArchivePathsShouldReturnAnEmptySetIfNoPathsHaveBeenCached) {
+  EXPECT_TRUE(cache_.GetArchivePaths().empty());
+}
+
+TEST_P(GameCacheTest,
+  gettingArchivePathsShouldReturnASetOfPathsIfPathsHaveBeenCached) {
+  cache_.CacheArchivePath(game_.DataPath() / blankEsm);
+  cache_.CacheArchivePath(game_.DataPath() / blankMasterDependentEsm);
+
+  auto expected = std::set<boost::filesystem::path>({
+    game_.DataPath() / blankEsm,
+    game_.DataPath() / blankMasterDependentEsm,
+  });
+
+  EXPECT_EQ(expected, cache_.GetArchivePaths());
 }
 
 TEST_P(GameCacheTest,
@@ -151,12 +175,25 @@ TEST_P(GameCacheTest, clearingCachedPluginsShouldNotThrowIfNoPluginsAreCached) {
 TEST_P(GameCacheTest, clearingCachedPluginsShouldClearAnyCachedPlugins) {
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
+                          std::make_shared<GameCache>(GameCache()),
                           game_.GetLoadOrderHandler(),
                           blankEsm,
                           true));
   cache_.ClearCachedPlugins();
 
   EXPECT_TRUE(cache_.GetPlugins().empty());
+}
+
+TEST_P(GameCacheTest,
+  clearingCachedArchivePathsShouldNotThrowIfNoPathsAreCached) {
+  EXPECT_NO_THROW(cache_.GetArchivePaths());
+}
+
+TEST_P(GameCacheTest, clearingCachedArchivePathsShouldClearAnyCachedPaths) {
+  cache_.CacheArchivePath(game_.DataPath() / blankEsm);
+  cache_.ClearCachedArchivePaths();
+
+  EXPECT_TRUE(cache_.GetArchivePaths().empty());
 }
 }
 }

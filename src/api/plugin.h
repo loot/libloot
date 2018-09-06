@@ -39,10 +39,13 @@
 #include "loot/plugin_interface.h"
 
 namespace loot {
+class GameCache;
+
 class Plugin : public PluginInterface {
 public:
   Plugin(const GameType gameType,
          const boost::filesystem::path& dataPath,
+         std::shared_ptr<GameCache> gameCache,
          std::shared_ptr<LoadOrderHandler> loadOrderHandler,
          const std::string& name,
          const bool headerOnly);
@@ -80,9 +83,9 @@ private:
             bool headerOnly);
   std::string GetDescription() const;
 
-  static std::string GetArchiveFileExtension(const GameType gameType);
   static bool LoadsArchive(const std::string& pluginName,
                            const GameType gameType,
+                           const std::shared_ptr<GameCache> gameCache,
                            const boost::filesystem::path& dataPath);
   static unsigned int GetEspluginGameId(GameType gameType);
 
@@ -100,6 +103,8 @@ private:
 
   std::shared_ptr<std::remove_pointer<::Plugin>::type> esPlugin;
 };
+
+std::string GetArchiveFileExtension(const GameType gameType);
 
 bool hasPluginFileExtension(const std::string& filename, GameType gameType);
 }

@@ -149,8 +149,12 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
     ++currentGroup;
   }
 
-  // Clear the existing plugin cache.
+  // Clear the existing plugin and archive caches.
   cache_->ClearCachedPlugins();
+  cache_->ClearCachedArchivePaths();
+
+  // Search for and cache archives.
+  CacheArchives();
 
   // Load the plugins.
   if (logger) {
@@ -168,7 +172,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
             boost::iequals(pluginName, masterFile_) || loadHeadersOnly;
         try {
           cache_->AddPlugin(Plugin(
-              Type(), DataPath(), loadOrderHandler_, pluginName, loadHeader));
+              Type(), DataPath(), cache_, loadOrderHandler_, pluginName, loadHeader));
         } catch (std::exception& e) {
           if (logger) {
             logger->error(
@@ -237,5 +241,21 @@ std::vector<std::string> Game::GetLoadOrder() const {
 
 void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
   loadOrderHandler_->SetLoadOrder(loadOrder);
+}
+
+void Game::CacheArchives() {
+  const auto archiveFileExtension = GetArchiveFileExtension(Type());
+
+  for (boost::filesystem::directory_iterator it(DataPath());
+    it != boost::filesystem::directory_iterator();
+    ++it) {
+    // Check if the path is an archive by checking if replacing its
+    // file extension with the archive extension resolves to the same file.
+    // Could use boost::iends_with, but it's less obvious here that the
+    // test string is ASCII-only.
+    if (boost::iequals(it->path().extension().string(), archiveFileExtension)) {
+      cache_->CacheArchivePath(it->path());
+    }
+  }
 }
 }

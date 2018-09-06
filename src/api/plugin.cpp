@@ -42,6 +42,7 @@ using std::string;
 namespace loot {
 Plugin::Plugin(const GameType gameType,
                const boost::filesystem::path& dataPath,
+               std::shared_ptr<GameCache> gameCache,
                std::shared_ptr<LoadOrderHandler> loadOrderHandler,
                const std::string& name,
                const bool headerOnly) :
@@ -118,7 +119,7 @@ Plugin::Plugin(const GameType gameType,
     // Get whether the plugin is active or not.
     isActive_ = loadOrderHandler->IsPluginActive(name_);
 
-    loadsArchive_ = LoadsArchive(name_, gameType, dataPath);
+    loadsArchive_ = LoadsArchive(name_, gameType, gameCache, dataPath);
   } catch (std::exception& e) {
     if (logger) {
       logger->error(
@@ -302,7 +303,7 @@ std::string Plugin::GetDescription() const {
   return descriptionStr;
 }
 
-std::string Plugin::GetArchiveFileExtension(const GameType gameType) {
+std::string GetArchiveFileExtension(const GameType gameType) {
   if (gameType == GameType::fo4 || gameType == GameType::fo4vr)
     return ".ba2";
   else
@@ -311,6 +312,7 @@ std::string Plugin::GetArchiveFileExtension(const GameType gameType) {
 
 bool Plugin::LoadsArchive(const std::string& pluginName,
                           const GameType gameType,
+                          const std::shared_ptr<GameCache> gameCache,
                           const boost::filesystem::path& dataPath) {
   // Get whether the plugin loads an archive (BSA/BA2) or not.
   const string archiveExtension = GetArchiveFileExtension(gameType);
@@ -325,11 +327,8 @@ bool Plugin::LoadsArchive(const std::string& pluginName,
     // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
     // begin with the plugin basename.
     string basename = pluginName.substr(0, pluginName.length() - 4);
-    for (boost::filesystem::directory_iterator it(dataPath);
-         it != boost::filesystem::directory_iterator();
-         ++it) {
-      if (boost::iequals(it->path().extension().string(), archiveExtension) &&
-          boost::istarts_with(it->path().filename().string(), basename)) {
+    for (const auto& archivePath : gameCache->GetArchivePaths()) {
+      if (boost::istarts_with(archivePath.filename().string(), basename)) {
         return true;
       }
     }

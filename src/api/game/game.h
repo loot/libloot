@@ -77,6 +77,8 @@ public:
   void SetLoadOrder(const std::vector<std::string>& loadOrder);
 
 private:
+  void CacheArchives();
+
   std::shared_ptr<GameCache> cache_;
   std::shared_ptr<LoadOrderHandler> loadOrderHandler_;
   std::shared_ptr<DatabaseInterface> database_;

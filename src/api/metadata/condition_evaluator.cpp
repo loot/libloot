@@ -458,7 +458,7 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
       // plugin file.
       if (Plugin::IsValid(filePath, gameType_, dataPath_))
         return Version(
-            Plugin(gameType_, dataPath_, loadOrderHandler_, filePath, true)
+            Plugin(gameType_, dataPath_, gameCache_, loadOrderHandler_, filePath, true)
                 .GetVersion());
 
       return Version(dataPath_ / filePath);
