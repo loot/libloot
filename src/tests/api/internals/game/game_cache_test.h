@@ -70,6 +70,15 @@ TEST_P(GameCacheTest, gettingANonCachedConditionShouldReturnAFalseFalsePair) {
   EXPECT_EQ(std::make_pair(false, false), cache_.GetCachedCondition(condition));
 }
 
+TEST_P(GameCacheTest, gettingACachedCrcShouldReturnTheValue) {
+  cache_.CacheCrc(boost::locale::to_upper(blankEsm), 5);
+  EXPECT_EQ(5, cache_.GetCachedCrc(blankEsm));
+}
+
+TEST_P(GameCacheTest, gettingAnUncachedCrcShouldReturnZero) {
+  EXPECT_EQ(0, cache_.GetCachedCrc(blankEsm));
+}
+
 TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
   cache_.AddPlugin(Plugin(game_.Type(),
                           game_.DataPath(),
@@ -159,13 +168,15 @@ TEST_P(GameCacheTest,
   EXPECT_NO_THROW(cache_.ClearCachedConditions());
 }
 
-TEST_P(GameCacheTest, clearingCachedConditionsShouldClearAnyCachedConditions) {
+TEST_P(GameCacheTest, clearingCachedConditionsShouldClearAnyCachedConditionsAndCrcs) {
   EXPECT_NO_THROW(cache_.CacheCondition(condition, true));
+  cache_.CacheCrc(blankEsm, 5);
 
   EXPECT_NO_THROW(cache_.ClearCachedConditions());
 
   EXPECT_EQ(std::make_pair(false, false),
             cache_.GetCachedCondition(conditionLowercase));
+  EXPECT_EQ(0, cache_.GetCachedCrc(blankEsm));
 }
 
 TEST_P(GameCacheTest, clearingCachedPluginsShouldNotThrowIfNoPluginsAreCached) {

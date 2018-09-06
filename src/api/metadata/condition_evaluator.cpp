@@ -75,25 +75,7 @@ bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData,
   if (shouldParseOnly() || pluginName.empty())
     return false;
 
-  // First need to get plugin's CRC.
-  uint32_t crc = 0;
-
-  // Get the CRC from the game plugin cache if possible.
-  try {
-    crc = gameCache_->GetPlugin(pluginName)->GetCRC();
-  } catch (...) {
-  }
-
-  // Otherwise calculate it from the file.
-  if (crc == 0) {
-    if (boost::filesystem::exists(dataPath_ / pluginName)) {
-      crc = GetCrc32(dataPath_ / pluginName);
-    } else if (boost::filesystem::exists(dataPath_ / (pluginName + ".ghost"))) {
-      crc = GetCrc32(dataPath_ / (pluginName + ".ghost"));
-    }
-  }
-
-  return cleaningData.GetCRC() == crc;
+  return cleaningData.GetCRC() == getCrc(pluginName);
 }
 
 PluginMetadata ConditionEvaluator::evaluateAll(
@@ -256,27 +238,7 @@ bool ConditionEvaluator::checksumMatches(const std::string& filePath,
   if (shouldParseOnly())
     return false;
 
-  uint32_t realChecksum = 0;
-  if (filePath == "LOOT")
-    realChecksum = GetCrc32(boost::filesystem::absolute("LOOT.exe"));
-  else {
-    // CRC could be for a plugin or a file.
-    // Get the CRC from the game plugin cache if possible.
-    try {
-      realChecksum = gameCache_->GetPlugin(filePath)->GetCRC();
-    } catch (...) {
-    }
-
-    if (realChecksum == 0) {
-      if (boost::filesystem::exists(dataPath_ / filePath))
-        realChecksum = GetCrc32(dataPath_ / filePath);
-      else if (hasPluginFileExtension(filePath, gameType_) &&
-               boost::filesystem::exists(dataPath_ / (filePath + ".ghost")))
-        realChecksum = GetCrc32(dataPath_ / (filePath + ".ghost"));
-    }
-  }
-
-  return checksum == realChecksum;
+  return checksum == getCrc(filePath);
 }
 
 bool ConditionEvaluator::compareVersions(const std::string& filePath,
@@ -467,5 +429,42 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
 }
 bool ConditionEvaluator::shouldParseOnly() const {
   return gameCache_ == nullptr || loadOrderHandler_ == nullptr;
+}
+
+uint32_t ConditionEvaluator::getCrc(const std::string & file) const {
+  uint32_t crc = gameCache_->GetCachedCrc(file);
+
+  if (crc != 0) {
+    return crc;
+  }
+
+  if (file == "LOOT") {
+    crc = GetCrc32(boost::filesystem::absolute("LOOT.exe"));
+    gameCache_->CacheCrc(file, crc);
+    return crc;
+  }
+
+  // Get the CRC from the game plugin cache if possible.
+  try {
+    crc = gameCache_->GetPlugin(file)->GetCRC();
+  } catch (...) {
+  }
+
+  // Otherwise calculate it from the file.
+  if (crc == 0) {
+    if (boost::filesystem::exists(dataPath_ / file)) {
+      crc = GetCrc32(dataPath_ / file);
+    }
+    else if (hasPluginFileExtension(file, gameType_) &&
+      boost::filesystem::exists(dataPath_ / (file + ".ghost"))) {
+      crc = GetCrc32(dataPath_ / (file + ".ghost"));
+    }
+  }
+
+  if (crc != 0) {
+    gameCache_->CacheCrc(file, crc);
+  }
+
+  return crc;
 }
 }

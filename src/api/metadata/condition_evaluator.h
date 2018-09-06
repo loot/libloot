@@ -92,6 +92,8 @@ private:
 
   bool shouldParseOnly() const;
 
+  uint32_t getCrc(const std::string& file) const;
+
   const GameType gameType_;
   const boost::filesystem::path dataPath_;
   const std::shared_ptr<GameCache> gameCache_;

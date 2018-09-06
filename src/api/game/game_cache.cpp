@@ -67,6 +67,23 @@ std::pair<bool, bool> GameCache::GetCachedCondition(
     return pair<bool, bool>(false, false);
 }
 
+uint32_t GameCache::GetCachedCrc(const std::string& file) const {
+  lock_guard<mutex> guard(mutex_);
+
+  auto it = crcs_.find(to_lower(file));
+
+  if (it != crcs_.end()) {
+    return it->second;
+  }
+
+  return 0;
+}
+
+void GameCache::CacheCrc(const std::string& file, uint32_t crc) {
+  lock_guard<mutex> guard(mutex_);
+  crcs_.insert(pair<string, uint32_t>(to_lower(file), crc));
+}
+
 std::set<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
   std::set<std::shared_ptr<const Plugin>> output;
   std::transform(
@@ -116,6 +133,7 @@ void GameCache::ClearCachedConditions() {
   lock_guard<mutex> guard(mutex_);
 
   conditions_.clear();
+  crcs_.clear();
 }
 
 void GameCache::ClearCachedPlugins() {
