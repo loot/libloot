@@ -40,7 +40,7 @@
 namespace loot {
 typedef boost::adjacency_list<boost::listS,
                               boost::listS,
-                              boost::directedS,
+                              boost::bidirectionalS,
                               PluginSortingData>
     PluginGraph;
 typedef boost::graph_traits<PluginGraph>::vertex_descriptor vertex_t;

@@ -25,6 +25,7 @@
 #include "plugin_sorter.h"
 
 #include <cstdlib>
+#include <queue>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/breadth_first_search.hpp>
@@ -47,8 +48,6 @@ namespace loot {
 typedef boost::graph_traits<PluginGraph>::vertex_iterator vertex_it;
 typedef boost::graph_traits<PluginGraph>::edge_descriptor edge_t;
 typedef boost::graph_traits<PluginGraph>::edge_iterator edge_it;
-
-class PathFoundException : public std::exception {};
 
 class CycleDetector : public boost::dfs_visitor<> {
 public:
@@ -86,19 +85,6 @@ public:
 
 private:
   list<string> trail;
-};
-
-class PathDetector : public boost::bfs_visitor<> {
-public:
-  PathDetector(vertex_t vertex) : target(vertex) {}
-
-  inline void discover_vertex(vertex_t vertex, const PluginGraph& graph) {
-    if (vertex == target)
-      throw PathFoundException();
-  }
-
-private:
-  vertex_t target;
 };
 
 std::vector<std::string> PluginSorter::Sort(Game& game) {
@@ -306,14 +292,48 @@ void PluginSorter::CheckForCycles() const {
 
 bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
                                     const vertex_t& toVertex) const {
-  try {
-    boost::breadth_first_search(
-        graph_,
-        toVertex,
-        visitor(PathDetector(fromVertex)).vertex_index_map(vertexIndexMap_));
-  } catch (PathFoundException&) {
-    return true;
+  auto start = toVertex;
+  auto end = fromVertex;
+
+  std::queue<vertex_t> forwardQueue;
+  std::queue<vertex_t> reverseQueue;
+  std::unordered_set<vertex_t> forwardVisited;
+  std::unordered_set<vertex_t> reverseVisited;
+
+  forwardQueue.push(start);
+  forwardVisited.insert(start);
+  reverseQueue.push(end);
+  reverseVisited.insert(end);
+
+  while (!forwardQueue.empty() && !reverseQueue.empty()) {
+    if (!forwardQueue.empty()) {
+      auto v = forwardQueue.front();
+      forwardQueue.pop();
+      if (v == end || reverseVisited.count(v) > 0) {
+        return true;
+      }
+      for (auto adjacentV : boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
+        if (forwardVisited.count(adjacentV) == 0) {
+          forwardVisited.insert(adjacentV);
+          forwardQueue.push(adjacentV);
+        }
+      }
+    }
+    if (!reverseQueue.empty()) {
+      auto v = reverseQueue.front();
+      reverseQueue.pop();
+      if (v == start || forwardVisited.count(v) > 0) {
+        return true;
+      }
+      for (auto adjacentV : boost::make_iterator_range(boost::inv_adjacent_vertices(v, graph_))) {
+        if (reverseVisited.count(adjacentV) == 0) {
+          reverseVisited.insert(adjacentV);
+          reverseQueue.push(adjacentV);
+        }
+      }
+    }
   }
+
   return false;
 }
 
