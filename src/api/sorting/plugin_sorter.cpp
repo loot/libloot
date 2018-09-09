@@ -720,19 +720,16 @@ void PluginSorter::AddTieBreakEdges() {
   // possible result. This can be enforced by adding edges between all vertices
   // that aren't already linked. Use existing load order to decide the direction
   // of these edges.
-  for (const auto& vertex :
-       boost::make_iterator_range(boost::vertices(graph_))) {
+  vertex_it vit, vitend;
+  for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
+    vertex_t vertex = *vit;
     if (logger_) {
       logger_->trace("Adding tie-break edges to vertex for \"{}\"",
                      graph_[vertex].GetName());
     }
 
-    for (const auto& otherVertex :
-         boost::make_iterator_range(boost::vertices(graph_))) {
-      if (vertex == otherVertex ||
-          boost::edge(vertex, otherVertex, graph_).second ||
-          boost::edge(otherVertex, vertex, graph_).second)
-        continue;
+    for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
+      vertex_t otherVertex = *vit2;
 
       vertex_t toVertex, fromVertex;
       if (ComparePlugins(graph_[vertex].GetName(),
