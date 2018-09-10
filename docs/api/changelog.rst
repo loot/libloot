@@ -2,6 +2,30 @@
 Version History
 ***************
 
+0.13.7 - 2018-09-10
+===================
+
+Changed
+-------
+
+- Significantly improve plugin loading performance by scanning for BSAs/BA2s
+  once instead of for each plugin.
+- Improve performance of metadata evaluation by caching CRCs with the same
+  cache lifetime as condition results.
+- Improve performance of sorting when it involves long plugin interaction
+  chains.
+- Updated esplugin to v2.0.1.
+- Updated libgit2 to v0.27.4.
+- Updated libloadorder v11.4.1.
+- Updated spdlog to v1.1.0.
+- Updated yaml-cpp to 0.6.2+merge-key-support.2.
+
+Fixed
+-----
+
+- Fallout 4's `DLCUltraHighResolution.esm` is now handled as a hardcoded plugin
+  (via libloadorder).
+
 0.13.6 - 2018-06-29
 ===================
 
