@@ -81,7 +81,8 @@ protected:
                 "DLCCoast.esm",
                 "DLCworkshop02.esm",
                 "DLCworkshop03.esm",
-                "DLCNukaWorld.esm"};
+                "DLCNukaWorld.esm",
+                "DLCUltraHighResolution.esm"};
       case GameType::fo4vr:
         return {"Fallout4.esm", "Fallout4_VR.esm"};
       default:
