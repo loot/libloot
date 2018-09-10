@@ -74,7 +74,7 @@ set (GTEST_LIBRARIES "${BINARY_DIR}/googlemock/gtest/${CMAKE_CFG_INTDIR}/${CMAKE
 
 ExternalProject_Add(esplugin
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/esplugin/archive/2.0.0.tar.gz"
+                    URL "https://github.com/WrinklyNinja/esplugin/archive/2.0.1.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --features ffi-headers --target ${RUST_TARGET}
