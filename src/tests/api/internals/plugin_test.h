@@ -125,6 +125,7 @@ private:
 class OtherPluginType : public PluginInterface {
 public:
   std::string GetName() const { return ""; }
+  float GetHeaderVersion() const { return 0.0f; }
   std::optional<std::string> GetVersion() const { return std::nullopt; }
   std::vector<std::string> GetMasters() const {
     return std::vector<std::string>();
@@ -173,6 +174,12 @@ TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
   EXPECT_TRUE(plugin.IsMaster());
   EXPECT_FALSE(plugin.IsEmpty());
   EXPECT_EQ("5.0", plugin.GetVersion());
+
+  if (GetParam() == GameType::tes4) {
+    EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion());
+  } else {
+    EXPECT_FLOAT_EQ(0.94f, plugin.GetHeaderVersion());
+  }
 }
 
 TEST_P(PluginTest, loadingHeaderOnlyShouldNotReadFieldsOrCalculateCrc) {
@@ -197,6 +204,12 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
   EXPECT_TRUE(plugin.IsMaster());
   EXPECT_FALSE(plugin.IsEmpty());
   EXPECT_EQ("5.0", plugin.GetVersion());
+
+  if (GetParam() == GameType::tes4) {
+    EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion());
+  } else {
+    EXPECT_FLOAT_EQ(0.94f, plugin.GetHeaderVersion());
+  }
 }
 
 TEST_P(PluginTest, loadingWholePluginShouldReadFields) {

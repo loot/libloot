@@ -46,6 +46,14 @@ public:
   virtual std::string GetName() const = 0;
 
   /**
+   * Get the value of the version field in the HEDR subrecord of the plugin's
+   * TES4 record.
+   * @return The value of the version field, or NaN if the field could not be
+   *         found.
+   */
+  virtual float GetHeaderVersion() const = 0;
+
+  /**
    * Get the plugin's version number from its description field.
    *
    * The description field may not contain a version number, or LOOT may be
