@@ -56,14 +56,15 @@ protected:
 
 #ifndef _WIN32
     ASSERT_NO_THROW(std::filesystem::copy(dataPath / blankEsp,
-                                            dataPath / lowercaseBlankEsp));
+                                          dataPath / lowercaseBlankEsp));
 #endif
 
     // Make sure the plugins with non-ASCII filenames exists.
-    ASSERT_NO_THROW(std::filesystem::copy_file(dataPath / blankEsp,
-      dataPath / std::filesystem::u8path(nonAsciiEsp)));
-    ASSERT_NO_THROW(std::filesystem::copy_file(dataPath / blankEsp,
-      dataPath / std::filesystem::u8path(otherNonAsciiEsp)));
+    ASSERT_NO_THROW(std::filesystem::copy_file(
+        dataPath / blankEsp, dataPath / std::filesystem::u8path(nonAsciiEsp)));
+    ASSERT_NO_THROW(std::filesystem::copy_file(
+        dataPath / blankEsp,
+        dataPath / std::filesystem::u8path(otherNonAsciiEsp)));
 
     if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
       ASSERT_NO_THROW(
@@ -76,11 +77,17 @@ protected:
     out.open(dataPath / blankSuffixArchive);
     out.close();
 
-    auto nonAsciiArchivePath = dataPath / std::filesystem::u8path(u8"non\u00E1scii" + GetArchiveFileExtension(game_.Type()));
+    auto nonAsciiArchivePath =
+        dataPath /
+        std::filesystem::u8path(u8"non\u00E1scii" +
+                                GetArchiveFileExtension(game_.Type()));
     out.open(nonAsciiArchivePath);
     out.close();
 
-    auto nonAsciiPrefixArchivePath = dataPath / std::filesystem::u8path(u8"other non\u00E1scii2 - suffix" + GetArchiveFileExtension(game_.Type()));
+    auto nonAsciiPrefixArchivePath =
+        dataPath /
+        std::filesystem::u8path(u8"other non\u00E1scii2 - suffix" +
+                                GetArchiveFileExtension(game_.Type()));
     out.open(nonAsciiPrefixArchivePath);
     out.close();
 
@@ -135,6 +142,7 @@ public:
 
   bool IsMaster() const { return false; }
   bool IsLightMaster() const { return false; }
+  bool IsValidAsLightMaster() const { return false; }
   bool IsEmpty() const { return false; }
   bool LoadsArchive() const { return false; }
   bool DoFormIDsOverlap(const PluginInterface& plugin) const { return true; }
@@ -153,10 +161,10 @@ INSTANTIATE_TEST_CASE_P(,
 
 TEST_P(PluginTest, loadingShouldHandleNonAsciiFilenamesCorrectly) {
   Plugin plugin(game_.Type(),
-    game_.GetCache(),
-    game_.GetLoadOrderHandler(),
-    game_.DataPath() / std::filesystem::u8path(nonAsciiEsp),
-    true);
+                game_.GetCache(),
+                game_.GetLoadOrderHandler(),
+                game_.DataPath() / std::filesystem::u8path(nonAsciiEsp),
+                true);
 
   EXPECT_EQ(nonAsciiEsp, plugin.GetName());
   EXPECT_EQ(nonAsciiEsp, plugin.GetName());
@@ -316,14 +324,14 @@ TEST_P(
 #endif
 
 TEST_P(
-  PluginTest,
-  loadsArchiveForAnArchiveThatExactlyMatchesAnEspFileBasenameShouldReturnTrue) {
+    PluginTest,
+    loadsArchiveForAnArchiveThatExactlyMatchesAnEspFileBasenameShouldReturnTrue) {
   EXPECT_TRUE(Plugin(game_.Type(),
-    game_.GetCache(),
-    game_.GetLoadOrderHandler(),
-    game_.DataPath() / blankEsp,
-    true)
-    .LoadsArchive());
+                     game_.GetCache(),
+                     game_.GetLoadOrderHandler(),
+                     game_.DataPath() / blankEsp,
+                     true)
+                  .LoadsArchive());
 }
 
 TEST_P(
@@ -360,14 +368,15 @@ TEST_P(
 
 #ifdef _WIN32
 TEST_P(
-  PluginTest,
-  loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheNonAsciiEspFileBasenameShouldReturnTrueForAllGamesExceptSkyrim) {
-  bool loadsArchive = Plugin(game_.Type(),
-    game_.GetCache(),
-    game_.GetLoadOrderHandler(),
-    game_.DataPath() / std::filesystem::u8path(otherNonAsciiEsp),
-    true)
-    .LoadsArchive();
+    PluginTest,
+    loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheNonAsciiEspFileBasenameShouldReturnTrueForAllGamesExceptSkyrim) {
+  bool loadsArchive =
+      Plugin(game_.Type(),
+             game_.GetCache(),
+             game_.GetLoadOrderHandler(),
+             game_.DataPath() / std::filesystem::u8path(otherNonAsciiEsp),
+             true)
+          .LoadsArchive();
 
   if (GetParam() == GameType::tes5)
     EXPECT_FALSE(loadsArchive);
@@ -391,7 +400,8 @@ TEST_P(PluginTest, isValidShouldReturnTrueForAValidPlugin) {
 }
 
 TEST_P(PluginTest, isValidShouldReturnTrueForAValidNonAsciiPlugin) {
-  EXPECT_TRUE(Plugin::IsValid(game_.Type(), game_.DataPath() / std::filesystem::u8path(nonAsciiEsp)));
+  EXPECT_TRUE(Plugin::IsValid(
+      game_.Type(), game_.DataPath() / std::filesystem::u8path(nonAsciiEsp)));
 }
 
 TEST_P(PluginTest, isValidShouldReturnFalseForANonPluginFile) {
@@ -402,16 +412,36 @@ TEST_P(PluginTest, isValidShouldReturnFalseForAnEmptyFile) {
   EXPECT_FALSE(Plugin::IsValid(game_.Type(), game_.DataPath() / emptyFile));
 }
 
+TEST_P(
+    PluginTest,
+    isValidAsLightMasterShouldReturnTrueOnlyForASkyrimSEOrFallout4PluginWithNewFormIdsBetween0x800And0xFFFInclusive) {
+  bool valid = Plugin(game_.Type(),
+                      game_.GetCache(),
+                      game_.GetLoadOrderHandler(),
+                      game_.DataPath() / blankEsm,
+                      true)
+                   .IsValidAsLightMaster();
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    EXPECT_TRUE(valid);
+  } else {
+    EXPECT_FALSE(valid);
+  }
+}
+
 TEST_P(PluginTest, getFileSizeShouldThrowForAMissingPlugin) {
-  EXPECT_THROW(Plugin::GetFileSize(game_.DataPath() / missingEsp), std::filesystem::filesystem_error);
+  EXPECT_THROW(Plugin::GetFileSize(game_.DataPath() / missingEsp),
+               std::filesystem::filesystem_error);
 }
 
 TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAPlugin) {
-  EXPECT_EQ(getNonAsciiEspFileSize(), Plugin::GetFileSize(game_.DataPath() / std::filesystem::u8path(nonAsciiEsp)));
+  EXPECT_EQ(getNonAsciiEspFileSize(),
+            Plugin::GetFileSize(game_.DataPath() /
+                                std::filesystem::u8path(nonAsciiEsp)));
 }
 
 TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAGhostedPlugin) {
-  EXPECT_EQ(getGhostedPluginFileSize(), Plugin::GetFileSize(game_.DataPath() / blankMasterDependentEsm));
+  EXPECT_EQ(getGhostedPluginFileSize(),
+            Plugin::GetFileSize(game_.DataPath() / blankMasterDependentEsm));
 }
 
 TEST_P(PluginTest, isActiveShouldReturnTrueForAPluginThatIsActive) {

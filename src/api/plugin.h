@@ -58,6 +58,7 @@ public:
 
   bool IsMaster() const;
   bool IsLightMaster() const;
+  bool IsValidAsLightMaster() const;
   bool IsEmpty() const;
   bool LoadsArchive() const;
   bool DoFormIDsOverlap(const PluginInterface& plugin) const;

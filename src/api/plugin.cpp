@@ -192,6 +192,18 @@ bool Plugin::IsLightMaster() const {
   return isLightMaster;
 }
 
+bool Plugin::IsValidAsLightMaster() const
+{
+  bool isValid;
+  auto ret = esp_plugin_is_valid_as_light_master(esPlugin.get(), &isValid);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ +
+      " : esplugin error code: " + std::to_string(ret));
+  }
+
+  return isValid;
+}
+
 bool Plugin::IsEmpty() const { return isEmpty_; }
 
 bool Plugin::LoadsArchive() const { return loadsArchive_; }
