@@ -45,7 +45,7 @@ public:
    * Get the name of the undefined group.
    * @return A group name.
    */
-  std::string getGroupName() { return groupName_; }
+  std::string GetGroupName() { return groupName_; }
 
 private:
   const std::string groupName_;
