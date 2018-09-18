@@ -26,8 +26,57 @@
 #define LOOT_EXCEPTION_CYCLIC_INTERACTION_ERROR
 
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace loot {
+/**
+ * @brief An enum representing the different possible types of interactions
+ *        between plugins or groups.
+ */
+enum struct EdgeType : unsigned int {
+  Hardcoded,
+  MasterFlag,
+  Master,
+  Requirement,
+  LoadAfter,
+  Group,
+  Overlap,
+  TieBreak,
+};
+
+/**
+ * @brief A class representing a plugin or group vertex in a cyclic interaction
+ *        path, and the type of the interaction with the next vertex in the
+ *        path.
+ */
+class Vertex {
+public:
+  /**
+   * @brief Construct a Vertex with the given name and out edge type.
+   * @param name The name of the plugin or group that this vertex represents.
+   * @param outEdgeType The type of the edge going out from this vertex.
+   */
+  Vertex(std::string name, EdgeType outEdgeType);
+
+  /**
+   * @brief Get the name of the plugin or group.
+   * @return The name of the plugin or group.
+  */
+  std::string GetName() const;
+
+  /**
+   * @brief Get the type of the edge going to the next vertex.
+   * @details Each edge goes from the vertex that loads earlier to the vertex
+   *          that loads later.
+   * @return The edge type.
+  */
+  EdgeType GetTypeOfEdgeToNextVertex() const;
+private:
+  std::string name_;
+  EdgeType outEdgeType_;
+};
+
 /**
  * @brief An exception class thrown if a cyclic interaction is detected when
  *        sorting a load order.
@@ -35,45 +84,22 @@ namespace loot {
 class CyclicInteractionError : public std::runtime_error {
 public:
   /**
-   * @brief Construct an exception detailing a plugin graph cycle.
-   * @param firstPlugin A plugin in the cycle.
-   * @param lastPlugin Another plugin in the cycle.
-   * @param backCycle A string describing the path from lastPlugin to
-   *                  firstPlugin.
+   * @brief Construct an exception detailing a plugin or group graph cycle.
+   * @param cycle A representation of the cyclic path.
    */
-  CyclicInteractionError(const std::string& firstPlugin,
-                         const std::string& lastPlugin,
-                         const std::string& backCycle) :
-      std::runtime_error("Cyclic interaction detected between plugins \"" +
-                         firstPlugin + "\" and \"" + lastPlugin +
-                         "\". Back cycle: " + backCycle),
-      firstPlugin_(firstPlugin),
-      lastPlugin_(lastPlugin),
-      backCycle_(backCycle) {}
+  CyclicInteractionError(std::vector<Vertex> cycle);
 
   /**
-   * Get the first plugin in the chosen forward path of the cycle.
-   * @return A plugin filename.
+   * @brief Get a representation of the cyclic path.
+   * @details Each Vertex is the name of a graph element (plugin or group) and
+   *          the type of the edge going to the next Vertex. The last Vertex
+   *          has an edge going to the first Vertex.
+   * @return A vector of Vertex elements representing the cyclic path.
    */
-  std::string getFirstPlugin() { return firstPlugin_; }
-
-  /**
-   * Get the first plugin in the chosen forward path of the cycle.
-   * @return A plugin filename.
-   */
-  std::string getLastPlugin() { return lastPlugin_; }
-
-  /**
-   * Get a description of the reverse path from the chosen last plugin to the
-   * chosen first plugin of the cycle.
-   * @return A string describing a path between two plugins in the plugin graph.
-   */
-  std::string getBackCycle() { return backCycle_; }
+  std::vector<Vertex> GetCycle();
 
 private:
-  const std::string firstPlugin_;
-  const std::string lastPlugin_;
-  const std::string backCycle_;
+  const std::vector<Vertex> cycle_;
 };
 }
 

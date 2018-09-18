@@ -53,10 +53,13 @@ class CycleDetector : public boost::dfs_visitor<> {
 public:
   void tree_edge(edge_t edge, const PluginGraph& graph) {
     const vertex_t source = boost::source(edge, graph);
-    const string name = graph[source].GetName();
+
+    auto vertex = Vertex(graph[source].GetName(), graph[edge]);
 
     // Check if the plugin already exists in the recorded trail.
-    auto it = find(begin(trail), end(trail), name);
+    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
+      return v.GetName() == graph[source].GetName();
+    });
 
     if (it != end(trail)) {
       // Erase everything from this position onwards, as it doesn't
@@ -64,27 +67,27 @@ public:
       trail.erase(it, end(trail));
     }
 
-    trail.push_back(name);
+    trail.push_back(vertex);
   }
 
   void back_edge(edge_t edge, const PluginGraph& graph) {
     vertex_t source = boost::source(edge, graph);
     vertex_t target = boost::target(edge, graph);
 
-    trail.push_back(graph[source].GetName());
-    string backCycle;
-    auto it = find(begin(trail), end(trail), graph[target].GetName());
-    for (it; it != end(trail); ++it) {
-      backCycle += *it + ", ";
-    }
-    backCycle.erase(backCycle.length() - 2);
+    auto vertex = Vertex(graph[source].GetName(), graph[edge]);
+    trail.push_back(vertex);
 
-    throw CyclicInteractionError(
-        graph[source].GetName(), graph[target].GetName(), backCycle);
+    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
+      return v.GetName() == graph[target].GetName();
+    });
+
+    if (it != trail.end()) {
+      throw CyclicInteractionError(std::vector<Vertex>(it, trail.end()));
+    }
   }
 
 private:
-  list<string> trail;
+  vector<Vertex> trail;
 };
 
 std::vector<std::string> PluginSorter::Sort(Game& game) {
@@ -209,8 +212,9 @@ void PluginSorter::AddPluginVertices(Game& game) {
                      plugin->GetName());
     }
 
-    auto metadata =
-        game.GetDatabase()->GetPluginMetadata(plugin->GetName(), true, true).value_or(PluginMetadata(plugin->GetName()));
+    auto metadata = game.GetDatabase()
+                        ->GetPluginMetadata(plugin->GetName(), true, true)
+                        .value_or(PluginMetadata(plugin->GetName()));
 
     auto groupName = metadata.GetGroup().value_or(Group().GetName());
     auto groupIt = groupPlugins.find(groupName);
@@ -314,7 +318,8 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
       if (v == end || reverseVisited.count(v) > 0) {
         return true;
       }
-      for (auto adjacentV : boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
+      for (auto adjacentV :
+           boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
         if (forwardVisited.count(adjacentV) == 0) {
           forwardVisited.insert(adjacentV);
           forwardQueue.push(adjacentV);
@@ -327,7 +332,8 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
       if (v == start || forwardVisited.count(v) > 0) {
         return true;
       }
-      for (auto adjacentV : boost::make_iterator_range(boost::inv_adjacent_vertices(v, graph_))) {
+      for (auto adjacentV : boost::make_iterator_range(
+               boost::inv_adjacent_vertices(v, graph_))) {
         if (reverseVisited.count(adjacentV) == 0) {
           reverseVisited.insert(adjacentV);
           reverseQueue.push(adjacentV);
@@ -340,7 +346,8 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
 }
 
 void PluginSorter::AddEdge(const vertex_t& fromVertex,
-                           const vertex_t& toVertex) {
+                           const vertex_t& toVertex,
+                           EdgeType edgeType) {
   if (!boost::edge(fromVertex, toVertex, graph_).second) {
     if (logger_) {
       logger_->trace("Adding edge from \"{}\" to \"{}\".",
@@ -348,7 +355,7 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex,
                      graph_[toVertex].GetName());
     }
 
-    boost::add_edge(fromVertex, toVertex, graph_);
+    boost::add_edge(fromVertex, toVertex, edgeType, graph_);
   }
 }
 
@@ -367,18 +374,18 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
 
     try {
       processedPluginPaths.insert(std::filesystem::canonical(pluginPath));
-    }
-    catch (std::filesystem::filesystem_error&) {
+    } catch (std::filesystem::filesystem_error&) {
       if (logger_) {
         logger_->trace(
-          "Skipping adding hardcoded plugin edges for \"{}\" as it is not "
-          "installed.",
-          plugin);
+            "Skipping adding hardcoded plugin edges for \"{}\" as it is not "
+            "installed.",
+            plugin);
       }
       continue;
     }
 
-    if (game.Type() == GameType::tes5 && loot::equivalent(plugin, "update.esm")) {
+    if (game.Type() == GameType::tes5 &&
+        loot::equivalent(plugin, "update.esm")) {
       if (logger_) {
         logger_->trace(
             "Skipping adding hardcoded plugin edges for Update.esm as it does "
@@ -412,8 +419,9 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
         continue;
       }
 
-      if (processedPluginPaths.count(std::filesystem::canonical(graphPluginPath)) == 0) {
-        AddEdge(pluginVertex, *vit);
+      if (processedPluginPaths.count(
+              std::filesystem::canonical(graphPluginPath)) == 0) {
+        AddEdge(pluginVertex, *vit, EdgeType::Hardcoded);
       }
     }
   }
@@ -442,7 +450,7 @@ void PluginSorter::AddSpecificEdges() {
         vertex = *vit2;
       }
 
-      AddEdge(parentVertex, vertex);
+      AddEdge(parentVertex, vertex, EdgeType::MasterFlag);
     }
 
     vertex_t parentVertex;
@@ -451,7 +459,7 @@ void PluginSorter::AddSpecificEdges() {
     }
     for (const auto& master : graph_[*vit].GetMasters()) {
       if (GetVertexByName(master, parentVertex))
-        AddEdge(parentVertex, *vit);
+        AddEdge(parentVertex, *vit, EdgeType::Master);
     }
 
     if (logger_) {
@@ -459,7 +467,7 @@ void PluginSorter::AddSpecificEdges() {
     }
     for (const auto& file : graph_[*vit].GetRequirements()) {
       if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit);
+        AddEdge(parentVertex, *vit, EdgeType::Requirement);
     }
 
     if (logger_) {
@@ -467,7 +475,7 @@ void PluginSorter::AddSpecificEdges() {
     }
     for (const auto& file : graph_[*vit].GetLoadAfterFiles()) {
       if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit);
+        AddEdge(parentVertex, *vit, EdgeType::LoadAfter);
     }
   }
 }
@@ -506,7 +514,7 @@ void ignorePlugin(const std::string& pluginName,
       pluginsToIgnore->second.insert(pluginName);
     } else {
       groupPluginsToIgnore.emplace(
-          group, std::unordered_set<std::string>({ pluginName }));
+          group, std::unordered_set<std::string>({pluginName}));
     }
   }
 }
@@ -640,7 +648,7 @@ void PluginSorter::AddGroupEdges() {
         shouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
 
     if (!ignore) {
-      AddEdge(edgePair.first, edgePair.second);
+      AddEdge(edgePair.first, edgePair.second, EdgeType::Group);
     } else if (logger_) {
       logger_->trace(
           "Skipping edge from \"{}\" to \"{}\" as it would "
@@ -691,7 +699,7 @@ void PluginSorter::AddOverlapEdges() {
       }
 
       if (!EdgeCreatesCycle(fromVertex, toVertex))
-        AddEdge(fromVertex, toVertex);
+        AddEdge(fromVertex, toVertex, EdgeType::Overlap);
     }
   }
 }
@@ -764,7 +772,7 @@ void PluginSorter::AddTieBreakEdges() {
       }
 
       if (!EdgeCreatesCycle(fromVertex, toVertex))
-        AddEdge(fromVertex, toVertex);
+        AddEdge(fromVertex, toVertex, EdgeType::TieBreak);
     }
   }
 }

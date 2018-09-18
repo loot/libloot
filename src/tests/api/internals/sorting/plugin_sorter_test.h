@@ -373,8 +373,19 @@ TEST_P(
   plugin.SetGroup("group4");
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
-  PluginSorter ps;
-  EXPECT_THROW(ps.Sort(game_), CyclicInteractionError);
+  try {
+    PluginSorter ps;
+    ps.Sort(game_);
+    FAIL();
+  } catch (CyclicInteractionError &e) {
+    ASSERT_EQ(3, e.GetCycle().size());
+    EXPECT_EQ("Blank - Different Master Dependent.esm", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::Group, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("Blank.esm", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::Master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[2].GetName());
+    EXPECT_EQ(EdgeType::Group, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+  }
 }
 
 TEST_P(

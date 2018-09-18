@@ -63,7 +63,29 @@ TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
     Group("c", std::unordered_set<std::string>({ "b" }))
   });
 
-  EXPECT_THROW(GetTransitiveAfterGroups(groups), CyclicInteractionError);
+  try {
+    GetTransitiveAfterGroups(groups);
+    FAIL();
+  }
+  catch (CyclicInteractionError &e) {
+    ASSERT_EQ(3, e.GetCycle().size());
+    EXPECT_EQ(EdgeType::LoadAfter, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(EdgeType::LoadAfter, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(EdgeType::LoadAfter, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+
+    // Vertices can be added in any order, so which group is first is undefined.
+    if (e.GetCycle()[0].GetName() == "a") {
+      EXPECT_EQ("c", e.GetCycle()[1].GetName());
+      EXPECT_EQ("b", e.GetCycle()[2].GetName());
+    } else if (e.GetCycle()[0].GetName() == "b") {
+      EXPECT_EQ("a", e.GetCycle()[1].GetName());
+      EXPECT_EQ("c", e.GetCycle()[2].GetName());
+    } else {
+      EXPECT_EQ("c", e.GetCycle()[0].GetName());
+      EXPECT_EQ("b", e.GetCycle()[1].GetName());
+      EXPECT_EQ("a", e.GetCycle()[2].GetName());
+    }
+  }
 }
 }
 }

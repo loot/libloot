@@ -36,12 +36,14 @@
 #include "api/game/game.h"
 #include "api/plugin.h"
 #include "api/sorting/plugin_sorting_data.h"
+#include "loot/exception/cyclic_interaction_error.h"
 
 namespace loot {
 typedef boost::adjacency_list<boost::listS,
                               boost::listS,
                               boost::bidirectionalS,
-                              PluginSortingData>
+                              PluginSortingData,
+                              EdgeType>
     PluginGraph;
 typedef boost::graph_traits<PluginGraph>::vertex_descriptor vertex_t;
 typedef boost::associative_property_map<std::map<vertex_t, size_t>>
@@ -66,7 +68,9 @@ private:
   void AddOverlapEdges();
   void AddTieBreakEdges();
 
-  void AddEdge(const vertex_t& fromVertex, const vertex_t& toVertex);
+  void AddEdge(const vertex_t& fromVertex,
+               const vertex_t& toVertex,
+               EdgeType edgeType);
 
   PluginGraph graph_;
   std::map<vertex_t, size_t> indexMap_;
