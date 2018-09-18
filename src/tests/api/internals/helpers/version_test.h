@@ -55,14 +55,14 @@ INSTANTIATE_TEST_CASE_P(, VersionTest, ::testing::Values(GameType::tes5));
 
 TEST_P(VersionTest, shouldExtractVersionFromNonAsciiDll) {
   Version version(dataPath / std::filesystem::u8path(nonAsciiDll));
-  std::string expected(LootVersion::string() + ".0");
+  std::string expected(LootVersion::GetVersionString() + ".0");
   EXPECT_EQ(expected, version.AsString());
 }
 
 TEST(Version, shouldExtractVersionFromApiDll) {
   // Use the API DLL built.
   Version version(std::filesystem::path("loot_api.dll"));
-  std::string expected(LootVersion::string() + ".0");
+  std::string expected(LootVersion::GetVersionString() + ".0");
   EXPECT_EQ(expected, version.AsString());
 }
 #endif

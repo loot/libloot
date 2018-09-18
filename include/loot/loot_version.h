@@ -52,7 +52,7 @@ public:
    * @brief Get the API version as a string.
    * @return A string of the form "major.minor.patch".
    */
-  LOOT_API static std::string string();
+  LOOT_API static std::string GetVersionString();
 };
 }
 
