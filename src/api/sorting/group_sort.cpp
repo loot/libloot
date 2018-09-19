@@ -71,47 +71,6 @@ typedef boost::adjacency_list<boost::vecS,
 typedef boost::graph_traits<GroupGraph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<GroupGraph>::edge_descriptor edge_t;
 
-class CycleDetector : public boost::dfs_visitor<> {
-public:
-  void tree_edge(edge_t edge, const GroupGraph& graph) {
-    auto source = boost::source(edge, graph);
-
-    auto vertex = Vertex(graph[source].GetName(), graph[edge]);
-
-    // Check if the plugin already exists in the recorded trail.
-    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
-      return v.GetName() == graph[source].GetName();
-    });
-
-    if (it != end(trail)) {
-      // Erase everything from this position onwards, as it doesn't
-      // contribute to a forward-cycle.
-      trail.erase(it, end(trail));
-    }
-
-    trail.push_back(vertex);
-  }
-
-  void back_edge(edge_t edge, const GroupGraph& graph) {
-    auto source = boost::source(edge, graph);
-    auto target = boost::target(edge, graph);
-
-    auto vertex = Vertex(graph[source].GetName(), graph[edge]);
-    trail.push_back(vertex);
-
-    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
-      return v.GetName() == graph[target].GetName();
-    });
-
-    if (it != trail.end()) {
-      throw CyclicInteractionError(std::vector<Vertex>(it, trail.end()));
-    }
-  }
-
-private:
-  std::vector<Vertex> trail;
-};
-
 class AfterGroupsVisitor : public boost::dfs_visitor<> {
 public:
   AfterGroupsVisitor(std::unordered_set<std::string>& visitedGroups) :
@@ -209,7 +168,7 @@ GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
   if (logger) {
     logger->trace("Checking for cycles in the group graph");
   }
-  boost::depth_first_search(graph, boost::visitor(CycleDetector()));
+  boost::depth_first_search(graph, boost::visitor(CycleDetector<GroupGraph>()));
 
   std::unordered_map<std::string, std::unordered_set<std::string>>
       transitiveAfterGroups;

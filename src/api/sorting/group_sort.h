@@ -28,7 +28,12 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/depth_first_search.hpp>
+
+#include "loot/exception/cyclic_interaction_error.h"
 #include "loot/metadata/group.h"
 
 namespace loot {
@@ -36,5 +41,47 @@ namespace loot {
 std::unordered_map<std::string, std::unordered_set<std::string>>
 GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
                          const std::unordered_set<Group>& userGroups);
+
+template<typename G>
+class CycleDetector : public boost::dfs_visitor<> {
+public:
+  void tree_edge(typename boost::graph_traits<G>::edge_descriptor edge, const G& graph) {
+    auto source = boost::source(edge, graph);
+
+    auto vertex = Vertex(graph[source].GetName(), graph[edge]);
+
+    // Check if the vertex already exists in the recorded trail.
+    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
+      return v.GetName() == graph[source].GetName();
+    });
+
+    if (it != end(trail)) {
+      // Erase everything from this position onwards, as it doesn't
+      // contribute to a forward-cycle.
+      trail.erase(it, end(trail));
+    }
+
+    trail.push_back(vertex);
+  }
+
+  void back_edge(typename boost::graph_traits<G>::edge_descriptor edge, const G& graph) {
+    auto source = boost::source(edge, graph);
+    auto target = boost::target(edge, graph);
+
+    auto vertex = Vertex(graph[source].GetName(), graph[edge]);
+    trail.push_back(vertex);
+
+    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
+      return v.GetName() == graph[target].GetName();
+    });
+
+    if (it != trail.end()) {
+      throw CyclicInteractionError(std::vector<Vertex>(it, trail.end()));
+    }
+  }
+
+private:
+  std::vector<Vertex> trail;
+};
 }
 #endif
