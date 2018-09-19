@@ -33,6 +33,8 @@
 
 namespace loot {
 // Map entries are a group name and names of transitive load after groups.
-std::unordered_map<std::string, std::unordered_set<std::string>> GetTransitiveAfterGroups(const std::unordered_set<Group> groups);
+std::unordered_map<std::string, std::unordered_set<std::string>>
+GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
+                         const std::unordered_set<Group>& userGroups);
 }
 #endif

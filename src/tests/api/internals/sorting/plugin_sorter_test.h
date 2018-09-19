@@ -98,9 +98,9 @@ protected:
   std::string getCCCFilename() {
     if (GetParam() == GameType::fo4) {
       return "Fallout4.ccc";
-    }
-    else {
-      // Not every game has a .ccc file, but Skyrim SE does, so just assume that.
+    } else {
+      // Not every game has a .ccc file, but Skyrim SE does, so just assume
+      // that.
       return "Skyrim.ccc";
     }
   }
@@ -147,23 +147,28 @@ TEST_P(PluginSorterTest,
 
   auto esp = PluginSortingData(
       *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp).value().get()),
+      PluginMetadata(),
       PluginMetadata());
   EXPECT_FALSE(esp.IsMaster());
 
   auto master = PluginSortingData(
       *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm).value().get()),
+      PluginMetadata(),
       PluginMetadata());
   EXPECT_TRUE(master.IsMaster());
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     auto lightMaster = PluginSortingData(
         *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl).value().get()),
+        PluginMetadata(),
         PluginMetadata());
     EXPECT_TRUE(lightMaster.IsMaster());
 
-    auto lightMasterEsp = PluginSortingData(*dynamic_cast<const Plugin *>(
+    auto lightMasterEsp =
+        PluginSortingData(*dynamic_cast<const Plugin *>(
                               game_.GetPlugin(blankEslEsp).value().get()),
-        PluginMetadata());
+                          PluginMetadata(),
+                          PluginMetadata());
     EXPECT_FALSE(lightMasterEsp.IsMaster());
   }
 }
@@ -379,7 +384,8 @@ TEST_P(
     FAIL();
   } catch (CyclicInteractionError &e) {
     ASSERT_EQ(3, e.GetCycle().size());
-    EXPECT_EQ("Blank - Different Master Dependent.esm", e.GetCycle()[0].GetName());
+    EXPECT_EQ("Blank - Different Master Dependent.esm",
+              e.GetCycle()[0].GetName());
     EXPECT_EQ(EdgeType::Group, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
     EXPECT_EQ("Blank.esm", e.GetCycle()[1].GetName());
     EXPECT_EQ(EdgeType::Master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());

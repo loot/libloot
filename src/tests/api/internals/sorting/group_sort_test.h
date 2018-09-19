@@ -35,55 +35,73 @@ along with LOOT.  If not, see
 namespace loot {
 namespace test {
 TEST(GetTransitiveAfterGroups, shouldMapGroupsToTheirTransitiveAfterGroups) {
-  std::unordered_set<Group> groups({
-    Group("a"),
-    Group("b", std::unordered_set<std::string>({ "a" })),
-    Group("c", std::unordered_set<std::string>({"b"}))
-  });
+  std::unordered_set<Group> groups(
+      {Group("a"),
+       Group("b", std::unordered_set<std::string>({"a"})),
+       Group("c", std::unordered_set<std::string>({"b"}))});
 
-  auto mapped = GetTransitiveAfterGroups(groups);
+  auto mapped = GetTransitiveAfterGroups(groups, {});
 
   EXPECT_TRUE(mapped["a"].empty());
-  EXPECT_EQ(std::unordered_set<std::string>({ "a" }), mapped["b"]);
-  EXPECT_EQ(std::unordered_set<std::string>({ "a", "b" }), mapped["c"]);
+  EXPECT_EQ(std::unordered_set<std::string>({"a"}), mapped["b"]);
+  EXPECT_EQ(std::unordered_set<std::string>({"a", "b"}), mapped["c"]);
 }
 
 TEST(GetTransitiveAfterGroups, shouldThrowIfAnAfterGroupDoesNotExist) {
-  std::unordered_set<Group> groups({
-    Group("b", std::unordered_set<std::string>({ "a" }))
-  });
+  std::unordered_set<Group> groups(
+      {Group("b", std::unordered_set<std::string>({"a"}))});
 
-  EXPECT_THROW(GetTransitiveAfterGroups(groups), UndefinedGroupError);
+  EXPECT_THROW(GetTransitiveAfterGroups(groups, {}), UndefinedGroupError);
 }
 
 TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
-  std::unordered_set<Group> groups({
-    Group("a", std::unordered_set<std::string>({ "c" })),
-    Group("b", std::unordered_set<std::string>({ "a" })),
-    Group("c", std::unordered_set<std::string>({ "b" }))
-  });
+  std::unordered_set<Group> groups(
+      {Group("a", std::unordered_set<std::string>({"c"})),
+       Group("b", std::unordered_set<std::string>({"a"}))});
+  std::unordered_set<Group> userGroups(
+      {Group("c", std::unordered_set<std::string>({"b"}))});
 
   try {
-    GetTransitiveAfterGroups(groups);
+    GetTransitiveAfterGroups(groups, userGroups);
     FAIL();
-  }
-  catch (CyclicInteractionError &e) {
+  } catch (CyclicInteractionError &e) {
     ASSERT_EQ(3, e.GetCycle().size());
-    EXPECT_EQ(EdgeType::LoadAfter, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ(EdgeType::LoadAfter, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ(EdgeType::LoadAfter, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
 
     // Vertices can be added in any order, so which group is first is undefined.
     if (e.GetCycle()[0].GetName() == "a") {
+      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+
       EXPECT_EQ("c", e.GetCycle()[1].GetName());
+      EXPECT_EQ(EdgeType::UserLoadAfter,
+                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+
       EXPECT_EQ("b", e.GetCycle()[2].GetName());
+      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
     } else if (e.GetCycle()[0].GetName() == "b") {
+      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+
       EXPECT_EQ("a", e.GetCycle()[1].GetName());
+      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+
       EXPECT_EQ("c", e.GetCycle()[2].GetName());
+      EXPECT_EQ(EdgeType::UserLoadAfter,
+                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
     } else {
       EXPECT_EQ("c", e.GetCycle()[0].GetName());
+      EXPECT_EQ(EdgeType::UserLoadAfter,
+                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+
       EXPECT_EQ("b", e.GetCycle()[1].GetName());
+      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+
       EXPECT_EQ("a", e.GetCycle()[2].GetName());
+      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
     }
   }
 }

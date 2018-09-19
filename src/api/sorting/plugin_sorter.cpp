@@ -208,15 +208,22 @@ void PluginSorter::AddPluginVertices(Game& game) {
 
   for (const auto& plugin : game.GetCache()->GetPlugins()) {
     if (logger_) {
-      logger_->trace("Getting and evaluating metadata for plugin {}",
+      logger_->trace("Getting and evaluating metadata for plugin \"{}\"",
                      plugin->GetName());
     }
 
-    auto metadata = game.GetDatabase()
-                        ->GetPluginMetadata(plugin->GetName(), true, true)
-                        .value_or(PluginMetadata(plugin->GetName()));
+    auto masterlistMetadata =
+        game.GetDatabase()
+            ->GetPluginMetadata(plugin->GetName(), false, true)
+            .value_or(PluginMetadata(plugin->GetName()));
+    auto userMetadata = game.GetDatabase()
+                            ->GetPluginUserMetadata(plugin->GetName(), true)
+                            .value_or(PluginMetadata(plugin->GetName()));
 
-    auto groupName = metadata.GetGroup().value_or(Group().GetName());
+    auto pluginSortingData =
+        PluginSortingData(*plugin, masterlistMetadata, userMetadata);
+
+    auto groupName = pluginSortingData.GetGroup();
     auto groupIt = groupPlugins.find(groupName);
     if (groupIt == groupPlugins.end()) {
       groupPlugins.emplace(groupName,
@@ -225,18 +232,15 @@ void PluginSorter::AddPluginVertices(Game& game) {
       groupIt->second.push_back(plugin->GetName());
     }
 
-    if (logger_) {
-      logger_->trace("Getting and evaluating metadata for plugin \"{}\"",
-                     plugin->GetName());
-    }
-
-    boost::add_vertex(PluginSortingData(*plugin, std::move(metadata)), graph_);
+    boost::add_vertex(pluginSortingData, graph_);
   }
 
   // Map sets of transitive group dependencies to sets of transitive plugin
   // dependencies.
   groups_ = game.GetDatabase()->GetGroups();
-  auto groups = GetTransitiveAfterGroups(groups_);
+
+  auto groups = GetTransitiveAfterGroups(game.GetDatabase()->GetGroups(false),
+                                         game.GetDatabase()->GetUserGroups());
   for (auto& group : groups) {
     std::unordered_set<std::string> transitivePlugins;
     for (const auto& afterGroup : group.second) {
@@ -465,17 +469,25 @@ void PluginSorter::AddSpecificEdges() {
     if (logger_) {
       logger_->trace("Adding in-edges for requirements.");
     }
-    for (const auto& file : graph_[*vit].GetRequirements()) {
+    for (const auto& file : graph_[*vit].GetMasterlistRequirements()) {
       if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::Requirement);
+        AddEdge(parentVertex, *vit, EdgeType::MasterlistRequirement);
+    }
+    for (const auto& file : graph_[*vit].GetUserRequirements()) {
+      if (GetVertexByName(file.GetName(), parentVertex))
+        AddEdge(parentVertex, *vit, EdgeType::UserRequirement);
     }
 
     if (logger_) {
       logger_->trace("Adding in-edges for 'load after's.");
     }
-    for (const auto& file : graph_[*vit].GetLoadAfterFiles()) {
+    for (const auto& file : graph_[*vit].GetMasterlistLoadAfterFiles()) {
       if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::LoadAfter);
+        AddEdge(parentVertex, *vit, EdgeType::MasterlistLoadAfter);
+    }
+    for (const auto& file : graph_[*vit].GetUserLoadAfterFiles()) {
+      if (GetVertexByName(file.GetName(), parentVertex))
+        AddEdge(parentVertex, *vit, EdgeType::UserLoadAfter);
     }
   }
 }

@@ -29,11 +29,14 @@
 #include "loot/metadata/plugin_metadata.h"
 
 namespace loot {
-class PluginSortingData : private PluginMetadata {
+class PluginSortingData {
 public:
-  PluginSortingData(const Plugin& plugin, const PluginMetadata&& metadata);
+  PluginSortingData(const Plugin& plugin,
+                    const PluginMetadata& masterlistMetadata,
+                    const PluginMetadata& userMetadata);
 
   std::string GetName() const;
+  std::string GetLowercasedName() const;
   bool IsMaster() const;
   bool LoadsArchive() const;
   std::vector<std::string> GetMasters() const;
@@ -44,15 +47,21 @@ public:
 
   std::unordered_set<std::string> GetAfterGroupPlugins() const;
   void SetAfterGroupPlugins(std::unordered_set<std::string> plugins);
-  
-  using PluginMetadata::GetLowercasedName;
-  using PluginMetadata::GetLoadAfterFiles;
-  using PluginMetadata::GetRequirements;
+
+  const std::set<File>& GetMasterlistLoadAfterFiles() const;
+  const std::set<File>& GetUserLoadAfterFiles() const;
+  const std::set<File>& GetMasterlistRequirements() const;
+  const std::set<File>& GetUserRequirements() const;
 
 private:
   const Plugin& plugin_;
   std::string group_;
   std::unordered_set<std::string> afterGroupPlugins_;
+
+  std::set<File> masterlistLoadAfter_;
+  std::set<File> userLoadAfter_;
+  std::set<File> masterlistReq_;
+  std::set<File> userReq_;
 };
 }
 

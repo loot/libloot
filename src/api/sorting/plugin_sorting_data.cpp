@@ -25,17 +25,33 @@
 #include "plugin_sorting_data.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/locale.hpp>
 
 #include <loot/metadata/group.h>
 
 namespace loot {
 PluginSortingData::PluginSortingData(const Plugin& plugin,
-                                     const PluginMetadata&& metadata) :
+                                     const PluginMetadata& masterlistMetadata,
+                                     const PluginMetadata& userMetadata) :
     plugin_(plugin),
-    PluginMetadata(metadata),
-    group_(metadata.GetGroup().value_or(Group().GetName())) {}
+    masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
+    userLoadAfter_(userMetadata.GetLoadAfterFiles()),
+    masterlistReq_(masterlistMetadata.GetRequirements()),
+    userReq_(userMetadata.GetRequirements()) {
+  if (userMetadata.GetGroup()) {
+    group_ = userMetadata.GetGroup().value();
+  } else if (masterlistMetadata.GetGroup()) {
+    group_ = masterlistMetadata.GetGroup().value();
+  } else {
+    group_ = Group().GetName();
+  }
+}
 
 std::string PluginSortingData::GetName() const { return plugin_.GetName(); }
+
+std::string PluginSortingData::GetLowercasedName() const {
+  return boost::locale::to_lower(plugin_.GetName());
+}
 
 bool PluginSortingData::IsMaster() const {
   return plugin_.IsMaster() || (plugin_.IsLightMaster() &&
@@ -59,11 +75,29 @@ bool PluginSortingData::DoFormIDsOverlap(
 
 std::string PluginSortingData::GetGroup() const { return group_; }
 
-std::unordered_set<std::string> PluginSortingData::GetAfterGroupPlugins() const {
+std::unordered_set<std::string> PluginSortingData::GetAfterGroupPlugins()
+    const {
   return afterGroupPlugins_;
 }
 
-void PluginSortingData::SetAfterGroupPlugins(std::unordered_set<std::string> plugins) {
+void PluginSortingData::SetAfterGroupPlugins(
+    std::unordered_set<std::string> plugins) {
   afterGroupPlugins_ = plugins;
+}
+
+const std::set<File>& PluginSortingData::GetMasterlistLoadAfterFiles() const {
+  return masterlistLoadAfter_;
+}
+
+const std::set<File>& PluginSortingData::GetUserLoadAfterFiles() const {
+  return userLoadAfter_;
+}
+
+const std::set<File>& PluginSortingData::GetMasterlistRequirements() const {
+  return masterlistReq_;
+}
+
+const std::set<File>& PluginSortingData::GetUserRequirements() const {
+  return userReq_;
 }
 }

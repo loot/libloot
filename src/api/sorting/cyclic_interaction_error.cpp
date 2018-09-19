@@ -24,45 +24,47 @@
 #include "loot/exception/cyclic_interaction_error.h"
 
 namespace loot {
-Vertex::Vertex(std::string name, EdgeType outEdgeType) : name_(name), outEdgeType_(outEdgeType) {}
+Vertex::Vertex(std::string name, EdgeType outEdgeType) :
+    name_(name),
+    outEdgeType_(outEdgeType) {}
 
-std::string Vertex::GetName() const {
-  return name_;
-}
+std::string Vertex::GetName() const { return name_; }
 
-EdgeType Vertex::GetTypeOfEdgeToNextVertex() const {
-  return outEdgeType_;
-}
+EdgeType Vertex::GetTypeOfEdgeToNextVertex() const { return outEdgeType_; }
 
 std::string describe(EdgeType edgeType) {
   switch (edgeType) {
-  case EdgeType::Hardcoded:
-    return "Hardcoded";
-  case EdgeType::MasterFlag:
-    return "Master Flag";
-  case EdgeType::Master:
-    return "Master";
-  case EdgeType::Requirement:
-    return "Requirement";
-  case EdgeType::LoadAfter:
-    return "Load After";
-  case EdgeType::Group:
-    return "Group";
-  case EdgeType::Overlap:
-    return "Overlap";
-  case EdgeType::TieBreak:
-    return "Tie Break";
-  default:
-    return "Unknown";
+    case EdgeType::Hardcoded:
+      return "Hardcoded";
+    case EdgeType::MasterFlag:
+      return "Master Flag";
+    case EdgeType::Master:
+      return "Master";
+    case EdgeType::MasterlistRequirement:
+      return "Masterlist Requirement";
+    case EdgeType::UserRequirement:
+      return "User Requirement";
+    case EdgeType::MasterlistLoadAfter:
+      return "Masterlist Load After";
+    case EdgeType::UserLoadAfter:
+      return "User Load After";
+    case EdgeType::Group:
+      return "Group";
+    case EdgeType::Overlap:
+      return "Overlap";
+    case EdgeType::TieBreak:
+      return "Tie Break";
+    default:
+      return "Unknown";
   }
 }
-
 
 // A.esp --[Master Flag]-> B.esp --Group->
 std::string describeCycle(const std::vector<Vertex>& cycle) {
   std::string text;
   for (const auto& vertex : cycle) {
-    text += vertex.GetName() + " --[" + describe(vertex.GetTypeOfEdgeToNextVertex()) + "]-> ";
+    text += vertex.GetName() + " --[" +
+            describe(vertex.GetTypeOfEdgeToNextVertex()) + "]-> ";
   }
   if (!cycle.empty()) {
     text += cycle[0].GetName();

@@ -38,8 +38,10 @@ enum struct EdgeType : unsigned int {
   Hardcoded,
   MasterFlag,
   Master,
-  Requirement,
-  LoadAfter,
+  MasterlistRequirement,
+  UserRequirement,
+  MasterlistLoadAfter,
+  UserLoadAfter,
   Group,
   Overlap,
   TieBreak,
@@ -62,7 +64,7 @@ public:
   /**
    * @brief Get the name of the plugin or group.
    * @return The name of the plugin or group.
-  */
+   */
   std::string GetName() const;
 
   /**
@@ -70,8 +72,9 @@ public:
    * @details Each edge goes from the vertex that loads earlier to the vertex
    *          that loads later.
    * @return The edge type.
-  */
+   */
   EdgeType GetTypeOfEdgeToNextVertex() const;
+
 private:
   std::string name_;
   EdgeType outEdgeType_;
