@@ -149,7 +149,7 @@ GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
 
       auto vertex = groupVertices[group.GetName()];
       boost::add_edge(
-          vertex, otherVertex->second, EdgeType::MasterlistLoadAfter, graph);
+          vertex, otherVertex->second, EdgeType::masterlistLoadAfter, graph);
     }
 
     for (const auto& otherGroupName : group.GetUserAfterGroups()) {
@@ -160,7 +160,7 @@ GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
 
       auto vertex = groupVertices[group.GetName()];
       boost::add_edge(
-          vertex, otherVertex->second, EdgeType::UserLoadAfter, graph);
+          vertex, otherVertex->second, EdgeType::userLoadAfter, graph);
     }
   }
 

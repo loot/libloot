@@ -386,11 +386,11 @@ TEST_P(
     ASSERT_EQ(3, e.GetCycle().size());
     EXPECT_EQ("Blank - Different Master Dependent.esm",
               e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::Group, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(EdgeType::group, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
     EXPECT_EQ("Blank.esm", e.GetCycle()[1].GetName());
-    EXPECT_EQ(EdgeType::Master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
     EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[2].GetName());
-    EXPECT_EQ(EdgeType::Group, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(EdgeType::group, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
   }
 }
 

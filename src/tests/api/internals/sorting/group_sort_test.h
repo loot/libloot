@@ -69,38 +69,38 @@ TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
 
     // Vertices can be added in any order, so which group is first is undefined.
     if (e.GetCycle()[0].GetName() == "a") {
-      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
                 e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("c", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::UserLoadAfter,
+      EXPECT_EQ(EdgeType::userLoadAfter,
                 e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("b", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
                 e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
     } else if (e.GetCycle()[0].GetName() == "b") {
-      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
                 e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("a", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
                 e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("c", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::UserLoadAfter,
+      EXPECT_EQ(EdgeType::userLoadAfter,
                 e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
     } else {
       EXPECT_EQ("c", e.GetCycle()[0].GetName());
-      EXPECT_EQ(EdgeType::UserLoadAfter,
+      EXPECT_EQ(EdgeType::userLoadAfter,
                 e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("b", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
                 e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("a", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::MasterlistLoadAfter,
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
                 e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
     }
   }

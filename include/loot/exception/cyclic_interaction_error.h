@@ -35,16 +35,16 @@ namespace loot {
  *        between plugins or groups.
  */
 enum struct EdgeType : unsigned int {
-  Hardcoded,
-  MasterFlag,
-  Master,
-  MasterlistRequirement,
-  UserRequirement,
-  MasterlistLoadAfter,
-  UserLoadAfter,
-  Group,
-  Overlap,
-  TieBreak,
+  hardcoded,
+  masterFlag,
+  master,
+  masterlistRequirement,
+  userRequirement,
+  masterlistLoadAfter,
+  userLoadAfter,
+  group,
+  overlap,
+  tieBreak,
 };
 
 /**

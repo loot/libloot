@@ -384,7 +384,7 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
 
       if (processedPluginPaths.count(
               std::filesystem::canonical(graphPluginPath)) == 0) {
-        AddEdge(pluginVertex, *vit, EdgeType::Hardcoded);
+        AddEdge(pluginVertex, *vit, EdgeType::hardcoded);
       }
     }
   }
@@ -413,7 +413,7 @@ void PluginSorter::AddSpecificEdges() {
         vertex = *vit2;
       }
 
-      AddEdge(parentVertex, vertex, EdgeType::MasterFlag);
+      AddEdge(parentVertex, vertex, EdgeType::masterFlag);
     }
 
     vertex_t parentVertex;
@@ -422,7 +422,7 @@ void PluginSorter::AddSpecificEdges() {
     }
     for (const auto& master : graph_[*vit].GetMasters()) {
       if (GetVertexByName(master, parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::Master);
+        AddEdge(parentVertex, *vit, EdgeType::master);
     }
 
     if (logger_) {
@@ -430,11 +430,11 @@ void PluginSorter::AddSpecificEdges() {
     }
     for (const auto& file : graph_[*vit].GetMasterlistRequirements()) {
       if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::MasterlistRequirement);
+        AddEdge(parentVertex, *vit, EdgeType::masterlistRequirement);
     }
     for (const auto& file : graph_[*vit].GetUserRequirements()) {
       if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::UserRequirement);
+        AddEdge(parentVertex, *vit, EdgeType::userRequirement);
     }
 
     if (logger_) {
@@ -442,11 +442,11 @@ void PluginSorter::AddSpecificEdges() {
     }
     for (const auto& file : graph_[*vit].GetMasterlistLoadAfterFiles()) {
       if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::MasterlistLoadAfter);
+        AddEdge(parentVertex, *vit, EdgeType::masterlistLoadAfter);
     }
     for (const auto& file : graph_[*vit].GetUserLoadAfterFiles()) {
       if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::UserLoadAfter);
+        AddEdge(parentVertex, *vit, EdgeType::userLoadAfter);
     }
   }
 }
@@ -619,7 +619,7 @@ void PluginSorter::AddGroupEdges() {
         shouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
 
     if (!ignore) {
-      AddEdge(edgePair.first, edgePair.second, EdgeType::Group);
+      AddEdge(edgePair.first, edgePair.second, EdgeType::group);
     } else if (logger_) {
       logger_->trace(
           "Skipping edge from \"{}\" to \"{}\" as it would "
@@ -670,7 +670,7 @@ void PluginSorter::AddOverlapEdges() {
       }
 
       if (!EdgeCreatesCycle(fromVertex, toVertex))
-        AddEdge(fromVertex, toVertex, EdgeType::Overlap);
+        AddEdge(fromVertex, toVertex, EdgeType::overlap);
     }
   }
 }
@@ -743,7 +743,7 @@ void PluginSorter::AddTieBreakEdges() {
       }
 
       if (!EdgeCreatesCycle(fromVertex, toVertex))
-        AddEdge(fromVertex, toVertex, EdgeType::TieBreak);
+        AddEdge(fromVertex, toVertex, EdgeType::tieBreak);
     }
   }
 }

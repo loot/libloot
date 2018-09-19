@@ -34,25 +34,25 @@ EdgeType Vertex::GetTypeOfEdgeToNextVertex() const { return outEdgeType_; }
 
 std::string describe(EdgeType edgeType) {
   switch (edgeType) {
-    case EdgeType::Hardcoded:
+    case EdgeType::hardcoded:
       return "Hardcoded";
-    case EdgeType::MasterFlag:
+    case EdgeType::masterFlag:
       return "Master Flag";
-    case EdgeType::Master:
+    case EdgeType::master:
       return "Master";
-    case EdgeType::MasterlistRequirement:
+    case EdgeType::masterlistRequirement:
       return "Masterlist Requirement";
-    case EdgeType::UserRequirement:
+    case EdgeType::userRequirement:
       return "User Requirement";
-    case EdgeType::MasterlistLoadAfter:
+    case EdgeType::masterlistLoadAfter:
       return "Masterlist Load After";
-    case EdgeType::UserLoadAfter:
+    case EdgeType::userLoadAfter:
       return "User Load After";
-    case EdgeType::Group:
+    case EdgeType::group:
       return "Group";
-    case EdgeType::Overlap:
+    case EdgeType::overlap:
       return "Overlap";
-    case EdgeType::TieBreak:
+    case EdgeType::tieBreak:
       return "Tie Break";
     default:
       return "Unknown";
