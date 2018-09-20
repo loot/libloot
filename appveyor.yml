@@ -77,7 +77,7 @@ deploy:
     tag: $(APPVEYOR_REPO_TAG_NAME)
     release: LOOT API v$(APPVEYOR_REPO_TAG_NAME)
     description: |
-      Requires Windows 7 or later and the [MSVC 2017 x86 redistributable](https://download.visualstudio.microsoft.com/download/pr/12192785/88b50ce70017bf10f2d56d60fcba6ab1/VC_redist.x86.exe), and [7-Zip](http://www.7-zip.org/) to extract the archives.
+      Requires Windows 7 or later and the [MSVC 2017 x86 redistributable](https://download.visualstudio.microsoft.com/download/pr/749aa419-f9e4-4578-a417-a43786af205e/d59197078cc425377be301faba7dd87a/vc_redist.x86.exe), and [7-Zip](http://www.7-zip.org/) to extract the archives.
 
       ## Change Logs
       - [API](https://loot-api.readthedocs.io/en/$(APPVEYOR_REPO_TAG_NAME)/api/changelog.html)
