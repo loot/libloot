@@ -36,6 +36,7 @@
 #include "api/metadata_list.h"
 #include "loot/database_interface.h"
 #include "loot/enum/game_type.h"
+#include "loot/vertex.h"
 
 namespace loot {
 struct ApiDatabase : public DatabaseInterface {
@@ -72,6 +73,8 @@ struct ApiDatabase : public DatabaseInterface {
   std::unordered_set<Group> GetGroups(bool includeUserMetadata = true) const;
   std::unordered_set<Group> GetUserGroups() const;
   void SetUserGroups(const std::unordered_set<Group>& groups);
+  std::vector<Vertex> GetGroupsPath(const std::string& fromGroupName,
+                                    const std::string& toGroupName) const;
 
   std::optional<PluginMetadata> GetPluginMetadata(
       const std::string& plugin,

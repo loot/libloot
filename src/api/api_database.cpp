@@ -31,6 +31,7 @@
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/plugin_metadata.h"
 #include "api/sorting/plugin_sorter.h"
+#include "api/sorting/group_sort.h"
 #include "loot/metadata/group.h"
 #include "loot/exception/file_access_error.h"
 
@@ -194,8 +195,18 @@ std::unordered_set<Group> ApiDatabase::GetGroups(bool includeUserMetadata) const
 std::unordered_set<Group> ApiDatabase::GetUserGroups() const {
   return userlist_.Groups();
 }
+
 void ApiDatabase::SetUserGroups(const std::unordered_set<Group>& groups) {
   userlist_.SetGroups(groups);
+}
+
+
+std::vector<Vertex> ApiDatabase::GetGroupsPath(const std::string& fromGroupName,
+  const std::string& toGroupName) const {
+  auto masterlistGroups = GetGroups(false);
+  auto userGroups = GetUserGroups();
+
+  return loot::GetGroupsPath(masterlistGroups, userGroups, fromGroupName, toGroupName);
 }
 
 std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(const std::string& plugin,

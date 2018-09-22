@@ -105,6 +105,80 @@ TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
     }
   }
 }
+
+TEST(GetGroupsPath, shouldThrowIfTheFromGroupDoesNotExist) {
+  std::unordered_set<Group> groups({Group("a", {"c"}), Group("b", {"a"})});
+  std::unordered_set<Group> userGroups({Group("c", {"b"})});
+
+  EXPECT_THROW(GetGroupsPath(groups, userGroups, "d", "a"),
+               std::invalid_argument);
+}
+
+TEST(GetGroupsPath, shouldThrowIfTheToGroupDoesNotExist) {
+  std::unordered_set<Group> groups({Group("a", {"c"}), Group("b", {"a"})});
+  std::unordered_set<Group> userGroups({Group("c", {"b"})});
+
+  EXPECT_THROW(GetGroupsPath(groups, userGroups, "a", "d"),
+               std::invalid_argument);
+}
+
+TEST(GetGroupsPath,
+     shouldReturnAnEmptyVectorIfThereIsNoPathBetweenTheTwoGroups) {
+  std::unordered_set<Group> groups({Group("a", {}),
+                                    Group("b", {"a"}),
+                                    Group("c", {"a"}),
+                                    Group("d", {"c"}),
+                                    Group("e", {"b", "d"})});
+
+  auto path = GetGroupsPath(groups, {}, "b", "d");
+
+  EXPECT_TRUE(path.empty());
+}
+
+TEST(GetGroupsPath,
+     shouldFindThePathWithTheLeastNumberOfEdgesInAMasterlistOnlyGraph) {
+  std::unordered_set<Group> groups({Group("a", {}),
+                                    Group("b", {"a"}),
+                                    Group("c", {"a"}),
+                                    Group("d", {"c"}),
+                                    Group("e", {"b", "d"})});
+
+  auto path = GetGroupsPath(groups, {}, "a", "e");
+
+  ASSERT_EQ(3, path.size());
+  EXPECT_EQ("a", path[0].GetName());
+  EXPECT_EQ(EdgeType::masterlistLoadAfter,
+            path[0].GetTypeOfEdgeToNextVertex().value());
+  EXPECT_EQ("b", path[1].GetName());
+  EXPECT_EQ(EdgeType::masterlistLoadAfter,
+            path[1].GetTypeOfEdgeToNextVertex().value());
+  EXPECT_EQ("e", path[2].GetName());
+  EXPECT_FALSE(path[2].GetTypeOfEdgeToNextVertex().has_value());
+}
+
+TEST(GetGroupsPath,
+     shouldFindThePathWithTheLeastNumberOfEdgesThatContainsUserMetadata) {
+  std::unordered_set<Group> groups({Group("a", {}),
+                                    Group("b", {"a"}),
+                                    Group("c", {"a"}),
+                                    Group("e", {"b", "d"})});
+  std::unordered_set<Group> userGroups({Group("d", {"c"})});
+
+  auto path = GetGroupsPath(groups, userGroups, "a", "e");
+
+  ASSERT_EQ(4, path.size());
+  EXPECT_EQ("a", path[0].GetName());
+  EXPECT_EQ(EdgeType::masterlistLoadAfter,
+            path[0].GetTypeOfEdgeToNextVertex().value());
+  EXPECT_EQ("c", path[1].GetName());
+  EXPECT_EQ(EdgeType::userLoadAfter,
+            path[1].GetTypeOfEdgeToNextVertex().value());
+  EXPECT_EQ("d", path[2].GetName());
+  EXPECT_EQ(EdgeType::masterlistLoadAfter,
+            path[2].GetTypeOfEdgeToNextVertex().value());
+  EXPECT_EQ("e", path[3].GetName());
+  EXPECT_FALSE(path[3].GetTypeOfEdgeToNextVertex().has_value());
+}
 }
 }
 

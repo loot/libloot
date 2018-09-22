@@ -24,14 +24,6 @@
 #include "loot/exception/cyclic_interaction_error.h"
 
 namespace loot {
-Vertex::Vertex(std::string name, EdgeType outEdgeType) :
-    name_(name),
-    outEdgeType_(outEdgeType) {}
-
-std::string Vertex::GetName() const { return name_; }
-
-EdgeType Vertex::GetTypeOfEdgeToNextVertex() const { return outEdgeType_; }
-
 std::string describe(EdgeType edgeType) {
   switch (edgeType) {
     case EdgeType::hardcoded:
@@ -63,8 +55,11 @@ std::string describe(EdgeType edgeType) {
 std::string describeCycle(const std::vector<Vertex>& cycle) {
   std::string text;
   for (const auto& vertex : cycle) {
-    text += vertex.GetName() + " --[" +
-            describe(vertex.GetTypeOfEdgeToNextVertex()) + "]-> ";
+    text += vertex.GetName();
+    if (vertex.GetTypeOfEdgeToNextVertex().has_value()) {
+      text += " --[" + describe(vertex.GetTypeOfEdgeToNextVertex().value()) +
+              "]-> ";
+    }
   }
   if (!cycle.empty()) {
     text += cycle[0].GetName();

@@ -42,10 +42,17 @@ std::unordered_map<std::string, std::unordered_set<std::string>>
 GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
                          const std::unordered_set<Group>& userGroups);
 
+std::vector<Vertex> GetGroupsPath(
+    const std::unordered_set<Group>& masterlistGroups,
+    const std::unordered_set<Group>& userGroups,
+    const std::string& fromGroupName,
+    const std::string& toGroupName);
+
 template<typename G>
 class CycleDetector : public boost::dfs_visitor<> {
 public:
-  void tree_edge(typename boost::graph_traits<G>::edge_descriptor edge, const G& graph) {
+  void tree_edge(typename boost::graph_traits<G>::edge_descriptor edge,
+                 const G& graph) {
     auto source = boost::source(edge, graph);
 
     auto vertex = Vertex(graph[source].GetName(), graph[edge]);
@@ -64,7 +71,8 @@ public:
     trail.push_back(vertex);
   }
 
-  void back_edge(typename boost::graph_traits<G>::edge_descriptor edge, const G& graph) {
+  void back_edge(typename boost::graph_traits<G>::edge_descriptor edge,
+                 const G& graph) {
     auto source = boost::source(edge, graph);
     auto target = boost::target(edge, graph);
 

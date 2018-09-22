@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+#include "loot/exception/cyclic_interaction_error.h"
 #include "loot/metadata/group.h"
 #include "loot/metadata/message.h"
 #include "loot/metadata/plugin_metadata.h"
@@ -191,7 +192,8 @@ public:
    *        metadata from the masterlist.
    * @returns An unordered set of Group objects.
    */
-  virtual std::unordered_set<Group> GetGroups(bool includeUserMetadata = true) const = 0;
+  virtual std::unordered_set<Group> GetGroups(
+      bool includeUserMetadata = true) const = 0;
 
   /**
    * @brief Gets the groups that are defined or extended in the loaded userlist.
@@ -206,6 +208,25 @@ public:
    *        The unordered set of Group objects to set.
    */
   virtual void SetUserGroups(const std::unordered_set<Group>& groups) = 0;
+
+  /**
+   * @brief Get the "shortest" path between the two given groups according to
+   *        their load after metadata.
+   * @details The "shortest" path is defined as the path that maximises the
+   *          amount of user metadata involved while minimising the amount of
+   *          masterlist metadata involved. It's not the path involving the
+   *          fewest groups.
+   * @param fromGroupName
+   *        The name of the source group, that loads earlier.
+   * @param toGroupName
+   *        The name of the destination group, that loads later.
+   * @returns A vector of Vertex elements representing the path from the source
+   *          group to the destination group, or an empty vector if no path
+   *          exists.
+   */
+  virtual std::vector<Vertex> GetGroupsPath(
+      const std::string& fromGroupName,
+      const std::string& toGroupName) const = 0;
 
   /**
    * @brief Set the groups

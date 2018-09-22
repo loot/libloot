@@ -497,6 +497,23 @@ TEST_P(DatabaseInterfaceTest,
 }
 
 TEST_P(DatabaseInterfaceTest,
+  getGroupsPathShouldReturnTheShortestPathBetweenTheGivenGroups) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+
+  ASSERT_NO_THROW(
+    db_->LoadLists(masterlistPath, userlistPath_));
+
+  auto path = db_->GetGroupsPath("group1", "group3");
+
+  ASSERT_EQ(2, path.size());
+  EXPECT_EQ("group1", path[0].GetName());
+  EXPECT_EQ(EdgeType::userLoadAfter, path[0].GetTypeOfEdgeToNextVertex());
+  EXPECT_EQ("group3", path[1].GetName());
+  EXPECT_FALSE(path[1].GetTypeOfEdgeToNextVertex().has_value());
+}
+
+TEST_P(DatabaseInterfaceTest,
        getKnownBashTagsShouldReturnAllBashTagsListedInLoadedMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());

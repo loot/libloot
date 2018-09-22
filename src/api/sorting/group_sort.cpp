@@ -25,6 +25,7 @@
 #include "group_sort.h"
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/bellman_ford_shortest_paths.hpp>
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/graph_traits.hpp>
 
@@ -70,6 +71,7 @@ typedef boost::adjacency_list<boost::vecS,
     GroupGraph;
 typedef boost::graph_traits<GroupGraph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<GroupGraph>::edge_descriptor edge_t;
+typedef boost::associative_property_map<std::map<edge_t, int>> edge_map_t;
 
 class AfterGroupsVisitor : public boost::dfs_visitor<> {
 public:
@@ -97,15 +99,9 @@ std::string join(const std::unordered_set<std::string>& set) {
   return output.substr(0, output.length() - 2);
 }
 
-std::unordered_map<std::string, std::unordered_set<std::string>>
-GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
-                         const std::unordered_set<Group>& userGroups) {
+GroupGraph BuildGraph(const std::unordered_set<Group>& masterlistGroups,
+                      const std::unordered_set<Group>& userGroups) {
   GroupGraph graph;
-
-  auto logger = getLogger();
-  if (logger) {
-    logger->info("Sorting groups according to their load after data");
-  }
 
   std::unordered_map<std::string, vertex_t> groupVertices;
   for (const auto& group : masterlistGroups) {
@@ -128,6 +124,7 @@ GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
     }
   }
 
+  auto logger = getLogger();
   for (const vertex_t& vertex :
        boost::make_iterator_range(boost::vertices(graph))) {
     auto group = graph[vertex];
@@ -164,6 +161,19 @@ GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
     }
   }
 
+  return graph;
+}
+
+std::unordered_map<std::string, std::unordered_set<std::string>>
+GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
+                         const std::unordered_set<Group>& userGroups) {
+  GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
+
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("Sorting groups according to their load after data");
+  }
+
   // Check for cycles.
   if (logger) {
     logger->trace("Checking for cycles in the group graph");
@@ -193,5 +203,86 @@ GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
   }
 
   return transitiveAfterGroups;
+}
+
+vertex_t GetVertexByName(const GroupGraph& graph, const std::string& name) {
+  for (const auto& vertex :
+       boost::make_iterator_range(boost::vertices(graph))) {
+    if (graph[vertex].GetName() == name) {
+      return vertex;
+    }
+  }
+
+  auto logger = getLogger();
+  if (logger) {
+    logger->error("Can't find group with name \"{}\"", name);
+  }
+
+  throw std::invalid_argument("Can't find group with name \"" + name + "\"");
+}
+
+
+std::vector<Vertex> GetGroupsPath(
+    const std::unordered_set<Group>& masterlistGroups,
+    const std::unordered_set<Group>& userGroups,
+    const std::string& fromGroupName,
+    const std::string& toGroupName) {
+  GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
+
+  auto logger = getLogger();
+
+  auto fromVertex = GetVertexByName(graph, fromGroupName);
+  auto toVertex = GetVertexByName(graph, toGroupName);
+
+  std::map<edge_t, int> weightMap;
+  for (const auto& edge : boost::make_iterator_range(boost::edges(graph))) {
+    if (graph[edge] == EdgeType::userLoadAfter) {
+      weightMap[edge] = -1000000;  // Magnitude is an arbitrarily large number.
+    } else {
+      weightMap[edge] = 1;
+    }
+  }
+
+  std::vector<vertex_t> predecessors(boost::num_vertices(graph));
+  std::vector<int> distance(predecessors.size(),
+                            (std::numeric_limits<int>::max)());
+  distance[toVertex] = 0;
+
+  bellman_ford_shortest_paths(
+      graph,
+      boost::weight_map(edge_map_t(weightMap))
+          .predecessor_map(boost::make_iterator_property_map(
+              predecessors.begin(), get(boost::vertex_index, graph)))
+          .distance_map(&distance[0])
+          .root_vertex(toVertex));
+
+  std::vector<Vertex> path;
+  vertex_t currentVertex = fromVertex;
+  while (currentVertex != toVertex) {
+    auto nextVertex = predecessors[currentVertex];
+    if (nextVertex == currentVertex) {
+      if (logger) {
+        logger->error(
+            "Unreachable vertex {} encountered while looking for vertex {}",
+            graph[currentVertex].GetName(),
+            graph[toVertex].GetName());
+      }
+      return std::vector<Vertex>();
+    }
+
+    auto pair = boost::edge(nextVertex, currentVertex, graph);
+    if (!pair.second) {
+      throw std::runtime_error("Unexpectedly couldn't find edge between \"" +
+                               graph[currentVertex].GetName() + "\" and \"" +
+                               graph[nextVertex].GetName() + "\"");
+    }
+    auto vertex = Vertex(graph[currentVertex].GetName(), graph[pair.first]);
+    path.push_back(vertex);
+
+    currentVertex = nextVertex;
+  }
+  path.push_back(Vertex(graph[currentVertex].GetName()));
+
+  return path;
 }
 }
