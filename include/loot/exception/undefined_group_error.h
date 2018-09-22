@@ -27,6 +27,8 @@
 
 #include <stdexcept>
 
+#include "loot/api_decorator.h"
+
 namespace loot {
 /**
  * @brief An exception class thrown if group is referenced but is undefined.
@@ -37,7 +39,7 @@ public:
    * @brief Construct an exception for an undefined group.
    * @param groupName The name of the group that is undefined.
    */
-  UndefinedGroupError(const std::string& groupName) :
+  LOOT_API UndefinedGroupError(const std::string& groupName) :
       std::runtime_error("The group \"" + groupName + "\" does not exist"),
       groupName_(groupName) {}
 
@@ -45,7 +47,7 @@ public:
    * Get the name of the undefined group.
    * @return A group name.
    */
-  std::string GetGroupName() { return groupName_; }
+  LOOT_API std::string GetGroupName() { return groupName_; }
 
 private:
   const std::string groupName_;

@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "loot/api_decorator.h"
 #include "loot/vertex.h"
 
 namespace loot {
@@ -41,7 +42,7 @@ public:
    * @brief Construct an exception detailing a plugin or group graph cycle.
    * @param cycle A representation of the cyclic path.
    */
-  CyclicInteractionError(std::vector<Vertex> cycle);
+  LOOT_API CyclicInteractionError(std::vector<Vertex> cycle);
 
   /**
    * @brief Get a representation of the cyclic path.
@@ -50,7 +51,7 @@ public:
    *          has an edge going to the first Vertex.
    * @return A vector of Vertex elements representing the cyclic path.
    */
-  std::vector<Vertex> GetCycle();
+  LOOT_API std::vector<Vertex> GetCycle();
 
 private:
   const std::vector<Vertex> cycle_;
