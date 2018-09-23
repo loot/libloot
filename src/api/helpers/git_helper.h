@@ -35,7 +35,6 @@ namespace loot {
 class GitHelper {
 public:
   GitHelper();
-  ~GitHelper();
 
   void InitialiseOptions(const std::string& branch,
                          const std::string& filenameToCheckout);

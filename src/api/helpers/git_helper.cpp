@@ -38,19 +38,6 @@ namespace fs = boost::filesystem;
 namespace loot {
 GitHelper::GitHelper() : logger_(getLogger()) {}
 
-GitHelper::~GitHelper() {
-  if (data_.repo != nullptr) {
-    std::string path = git_repository_path(data_.repo);
-
-    if (!path.empty()) {
-      try {
-        GrantWritePermissions(path);
-      } catch (std::exception&) {
-      }
-    }
-  }
-}
-
 GitHelper::GitData::GitData() :
     repo(nullptr),
     remote(nullptr),
@@ -164,26 +151,6 @@ bool GitHelper::IsRepository(const boost::filesystem::path& path) {
                                  NULL) == 0;
 }
 
-// Removes the read-only flag from some files in git repositories created by
-// libgit2.
-void GitHelper::GrantWritePermissions(const boost::filesystem::path& path) {
-  if (logger_) {
-    logger_->trace("Recursively setting write permission on directory: {}",
-                   path.string());
-  }
-  for (fs::recursive_directory_iterator it(path);
-       it != fs::recursive_directory_iterator();
-       ++it) {
-    if ((it->status().permissions() &
-         (fs::owner_write | fs::group_write | fs::others_write)) == 0) {
-      if (logger_) {
-        logger_->trace("Setting write permission for: {}", it->path().string());
-      }
-      fs::permissions(it->path(), fs::add_perms | fs::owner_write);
-    }
-  }
-}
-
 int GitHelper::DiffFileCallback(const git_diff_delta* delta,
                                 float progress,
                                 void* payload) {
@@ -248,12 +215,8 @@ void GitHelper::Clone(const boost::filesystem::path& path,
 
     if (logger_) {
       logger_->trace(
-          "Target repo path not empty, renaming and moving previous content "
-          "back in.");
+          "Target repo path not empty, moving cloned files in.");
     }
-
-    GrantWritePermissions(path);
-    GrantWritePermissions(repoPath);
 
     std::vector<boost::filesystem::path> filenamesToMove;
     for (fs::directory_iterator it(repoPath);
