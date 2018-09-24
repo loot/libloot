@@ -2,6 +2,15 @@
 Version History
 ***************
 
+0.13.8 - 2018-09-24
+===================
+
+Fixed
+-----
+
+- Filesystem errors when trying to set permissions during a masterlist update
+  that clones a new repository.
+
 0.13.7 - 2018-09-10
 ===================
 
