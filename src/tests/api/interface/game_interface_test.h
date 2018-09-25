@@ -99,7 +99,7 @@ TEST_P(
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(handle_->GetPlugin(masterFile));
-  auto plugin = handle_->GetPlugin(masterFile).value();
+  auto plugin = handle_->GetPlugin(masterFile);
   EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that only the header has been read.
@@ -113,7 +113,7 @@ TEST_P(GameInterfaceTest,
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(handle_->GetPlugin(masterFile));
-  auto plugin = handle_->GetPlugin(masterFile).value();
+  auto plugin = handle_->GetPlugin(masterFile);
   EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that not only the header has been read.
@@ -125,7 +125,7 @@ TEST_P(GameInterfaceTest, loadPluginsWithANonAsciiPluginShouldLoadIt) {
   EXPECT_EQ(1, handle_->GetLoadedPlugins().size());
 
   // Check that one plugin's header has been read.
-  auto plugin = handle_->GetPlugin(nonAsciiEsm).value();
+  auto plugin = handle_->GetPlugin(nonAsciiEsm);
   EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that not only the header has been read.

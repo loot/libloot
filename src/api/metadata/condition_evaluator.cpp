@@ -415,7 +415,7 @@ Version ConditionEvaluator::getVersion(const std::string& filePath) const {
 
     auto plugin = gameCache_->GetPlugin(filePath);
     if (plugin) {
-      return Version(plugin.value()->GetVersion().value_or(""));
+      return Version(plugin->GetVersion().value_or(""));
     }
 
     // The file wasn't in the plugin cache, load it as a plugin
@@ -451,7 +451,7 @@ uint32_t ConditionEvaluator::getCrc(const std::string & file) const {
   // Get the CRC from the game plugin cache if possible.
   auto plugin = gameCache_->GetPlugin(file);
   if (plugin) {
-    crc = plugin.value()->GetCRC().value_or(0);
+    crc = plugin->GetCRC().value_or(0);
   }
 
   // Otherwise calculate it from the file.

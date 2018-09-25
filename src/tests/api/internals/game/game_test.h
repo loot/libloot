@@ -108,7 +108,7 @@ TEST_P(
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(game.GetPlugin(masterFile));
-  auto plugin = game.GetPlugin(masterFile).value();
+  auto plugin = game.GetPlugin(masterFile);
   EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that only the header has been read.
@@ -149,7 +149,7 @@ TEST_P(GameTest,
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(game.GetPlugin(blankEsm));
-  auto plugin = game.GetPlugin(blankEsm).value();
+  auto plugin = game.GetPlugin(blankEsm);
   EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that not only the header has been read.

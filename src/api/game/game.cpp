@@ -194,7 +194,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   }
 }
 
-std::optional<std::shared_ptr<const PluginInterface>> Game::GetPlugin(
+std::shared_ptr<const PluginInterface> Game::GetPlugin(
     const std::string& pluginName) const {
   return cache_->GetPlugin(pluginName);
 }
@@ -231,7 +231,7 @@ bool Game::IsPluginActive(const std::string& pluginName) const {
   auto plugin = cache_->GetPlugin(pluginName);
 
   if (plugin) {
-    return plugin.value()->IsActive();
+    return plugin->IsActive();
   }
 
   return loadOrderHandler_->IsPluginActive(pluginName);

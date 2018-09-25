@@ -97,13 +97,13 @@ std::set<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
   return output;
 }
 
-std::optional<std::shared_ptr<const Plugin>> GameCache::GetPlugin(
+std::shared_ptr<const Plugin> GameCache::GetPlugin(
     const std::string& pluginName) const {
   auto it = plugins_.find(to_lower(pluginName));
   if (it != end(plugins_))
     return it->second;
 
-  return std::nullopt;
+  return nullptr;
 }
 
 void GameCache::AddPlugin(const Plugin&& plugin) {

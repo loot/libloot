@@ -58,8 +58,7 @@ public:
   void LoadPlugins(const std::vector<std::string>& plugins,
                    bool loadHeadersOnly);
 
-  std::optional<std::shared_ptr<const PluginInterface>>
-  GetPlugin(
+  std::shared_ptr<const PluginInterface> GetPlugin(
       const std::string& pluginName) const;
 
   std::set<std::shared_ptr<const PluginInterface>> GetLoadedPlugins() const;

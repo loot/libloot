@@ -81,11 +81,10 @@ public:
    * @brief Get data for a loaded plugin.
    * @param  pluginName
    *         The filename of the plugin to get data for.
-   * @returns If the plugin has been loaded, an optional containing a pointer to
-   *          an implementation of PluginInterface for that plugin, otherwise an
-   *          optional containing no value.
+   * @returns A shared pointer to a const PluginInterface implementation. The
+   *          pointer is null if the given plugin has not been loaded.
    */
-  virtual std::optional<std::shared_ptr<const PluginInterface>> GetPlugin(
+  virtual std::shared_ptr<const PluginInterface> GetPlugin(
       const std::string& pluginName) const = 0;
 
   /**

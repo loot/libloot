@@ -47,8 +47,7 @@ public:
   void CacheCrc(const std::string& file, uint32_t crc);
 
   std::set<std::shared_ptr<const Plugin>> GetPlugins() const;
-  std::optional<std::shared_ptr<const Plugin>> GetPlugin(
-      const std::string& pluginName) const;
+  std::shared_ptr<const Plugin> GetPlugin(const std::string& pluginName) const;
   void AddPlugin(const Plugin&& plugin);
 
   std::set<std::filesystem::path> GetArchivePaths() const;
