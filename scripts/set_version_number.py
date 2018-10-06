@@ -28,7 +28,7 @@ def update_resource_file(path, version):
     comma_separated_version = version.replace('.', ', ')
 
     replace_in_file(path, 'VERSION \d+, \d+, \d+', 'VERSION {}'.format(comma_separated_version))
-    replace_in_file(path, 'Version", "\d+\.\d+\.\d+"', 'VERSION ", "{}"'.format(version))
+    replace_in_file(path, 'Version", "\d+\.\d+\.\d+"', 'Version", "{}"'.format(version))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Set the LOOT API version number')
