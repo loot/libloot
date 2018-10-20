@@ -235,10 +235,18 @@ void GitHelper::Clone(const std::filesystem::path& path,
     }
 
     for (const auto& filename : filenamesToMove) {
-      fs::rename(repoPath / filename, path / filename);
+      fs::copy(repoPath / filename, path / filename, std::filesystem::copy_options::recursive);
     }
 
-    fs::remove_all(repoPath);
+    try {
+      fs::remove_all(repoPath);
+    } catch (std::exception& e) {
+      if (logger_) {
+        logger_->error(
+          "Could not delete temporary repository path \"{}\": {}",
+          repoPath.u8string(), e.what());
+      }
+    }
 
     // Open the repo again.
     Open(path);
