@@ -21,7 +21,7 @@
     along with LOOT.  If not, see
     <https://www.gnu.org/licenses/>.
     */
-#include "api/helpers/version.h"
+#include "api/helpers/text.h"
 
 #include <regex>
 
@@ -61,6 +61,32 @@ const std::vector<regex> versionRegexes({
         R"((?:^|v)(\d+))",
         regex::ECMAScript | regex::icase),
 });
+
+std::set<Tag> ExtractBashTags(const std::string& description) {
+  std::set<Tag> tags;
+
+  size_t startPos = description.find("{{BASH:");
+  if (startPos == std::string::npos) {
+    return tags;
+  }
+
+  size_t endPos = description.find("}}", startPos);
+  if (endPos == std::string::npos) {
+    return tags;
+  }
+
+  auto commaSeparatedTags = description.substr(startPos, endPos - startPos);
+
+  std::vector<std::string> bashTags;
+  boost::split(bashTags, commaSeparatedTags, [](char c) { return c == ','; });
+
+  for (auto& tag : bashTags) {
+    boost::trim(tag);
+    tags.insert(Tag(tag));
+  }
+
+  return tags;
+}
 
 std::optional<std::string> ExtractVersion(const std::string& text) {
   std::smatch what;

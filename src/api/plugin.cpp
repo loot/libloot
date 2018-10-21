@@ -25,7 +25,6 @@
 #include "api/plugin.h"
 
 #include <filesystem>
-#include <regex>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/locale.hpp>
@@ -33,7 +32,7 @@
 #include "api/game/game.h"
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"
-#include "api/helpers/version.h"
+#include "api/helpers/text.h"
 #include "loot/exception/file_access_error.h"
 
 using std::set;
@@ -88,28 +87,7 @@ Plugin::Plugin(const GameType gameType,
                     name_);
     }
 
-    string text = GetDescription();
-    size_t pos1 = text.find("{{BASH:");
-    if (pos1 != string::npos && pos1 + 7 != text.length()) {
-      pos1 += 7;
-
-      size_t pos2 = text.find("}}", pos1);
-      if (pos2 != string::npos && pos1 != pos2) {
-        text = text.substr(pos1, pos2 - pos1);
-
-        std::vector<string> bashTags;
-        boost::split(bashTags, text, [](char c) { return c == ','; });
-
-        for (auto& tag : bashTags) {
-          boost::trim(tag);
-          tags_.insert(Tag(tag));
-
-          if (logger) {
-            logger->trace("{}: Extracted Bash Tag: {}", name_, tag);
-          }
-        }
-      }
-    }
+    tags_ = ExtractBashTags(GetDescription());
 
     loadsArchive_ = LoadsArchive(gameType, gameCache, pluginPath);
   } catch (std::exception& e) {

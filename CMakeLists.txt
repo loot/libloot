@@ -208,7 +208,7 @@ set (LOOT_API_SRC "${CMAKE_BINARY_DIR}/generated/loot_version.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sorting_data.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/helpers/git_helper.cpp"
-                  "${CMAKE_SOURCE_DIR}/src/api/helpers/version.cpp"
+                  "${CMAKE_SOURCE_DIR}/src/api/helpers/text.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/vertex.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/resource.rc")
 
@@ -263,7 +263,7 @@ set (LOOT_API_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/git_helper.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/logging.h"
-                      "${CMAKE_SOURCE_DIR}/src/api/helpers/version.h")
+                      "${CMAKE_SOURCE_DIR}/src/api/helpers/text.h")
 
 set (LOOT_TESTS_SRC "${CMAKE_SOURCE_DIR}/src/tests/api/internals/main.cpp")
 
@@ -272,7 +272,7 @@ set (LOOT_TESTS_HEADERS "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_t
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/load_order_handler_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/git_helper_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/crc_test.h"
-                        "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/version_test.h"
+                        "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/text_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/yaml_set_helpers_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/condition_evaluator_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/conditional_metadata_test.h"

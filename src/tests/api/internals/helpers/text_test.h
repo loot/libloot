@@ -22,10 +22,10 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_HELPERS_VERSION_TEST
-#define LOOT_TESTS_API_INTERNALS_HELPERS_VERSION_TEST
+#ifndef LOOT_TESTS_API_INTERNALS_HELPERS_TEXT_TEST
+#define LOOT_TESTS_API_INTERNALS_HELPERS_TEXT_TEST
 
-#include "api/helpers/version.h"
+#include "api/helpers/text.h"
 #include "loot/loot_version.h"
 
 #include <gtest/gtest.h>
@@ -42,7 +42,6 @@ TEST(Version, shouldExtractAVersionContainingMultipleDigits) {
 }
 
 TEST(Version, shouldExtractAVersionContainingMultipleNumbers) {
-  
   EXPECT_EQ("10.11.12.13", ExtractVersion("10.11.12.13").value());
 }
 

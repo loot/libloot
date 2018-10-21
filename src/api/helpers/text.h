@@ -22,13 +22,18 @@
     <https://www.gnu.org/licenses/>.
     */
 
-#ifndef LOOT_API_HELPERS_VERSION
-#define LOOT_API_HELPERS_VERSION
+#ifndef LOOT_API_HELPERS_TEXT
+#define LOOT_API_HELPERS_TEXT
 
 #include <optional>
+#include <set>
 #include <string>
 
+#include "loot/metadata/tag.h"
+
 namespace loot {
+std::set<Tag> ExtractBashTags(const std::string& description);
+
 std::optional<std::string> ExtractVersion(const std::string& text);
 }
 
