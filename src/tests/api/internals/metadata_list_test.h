@@ -361,12 +361,10 @@ TEST_P(MetadataListTest,
 
 TEST_P(
     MetadataListTest,
-    evalAllConditionsShouldEvaluateTheConditionsForThePluginsStoredInTeMetadataList) {
+    evalAllConditionsShouldEvaluateTheConditionsForThePluginsStoredInTheMetadataList) {
   Game game(GetParam(), dataPath.parent_path(), localPath);
   ConditionEvaluator evaluator(game.Type(),
-                               game.DataPath(),
-                               game.GetCache(),
-                               game.GetLoadOrderHandler());
+                               game.DataPath());
 
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));

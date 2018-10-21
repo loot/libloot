@@ -139,12 +139,7 @@ float Plugin::GetHeaderVersion() const {
 }
 
 std::optional<std::string> Plugin::GetVersion() const {
-  std::string version = Version(GetDescription()).AsString();
-  if (version.empty()) {
-    return std::nullopt;
-  }
-
-  return version;
+  return ExtractVersion(GetDescription());
 }
 
 std::vector<std::string> Plugin::GetMasters() const {

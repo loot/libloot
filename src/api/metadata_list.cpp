@@ -195,14 +195,14 @@ void MetadataList::AppendMessage(const Message& message) {
 }
 
 void MetadataList::EvalAllConditions(
-    const ConditionEvaluator& conditionEvaluator) {
+    ConditionEvaluator& conditionEvaluator) {
   if (unevaluatedPlugins_.empty())
     unevaluatedPlugins_.swap(plugins_);
   else
     plugins_.clear();
 
   for (const auto& plugin : unevaluatedPlugins_) {
-    plugins_.insert(conditionEvaluator.evaluateAll(plugin));
+    plugins_.insert(conditionEvaluator.EvaluateAll(plugin));
   }
 
   if (unevaluatedRegexPlugins_.empty())
@@ -211,7 +211,7 @@ void MetadataList::EvalAllConditions(
     regexPlugins_ = unevaluatedRegexPlugins_;
 
   for (auto& plugin : regexPlugins_) {
-    plugin = conditionEvaluator.evaluateAll(plugin);
+    plugin = conditionEvaluator.EvaluateAll(plugin);
   }
 
   if (unevaluatedMessages_.empty())
@@ -220,7 +220,7 @@ void MetadataList::EvalAllConditions(
     messages_.clear();
 
   for (const auto& message : unevaluatedMessages_) {
-    if (conditionEvaluator.evaluate(message.GetCondition()))
+    if (conditionEvaluator.Evaluate(message.GetCondition()))
       messages_.push_back(message);
   }
 }

@@ -125,6 +125,26 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
   return loadOrder;
 }
 
+std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
+  auto logger = getLogger();
+  if (logger) {
+    logger->debug("Getting active plugins.");
+  }
+
+  char** pluginArr;
+  size_t pluginArrSize;
+
+  unsigned int ret =
+    lo_get_active_plugins(gh_, &pluginArr, &pluginArrSize);
+
+  HandleError("get active plugins", ret);
+
+  std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
+  lo_free_string_array(pluginArr, pluginArrSize);
+
+  return loadOrder;
+}
+
 std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
   auto logger = getLogger();
   if (logger) {

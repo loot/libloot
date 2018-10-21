@@ -40,9 +40,7 @@ protected:
       })),
       game_(GetParam(), dataPath.parent_path(), localPath),
       evaluator_(game_.Type(),
-                 game_.DataPath(),
-                 game_.GetCache(),
-                 game_.GetLoadOrderHandler()),
+                 game_.DataPath()),
       nonAsciiEsm(u8"non\u00C1scii.esm"),
       nonAsciiNestedFile(u8"non\u00C1scii/test.txt") {
     // Make sure the plugin with a non-ASCII filename exists.
@@ -54,12 +52,41 @@ protected:
 
     std::ofstream out(nonAsciiPath);
     out.close();
+
+    loadInstalledPlugins();
+    evaluator_.RefreshState(game_.GetCache());
+    evaluator_.RefreshState(game_.GetLoadOrderHandler());
   }
 
   std::string IntToHexString(const uint32_t value) {
     std::stringstream stream;
     stream << std::hex << value;
     return stream.str();
+  }
+
+  void loadInstalledPlugins() {
+    std::vector<std::string> plugins({
+        masterFile,
+        blankEsm,
+        blankDifferentEsm,
+        blankMasterDependentEsm,
+        blankDifferentMasterDependentEsm,
+        blankEsp,
+        blankDifferentEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+        blankDifferentPluginDependentEsp,
+        nonAsciiEsm,
+      });
+
+    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+      plugins.push_back(blankEsl);
+    }
+
+    game_.IdentifyMainMasterFile(masterFile);
+    game_.LoadCurrentLoadOrderState();
+    game_.LoadPlugins(plugins, true);
   }
 
   const std::vector<MessageContent> info_;
@@ -83,86 +110,61 @@ INSTANTIATE_TEST_CASE_P(,
 
 TEST_P(ConditionEvaluatorTest,
        evaluateShouldReturnTrueForAnEmptyConditionString) {
-  EXPECT_TRUE(evaluator_.evaluate(""));
+  EXPECT_TRUE(evaluator_.Evaluate(""));
 }
 
 TEST_P(ConditionEvaluatorTest, evaluateShouldThrowForAnInvalidConditionString) {
-  EXPECT_THROW(evaluator_.evaluate("condition"), ConditionSyntaxError);
+  EXPECT_THROW(evaluator_.Evaluate("condition"), ConditionSyntaxError);
 }
 
 TEST_P(ConditionEvaluatorTest,
        evaluateShouldReturnTrueForAConditionThatIsTrue) {
-  EXPECT_TRUE(evaluator_.evaluate("file(\"" + blankEsm + "\")"));
+  EXPECT_TRUE(evaluator_.Evaluate("file(\"" + blankEsm + "\")"));
 }
 
 TEST_P(ConditionEvaluatorTest,
   evaluateFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
-  EXPECT_TRUE(evaluator_.evaluate("file(\"" + nonAsciiEsm + "\")"));
+  EXPECT_TRUE(evaluator_.Evaluate("file(\"" + nonAsciiEsm + "\")"));
 }
 
 TEST_P(ConditionEvaluatorTest,
   evaluateChecksumConditionShouldBeAbleToGetTheCrcOfANonAsciiFile) {
   std::string condition("checksum(\"" + nonAsciiEsm + "\", " +
     IntToHexString(blankEsmCrc) + ")");
-  EXPECT_TRUE(evaluator_.evaluate(condition));
+  EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
 
 TEST_P(ConditionEvaluatorTest,
   evaluateVersionConditionShouldBeAbleToGetTheVersionOfANonAsciiFile) {
   std::string condition("version(\"" + nonAsciiEsm + "\", \"5.0\", ==)");
-  EXPECT_TRUE(evaluator_.evaluate(condition));
+  EXPECT_TRUE(evaluator_.Evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
+  evaluateActiveConditionShouldReturnTrueForAnActivePlugin) {
+  std::string condition("active(\"" + blankEsm + "\")");
+  EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
 
 TEST_P(ConditionEvaluatorTest,
   evaluateRegexFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
   std::string condition(u8"file(\"non\u00C1scii.*\\.esm\")");
-  EXPECT_TRUE(evaluator_.evaluate(condition));
+  EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
 
 TEST_P(ConditionEvaluatorTest,
   evaluateRegexFileConditionShouldReturnTrueForANonAsciiNestedFileThatExists) {
   std::string condition(u8"file(\"non\u00C1scii/.+\\.txt\")");
-  EXPECT_TRUE(evaluator_.evaluate(condition));
+  EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
 
 TEST_P(ConditionEvaluatorTest,
        evaluateShouldReturnFalseForAConditionThatIsFalse) {
-  EXPECT_FALSE(evaluator_.evaluate("file(\"" + missingEsp + "\")"));
-}
-
-TEST_P(
-    ConditionEvaluatorTest,
-    evaluateConditionShouldBeTrueIfTheCrcInThePluginCleaningDataGivenMatchesTheRealPluginCrc) {
-  PluginCleaningData dirtyInfo(blankEsmCrc, "cleaner", info_, 2, 10, 30);
-
-  EXPECT_TRUE(evaluator_.evaluate(dirtyInfo, blankEsm));
-}
-
-TEST_P(
-  ConditionEvaluatorTest,
-  evaluateShouldBeTrueIfTheCrcInTheCleaningDataMatchesTheCrcOfANonAsciiPlugin) {
-  PluginCleaningData dirtyInfo(blankEsmCrc, "cleaner", info_, 2, 10, 30);
-
-  EXPECT_TRUE(evaluator_.evaluate(dirtyInfo, nonAsciiEsm));
-}
-
-TEST_P(
-    ConditionEvaluatorTest,
-    evaluateShouldBeFalseIfTheCrcInThePluginCleaningDataGivenDoesNotMatchTheRealPluginCrc) {
-  PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info_, 2, 10, 30);
-
-  EXPECT_FALSE(evaluator_.evaluate(dirtyInfo, blankEsm));
-}
-
-TEST_P(ConditionEvaluatorTest,
-       evaluateShouldBeFalseIfAnEmptyPluginFilenameIsGiven) {
-  PluginCleaningData dirtyInfo(blankEsmCrc, "cleaner", info_, 2, 10, 30);
-
-  EXPECT_FALSE(evaluator_.evaluate(dirtyInfo, ""));
+  EXPECT_FALSE(evaluator_.Evaluate("file(\"" + missingEsp + "\")"));
 }
 
 TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
-  PluginMetadata plugin(blankEsm);
+  PluginMetadata plugin(nonAsciiEsm);
   plugin.SetGroup("group1");
 
   File file1(blankEsp);
@@ -184,7 +186,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
   plugin.SetDirtyInfo({info1, info2});
   plugin.SetCleanInfo({info1, info2});
 
-  EXPECT_NO_THROW(plugin = evaluator_.evaluateAll(plugin));
+  EXPECT_NO_THROW(plugin = evaluator_.EvaluateAll(plugin));
 
   std::set<File> expectedFiles({file1});
   EXPECT_EQ("group1", plugin.GetGroup().value());
@@ -200,7 +202,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
 TEST_P(ConditionEvaluatorTest, evaluateAllShouldPreserveGroupExplicitness) {
   PluginMetadata plugin(blankEsm);
 
-  EXPECT_NO_THROW(plugin = evaluator_.evaluateAll(plugin));
+  EXPECT_NO_THROW(plugin = evaluator_.EvaluateAll(plugin));
   EXPECT_FALSE(plugin.GetGroup());
 }
 }

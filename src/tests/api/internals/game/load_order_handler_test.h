@@ -90,6 +90,16 @@ protected:
     }
   }
 
+  std::vector<std::string> getActivePlugins() {
+    std::vector<std::string> activePlugins;
+    for (auto& pair : getInitialLoadOrder()) {
+      if (pair.second) {
+        activePlugins.push_back(pair.first);
+      }
+    }
+    return activePlugins;
+  }
+
   LoadOrderHandler loadOrderHandler_;
   std::vector<std::string> loadOrderToSet_;
 };
@@ -168,6 +178,28 @@ TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
   loadOrderHandler_.LoadCurrentState();
 
   ASSERT_EQ(getLoadOrder(), loadOrderHandler_.GetLoadOrder());
+}
+
+TEST_P(LoadOrderHandlerTest,
+  getActivePluginsShouldThrowIfTheHandlerHasNotBeenInitialised) {
+  EXPECT_THROW(loadOrderHandler_.GetActivePlugins(),
+    std::system_error);
+}
+
+TEST_P(LoadOrderHandlerTest,
+  getActivePluginsShouldReturnAnEmptyVectorIfStateHasNotBeenLoaded) {
+  initialiseHandler();
+
+  EXPECT_TRUE(loadOrderHandler_.GetActivePlugins().empty());
+}
+TEST_P(
+  LoadOrderHandlerTest,
+  getActivePluginsShouldReturnOnlyActivePlugins) {
+  initialiseHandler();
+  loadOrderHandler_.LoadCurrentState();
+
+  ASSERT_EQ(getActivePlugins(),
+    loadOrderHandler_.GetActivePlugins());
 }
 
 TEST_P(LoadOrderHandlerTest,

@@ -26,78 +26,35 @@
 #define LOOT_API_METADATA_CONDITION_EVALUATOR
 
 #include <filesystem>
-#include <regex>
 #include <string>
+
+#include <loot_condition_interpreter.hpp>
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
-#include "api/helpers/version.h"
 #include "loot/metadata/plugin_cleaning_data.h"
 #include "loot/metadata/plugin_metadata.h"
 
 namespace loot {
 class ConditionEvaluator {
 public:
-  ConditionEvaluator();
   ConditionEvaluator(const GameType gameType,
-                     const std::filesystem::path& dataPath,
-                     std::shared_ptr<GameCache> gameCache,
-                     std::shared_ptr<LoadOrderHandler> loadOrderHandler);
+    const std::filesystem::path& dataPath);
 
-  bool evaluate(const std::string& condition) const;
-  bool evaluate(const PluginCleaningData& cleaningData,
-                const std::string& pluginName) const;
-  PluginMetadata evaluateAll(const PluginMetadata& pluginMetadata) const;
+  bool Evaluate(const std::string& condition);
+  PluginMetadata EvaluateAll(const PluginMetadata& pluginMetadata);
 
-  bool fileExists(const std::string& filePath) const;
-  bool regexMatchExists(const std::string& regexString) const;
-  bool regexMatchesExist(const std::string& regexString) const;
-
-  bool isPluginActive(const std::string& pluginName) const;
-  bool isPluginMatchingRegexActive(const std::string& regexString) const;
-  bool arePluginsActive(const std::string& regexString) const;
-
-  bool checksumMatches(const std::string& filePath,
-                       const uint32_t checksum) const;
-
-  bool compareVersions(const std::string& filePath,
-                       const std::string& testVersion,
-                       const std::string& comparator) const;
-
+  void ClearConditionCache();
+  void RefreshState(std::shared_ptr<LoadOrderHandler> loadOrderHandler);
+  void RefreshState(std::shared_ptr<GameCache> gameCache);
 private:
-  static void validatePath(const std::filesystem::path& path);
-  static void validateRegex(const std::string& regexString);
+  bool Evaluate(const PluginCleaningData& cleaningData,
+    const std::string& pluginName);
 
-  static std::filesystem::path getRegexParentPath(
-      const std::string& regexString);
-  static std::string getRegexFilename(const std::string& regexString);
-
-  // Split a regex string into the non-regex filesystem parent path, and the
-  // regex filename.
-  static std::pair<std::filesystem::path, std::regex> splitRegex(
-      const std::string& regexString);
-
-  bool isGameSubdirectory(const std::filesystem::path& path) const;
-  bool isRegexMatchInDataDirectory(
-      const std::pair<std::filesystem::path, std::regex>& pathRegex,
-      const std::function<bool(const std::string&)> condition) const;
-  bool areRegexMatchesInDataDirectory(
-      const std::pair<std::filesystem::path, std::regex>& pathRegex,
-      const std::function<bool(const std::string&)> condition) const;
-
-  bool parseCondition(const std::string& condition) const;
-
-  Version getVersion(const std::string& filePath) const;
-
-  bool shouldParseOnly() const;
-
-  uint32_t getCrc(const std::string& file) const;
-
-  const GameType gameType_;
-  const std::filesystem::path dataPath_;
-  const std::shared_ptr<GameCache> gameCache_;
-  const std::shared_ptr<LoadOrderHandler> loadOrderHandler_;
+  std::shared_ptr<lci_state> lciState_;
 };
+
+void ParseCondition(const std::string& condition);
 }
 
 #endif

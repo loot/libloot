@@ -33,7 +33,6 @@
 #include "tests/api/internals/helpers/yaml_set_helpers_test.h"
 #include "tests/api/internals/masterlist_test.h"
 #include "tests/api/internals/metadata/condition_evaluator_test.h"
-#include "tests/api/internals/metadata/condition_grammar_test.h"
 #include "tests/api/internals/metadata/conditional_metadata_test.h"
 #include "tests/api/internals/metadata/file_test.h"
 #include "tests/api/internals/metadata/group_test.h"

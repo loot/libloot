@@ -71,8 +71,9 @@ Game::Game(const GameType gameType,
 
   loadOrderHandler_->Init(type_, gamePath_, localDataPath);
 
-  database_ = std::make_shared<ApiDatabase>(
-      Type(), DataPath(), GetCache(), GetLoadOrderHandler());
+  conditionEvaluator_ = std::make_shared<ConditionEvaluator>(Type(), DataPath());
+
+  database_ = std::make_shared<ApiDatabase>(conditionEvaluator_);
 }
 
 GameType Game::Type() const { return type_; }
@@ -192,6 +193,8 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
     if (thread.joinable())
       thread.join();
   }
+
+  conditionEvaluator_->RefreshState(cache_);
 }
 
 std::shared_ptr<const PluginInterface> Game::GetPlugin(
@@ -225,6 +228,7 @@ std::vector<std::string> Game::SortPlugins(
 
 void Game::LoadCurrentLoadOrderState() {
   loadOrderHandler_->LoadCurrentState();
+  conditionEvaluator_->RefreshState(loadOrderHandler_);
 }
 
 bool Game::IsPluginActive(const std::string& pluginName) const {

@@ -52,40 +52,6 @@ protected:
 // all.
 INSTANTIATE_TEST_CASE_P(, GameCacheTest, ::testing::Values(GameType::tes5));
 
-TEST_P(GameCacheTest, gettingATrueConditionShouldReturnATrueTruePair) {
-  EXPECT_NO_THROW(cache_.CacheCondition(condition, true));
-
-  EXPECT_EQ(std::make_pair(true, true),
-            cache_.GetCachedCondition(condition));
-}
-
-TEST_P(GameCacheTest, gettingAFalseConditionShouldReturnAFalseTruePair) {
-  EXPECT_NO_THROW(cache_.CacheCondition(condition, false));
-
-  EXPECT_EQ(std::make_pair(false, true),
-            cache_.GetCachedCondition(condition));
-}
-
-TEST_P(GameCacheTest, gettingACachedConditionShouldBeCaseSensitive) {
-  EXPECT_NO_THROW(cache_.CacheCondition(condition, false));
-
-  EXPECT_EQ(std::make_pair(false, false),
-    cache_.GetCachedCondition(conditionLowercase));
-}
-
-TEST_P(GameCacheTest, gettingANonCachedConditionShouldReturnAFalseFalsePair) {
-  EXPECT_EQ(std::make_pair(false, false), cache_.GetCachedCondition(condition));
-}
-
-TEST_P(GameCacheTest, gettingACachedCrcShouldReturnTheValue) {
-  cache_.CacheCrc(boost::locale::to_upper(blankEsm), 5);
-  EXPECT_EQ(5, cache_.GetCachedCrc(blankEsm));
-}
-
-TEST_P(GameCacheTest, gettingAnUncachedCrcShouldReturnZero) {
-  EXPECT_EQ(0, cache_.GetCachedCrc(blankEsm));
-}
-
 TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
   cache_.AddPlugin(Plugin(game_.Type(),
                           std::make_shared<GameCache>(GameCache()),
@@ -156,22 +122,6 @@ TEST_P(GameCacheTest,
   });
 
   EXPECT_EQ(expected, cache_.GetArchivePaths());
-}
-
-TEST_P(GameCacheTest,
-       clearingCachedConditionsShouldNotThrowIfNoConditionsAreCached) {
-  EXPECT_NO_THROW(cache_.ClearCachedConditions());
-}
-
-TEST_P(GameCacheTest, clearingCachedConditionsShouldClearAnyCachedConditionsAndCrcs) {
-  EXPECT_NO_THROW(cache_.CacheCondition(condition, true));
-  cache_.CacheCrc(blankEsm, 5);
-
-  EXPECT_NO_THROW(cache_.ClearCachedConditions());
-
-  EXPECT_EQ(std::make_pair(false, false),
-            cache_.GetCachedCondition(conditionLowercase));
-  EXPECT_EQ(0, cache_.GetCachedCrc(blankEsm));
 }
 
 TEST_P(GameCacheTest, clearingCachedPluginsShouldNotThrowIfNoPluginsAreCached) {

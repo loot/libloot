@@ -25,31 +25,11 @@
 #ifndef LOOT_API_HELPERS_VERSION
 #define LOOT_API_HELPERS_VERSION
 
-#include <filesystem>
-#include <regex>
+#include <optional>
 #include <string>
 
 namespace loot {
-// Version class for more robust version comparisons.
-class Version {
-public:
-  Version();
-  Version(const std::string& ver);
-  Version(const std::filesystem::path& file);
-
-  std::string AsString() const;
-
-  bool operator>(const Version&) const;
-  bool operator<(const Version&) const;
-  bool operator>=(const Version&) const;
-  bool operator<=(const Version&) const;
-  bool operator==(const Version&) const;
-  bool operator!=(const Version&) const;
-
-private:
-  std::string verString_;
-  static const std::vector<std::regex> versionRegexes;
-};
+std::optional<std::string> ExtractVersion(const std::string& text);
 }
 
 #endif

@@ -25,18 +25,7 @@
 
 #include <regex>
 
-#include <pseudosem.h>
 #include <boost/algorithm/string.hpp>
-
-#ifdef _WIN32
-#ifndef UNICODE
-#define UNICODE
-#endif
-#ifndef _UNICODE
-#define _UNICODE
-#endif
-#include "windows.h"
-#endif
 
 using std::regex;
 
@@ -60,7 +49,7 @@ const std::string pseudosemVersionRegex =
 /* There are a few different version formats that can appear in strings
    together, and in order to extract the correct one, they must be searched
    for in order of priority. */
-const std::vector<regex> Version::versionRegexes({
+const std::vector<regex> versionRegexes({
     regex(dateRegex, regex::ECMAScript | regex::icase),
     regex(R"(version:?\s)" + pseudosemVersionRegex,
           regex::ECMAScript | regex::icase),
@@ -73,97 +62,22 @@ const std::vector<regex> Version::versionRegexes({
         regex::ECMAScript | regex::icase),
 });
 
-Version::Version() {}
-
-Version::Version(const std::string& ver) {
+std::optional<std::string> ExtractVersion(const std::string& text) {
   std::smatch what;
   for (const auto& versionRegex : versionRegexes) {
-    if (std::regex_search(ver, what, versionRegex)) {
+    if (std::regex_search(text, what, versionRegex)) {
       for (auto it = next(begin(what)); it != end(what); ++it) {
         if (it->str().empty())
           continue;
 
         // Use the first non-empty sub-match.
-        verString_ = *it;
-        boost::trim(verString_);
-        return;
+        std::string version = *it;
+        boost::trim(version);
+        return version;
       }
     }
   }
-}
 
-Version::Version(const std::filesystem::path& file) {
-#ifdef _WIN32
-  DWORD dummy = 0;
-  DWORD size = GetFileVersionInfoSize(file.wstring().c_str(), &dummy);
-
-  if (size > 0) {
-    LPBYTE point = new BYTE[size];
-    UINT uLen;
-    VS_FIXEDFILEINFO* info;
-
-    GetFileVersionInfo(file.wstring().c_str(), 0, size, point);
-
-    VerQueryValue(point, L"\\", (LPVOID*)&info, &uLen);
-
-    DWORD dwLeftMost = HIWORD(info->dwFileVersionMS);
-    DWORD dwSecondLeft = LOWORD(info->dwFileVersionMS);
-    DWORD dwSecondRight = HIWORD(info->dwFileVersionLS);
-    DWORD dwRightMost = LOWORD(info->dwFileVersionLS);
-
-    delete[] point;
-
-    verString_ =
-        std::to_string(dwLeftMost) + '.' + std::to_string(dwSecondLeft) + '.' +
-        std::to_string(dwSecondRight) + '.' + std::to_string(dwRightMost);
-  }
-#else
-  // ensure filename has no quote characters in it to avoid command injection
-  // attacks
-  if (std::string::npos != file.u8string().find('"')) {
-    // command mostly borrowed from the gnome-exe-thumbnailer.sh script
-    // wrestool is part of the icoutils package
-    std::string cmd =
-        "wrestool --extract --raw --type=version \"" + file.u8string() +
-        "\" | tr '\\0, ' '\\t.\\0' | sed 's/\\t\\t/_/g' | tr -c -d '[:print:]' "
-        "| sed -r 's/.*Version[^0-9]*([0-9]+(\\.[0-9]+)+).*/\\1/'";
-
-    FILE* fp = popen(cmd.c_str(), "r");
-
-    // read out the version string
-    static const uint32_t BUFSIZE = 32;
-    char buf[BUFSIZE];
-    if (nullptr != fgets(buf, BUFSIZE, fp)) {
-      verString_ = std::string(buf);
-    }
-    pclose(fp);
-  }
-#endif
-}
-
-std::string Version::AsString() const { return verString_; }
-
-bool Version::operator<(const Version& ver) const {
-  return pseudosem::compare(this->verString_, ver.AsString()) < 0;
-}
-
-bool Version::operator>(const Version& ver) const {
-  return pseudosem::compare(this->verString_, ver.AsString()) > 0;
-}
-
-bool Version::operator>=(const Version& ver) const {
-  return pseudosem::compare(this->verString_, ver.AsString()) >= 0;
-}
-
-bool Version::operator<=(const Version& ver) const {
-  return pseudosem::compare(this->verString_, ver.AsString()) <= 0;
-}
-
-bool Version::operator==(const Version& ver) const {
-  return pseudosem::compare(this->verString_, ver.AsString()) == 0;
-}
-
-bool Version::operator!=(const Version& ver) const {
-  return pseudosem::compare(this->verString_, ver.AsString()) != 0;
+  return std::nullopt;
 }
 }

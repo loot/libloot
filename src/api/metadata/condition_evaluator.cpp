@@ -24,35 +24,83 @@
 
 #include "api/metadata/condition_evaluator.h"
 
+#include <sstream>
+
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"
-#include "api/metadata/condition_grammar.h"
 #include "loot/exception/condition_syntax_error.h"
 
 using std::filesystem::u8path;
 
 namespace loot {
-ConditionEvaluator::ConditionEvaluator() :
-    gameType_(GameType::tes4),
-    gameCache_(nullptr),
-    loadOrderHandler_(nullptr) {}
-ConditionEvaluator::ConditionEvaluator(
-    const GameType gameType,
-    const std::filesystem::path& dataPath,
-    std::shared_ptr<GameCache> gameCache,
-    std::shared_ptr<LoadOrderHandler> loadOrderHandler) :
-    gameType_(gameType),
-    dataPath_(dataPath),
-    gameCache_(gameCache),
-    loadOrderHandler_(loadOrderHandler) {}
-
-bool ConditionEvaluator::evaluate(const std::string& condition) const {
-  if (shouldParseOnly()) {
-    // Still check that the syntax is valid.
-    parseCondition(condition);
-    return false;
+void HandleError(const std::string operation, int returnCode) {
+  if (returnCode == LCI_OK) {
+    return;
   }
 
+  const char* message = nullptr;
+  std::string err = "Failed to " + operation + ". ";
+  lci_get_error_message(&message);
+  if (message == nullptr) {
+    err += "Error code: " + std::to_string(returnCode);
+  }
+  else {
+    err += "Details: " + std::string(message);
+  }
+
+  auto logger = getLogger();
+  if (logger) {
+    logger->error(err);
+  }
+
+  throw ConditionSyntaxError(err);
+}
+
+int mapGameType(GameType gameType) {
+  switch (gameType) {
+  case GameType::tes4:
+    return LCI_GAME_TES4;
+  case GameType::tes5:
+    return LCI_GAME_TES5;
+  case GameType::tes5se:
+    return LCI_GAME_TES5SE;
+  case GameType::tes5vr:
+    return LCI_GAME_TES5VR;
+  case GameType::fo3:
+    return LCI_GAME_FO3;
+  case GameType::fonv:
+    return LCI_GAME_FNV;
+  case GameType::fo4:
+    return LCI_GAME_FO4;
+  case GameType::fo4vr:
+    return LCI_GAME_FO4VR;
+  default:
+    throw std::runtime_error("Unrecognised game type encountered while mapping for condition evaluation.");
+  }
+}
+
+std::string IntToHexString(const uint32_t value) {
+  std::stringstream stream;
+  stream << std::hex << value;
+  return stream.str();
+}
+
+ConditionEvaluator::ConditionEvaluator(
+    const GameType gameType,
+    const std::filesystem::path& dataPath) {
+    lci_state * state = nullptr;
+
+    // This probably isn't correct for API users other than LOOT.
+    // But that probably doesn't matter, as the only things conditional
+    // on LOOT's version are LOOT-specific messages.
+    auto lootPath = std::filesystem::absolute("LOOT.exe");
+    int result = lci_state_create(&state, mapGameType(gameType), dataPath.u8string().c_str(), lootPath.u8string().c_str());
+    HandleError("create state object for condition evaluation", result);
+
+    lciState_ = std::shared_ptr<lci_state>(state, lci_state_destroy);
+}
+
+bool ConditionEvaluator::Evaluate(const std::string& condition) {
   if (condition.empty())
     return true;
 
@@ -61,30 +109,15 @@ bool ConditionEvaluator::evaluate(const std::string& condition) const {
     logger->trace("Evaluating condition: {}", condition);
   }
 
-  auto cachedValue = gameCache_->GetCachedCondition(condition);
-  if (cachedValue.second)
-    return cachedValue.first;
+  int result = lci_condition_eval(condition.c_str(), lciState_.get());
+  if (result != LCI_RESULT_FALSE && result != LCI_RESULT_TRUE) {
+    HandleError("evaluate condition \"" + condition + "\"", result);
+  }
 
-  bool result = parseCondition(condition);
-
-  gameCache_->CacheCondition(condition, result);
-
-  return result;
+  return result == LCI_RESULT_TRUE;
 }
 
-bool ConditionEvaluator::evaluate(const PluginCleaningData& cleaningData,
-                                  const std::string& pluginName) const {
-  if (shouldParseOnly() || pluginName.empty())
-    return false;
-
-  return cleaningData.GetCRC() == getCrc(pluginName);
-}
-
-PluginMetadata ConditionEvaluator::evaluateAll(
-    const PluginMetadata& pluginMetadata) const {
-  if (shouldParseOnly())
-    return pluginMetadata;
-
+PluginMetadata ConditionEvaluator::EvaluateAll(const PluginMetadata& pluginMetadata) {
   PluginMetadata evaluatedMetadata(pluginMetadata.GetName());
   evaluatedMetadata.SetEnabled(pluginMetadata.IsEnabled());
   evaluatedMetadata.SetLocations(pluginMetadata.GetLocations());
@@ -95,35 +128,35 @@ PluginMetadata ConditionEvaluator::evaluateAll(
 
   std::set<File> fileSet;
   for (const auto& file : pluginMetadata.GetLoadAfterFiles()) {
-    if (evaluate(file.GetCondition()))
+    if (Evaluate(file.GetCondition()))
       fileSet.insert(file);
   }
   evaluatedMetadata.SetLoadAfterFiles(fileSet);
 
   fileSet.clear();
   for (const auto& file : pluginMetadata.GetRequirements()) {
-    if (evaluate(file.GetCondition()))
+    if (Evaluate(file.GetCondition()))
       fileSet.insert(file);
   }
   evaluatedMetadata.SetRequirements(fileSet);
 
   fileSet.clear();
   for (const auto& file : pluginMetadata.GetIncompatibilities()) {
-    if (evaluate(file.GetCondition()))
+    if (Evaluate(file.GetCondition()))
       fileSet.insert(file);
   }
   evaluatedMetadata.SetIncompatibilities(fileSet);
 
   std::vector<Message> messages;
   for (const auto& message : pluginMetadata.GetMessages()) {
-    if (evaluate(message.GetCondition()))
+    if (Evaluate(message.GetCondition()))
       messages.push_back(message);
   }
   evaluatedMetadata.SetMessages(messages);
 
   std::set<Tag> tagSet;
   for (const auto& tag : pluginMetadata.GetTags()) {
-    if (evaluate(tag.GetCondition()))
+    if (Evaluate(tag.GetCondition()))
       tagSet.insert(tag);
   }
   evaluatedMetadata.SetTags(tagSet);
@@ -131,14 +164,14 @@ PluginMetadata ConditionEvaluator::evaluateAll(
   if (!evaluatedMetadata.IsRegexPlugin()) {
     std::set<PluginCleaningData> infoSet;
     for (const auto& info : pluginMetadata.GetDirtyInfo()) {
-      if (evaluate(info, pluginMetadata.GetName()))
+      if (Evaluate(info, pluginMetadata.GetName()))
         infoSet.insert(info);
     }
     evaluatedMetadata.SetDirtyInfo(infoSet);
 
     infoSet.clear();
     for (const auto& info : pluginMetadata.GetCleanInfo()) {
-      if (evaluate(info, pluginMetadata.GetName()))
+      if (Evaluate(info, pluginMetadata.GetName()))
         infoSet.insert(info);
     }
     evaluatedMetadata.SetCleanInfo(infoSet);
@@ -147,328 +180,82 @@ PluginMetadata ConditionEvaluator::evaluateAll(
   return evaluatedMetadata;
 }
 
-bool ConditionEvaluator::fileExists(const std::string& filePath) const {
-  validatePath(filePath);
+void ConditionEvaluator::ClearConditionCache() {
+  int result = lci_state_clear_condition_cache(lciState_.get());
+  HandleError("clear the condition cache", result);
+}
 
-  if (shouldParseOnly())
-    return false;
+void ConditionEvaluator::RefreshState(std::shared_ptr<LoadOrderHandler> loadOrderHandler) {
+  ClearConditionCache();
 
-  if (filePath == "LOOT")
-    return true;
-
-  // Try first checking the plugin cache, as most file entries are
-  // for plugins.
-  auto plugin = gameCache_->GetPlugin(filePath);
-  if (plugin) {
-    return true;
+  std::vector<std::string> activePluginNameStrings = loadOrderHandler->GetActivePlugins();
+  std::vector<const char *> activePluginNames;
+  for (auto& pluginName : activePluginNameStrings) {
+    activePluginNames.push_back(pluginName.c_str());
   }
 
-  // Not a loaded plugin, check the filesystem.
-  if (hasPluginFileExtension(filePath, gameType_))
-    return std::filesystem::exists(dataPath_ / u8path(filePath)) ||
-            std::filesystem::exists(dataPath_ / u8path(filePath + ".ghost"));
-  else
-    return std::filesystem::exists(dataPath_ / u8path(filePath));
+  int result = lci_state_set_active_plugins(lciState_.get(),
+    &activePluginNames[0],
+    activePluginNames.size());
+  HandleError("cache active plugins for condition evaluation", result);
 }
 
-bool ConditionEvaluator::regexMatchExists(
-    const std::string& regexString) const {
-  auto pathRegex = splitRegex(regexString);
+void ConditionEvaluator::RefreshState(std::shared_ptr<GameCache> gameCache) {
+  ClearConditionCache();
 
-  if (shouldParseOnly())
-    return false;
+  std::vector<std::string> pluginNames;
+  std::vector<std::string> pluginVersionStrings;
+  std::vector<uint32_t> crcs;
+  for (auto plugin : gameCache->GetPlugins()) {
+    pluginNames.push_back(plugin->GetName());
+    pluginVersionStrings.push_back(plugin->GetVersion().value_or(""));
+    crcs.push_back(plugin->GetCRC().value_or(0));
+  }
 
-  return isRegexMatchInDataDirectory(pathRegex,
-                                     [](const std::string&) { return true; });
+  std::vector<plugin_version> pluginVersions;
+  std::vector<plugin_crc> pluginCrcs;
+  for (size_t i = 0; i < pluginNames.size(); ++i) {
+    if (!pluginVersionStrings[i].empty()) {
+      plugin_version pluginVersion;
+      pluginVersion.plugin_name = pluginNames[i].c_str();
+      pluginVersion.version = pluginVersionStrings[i].c_str();
+      pluginVersions.push_back(pluginVersion);
+    }
+
+    if (crcs[i] != 0) {
+      plugin_crc pluginCrc;
+      pluginCrc.plugin_name = pluginNames[i].c_str();
+      pluginCrc.crc = crcs[i];
+      pluginCrcs.push_back(pluginCrc);
+    }
+  }
+
+  int result = lci_state_set_plugin_versions(lciState_.get(),
+    &pluginVersions[0],
+    pluginVersions.size());
+  HandleError("cache plugin versions for condition evaluation", result);
+
+  result = lci_state_set_crc_cache(lciState_.get(),
+    &pluginCrcs[0],
+    pluginCrcs.size());
+  HandleError("fill CRC cache for condition evaluation", result);
 }
 
-bool ConditionEvaluator::regexMatchesExist(
-    const std::string& regexString) const {
-  auto pathRegex = splitRegex(regexString);
-
-  if (shouldParseOnly())
+bool ConditionEvaluator::Evaluate(const PluginCleaningData& cleaningData,
+  const std::string& pluginName) {
+  if (pluginName.empty())
     return false;
 
-  return areRegexMatchesInDataDirectory(
-      pathRegex, [](const std::string&) { return true; });
+  return Evaluate("checksum(\"" + pluginName + "\", " + IntToHexString(cleaningData.GetCRC()) + ")");
 }
 
-bool ConditionEvaluator::isPluginActive(const std::string& pluginName) const {
-  validatePath(pluginName);
-
-  if (shouldParseOnly())
-    return false;
-
-  if (pluginName == "LOOT")
-    return false;
-
-  return loadOrderHandler_->IsPluginActive(pluginName);
-}
-
-bool ConditionEvaluator::isPluginMatchingRegexActive(
-    const std::string& regexString) const {
-  auto pathRegex = splitRegex(regexString);
-
-  if (shouldParseOnly())
-    return false;
-
-  return isRegexMatchInDataDirectory(
-      pathRegex, [&](const std::string& filename) {
-        return loadOrderHandler_->IsPluginActive(filename);
-      });
-}
-
-bool ConditionEvaluator::arePluginsActive(
-    const std::string& regexString) const {
-  auto pathRegex = splitRegex(regexString);
-
-  if (shouldParseOnly())
-    return false;
-
-  return areRegexMatchesInDataDirectory(
-      pathRegex, [&](const std::string& filename) {
-        return loadOrderHandler_->IsPluginActive(filename);
-      });
-}
-
-bool ConditionEvaluator::checksumMatches(const std::string& filePath,
-                                         const uint32_t checksum) const {
-  validatePath(filePath);
-
-  if (shouldParseOnly())
-    return false;
-
-  return checksum == getCrc(filePath);
-}
-
-bool ConditionEvaluator::compareVersions(const std::string& filePath,
-                                         const std::string& testVersion,
-                                         const std::string& comparator) const {
-  if (!fileExists(filePath))
-    return comparator == "!=" || comparator == "<" || comparator == "<=";
-
-  Version givenVersion = Version(testVersion);
-  Version trueVersion = getVersion(filePath);
-
+void ParseCondition(const std::string& condition) {
   auto logger = getLogger();
   if (logger) {
-    logger->trace("Version extracted: {}", trueVersion.AsString());
+    logger->trace("Testing condition syntax: {}", condition);
   }
 
-  return ((comparator == "==" && trueVersion == givenVersion) ||
-          (comparator == "!=" && trueVersion != givenVersion) ||
-          (comparator == "<" && trueVersion < givenVersion) ||
-          (comparator == ">" && trueVersion > givenVersion) ||
-          (comparator == "<=" && trueVersion <= givenVersion) ||
-          (comparator == ">=" && trueVersion >= givenVersion));
-}
-
-void ConditionEvaluator::validatePath(const std::filesystem::path& path) {
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Checking to see if the path \"{}\" is safe.", path.u8string());
-  }
-
-  std::filesystem::path temp;
-  for (const auto& component : path) {
-    if (component == ".")
-      continue;
-
-    if (component == ".." && temp.filename() == "..") {
-      throw ConditionSyntaxError("Invalid file path: " + path.u8string());
-    }
-
-    temp /= component;
-  }
-}
-void ConditionEvaluator::validateRegex(const std::string& regexString) {
-  try {
-    std::regex(regexString, std::regex::ECMAScript | std::regex::icase);
-  } catch (std::regex_error& e) {
-    throw ConditionSyntaxError("Invalid regex string \"" + regexString +
-                               "\": " + e.what());
-  }
-}
-
-std::filesystem::path ConditionEvaluator::getRegexParentPath(
-    const std::string& regexString) {
-  size_t pos = regexString.rfind('/');
-
-  if (pos == std::string::npos)
-    return std::filesystem::path();
-
-  return u8path(regexString.substr(0, pos));
-}
-
-std::string ConditionEvaluator::getRegexFilename(
-    const std::string& regexString) {
-  size_t pos = regexString.rfind('/');
-
-  if (pos == std::string::npos)
-    return regexString;
-
-  return regexString.substr(pos + 1);
-}
-
-std::pair<std::filesystem::path, std::regex> ConditionEvaluator::splitRegex(
-    const std::string& regexString) {
-  // Can't support a regex string where all path components may be regex, since
-  // this could lead to massive scanning if an unfortunately-named directory is
-  // encountered. As such, only the filename portion can be a regex. Need to
-  // separate that from the rest of the string.
-
-  validateRegex(regexString);
-
-  std::string filename = getRegexFilename(regexString);
-  std::filesystem::path parent = getRegexParentPath(regexString);
-
-  validatePath(parent);
-
-  std::regex reg;
-  try {
-    reg = std::regex(filename, std::regex::ECMAScript | std::regex::icase);
-  } catch (std::regex_error& e) {
-    throw ConditionSyntaxError("Invalid regex string \"" + filename +
-                               "\": " + e.what());
-  }
-
-  return std::pair<std::filesystem::path, std::regex>(parent, reg);
-}
-
-bool ConditionEvaluator::isGameSubdirectory(
-    const std::filesystem::path& path) const {
-  std::filesystem::path parentPath = dataPath_ / path;
-
-  return std::filesystem::exists(parentPath) &&
-         std::filesystem::is_directory(parentPath);
-}
-
-bool ConditionEvaluator::isRegexMatchInDataDirectory(
-    const std::pair<std::filesystem::path, std::regex>& pathRegex,
-    const std::function<bool(const std::string&)> condition) const {
-  // Now we have a valid parent path and a regex filename. Check that the
-  // parent path exists and is a directory.
-  if (!isGameSubdirectory(pathRegex.first)) {
-    auto logger = getLogger();
-    if (logger) {
-      logger->trace("The path \"{}\" is not a game subdirectory.",
-                    pathRegex.first.u8string());
-    }
-    return false;
-  }
-
-  return std::any_of(
-      std::filesystem::directory_iterator(dataPath_ / pathRegex.first),
-      std::filesystem::directory_iterator(),
-      [&](const std::filesystem::directory_entry& entry) {
-        const std::string filename = entry.path().filename().u8string();
-        return std::regex_match(filename, pathRegex.second) &&
-               condition(filename);
-      });
-}
-
-bool ConditionEvaluator::areRegexMatchesInDataDirectory(
-    const std::pair<std::filesystem::path, std::regex>& pathRegex,
-    const std::function<bool(const std::string&)> condition) const {
-  bool foundOneFile = false;
-
-  return isRegexMatchInDataDirectory(pathRegex,
-                                     [&](const std::string& filename) {
-                                       if (condition(filename)) {
-                                         if (foundOneFile)
-                                           return true;
-
-                                         foundOneFile = true;
-                                       }
-
-                                       return false;
-                                     });
-}
-bool ConditionEvaluator::parseCondition(const std::string& condition) const {
-  if (condition.empty())
-    return true;
-
-  ConditionGrammar<std::string::const_iterator, boost::spirit::qi::space_type>
-      grammar(*this);
-  boost::spirit::qi::space_type skipper;
-  std::string::const_iterator begin = condition.begin();
-  std::string::const_iterator end = condition.end();
-  bool evaluation;
-
-  bool parseResult =
-      boost::spirit::qi::phrase_parse(begin, end, grammar, skipper, evaluation);
-
-  if (!parseResult || begin != end) {
-    throw ConditionSyntaxError("Failed to parse condition \"" + condition +
-                               "\": only partially matched expected syntax.");
-  }
-
-  return evaluation;
-}
-Version ConditionEvaluator::getVersion(const std::string& filePath) const {
-  if (filePath == "LOOT")
-    return Version(std::filesystem::absolute("LOOT.exe"));
-  else {
-    // If the file is a plugin, its version needs to be extracted
-    // from its description field. Try getting an entry from the
-    // plugin cache.
-
-    auto plugin = gameCache_->GetPlugin(filePath);
-    if (plugin) {
-      return Version(plugin->GetVersion().value_or(""));
-    }
-
-    // The file wasn't in the plugin cache, load it as a plugin
-    // if it appears to be valid, otherwise treat it as a non
-    // plugin file.
-    auto pluginPath = dataPath_ / u8path(filePath);
-    if (Plugin::IsValid(gameType_, pluginPath))
-      return Version(
-          Plugin(gameType_, gameCache_, pluginPath, true)
-              .GetVersion()
-              .value_or(""));
-
-    return Version(pluginPath);
-  }
-}
-bool ConditionEvaluator::shouldParseOnly() const {
-  return gameCache_ == nullptr || loadOrderHandler_ == nullptr;
-}
-
-uint32_t ConditionEvaluator::getCrc(const std::string & file) const {
-  uint32_t crc = gameCache_->GetCachedCrc(file);
-
-  if (crc != 0) {
-    return crc;
-  }
-
-  if (file == "LOOT") {
-    crc = GetCrc32(std::filesystem::absolute("LOOT.exe"));
-    gameCache_->CacheCrc(file, crc);
-    return crc;
-  }
-
-  // Get the CRC from the game plugin cache if possible.
-  auto plugin = gameCache_->GetPlugin(file);
-  if (plugin) {
-    crc = plugin->GetCRC().value_or(0);
-  }
-
-  // Otherwise calculate it from the file.
-  if (crc == 0) {
-    if (std::filesystem::exists(dataPath_ / u8path(file))) {
-      crc = GetCrc32(dataPath_ / u8path(file));
-    }
-    else if (hasPluginFileExtension(file, gameType_) &&
-      std::filesystem::exists(dataPath_ / u8path(file + ".ghost"))) {
-      crc = GetCrc32(dataPath_ / u8path(file + ".ghost"));
-    }
-  }
-
-  if (crc != 0) {
-    gameCache_->CacheCrc(file, crc);
-  }
-
-  return crc;
+  int result = lci_condition_parse(condition.c_str());
+  HandleError("parse condition \"" + condition + "\"", result);
 }
 }

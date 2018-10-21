@@ -30,6 +30,7 @@
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
+#include "api/metadata/condition_evaluator.h"
 #include "loot/game_interface.h"
 
 namespace loot {
@@ -80,6 +81,7 @@ private:
 
   std::shared_ptr<GameCache> cache_;
   std::shared_ptr<LoadOrderHandler> loadOrderHandler_;
+  std::shared_ptr<ConditionEvaluator> conditionEvaluator_;
   std::shared_ptr<DatabaseInterface> database_;
 
   const GameType type_;

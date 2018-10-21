@@ -60,7 +60,7 @@ public:
   void AppendMessage(const Message& message);
 
   // Eval plugin conditions.
-  void EvalAllConditions(const ConditionEvaluator& conditionEvaluator);
+  void EvalAllConditions(ConditionEvaluator& conditionEvaluator);
 
 protected:
   std::unordered_set<Group> groups_;

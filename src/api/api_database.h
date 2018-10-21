@@ -40,10 +40,7 @@
 
 namespace loot {
 struct ApiDatabase : public DatabaseInterface {
-  ApiDatabase(const GameType gameType,
-              const std::filesystem::path& dataPath,
-              std::shared_ptr<GameCache> gameCache,
-              std::shared_ptr<LoadOrderHandler> loadOrderHandler);
+  ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator);
 
   void LoadLists(const std::filesystem::path& masterlist_path,
                  const std::filesystem::path& userlist_path = "");
@@ -92,8 +89,7 @@ struct ApiDatabase : public DatabaseInterface {
   void DiscardAllUserMetadata();
 
 private:
-  std::shared_ptr<GameCache> gameCache_;
-  ConditionEvaluator conditionEvaluator_;
+  std::shared_ptr<ConditionEvaluator> conditionEvaluator_;
   Masterlist masterlist_;
   MetadataList userlist_;
 };

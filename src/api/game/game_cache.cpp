@@ -38,50 +38,14 @@ namespace loot {
 GameCache::GameCache() {}
 
 GameCache::GameCache(const GameCache& cache) :
-    conditions_(cache.conditions_),
     plugins_(cache.plugins_) {}
 
 GameCache& GameCache::operator=(const GameCache& cache) {
   if (&cache != this) {
-    conditions_ = cache.conditions_;
     plugins_ = cache.plugins_;
   }
 
   return *this;
-}
-
-void GameCache::CacheCondition(const std::string& condition, bool result) {
-  lock_guard<mutex> guard(mutex_);
-  conditions_.insert(pair<string, bool>(condition, result));
-}
-
-std::pair<bool, bool> GameCache::GetCachedCondition(
-    const std::string& condition) const {
-  lock_guard<mutex> guard(mutex_);
-
-  auto it = conditions_.find(condition);
-
-  if (it != conditions_.end())
-    return pair<bool, bool>(it->second, true);
-  else
-    return pair<bool, bool>(false, false);
-}
-
-uint32_t GameCache::GetCachedCrc(const std::string& file) const {
-  lock_guard<mutex> guard(mutex_);
-
-  auto it = crcs_.find(to_lower(file));
-
-  if (it != crcs_.end()) {
-    return it->second;
-  }
-
-  return 0;
-}
-
-void GameCache::CacheCrc(const std::string& file, uint32_t crc) {
-  lock_guard<mutex> guard(mutex_);
-  crcs_.insert(pair<string, uint32_t>(to_lower(file), crc));
 }
 
 std::set<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
@@ -129,13 +93,6 @@ void GameCache::CacheArchivePath(const std::filesystem::path& path)
   lock_guard<mutex> lock(mutex_);
 
   archivePaths_.insert(path);
-}
-
-void GameCache::ClearCachedConditions() {
-  lock_guard<mutex> guard(mutex_);
-
-  conditions_.clear();
-  crcs_.clear();
 }
 
 void GameCache::ClearCachedPlugins() {

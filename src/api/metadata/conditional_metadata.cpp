@@ -42,11 +42,7 @@ std::string ConditionalMetadata::GetCondition() const { return condition_; }
 
 void ConditionalMetadata::ParseCondition() const {
   if (!condition_.empty()) {
-    auto logger = getLogger();
-    if (logger) {
-      logger->trace("Testing condition syntax: {}", condition_);
-    }
-    ConditionEvaluator().evaluate(condition_);
+    loot::ParseCondition(condition_);
   }
 }
 }

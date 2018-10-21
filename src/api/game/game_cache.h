@@ -39,13 +39,6 @@ public:
 
   GameCache& operator=(const GameCache& cache);
 
-  // Returns false for second bool if no cached condition.
-  std::pair<bool, bool> GetCachedCondition(const std::string& condition) const;
-  void CacheCondition(const std::string& condition, bool result);
-
-  uint32_t GetCachedCrc(const std::string& file) const;
-  void CacheCrc(const std::string& file, uint32_t crc);
-
   std::set<std::shared_ptr<const Plugin>> GetPlugins() const;
   std::shared_ptr<const Plugin> GetPlugin(const std::string& pluginName) const;
   void AddPlugin(const Plugin&& plugin);
@@ -53,13 +46,10 @@ public:
   std::set<std::filesystem::path> GetArchivePaths() const;
   void CacheArchivePath(const std::filesystem::path& path);
 
-  void ClearCachedConditions();
   void ClearCachedPlugins();
   void ClearCachedArchivePaths();
 
 private:
-  std::unordered_map<std::string, bool> conditions_;
-  std::unordered_map<std::string, uint32_t> crcs_;
   std::unordered_map<std::string, std::shared_ptr<const Plugin>> plugins_;
   std::set<std::filesystem::path> archivePaths_;
 

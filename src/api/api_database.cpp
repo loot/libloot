@@ -36,12 +36,8 @@
 #include "loot/exception/file_access_error.h"
 
 namespace loot {
-ApiDatabase::ApiDatabase(const GameType gameType,
-                         const std::filesystem::path& dataPath,
-                         std::shared_ptr<GameCache> gameCache,
-                         std::shared_ptr<LoadOrderHandler> loadOrderHandler) :
-    gameCache_(gameCache),
-    conditionEvaluator_(gameType, dataPath, gameCache, loadOrderHandler) {}
+ApiDatabase::ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator) :
+  conditionEvaluator_(conditionEvaluator) {}
 
 ///////////////////////////////////
 // Database Loading Functions
@@ -146,10 +142,10 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(
 
   if (evaluateConditions) {
     // Evaluate conditions from scratch.
-    gameCache_->ClearCachedConditions();
+    conditionEvaluator_->ClearConditionCache();
     for (auto it = std::begin(masterlistMessages);
          it != std::end(masterlistMessages);) {
-      if (!conditionEvaluator_.evaluate(it->GetCondition()))
+      if (!conditionEvaluator_->Evaluate(it->GetCondition()))
         it = masterlistMessages.erase(it);
       else
         ++it;
@@ -224,7 +220,7 @@ std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(const std::string& 
   }
 
   if (evaluateConditions && metadata) {
-    return conditionEvaluator_.evaluateAll(metadata.value());
+    return conditionEvaluator_->EvaluateAll(metadata.value());
   }
 
   return metadata;
@@ -236,7 +232,7 @@ std::optional<PluginMetadata> ApiDatabase::GetPluginUserMetadata(
   auto metadata = userlist_.FindPlugin(plugin);
 
   if (evaluateConditions && metadata) {
-    return conditionEvaluator_.evaluateAll(metadata.value());
+    return conditionEvaluator_->EvaluateAll(metadata.value());
   }
 
   return metadata;

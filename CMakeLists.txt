@@ -116,14 +116,21 @@ ELSE ()
     set (LIBLOADORDER_LIBRARIES ${LIBLOADORDER_LIBRARIES} dl)
 ENDIF ()
 
-ExternalProject_Add(pseudosem
+ExternalProject_Add(loot-condition-interpreter
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/pseudosem/archive/1.1.0.tar.gz"
+                    URL "https://github.com/Ortham/loot-condition-interpreter/archive/1.0.0.tar.gz"
                     CONFIGURE_COMMAND ""
-                    BUILD_COMMAND ""
+                    BUILD_IN_SOURCE 1
+                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --features ffi-headers --target ${RUST_TARGET}
                     INSTALL_COMMAND "")
-ExternalProject_Get_Property(pseudosem SOURCE_DIR)
-set(PSEUDOSEM_INCLUDE_DIRS "${SOURCE_DIR}/include")
+ExternalProject_Get_Property(loot-condition-interpreter SOURCE_DIR)
+set (LCI_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
+set (LCI_LIBRARIES "${SOURCE_DIR}/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}loot_condition_interpreter_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
+IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set (LCI_LIBRARIES ${LCI_LIBRARIES} Userenv)
+ELSE ()
+    set (LCI_LIBRARIES ${LCI_LIBRARIES} dl)
+ENDIF ()
 
 ExternalProject_Add(testing-metadata
                     PREFIX "external"
@@ -235,7 +242,6 @@ set (LOOT_API_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/vertex.h"
                       "${CMAKE_SOURCE_DIR}/src/api/api_database.h"
                       "${CMAKE_SOURCE_DIR}/src/api/metadata/condition_evaluator.h"
-                      "${CMAKE_SOURCE_DIR}/src/api/metadata/condition_grammar.h"
                       "${CMAKE_SOURCE_DIR}/src/api/metadata/yaml/file.h"
                       "${CMAKE_SOURCE_DIR}/src/api/metadata/yaml/group.h"
                       "${CMAKE_SOURCE_DIR}/src/api/metadata/yaml/location.h"
@@ -269,7 +275,6 @@ set (LOOT_TESTS_HEADERS "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_t
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/version_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/yaml_set_helpers_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/condition_evaluator_test.h"
-                        "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/condition_grammar_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/conditional_metadata_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/file_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/group_test.h"
@@ -310,11 +315,11 @@ include_directories ("${CMAKE_SOURCE_DIR}/src"
                      ${LIBLOADORDER_INCLUDE_DIRS}
                      ${LIBGIT2_INCLUDE_DIRS}
                      ${ESPLUGIN_INCLUDE_DIRS}
+                     ${LCI_INCLUDE_DIRS}
                      ${Boost_INCLUDE_DIRS}
                      ${SPDLOG_INCLUDE_DIRS}
                      ${YAML_CPP_INCLUDE_DIRS}
-                     ${GTEST_INCLUDE_DIRS}
-                     ${PSEUDOSEM_INCLUDE_DIRS})
+                     ${GTEST_INCLUDE_DIRS})
 
 ##############################
 # System-Specific Settings
@@ -380,13 +385,13 @@ ENDIF ()
 
 # Build tests.
 add_executable       (loot_api_internals_tests ${LOOT_API_SRC} ${LOOT_API_HEADERS} ${LOOT_TESTS_SRC} ${LOOT_TESTS_HEADERS})
-add_dependencies     (loot_api_internals_tests esplugin libgit2 libloadorder pseudosem spdlog yaml-cpp GTest testing-metadata testing-plugins)
-target_link_libraries(loot_api_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES})
+add_dependencies     (loot_api_internals_tests esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp GTest testing-metadata testing-plugins)
+target_link_libraries(loot_api_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES})
 
 # Build API.
 add_library          (loot_api ${LOOT_API_SRC} ${LOOT_API_HEADERS})
-add_dependencies     (loot_api esplugin libgit2 libloadorder pseudosem spdlog yaml-cpp)
-target_link_libraries(loot_api ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${YAML_CPP_LIBRARIES})
+add_dependencies     (loot_api esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp)
+target_link_libraries(loot_api ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 # Build API tests.
 add_executable       (loot_api_tests ${LOOT_API_TESTS_SRC} ${LOOT_API_TESTS_HEADERS})
