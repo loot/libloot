@@ -34,6 +34,8 @@ install:
   - tar -xf doxygen-1.8.12.linux.bin.tar.gz
   # Add Doxygen binary path to PATH
   - export PATH="$PWD/doxygen-1.8.12/bin:$PATH"
+  # Install cbindgen for generating C++ headers for Rust dependencies.
+  - cbindgen --version || cargo install cbindgen --version 0.6.6
 
 before_script:
   - mkdir build

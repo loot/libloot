@@ -76,10 +76,11 @@ set (GTEST_LIBRARIES "${BINARY_DIR}/googlemock/gtest/${CMAKE_CFG_INTDIR}/${CMAKE
 
 ExternalProject_Add(esplugin
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/esplugin/archive/2.1.0.tar.gz"
+                    URL "https://github.com/WrinklyNinja/esplugin/archive/2.1.1.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
-                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --features ffi-headers --target ${RUST_TARGET}
+                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
+                        cbindgen ffi/ -o ffi/include/esplugin.hpp
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(esplugin SOURCE_DIR)
 set (ESPLUGIN_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
@@ -105,7 +106,8 @@ ExternalProject_Add(libloadorder
                     URL "https://github.com/WrinklyNinja/libloadorder/archive/11.4.1.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
-                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --features ffi-headers --target ${RUST_TARGET}
+                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
+                        cbindgen ffi/ -l c++ -o ffi/include/libloadorder.hpp
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(libloadorder SOURCE_DIR)
 set(LIBLOADORDER_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
@@ -121,7 +123,8 @@ ExternalProject_Add(loot-condition-interpreter
                     URL "https://github.com/Ortham/loot-condition-interpreter/archive/1.0.0.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
-                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --features ffi-headers --target ${RUST_TARGET}
+                    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
+                        cbindgen ffi/ -l c++ -o ffi/include/loot_condition_interpreter.hpp
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(loot-condition-interpreter SOURCE_DIR)
 set (LCI_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")

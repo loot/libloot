@@ -22,6 +22,7 @@ install:
   - rustup-init.exe -y
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - rustup target add i686-pc-windows-msvc
+  - where cbindgen || cargo install cbindgen --version 0.6.6
   - choco install -y doxygen.portable
   - python -m pip install -r docs/requirements.txt
   - ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/WrinklyNinja/ci-scripts/2.0.0/delete_old_bintray_versions.py', "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py")
