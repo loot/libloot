@@ -45,7 +45,6 @@ class Plugin : public PluginInterface {
 public:
   Plugin(const GameType gameType,
          std::shared_ptr<GameCache> gameCache,
-         std::shared_ptr<LoadOrderHandler> loadOrderHandler,
          std::filesystem::path pluginPath,
          const bool headerOnly);
 
@@ -62,8 +61,6 @@ public:
   bool IsEmpty() const;
   bool LoadsArchive() const;
   bool DoFormIDsOverlap(const PluginInterface& plugin) const;
-
-  bool IsActive() const;
 
   // Load ordering functions.
   size_t NumOverrideFormIDs() const;
@@ -88,7 +85,6 @@ private:
 
   bool isEmpty_;  // Does the plugin contain any records other than the TES4
                   // header?
-  bool isActive_;
   bool loadsArchive_;
   const std::string name_;
   std::optional<std::string> version_;  // Obtained from description field.

@@ -42,13 +42,11 @@ using std::string;
 namespace loot {
 Plugin::Plugin(const GameType gameType,
                std::shared_ptr<GameCache> gameCache,
-               std::shared_ptr<LoadOrderHandler> loadOrderHandler,
                std::filesystem::path pluginPath,
                const bool headerOnly) :
     name_(pluginPath.filename().u8string()),
     esPlugin(nullptr),
     isEmpty_(true),
-    isActive_(false),
     loadsArchive_(false),
     numOverrideRecords_(0) {
   auto logger = getLogger();
@@ -112,8 +110,6 @@ Plugin::Plugin(const GameType gameType,
         }
       }
     }
-    // Get whether the plugin is active or not.
-    isActive_ = loadOrderHandler->IsPluginActive(name_);
 
     loadsArchive_ = LoadsArchive(gameType, gameCache, pluginPath);
   } catch (std::exception& e) {
@@ -284,8 +280,6 @@ uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
 bool Plugin::operator<(const Plugin& rhs) const {
   return boost::locale::to_lower(name_) < boost::locale::to_lower(rhs.name_);
 }
-
-bool Plugin::IsActive() const { return isActive_; }
 
 void Plugin::Load(const std::filesystem::path& path,
                   GameType gameType,

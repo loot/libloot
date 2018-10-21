@@ -174,7 +174,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
           loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
         try {
           cache_->AddPlugin(Plugin(
-              Type(), cache_, loadOrderHandler_, pluginPath, loadHeader));
+              Type(), cache_, pluginPath, loadHeader));
         } catch (std::exception& e) {
           if (logger) {
             logger->error(
@@ -228,12 +228,6 @@ void Game::LoadCurrentLoadOrderState() {
 }
 
 bool Game::IsPluginActive(const std::string& pluginName) const {
-  auto plugin = cache_->GetPlugin(pluginName);
-
-  if (plugin) {
-    return plugin->IsActive();
-  }
-
   return loadOrderHandler_->IsPluginActive(pluginName);
 }
 
