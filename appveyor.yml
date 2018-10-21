@@ -17,6 +17,9 @@ environment:
   bintray_auth_token:
     secure: PgsEA6TjHVf718zMnK7J/fT1hUAVNKBeWhpYgYaeCyeZk37VT4Ics6j7+B7ElLEr
 
+cache:
+  - C:\Users\appveyor\.cargo\bin\cbindgen.exe
+
 install:
   - curl -sSf -o rustup-init.exe https://win.rustup.rs
   - rustup-init.exe -y
