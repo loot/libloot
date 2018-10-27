@@ -9,6 +9,8 @@ This is the structure that brings all the others together, and forms the main co
 
   **Required.** Can be an exact plugin filename or a regular expression plugin filename. If the filename contains any of the characters ``:\*?|``, the string will be treated as a regular expression, otherwise it will be treated as an exact filename. For example, ``Example\.esm`` will be treated as a regular expression, as it contains a ``\`` character.
 
+  Regular expression plugin filenames must be written in `modified ECMAScript <https://en.cppreference.com/w/cpp/regex/ecmascript>`_ syntax.
+
 .. describe:: enabled
 
   ``boolean``

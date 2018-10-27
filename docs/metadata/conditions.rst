@@ -24,7 +24,9 @@ Types
 
 .. describe:: regular_expression
 
-  A double-quoted regular expression string to match file paths to.
+  A double-quoted file path, with a regular expression in place of a filename. The path must use ``/`` for directory separators, not ``\``. The regular expression must be written in a `modified Perl <https://docs.rs/regex/1.0.5/regex/index.html#syntax>`_ syntax.
+
+  Only the filename path component will be evaluated as a regular expression. For example, given the regex file path ``Meshes/Resources(1|2)/(upperclass)?table.nif``, LOOT will look for a file named ``table.nif`` or ``upperclasstable.nif`` in the ``Meshes\Resources(1|2)`` folder, rather than looking in the ``Meshes\Resources1`` and ``Meshes\Resources2`` folders.
 
 .. describe:: checksum
 

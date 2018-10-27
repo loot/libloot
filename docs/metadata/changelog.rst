@@ -4,8 +4,44 @@ Version History
 
 The version history of the metadata syntax is given below.
 
-0.13
-====
+0.14 - Unreleased
+=================
+
+Added
+-----
+
+- The ``Group`` data structure now has a ``description`` key that takes a string
+  value.
+
+Changed
+-------
+
+- ``clean`` and ``dirty`` metadata are now allowed in regex plugin entries.
+- ``Location``, ``Message``, ``MessageContent`` and ``Tag`` equality comparisons
+  are now case-sensitive.
+- Regular expressions in condition strings now use a `modified Perl grammar`_
+  instead of a modified ECMAScript grammar. ``Plugin`` object ``name`` fields
+  still use the modified ECMAScript grammar for regex values. To improve
+  portability and avoid mistakes, it's best to stick to using the subset of
+  regular expression features that are common to both grammars.
+
+Removed
+-------
+
+- The change in regular expression grammar means that the following regular
+  expression features are no longer supported in condition strings:
+
+  - ``\c<letter>`` control code escape sequences, use ``\x<hex>`` instead
+  - The ``\0`` null escape sequence, - use ``\x00`` instead
+  - The ``[:d:]``, ``[:w:]`` and ``[:s:]`` character classes,
+    use ``[:digit:]``, ``[:alnum:]`` and ``[:space:]`` instead respectively.
+  - ``\<number>`` backreferences
+  - ``(?=<subpattern>)`` and ``(?!<subpattern>)`` positive and negative lookahead
+
+.. _modified Perl grammar: https://docs.rs/regex/1.0.5/regex/index.html#syntax
+
+0.13 - 2018-04-02
+=================
 
 Added
 -----

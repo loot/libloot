@@ -26,7 +26,7 @@ The root of a metadata file is a key-value map. LOOT will recognise the followin
 
   plugin list *and* plugin set
 
-  The plugin data structures that hold all the plugin metadata within the file. It is a mixture of a list and a set because **no non-regex plugin value may be equal to any other non-regex plugin value** , but there may be any number of equal regex plugin values, and non-regex plugin values may be equal to regex plugin values.If multiple plugin values match a single plugin, their metadata is merged in the order the values are listed, and as defined in :ref:`plugin-merging`.
+  The plugin data structures that hold all the plugin metadata within the file. It is a mixture of a list and a set because **no non-regex plugin value may be equal to any other non-regex plugin value** , but there may be any number of equal regex plugin values, and non-regex plugin values may be equal to regex plugin values. If multiple plugin values match a single plugin, their metadata is merged in the order the values are listed, and as defined in :ref:`plugin-merging`.
 
 The message and plugin data structures are detailed in the next section.
 
