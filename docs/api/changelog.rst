@@ -2,6 +2,99 @@
 Version History
 ***************
 
+0.14.0 - Unreleased
+===================
+
+Added
+-----
+
+- :cpp:any:`GetHeaderVersion()` to get the value of the version field in the
+  ``HEDR`` subrecord of a plugin's ``TES4`` record.
+- :cpp:any:`IsValidAsLightMaster()` to check if a light master is valid or if a
+  non-light-master plugin would be valid with the light master flag or ``.esl``
+  extension. Validity is defined as having no new records with a FormID object
+  index greater than 0xFFF.
+- :cpp:any:`GetGroupsPath()` to return the path between two given groups that
+  maximises the user metadata and minimises the masterlist metadata involved.
+- :cpp:any:`loot::Vertex` to represent a plugin or group vertex in a sorting
+  graph path.
+- :cpp:any:`loot::EdgeType` to represent the type of the edge between two vertices
+  in a sorting graph. Each edge type indicates the type of data it was sourced
+  from.
+
+Changed
+-------
+
+- :cpp:any:`CyclicInteractionError` has had its constructor and methods
+  completely replaced to provide a more detailed and flexible representation of
+  the cyclic path that it reports.
+- ``UndefinedGroupError::getGroupName()`` has been renamed to ``UndefinedGroupError::GetGroupName()`` for consistency with other API method names.
+- ``LootVersion::string()`` has been renamed to ``LootVersion::GetVersionString()`` for consistency with other API method names.
+- :cpp:any:`GetPluginMetadata()` and :cpp:any:`GetPluginUserMetadata()` now
+  return ``std::optional<PluginMetadata>`` to differentiate metadata being found
+  or not. Note that the ``PluginMetadata`` value may still return true for
+  :cpp:any:`HasNameOnly()` if a metadata entry exists but has no content other
+  than the plugin name.
+- :cpp:any:`GetGroup()` now returns ``std::optional<std::string>`` to
+  indicate when there is no group metadata explicitly set, to simplify
+  distinguishing between explicit and implicit default group membership.
+- :cpp:any:`GetVersion()` now returns ``std::optional<std::string>`` to
+  differentiate between there being no version and the version being an empty
+  string, though the latter should never occur.
+- :cpp:any:`GetCRC()` now returns ``std::optional<uint32_t>`` to differentiate
+  between there being no CRC calculated and the CRC somehow being zero (which
+  should never occur).
+- Filesystem paths are now represented in the API by ``std::filesystem::path``
+  values instead of ``std::string`` values. This affects the following
+  functions:
+
+  - :cpp:any:`loot::CreateGameHandle()`
+  - :cpp:any:`LoadLists()`
+  - :cpp:any:`WriteUserMetadata()`
+  - :cpp:any:`WriteMinimalList()`
+  - :cpp:any:`UpdateMasterlist()`
+  - :cpp:any:`GetMasterlistRevision()`
+  - :cpp:any:`IsLatestMasterlist()`
+
+- The metadata condition parsing, evaluation and caching code and the pseudosem
+  dependency have been replaced by a dependency on
+  `loot-condition-interpreter`_, which provides more granular caching and more
+  opportunity for future enhancements.
+- The API now supports v0.14 of the metadata syntax.
+- Updated C++ version required to C++17. This means that Windows builds
+  now require the MSVC 2017 runtime redistributable to be installed.
+- Updated esplugin to v2.1.1.
+- Updated libgit2 to v0.27.7.
+- Updated spdlog to v1.2.1.
+
+.. _loot-condition-interpreter: https://github.com/loot/loot-condition-interpreter
+
+Removed
+-------
+
+- ``PluginInterface::GetLowercasedName()``, as the case folding behaviour LOOT
+  uses is not necessarily appropriate for all use cases, so it's up to the
+  client to lowercase according to their own needs.
+
+Fixed
+-----
+
+- BSAs/BA2s loaded by non-ASCII plugins for Oblivion, Fallout 3, Fallout: New
+  Vegas and Fallout 4 may not have been detected due to incorrect
+  case-insensitivity handling.
+- Fixed incorrect case-insensitivity handling for non-ASCII plugin filenames and
+  ``File`` metadata names.
+- ``FileVersion`` and ``ProductVersion`` properties were not set in the DLL
+  since v0.11.0.
+- Path equivalence checks could be inaccurate as they were using case-insensitive
+  string comparisons, which may not match filesystem behaviour. Filesystem
+  equivalence checks are now used to improve correctness.
+- Errors due to filesystem permissions when cloning a new masterlist repository
+  into an existing game directory. Deleting the temporary directory is now
+  deferred until after its contents have been copied into the game directory,
+  and if an error is encountered when deleting the temporary directory, it is
+  logged but does not cause the masterlist update to fail.
+
 0.13.8 - 2018-09-24
 ===================
 
@@ -99,7 +192,7 @@ Fixed
 - Building the esplugin and libloadorder dependencies using Rust 1.26.0, which
   included a `regression`_ to workspace builds.
 
-.. regression: https://github.com/rust-lang/cargo/issues/5518
+.. _regression: https://github.com/rust-lang/cargo/issues/5518
 
 0.13.2 - 2018-04-29
 ===================

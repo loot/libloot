@@ -2,15 +2,16 @@
 Credits
 *******
 
-The LOOT API is written by `WrinklyNinja`_ in C++ and makes use of the
-`Boost`_, `libespm`_, `libgit2`_, `libloadorder`_, `Pseudosem`_ and `yaml-cpp`_
-libraries. The copyright licenses for all of these and the LOOT API itself in
-:doc:`../licenses/texts`.
+The LOOT API is written by `Ortham`_ in C++ and makes use of the `Boost`_,
+`esplugin`_, `libgit2`_, `libloadorder`_, `loot-condition-interpreter`_,
+`spdlog`_ and `yaml-cpp`_ libraries. The copyright licenses for all of these and
+the LOOT API itself in :doc:`../licenses/texts`.
 
-.. _WrinklyNinja: https://github.com/WrinklyNinja
+.. _Ortham: https://github.com/Ortham
 .. _Boost: http://www.boost.org/
-.. _libespm: https://github.com/WrinklyNinja/libespm
+.. _esplugin: https://github.com/Ortham/esplugin
 .. _libgit2: https://github.com/libgit2/libgit2
-.. _libloadorder: https://github.com/WrinklyNinja/libloadorder
-.. _Pseudosem: https://github.com/WrinklyNinja/pseudosem
-.. _yaml-cpp: https://github.com/WrinklyNinja/yaml-cpp
+.. _libloadorder: https://github.com/Ortham/libloadorder
+.. _loot-condition-interpreter: https://github.com/loot/loot-condition-interpreter
+.. _spdlog: https://github.com/gabime/spdlog
+.. _yaml-cpp: https://github.com/loot/yaml-cpp

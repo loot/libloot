@@ -7,6 +7,8 @@ API Reference
 Enumerations
 ============
 
+.. doxygenenum:: loot::EdgeType
+
 .. doxygenenum:: loot::GameType
 
 .. doxygenenum:: loot::LogLevel
@@ -76,6 +78,9 @@ Classes
    :members:
 
 .. doxygenclass:: loot::Tag
+   :members:
+
+.. doxygenclass:: loot::Vertex
    :members:
 
 Exceptions
