@@ -103,9 +103,35 @@ There are several conditions that can be tested for using the functions detailed
 
     actual_version comparator given_version
 
-  (where ``actual version`` is the version read from ``path``) holds true, and false otherwise. If ``path`` does not exist or does not have a version number, its version is assumed to be ``0``.
+  (where ``actual version`` is the version read from ``path``) holds true, and
+  false otherwise. If ``path`` is a plugin, its version is read from its
+  description field. If ``path`` is not a plugin, it will be assumed to be an
+  executable (e.g. ``*.exe`` or ``*.dll``), and its version is read from its
+  File Version field. If ``path`` does not exist or does not have a version
+  number, its version is assumed to be ``0``. If ``path`` isn't a plugin or an
+  executable, an error will occur.
 
-  The comparison uses the precedence rules defined by `Semantic Versioning <http://semver.org/>`_, extended to allow leading zeroes, an arbitrary number of release version numbers, case-insensitivity and a wider range of separator characters.
+  The comparison uses the precedence rules defined by `Semantic Versioning
+  <http://semver.org/>`_, extended to allow leading zeroes, an arbitrary number
+  of release version numbers, case-insensitivity and a wider range of separator
+  characters.
+
+.. describe:: product_version(file_path path, version given_version, comparison_operator comparator)
+
+  Returns true if the boolean expression::
+
+    actual_version comparator given_version
+
+  (where ``actual version`` is the version read from ``path``) holds true, and
+  false otherwise. ``path`` must be an executable (e.g. ``*.exe`` or ``*.dll``),
+  and its version is read from its Product Version field. If ``path`` does not
+  exist or does not have a version number, its version is assumed to be ``0``.
+  If ``path`` is not an executable, an error will occur.
+
+  The comparison uses the precedence rules defined by `Semantic Versioning
+  <http://semver.org/>`_, extended to allow leading zeroes, an arbitrary number
+  of release version numbers, case-insensitivity and a wider range of separator
+  characters.
 
 Logical Operators
 =================

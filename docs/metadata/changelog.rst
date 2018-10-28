@@ -12,6 +12,9 @@ Added
 
 - The ``Group`` data structure now has a ``description`` key that takes a string
   value.
+- The condition function ``product_version(file_path path, version
+  given_version, comparison_operator comparator)``, which checks against the
+  Product Version field of an executable.
 
 Changed
 -------
