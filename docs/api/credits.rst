@@ -2,10 +2,10 @@
 Credits
 *******
 
-The LOOT API is written by `Ortham`_ in C++ and makes use of the `Boost`_,
+libloot is written by `Ortham`_ in C++ and makes use of the `Boost`_,
 `esplugin`_, `libgit2`_, `libloadorder`_, `loot-condition-interpreter`_,
 `spdlog`_ and `yaml-cpp`_ libraries. The copyright licenses for all of these and
-the LOOT API itself in :doc:`../licenses/texts`.
+libloot itself in :doc:`../licenses/texts`.
 
 .. _Ortham: https://github.com/Ortham
 .. _Boost: http://www.boost.org/

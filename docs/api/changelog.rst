@@ -25,6 +25,10 @@ Added
 Changed
 -------
 
+- Renamed the library from "the LOOT API" to "libloot" to avoid confusion
+  between the name of the library and the API that it provides. The library
+  filename is changed so that the ``loot_api`` part is now ``loot``, e.g.
+  ``loot.dll`` on Windows and ``libloot.so`` on Linux.
 - :cpp:any:`CyclicInteractionError` has had its constructor and methods
   completely replaced to provide a more detailed and flexible representation of
   the cyclic path that it reports.

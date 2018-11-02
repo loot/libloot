@@ -1,4 +1,4 @@
-# LOOT
+# libloot
 
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/48a540m7ywuqcl3b/branch/dev?svg=true)](https://ci.appveyor.com/project/LOOT/loot-api/branch/dev)
 [![Travis Build Status](https://travis-ci.org/loot/loot-api.svg?branch=dev)](https://travis-ci.org/loot/loot-api)
@@ -10,17 +10,17 @@ LOOT is a plugin load order optimisation tool for TES IV: Oblivion, TES V: Skyri
 
 LOOT also provides some load order error checking, including checks for requirements, incompatibilities and cyclic dependencies. In addition, it provides a large number of plugin-specific usage notes, bug warnings and Bash Tag suggestions.
 
-The LOOT API provides access to LOOT's metadata and sorting functionality, and the LOOT application is built using it.
+libloot provides access to LOOT's metadata and sorting functionality, and the LOOT application is built using it.
 
 ## Downloads
 
-Releases are hosted on [GitHub](https://github.com/loot/loot-api/releases), and snapshot builds are available on [Bintray](https://bintray.com/loot/snapshots/loot-api). The snapshot build archives are named like so:
+Releases are hosted on [GitHub](https://github.com/loot/loot-api/releases), and snapshot builds are available on [Bintray](https://bintray.com/loot/snapshots/libloot). The snapshot build archives are named like so:
 
 ```
-loot_api-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.7z
+libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.7z
 ```
 
-## Building The LOOT API
+## Building libloot
 
 ### Windows
 
@@ -32,11 +32,11 @@ Refer to `.travis.yml` for the build process. A [local Docker image](https://doc
 
 ### CMake Variables
 
-LOOT uses the following CMake variables to set build parameters:
+libloot uses the following CMake variables to set build parameters:
 
 Parameter | Values | Default |Description
 ----------|--------|---------|-----------
-`BUILD_SHARED_LIBS` | `ON`, `OFF` | `ON` | Whether or not to build a shared LOOT API binary.
+`BUILD_SHARED_LIBS` | `ON`, `OFF` | `ON` | Whether or not to build a shared libloot binary.
 `MSVC_STATIC_RUNTIME` | `ON`, `OFF` | `OFF` | Whether to link the C++ runtime statically or not when building with MSVC.
 
 You may also need to set `BOOST_ROOT` if CMake cannot find Boost.

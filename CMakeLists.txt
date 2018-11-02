@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8.12.1)
 cmake_policy(SET CMP0015 NEW)
-project (loot_api)
+project (libloot)
 include(ExternalProject)
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
@@ -185,7 +185,7 @@ set(YAML_CPP_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/libyaml-cpp${YAML_CPP_
 ##############################
 
 
-set (LOOT_API_SRC "${CMAKE_BINARY_DIR}/generated/loot_version.cpp"
+set (LIBLOOT_SRC "${CMAKE_BINARY_DIR}/generated/loot_version.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/api.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/api_database.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/error_categories.cpp"
@@ -215,7 +215,7 @@ set (LOOT_API_SRC "${CMAKE_BINARY_DIR}/generated/loot_version.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/vertex.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/resource.rc")
 
-set (LOOT_API_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
+set (LIBLOOT_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/api_decorator.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/database_interface.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/exception/error_categories.h"
@@ -295,22 +295,22 @@ set (LOOT_TESTS_HEADERS "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_t
                         "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/printers.h")
 
-set(LOOT_API_TESTS_SRC "${CMAKE_SOURCE_DIR}/src/tests/api/interface/main.cpp")
+set(LIBLOOT_TESTS_SRC "${CMAKE_SOURCE_DIR}/src/tests/api/interface/main.cpp")
 
-set(LOOT_API_TESTS_HEADERS  "${CMAKE_SOURCE_DIR}/src/tests/api/interface/api_game_operations_test.h"
+set(LIBLOOT_TESTS_HEADERS  "${CMAKE_SOURCE_DIR}/src/tests/api/interface/api_game_operations_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/create_game_handle_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/database_interface_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/game_interface_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/is_compatible_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h")
 
-source_group("Header Files\\api" FILES ${LOOT_API_HEADERS})
+source_group("Header Files\\api" FILES ${LIBLOOT_HEADERS})
 source_group("Header Files\\tests" FILES ${LOOT_TESTS_HEADERS})
-source_group("Header Files\\tests" FILES ${LOOT_API_TESTS_HEADERS})
+source_group("Header Files\\tests" FILES ${LIBLOOT_TESTS_HEADERS})
 
-source_group("Source Files\\api" FILES ${LOOT_API_SRC})
+source_group("Source Files\\api" FILES ${LIBLOOT_SRC})
 source_group("Source Files\\tests" FILES ${LOOT_TESTS_SRC})
-source_group("Source Files\\tests" FILES ${LOOT_API_TESTS_SRC})
+source_group("Source Files\\tests" FILES ${LIBLOOT_TESTS_SRC})
 
 # Include source and library directories.
 include_directories ("${CMAKE_SOURCE_DIR}/src"
@@ -387,30 +387,30 @@ ENDIF ()
 ##############################
 
 # Build tests.
-add_executable       (loot_api_internals_tests ${LOOT_API_SRC} ${LOOT_API_HEADERS} ${LOOT_TESTS_SRC} ${LOOT_TESTS_HEADERS})
-add_dependencies     (loot_api_internals_tests esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp GTest testing-metadata testing-plugins)
-target_link_libraries(loot_api_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES})
+add_executable       (libloot_internals_tests ${LIBLOOT_SRC} ${LIBLOOT_HEADERS} ${LOOT_TESTS_SRC} ${LOOT_TESTS_HEADERS})
+add_dependencies     (libloot_internals_tests esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp GTest testing-metadata testing-plugins)
+target_link_libraries(libloot_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES})
 
 # Build API.
-add_library          (loot_api ${LOOT_API_SRC} ${LOOT_API_HEADERS})
-add_dependencies     (loot_api esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp)
-target_link_libraries(loot_api ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES})
+add_library          (loot ${LIBLOOT_SRC} ${LIBLOOT_HEADERS})
+add_dependencies     (loot esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp)
+target_link_libraries(loot ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 # Build API tests.
-add_executable       (loot_api_tests ${LOOT_API_TESTS_SRC} ${LOOT_API_TESTS_HEADERS})
-add_dependencies     (loot_api_tests loot_api GTest testing-metadata testing-plugins)
-target_link_libraries(loot_api_tests loot_api ${GTEST_LIBRARIES})
+add_executable       (libloot_tests ${LIBLOOT_TESTS_SRC} ${LIBLOOT_TESTS_HEADERS})
+add_dependencies     (libloot_tests loot GTest testing-metadata testing-plugins)
+target_link_libraries(libloot_tests loot ${GTEST_LIBRARIES})
 
 ##############################
 # Set Target-Specific Flags
 ##############################
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    set_target_properties (loot_api_internals_tests PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_STATIC")
+    set_target_properties (libloot_internals_tests PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_STATIC")
     IF (BUILD_SHARED_LIBS)
-        set_target_properties (loot_api PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_EXPORT")
+        set_target_properties (loot PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_EXPORT")
     ELSE ()
-        set_target_properties (loot_api PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_STATIC")
+        set_target_properties (loot PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_STATIC")
     ENDIF ()
 ENDIF ()
 
@@ -421,35 +421,35 @@ ENDIF ()
 
 # Copy testing metadata
 ExternalProject_Get_Property(testing-metadata SOURCE_DIR)
-add_custom_command(TARGET loot_api_internals_tests POST_BUILD
+add_custom_command(TARGET libloot_internals_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${SOURCE_DIR}
-        "$<TARGET_FILE_DIR:loot_api_internals_tests>/testing-metadata")
-add_custom_command(TARGET loot_api_tests POST_BUILD
+        "$<TARGET_FILE_DIR:libloot_internals_tests>/testing-metadata")
+add_custom_command(TARGET libloot_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${SOURCE_DIR}
-        "$<TARGET_FILE_DIR:loot_api_tests>/testing-metadata")
+        "$<TARGET_FILE_DIR:libloot_tests>/testing-metadata")
 
 # Copy testing plugins
 ExternalProject_Get_Property(testing-plugins SOURCE_DIR)
-add_custom_command(TARGET loot_api_internals_tests POST_BUILD
+add_custom_command(TARGET libloot_internals_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${SOURCE_DIR}
-        $<TARGET_FILE_DIR:loot_api_internals_tests>)
-add_custom_command(TARGET loot_api_tests POST_BUILD
+        $<TARGET_FILE_DIR:libloot_internals_tests>)
+add_custom_command(TARGET libloot_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${SOURCE_DIR}
-      $<TARGET_FILE_DIR:loot_api_tests>)
+      $<TARGET_FILE_DIR:libloot_tests>)
 
 ########################################
 # Install
 ########################################
 
-install(TARGETS loot_api
+install(TARGETS loot
         DESTINATION ".")
 
 IF (MSVC)
-    install(FILES $<TARGET_PDB_FILE:loot_api>
+    install(FILES $<TARGET_PDB_FILE:loot>
     DESTINATION .
     OPTIONAL
     CONFIGURATIONS RelWithDebInfo)

@@ -44,15 +44,15 @@ before_build:
 
 build:
   verbosity: minimal
-  project: '$(APPVEYOR_BUILD_FOLDER)\build\loot_api.sln'
+  project: '$(APPVEYOR_BUILD_FOLDER)\build\libloot.sln'
 
 test_script:
   - cd %APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%
   # Some tests call Git, so set a user
   - git config --global user.email "appveyor@ci"
   - git config --global user.name "AppVeyor"
-  - loot_api_internals_tests.exe --gtest_output=xml:loot_api_internals_tests.xml
-  - loot_api_tests.exe --gtest_output=xml:loot_api_tests.xml
+  - libloot_internals_tests.exe --gtest_output=xml:libloot_internals_tests.xml
+  - libloot_tests.exe --gtest_output=xml:libloot_tests.xml
 
 after_test:
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -62,7 +62,7 @@ after_test:
   - cpack -C %CONFIGURATION%
 
 artifacts:
-  - path: build\package\loot_api-$(GIT_DESCRIBE)_$(APPVEYOR_REPO_BRANCH)-win$(ADDRESS_MODEL).7z
+  - path: build\package\libloot-$(GIT_DESCRIBE)_$(APPVEYOR_REPO_BRANCH)-win$(ADDRESS_MODEL).7z
     name: API
 
 deploy:
@@ -72,14 +72,14 @@ deploy:
       secure: PgsEA6TjHVf718zMnK7J/fT1hUAVNKBeWhpYgYaeCyeZk37VT4Ics6j7+B7ElLEr
     subject: loot
     repo: snapshots
-    package: loot-api
+    package: libloot
     version: $(GIT_DESCRIBE)_$(APPVEYOR_REPO_BRANCH)
     publish: true
     artifact: API
 
   - provider: GitHub
     tag: $(APPVEYOR_REPO_TAG_NAME)
-    release: LOOT API v$(APPVEYOR_REPO_TAG_NAME)
+    release: libloot v$(APPVEYOR_REPO_TAG_NAME)
     description: |
       Requires Windows 7 or later and the [MSVC 2017 x86 redistributable](https://download.visualstudio.microsoft.com/download/pr/749aa419-f9e4-4578-a417-a43786af205e/d59197078cc425377be301faba7dd87a/vc_redist.x86.exe), and [7-Zip](http://www.7-zip.org/) to extract the archives.
 
@@ -97,8 +97,8 @@ deploy:
       appveyor_repo_tag: true
 
 on_success:
-  - ps: python "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py" -g loot/loot-api -b loot/snapshots/loot-api -u wrinklyninja -k $env:bintray_auth_token -t $env:github_auth_token -n 30
+  - ps: python "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py" -g loot/loot-api -b loot/snapshots/libloot -u wrinklyninja -k $env:bintray_auth_token -t $env:github_auth_token -n 30
 
 on_finish:
-  - ps: (New-Object System.Net.WebClient).UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:CONFIGURATION)\loot_api_internals_tests.xml")
-  - ps: (New-Object System.Net.WebClient).UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:CONFIGURATION)\loot_api_tests.xml")
+  - ps: (New-Object System.Net.WebClient).UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:CONFIGURATION)\libloot_internals_tests.xml")
+  - ps: (New-Object System.Net.WebClient).UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:CONFIGURATION)\libloot_tests.xml")

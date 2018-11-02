@@ -26,7 +26,7 @@ along with LOOT.  If not, see
 #define LOOT_GAME_TYPE
 
 /**
- * The namespace used by the LOOT API.
+ * The namespace used by libloot.
  */
 namespace loot {
 /** @brief Codes used to create database handles for specific games. */

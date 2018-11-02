@@ -48,8 +48,8 @@ script:
   # Some tests call Git, so set a user
   - git config --global user.email "travis@ci"
   - git config --global user.name "Travis"
-  - ./loot_api_internals_tests
-  - ./loot_api_tests
+  - ./libloot_internals_tests
+  - ./libloot_tests
 
 after_success:
   - cd $TRAVIS_BUILD_DIR
@@ -61,15 +61,15 @@ after_success:
   - git fetch --unshallow
   - GIT_DESCRIBE=$(git describe --tags --long --always --abbrev=7)
   # Make copies of the archives for GitHub deployment to find.
-  - cp $(ls build/package/loot_api-*.tar.xz) build/loot-api.tar.xz
+  - cp $(ls build/package/libloot-*.tar.xz) build/libloot.tar.xz
   # Need to replace the Bintray config files' version placeholders.
-  - sed -i "s/REPLACE_THIS_VERSION/${GIT_DESCRIBE}_${TRAVIS_BRANCH}/" scripts/travis/loot-api.bintray.json
+  - sed -i "s/REPLACE_THIS_VERSION/${GIT_DESCRIBE}_${TRAVIS_BRANCH}/" scripts/travis/libloot.bintray.json
 
 deploy:
   - provider: bintray
     edge:
       branch: v1.8.47
-    file: scripts/travis/loot-api.bintray.json
+    file: scripts/travis/libloot.bintray.json
     user: wrinklyninja
     key:
       secure: "zczTW2fGiTDlrgCtDyWAcQ+FftErR8XFZ7Lz3Mnj3gbedlS7wKdpffXngpepGGQQp3N5Jt0F51mQDrRFfvgmSk0IpuSVKkzuUNt5aJEav7LYb9tho4afXGu/fd3Sj8nF0NM4rB9b2sHMKOLSBD/a+7qsf0q3W4lFZGRQPzqq6RBqB0p8brsdf4g/aoVjAGltUtagMNMYJbs5MNsZLX0Zw9pRB4bSvCf9YNXLcMckA2FQC+xiWAliMOQQlnQU5QZgzNypiTvYpyYwhLM3Xy6/QB9WkABDPEfYNcnOX7JRI81Q6QGWbbSNpDcGI1LmxDwYCftpI7ilbL+yj8Al6AFAn4Ia3AcMpoXv9De/11HYftwYL+76Lud+EaCZimy5FIj6d+GBVwiZkpnbEi8r0LJ0o9dBlLJESqSRwqhYH25fahSgfT/Tew5ftigOfJRY/sYXYXJS5TLeV7OaP6LXAivBWttB3Wo3OcE+4HsvmpgIrHGhvKsmtAQMs2ddBwKdro9jqtaCBbM2To05FtQ1/RYV2dD3v8nF7CwSX6VLp1a973CUZ5/IF3R6ONeCVwkxVqe7hPlo65NAx8L8jvxjksYIQ/r1aPhJLU7UCPPic47I/6M0fsRnT8pcRymnMcfQ5QT7h7gtqQQRJzYKaalkYVObw1ygDsqgPh5LZTf6U6S+bG8="
@@ -80,7 +80,7 @@ deploy:
     api_key:
       secure: "HBBghmIDgWsPq6YVrKh/M0au51ffWQdnaNr2QUFBEzsrMUgaAR04vd3eLtodHr5W2m6fJFfvIDnROYh2KnFQP0MFwEkldyToHpAJqoSxOJ2uJzq7TOiWTVlKbdnutQ+0GS0URcoM32uxRgkduWWe9McZ1mj12oyV2PKR2ojtNp9ni12O2qfzH32YPdQZ3zutxRgB82OZ0qj7HMHfD4v0yPhBncZaEWFTKKRy/LgJvaEGsEsb7u8MidRVpo/pNbNirjlh7Vlx4tm7kT2R4/ehH8H2y3MjxCaacfzaqi6LoGqMBVEjhpETI1COMvhezUdzmB/GBdX8zlTKuSs1GwiUl6FXnEPxnIU+qllx5PkHeph3GpkPZ8ChUuqnEksaBZsnVQ0D06KrivLb5otlRkfk4xfEX/68KUP7y/dNVZCVYOHSPD0N+iaKhGhTkjt77xJQ0z3U1qtoHrbtSdVUdeb+xIiyYCr8mHrQy+gNGqB8NLtpsdqWpjKh/BAcYnlu15VZLq6AASpLaDeBsCGXm/Er15z5meXDyRPtR1qT9XZgDEMXsn7ywe/dNfNxiY8sPxNn6vpqNvD7AR4s8nYm7qAm3JBw5xBaqh5HpkibIcNADkZGvDWjsbvO48/g1J5R+XT6CE77Qbj9UcYR532TbD0VSYFr6+snTf0Vwe1JgoiHNSk="
     file:
-      - build/loot-api.tar.xz
+      - build/libloot.tar.xz
     skip_cleanup: true
     on:
       repo: loot/loot-api

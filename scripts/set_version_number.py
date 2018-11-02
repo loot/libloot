@@ -31,7 +31,7 @@ def update_resource_file(path, version):
     replace_in_file(path, 'Version", "\d+\.\d+\.\d+"', 'Version", "{}"'.format(version))
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Set the LOOT API version number')
+    parser = argparse.ArgumentParser(description = 'Set the libloot version number')
     parser.add_argument('version', nargs='+')
 
     arguments = parser.parse_args()

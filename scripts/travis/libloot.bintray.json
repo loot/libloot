@@ -1,6 +1,6 @@
 {
   "package": {
-    "name": "loot-api",
+    "name": "libloot",
     "repo": "snapshots",
     "subject": "loot"
   },
@@ -8,7 +8,7 @@
     "name": "REPLACE_THIS_VERSION"
   },
   "files": [{
-    "includePattern": "build/package/(loot_api-.+\\.tar.xz)",
+    "includePattern": "build/package/(libloot-.+\\.tar.xz)",
     "uploadPattern": "$1"
   }],
   "publish": true

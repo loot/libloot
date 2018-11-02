@@ -1,5 +1,5 @@
-Contributing To the LOOT API
-============================
+Contributing To libloot
+=======================
 
 A general guide to contributing to LOOT may be found on [LOOT's website](https://loot.github.io/docs/contributing/How-To-Contribute). Information more specific to this repository is found here.
 
@@ -21,7 +21,7 @@ When you do make a pull request, please do so from a branch which doesn't have t
 
 ## Code Style
 
-The LOOT API code style is based on the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html). Formatting style is codified in the repository's `.clang-format` file, but is not enforced.
+libloot's code style is based on the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html). Formatting style is codified in the repository's `.clang-format` file, but is not enforced.
 
 ### C++ Features
 

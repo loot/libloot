@@ -20,7 +20,7 @@ Copyright License Texts
 .. include:: GNU GPL v2 (libgit2).txt
   :literal:
 
-LOOT API, `esplugin`_ & `Libloadorder`_
+libloot, `esplugin`_ & `Libloadorder`_
 ======================================
 
 .. _esplugin: https://github.com/Ortham/esplugin
@@ -29,7 +29,7 @@ LOOT API, `esplugin`_ & `Libloadorder`_
 .. include:: GNU GPL v3.txt
   :literal:
 
-LOOT API Documentation
+libloot Documentation
 ======================
 
 .. include:: GNU FDL v1.3.txt

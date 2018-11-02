@@ -1,6 +1,6 @@
-########
-LOOT API
-########
+#######
+libloot
+#######
 
 .. toctree::
   :maxdepth: 2
