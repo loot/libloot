@@ -23,8 +23,8 @@ Copyright License Texts
 LOOT API, `esplugin`_ & `Libloadorder`_
 ======================================
 
-.. _esplugin: https://github.com/WrinklyNinja/esplugin
-.. _libloadorder: https://github.com/WrinklyNinja/libloadorder
+.. _esplugin: https://github.com/Ortham/esplugin
+.. _libloadorder: https://github.com/Ortham/libloadorder
 
 .. include:: GNU GPL v3.txt
   :literal:

@@ -76,7 +76,7 @@ set (GTEST_LIBRARIES "${BINARY_DIR}/googlemock/gtest/${CMAKE_CFG_INTDIR}/${CMAKE
 
 ExternalProject_Add(esplugin
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/esplugin/archive/2.1.1.tar.gz"
+                    URL "https://github.com/Ortham/esplugin/archive/2.1.1.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -103,7 +103,7 @@ set(LIBGIT2_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_
 
 ExternalProject_Add(libloadorder
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/libloadorder/archive/11.4.1.tar.gz"
+                    URL "https://github.com/Ortham/libloadorder/archive/11.4.1.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -145,7 +145,7 @@ ExternalProject_Add(testing-metadata
 
 ExternalProject_Add(testing-plugins
                     PREFIX "external"
-                    URL "https://github.com/WrinklyNinja/testing-plugins/archive/1.4.1.tar.gz"
+                    URL "https://github.com/Ortham/testing-plugins/archive/1.4.1.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_COMMAND ""
                     INSTALL_COMMAND "")
