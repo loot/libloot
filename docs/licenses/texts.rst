@@ -20,10 +20,10 @@ Copyright License Texts
 .. include:: GNU GPL v2 (libgit2).txt
   :literal:
 
-LOOT API, `Libespm`_ & `Libloadorder`_
+LOOT API, `esplugin`_ & `Libloadorder`_
 ======================================
 
-.. _libespm: https://github.com/WrinklyNinja/libespm
+.. _esplugin: https://github.com/WrinklyNinja/esplugin
 .. _libloadorder: https://github.com/WrinklyNinja/libloadorder
 
 .. include:: GNU GPL v3.txt
@@ -35,12 +35,12 @@ LOOT API Documentation
 .. include:: GNU FDL v1.3.txt
   :literal:
 
-`Pseudosem`_
+`spdlog`_
 ============
 
-.. _Pseudosem: https://github.com/WrinklyNinja/pseudosem
+.. _spdlog: https://github.com/gabime/spdlog
 
-.. include:: MIT License (Pseudosem).txt
+.. include:: MIT License (spdlog).txt
   :literal:
 
 `yaml-cpp`_
