@@ -103,7 +103,7 @@ set(LIBGIT2_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_
 
 ExternalProject_Add(libloadorder
                     PREFIX "external"
-                    URL "https://github.com/Ortham/libloadorder/archive/11.4.1.tar.gz"
+                    URL "https://github.com/Ortham/libloadorder/archive/12.0.0.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
