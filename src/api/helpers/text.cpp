@@ -66,9 +66,10 @@ std::set<Tag> ExtractBashTags(const std::string& description) {
   std::set<Tag> tags;
 
   size_t startPos = description.find("{{BASH:");
-  if (startPos == std::string::npos) {
+  if (startPos == std::string::npos || startPos + 7 >= description.length()) {
     return tags;
   }
+  startPos += 7;
 
   size_t endPos = description.find("}}", startPos);
   if (endPos == std::string::npos) {

@@ -33,74 +33,109 @@ along with LOOT.  If not, see
 namespace loot {
 namespace test {
 
-TEST(Version, shouldExtractAVersionContainingASingleDigit) {
+TEST(ExtractBashTags, shouldExtractTagsFromPluginDescriptionText) {
+  auto description = R"raw(Unofficial Skyrim Special Edition Patch
+
+A comprehensive bugfixing mod for The Elder Scrolls V: Skyrim - Special Edition
+
+Version: 4.1.4
+
+Requires Skyrim Special Edition 1.5.39 or greater.
+
+{{BASH:C.Climate,C.Encounter,C.ImageSpace,C.Light,C.Location,C.Music,C.Name,C.Owner,C.Water,Delev,Graphics,Invent,Names,Relev,Sound,Stats}})raw";
+
+  auto tags = ExtractBashTags(description);
+
+  std::set<Tag> expectedTags({
+    Tag("C.Climate"),
+    Tag("C.Encounter"),
+    Tag("C.ImageSpace"),
+    Tag("C.Light"),
+    Tag("C.Location"),
+    Tag("C.Music"),
+    Tag("C.Name"),
+    Tag("C.Owner"),
+    Tag("C.Water"),
+    Tag("Delev"),
+    Tag("Graphics"),
+    Tag("Invent"),
+    Tag("Names"),
+    Tag("Relev"),
+    Tag("Sound"),
+    Tag("Stats"),
+  });
+
+  EXPECT_EQ(expectedTags, tags);
+}
+
+TEST(ExtractVersion, shouldExtractAVersionContainingASingleDigit) {
   EXPECT_EQ("5", ExtractVersion("5").value());
 }
 
-TEST(Version, shouldExtractAVersionContainingMultipleDigits) {
+TEST(ExtractVersion, shouldExtractAVersionContainingMultipleDigits) {
   EXPECT_EQ("10", ExtractVersion("10").value());
 }
 
-TEST(Version, shouldExtractAVersionContainingMultipleNumbers) {
+TEST(ExtractVersion, shouldExtractAVersionContainingMultipleNumbers) {
   EXPECT_EQ("10.11.12.13", ExtractVersion("10.11.12.13").value());
 }
 
-TEST(Version, shouldExtractASemanticVersion) {
+TEST(ExtractVersion, shouldExtractASemanticVersion) {
   EXPECT_EQ("1.0.0-x.7.z.92", ExtractVersion("1.0.0-x.7.z.92+exp.sha.5114f85").value());
 }
 
-TEST(Version,
+TEST(ExtractVersion,
      shouldExtractAPseudosemExtendedVersionStoppingAtTheFirstSpaceSeparator) {
   EXPECT_EQ("01.0.0_alpha:1-2", ExtractVersion("01.0.0_alpha:1-2 3").value());
 }
 
-TEST(Version, shouldExtractAVersionSubstring) {
+TEST(ExtractVersion, shouldExtractAVersionSubstring) {
   EXPECT_EQ("5.0", ExtractVersion("v5.0").value());
 }
 
-TEST(Version, shouldBeEmptyIfInputStringContainedNoVersion) {
+TEST(ExtractVersion, shouldBeEmptyIfInputStringContainedNoVersion) {
   EXPECT_FALSE(ExtractVersion("The quick brown fox jumped over the lazy dog.").has_value());
 }
 
-TEST(Version, shouldExtractTimestampWithForwardslashDateSeparators) {
+TEST(ExtractVersion, shouldExtractTimestampWithForwardslashDateSeparators) {
   // Found in a Bashed Patch. Though the timestamp isn't useful to
-  // LOOT, it is semantically a version, and extracting it is far
+  // LOOT, it is semantically a ExtractVersion, and extracting it is far
   // easier than trying to skip it and the number of records changed.
   auto text = ExtractVersion("Updated: 10/09/2016 13:15:18\r\n\r\nRecords Changed: 43");
   EXPECT_EQ("10/09/2016 13:15:18", text.value());
 }
 
-TEST(Version, shouldNotExtractTrailingPeriods) {
+TEST(ExtractVersion, shouldNotExtractTrailingPeriods) {
   // Found in <http://www.nexusmods.com/fallout4/mods/2955/>.
   EXPECT_EQ("0.2", ExtractVersion("Version 0.2.").value());
 }
 
-TEST(Version, shouldExtractVersionAfterTextWhenPrecededByVersionColonString) {
+TEST(ExtractVersion, shouldExtractVersionAfterTextWhenPrecededByVersionColonString) {
   // Found in <http://www.nexusmods.com/skyrim/mods/71214/>.
   EXPECT_EQ("3.0.0", ExtractVersion("Legendary Edition\r\n\r\nVersion: 3.0.0").value());
 }
 
-TEST(Version, shouldIgnoreNumbersContainingCommas) {
+TEST(ExtractVersion, shouldIgnoreNumbersContainingCommas) {
   // Found in <http://www.nexusmods.com/oblivion/mods/5296/>.
   EXPECT_EQ("3.5.3", ExtractVersion("fixing over 2,300 bugs so far! Version: 3.5.3").value());
 }
 
-TEST(Version, shouldExtractVersionBeforeText) {
+TEST(ExtractVersion, shouldExtractVersionBeforeText) {
   // Found in <http://www.nexusmods.com/fallout3/mods/19122/>.
   EXPECT_EQ("2.1", ExtractVersion("Version: 2.1 The Unofficial Fallout 3 Patch").value());
 }
 
-TEST(Version, shouldExtractVersionWithPrecedingV) {
+TEST(ExtractVersion, shouldExtractVersionWithPrecedingV) {
   // Found in <http://www.nexusmods.com/oblivion/mods/22795/>.
   EXPECT_EQ("2.11", ExtractVersion("V2.11\r\n\r\n{{BASH:Invent}}").value());
 }
 
-TEST(Version, shouldExtractVersionWithPrecedingColonPeriodWhitespace) {
+TEST(ExtractVersion, shouldExtractVersionWithPrecedingColonPeriodWhitespace) {
   // Found in <http://www.nexusmods.com/oblivion/mods/45570>.
   EXPECT_EQ("1.09", ExtractVersion("Version:. 1.09").value());
 }
 
-TEST(Version, shouldExtractVersionWithLettersImmediatelyAfterNumbers) {
+TEST(ExtractVersion, shouldExtractVersionWithLettersImmediatelyAfterNumbers) {
   // Found in <http://www.nexusmods.com/skyrim/mods/19>.
   auto text = ExtractVersion(
     "comprehensive bugfixing mod for The Elder Scrolls V: "
@@ -108,19 +143,19 @@ TEST(Version, shouldExtractVersionWithLettersImmediatelyAfterNumbers) {
   EXPECT_EQ("2.1.3b", text.value());
 }
 
-TEST(Version, shouldExtractVersionWithPeriodAndNoPrecedingIdentifier) {
+TEST(ExtractVersion, shouldExtractVersionWithPeriodAndNoPrecedingIdentifier) {
   // Found in <http://www.nexusmods.com/skyrim/mods/3863>.
   EXPECT_EQ("5.1", ExtractVersion("SkyUI 5.1").value());
 }
 
-TEST(Version, shouldNotExtractSingleDigitInSentence) {
+TEST(ExtractVersion, shouldNotExtractSingleDigitInSentence) {
   // Found in <http://www.nexusmods.com/skyrim/mods/4708>.
   auto text = ExtractVersion(
       "Adds 8 variants of Triss Merigold's outfit from \"The Witcher 2\"");
   EXPECT_FALSE(text.has_value());
 }
 
-TEST(Version, shouldPreferVersionPrefixedNumbersOverVersionsInSentence) {
+TEST(ExtractVersion, shouldPreferVersionPrefixedNumbersOverVersionsInSentence) {
   // Found in <http://www.nexusmods.com/skyrim/mods/47327>
   auto text = ExtractVersion(
       "Requires Skyrim patch 1.9.32.0.8 or greater.\n"
@@ -129,12 +164,12 @@ TEST(Version, shouldPreferVersionPrefixedNumbersOverVersionsInSentence) {
   EXPECT_EQ("2.0.0", text.value());
 }
 
-TEST(Version, shouldExtractSingleDigitVersionPrecededByV) {
+TEST(ExtractVersion, shouldExtractSingleDigitVersionPrecededByV) {
   // Found in <http://www.nexusmods.com/skyrim/mods/19733>
   EXPECT_EQ("8", ExtractVersion("Immersive Armors v8 Main Plugin").value());
 }
 
-TEST(Version, shouldPreferVersionPrefixedNumbersOverVPrefixedNumber) {
+TEST(ExtractVersion, shouldPreferVersionPrefixedNumbersOverVPrefixedNumber) {
   // Found in <http://www.nexusmods.com/skyrim/mods/43773>
   auto text = ExtractVersion(
       "Compatibility patch for AOS v2.5 and True Storms v1.5 (or "
