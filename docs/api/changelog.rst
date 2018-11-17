@@ -64,6 +64,7 @@ Changed
 - Updated C++ version required to C++17. This means that Windows builds
   now require the MSVC 2017 runtime redistributable to be installed.
 - Updated esplugin to v2.1.1.
+- Updated libloadorder to v12.0.0.
 - Updated libgit2 to v0.27.7.
 - Updated spdlog to v1.2.1.
 
@@ -94,6 +95,10 @@ Fixed
   deferred until after its contents have been copied into the game directory,
   and if an error is encountered when deleting the temporary directory, it is
   logged but does not cause the masterlist update to fail.
+- An error creating a game handle for Skyrim if ``loadorder.txt`` is not encoded
+  in UTF-8. In this case, libloadorder will now fall back to interpreting its
+  contents as encoded in Windows-1252, to match the behaviour when reading the
+  load order state.
 
 0.13.8 - 2018-09-24
 ===================
