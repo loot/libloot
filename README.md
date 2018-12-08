@@ -1,7 +1,7 @@
 # libloot
 
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/48a540m7ywuqcl3b/branch/dev?svg=true)](https://ci.appveyor.com/project/LOOT/loot-api/branch/dev)
-[![Travis Build Status](https://travis-ci.org/loot/loot-api.svg?branch=dev)](https://travis-ci.org/loot/loot-api)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/48a540m7ywuqcl3b/branch/dev?svg=true)](https://ci.appveyor.com/project/LOOT/libloot/branch/dev)
+[![Travis Build Status](https://travis-ci.org/loot/libloot.svg?branch=dev)](https://travis-ci.org/loot/libloot)
 [![Documentation Status](https://readthedocs.org/projects/loot-api/badge/?version=latest)](http://loot-api.readthedocs.io/en/latest/?badge=latest)
 
 ## Introduction
@@ -14,7 +14,7 @@ libloot provides access to LOOT's metadata and sorting functionality, and the LO
 
 ## Downloads
 
-Releases are hosted on [GitHub](https://github.com/loot/loot-api/releases), and snapshot builds are available on [Bintray](https://bintray.com/loot/snapshots/libloot). The snapshot build archives are named like so:
+Releases are hosted on [GitHub](https://github.com/loot/libloot/releases), and snapshot builds are available on [Bintray](https://bintray.com/loot/snapshots/libloot). The snapshot build archives are named like so:
 
 ```
 libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.7z

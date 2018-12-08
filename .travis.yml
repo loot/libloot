@@ -83,7 +83,7 @@ deploy:
       - build/libloot.tar.xz
     skip_cleanup: true
     on:
-      repo: loot/loot-api
+      repo: loot/libloot
       tags: true
 
 notifications:
