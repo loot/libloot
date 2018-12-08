@@ -35,4 +35,3 @@ libloot's code style is based on the [Google C++ Style Guide](https://google.git
 ### Naming
 
 * Constant, enumerator and variable names should use `camelCase` or `underscore_separators`, but they should be consistent within the same scope.
-* Function names should use `PascalCase` or `camelCase`, but they should be consistent within the same scope.
