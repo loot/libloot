@@ -2,7 +2,7 @@
 Version History
 ***************
 
-0.14.0 - Unreleased
+0.14.0 - 2018-12-09
 ===================
 
 Added
@@ -32,8 +32,12 @@ Changed
 - :cpp:any:`CyclicInteractionError` has had its constructor and methods
   completely replaced to provide a more detailed and flexible representation of
   the cyclic path that it reports.
-- ``UndefinedGroupError::getGroupName()`` has been renamed to ``UndefinedGroupError::GetGroupName()`` for consistency with other API method names.
-- ``LootVersion::string()`` has been renamed to ``LootVersion::GetVersionString()`` for consistency with other API method names.
+- ``UndefinedGroupError::getGroupName()`` has been renamed to
+  ``UndefinedGroupError::GetGroupName()`` for consistency with other API method
+  names.
+- ``LootVersion::string()`` has been renamed to
+  ``LootVersion::GetVersionString()`` for consistency with other API method
+  names.
 - :cpp:any:`GetPluginMetadata()` and :cpp:any:`GetPluginUserMetadata()` now
   return ``std::optional<PluginMetadata>`` to differentiate metadata being found
   or not. Note that the ``PluginMetadata`` value may still return true for
