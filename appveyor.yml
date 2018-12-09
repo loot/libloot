@@ -12,6 +12,7 @@ matrix:
   fast_finish: true
 
 environment:
+  PATH: C:\Users\appveyor\.cargo\bin;$(APPVEYOR_BUILD_FOLDER)\doxygen;$(PATH)
   github_auth_token:
     secure: yDqT5l/e5MntbW99V6+MHlfFgNv+UIogFfeyUVqtFk5lFRB/dAraLLwKCLl6y+DH
   bintray_auth_token:
@@ -23,10 +24,11 @@ cache:
 install:
   - curl -sSf -o rustup-init.exe https://win.rustup.rs
   - rustup-init.exe -y
-  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - rustup target add i686-pc-windows-msvc
   - where cbindgen || cargo install cbindgen --version 0.6.6
-  - choco install -y doxygen.portable
+  # Download and extract Doxygen manually because Chocolatey is flaky.
+  - curl -sSf -o doxygen.zip http://doxygen.nl/files/doxygen-1.8.14.windows.x64.bin.zip
+  - ps: Expand-Archive doxygen.zip -DestinationPath "$env:APPVEYOR_BUILD_FOLDER\doxygen"
   - python -m pip install -r docs/requirements.txt
   - ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Ortham/ci-scripts/2.0.0/delete_old_bintray_versions.py', "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py")
   - ps: if ($env:PLATFORM -eq "Win32") { $env:ADDRESS_MODEL = '32' } else { $env:ADDRESS_MODEL = '64' }
