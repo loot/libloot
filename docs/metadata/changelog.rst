@@ -4,7 +4,7 @@ Version History
 
 The version history of the metadata syntax is given below.
 
-0.14 - Unreleased
+0.14 - 2018-12-09
 =================
 
 Added
