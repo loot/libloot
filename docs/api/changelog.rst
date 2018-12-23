@@ -2,6 +2,18 @@
 Version History
 ***************
 
+0.14.1 - 2018-12-23
+===================
+
+Fixed
+-----
+
+- Product version conditions read from executables' ``VS_FIXEDFILEINFO``
+  structure, so the versions read did not match the versions displayed by
+  Windows' File Explorer. Product versions are now read from executables'
+  ``VS_VERSIONINFO`` structure, using the ``ProductVersion`` key.
+- The release date in the metadata syntax changelog for v0.14 was "Unreleased".
+
 0.14.0 - 2018-12-09
 ===================
 
