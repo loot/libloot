@@ -24,6 +24,8 @@
 #ifndef LOOT_API_HELPERS_LOGGING
 #define LOOT_API_HELPERS_LOGGING
 
+#define FMT_USE_STD_STRING_VIEW
+
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/base_sink.h>
 
@@ -44,7 +46,10 @@ public:
 
 protected:
   void sink_it_(const spdlog::details::log_msg& msg) override {
-    callback(mapFromSpdlog(msg.level), fmt::to_string(msg.raw).c_str());
+    // string_view isn't necessarily null-terminated, so using
+    // msg.payload.data() directly isn't a good idea.
+    std::string payload = std::string(msg.payload.data(), msg.payload.size());
+    callback(mapFromSpdlog(msg.level), payload.c_str());
   }
 
   void flush_() override {}
