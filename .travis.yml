@@ -30,10 +30,10 @@ install:
   - export PATH="$HOME/.local/bin:$PATH"
   # Don't install Doxygen from the repositories, it also gets the LaTeX packages
   # so is a ~ 700 MB download.
-  - wget http://doxygen.nl/files/doxygen-1.8.14.linux.bin.tar.gz
-  - tar -xf doxygen-1.8.14.linux.bin.tar.gz
+  - wget http://doxygen.nl/files/doxygen-1.8.15.linux.bin.tar.gz
+  - tar -xf doxygen-1.8.15.linux.bin.tar.gz
   # Add Doxygen binary path to PATH
-  - export PATH="$PWD/doxygen-1.8.14/bin:$PATH"
+  - export PATH="$PWD/doxygen-1.8.15/bin:$PATH"
   # Install cbindgen for generating C++ headers for Rust dependencies.
   - cbindgen --version || cargo install cbindgen --version 0.6.6
 

@@ -27,7 +27,7 @@ install:
   - rustup target add i686-pc-windows-msvc
   - where cbindgen || cargo install cbindgen --version 0.6.6
   # Download and extract Doxygen manually because Chocolatey is flaky.
-  - curl -sSf -o doxygen.zip http://doxygen.nl/files/doxygen-1.8.14.windows.x64.bin.zip
+  - curl -sSf -o doxygen.zip http://doxygen.nl/files/doxygen-1.8.15.windows.x64.bin.zip
   - ps: Expand-Archive doxygen.zip -DestinationPath "$env:APPVEYOR_BUILD_FOLDER\doxygen"
   - python -m pip install -r docs/requirements.txt
   - ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Ortham/ci-scripts/2.0.0/delete_old_bintray_versions.py', "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py")
