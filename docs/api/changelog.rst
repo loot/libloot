@@ -2,8 +2,33 @@
 Version History
 ***************
 
+0.14.2 - 2019-01-20
+===================
+
+Changed
+-------
+
+- Updated loot-condition-interpreter to v1.2.1.
+- Updated spdlog to v1.3.0.
+
+Fixed
+-----
+
+- An error when loading plugins with a file present in the plugins directory
+  that has a filename containing characters that cannot be represented in the
+  system code page.
+- An error when trying to read the version of an executable that does not have
+  a US English version information resource. Executable versions are now read
+  from the file's first version information resource, whatever its language.
+  Via loot-condition-interpreter.
+
 0.14.1 - 2018-12-23
 ===================
+
+Changed
+-------
+
+- Updated loot-condition-interpreter to v1.2.0.
 
 Fixed
 -----
@@ -11,7 +36,8 @@ Fixed
 - Product version conditions read from executables' ``VS_FIXEDFILEINFO``
   structure, so the versions read did not match the versions displayed by
   Windows' File Explorer. Product versions are now read from executables'
-  ``VS_VERSIONINFO`` structure, using the ``ProductVersion`` key.
+  ``VS_VERSIONINFO`` structure, using the ``ProductVersion`` key. Via
+  loot-condition-interpreter.
 - The release date in the metadata syntax changelog for v0.14 was "Unreleased".
 
 0.14.0 - 2018-12-09
