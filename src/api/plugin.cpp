@@ -304,11 +304,25 @@ std::filesystem::path replaceExtension(std::filesystem::path path, const std::st
 }
 
 bool equivalent(const std::filesystem::path& path1, const std::filesystem::path& path2) {
+  // If the paths are identical, they've got to be equivalent,
+  // it doesn't matter if the paths exist or not.
+  if (path1 == path2) {
+    return true;
+  }
+  // If the paths are not identical, the filesystem might be case-insensitive
+  // so check with the filesystem.
   try {
     return std::filesystem::equivalent(path1, path2);
   } catch (std::filesystem::filesystem_error) {
     // One of the paths checked for equivalence doesn't exist,
     // so they can't be equivalent.
+    return false;
+  } catch (std::system_error) {
+    // This can be thrown if one or both of the paths contains a character
+    // that can't be represented in Windows' multi-byte code page (e.g.
+    // Windows-1252), even though Unicode paths shouldn't be a problem,
+    // and throwing system_error is undocumented. Seems like a bug in MSVC's
+    // implementation.
     return false;
   }
 }

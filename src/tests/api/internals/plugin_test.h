@@ -523,6 +523,71 @@ TEST_P(
   EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::tes5se,
             result);
 }
+
+TEST(equivalent, shouldReturnTrueIfGivenEqualPathsThatExist) {
+  auto path1 = std::filesystem::path("LICENSE");
+  auto path2 = std::filesystem::path("LICENSE");
+
+  EXPECT_TRUE(loot::equivalent(path1, path2));
+}
+
+TEST(equivalent, shouldReturnTrueIfGivenEqualPathsThatDoNotExist) {
+  auto path1 = std::filesystem::path("LICENSE2");
+  auto path2 = std::filesystem::path("LICENSE2");
+
+  EXPECT_TRUE(loot::equivalent(path1, path2));
+}
+
+TEST(equivalent, shouldReturnFalseIfPathsAreNotCaseInsensitivelyEqual) {
+  auto upper = std::filesystem::path("LICENSE");
+  auto lower = std::filesystem::path("license2");
+
+  EXPECT_FALSE(loot::equivalent(lower, upper));
+}
+
+#ifdef _WIN32
+TEST(equivalent, shouldReturnTrueIfGivenCaseInsensitivelyEqualPathsThatExist) {
+  auto upper = std::filesystem::path("LICENSE");
+  auto lower = std::filesystem::path("license");
+
+  EXPECT_TRUE(loot::equivalent(lower, upper));
+}
+
+TEST(equivalent, shouldReturnFalseIfGivenCaseInsensitivelyEqualPathsThatDoNotExist) {
+  auto upper = std::filesystem::path("LICENSE2");
+  auto lower = std::filesystem::path("license2");
+
+  EXPECT_FALSE(loot::equivalent(lower, upper));
+}
+
+TEST(equivalent, shouldReturnTrueIfEqualPathsHaveCharactersThatAreUnrepresentableInTheSystemMultiByteCodePage) {
+  auto path1 = std::filesystem::u8path(u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
+  auto path2 = std::filesystem::u8path(u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
+
+  EXPECT_TRUE(loot::equivalent(path1, path2));
+}
+
+TEST(equivalent, shouldReturnFalseIfCaseInsensitivelyEqualPathsHaveCharactersThatAreUnrepresentableInTheSystemMultiByteCodePage) {
+  auto path1 = std::filesystem::u8path(u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00E3\u00CE.txt");
+  auto path2 = std::filesystem::u8path(u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
+
+  EXPECT_FALSE(loot::equivalent(path1, path2));
+}
+#else
+TEST(equivalent, shouldReturnFalseIfGivenCaseInsensitivelyEqualPathsThatExist) {
+  auto upper = std::filesystem::path("LICENSE");
+  auto lower = std::filesystem::path("license");
+
+  EXPECT_FALSE(loot::equivalent(lower, upper));
+}
+
+TEST(equivalent, shouldReturnFalseIfGivenCaseInsensitivelyEqualPathsThatDoNotExist) {
+  auto upper = std::filesystem::path("LICENSE2");
+  auto lower = std::filesystem::path("license2");
+
+  EXPECT_FALSE(loot::equivalent(lower, upper));
+}
+#endif
 }
 }
 

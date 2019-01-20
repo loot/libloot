@@ -177,6 +177,17 @@ TEST_P(GameTest,
   EXPECT_EQ(1, game.GetCache()->GetArchivePaths().size());
 }
 
+TEST_P(GameTest,
+  loadPluginsShouldNotThrowIfAFilenameHasNonWindows1252EncodableCharacters) {
+  auto path = dataPath / std::filesystem::u8path(u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
+  std::ofstream out(path);
+  out.close();
+
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  EXPECT_NO_THROW(loadInstalledPlugins(game, false));
+}
+
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasNotBeenLoaded) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
   game.LoadCurrentLoadOrderState();
