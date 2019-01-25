@@ -141,11 +141,6 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
       currentGroup = 0;
     }
 
-    if (logger) {
-      logger->trace(
-          "Adding plugin {} to loading group {}", plugin.second, currentGroup);
-    }
-
     pluginGroups[currentGroup].push_back(plugin.second);
     ++currentGroup;
   }
@@ -167,13 +162,11 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
     vector<string>& pluginGroup = pluginGroups[threads.size()];
     threads.push_back(thread([&]() {
       for (auto pluginName : pluginGroup) {
-        if (logger) {
-          logger->trace("Loading {}", pluginName);
-        }
-        auto pluginPath = DataPath() / u8path(pluginName);
-        const bool loadHeader =
-          loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
         try {
+          auto pluginPath = DataPath() / u8path(pluginName);
+          const bool loadHeader =
+            loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
+
           cache_->AddPlugin(Plugin(
               Type(), cache_, pluginPath, loadHeader));
         } catch (std::exception& e) {

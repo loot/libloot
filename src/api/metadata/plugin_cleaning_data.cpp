@@ -78,10 +78,6 @@ std::vector<MessageContent> PluginCleaningData::GetInfo() const {
 
 MessageContent PluginCleaningData::ChooseInfo(
     const std::string& language) const {
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Choosing dirty info content.");
-  }
   return MessageContent::Choose(info_, language);
 }
 }

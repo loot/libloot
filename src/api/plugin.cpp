@@ -60,35 +60,20 @@ Plugin::Plugin(const GameType gameType,
 
     auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
     if (ret != ESP_OK) {
-      throw FileAccessError(name_ +
-                            " : esplugin error code: " + std::to_string(ret));
+      throw FileAccessError("Error checking if \"" + name_ + "\" is empty. esplugin error code: " + std::to_string(ret));
     }
 
     if (!headerOnly) {
-      if (logger) {
-        logger->trace("{}: Caching CRC value.", name_);
-      }
       crc_ = GetCrc32(pluginPath);
 
-      if (logger) {
-        logger->trace("{}: Counting override FormIDs.", name_);
-      }
       ret = esp_plugin_count_override_records(esPlugin.get(),
                                               &numOverrideRecords_);
       if (ret != ESP_OK) {
-        throw FileAccessError(name_ +
-                              " : esplugin error code: " + std::to_string(ret));
+        throw FileAccessError("Error counting override records in \"" + name_ + "\". esplugin error code: " + std::to_string(ret));
       }
     }
 
-    // Also read Bash Tags applied and version string in description.
-    if (logger) {
-      logger->trace("{}: Attempting to extract Bash Tags from the description.",
-                    name_);
-    }
-
     tags_ = ExtractBashTags(GetDescription());
-
     loadsArchive_ = LoadsArchive(gameType, gameCache, pluginPath);
   } catch (std::exception& e) {
     if (logger) {
@@ -96,10 +81,6 @@ Plugin::Plugin(const GameType gameType,
           "Cannot read plugin file \"{}\". Details: {}", name_, e.what());
     }
     throw FileAccessError("Cannot read \"" + name_ + "\". Details: " + e.what());
-  }
-
-  if (logger) {
-    logger->trace("{}: Plugin loading complete.", name_);
   }
 }
 
@@ -206,41 +187,35 @@ size_t Plugin::NumOverrideFormIDs() const { return numOverrideRecords_; }
 
 bool Plugin::IsValid(const GameType gameType,
                      const std::filesystem::path& pluginPath) {
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Checking to see if \"{}\" is a valid plugin.", pluginPath.filename().u8string());
-  }
-
-  // If the filename passed ends in '.ghost', that should be trimmed.
-  std::string trimmedFilename = pluginPath.filename().u8string();
-  if (boost::iends_with(trimmedFilename, ".ghost")) {
-    trimmedFilename = trimmedFilename.substr(0, trimmedFilename.length() - 6);
-  }
-
   // Check that the file has a valid extension.
-  if (!hasPluginFileExtension(trimmedFilename, gameType))
-    return false;
+  if (hasPluginFileExtension(pluginPath.filename().u8string(), gameType)) {
+    bool isValid;
+    int returnCode = esp_plugin_is_valid(GetEspluginGameId(gameType),
+                                          pluginPath.u8string().c_str(),
+                                          true,
+                                          &isValid);
 
-  bool isValid;
-  int ret = esp_plugin_is_valid(
-      GetEspluginGameId(gameType), pluginPath.u8string().c_str(), true, &isValid);
+    if (returnCode != ESP_OK || !isValid) {
+      // Try adding .ghost extension.
+      auto ghostedFilename = pluginPath.u8string() + ".ghost";
+      returnCode = esp_plugin_is_valid(GetEspluginGameId(gameType),
+        ghostedFilename.c_str(),
+        true,
+        &isValid);
+    }
 
-  if (ret != ESP_OK || !isValid) {
-    // Try adding .ghost extension.
-    auto ghostedPath = pluginPath;
-    ghostedPath += ".ghost";
-
-    ret = esp_plugin_is_valid(
-      GetEspluginGameId(gameType), ghostedPath.u8string().c_str(), true, &isValid);
-  }
-
-  if (ret != ESP_OK || !isValid) {
-    if (logger) {
-      logger->warn("The file \"{}\" is not a valid plugin.", pluginPath.filename().u8string());
+    if (returnCode == ESP_OK && isValid) {
+      return true;
     }
   }
 
-  return ret == ESP_OK && isValid;
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("The file \"{}\" is not a valid plugin.",
+                  pluginPath.filename().u8string());
+  }
+
+  return false;
 }
 
 uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
@@ -380,7 +355,11 @@ unsigned int Plugin::GetEspluginGameId(GameType gameType) {
   }
 }
 
-bool hasPluginFileExtension(const std::string& filename, GameType gameType) {
+bool hasPluginFileExtension(std::string filename, GameType gameType) {
+  if (boost::iends_with(filename, ".ghost")) {
+    filename = filename.substr(0, filename.length() - 6);
+  }
+
   bool espOrEsm = boost::iends_with(filename, ".esp") ||
                   boost::iends_with(filename, ".esm");
   bool lightMaster =

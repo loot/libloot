@@ -84,7 +84,7 @@ void LoadOrderHandler::Init(const GameType& gameType,
 void LoadOrderHandler::LoadCurrentState() {
   auto logger = getLogger();
   if (logger) {
-    logger->debug("Loading the current load order state.");
+    logger->info("Loading the current load order state.");
   }
 
   unsigned int ret = lo_load_current_state(gh_);
@@ -95,7 +95,7 @@ void LoadOrderHandler::LoadCurrentState() {
 bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
   auto logger = getLogger();
   if (logger) {
-    logger->debug("Checking if plugin \"{}\" is active.", pluginName);
+    logger->trace("Checking if plugin \"{}\" is active.", pluginName);
   }
 
   bool result = false;
@@ -109,7 +109,7 @@ bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
 std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
   auto logger = getLogger();
   if (logger) {
-    logger->debug("Getting load order.");
+    logger->trace("Getting load order.");
   }
 
   char** pluginArr;
@@ -128,7 +128,7 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
 std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
   auto logger = getLogger();
   if (logger) {
-    logger->debug("Getting active plugins.");
+    logger->trace("Getting active plugins.");
   }
 
   char** pluginArr;
@@ -148,7 +148,7 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
 std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
   auto logger = getLogger();
   if (logger) {
-    logger->debug("Getting implicitly active plugins.");
+    logger->trace("Getting implicitly active plugins.");
   }
 
   char** pluginArr;

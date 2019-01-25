@@ -52,11 +52,6 @@ PluginMetadata::PluginMetadata(const std::string& n) :
 }
 
 void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Merging metadata for: {}", name_);
-  }
-
   if (plugin.HasNameOnly())
     return;
 
@@ -95,11 +90,6 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
 
 PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
   using std::set_difference;
-
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Comparing new metadata for: {}", name_);
-  }
 
   PluginMetadata p(*this);
 
