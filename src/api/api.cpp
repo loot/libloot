@@ -35,8 +35,22 @@ namespace fs = std::filesystem;
 
 namespace loot {
 std::filesystem::path ResolvePath(const std::filesystem::path& path) {
-  if (fs::is_symlink(path))
-    return fs::read_symlink(path);
+  // is_symlink can throw on MSVC with the message
+  // "symlink_status: The parameter is incorrect."
+  // even though a perfectly valid (non-symlink) path is given. This has been
+  // seen with a non C: drive path, but not reproduced, so just catch the
+  // exception and log it.
+  try {
+    if (fs::is_symlink(path))
+      return fs::read_symlink(path);
+  } catch (std::exception& e) {
+    auto logger = getLogger();
+    if (logger) {
+      logger->error("Could not check or read potential symlink path \"{}\": {}",
+                    path.u8string(),
+                    e.what());
+    }
+  }
 
   return path;
 }
