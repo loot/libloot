@@ -2,6 +2,28 @@
 Version History
 ***************
 
+0.14.3 - 2019-01-27
+===================
+
+Changed
+-------
+
+- Condition parsing now errors if it does not consume the whole condition
+  string. Via loot-condition-interpreter.
+- Removed a few unhelpful log statements and changed the verbosity level of
+  others.
+- Updated loot-condition-interpreter to v1.2.2.
+
+Fixed
+-----
+
+- Conditions were not parsed past the first instance of ``file(<regex>)``,
+  ``active(<regex>)``, ``many(<regex>)`` or ``many_active(<regex>)``. Via
+  loot-condition-interpreter.
+- :cpp:any:`loot::CreateGameHandle()` could crash when trying to check if the
+  given paths are symlinks. If a check fails, LOOT will assume the path is not a
+  symlink.
+
 0.14.2 - 2019-01-20
 ===================
 
