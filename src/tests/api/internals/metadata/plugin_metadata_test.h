@@ -476,6 +476,17 @@ TEST_P(PluginMetadataTest, simpleMessagesShouldReturnMessagesAsSimpleMessages) {
   EXPECT_EQ("content3", simpleMessages.back().text);
 }
 
+TEST_P(PluginMetadataTest, unsetGroupShouldLeaveNoGroupValueSet) {
+  PluginMetadata plugin;
+  EXPECT_FALSE(plugin.GetGroup().has_value());
+
+  plugin.SetGroup("test");
+  EXPECT_EQ("test", plugin.GetGroup().value());
+
+  plugin.UnsetGroup();
+  EXPECT_FALSE(plugin.GetGroup().has_value());
+}
+
 TEST_P(PluginMetadataTest,
        hasNameOnlyShouldBeTrueForADefaultConstructedPluginMetadataObject) {
   PluginMetadata plugin;

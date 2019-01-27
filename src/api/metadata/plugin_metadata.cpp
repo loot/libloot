@@ -220,6 +220,10 @@ void PluginMetadata::SetGroup(const std::string& group) {
   group_ = group;
 }
 
+void PluginMetadata::UnsetGroup() {
+  group_ = std::nullopt;
+}
+
 void PluginMetadata::SetLoadAfterFiles(const std::set<File>& l) {
   loadAfter_ = l;
 }

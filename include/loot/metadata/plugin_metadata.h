@@ -181,6 +181,11 @@ public:
   LOOT_API void SetGroup(const std::string& group);
 
   /**
+   * Unsets the plugin's group.
+   */
+  LOOT_API void UnsetGroup();
+
+  /**
    * Set the files that the plugin must load after.
    * @param after
    *        The files to set.
