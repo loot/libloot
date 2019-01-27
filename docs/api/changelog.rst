@@ -2,6 +2,14 @@
 Version History
 ***************
 
+0.14.4 - 2019-01-27
+===================
+
+Added
+-----
+
+- Added :cpp:any:`UnsetGroup()` to ``PluginMetadata``.
+
 0.14.3 - 2019-01-27
 ===================
 
