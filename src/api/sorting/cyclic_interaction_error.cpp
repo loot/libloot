@@ -23,41 +23,16 @@
     */
 #include "loot/exception/cyclic_interaction_error.h"
 
-namespace loot {
-std::string describe(EdgeType edgeType) {
-  switch (edgeType) {
-    case EdgeType::hardcoded:
-      return "Hardcoded";
-    case EdgeType::masterFlag:
-      return "Master Flag";
-    case EdgeType::master:
-      return "Master";
-    case EdgeType::masterlistRequirement:
-      return "Masterlist Requirement";
-    case EdgeType::userRequirement:
-      return "User Requirement";
-    case EdgeType::masterlistLoadAfter:
-      return "Masterlist Load After";
-    case EdgeType::userLoadAfter:
-      return "User Load After";
-    case EdgeType::group:
-      return "Group";
-    case EdgeType::overlap:
-      return "Overlap";
-    case EdgeType::tieBreak:
-      return "Tie Break";
-    default:
-      return "Unknown";
-  }
-}
+#include "api/sorting/plugin_sorter.h"
 
+namespace loot {
 // A.esp --[Master Flag]-> B.esp --Group->
 std::string describeCycle(const std::vector<Vertex>& cycle) {
   std::string text;
   for (const auto& vertex : cycle) {
     text += vertex.GetName();
     if (vertex.GetTypeOfEdgeToNextVertex().has_value()) {
-      text += " --[" + describe(vertex.GetTypeOfEdgeToNextVertex().value()) +
+      text += " --[" + describeEdgeType(vertex.GetTypeOfEdgeToNextVertex().value()) +
               "]-> ";
     }
   }

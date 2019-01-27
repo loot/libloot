@@ -49,6 +49,8 @@ typedef boost::graph_traits<PluginGraph>::vertex_descriptor vertex_t;
 typedef boost::associative_property_map<std::map<vertex_t, size_t>>
     vertex_map_t;
 
+std::string describeEdgeType(EdgeType edgeType);
+
 class PluginSorter {
 public:
   std::vector<std::string> Sort(Game& game);

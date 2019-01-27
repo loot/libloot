@@ -49,6 +49,33 @@ typedef boost::graph_traits<PluginGraph>::vertex_iterator vertex_it;
 typedef boost::graph_traits<PluginGraph>::edge_descriptor edge_t;
 typedef boost::graph_traits<PluginGraph>::edge_iterator edge_it;
 
+std::string describeEdgeType(EdgeType edgeType) {
+  switch (edgeType) {
+    case EdgeType::hardcoded:
+      return "Hardcoded";
+    case EdgeType::masterFlag:
+      return "Master Flag";
+    case EdgeType::master:
+      return "Master";
+    case EdgeType::masterlistRequirement:
+      return "Masterlist Requirement";
+    case EdgeType::userRequirement:
+      return "User Requirement";
+    case EdgeType::masterlistLoadAfter:
+      return "Masterlist Load After";
+    case EdgeType::userLoadAfter:
+      return "User Load After";
+    case EdgeType::group:
+      return "Group";
+    case EdgeType::overlap:
+      return "Overlap";
+    case EdgeType::tieBreak:
+      return "Tie Break";
+    default:
+      return "Unknown";
+  }
+}
+
 std::vector<std::string> PluginSorter::Sort(Game& game) {
   logger_ = getLogger();
 
@@ -74,35 +101,15 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   }
 
   // Now add the interactions between plugins to the graph as edges.
-  if (logger_) {
-    logger_->info("Adding edges to plugin graph.");
-    logger_->debug("Adding non-overlap edges.");
-  }
   AddSpecificEdges();
-
   AddHardcodedPluginEdges(game);
-
   AddGroupEdges();
-
-  if (logger_) {
-    logger_->debug("Adding overlap edges.");
-  }
   AddOverlapEdges();
-
-  if (logger_) {
-    logger_->debug("Adding tie-break edges.");
-  }
   AddTieBreakEdges();
 
-  if (logger_) {
-    logger_->debug("Checking to see if the graph is cyclic.");
-  }
   CheckForCycles();
 
   // Now we can sort.
-  if (logger_) {
-    logger_->debug("Performing a topological sort.");
-  }
   list<vertex_t> sortedVertices;
   boost::topological_sort(graph_,
                           std::front_inserter(sortedVertices),
@@ -136,12 +143,6 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
 }
 
 void PluginSorter::AddPluginVertices(Game& game) {
-  if (logger_) {
-    logger_->info(
-        "Merging masterlist, userlist into plugin list, evaluating conditions "
-        "and checking for install validity.");
-  }
-
   // The resolution of tie-breaks in the plugin graph may be dependent
   // on the order in which vertices are iterated over, as an earlier tie
   // break resolution may cause a potential later tie break to instead
@@ -166,11 +167,6 @@ void PluginSorter::AddPluginVertices(Game& game) {
   std::map<std::string, std::vector<std::string>> groupPlugins;
 
   for (const auto& plugin : game.GetCache()->GetPlugins()) {
-    if (logger_) {
-      logger_->trace("Getting and evaluating metadata for plugin \"{}\"",
-                     plugin->GetName());
-    }
-
     auto masterlistMetadata =
         game.GetDatabase()
             ->GetPluginMetadata(plugin->GetName(), false, true)
@@ -313,7 +309,8 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex,
                            EdgeType edgeType) {
   if (!boost::edge(fromVertex, toVertex, graph_).second) {
     if (logger_) {
-      logger_->trace("Adding edge from \"{}\" to \"{}\".",
+      logger_->trace("Adding {} edge from \"{}\" to \"{}\".",
+                     describeEdgeType(edgeType),
                      graph_[fromVertex].GetName(),
                      graph_[toVertex].GetName());
     }
@@ -324,9 +321,6 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex,
 
 void PluginSorter::AddHardcodedPluginEdges(Game& game) {
   using std::filesystem::u8path;
-  if (logger_) {
-    logger_->trace("Adding hardcoded plugin edges.");
-  }
 
   auto implicitlyActivePlugins =
       game.GetLoadOrderHandler()->GetImplicitlyActivePlugins();
@@ -394,12 +388,6 @@ void PluginSorter::AddSpecificEdges() {
   // Add edges for all relationships that aren't overlaps.
   vertex_it vit, vitend;
   for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
-    if (logger_) {
-      logger_->trace("Adding specific edges to vertex for \"{}\".",
-                     graph_[*vit].GetName());
-      logger_->trace("Adding edges for master flag differences.");
-    }
-
     for (vertex_it vit2 = vit; vit2 != vitend; ++vit2) {
       if (graph_[*vit].IsMaster() == graph_[*vit2].IsMaster())
         continue;
@@ -417,17 +405,11 @@ void PluginSorter::AddSpecificEdges() {
     }
 
     vertex_t parentVertex;
-    if (logger_) {
-      logger_->trace("Adding in-edges for masters.");
-    }
     for (const auto& master : graph_[*vit].GetMasters()) {
       if (GetVertexByName(master, parentVertex))
         AddEdge(parentVertex, *vit, EdgeType::master);
     }
 
-    if (logger_) {
-      logger_->trace("Adding in-edges for requirements.");
-    }
     for (const auto& file : graph_[*vit].GetMasterlistRequirements()) {
       if (GetVertexByName(file.GetName(), parentVertex))
         AddEdge(parentVertex, *vit, EdgeType::masterlistRequirement);
@@ -437,9 +419,6 @@ void PluginSorter::AddSpecificEdges() {
         AddEdge(parentVertex, *vit, EdgeType::userRequirement);
     }
 
-    if (logger_) {
-      logger_->trace("Adding in-edges for 'load after's.");
-    }
     for (const auto& file : graph_[*vit].GetMasterlistLoadAfterFiles()) {
       if (GetVertexByName(file.GetName(), parentVertex))
         AddEdge(parentVertex, *vit, EdgeType::masterlistLoadAfter);
@@ -553,17 +532,10 @@ std::unordered_set<std::string> getGroupsInPaths(
 }
 
 void PluginSorter::AddGroupEdges() {
-  if (logger_) {
-    logger_->trace("Adding group edges.");
-  }
   std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
   std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
   for (const vertex_t& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
-    if (logger_) {
-      logger_->trace("Checking group edges for \"{}\".",
-                     graph_[vertex].GetName());
-    }
     for (const auto& pluginName : graph_[vertex].GetAfterGroupPlugins()) {
       vertex_t parentVertex;
       if (GetVertexByName(pluginName, parentVertex)) {
@@ -573,7 +545,7 @@ void PluginSorter::AddGroupEdges() {
 
           if (logger_) {
             logger_->trace(
-                "Skipping edge from \"{}\" to \"{}\" as it would "
+                "Skipping group edge from \"{}\" to \"{}\" as it would "
                 "create a cycle.",
                 fromPlugin.GetName(),
                 toPlugin.GetName());
@@ -608,10 +580,6 @@ void PluginSorter::AddGroupEdges() {
     }
   }
 
-  if (logger_) {
-    logger_->trace(
-        "Adding group edges that don't individually introduce cycles.");
-  }
   for (const auto& edgePair : acyclicEdgePairs) {
     auto& fromPlugin = graph_[edgePair.first];
     auto& toPlugin = graph_[edgePair.second];
@@ -622,7 +590,7 @@ void PluginSorter::AddGroupEdges() {
       AddEdge(edgePair.first, edgePair.second, EdgeType::group);
     } else if (logger_) {
       logger_->trace(
-          "Skipping edge from \"{}\" to \"{}\" as it would "
+          "Skipping group edge from \"{}\" to \"{}\" as it would "
           "create a multi-group cycle.",
           fromPlugin.GetName(),
           toPlugin.GetName());
@@ -633,11 +601,6 @@ void PluginSorter::AddGroupEdges() {
 void PluginSorter::AddOverlapEdges() {
   for (const auto& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
-    if (logger_) {
-      logger_->trace("Adding overlap edges to vertex for \"{}\".",
-                     graph_[vertex].GetName());
-    }
-
     if (graph_[vertex].NumOverrideFormIDs() == 0) {
       if (logger_) {
         logger_->trace(
@@ -724,10 +687,6 @@ void PluginSorter::AddTieBreakEdges() {
   vertex_it vit, vitend;
   for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
     vertex_t vertex = *vit;
-    if (logger_) {
-      logger_->trace("Adding tie-break edges to vertex for \"{}\"",
-                     graph_[vertex].GetName());
-    }
 
     for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
       vertex_t otherVertex = *vit2;
