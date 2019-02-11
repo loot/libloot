@@ -28,7 +28,19 @@ Refer to `appveyor.yml` for the build process.
 
 ### Linux
 
-Refer to `.travis.yml` for the build process. A [local Docker image](https://docs.travis-ci.com/user/common-build-problems/#Troubleshooting-Locally-in-a-Docker-Image) can be used to ensure the assumed build environment.
+Refer to `.travis.yml` for the build process. It assumes that you have already
+cloned the libloot repository, that the current working directory is its root,
+and that the following applications are already installed:
+
+- `cmake`
+- `curl` and libcurl (`libcurl4-openssl-dev` on Ubuntu)
+- `git`
+- `python` and `pip` (2.7 or 3, it shouldn't matter)
+- `cargo` and the rest of the Rust toolchain (e.g. via
+  [rustup](https://rustup.rs/))
+- `wget`
+
+(The list above may be incomplete.)
 
 ### CMake Variables
 
