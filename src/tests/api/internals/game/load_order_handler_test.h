@@ -65,13 +65,13 @@ protected:
         return {"Skyrim.esm",
                 "Update.esm",
                 "Dawnguard.esm",
-                "Hearthfires.esm",
+                "HearthFires.esm",
                 "Dragonborn.esm"};
       case GameType::tes5vr:
         return {"Skyrim.esm",
                 "Update.esm",
                 "Dawnguard.esm",
-                "Hearthfires.esm",
+                "HearthFires.esm",
                 "Dragonborn.esm",
                 "SkyrimVR.esm"};
       case GameType::fo4:
