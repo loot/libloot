@@ -2,6 +2,23 @@
 Version History
 ***************
 
+0.14.5 - 2019-02-27
+===================
+
+Changed
+-------
+
+- Updated libgit2 to v0.28.1.
+- Updated libloadorder to v12.0.1.
+- Updated spdlog to v1.3.1.
+
+Fixed
+-----
+
+- ``HearthFires.esm`` was not recognised as a hardcoded plugin on case-sensitive
+  filesystems, causing a cyclic interaction error when sorting Skyrim or Skyrim
+  SE (via libloadorder).
+
 0.14.4 - 2019-01-27
 ===================
 
