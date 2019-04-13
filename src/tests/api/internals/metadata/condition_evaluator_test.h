@@ -101,7 +101,8 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         ConditionEvaluatorTest,
-                        ::testing::Values(GameType::tes4,
+                        ::testing::Values(GameType::tes3,
+                                          GameType::tes4,
                                           GameType::tes5,
                                           GameType::fo3,
                                           GameType::fonv,

@@ -306,6 +306,10 @@ bool equivalent(const std::filesystem::path& path1, const std::filesystem::path&
 bool Plugin::LoadsArchive(const GameType gameType,
                           const std::shared_ptr<GameCache> gameCache,
                           const std::filesystem::path& pluginPath) {
+  if (gameType == GameType::tes3) {
+    return false;
+  }
+
   const string archiveExtension = GetArchiveFileExtension(gameType);
 
   if (gameType == GameType::tes5) {
@@ -340,6 +344,8 @@ bool Plugin::LoadsArchive(const GameType gameType,
 
 unsigned int Plugin::GetEspluginGameId(GameType gameType) {
   switch (gameType) {
+    case GameType::tes3:
+      return ESP_GAME_MORROWIND;
     case GameType::tes4:
       return ESP_GAME_OBLIVION;
     case GameType::tes5:

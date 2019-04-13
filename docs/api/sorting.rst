@@ -10,12 +10,13 @@ LOOT's sorting algorithm consists of four stages:
 Load plugin data
 ================
 
-In this first stage, the plugins to be sorted are parsed and their FormIDs
-stored. Parsing is multithreaded by dividing the plugins into buckets with
-roughly equal total file sizes, and loading each bucket's plugins in a separate
-thread. The number of buckets created is equal to the number of concurrent
-threads that are hardware-supported (e.g. a dual-core CPU without hyperthreading
-may report that it supports two threads).
+In this first stage, the plugins to be sorted are parsed and their record IDs
+(which are FormIDs for all games apart from Morrowind) are stored. Parsing is
+multithreaded by dividing the plugins into buckets with roughly equal total file
+sizes, and loading each bucket's plugins in a separate thread. The number of
+buckets created is equal to the number of concurrent threads that are
+hardware-supported (e.g. a dual-core CPU without hyperthreading may report that
+it supports two threads).
 
 When parsing plugins, all subrecords are skipped over for efficiency, apart from
 the subrecords of the ``TES4`` header record.
@@ -53,11 +54,13 @@ is recorded. Once all potential edges have been checked, the recorded edges are
 added to the graph.
 
 Plugin overlap edges are then added. Two plugins overlap if they contain the
-same FormID, i.e. if they both edit the same record or if one edits a record the
+same record, i.e. if they both edit the same record or if one edits a record the
 other plugin adds.
 
 For each plugin, skip it if it overrides no records, otherwise iterate over all
-other plugins.
+other plugins. Sorting currently skips adding overlap edges for Morrowind
+plugins, because LOOT is unable to distinguish between new and overridden
+records in Morrowind plugins, and considers all plugins to override no records.
 
 * If the plugin and other plugin override the same number of records, or do not
   overlap, skip the other plugin.

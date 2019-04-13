@@ -48,11 +48,11 @@
 #include "windows.h"
 #endif
 
-using std::filesystem::u8path;
 using std::list;
 using std::string;
 using std::thread;
 using std::vector;
+using std::filesystem::u8path;
 
 namespace loot {
 Game::Game(const GameType gameType,
@@ -71,14 +71,21 @@ Game::Game(const GameType gameType,
 
   loadOrderHandler_->Init(type_, gamePath_, localDataPath);
 
-  conditionEvaluator_ = std::make_shared<ConditionEvaluator>(Type(), DataPath());
+  conditionEvaluator_ =
+      std::make_shared<ConditionEvaluator>(Type(), DataPath());
 
   database_ = std::make_shared<ApiDatabase>(conditionEvaluator_);
 }
 
 GameType Game::Type() const { return type_; }
 
-std::filesystem::path Game::DataPath() const { return gamePath_ / "Data"; }
+std::filesystem::path Game::DataPath() const {
+  if (type_ == GameType::tes3) {
+    return gamePath_ / "Data Files";
+  } else {
+    return gamePath_ / "Data";
+  }
+}
 
 std::shared_ptr<GameCache> Game::GetCache() { return cache_; }
 
@@ -94,7 +101,6 @@ bool Game::IsValidPlugin(const std::string& plugin) const {
 
 void Game::LoadPlugins(const std::vector<std::string>& plugins,
                        bool loadHeadersOnly) {
-
   auto logger = getLogger();
   uintmax_t meanFileSize = 0;
   std::multimap<uintmax_t, string> sizeMap;
@@ -165,10 +171,9 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
         try {
           auto pluginPath = DataPath() / u8path(pluginName);
           const bool loadHeader =
-            loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
+              loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
 
-          cache_->AddPlugin(Plugin(
-              Type(), cache_, pluginPath, loadHeader));
+          cache_->AddPlugin(Plugin(Type(), cache_, pluginPath, loadHeader));
         } catch (std::exception& e) {
           if (logger) {
             logger->error(
@@ -240,13 +245,14 @@ void Game::CacheArchives() {
   const auto archiveFileExtension = GetArchiveFileExtension(Type());
 
   for (std::filesystem::directory_iterator it(DataPath());
-    it != std::filesystem::directory_iterator();
-    ++it) {
+       it != std::filesystem::directory_iterator();
+       ++it) {
     // Check if the path is an archive by checking if replacing its
     // file extension with the archive extension resolves to the same file.
     // Could use boost::iends_with, but it's less obvious here that the
     // test string is ASCII-only.
-    if (loot::equivalent(it->path(), replaceExtension(it->path(), archiveFileExtension))) {
+    if (loot::equivalent(it->path(),
+                         replaceExtension(it->path(), archiveFileExtension))) {
       cache_->CacheArchivePath(it->path());
     }
   }

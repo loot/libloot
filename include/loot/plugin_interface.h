@@ -116,11 +116,13 @@ public:
   virtual bool LoadsArchive() const = 0;
 
   /**
-   * Check if two plugins contain records for the same FormIDs.
+   * Check if two plugins contain a record with the same ID.
    * @param  plugin
-   *         The other plugin to check for FormID overlap with.
+   *         The other plugin to check for overlap with.
    * @return True if the plugins both contain at least one record with the same
-   *         FormID, false otherwise.
+   *         ID, false otherwise. FormIDs are compared for all games apart from
+   *         Morrowind, which doesn't have FormIDs and so has other identifying
+   *         data compared.
    */
   virtual bool DoFormIDsOverlap(const PluginInterface& plugin) const = 0;
 };

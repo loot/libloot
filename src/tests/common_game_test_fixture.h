@@ -43,11 +43,12 @@ namespace loot {
 namespace test {
 
 std::filesystem::path getRootTestPath() {
-  auto directoryName = u8"LOOT-t\u00E9st-" + boost::lexical_cast<std::string>(
-                                      (boost::uuids::random_generator())());
+  auto directoryName =
+      u8"LOOT-t\u00E9st-" +
+      boost::lexical_cast<std::string>((boost::uuids::random_generator())());
 
   return std::filesystem::absolute(std::filesystem::temp_directory_path() /
-                                    std::filesystem::u8path(directoryName));
+                                   std::filesystem::u8path(directoryName));
 }
 
 class CommonGameTestFixture : public ::testing::TestWithParam<GameType> {
@@ -57,7 +58,7 @@ protected:
       german("de"),
       rootTestPath(getRootTestPath()),
       missingPath(rootTestPath / "missing"),
-      dataPath(rootTestPath / "game" / "Data"),
+      dataPath(rootTestPath / "game" / getPluginsFolder()),
       localPath(rootTestPath / "local" / "game"),
       metadataFilesPath(rootTestPath / "metadata"),
       masterFile(getMasterFile()),
@@ -138,15 +139,18 @@ protected:
     ASSERT_FALSE(exists(dataPath / missingEsp));
   }
 
-  void copyPlugin(const std::filesystem::path& sourceParentPath, const std::string& filename) {
-    std::filesystem::copy_file(sourceParentPath / filename, dataPath / filename);
+  void copyPlugin(const std::filesystem::path& sourceParentPath,
+                  const std::string& filename) {
+    std::filesystem::copy_file(sourceParentPath / filename,
+                               dataPath / filename);
     ASSERT_TRUE(std::filesystem::exists(dataPath / filename));
   }
 
   void TearDown() {
     // Grant write permissions to everything in rootTestPath
     // in case the test made anything read only.
-    for (const auto& path : std::filesystem::recursive_directory_iterator(rootTestPath)) {
+    for (const auto& path :
+         std::filesystem::recursive_directory_iterator(rootTestPath)) {
       std::filesystem::permissions(path, std::filesystem::perms::all);
     }
     std::filesystem::remove_all(rootTestPath);
@@ -267,7 +271,9 @@ protected:
 private:
   std::filesystem::path getSourcePluginsPath() const {
     using std::filesystem::absolute;
-    if (GetParam() == GameType::tes4)
+    if (GetParam() == GameType::tes3)
+      return absolute("./Morrowind/Data Files");
+    else if (GetParam() == GameType::tes4)
       return absolute("./Oblivion/Data");
     else if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
       return absolute("./SkyrimSE/Data");
@@ -276,7 +282,9 @@ private:
   }
 
   inline std::string getMasterFile() const {
-    if (GetParam() == GameType::tes4)
+    if (GetParam() == GameType::tes3)
+      return "Morrowind.esm";
+    else if (GetParam() == GameType::tes4)
       return "Oblivion.esm";
     else if (GetParam() == GameType::tes5 || GetParam() == GameType::tes5se)
       return "Skyrim.esm";
@@ -288,29 +296,50 @@ private:
       return "Fallout4.esm";
   }
 
+  std::string getPluginsFolder() const {
+    if (GetParam() == GameType::tes3) {
+      return "Data Files";
+    } else {
+      return "Data";
+    }
+  }
+
   inline uint32_t getBlankEsmCrc() const {
-    if (GetParam() == GameType::tes4)
-      return 0x374E2A6F;
-    else
-      return 0x6A1273DC;
+    switch (GetParam()) {
+      case GameType::tes3:
+        return 0x790DC6FB;
+      case GameType::tes4:
+        return 0x374E2A6F;
+      default:
+        return 0x6A1273DC;
+    }
   }
 
   void setLoadOrder(
       const std::vector<std::pair<std::string, bool>>& loadOrder) const {
-    std::ofstream out(localPath / "plugins.txt");
-    for (const auto& plugin : loadOrder) {
-      if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-        if (plugin.second)
-          out << '*';
-      } else if (!plugin.second)
-        continue;
+    if (GetParam() == GameType::tes3) {
+      std::ofstream out(dataPath.parent_path() / "Morrowind.ini");
+      for (const auto& plugin : loadOrder) {
+        if (plugin.second) {
+          out << "GameFile0=" << plugin.first << std::endl;
+        }
+      }
+    } else {
+      std::ofstream out(localPath / "plugins.txt");
+      for (const auto& plugin : loadOrder) {
+        if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+          if (plugin.second)
+            out << '*';
+        } else if (!plugin.second)
+          continue;
 
-      out << plugin.first << std::endl;
+        out << plugin.first << std::endl;
+      }
     }
 
     if (isLoadOrderTimestampBased(GetParam())) {
       std::filesystem::file_time_type modificationTime =
-        std::filesystem::file_time_type::clock::now();
+          std::filesystem::file_time_type::clock::now();
       for (const auto& plugin : loadOrder) {
         if (std::filesystem::exists(
                 dataPath / std::filesystem::path(plugin.first + ".ghost"))) {
@@ -319,7 +348,7 @@ private:
               modificationTime);
         } else {
           std::filesystem::last_write_time(dataPath / plugin.first,
-                                             modificationTime);
+                                           modificationTime);
         }
         modificationTime += std::chrono::seconds(60);
       }
@@ -330,8 +359,8 @@ private:
   }
 
   inline static bool isLoadOrderTimestampBased(GameType gameType) {
-    return gameType == GameType::tes4 || gameType == GameType::fo3 ||
-           gameType == GameType::fonv;
+    return gameType == GameType::tes3 || gameType == GameType::tes4 ||
+           gameType == GameType::fo3 || gameType == GameType::fonv;
   }
 };
 }

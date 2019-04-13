@@ -47,7 +47,7 @@ All unevaluated metadata is cached between calls to :cpp:func:`LoadLists`.
 Plugin content is cached between calls to :cpp:func:`LoadPlugins` and
 :cpp:func:`SortPlugins`.
 
-Load order is cached between calls to :cpp:func:`LoadPlugins`, 
+Load order is cached between calls to :cpp:func:`LoadPlugins`,
 :cpp:func:`SortPlugins` and :cpp:func:`LoadCurrentLoadOrderState`.
 
 Performance
@@ -56,7 +56,7 @@ Performance
 Loading metadata lists is a relatively costly operation, as is updating the
 masterlist (which involves loading it).
 
-Sorting plugins is expensive, as it involves loading all the FormIDs for all
+Sorting plugins is expensive, as it involves loading all the content of all
 the plugins, apart from the game's main master file, which is skipped as an
 optimisation (it doesn't depend on anything else and is much bigger than any
 other plugin, so is unnecessary and slow to load).
@@ -66,5 +66,5 @@ revision.
 
 Loading the current load order state is relatively cheap and can take < 1 ms
 depending on hardware and the size of the load order, but involves filesystem
-access and should not be done more often than necessary to avoid a performance 
+access and should not be done more often than necessary to avoid a performance
 impact.

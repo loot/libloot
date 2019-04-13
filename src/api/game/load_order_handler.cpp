@@ -32,6 +32,8 @@ using std::string;
 namespace loot {
 unsigned int mapGameId(GameType gameType) {
   switch (gameType) {
+  case GameType::tes3:
+    return LIBLO_GAME_TES3;
   case GameType::tes4:
     return LIBLO_GAME_TES4;
   case GameType::tes5:

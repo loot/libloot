@@ -58,6 +58,8 @@ void HandleError(const std::string operation, int returnCode) {
 
 int mapGameType(GameType gameType) {
   switch (gameType) {
+  case GameType::tes3:
+    return LCI_GAME_TES3;
   case GameType::tes4:
     return LCI_GAME_TES4;
   case GameType::tes5:
