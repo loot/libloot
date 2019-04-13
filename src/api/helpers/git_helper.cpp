@@ -88,7 +88,7 @@ void GitHelper::InitialiseOptions(const std::string& branch,
                                   const std::string& filenameToCheckout) {
   if (logger_) {
     logger_->debug(
-        "Setting up checkout options uUsing branch {} and filename {}.",
+        "Setting up checkout options using branch {} and filename {}.",
         branch,
         filenameToCheckout);
   }
@@ -183,7 +183,7 @@ void GitHelper::Clone(const std::filesystem::path& path,
 
   // Clone the remote repository.
   if (logger_) {
-    logger_->info("Repository doesn't exist, cloning the remote repository.");
+    logger_->info("Repository doesn't exist, cloning the remote repository at \"{}\".", url);
   }
 
   fs::create_directories(path.parent_path());

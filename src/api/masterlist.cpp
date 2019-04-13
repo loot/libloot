@@ -107,10 +107,6 @@ bool Masterlist::Update(const std::filesystem::path& path,
   if (path.empty() || repoUrl.empty() || repoBranch.empty())
     throw std::invalid_argument("Repository path, URL and branch must not be empty.");
 
-  if (logger) {
-    logger->debug("Setting up checkout options.");
-    logger->debug("Using remote URL {} and branch {}", repoUrl, repoBranch);
-  }
   git.InitialiseOptions(repoBranch, filename);
 
   // Now try to access the repository if it exists, or clone one if it doesn't.
