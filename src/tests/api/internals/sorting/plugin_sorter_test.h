@@ -164,11 +164,10 @@ TEST_P(PluginSorterTest,
         PluginMetadata());
     EXPECT_TRUE(lightMaster.IsMaster());
 
-    auto lightMasterEsp =
-        PluginSortingData(*dynamic_cast<const Plugin *>(
-                              game_.GetPlugin(blankEslEsp).get()),
-                          PluginMetadata(),
-                          PluginMetadata());
+    auto lightMasterEsp = PluginSortingData(
+        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp).get()),
+        PluginMetadata(),
+        PluginMetadata());
     EXPECT_FALSE(lightMasterEsp.IsMaster());
   }
 }
@@ -392,6 +391,46 @@ TEST_P(
     EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[2].GetName());
     EXPECT_EQ(EdgeType::group, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
   }
+}
+
+TEST_P(PluginSorterTest,
+       sortingShouldNotIgnoreIntermediatePluginsInAMultiGroupCycleIfTheEarlierPluginIsNotAMasterAndTheLaterIs) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  GenerateMasterlist();
+  game_.GetDatabase()->LoadLists(masterlistPath_);
+
+  PluginMetadata plugin(blankMasterDependentEsp);
+  plugin.SetGroup("earliest");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  plugin = PluginMetadata(blankDifferentEsm);
+  plugin.SetGroup("earlier");
+  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+
+  PluginSorter ps;
+  std::vector<std::string> expectedSortedOrder({
+      blankDifferentEsm,
+      blankEsm,
+      blankMasterDependentEsm,
+      blankDifferentMasterDependentEsm,
+      blankMasterDependentEsp,
+      blankEsp,
+      blankDifferentEsp,
+      blankDifferentMasterDependentEsp,
+      blankPluginDependentEsp,
+      blankDifferentPluginDependentEsp,
+  });
+
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    expectedSortedOrder.insert(expectedSortedOrder.begin(), masterFile);
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
+  } else {
+    expectedSortedOrder.insert(expectedSortedOrder.begin() + 1, masterFile);
+  }
+
+  std::vector<std::string> sorted = ps.Sort(game_);
+  EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
 TEST_P(

@@ -551,6 +551,16 @@ void PluginSorter::AddGroupEdges() {
                 toPlugin.GetName());
           }
 
+          // If the earlier plugin is not a master and the later plugin is,
+          // don't ignore the plugin with the default group for all
+          // intermediate plugins, as some of those plugins may be masters
+          // that wouldn't be involved in the cycle, and any of those
+          // plugins that are not masters would have their own cycles
+          // detected anyway.
+          if (!fromPlugin.IsMaster() && toPlugin.IsMaster()) {
+            continue;
+          }
+
           // The default group is a special case, as it's given to plugins
           // with no metadata. If a plugin in the default group causes
           // a cycle due to its group, ignore that plugin's group for all
