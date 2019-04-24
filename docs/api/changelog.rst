@@ -2,6 +2,29 @@
 Version History
 ***************
 
+0.14.6 - 2019-04-24
+===================
+
+Added
+-----
+
+- Support for TES III: Morrowind using ``GameType::tes3``. The sorting process
+  for Morrowind is slightly different than for other games, because LOOT cannot
+  currently detect when plugins overlap. As a result, LOOT is much less likely
+  to suggest load order changes.
+
+Changed
+-------
+
+- Updated esplugin to v2.1.2.
+- Updated loot-condition-interpreter to v1.3.0.
+
+Fixed
+-----
+
+- LOOT would unnecessarily ignore intermediate plugins in a non-master to master
+  cycle involving groups, leading to unexpected results when sorting plugins.
+
 0.14.5 - 2019-02-27
 ===================
 
