@@ -27,8 +27,8 @@ install:
   - rustup target add i686-pc-windows-msvc
   - where cbindgen || cargo install cbindgen --version 0.6.6
   - nuget install doxygen -Version 1.8.14
-  - python -m pip install -r docs/requirements.txt
-  - ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Ortham/ci-scripts/2.0.0/delete_old_bintray_versions.py', "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py")
+  - py -3 -m pip install -r docs/requirements.txt
+  - ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Ortham/ci-scripts/2.1.3/delete_old_bintray_versions.py', "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py")
   - ps: if ($env:PLATFORM -eq "Win32") { $env:ADDRESS_MODEL = '32' } else { $env:ADDRESS_MODEL = '64' }
 
 before_build:
@@ -56,7 +56,7 @@ test_script:
 
 after_test:
   - cd %APPVEYOR_BUILD_FOLDER%
-  - C:\Python27\Scripts\sphinx-build -b html docs build\docs\html
+  - C:\Python37-x64\Scripts\sphinx-build -b html docs build\docs\html
   - ps:  $env:GIT_DESCRIBE = ((git describe --tags --long --always --abbrev=7) | Out-String) -replace "`n|`r", ""
   - cd build
   - cpack -C %CONFIGURATION%
@@ -97,7 +97,7 @@ deploy:
       appveyor_repo_tag: true
 
 on_success:
-  - ps: python "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py" -g loot/libloot -b loot/snapshots/libloot -u wrinklyninja -k $env:bintray_auth_token -t $env:github_auth_token -n 30
+  - ps: py -3 "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py" -g loot/libloot -b loot/snapshots/libloot -u wrinklyninja -k $env:bintray_auth_token -t $env:github_auth_token -n 30
 
 on_finish:
   - ps: (New-Object System.Net.WebClient).UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:CONFIGURATION)\libloot_internals_tests.xml")
