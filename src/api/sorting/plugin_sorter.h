@@ -56,7 +56,7 @@ public:
   std::vector<std::string> Sort(Game& game);
 
 private:
-  bool GetVertexByName(const std::string& name, vertex_t& vertex) const;
+  std::optional<vertex_t> GetVertexByName(const std::string& name) const;
   void CheckForCycles() const;
   bool EdgeCreatesCycle(const vertex_t& u, const vertex_t& v) const;
 

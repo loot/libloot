@@ -236,18 +236,16 @@ void PluginSorter::AddPluginVertices(Game& game) {
   put(vertexIndexMap_, v, i++);
 }
 
-bool PluginSorter::GetVertexByName(const std::string& name,
-                                   vertex_t& vertexOut) const {
+std::optional<vertex_t> PluginSorter::GetVertexByName(const std::string& name) const {
   auto lowercasedName = boost::locale::to_lower(name);
   for (const auto& vertex :
-       boost::make_iterator_range(boost::vertices(graph_))) {
+    boost::make_iterator_range(boost::vertices(graph_))) {
     if (graph_[vertex].GetLowercasedName() == lowercasedName) {
-      vertexOut = vertex;
-      return true;
+      return vertex;
     }
   }
 
-  return false;
+  return std::nullopt;
 }
 
 void PluginSorter::CheckForCycles() const {
@@ -352,9 +350,9 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
       }
     }
 
-    vertex_t pluginVertex;
+    auto pluginVertex = GetVertexByName(plugin);
 
-    if (!GetVertexByName(plugin, pluginVertex)) {
+    if (!pluginVertex.has_value()) {
       if (logger_) {
         logger_->trace(
             "Skipping adding hardcoded plugin edges for \"{}\" as it is not "
@@ -379,7 +377,7 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
 
       if (processedPluginPaths.count(
               std::filesystem::canonical(graphPluginPath)) == 0) {
-        AddEdge(pluginVertex, *vit, EdgeType::hardcoded);
+        AddEdge(pluginVertex.value(), *vit, EdgeType::hardcoded);
       }
     }
   }
@@ -405,28 +403,37 @@ void PluginSorter::AddSpecificEdges() {
       AddEdge(parentVertex, vertex, EdgeType::masterFlag);
     }
 
-    vertex_t parentVertex;
     for (const auto& master : graph_[*vit].GetMasters()) {
-      if (GetVertexByName(master, parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::master);
+      auto parentVertex = GetVertexByName(master);
+      if (parentVertex.has_value()) {
+        AddEdge(parentVertex.value(), *vit, EdgeType::master);
+      }
     }
 
     for (const auto& file : graph_[*vit].GetMasterlistRequirements()) {
-      if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::masterlistRequirement);
+      auto parentVertex = GetVertexByName(file.GetName());
+      if (parentVertex.has_value()) {
+        AddEdge(parentVertex.value(), *vit, EdgeType::masterlistRequirement);
+      }
     }
     for (const auto& file : graph_[*vit].GetUserRequirements()) {
-      if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::userRequirement);
+      auto parentVertex = GetVertexByName(file.GetName());
+      if (parentVertex.has_value()) {
+        AddEdge(parentVertex.value(), *vit, EdgeType::userRequirement);
+      }
     }
 
     for (const auto& file : graph_[*vit].GetMasterlistLoadAfterFiles()) {
-      if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::masterlistLoadAfter);
+      auto parentVertex = GetVertexByName(file.GetName());
+      if (parentVertex.has_value()) {
+        AddEdge(parentVertex.value(), *vit, EdgeType::masterlistLoadAfter);
+      }
     }
     for (const auto& file : graph_[*vit].GetUserLoadAfterFiles()) {
-      if (GetVertexByName(file.GetName(), parentVertex))
-        AddEdge(parentVertex, *vit, EdgeType::userLoadAfter);
+      auto parentVertex = GetVertexByName(file.GetName());
+      if (parentVertex.has_value()) {
+        AddEdge(parentVertex.value(), *vit, EdgeType::userLoadAfter);
+      }
     }
   }
 }
@@ -538,56 +545,58 @@ void PluginSorter::AddGroupEdges() {
   for (const vertex_t& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
     for (const auto& pluginName : graph_[vertex].GetAfterGroupPlugins()) {
-      vertex_t parentVertex;
-      if (GetVertexByName(pluginName, parentVertex)) {
-        if (EdgeCreatesCycle(parentVertex, vertex)) {
-          auto& fromPlugin = graph_[parentVertex];
-          auto& toPlugin = graph_[vertex];
+      auto parentVertex = GetVertexByName(pluginName);
+      if (!parentVertex.has_value()) {
+        continue;
+      }
 
-          if (logger_) {
-            logger_->trace(
-                "Skipping group edge from \"{}\" to \"{}\" as it would "
-                "create a cycle.",
-                fromPlugin.GetName(),
-                toPlugin.GetName());
-          }
+      if (EdgeCreatesCycle(parentVertex.value(), vertex)) {
+        auto& fromPlugin = graph_[parentVertex.value()];
+        auto& toPlugin = graph_[vertex];
 
-          // If the earlier plugin is not a master and the later plugin is,
-          // don't ignore the plugin with the default group for all
-          // intermediate plugins, as some of those plugins may be masters
-          // that wouldn't be involved in the cycle, and any of those
-          // plugins that are not masters would have their own cycles
-          // detected anyway.
-          if (!fromPlugin.IsMaster() && toPlugin.IsMaster()) {
-            continue;
-          }
+        if (logger_) {
+          logger_->trace(
+              "Skipping group edge from \"{}\" to \"{}\" as it would "
+              "create a cycle.",
+              fromPlugin.GetName(),
+              toPlugin.GetName());
+        }
 
-          // The default group is a special case, as it's given to plugins
-          // with no metadata. If a plugin in the default group causes
-          // a cycle due to its group, ignore that plugin's group for all
-          // groups in the group graph paths between default and the other
-          // plugin's group.
-          std::string pluginToIgnore;
-          if (toPlugin.GetGroup() == Group().GetName()) {
-            pluginToIgnore = toPlugin.GetName();
-          } else if (fromPlugin.GetGroup() == Group().GetName()) {
-            pluginToIgnore = fromPlugin.GetName();
-          } else {
-            // If neither plugin is in the default group, it's impossible
-            // to decide which group to ignore, so ignore neither of them.
-            continue;
-          }
-
-          auto groupsInPaths = getGroupsInPaths(
-              groups_, fromPlugin.GetGroup(), toPlugin.GetGroup());
-
-          ignorePlugin(pluginToIgnore, groupsInPaths, groupPluginsToIgnore);
-
+        // If the earlier plugin is not a master and the later plugin is,
+        // don't ignore the plugin with the default group for all
+        // intermediate plugins, as some of those plugins may be masters
+        // that wouldn't be involved in the cycle, and any of those
+        // plugins that are not masters would have their own cycles
+        // detected anyway.
+        if (!fromPlugin.IsMaster() && toPlugin.IsMaster()) {
           continue;
         }
 
-        acyclicEdgePairs.push_back(std::make_pair(parentVertex, vertex));
+        // The default group is a special case, as it's given to plugins
+        // with no metadata. If a plugin in the default group causes
+        // a cycle due to its group, ignore that plugin's group for all
+        // groups in the group graph paths between default and the other
+        // plugin's group.
+        std::string pluginToIgnore;
+        if (toPlugin.GetGroup() == Group().GetName()) {
+          pluginToIgnore = toPlugin.GetName();
+        } else if (fromPlugin.GetGroup() == Group().GetName()) {
+          pluginToIgnore = fromPlugin.GetName();
+        } else {
+          // If neither plugin is in the default group, it's impossible
+          // to decide which group to ignore, so ignore neither of them.
+          continue;
+        }
+
+        auto groupsInPaths = getGroupsInPaths(
+            groups_, fromPlugin.GetGroup(), toPlugin.GetGroup());
+
+        ignorePlugin(pluginToIgnore, groupsInPaths, groupPluginsToIgnore);
+
+        continue;
       }
+
+      acyclicEdgePairs.push_back(std::make_pair(parentVertex.value(), vertex));
     }
   }
 
