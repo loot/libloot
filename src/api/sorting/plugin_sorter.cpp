@@ -331,12 +331,13 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
 
     try {
       processedPluginPaths.insert(std::filesystem::canonical(pluginPath));
-    } catch (std::filesystem::filesystem_error&) {
+    } catch (std::filesystem::filesystem_error& e) {
       if (logger_) {
         logger_->trace(
-            "Skipping adding hardcoded plugin edges for \"{}\" as it is not "
-            "installed.",
-            plugin);
+            "Skipping adding hardcoded plugin edges for \"{}\" as its "
+            "canonical path could not be determined: {}",
+            plugin,
+            e.what());
       }
       continue;
     }
