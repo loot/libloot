@@ -355,8 +355,8 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
     if (!pluginVertex.has_value()) {
       if (logger_) {
         logger_->trace(
-            "Skipping adding hardcoded plugin edges for \"{}\" as it is not "
-            "installed.",
+            "Skipping adding hardcoded plugin edges for \"{}\" as it has not "
+            "been loaded.",
             plugin);
       }
       continue;
