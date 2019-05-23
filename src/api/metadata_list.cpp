@@ -29,6 +29,7 @@
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
+#include "api/helpers/text.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/group.h"
 #include "api/metadata/yaml/plugin_metadata.h"
@@ -100,7 +101,7 @@ void MetadataList::Save(const std::filesystem::path& filepath) const {
 
   auto plugins = Plugins();
   plugins.sort([](const PluginMetadata& p1, const PluginMetadata& p2) {
-    return p1.GetLowercasedName() < p2.GetLowercasedName();
+    return CompareFilenames(p1.GetName(), p2.GetName()) < 0;
   });
 
   if (!plugins.empty())

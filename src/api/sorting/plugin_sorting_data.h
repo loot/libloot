@@ -36,7 +36,6 @@ public:
                     const PluginMetadata& userMetadata);
 
   std::string GetName() const;
-  std::string GetLowercasedName() const;
   bool IsMaster() const;
   bool LoadsArchive() const;
   std::vector<std::string> GetMasters() const;

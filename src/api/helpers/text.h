@@ -35,6 +35,14 @@ namespace loot {
 std::set<Tag> ExtractBashTags(const std::string& description);
 
 std::optional<std::string> ExtractVersion(const std::string& text);
+
+// Compare strings as if they're filenames, respecting filesystem case
+// insensitivity on Windows. Returns -1 if lhs < rhs, 0 if lhs == rhs, and 1 if
+// lhs > rhs.
+int CompareFilenames(const std::string& lhs, const std::string& rhs);
+
+// Uppercase the given filename using an invariant locale on Windows.
+std::string NormalizeFilename(const std::string& filename);
 }
 
 #endif

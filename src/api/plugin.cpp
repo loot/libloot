@@ -226,7 +226,7 @@ uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
 }
 
 bool Plugin::operator<(const Plugin& rhs) const {
-  return boost::locale::to_lower(name_) < boost::locale::to_lower(rhs.name_);
+  return CompareFilenames(name_, rhs.name_) < 0;
 }
 
 void Plugin::Load(const std::filesystem::path& path,

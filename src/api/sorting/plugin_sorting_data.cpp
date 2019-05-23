@@ -49,10 +49,6 @@ PluginSortingData::PluginSortingData(const Plugin& plugin,
 
 std::string PluginSortingData::GetName() const { return plugin_.GetName(); }
 
-std::string PluginSortingData::GetLowercasedName() const {
-  return boost::locale::to_lower(plugin_.GetName());
-}
-
 bool PluginSortingData::IsMaster() const {
   return plugin_.IsMaster() || (plugin_.IsLightMaster() &&
                                 !boost::iends_with(plugin_.GetName(), ".esp"));

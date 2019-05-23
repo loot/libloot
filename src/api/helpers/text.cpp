@@ -27,6 +27,12 @@
 
 #include <boost/algorithm/string.hpp>
 
+#ifdef _WIN32
+#include "windows.h"
+#else
+#include <boost/locale.hpp>
+#endif
+
 using std::regex;
 
 namespace loot {
@@ -106,5 +112,56 @@ std::optional<std::string> ExtractVersion(const std::string& text) {
   }
 
   return std::nullopt;
+}
+
+
+#ifdef _WIN32
+std::wstring ToWinWide(const std::string& str) {
+  size_t len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), 0, 0);
+  std::wstring wstr(len, 0);
+  MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &wstr[0], len);
+  return wstr;
+}
+
+std::string FromWinWide(const std::wstring& wstr) {
+  size_t len = WideCharToMultiByte(
+    CP_UTF8, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
+  std::string str(len, 0);
+  WideCharToMultiByte(
+    CP_UTF8, 0, wstr.c_str(), wstr.length(), &str[0], len, NULL, NULL);
+  return str;
+}
+#endif
+
+int CompareFilenames(const std::string& lhs, const std::string& rhs) {
+#ifdef _WIN32
+  // On Windows, use CompareStringOrdinal as that will perform case conversion
+  // using the operating system uppercase table information, which (I think)
+  // will give results that match the filesystem, and is not locale-dependent.
+  int result = CompareStringOrdinal(ToWinWide(lhs).c_str(), -1, ToWinWide(rhs).c_str(), -1, true);
+  switch (result) {
+    case CSTR_LESS_THAN:
+    return -1;
+    case CSTR_EQUAL:
+    return 0;
+    case CSTR_GREATER_THAN:
+    return 1;
+    default:
+    throw std::invalid_argument("One of the filenames to compare was invalid.");
+  }
+#else
+  using boost::locale::to_upper;
+  return to_upper(lhs).compare(to_upper(rhs));
+#endif
+}
+
+std::string NormalizeFilename(const std::string& filename) {
+#ifdef _WIN32
+  auto wideString = ToWinWide(filename);
+  CharUpperBuffW(&wideString[0], wideString.length());
+  return FromWinWide(wideString);
+#else
+  return boost::locale::to_upper(filename);
+#endif
 }
 }

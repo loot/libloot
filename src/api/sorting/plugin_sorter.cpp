@@ -35,6 +35,7 @@
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
+#include "api/helpers/text.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/sorting/group_sort.h"
 #include "loot/exception/cyclic_interaction_error.h"
@@ -237,10 +238,9 @@ void PluginSorter::AddPluginVertices(Game& game) {
 }
 
 std::optional<vertex_t> PluginSorter::GetVertexByName(const std::string& name) const {
-  auto lowercasedName = boost::locale::to_lower(name);
   for (const auto& vertex :
     boost::make_iterator_range(boost::vertices(graph_))) {
-    if (graph_[vertex].GetLowercasedName() == lowercasedName) {
+    if (CompareFilenames(graph_[vertex].GetName(), name) == 0) {
       return vertex;
     }
   }
@@ -678,22 +678,17 @@ int PluginSorter::ComparePlugins(const std::string& plugin1,
     // comparison to get an ordering.
 
     // Compare plugin basenames.
-    string name1 = boost::locale::to_lower(plugin1);
-    name1 = name1.substr(0, name1.length() - 4);
-    string name2 = boost::locale::to_lower(plugin2);
-    name2 = name2.substr(0, name2.length() - 4);
+    auto basename1 = plugin1.substr(0, plugin1.length() - 4);
+    auto basename2 = plugin2.substr(0, plugin2.length() - 4);
 
-    if (name1 < name2)
-      return -1;
-    else if (name2 < name1)
-      return 1;
-    else {
+    int result = CompareFilenames(basename1, basename2);
+
+    if (result != 0) {
+      return result;
+    } else {
       // Could be a .esp and .esm plugin with the same basename,
       // compare whole filenames.
-      if (plugin1 < plugin2)
-        return -1;
-      else
-        return 1;
+      return CompareFilenames(plugin1, plugin2);
     }
   }
   return 0;

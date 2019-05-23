@@ -27,6 +27,7 @@
 #include <boost/locale.hpp>
 
 #include "api/metadata/yaml/file.h"
+#include "api/helpers/text.h"
 
 namespace loot {
 File::File() {}
@@ -39,11 +40,11 @@ File::File(const std::string& name,
     ConditionalMetadata(condition) {}
 
 bool File::operator<(const File& rhs) const {
-  return boost::locale::to_lower(name_) < boost::locale::to_lower(rhs.name_);
+  return CompareFilenames(name_, rhs.name_) < 0;
 }
 
 bool File::operator==(const File& rhs) const {
-  return boost::locale::to_lower(name_) == boost::locale::to_lower(rhs.name_);
+  return CompareFilenames(name_, rhs.name_) == 0;
 }
 
 std::string File::GetName() const { return name_; }

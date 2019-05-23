@@ -28,7 +28,8 @@
 
 #include <boost/locale.hpp>
 
-using boost::locale::to_lower;
+#include "api/helpers/text.h"
+
 using std::lock_guard;
 using std::mutex;
 using std::pair;
@@ -63,7 +64,7 @@ std::set<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
 
 std::shared_ptr<const Plugin> GameCache::GetPlugin(
     const std::string& pluginName) const {
-  auto it = plugins_.find(to_lower(pluginName));
+  auto it = plugins_.find(NormalizeFilename(pluginName));
   if (it != end(plugins_))
     return it->second;
 
@@ -73,13 +74,13 @@ std::shared_ptr<const Plugin> GameCache::GetPlugin(
 void GameCache::AddPlugin(const Plugin&& plugin) {
   lock_guard<mutex> lock(mutex_);
 
-  auto lowercasedName = to_lower(plugin.GetName());
+  auto normalizedName = NormalizeFilename(plugin.GetName());
 
-  auto it = plugins_.find(lowercasedName);
+  auto it = plugins_.find(normalizedName);
   if (it != end(plugins_))
     plugins_.erase(it);
 
-  plugins_.emplace(lowercasedName,
+  plugins_.emplace(normalizedName,
                    std::make_shared<Plugin>(std::move(plugin)));
 }
 

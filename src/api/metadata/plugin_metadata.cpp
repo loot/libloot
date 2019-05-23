@@ -32,6 +32,7 @@
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
+#include "api/helpers/text.h"
 
 using std::inserter;
 using std::regex;
@@ -175,6 +176,10 @@ std::string PluginMetadata::GetLowercasedName() const {
   return boost::locale::to_lower(name_);
 }
 
+std::string PluginMetadata::GetNormalizedName() const {
+  return NormalizeFilename(name_);
+}
+
 bool PluginMetadata::IsEnabled() const { return enabled_; }
 
 std::optional<std::string> PluginMetadata::GetGroup() const { return group_; }
@@ -271,7 +276,7 @@ bool PluginMetadata::IsRegexPlugin() const {
 
 bool PluginMetadata::operator==(const PluginMetadata& rhs) const {
   if (IsRegexPlugin() == rhs.IsRegexPlugin()) {
-    return GetLowercasedName() == rhs.GetLowercasedName();
+    return CompareFilenames(name_, rhs.name_) == 0;
   }
 
   if (IsRegexPlugin())
