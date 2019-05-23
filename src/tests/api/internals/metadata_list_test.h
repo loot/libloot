@@ -354,7 +354,7 @@ TEST_P(MetadataListTest,
   ASSERT_EQ(blankEsp, plugin.GetName());
   ASSERT_FALSE(plugin.HasNameOnly());
 
-  metadataList.ErasePlugin(plugin);
+  metadataList.ErasePlugin(plugin.GetName());
 
   EXPECT_FALSE(metadataList.FindPlugin(plugin.GetName()));
 }

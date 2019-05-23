@@ -50,12 +50,12 @@ public:
   void SetGroups(const std::unordered_set<Group>& groups);
 
   // Merges multiple matching regex entries if any are found.
-  std::optional<PluginMetadata> FindPlugin(const std::string& plugin) const;
+  std::optional<PluginMetadata> FindPlugin(const std::string& pluginName) const;
   void AddPlugin(const PluginMetadata& plugin);
 
   // Doesn't erase matching regex entries, because they might also
   // be required for other plugins.
-  void ErasePlugin(const PluginMetadata& plugin);
+  void ErasePlugin(const std::string& pluginName);
 
   void AppendMessage(const Message& message);
 

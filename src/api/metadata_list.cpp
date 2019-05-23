@@ -145,20 +145,20 @@ void MetadataList::SetGroups(const std::unordered_set<Group>& groups) {
 
 // Merges multiple matching regex entries if any are found.
 std::optional<PluginMetadata> MetadataList::FindPlugin(
-    const std::string& plugin) const {
-  PluginMetadata match(plugin);
+    const std::string& pluginName) const {
+  PluginMetadata match(pluginName);
 
-  auto it = plugins_.find(plugin);
+  auto it = plugins_.find(match);
 
   if (it != plugins_.end())
     match = *it;
 
   // Now we want to also match possibly multiple regex entries.
-  auto regIt = find(regexPlugins_.begin(), regexPlugins_.end(), plugin);
+  auto regIt = find(regexPlugins_.begin(), regexPlugins_.end(), match);
   while (regIt != regexPlugins_.end()) {
     match.MergeMetadata(*regIt);
 
-    regIt = find(++regIt, regexPlugins_.end(), plugin);
+    regIt = find(++regIt, regexPlugins_.end(), match);
   }
 
   if (match.HasNameOnly()) {
@@ -181,8 +181,8 @@ void MetadataList::AddPlugin(const PluginMetadata& plugin) {
 
 // Doesn't erase matching regex entries, because they might also
 // be required for other plugins.
-void MetadataList::ErasePlugin(const PluginMetadata& plugin) {
-  auto it = plugins_.find(plugin);
+void MetadataList::ErasePlugin(const std::string& pluginName) {
+  auto it = plugins_.find(PluginMetadata(pluginName));
 
   if (it != plugins_.end()) {
     plugins_.erase(it);

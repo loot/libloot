@@ -239,7 +239,7 @@ std::optional<PluginMetadata> ApiDatabase::GetPluginUserMetadata(
 }
 
 void ApiDatabase::SetPluginUserMetadata(const PluginMetadata& pluginMetadata) {
-  userlist_.ErasePlugin(pluginMetadata);
+  userlist_.ErasePlugin(pluginMetadata.GetName());
   userlist_.AddPlugin(pluginMetadata);
 }
 
