@@ -227,6 +227,11 @@ void GitHelper::Clone(const std::filesystem::path& path,
     for (fs::directory_iterator it(repoPath);
          it != fs::directory_iterator();
          ++it) {
+      // libgit2 v0.28.1 creates a _git2_<random> symlink on clone.
+      if (!it->is_regular_file() && !it->is_directory()) {
+        continue;
+      }
+
       auto targetPath = path / it->path().filename();
       if (fs::exists(targetPath)) {
         fs::remove_all(targetPath);
