@@ -172,14 +172,6 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
 
 std::string PluginMetadata::GetName() const { return name_; }
 
-std::string PluginMetadata::GetLowercasedName() const {
-  return boost::locale::to_lower(name_);
-}
-
-std::string PluginMetadata::GetNormalizedName() const {
-  return NormalizeFilename(name_);
-}
-
 bool PluginMetadata::IsEnabled() const { return enabled_; }
 
 std::optional<std::string> PluginMetadata::GetGroup() const { return group_; }

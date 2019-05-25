@@ -31,9 +31,27 @@
 #include <unordered_set>
 #include <vector>
 
+#include "api/helpers/text.h"
 #include "api/metadata/condition_evaluator.h"
 #include "loot/metadata/group.h"
 #include "loot/metadata/plugin_metadata.h"
+
+namespace std {
+  /**
+    * A specialisation of std::hash for loot::PluginMetadata.
+    */
+  template<>
+  struct hash<loot::PluginMetadata> {
+    /**
+      * Calculate a hash value for an object of a class that implements
+      * loot::PluginMetadata.
+      * @return The hash generated from the plugin's normalized filename.
+      */
+    size_t operator()(const loot::PluginMetadata& plugin) const {
+      return hash<string>()(loot::NormalizeFilename(plugin.GetName()));
+    }
+  };
+}
 
 namespace loot {
 class MetadataList {

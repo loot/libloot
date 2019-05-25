@@ -90,19 +90,6 @@ public:
   LOOT_API std::string GetName() const;
 
   /**
-   * Get the lowercased plugin name.
-   * @return The lowercased plugin name.
-   */
-  LOOT_API std::string GetLowercasedName() const;
-
-  /**
-   * Get the plugin name, normalized to be suitable for case-insensitive
-   * filename comparison.
-   * @return The normalized plugin name.
-   */
-  LOOT_API std::string GetNormalizedName() const;
-
-  /**
    * Check if the plugin metadata is enabled for use during sorting.
    * @return True if the metadata will be used during sorting, false otherwise.
    */
@@ -304,23 +291,6 @@ private:
   std::set<PluginCleaningData> dirtyInfo_;
   std::set<PluginCleaningData> cleanInfo_;
   std::set<Location> locations_;
-};
-}
-
-namespace std {
-/**
- * A specialisation of std::hash for loot::PluginMetadata.
- */
-template<>
-struct hash<loot::PluginMetadata> {
-  /**
-   * Calculate a hash value for an object of a class that implements
-   * loot::PluginMetadata.
-   * @return The hash generated from the plugin's lowercased filename.
-   */
-  size_t operator()(const loot::PluginMetadata& plugin) const {
-    return hash<string>()(plugin.GetNormalizedName());
-  }
 };
 }
 
