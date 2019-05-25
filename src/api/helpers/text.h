@@ -38,10 +38,16 @@ std::optional<std::string> ExtractVersion(const std::string& text);
 
 // Compare strings as if they're filenames, respecting filesystem case
 // insensitivity on Windows. Returns -1 if lhs < rhs, 0 if lhs == rhs, and 1 if
-// lhs > rhs.
+// lhs > rhs. The comparison may give different results on Linux, but is still
+// locale-invariant.
 int CompareFilenames(const std::string& lhs, const std::string& rhs);
 
-// Uppercase the given filename using an invariant locale on Windows.
+// Normalize the given filename in a way that is locale-invariant. On Windows,
+// this uppercases the filename according to the same case mapping rules as used
+// by the filesystem. On Linux, case folding is used and gives results that are
+// different but hopefully still consistent enough with the behaviour on Windows
+// that the normalized filenames distinguish characters in a similar way to the
+// Windows filesystem.
 std::string NormalizeFilename(const std::string& filename);
 }
 

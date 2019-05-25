@@ -30,7 +30,8 @@
 #ifdef _WIN32
 #include "windows.h"
 #else
-#include <boost/locale.hpp>
+#include <unicode/uchar.h>
+#include <unicode/unistr.h>
 #endif
 
 using std::regex;
@@ -114,7 +115,6 @@ std::optional<std::string> ExtractVersion(const std::string& text) {
   return std::nullopt;
 }
 
-
 #ifdef _WIN32
 std::wstring ToWinWide(const std::string& str) {
   size_t len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), 0, 0);
@@ -125,10 +125,10 @@ std::wstring ToWinWide(const std::string& str) {
 
 std::string FromWinWide(const std::wstring& wstr) {
   size_t len = WideCharToMultiByte(
-    CP_UTF8, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
+      CP_UTF8, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
   std::string str(len, 0);
   WideCharToMultiByte(
-    CP_UTF8, 0, wstr.c_str(), wstr.length(), &str[0], len, NULL, NULL);
+      CP_UTF8, 0, wstr.c_str(), wstr.length(), &str[0], len, NULL, NULL);
   return str;
 }
 #endif
@@ -138,20 +138,23 @@ int CompareFilenames(const std::string& lhs, const std::string& rhs) {
   // On Windows, use CompareStringOrdinal as that will perform case conversion
   // using the operating system uppercase table information, which (I think)
   // will give results that match the filesystem, and is not locale-dependent.
-  int result = CompareStringOrdinal(ToWinWide(lhs).c_str(), -1, ToWinWide(rhs).c_str(), -1, true);
+  int result = CompareStringOrdinal(
+      ToWinWide(lhs).c_str(), -1, ToWinWide(rhs).c_str(), -1, true);
   switch (result) {
     case CSTR_LESS_THAN:
-    return -1;
+      return -1;
     case CSTR_EQUAL:
-    return 0;
+      return 0;
     case CSTR_GREATER_THAN:
-    return 1;
+      return 1;
     default:
-    throw std::invalid_argument("One of the filenames to compare was invalid.");
+      throw std::invalid_argument(
+          "One of the filenames to compare was invalid.");
   }
 #else
-  using boost::locale::to_upper;
-  return to_upper(lhs).compare(to_upper(rhs));
+  auto unicodeLhs = UnicodeString::fromUTF8(lhs);
+  auto unicodeRhs = UnicodeString::fromUTF8(rhs);
+  return unicodeLhs.caseCompare(unicodeRhs, U_FOLD_CASE_DEFAULT);
 #endif
 }
 
@@ -161,7 +164,11 @@ std::string NormalizeFilename(const std::string& filename) {
   CharUpperBuffW(&wideString[0], wideString.length());
   return FromWinWide(wideString);
 #else
-  return boost::locale::to_upper(filename);
+  std::string normalizedFilename;
+  UnicodeString::fromUTF8(filename)
+      .foldCase(U_FOLD_CASE_DEFAULT)
+      .toUTF8String(normalizedFilename);
+  return normalizedFilename;
 #endif
 }
 }

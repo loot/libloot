@@ -65,6 +65,12 @@ ENDIF ()
 
 find_package(Boost REQUIRED COMPONENTS locale system)
 
+if (NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
+    find_package(ICU REQUIRED COMPONENTS uc)
+    include_directories($ICU_INCLUDE_DIRS)
+    link_directories($ICU_LIBRARY_DIRS)
+endif()
+
 ExternalProject_Add(GTest
                     PREFIX "external"
                     URL "https://github.com/google/googletest/archive/release-1.8.1.tar.gz"
@@ -389,12 +395,12 @@ ENDIF ()
 # Build tests.
 add_executable       (libloot_internals_tests ${LIBLOOT_SRC} ${LIBLOOT_HEADERS} ${LOOT_TESTS_SRC} ${LOOT_TESTS_HEADERS})
 add_dependencies     (libloot_internals_tests esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp GTest testing-metadata testing-plugins)
-target_link_libraries(libloot_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES})
+target_link_libraries(libloot_internals_tests ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES} ${ICU_LIBRARIES})
 
 # Build API.
 add_library          (loot ${LIBLOOT_SRC} ${LIBLOOT_HEADERS})
 add_dependencies     (loot esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp)
-target_link_libraries(loot ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES})
+target_link_libraries(loot ${Boost_LIBRARIES} ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${ICU_LIBRARIES})
 
 # Build API tests.
 add_executable       (libloot_tests ${LIBLOOT_TESTS_SRC} ${LIBLOOT_TESTS_HEADERS})

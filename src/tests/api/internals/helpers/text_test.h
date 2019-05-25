@@ -177,7 +177,6 @@ TEST(ExtractVersion, shouldPreferVersionPrefixedNumbersOverVPrefixedNumber) {
   EXPECT_EQ("1.0", text.value());
 }
 
-#ifdef _WIN32
 // MSVC interprets source files in the default code page, so
 // for me u8"\xC3\x9C" != u8"\u00DC", which is a lot of fun.
 // To avoid insanity, write non-ASCII characters as \uXXXX escapes.
@@ -188,14 +187,22 @@ TEST(ExtractVersion, shouldPreferVersionPrefixedNumbersOverVPrefixedNumber) {
 // \u0131 is turkish 'ı'
 
 TEST(CompareFilenames, shouldBeCaseInsensitiveAndLocaleInvariant) {
+  // ICU sees all three greek rhos as case-insensitively equal, unlike Windows.
+  // A small enough deviation that it should hopefully be insignificant.
+
   EXPECT_EQ(0, CompareFilenames("i", "I"));
   EXPECT_EQ(-1, CompareFilenames("i", u8"\u0130"));
   EXPECT_EQ(-1, CompareFilenames("i", u8"\u0131"));
   EXPECT_EQ(-1, CompareFilenames("I", u8"\u0130"));
   EXPECT_EQ(-1, CompareFilenames("I", u8"\u0131"));
   EXPECT_EQ(-1, CompareFilenames(u8"\u0130", u8"\u0131"));
+#ifdef _WIN32
   EXPECT_EQ(1, CompareFilenames(u8"\u03f1", u8"\u03a1"));
   EXPECT_EQ(1, CompareFilenames(u8"\u03f1", u8"\u03c1"));
+#else
+  EXPECT_EQ(0, CompareFilenames(u8"\u03f1", u8"\u03a1"));
+  EXPECT_EQ(0, CompareFilenames(u8"\u03f1", u8"\u03c1"));
+#endif
   EXPECT_EQ(0, CompareFilenames(u8"\u03a1", u8"\u03c1"));
 
   // Set locale to Turkish.
@@ -207,8 +214,13 @@ TEST(CompareFilenames, shouldBeCaseInsensitiveAndLocaleInvariant) {
   EXPECT_EQ(-1, CompareFilenames("I", u8"\u0130"));
   EXPECT_EQ(-1, CompareFilenames("I", u8"\u0131"));
   EXPECT_EQ(-1, CompareFilenames(u8"\u0130", u8"\u0131"));
+#ifdef _WIN32
   EXPECT_EQ(1, CompareFilenames(u8"\u03f1", u8"\u03a1"));
   EXPECT_EQ(1, CompareFilenames(u8"\u03f1", u8"\u03c1"));
+#else
+  EXPECT_EQ(0, CompareFilenames(u8"\u03f1", u8"\u03a1"));
+  EXPECT_EQ(0, CompareFilenames(u8"\u03f1", u8"\u03c1"));
+#endif
   EXPECT_EQ(0, CompareFilenames(u8"\u03a1", u8"\u03c1"));
 
   // Set locale to Greek.
@@ -220,14 +232,20 @@ TEST(CompareFilenames, shouldBeCaseInsensitiveAndLocaleInvariant) {
   EXPECT_EQ(-1, CompareFilenames("I", u8"\u0130"));
   EXPECT_EQ(-1, CompareFilenames("I", u8"\u0131"));
   EXPECT_EQ(-1, CompareFilenames(u8"\u0130", u8"\u0131"));
+#ifdef _WIN32
   EXPECT_EQ(1, CompareFilenames(u8"\u03f1", u8"\u03a1"));
   EXPECT_EQ(1, CompareFilenames(u8"\u03f1", u8"\u03c1"));
+#else
+  EXPECT_EQ(0, CompareFilenames(u8"\u03f1", u8"\u03a1"));
+  EXPECT_EQ(0, CompareFilenames(u8"\u03f1", u8"\u03c1"));
+#endif
   EXPECT_EQ(0, CompareFilenames(u8"\u03a1", u8"\u03c1"));
 
   // Reset locale.
   std::locale::global(boost::locale::generator().generate(""));
 }
 
+#ifdef _WIN32
 TEST(NormalizeFilename, shouldUppercaseStringsAndBeLocaleInvariant) {
   EXPECT_EQ("I", NormalizeFilename("i"));
   EXPECT_EQ("I", NormalizeFilename("I"));
@@ -258,6 +276,46 @@ TEST(NormalizeFilename, shouldUppercaseStringsAndBeLocaleInvariant) {
   EXPECT_EQ(u8"\u03f1", NormalizeFilename(u8"\u03f1"));
   EXPECT_EQ(u8"\u03a1", NormalizeFilename(u8"\u03a1"));
   EXPECT_EQ(u8"\u03a1", NormalizeFilename(u8"\u03c1"));
+
+  // Reset locale.
+  std::locale::global(boost::locale::generator().generate(""));
+}
+#else
+TEST(NormalizeFilename, shouldCaseFoldStringsAndBeLocaleInvariant) {
+  // ICU folds all greek rhos to the lowercase rho, unlike Windows. The result
+  // for uppercase turkish i is different from Windows but functionally
+  // equivalent.
+  // A small enough deviation that it should hopefully be insignificant.
+
+  EXPECT_EQ("i", NormalizeFilename("i"));
+  EXPECT_EQ("i", NormalizeFilename("I"));
+  EXPECT_EQ(u8"i\u0307", NormalizeFilename(u8"\u0130"));
+  EXPECT_EQ(u8"\u0131", NormalizeFilename(u8"\u0131"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03f1"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03a1"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03c1"));
+
+  // Set locale to Turkish.
+  std::locale::global(boost::locale::generator().generate("tr_TR.UTF-8"));
+
+  EXPECT_EQ("i", NormalizeFilename("i"));
+  EXPECT_EQ("i", NormalizeFilename("I"));
+  EXPECT_EQ(u8"i\u0307", NormalizeFilename(u8"\u0130"));
+  EXPECT_EQ(u8"\u0131", NormalizeFilename(u8"\u0131"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03f1"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03a1"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03c1"));
+
+  // Set locale to Greek.
+  std::locale::global(boost::locale::generator().generate("el_GR.UTF-8"));
+
+  EXPECT_EQ("i", NormalizeFilename("i"));
+  EXPECT_EQ("i", NormalizeFilename("I"));
+  EXPECT_EQ(u8"i\u0307", NormalizeFilename(u8"\u0130"));
+  EXPECT_EQ(u8"\u0131", NormalizeFilename(u8"\u0131"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03f1"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03a1"));
+  EXPECT_EQ(u8"\u03c1", NormalizeFilename(u8"\u03c1"));
 
   // Reset locale.
   std::locale::global(boost::locale::generator().generate(""));

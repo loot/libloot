@@ -11,6 +11,7 @@ addons:
       - libssl-dev
       - libhttp-parser-dev
       - libssh2-1-dev
+      - libicu-dev
       - gcc-8
       - g++-8
 
