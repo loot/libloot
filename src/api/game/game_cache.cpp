@@ -26,8 +26,6 @@
 
 #include <thread>
 
-#include <boost/locale.hpp>
-
 #include "api/helpers/text.h"
 
 using std::lock_guard;

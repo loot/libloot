@@ -26,8 +26,6 @@
 
 #include <filesystem>
 
-#include <boost/locale.hpp>
-
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
 
@@ -72,10 +70,6 @@ LOOT_API bool IsCompatible(const unsigned int versionMajor,
     return versionMajor == loot::LootVersion::major;
   else
     return versionMinor == loot::LootVersion::minor;
-}
-
-LOOT_API void InitialiseLocale(const std::string& id) {
-  std::locale::global(boost::locale::generator().generate(id));
 }
 
 LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(

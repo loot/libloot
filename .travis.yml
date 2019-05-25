@@ -12,20 +12,18 @@ addons:
       - libhttp-parser-dev
       - libssh2-1-dev
       - libicu-dev
+      - language-pack-el
+      - language-pack-tr
       - gcc-8
       - g++-8
 
 cache:
-  directories:
-    - $HOME/boost_1_67_0/boost
-    - $HOME/boost_1_67_0/stage/64/lib
   cargo: true
 
 install:
   - export CXX="g++-8" CC="gcc-8"
-  # Build Boost.
-  - wget https://raw.githubusercontent.com/Ortham/ci-scripts/2.1.2/install_boost.py
-  - python3 install_boost.py --directory ~ --boost-version 1.67.0 -a 64 -t gcc-8 locale system
+  # Get Boost.
+  - curl -fsSL 'https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.bz2' | tar -xj -C "$HOME"
   # Install packages for generating documentation
   - pyenv install 3.6.3
   - pyenv global 3.6.3
@@ -43,7 +41,7 @@ before_script:
   - mkdir build
   - cd build
   # Link dynamically to the C++ standard library runtime.
-  - cmake .. -DBOOST_ROOT=~/boost_1_67_0 -DBOOST_LIBRARYDIR=~/boost_1_67_0/stage/64/lib
+  - cmake .. -DBOOST_ROOT=~/boost_1_67_0
 
 script:
   - make all

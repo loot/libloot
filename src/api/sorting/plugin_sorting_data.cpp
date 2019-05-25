@@ -25,7 +25,6 @@
 #include "plugin_sorting_data.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/locale.hpp>
 
 #include <loot/metadata/group.h>
 #include "api/helpers/text.h"

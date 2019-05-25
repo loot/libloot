@@ -31,7 +31,6 @@
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/topological_sort.hpp>
-#include <boost/locale.hpp>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"

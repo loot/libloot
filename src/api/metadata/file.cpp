@@ -24,8 +24,6 @@
 
 #include "loot/metadata/file.h"
 
-#include <boost/locale.hpp>
-
 #include "api/metadata/yaml/file.h"
 #include "api/helpers/text.h"
 

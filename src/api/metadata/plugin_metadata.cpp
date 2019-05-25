@@ -28,7 +28,6 @@
 #include <regex>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/locale.hpp>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"

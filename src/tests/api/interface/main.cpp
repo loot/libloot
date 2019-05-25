@@ -30,13 +30,7 @@
 #include "tests/api/interface/game_interface_test.h"
 #include "tests/api/interface/is_compatible_test.h"
 
-#include <boost/locale.hpp>
-
 int main(int argc, char **argv) {
-  // Set the locale to get encoding conversions working correctly.
-  std::locale::global(boost::locale::generator().generate(""));
-  loot::InitialiseLocale("");
-
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
