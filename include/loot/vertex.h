@@ -42,14 +42,14 @@ public:
    * @brief Construct a Vertex with the given name and no out edge.
    * @param name The name of the plugin or group that this vertex represents.
    */
-  LOOT_API Vertex(std::string name);
+  LOOT_API explicit Vertex(std::string name);
 
   /**
    * @brief Construct a Vertex with the given name and out edge type.
    * @param name The name of the plugin or group that this vertex represents.
    * @param outEdgeType The type of the edge going out from this vertex.
    */
-  LOOT_API Vertex(std::string name, EdgeType outEdgeType);
+  LOOT_API explicit Vertex(std::string name, EdgeType outEdgeType);
 
   /**
    * @brief Get the name of the plugin or group.

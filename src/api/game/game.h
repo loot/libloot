@@ -36,7 +36,7 @@
 namespace loot {
 class Game : public GameInterface {
 public:
-  Game(const GameType gameType,
+  explicit Game(const GameType gameType,
        const std::filesystem::path& gamePath,
        const std::filesystem::path& gameLocalDataPath = "");
 

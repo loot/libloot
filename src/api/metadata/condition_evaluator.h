@@ -38,7 +38,7 @@
 namespace loot {
 class ConditionEvaluator {
 public:
-  ConditionEvaluator(const GameType gameType,
+  explicit ConditionEvaluator(const GameType gameType,
     const std::filesystem::path& dataPath);
 
   bool Evaluate(const std::string& condition);

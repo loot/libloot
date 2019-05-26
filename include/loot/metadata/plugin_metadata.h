@@ -49,7 +49,7 @@ public:
    * Construct a PluginMetadata object with a blank plugin name and no metadata.
    * @return A PluginMetadata object.
    */
-  LOOT_API PluginMetadata();
+  LOOT_API explicit PluginMetadata();
 
   /**
    * Construct a PluginMetadata object with no metadata for a plugin with the
@@ -58,7 +58,7 @@ public:
    *         The filename of the plugin that the object is constructed for.
    * @return A PluginMetadata object.
    */
-  LOOT_API PluginMetadata(const std::string& name);
+  LOOT_API explicit PluginMetadata(const std::string& name);
 
   /**
    * Merge metadata from the given PluginMetadata object into this object.

@@ -44,7 +44,7 @@ public:
    * and no info.
    * @return A PluginCleaningData object.
    */
-  LOOT_API PluginCleaningData();
+  LOOT_API explicit PluginCleaningData();
 
   /**
    * Construct a PluginCleaningData object with the given CRC and utility,
@@ -56,7 +56,7 @@ public:
    *         The utility that the plugin cleanliness was checked with.
    * @return A PluginCleaningData object.
    */
-  LOOT_API PluginCleaningData(uint32_t crc, const std::string& utility);
+  LOOT_API explicit PluginCleaningData(uint32_t crc, const std::string& utility);
 
   /**
    * Construct a PluginCleaningData object with the given values.
@@ -75,7 +75,7 @@ public:
    *         The number of deleted navmeshes found in the plugin.
    * @return A PluginCleaningData object.
    */
-  LOOT_API PluginCleaningData(uint32_t crc,
+  LOOT_API explicit PluginCleaningData(uint32_t crc,
                               const std::string& utility,
                               const std::vector<MessageContent>& info,
                               unsigned int itm,

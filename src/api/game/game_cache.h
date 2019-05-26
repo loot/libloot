@@ -34,8 +34,8 @@
 namespace loot {
 class GameCache {
 public:
-  GameCache();
-  GameCache(const GameCache& cache);
+  explicit GameCache();
+  explicit GameCache(const GameCache& cache);
 
   GameCache& operator=(const GameCache& cache);
 

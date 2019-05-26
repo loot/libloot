@@ -40,7 +40,7 @@ inline std::shared_ptr<spdlog::logger> getLogger() {
 
 class SpdLoggingSink : public spdlog::sinks::base_sink<std::mutex> {
 public:
-  SpdLoggingSink(std::function<void(LogLevel, const char*)> callback) {
+  explicit SpdLoggingSink(std::function<void(LogLevel, const char*)> callback) {
     this->callback = callback;
   }
 

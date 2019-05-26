@@ -32,7 +32,7 @@ namespace loot {
  *        revision.
  */
 struct MasterlistInfo {
-  inline MasterlistInfo() : is_modified(false) {}
+  inline explicit MasterlistInfo() : is_modified(false) {}
 
   /**
    * @brief The revision hash for the masterlist. If the masterlist doesn't

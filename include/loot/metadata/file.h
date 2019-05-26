@@ -39,7 +39,7 @@ public:
    * Construct a File with blank name, display and condition strings.
    * @return A File object.
    */
-  LOOT_API File();
+  LOOT_API explicit File();
 
   /**
    * Construct a File with the given name, display name and condition strings.
@@ -51,7 +51,7 @@ public:
    *         The File's condition string.
    * @return A File object.
    */
-  LOOT_API File(const std::string& name,
+  LOOT_API explicit File(const std::string& name,
                 const std::string& display = "",
                 const std::string& condition = "");
 

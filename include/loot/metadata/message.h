@@ -44,7 +44,7 @@ public:
    * strings.
    * @return A Message object.
    */
-  LOOT_API Message();
+  LOOT_API explicit Message();
 
   /**
    * Construct a Message object with the given type, English content and
@@ -57,7 +57,7 @@ public:
    *         A condition string.
    * @return A Message object.
    */
-  LOOT_API Message(const MessageType type,
+  LOOT_API explicit Message(const MessageType type,
                    const std::string& content,
                    const std::string& condition = "");
 
@@ -72,7 +72,7 @@ public:
    *         A condition string.
    * @return A Message object.
    */
-  LOOT_API Message(const MessageType type,
+  LOOT_API explicit Message(const MessageType type,
                    const std::vector<MessageContent>& content,
                    const std::string& condition = "");
 

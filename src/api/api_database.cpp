@@ -169,7 +169,7 @@ std::unordered_set<Group> ApiDatabase::GetGroups(bool includeUserMetadata) const
 
   auto userlistGroups = userlist_.Groups();
   for (const auto& group : masterlist_.Groups()) {
-    auto userlistGroup = userlistGroups.find(group.GetName());
+    auto userlistGroup = userlistGroups.find(group);
     if (userlistGroup != userlistGroups.end()) {
       auto afterGroups = group.GetAfterGroups();
       auto userlistAfterGroups = userlistGroup->GetAfterGroups();

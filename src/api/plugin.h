@@ -43,7 +43,7 @@ class GameCache;
 
 class Plugin : public PluginInterface {
 public:
-  Plugin(const GameType gameType,
+  explicit Plugin(const GameType gameType,
          std::shared_ptr<GameCache> gameCache,
          std::filesystem::path pluginPath,
          const bool headerOnly);

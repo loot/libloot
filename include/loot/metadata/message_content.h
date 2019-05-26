@@ -45,7 +45,7 @@ public:
    * Construct a MessageContent object with an empty English message string.
    * @return A MessageContent object.
    */
-  LOOT_API MessageContent();
+  LOOT_API explicit MessageContent();
 
   /**
    * Construct a Message object with the given text in the given language.
@@ -55,7 +55,7 @@ public:
    *         The language that the message is written in.
    * @return A MessageContent object.
    */
-  LOOT_API MessageContent(const std::string& text,
+  LOOT_API explicit MessageContent(const std::string& text,
                           const std::string& language = defaultLanguage);
 
   /**

@@ -40,7 +40,7 @@
 
 namespace loot {
 struct ApiDatabase : public DatabaseInterface {
-  ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator);
+  explicit ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator);
 
   void LoadLists(const std::filesystem::path& masterlist_path,
                  const std::filesystem::path& userlist_path = "");

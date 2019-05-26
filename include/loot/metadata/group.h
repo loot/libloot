@@ -40,7 +40,7 @@ public:
    * load after.
    * @return A Group object.
    */
-  LOOT_API Group();
+  LOOT_API explicit Group();
 
   /**
    * Construct a Group with the given name, description and set of groups to
@@ -53,7 +53,7 @@ public:
    *         A description of the group.
    * @return A Group object.
    */
-  LOOT_API Group(const std::string& name,
+  LOOT_API explicit Group(const std::string& name,
                  const std::unordered_set<std::string>& afterGroups = {},
                  const std::string& description = "");
 

@@ -39,7 +39,7 @@ public:
    * Construct a ConditionalMetadata object with an empty condition string.
    * @return A ConditionalMetadata object.
    */
-  LOOT_API ConditionalMetadata();
+  LOOT_API explicit ConditionalMetadata();
 
   /**
    * Construct a ConditionalMetadata object with a given condition string.
@@ -48,7 +48,7 @@ public:
    *         documentation.
    * @return A ConditionalMetadata object.
    */
-  LOOT_API ConditionalMetadata(const std::string& condition);
+  LOOT_API explicit ConditionalMetadata(const std::string& condition);
 
   /**
    * Check if the condition string is non-empty.

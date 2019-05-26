@@ -290,7 +290,8 @@ TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginEnabledState) {
   EXPECT_FALSE(newMetadata.IsEnabled());
 }
 
-TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginGroupExplicitlyIfItIsExplicit) {
+TEST_P(PluginMetadataTest,
+       newMetadataShouldUseSourcePluginGroupExplicitlyIfItIsExplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -302,8 +303,9 @@ TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginGroupExplicitlyIfItIs
   EXPECT_EQ("group1", newMetadata.GetGroup().value());
 }
 
-TEST_P(PluginMetadataTest,
-       newMetadataShouldUseGivenPluginGroupImplicitlyIfTheSourcePluginGroupIsNotExplicit) {
+TEST_P(
+    PluginMetadataTest,
+    newMetadataShouldUseGivenPluginGroupImplicitlyIfTheSourcePluginGroupIsNotExplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -314,9 +316,8 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(newMetadata.GetGroup());
 }
 
-TEST_P(
-    PluginMetadataTest,
-    newMetadataShouldUseSourcePluginGroupImplicitlyIfTheGroupsAreTheSame) {
+TEST_P(PluginMetadataTest,
+       newMetadataShouldUseSourcePluginGroupImplicitlyIfTheGroupsAreTheSame) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -457,8 +458,10 @@ TEST_P(PluginMetadataTest, simpleMessagesShouldReturnMessagesAsSimpleMessages) {
   plugin.SetMessages({
       Message(MessageType::say, "content1"),
       Message(MessageType::warn,
-              {{"content2", french},
-               {"other content2", MessageContent::defaultLanguage}}),
+              std::vector<MessageContent>(
+                  {MessageContent("content2", french),
+                   MessageContent("other content2",
+                                  MessageContent::defaultLanguage)})),
       Message(MessageType::error, "content3"),
   });
 
@@ -985,8 +988,7 @@ TEST_P(PluginMetadataTest,
   PluginMetadata plugin = node.as<PluginMetadata>();
 
   EXPECT_EQ("Blank\\.esp", plugin.GetName());
-  EXPECT_EQ(std::set<PluginCleaningData>(
-                {PluginCleaningData(5, "utility")}),
+  EXPECT_EQ(std::set<PluginCleaningData>({PluginCleaningData(5, "utility")}),
             plugin.GetCleanInfo());
 }
 

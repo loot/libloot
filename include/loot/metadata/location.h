@@ -39,7 +39,7 @@ public:
    * Construct a Location with empty URL and name strings.
    * @return A Location object.
    */
-  LOOT_API Location();
+  LOOT_API explicit Location();
 
   /**
    * Construct a Location with the given URL and name.
@@ -49,7 +49,7 @@ public:
    *         A name for the URL, eg. the page or site name.
    * @return A Location object.
    */
-  LOOT_API Location(const std::string& url, const std::string& name = "");
+  LOOT_API explicit Location(const std::string& url, const std::string& name = "");
 
   /**
    * A less-than operator implemented with no semantics so that Location objects

@@ -31,7 +31,7 @@
 namespace loot {
 class PluginSortingData {
 public:
-  PluginSortingData(const Plugin& plugin,
+  explicit PluginSortingData(const Plugin& plugin,
                     const PluginMetadata& masterlistMetadata,
                     const PluginMetadata& userMetadata,
                     const std::vector<std::string>& loadOrder,

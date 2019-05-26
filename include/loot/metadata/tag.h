@@ -40,7 +40,7 @@ public:
    * an empty condition string.
    * @return A Tag object.
    */
-  LOOT_API Tag();
+  LOOT_API explicit Tag();
 
   /**
    * Construct a Tag object with the given name, for addition or removal, with
@@ -53,7 +53,7 @@ public:
    *         A condition string.
    * @return A Tag object.
    */
-  LOOT_API Tag(const std::string& tag,
+  LOOT_API explicit Tag(const std::string& tag,
                const bool isAddition = true,
                const std::string& condition = "");
 
