@@ -2,6 +2,23 @@
 Version History
 ***************
 
+0.14.7 - 2019-06-13
+===================
+
+Fixed
+-----
+
+- Filename comparisons on Windows now has the same locale-invariant case
+  insensitivity behaviour as Windows itself, instead of being locale-dependent.
+- Filename comparisons on Linux now use ICU case folding to give
+  locale-invariant results that are much closer to Windows' case insensitivity,
+  though still not identical.
+
+Changed
+-------
+
+- Updated libgit2 to v0.28.2.
+
 0.14.6 - 2019-04-24
 ===================
 
