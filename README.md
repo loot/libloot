@@ -1,7 +1,7 @@
 # libloot
 
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/48a540m7ywuqcl3b/branch/dev?svg=true)](https://ci.appveyor.com/project/LOOT/libloot/branch/dev)
-[![Travis Build Status](https://travis-ci.org/loot/libloot.svg?branch=dev)](https://travis-ci.org/loot/libloot)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/48a540m7ywuqcl3b/branch/master?svg=true)](https://ci.appveyor.com/project/LOOT/libloot/branch/master)
+[![Travis Build Status](https://travis-ci.org/loot/libloot.svg?branch=master)](https://travis-ci.org/loot/libloot)
 [![Documentation Status](https://readthedocs.org/projects/loot-api/badge/?version=latest)](http://loot-api.readthedocs.io/en/latest/?badge=latest)
 
 ## Introduction
