@@ -37,14 +37,75 @@ int main(int argc, char **argv) {
 
 namespace loot {
 namespace test {
-TEST(SetLoggingCallback, shouldWriteMessagesToGivenCallback) {
+void testLoggingCallback(LogLevel level, const char * message) {
+  // Do nothing.
+}
+
+struct TestLogger {
+  void callback(LogLevel level, const char * message) {
+    loggedMessages += std::string(message);
+  }
+
   std::string loggedMessages;
-  SetLoggingCallback([&](LogLevel level, const char *string) {
-    loggedMessages += std::string(string);
-  });
+};
+
+TEST(SetLoggingCallback, shouldAcceptAFreeFunction) {
+  SetLoggingCallback(testLoggingCallback);
 
   try {
     CreateGameHandle(GameType::tes4, "dummy");
+    FAIL();
+  }
+  catch (...) {
+    //SetLoggingCallback([](LogLevel, const char *) {});
+  }
+}
+
+TEST(SetLoggingCallback, shouldAcceptAMemberFunction) {
+  TestLogger testLogger;
+  auto boundCallback = std::bind(&TestLogger::callback, &testLogger, std::placeholders::_1, std::placeholders::_2);
+  SetLoggingCallback(boundCallback);
+
+  try {
+    CreateGameHandle(GameType::tes4, "dummy");
+    FAIL();
+  }
+  catch (...) {
+    EXPECT_EQ(
+      "Attempting to create a game handle with game path \"dummy\" "
+      "and local path \"\"",
+      testLogger.loggedMessages);
+
+    SetLoggingCallback([](LogLevel, const char *) {});
+  }
+}
+
+TEST(SetLoggingCallback, shouldNotBreakLoggingIfPassedMemberFunctionGoesOutOfScope) {
+  {
+    TestLogger testLogger;
+    auto boundCallback = std::bind(&TestLogger::callback, &testLogger, std::placeholders::_1, std::placeholders::_2);
+    SetLoggingCallback(boundCallback);
+  }
+
+  try {
+    CreateGameHandle(GameType::tes4, "dummy");
+    FAIL();
+  }
+  catch (...) {
+    SetLoggingCallback([](LogLevel, const char *) {});
+  }
+}
+
+TEST(SetLoggingCallback, shouldAcceptALambdaFunction) {
+  std::string loggedMessages;
+  auto callback = [&](LogLevel level, const char *string) {
+    loggedMessages += std::string(string);
+  };
+  SetLoggingCallback(callback);
+
+  try {
+    CreateGameHandle(GameType::tes4, "dummy");
+    FAIL();
   } catch (...) {
     EXPECT_EQ(
         "Attempting to create a game handle with game path \"dummy\" "
@@ -52,10 +113,29 @@ TEST(SetLoggingCallback, shouldWriteMessagesToGivenCallback) {
         loggedMessages);
 
     SetLoggingCallback([](LogLevel, const char *) {});
-    return;
+  }
+}
+
+TEST(SetLoggingCallback, shouldNotBreakLoggingIfPassedLambdaFunctionGoesOutOfScope) {
+  std::string loggedMessages;
+  {
+    SetLoggingCallback([&](LogLevel level, const char *string) {
+      loggedMessages += std::string(string);
+    });
   }
 
-  FAIL();
+  try {
+    CreateGameHandle(GameType::tes4, "dummy");
+    FAIL();
+  }
+  catch (...) {
+    EXPECT_EQ(
+      "Attempting to create a game handle with game path \"dummy\" "
+      "and local path \"\"",
+      loggedMessages);
+
+    SetLoggingCallback([](LogLevel, const char *) {});
+  }
 }
 }
 }
