@@ -28,11 +28,13 @@
 #include <boost/locale.hpp>
 
 #include <loot/metadata/group.h>
+#include "api/helpers/text.h"
 
 namespace loot {
 PluginSortingData::PluginSortingData(const Plugin& plugin,
                                      const PluginMetadata& masterlistMetadata,
-                                     const PluginMetadata& userMetadata) :
+    const PluginMetadata& userMetadata,
+    const std::vector<std::string>& loadOrder) :
     plugin_(plugin),
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),
@@ -44,6 +46,12 @@ PluginSortingData::PluginSortingData(const Plugin& plugin,
     group_ = masterlistMetadata.GetGroup().value();
   } else {
     group_ = Group().GetName();
+  }
+
+  for (size_t i = 0; i < loadOrder.size(); i++) {
+    if (CompareFilenames(GetName(), loadOrder[i]) == 0) {
+      loadOrderIndex_ = i;
+    }
   }
 }
 
@@ -95,5 +103,8 @@ const std::set<File>& PluginSortingData::GetMasterlistRequirements() const {
 
 const std::set<File>& PluginSortingData::GetUserRequirements() const {
   return userReq_;
+}
+const std::optional<size_t>& PluginSortingData::GetLoadOrderIndex() const {
+  return loadOrderIndex_;
 }
 }

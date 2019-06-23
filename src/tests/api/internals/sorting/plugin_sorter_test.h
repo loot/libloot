@@ -148,26 +148,30 @@ TEST_P(PluginSorterTest,
   auto esp = PluginSortingData(
       *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp).get()),
       PluginMetadata(),
-      PluginMetadata());
+      PluginMetadata(),
+      getLoadOrder());
   EXPECT_FALSE(esp.IsMaster());
 
   auto master = PluginSortingData(
       *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm).get()),
       PluginMetadata(),
-      PluginMetadata());
+      PluginMetadata(),
+      getLoadOrder());
   EXPECT_TRUE(master.IsMaster());
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     auto lightMaster = PluginSortingData(
         *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl).get()),
         PluginMetadata(),
-        PluginMetadata());
+        PluginMetadata(),
+        getLoadOrder());
     EXPECT_TRUE(lightMaster.IsMaster());
 
     auto lightMasterEsp = PluginSortingData(
         *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp).get()),
         PluginMetadata(),
-        PluginMetadata());
+        PluginMetadata(),
+        getLoadOrder());
     EXPECT_FALSE(lightMasterEsp.IsMaster());
   }
 }

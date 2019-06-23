@@ -83,7 +83,6 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   // Clear existing data.
   graph_.clear();
   indexMap_.clear();
-  oldLoadOrder_.clear();
 
   AddPluginVertices(game);
 
@@ -92,11 +91,9 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   if (boost::num_vertices(graph_) == 0)
     return vector<std::string>();
 
-  // Get the existing load order.
-  oldLoadOrder_ = game.GetLoadOrder();
   if (logger_) {
-    logger_->info("Fetched existing load order: ");
-    for (const auto& plugin : oldLoadOrder_) {
+    logger_->info("Current load order: ");
+    for (const auto& plugin : game.GetLoadOrder()) {
       logger_->info("\t\t{}", plugin);
     }
   }
@@ -167,6 +164,8 @@ void PluginSorter::AddPluginVertices(Game& game) {
   // full plugin objects then sorting them.
   std::map<std::string, std::vector<std::string>> groupPlugins;
 
+  auto loadOrder = game.GetLoadOrder();
+
   for (const auto& plugin : game.GetCache()->GetPlugins()) {
     auto masterlistMetadata =
         game.GetDatabase()
@@ -177,7 +176,7 @@ void PluginSorter::AddPluginVertices(Game& game) {
                             .value_or(PluginMetadata(plugin->GetName()));
 
     auto pluginSortingData =
-        PluginSortingData(*plugin, masterlistMetadata, userMetadata);
+        PluginSortingData(*plugin, masterlistMetadata, userMetadata, loadOrder);
 
     auto groupName = pluginSortingData.GetGroup();
     auto groupIt = groupPlugins.find(groupName);
@@ -237,9 +236,10 @@ void PluginSorter::AddPluginVertices(Game& game) {
   put(vertexIndexMap_, v, i++);
 }
 
-std::optional<vertex_t> PluginSorter::GetVertexByName(const std::string& name) const {
+std::optional<vertex_t> PluginSorter::GetVertexByName(
+    const std::string& name) const {
   for (const auto& vertex :
-    boost::make_iterator_range(boost::vertices(graph_))) {
+       boost::make_iterator_range(boost::vertices(graph_))) {
     if (CompareFilenames(graph_[vertex].GetName(), name) == 0) {
       return vertex;
     }
@@ -250,7 +250,8 @@ std::optional<vertex_t> PluginSorter::GetVertexByName(const std::string& name) c
 
 void PluginSorter::CheckForCycles() const {
   boost::depth_first_search(
-      graph_, visitor(CycleDetector<PluginGraph>()).vertex_index_map(vertexIndexMap_));
+      graph_,
+      visitor(CycleDetector<PluginGraph>()).vertex_index_map(vertexIndexMap_));
 }
 
 bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
@@ -661,40 +662,46 @@ void PluginSorter::AddOverlapEdges() {
   }
 }
 
-int PluginSorter::ComparePlugins(const std::string& plugin1,
-                                 const std::string& plugin2) const {
-  auto it1 = find(begin(oldLoadOrder_), end(oldLoadOrder_), plugin1);
-  auto it2 = find(begin(oldLoadOrder_), end(oldLoadOrder_), plugin2);
-
-  if (it1 != end(oldLoadOrder_) && it2 == end(oldLoadOrder_))
+int ComparePlugins(const PluginSortingData& plugin1,
+                   const PluginSortingData& plugin2) {
+  if (plugin1.GetLoadOrderIndex().has_value() &&
+      !plugin2.GetLoadOrderIndex().has_value()) {
     return -1;
-  else if (it1 == end(oldLoadOrder_) && it2 != end(oldLoadOrder_))
+  }
+
+  if (!plugin1.GetLoadOrderIndex().has_value() &&
+      plugin2.GetLoadOrderIndex().has_value()) {
     return 1;
-  else if (it1 != end(oldLoadOrder_) && it2 != end(oldLoadOrder_)) {
-    if (distance(begin(oldLoadOrder_), it1) <
-        distance(begin(oldLoadOrder_), it2))
+  }
+
+  if (plugin1.GetLoadOrderIndex().has_value() &&
+      plugin2.GetLoadOrderIndex().has_value()) {
+    if (plugin1.GetLoadOrderIndex().value() <
+        plugin2.GetLoadOrderIndex().value()) {
       return -1;
-    else
-      return 1;
-  } else {
-    // Neither plugin has a load order position. Need to use another
-    // comparison to get an ordering.
-
-    // Compare plugin basenames.
-    auto basename1 = plugin1.substr(0, plugin1.length() - 4);
-    auto basename2 = plugin2.substr(0, plugin2.length() - 4);
-
-    int result = CompareFilenames(basename1, basename2);
-
-    if (result != 0) {
-      return result;
     } else {
-      // Could be a .esp and .esm plugin with the same basename,
-      // compare whole filenames.
-      return CompareFilenames(plugin1, plugin2);
+      return 1;
     }
   }
-  return 0;
+
+  // Neither plugin has a load order position. Compare plugin basenames to
+  // get an ordering.
+  auto name1 = plugin1.GetName();
+  auto name2 = plugin2.GetName();
+  auto basename1 = name1.substr(0, name1.length() - 4);
+  auto basename2 = name2.substr(0, name2.length() - 4);
+
+  int result = CompareFilenames(basename1, basename2);
+
+  if (result != 0) {
+    return result;
+  } else {
+    // Could be a .esp and .esm plugin with the same basename,
+    // compare their extensions.
+    auto ext1 = name1.substr(name1.length() - 4);
+    auto ext2 = name2.substr(name2.length() - 4);
+    return CompareFilenames(ext1, ext2);
+  }
 }
 
 void PluginSorter::AddTieBreakEdges() {
@@ -710,8 +717,7 @@ void PluginSorter::AddTieBreakEdges() {
       vertex_t otherVertex = *vit2;
 
       vertex_t toVertex, fromVertex;
-      if (ComparePlugins(graph_[vertex].GetName(),
-                         graph_[otherVertex].GetName()) < 0) {
+      if (ComparePlugins(graph_[vertex], graph_[otherVertex]) < 0) {
         fromVertex = vertex;
         toVertex = otherVertex;
       } else {

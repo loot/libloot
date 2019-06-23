@@ -33,7 +33,8 @@ class PluginSortingData {
 public:
   PluginSortingData(const Plugin& plugin,
                     const PluginMetadata& masterlistMetadata,
-                    const PluginMetadata& userMetadata);
+                    const PluginMetadata& userMetadata,
+                    const std::vector<std::string>& loadOrder);
 
   std::string GetName() const;
   bool IsMaster() const;
@@ -52,6 +53,8 @@ public:
   const std::set<File>& GetMasterlistRequirements() const;
   const std::set<File>& GetUserRequirements() const;
 
+  const std::optional<size_t>& GetLoadOrderIndex() const;
+
 private:
   const Plugin& plugin_;
   std::string group_;
@@ -61,6 +64,8 @@ private:
   std::set<File> userLoadAfter_;
   std::set<File> masterlistReq_;
   std::set<File> userReq_;
+
+  std::optional<size_t> loadOrderIndex_;
 };
 }
 

@@ -60,9 +60,6 @@ private:
   void CheckForCycles() const;
   bool EdgeCreatesCycle(const vertex_t& u, const vertex_t& v) const;
 
-  int ComparePlugins(const std::string& plugin1,
-                     const std::string& plugin2) const;
-
   void AddPluginVertices(Game& game);
   void AddSpecificEdges();
   void AddHardcodedPluginEdges(Game& game);
@@ -77,7 +74,6 @@ private:
   PluginGraph graph_;
   std::map<vertex_t, size_t> indexMap_;
   vertex_map_t vertexIndexMap_;
-  std::vector<std::string> oldLoadOrder_;
   std::shared_ptr<spdlog::logger> logger_;
   std::unordered_set<Group> groups_;
 };
