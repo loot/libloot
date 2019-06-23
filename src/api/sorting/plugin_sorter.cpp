@@ -109,11 +109,17 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
 
   // Now we can sort.
   list<vertex_t> sortedVertices;
+  if (logger_) {
+    logger_->trace("Performing topological sort on plugin graph...");
+  }
   boost::topological_sort(graph_,
                           std::front_inserter(sortedVertices),
                           boost::vertex_index_map(vertexIndexMap_));
 
   // Check that the sorted path is Hamiltonian (ie. unique).
+  if (logger_) {
+    logger_->trace("Checking uniqueness of calculated load order...");
+  }
   for (auto it = sortedVertices.begin(); it != sortedVertices.end(); ++it) {
     if (next(it) != sortedVertices.end() &&
         !boost::edge(*it, *next(it), graph_).second && logger_) {
@@ -249,6 +255,9 @@ std::optional<vertex_t> PluginSorter::GetVertexByName(
 }
 
 void PluginSorter::CheckForCycles() const {
+  if (logger_) {
+    logger_->trace("Checking plugin graph for cycles...");
+  }
   boost::depth_first_search(
       graph_,
       visitor(CycleDetector<PluginGraph>()).vertex_index_map(vertexIndexMap_));
