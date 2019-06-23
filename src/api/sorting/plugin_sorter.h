@@ -30,6 +30,7 @@
 #include <map>
 
 #include <spdlog/spdlog.h>
+#include <boost/container_hash/hash.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
 
@@ -51,6 +52,32 @@ typedef boost::associative_property_map<std::map<vertex_t, size_t>>
 
 std::string describeEdgeType(EdgeType edgeType);
 
+struct GraphPath {
+  GraphPath(vertex_t from, vertex_t to) : from(from), to(to) {}
+
+  bool operator==(const GraphPath& rhs) const {
+    return this->from == rhs.from && this->to == rhs.to;
+  }
+
+  vertex_t from;
+  vertex_t to;
+};
+}
+
+namespace std {
+template<>
+struct hash<loot::GraphPath> {
+  size_t operator()(const loot::GraphPath& graphPath) const {
+    size_t seed = 0;
+    boost::hash_combine(seed, graphPath.from);
+    boost::hash_combine(seed, graphPath.to);
+
+    return seed;
+  }
+};
+}
+
+namespace loot {
 class PluginSorter {
 public:
   std::vector<std::string> Sort(Game& game);
@@ -58,7 +85,7 @@ public:
 private:
   std::optional<vertex_t> GetVertexByName(const std::string& name) const;
   void CheckForCycles() const;
-  bool EdgeCreatesCycle(const vertex_t& u, const vertex_t& v) const;
+  bool EdgeCreatesCycle(const vertex_t& u, const vertex_t& v);
 
   void AddPluginVertices(Game& game);
   void AddSpecificEdges();
@@ -76,6 +103,8 @@ private:
   vertex_map_t vertexIndexMap_;
   std::shared_ptr<spdlog::logger> logger_;
   std::unordered_set<Group> groups_;
+
+  std::unordered_set<GraphPath> pathsCache_;
 };
 }
 

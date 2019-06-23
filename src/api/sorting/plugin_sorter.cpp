@@ -83,6 +83,7 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   // Clear existing data.
   graph_.clear();
   indexMap_.clear();
+  pathsCache_.clear();
 
   AddPluginVertices(game);
 
@@ -264,7 +265,11 @@ void PluginSorter::CheckForCycles() const {
 }
 
 bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
-                                    const vertex_t& toVertex) const {
+                                    const vertex_t& toVertex) {
+  if (pathsCache_.count(GraphPath(toVertex, fromVertex)) != 0) {
+    return true;
+  }
+
   auto start = toVertex;
   auto end = fromVertex;
 
@@ -288,6 +293,8 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
       for (auto adjacentV :
            boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
         if (forwardVisited.count(adjacentV) == 0) {
+          pathsCache_.insert(GraphPath(start, adjacentV));
+
           forwardVisited.insert(adjacentV);
           forwardQueue.push(adjacentV);
         }
@@ -302,6 +309,8 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
       for (auto adjacentV : boost::make_iterator_range(
                boost::inv_adjacent_vertices(v, graph_))) {
         if (reverseVisited.count(adjacentV) == 0) {
+          pathsCache_.insert(GraphPath(adjacentV, end));
+
           reverseVisited.insert(adjacentV);
           reverseQueue.push(adjacentV);
         }
@@ -315,16 +324,21 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
 void PluginSorter::AddEdge(const vertex_t& fromVertex,
                            const vertex_t& toVertex,
                            EdgeType edgeType) {
-  if (!boost::edge(fromVertex, toVertex, graph_).second) {
-    if (logger_) {
-      logger_->trace("Adding {} edge from \"{}\" to \"{}\".",
-                     describeEdgeType(edgeType),
-                     graph_[fromVertex].GetName(),
-                     graph_[toVertex].GetName());
-    }
+  auto graphPath = GraphPath(fromVertex, toVertex);
 
-    boost::add_edge(fromVertex, toVertex, edgeType, graph_);
+  if (pathsCache_.count(graphPath) != 0) {
+    return;
   }
+
+  if (logger_) {
+    logger_->trace("Adding {} edge from \"{}\" to \"{}\".",
+                   describeEdgeType(edgeType),
+                   graph_[fromVertex].GetName(),
+                   graph_[toVertex].GetName());
+  }
+
+  boost::add_edge(fromVertex, toVertex, edgeType, graph_);
+  pathsCache_.insert(graphPath);
 }
 
 void PluginSorter::AddHardcodedPluginEdges(Game& game) {
