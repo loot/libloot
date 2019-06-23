@@ -619,8 +619,10 @@ void PluginSorter::AddGroupEdges() {
 }
 
 void PluginSorter::AddOverlapEdges() {
-  for (const auto& vertex :
-       boost::make_iterator_range(boost::vertices(graph_))) {
+  vertex_it vit, vitend;
+  for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
+    vertex_t vertex = *vit;
+
     if (graph_[vertex].NumOverrideFormIDs() == 0) {
       if (logger_) {
         logger_->trace(
@@ -631,8 +633,9 @@ void PluginSorter::AddOverlapEdges() {
       continue;
     }
 
-    for (const auto& otherVertex :
-         boost::make_iterator_range(boost::vertices(graph_))) {
+    for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
+      vertex_t otherVertex = *vit2;
+
       if (vertex == otherVertex ||
           boost::edge(vertex, otherVertex, graph_).second ||
           boost::edge(otherVertex, vertex, graph_).second ||
