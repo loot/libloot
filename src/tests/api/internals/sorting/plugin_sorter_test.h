@@ -179,14 +179,11 @@ TEST_P(PluginSorterTest,
   PluginSorter ps;
   std::vector<std::string> expectedSortedOrder = getLoadOrder();
 
-  std::vector<std::string> sorted = ps.Sort(game_);
-  EXPECT_TRUE(
-      std::equal(begin(sorted), end(sorted), begin(expectedSortedOrder)));
-
-  // Check stability.
-  sorted = ps.Sort(game_);
-  EXPECT_TRUE(
-      std::equal(begin(sorted), end(sorted), begin(expectedSortedOrder)));
+  // Check stability by running the sort 100 times.
+  for (int i = 0; i < 100; i++) {
+    std::vector<std::string> sorted = ps.Sort(game_);
+    ASSERT_EQ(expectedSortedOrder, sorted) << " for sort " << i;
+  }
 }
 
 TEST_P(PluginSorterTest, sortingShouldResolveGroupsAsTransitiveLoadAfterSets) {
