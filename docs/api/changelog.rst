@@ -2,6 +2,26 @@
 Version History
 ***************
 
+0.14.8 - 2019-06-30
+===================
+
+Fixed
+-----
+
+- Evaluating ``version()`` and ``product_version()`` conditions will no longer
+  error if the given executable has no version fields. Instead, it will be
+  evaluated as having no version.
+- Sorting would not preserve the existing relative positions of plugins that had
+  no relative positioning enforced by plugin data or metadata, if one or both of
+  their filenames were not case-sensitively equal to their entries in
+  ``plugins.txt`` / ``loadorder.txt``. Load order position comparison is now
+  correctly case-insensitive.
+
+Changed
+-------
+
+- Improved load order sorting performance.
+
 0.14.7 - 2019-06-13
 ===================
 
