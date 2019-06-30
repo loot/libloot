@@ -59,23 +59,23 @@ void HandleError(const std::string operation, int returnCode) {
 int mapGameType(GameType gameType) {
   switch (gameType) {
   case GameType::tes3:
-    return LCI_GAME_TES3;
+    return LCI_GAME_MORROWIND;
   case GameType::tes4:
-    return LCI_GAME_TES4;
+    return LCI_GAME_OBLIVION;
   case GameType::tes5:
-    return LCI_GAME_TES5;
+    return LCI_GAME_SKYRIM;
   case GameType::tes5se:
-    return LCI_GAME_TES5SE;
+    return LCI_GAME_SKYRIM_SE;
   case GameType::tes5vr:
-    return LCI_GAME_TES5VR;
+    return LCI_GAME_SKYRIM_VR;
   case GameType::fo3:
-    return LCI_GAME_FO3;
+    return LCI_GAME_FALLOUT_3;
   case GameType::fonv:
-    return LCI_GAME_FNV;
+    return LCI_GAME_FALLOUT_NV;
   case GameType::fo4:
-    return LCI_GAME_FO4;
+    return LCI_GAME_FALLOUT_4;
   case GameType::fo4vr:
-    return LCI_GAME_FO4VR;
+    return LCI_GAME_FALLOUT_4_VR;
   default:
     throw std::runtime_error("Unrecognised game type encountered while mapping for condition evaluation.");
   }

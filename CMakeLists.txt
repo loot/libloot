@@ -126,11 +126,11 @@ ENDIF ()
 
 ExternalProject_Add(loot-condition-interpreter
                     PREFIX "external"
-                    URL "https://github.com/loot/loot-condition-interpreter/archive/1.3.0.tar.gz"
+                    URL "https://github.com/loot/loot-condition-interpreter/archive/2.0.0.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
-                        cbindgen ffi/ -l c++ -o ffi/include/loot_condition_interpreter.hpp
+                        cbindgen ffi/ -o ffi/include/loot_condition_interpreter.h
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(loot-condition-interpreter SOURCE_DIR)
 set (LCI_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")

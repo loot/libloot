@@ -28,7 +28,7 @@
 #include <filesystem>
 #include <string>
 
-#include <loot_condition_interpreter.hpp>
+#include <loot_condition_interpreter.h>
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
