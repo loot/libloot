@@ -2,6 +2,21 @@
 Version History
 ***************
 
+0.14.9 - 2019-07-23
+===================
+
+Fixed
+-----
+
+- Regular expressions in condition strings are now prefixed with ``^`` and
+  suffixed with ``$`` before evaluation to ensure that only exact matches to the
+  given expression are found. Via loot-condition-interpreter.
+
+Changed
+-------
+
+- Updated loot-condition-interpreter to v2.0.0.
+
 0.14.8 - 2019-06-30
 ===================
 
@@ -10,7 +25,7 @@ Fixed
 
 - Evaluating ``version()`` and ``product_version()`` conditions will no longer
   error if the given executable has no version fields. Instead, it will be
-  evaluated as having no version.
+  evaluated as having no version. Via loot-condition-interpreter.
 - Sorting would not preserve the existing relative positions of plugins that had
   no relative positioning enforced by plugin data or metadata, if one or both of
   their filenames were not case-sensitively equal to their entries in
@@ -21,6 +36,7 @@ Changed
 -------
 
 - Improved load order sorting performance.
+- Updated loot-condition-interpreter to v2.0.0.
 
 0.14.7 - 2019-06-13
 ===================
