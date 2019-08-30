@@ -173,7 +173,8 @@ void PluginSorter::AddPluginVertices(Game& game) {
 
   auto loadOrder = game.GetLoadOrder();
 
-  for (const auto& plugin : game.GetCache()->GetPlugins()) {
+  auto loadedPlugins = game.GetCache()->GetPlugins();
+  for (const auto& plugin : loadedPlugins) {
     auto masterlistMetadata =
         game.GetDatabase()
             ->GetPluginMetadata(plugin->GetName(), false, true)
@@ -182,8 +183,12 @@ void PluginSorter::AddPluginVertices(Game& game) {
                             ->GetPluginUserMetadata(plugin->GetName(), true)
                             .value_or(PluginMetadata(plugin->GetName()));
 
-    auto pluginSortingData =
-        PluginSortingData(*plugin, masterlistMetadata, userMetadata, loadOrder);
+    auto pluginSortingData = PluginSortingData(*plugin,
+                                               masterlistMetadata,
+                                               userMetadata,
+                                               loadOrder,
+                                               game.Type(),
+                                               loadedPlugins);
 
     auto groupName = pluginSortingData.GetGroup();
     auto groupIt = groupPlugins.find(groupName);

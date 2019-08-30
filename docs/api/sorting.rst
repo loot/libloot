@@ -58,14 +58,16 @@ same record, i.e. if they both edit the same record or if one edits a record the
 other plugin adds.
 
 For each plugin, skip it if it overrides no records, otherwise iterate over all
-other plugins. Sorting currently skips adding overlap edges for Morrowind
-plugins, because LOOT is unable to distinguish between new and overridden
-records in Morrowind plugins, and considers all plugins to override no records.
+other plugins.
 
 * If the plugin and other plugin override the same number of records, or do not
   overlap, skip the other plugin.
 * Otherwise, add an edge from the plugin which overrides more records to the
   plugin that overrides fewer records, unless that edge would cause a cycle.
+
+For Morrowind, identifying which records override others requires all of a
+plugin's masters to be installed, so if a plugin has missing masters, its total
+record count is used in place of its override record count.
 
 Finally, tie-break edges are added to ensure that sorting is consistent. For
 each plugin, iterate over all other plugins and add an edge between each pair of

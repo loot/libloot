@@ -31,10 +31,31 @@
 #include "api/helpers/text.h"
 
 namespace loot {
-PluginSortingData::PluginSortingData(const Plugin& plugin,
-                                     const PluginMetadata& masterlistMetadata,
+std::vector<std::shared_ptr<const Plugin>> GetPluginsSubset(
+    const std::set<std::shared_ptr<const Plugin>>& plugins,
+    const std::vector<std::string>& pluginNames) {
+  std::vector<std::shared_ptr<const Plugin>> pluginsSubset;
+
+  for (const auto& pluginName : pluginNames) {
+    auto pos = std::find_if(plugins.begin(), plugins.end(), [&](auto plugin) {
+      return CompareFilenames(plugin->GetName(), pluginName) == 0;
+    });
+
+    if (pos != plugins.end()) {
+      pluginsSubset.push_back(*pos);
+    }
+  }
+
+  return pluginsSubset;
+}
+
+PluginSortingData::PluginSortingData(
+    const Plugin& plugin,
+    const PluginMetadata& masterlistMetadata,
     const PluginMetadata& userMetadata,
-    const std::vector<std::string>& loadOrder) :
+    const std::vector<std::string>& loadOrder,
+    const GameType gameType,
+    const std::set<std::shared_ptr<const Plugin>>& loadedPlugins) :
     plugin_(plugin),
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),
@@ -49,9 +70,34 @@ PluginSortingData::PluginSortingData(const Plugin& plugin,
   }
 
   for (size_t i = 0; i < loadOrder.size(); i++) {
-    if (CompareFilenames(GetName(), loadOrder[i]) == 0) {
+    if (CompareFilenames(plugin.GetName(), loadOrder[i]) == 0) {
       loadOrderIndex_ = i;
     }
+  }
+
+  if (gameType == GameType::tes3) {
+    auto masterNames = plugin.GetMasters();
+    if (masterNames.empty()) {
+      numOverrideFormIDs = 0;
+    } else {
+      auto masters = GetPluginsSubset(loadedPlugins, masterNames);
+      if (masters.size() == masterNames.size()) {
+        numOverrideFormIDs = plugin.GetOverlapSize(masters);
+      } else {
+        // Not all masters are loaded, fall back to using the plugin's
+        // total record count (Morrowind doesn't have groups). This is OK
+        // because plugins with missing masters can't be loaded by the game, 
+        // so the correctness of their load order positions is less important
+        // (it may not matter at all, depending on the sophistication/usage of
+        // merge patches in Morrowind). It's better for LOOT to sort a load
+        // order with missing masters with potentially poorer results than
+        // for it to error out, as masters may be missing for a variety of
+        // development & testing reasons.
+        numOverrideFormIDs = plugin.GetRecordAndGroupCount();
+      }
+    }
+  } else {
+    numOverrideFormIDs = plugin.NumOverrideFormIDs();
   }
 }
 
@@ -69,7 +115,7 @@ std::vector<std::string> PluginSortingData::GetMasters() const {
 }
 
 size_t PluginSortingData::NumOverrideFormIDs() const {
-  return plugin_.NumOverrideFormIDs();
+  return numOverrideFormIDs;
 }
 
 bool PluginSortingData::DoFormIDsOverlap(

@@ -127,53 +127,15 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_CASE_P(,
                         PluginSorterTest,
-                        ::testing::Values(GameType::tes4, GameType::fo4));
+                        ::testing::Values(GameType::tes3,
+                                          GameType::tes4,
+                                          GameType::fo4));
 
 TEST_P(PluginSorterTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
   PluginSorter sorter;
   std::vector<std::string> sorted = sorter.Sort(game_);
 
   EXPECT_TRUE(sorted.empty());
-}
-
-TEST_P(PluginSorterTest,
-       lightMasterFlaggedEspFilesShouldNotBeTreatedAsMasters) {
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    ASSERT_NO_THROW(
-        std::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
-  }
-
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-
-  auto esp = PluginSortingData(
-      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp).get()),
-      PluginMetadata(),
-      PluginMetadata(),
-      getLoadOrder());
-  EXPECT_FALSE(esp.IsMaster());
-
-  auto master = PluginSortingData(
-      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm).get()),
-      PluginMetadata(),
-      PluginMetadata(),
-      getLoadOrder());
-  EXPECT_TRUE(master.IsMaster());
-
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    auto lightMaster = PluginSortingData(
-        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl).get()),
-        PluginMetadata(),
-        PluginMetadata(),
-        getLoadOrder());
-    EXPECT_TRUE(lightMaster.IsMaster());
-
-    auto lightMasterEsp = PluginSortingData(
-        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp).get()),
-        PluginMetadata(),
-        PluginMetadata(),
-        getLoadOrder());
-    EXPECT_FALSE(lightMasterEsp.IsMaster());
-  }
 }
 
 TEST_P(PluginSorterTest,

@@ -82,7 +82,7 @@ set (GTEST_LIBRARIES "${BINARY_DIR}/googlemock/gtest/${CMAKE_CFG_INTDIR}/${CMAKE
 
 ExternalProject_Add(esplugin
                     PREFIX "external"
-                    URL "https://github.com/Ortham/esplugin/archive/2.1.2.tar.gz"
+                    URL "https://github.com/Ortham/esplugin/archive/3.2.0.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -296,6 +296,7 @@ set (LOOT_TESTS_HEADERS "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_t
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/plugin_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/sorting/group_sort_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/sorting/plugin_sorter_test.h"
+                        "${CMAKE_SOURCE_DIR}/src/tests/api/internals/sorting/plugin_sorting_data_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/masterlist_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata_list_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"

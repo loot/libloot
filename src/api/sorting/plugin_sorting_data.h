@@ -34,7 +34,9 @@ public:
   PluginSortingData(const Plugin& plugin,
                     const PluginMetadata& masterlistMetadata,
                     const PluginMetadata& userMetadata,
-                    const std::vector<std::string>& loadOrder);
+                    const std::vector<std::string>& loadOrder,
+                    const GameType gameType,
+                    const std::set<std::shared_ptr<const Plugin>>& loadedPlugins);
 
   std::string GetName() const;
   bool IsMaster() const;
@@ -66,6 +68,7 @@ private:
   std::set<File> userReq_;
 
   std::optional<size_t> loadOrderIndex_;
+  size_t numOverrideFormIDs;
 };
 }
 

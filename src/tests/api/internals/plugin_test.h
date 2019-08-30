@@ -304,11 +304,12 @@ TEST_P(
 TEST_P(
     PluginTest,
     loadsArchiveForAnArchiveThatExactlyMatchesANonAsciiEspFileBasenameShouldReturnTrueForAllGamesExceptMorrowind) {
-  bool loadsArchive = Plugin(game_.Type(),
-                     game_.GetCache(),
-                     game_.DataPath() / std::filesystem::u8path(nonAsciiEsp),
-                     true)
-                  .LoadsArchive();
+  bool loadsArchive =
+      Plugin(game_.Type(),
+             game_.GetCache(),
+             game_.DataPath() / std::filesystem::u8path(nonAsciiEsp),
+             true)
+          .LoadsArchive();
 
   if (GetParam() == GameType::tes3)
     EXPECT_FALSE(loadsArchive);
@@ -320,7 +321,8 @@ TEST_P(
 TEST_P(
     PluginTest,
     loadsArchiveForAnArchiveThatExactlyMatchesAnEspFileBasenameShouldReturnTrueForAllGamesExceptMorrowind) {
-  bool loadsArchive = Plugin(game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, true)
+  bool loadsArchive =
+      Plugin(game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, true)
           .LoadsArchive();
 
   if (GetParam() == GameType::tes3)
@@ -338,7 +340,8 @@ TEST_P(
                              true)
                           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes4 || GetParam() == GameType::tes5)
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes4 ||
+      GetParam() == GameType::tes5)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
@@ -498,6 +501,78 @@ TEST_P(PluginTest,
 
   EXPECT_TRUE(plugin1.DoFormIDsOverlap(plugin2));
   EXPECT_TRUE(plugin2.DoFormIDsOverlap(plugin1));
+}
+
+TEST_P(PluginTest, getOverlapSizeShouldCountEachRecordOnce) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+  Plugin plugin2(game_.Type(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankMasterDependentEsm,
+                 false);
+
+  std::vector<std::shared_ptr<const Plugin>> plugins = {
+      std::make_shared<const Plugin>(plugin2),
+      std::make_shared<const Plugin>(plugin2)};
+
+  EXPECT_EQ(4, plugin1.GetOverlapSize(plugins));
+}
+
+TEST_P(PluginTest, getOverlapSizeShouldCheckAgainstAllGivenPlugins) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+  Plugin plugin2(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false);
+  Plugin plugin3(game_.Type(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankMasterDependentEsm,
+                 false);
+
+  std::vector<std::shared_ptr<const Plugin>> plugins = {
+      std::make_shared<const Plugin>(plugin2),
+      std::make_shared<const Plugin>(plugin3)};
+
+  EXPECT_EQ(4, plugin1.GetOverlapSize(plugins));
+}
+
+TEST_P(PluginTest,
+       getOverlapSizeShouldReturnZeroForPluginsWithOnlyHeadersLoaded) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, true);
+  Plugin plugin2(game_.Type(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankMasterDependentEsm,
+                 true);
+
+  std::vector<std::shared_ptr<const Plugin>> plugins = {
+      std::make_shared<const Plugin>(plugin2)};
+
+  EXPECT_EQ(0, plugin1.GetOverlapSize(plugins));
+}
+
+TEST_P(PluginTest, getOverlapSizeShouldReturnZeroForPluginsThatDoNotOverlap) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+  Plugin plugin2(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false);
+
+  std::vector<std::shared_ptr<const Plugin>> plugins = {
+      std::make_shared<const Plugin>(plugin2)};
+
+  EXPECT_EQ(0, plugin1.GetOverlapSize(plugins));
+}
+
+TEST_P(PluginTest, getRecordAndGroupCountShouldReturnTheHeaderFieldValue) {
+  Plugin plugin(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, true);
+
+  if (GetParam() == GameType::tes3) {
+    EXPECT_EQ(10, plugin.GetRecordAndGroupCount());
+  } else if (GetParam() == GameType::tes4) {
+    EXPECT_EQ(14, plugin.GetRecordAndGroupCount());
+  } else {
+    EXPECT_EQ(15, plugin.GetRecordAndGroupCount());
+  }
 }
 
 TEST_P(PluginTest,

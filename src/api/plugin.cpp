@@ -60,7 +60,9 @@ Plugin::Plugin(const GameType gameType,
 
     auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
     if (ret != ESP_OK) {
-      throw FileAccessError("Error checking if \"" + name_ + "\" is empty. esplugin error code: " + std::to_string(ret));
+      throw FileAccessError(
+          "Error checking if \"" + name_ +
+          "\" is empty. esplugin error code: " + std::to_string(ret));
     }
 
     if (!headerOnly) {
@@ -69,7 +71,9 @@ Plugin::Plugin(const GameType gameType,
       ret = esp_plugin_count_override_records(esPlugin.get(),
                                               &numOverrideRecords_);
       if (ret != ESP_OK) {
-        throw FileAccessError("Error counting override records in \"" + name_ + "\". esplugin error code: " + std::to_string(ret));
+        throw FileAccessError(
+            "Error counting override records in \"" + name_ +
+            "\". esplugin error code: " + std::to_string(ret));
       }
     }
 
@@ -80,7 +84,8 @@ Plugin::Plugin(const GameType gameType,
       logger->error(
           "Cannot read plugin file \"{}\". Details: {}", name_, e.what());
     }
-    throw FileAccessError("Cannot read \"" + name_ + "\". Details: " + e.what());
+    throw FileAccessError("Cannot read \"" + name_ +
+                          "\". Details: " + e.what());
   }
 }
 
@@ -91,7 +96,7 @@ float Plugin::GetHeaderVersion() const {
   auto ret = esp_plugin_header_version(esPlugin.get(), &version);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
-      " : esplugin error code: " + std::to_string(ret));
+                          " : esplugin error code: " + std::to_string(ret));
   }
 
   return version;
@@ -142,13 +147,12 @@ bool Plugin::IsLightMaster() const {
   return isLightMaster;
 }
 
-bool Plugin::IsValidAsLightMaster() const
-{
+bool Plugin::IsValidAsLightMaster() const {
   bool isValid;
   auto ret = esp_plugin_is_valid_as_light_master(esPlugin.get(), &isValid);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
-      " : esplugin error code: " + std::to_string(ret));
+                          " : esplugin error code: " + std::to_string(ret));
   }
 
   return isValid;
@@ -183,7 +187,42 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
   return false;
 }
 
+size_t Plugin::GetOverlapSize(
+    const std::vector<std::shared_ptr<const Plugin>> plugins) const {
+  if (plugins.empty()) {
+    return 0;
+  }
+
+  std::vector<::Plugin*> esPlugins;
+  for (const auto& plugin : plugins) {
+    esPlugins.push_back(plugin->esPlugin.get());
+  }
+
+  size_t overlapSize;
+  auto ret = esp_plugin_records_overlap_size(
+      esPlugin.get(), &esPlugins[0], esPlugins.size(), &overlapSize);
+  if (ret != ESP_OK) {
+    throw FileAccessError("Error getting overlap size for \"" + name_ +
+                          "\". esplugin error code: " + std::to_string(ret));
+  }
+
+  return overlapSize;
+}
+
 size_t Plugin::NumOverrideFormIDs() const { return numOverrideRecords_; }
+
+uint32_t Plugin::GetRecordAndGroupCount() const { 
+  uint32_t recordAndGroupCount = 0;
+  auto ret =
+      esp_plugin_record_and_group_count(esPlugin.get(), &recordAndGroupCount);
+  if (ret != ESP_OK) {
+    throw FileAccessError("Error getting record and group count for \"" +
+                          name_ +
+                          "\". esplugin error code: " + std::to_string(ret));
+  }
+
+  return recordAndGroupCount;
+}
 
 bool Plugin::IsValid(const GameType gameType,
                      const std::filesystem::path& pluginPath) {
@@ -191,17 +230,15 @@ bool Plugin::IsValid(const GameType gameType,
   if (hasPluginFileExtension(pluginPath.filename().u8string(), gameType)) {
     bool isValid;
     int returnCode = esp_plugin_is_valid(GetEspluginGameId(gameType),
-                                          pluginPath.u8string().c_str(),
-                                          true,
-                                          &isValid);
+                                         pluginPath.u8string().c_str(),
+                                         true,
+                                         &isValid);
 
     if (returnCode != ESP_OK || !isValid) {
       // Try adding .ghost extension.
       auto ghostedFilename = pluginPath.u8string() + ".ghost";
-      returnCode = esp_plugin_is_valid(GetEspluginGameId(gameType),
-        ghostedFilename.c_str(),
-        true,
-        &isValid);
+      returnCode = esp_plugin_is_valid(
+          GetEspluginGameId(gameType), ghostedFilename.c_str(), true, &isValid);
     }
 
     if (returnCode == ESP_OK && isValid) {
@@ -212,7 +249,7 @@ bool Plugin::IsValid(const GameType gameType,
   auto logger = getLogger();
   if (logger) {
     logger->info("The file \"{}\" is not a valid plugin.",
-                  pluginPath.filename().u8string());
+                 pluginPath.filename().u8string());
   }
 
   return false;
@@ -274,11 +311,13 @@ std::string GetArchiveFileExtension(const GameType gameType) {
     return ".bsa";
 }
 
-std::filesystem::path replaceExtension(std::filesystem::path path, const std::string& newExtension) {
+std::filesystem::path replaceExtension(std::filesystem::path path,
+                                       const std::string& newExtension) {
   return path.replace_extension(std::filesystem::u8path(newExtension));
 }
 
-bool equivalent(const std::filesystem::path& path1, const std::filesystem::path& path2) {
+bool equivalent(const std::filesystem::path& path1,
+                const std::filesystem::path& path2) {
   // If the paths are identical, they've got to be equivalent,
   // it doesn't matter if the paths exist or not.
   if (path1 == path2) {
@@ -314,7 +353,8 @@ bool Plugin::LoadsArchive(const GameType gameType,
 
   if (gameType == GameType::tes5) {
     // Skyrim plugins only load BSAs that exactly match their basename.
-    return std::filesystem::exists(replaceExtension(pluginPath, archiveExtension));
+    return std::filesystem::exists(
+        replaceExtension(pluginPath, archiveExtension));
   } else if (gameType != GameType::tes4 ||
              boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
     // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
@@ -331,8 +371,7 @@ bool Plugin::LoadsArchive(const GameType gameType,
       auto bsaPluginFilename =
           archivePath.filename().native().substr(0, basenameLength) +
           pluginExtension;
-      auto bsaPluginPath =
-          pluginPath.parent_path() / bsaPluginFilename;
+      auto bsaPluginPath = pluginPath.parent_path() / bsaPluginFilename;
       if (loot::equivalent(pluginPath, bsaPluginPath)) {
         return true;
       }

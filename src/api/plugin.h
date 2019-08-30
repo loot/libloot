@@ -61,9 +61,12 @@ public:
   bool IsEmpty() const;
   bool LoadsArchive() const;
   bool DoFormIDsOverlap(const PluginInterface& plugin) const;
+  size_t GetOverlapSize(
+      const std::vector<std::shared_ptr<const Plugin>> plugins) const;
 
   // Load ordering functions.
   size_t NumOverrideFormIDs() const;
+  uint32_t GetRecordAndGroupCount() const;
 
   // Validity checks.
   static bool IsValid(const GameType gameType,

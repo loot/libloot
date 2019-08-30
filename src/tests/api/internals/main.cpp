@@ -46,6 +46,7 @@
 #include "tests/api/internals/plugin_test.h"
 #include "tests/api/internals/sorting/group_sort_test.h"
 #include "tests/api/internals/sorting/plugin_sorter_test.h"
+#include "tests/api/internals/sorting/plugin_sorting_data_test.h"
 
 TEST(ModuloOperator, shouldConformToTheCpp11Standard) {
   // C++11 defines the modulo operator more strongly
