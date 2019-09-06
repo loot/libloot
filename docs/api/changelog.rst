@@ -2,6 +2,24 @@
 Version History
 ***************
 
+0.14.10 - 2019-09-06
+====================
+
+Changed
+-------
+
+- Improved the sorting process for Morrowind. Previously, sorting was unable to
+  determine if a Morrowind plugin contained any records overriding those of its
+  masters, and so added no overlap edges between Morrowind plugins when sorting.
+  Sorting now counts override records by comparing plugins against their
+  masters, giving the same results as for other games.
+
+  However, unlike for other games, this requires all a plugin's masters to be
+  installed. If a plugin's masters are missing, the plugin's total record count
+  will be used as if it was the plugin's override record count to ensure that
+  sorting can still proceed, albeit with potentially reduced accuracy.
+- Updated libgit2 to v0.28.3.
+
 0.14.9 - 2019-07-23
 ===================
 
