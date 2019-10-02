@@ -36,9 +36,7 @@ namespace loot {
 namespace test {
 TEST(GetTransitiveAfterGroups, shouldMapGroupsToTheirTransitiveAfterGroups) {
   std::unordered_set<Group> groups(
-      {Group("a"),
-       Group("b", std::unordered_set<std::string>({"a"})),
-       Group("c", std::unordered_set<std::string>({"b"}))});
+      {Group("a"), Group("b", {"a"}), Group("c", {"b"})});
 
   auto mapped = GetTransitiveAfterGroups(groups, {});
 
@@ -48,18 +46,14 @@ TEST(GetTransitiveAfterGroups, shouldMapGroupsToTheirTransitiveAfterGroups) {
 }
 
 TEST(GetTransitiveAfterGroups, shouldThrowIfAnAfterGroupDoesNotExist) {
-  std::unordered_set<Group> groups(
-      {Group("b", std::unordered_set<std::string>({"a"}))});
+  std::unordered_set<Group> groups({Group("b", {"a"})});
 
   EXPECT_THROW(GetTransitiveAfterGroups(groups, {}), UndefinedGroupError);
 }
 
 TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
-  std::unordered_set<Group> groups(
-      {Group("a", std::unordered_set<std::string>({"c"})),
-       Group("b", std::unordered_set<std::string>({"a"}))});
-  std::unordered_set<Group> userGroups(
-      {Group("c", std::unordered_set<std::string>({"b"}))});
+  std::unordered_set<Group> groups({Group("a"), Group("b", {"a"})});
+  std::unordered_set<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
   try {
     GetTransitiveAfterGroups(groups, userGroups);
@@ -69,7 +63,7 @@ TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
 
     // Vertices can be added in any order, so which group is first is undefined.
     if (e.GetCycle()[0].GetName() == "a") {
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
+      EXPECT_EQ(EdgeType::userLoadAfter,
                 e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("c", e.GetCycle()[1].GetName());
@@ -84,7 +78,7 @@ TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
                 e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("a", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
+      EXPECT_EQ(EdgeType::userLoadAfter,
                 e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("c", e.GetCycle()[2].GetName());
@@ -100,23 +94,23 @@ TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
                 e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
 
       EXPECT_EQ("a", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
+      EXPECT_EQ(EdgeType::userLoadAfter,
                 e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
     }
   }
 }
 
 TEST(GetGroupsPath, shouldThrowIfTheFromGroupDoesNotExist) {
-  std::unordered_set<Group> groups({Group("a", {"c"}), Group("b", {"a"})});
-  std::unordered_set<Group> userGroups({Group("c", {"b"})});
+  std::unordered_set<Group> groups({Group("a"), Group("b", {"a"})});
+  std::unordered_set<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
   EXPECT_THROW(GetGroupsPath(groups, userGroups, "d", "a"),
                std::invalid_argument);
 }
 
 TEST(GetGroupsPath, shouldThrowIfTheToGroupDoesNotExist) {
-  std::unordered_set<Group> groups({Group("a", {"c"}), Group("b", {"a"})});
-  std::unordered_set<Group> userGroups({Group("c", {"b"})});
+  std::unordered_set<Group> groups({Group("a"), Group("b", {"a"})});
+  std::unordered_set<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
   EXPECT_THROW(GetGroupsPath(groups, userGroups, "a", "d"),
                std::invalid_argument);
@@ -161,8 +155,8 @@ TEST(GetGroupsPath,
   std::unordered_set<Group> groups({Group("a", {}),
                                     Group("b", {"a"}),
                                     Group("c", {"a"}),
-                                    Group("e", {"b", "d"})});
-  std::unordered_set<Group> userGroups({Group("d", {"c"})});
+                                    Group("e", {"b"})});
+  std::unordered_set<Group> userGroups({Group("d", {"c"}), Group("e", {"d"})});
 
   auto path = GetGroupsPath(groups, userGroups, "a", "e");
 
@@ -174,10 +168,21 @@ TEST(GetGroupsPath,
   EXPECT_EQ(EdgeType::userLoadAfter,
             path[1].GetTypeOfEdgeToNextVertex().value());
   EXPECT_EQ("d", path[2].GetName());
-  EXPECT_EQ(EdgeType::masterlistLoadAfter,
+  EXPECT_EQ(EdgeType::userLoadAfter,
             path[2].GetTypeOfEdgeToNextVertex().value());
   EXPECT_EQ("e", path[3].GetName());
   EXPECT_FALSE(path[3].GetTypeOfEdgeToNextVertex().has_value());
+}
+
+TEST(GetGroupsPath, shouldThrowIfMasterlistGroupLoadsAfterAUserlistGroup) {
+  std::unordered_set<Group> groups({Group("a", {}),
+                                    Group("b", {"a"}),
+                                    Group("c", {"a"}),
+                                    Group("e", {"b", "d"})});
+  std::unordered_set<Group> userGroups({Group("d", {"c"})});
+
+  EXPECT_THROW(GetGroupsPath(groups, userGroups, "a", "e"),
+               UndefinedGroupError);
 }
 }
 }

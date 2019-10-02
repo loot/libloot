@@ -49,6 +49,47 @@ typedef boost::graph_traits<PluginGraph>::vertex_iterator vertex_it;
 typedef boost::graph_traits<PluginGraph>::edge_descriptor edge_t;
 typedef boost::graph_traits<PluginGraph>::edge_iterator edge_it;
 
+class CycleDetector : public boost::dfs_visitor<> {
+public:
+  void tree_edge(edge_t edge, const PluginGraph& graph) {
+    auto source = boost::source(edge, graph);
+
+    auto vertex = Vertex(graph[source].GetName(), graph[edge]);
+
+    // Check if the vertex already exists in the recorded trail.
+    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
+      return v.GetName() == graph[source].GetName();
+    });
+
+    if (it != end(trail)) {
+      // Erase everything from this position onwards, as it doesn't
+      // contribute to a forward-cycle.
+      trail.erase(it, end(trail));
+    }
+
+    trail.push_back(vertex);
+  }
+
+  void back_edge(edge_t edge, const PluginGraph& graph) {
+    auto source = boost::source(edge, graph);
+    auto target = boost::target(edge, graph);
+
+    auto vertex = Vertex(graph[source].GetName(), graph[edge]);
+    trail.push_back(vertex);
+
+    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
+      return v.GetName() == graph[target].GetName();
+    });
+
+    if (it != trail.end()) {
+      throw CyclicInteractionError(std::vector<Vertex>(it, trail.end()));
+    }
+  }
+
+private:
+  std::vector<Vertex> trail;
+};
+
 std::string describeEdgeType(EdgeType edgeType) {
   switch (edgeType) {
     case EdgeType::hardcoded:
@@ -264,8 +305,7 @@ void PluginSorter::CheckForCycles() const {
     logger_->trace("Checking plugin graph for cycles...");
   }
   boost::depth_first_search(
-      graph_,
-      visitor(CycleDetector<PluginGraph>()).vertex_index_map(vertexIndexMap_));
+      graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap_));
 }
 
 bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
