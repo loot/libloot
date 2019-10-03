@@ -22,7 +22,7 @@
     <https://www.gnu.org/licenses/>.
     */
 
-#include "plugin_sorter.h"
+#include "plugin_graph.h"
 
 #include <cstdlib>
 #include <queue>
@@ -45,13 +45,13 @@ using std::string;
 using std::vector;
 
 namespace loot {
-typedef boost::graph_traits<PluginGraph>::vertex_iterator vertex_it;
-typedef boost::graph_traits<PluginGraph>::edge_descriptor edge_t;
-typedef boost::graph_traits<PluginGraph>::edge_iterator edge_it;
+typedef boost::graph_traits<RawPluginGraph>::vertex_iterator vertex_it;
+typedef boost::graph_traits<RawPluginGraph>::edge_descriptor edge_t;
+typedef boost::graph_traits<RawPluginGraph>::edge_iterator edge_it;
 
 class CycleDetector : public boost::dfs_visitor<> {
 public:
-  void tree_edge(edge_t edge, const PluginGraph& graph) {
+  void tree_edge(edge_t edge, const RawPluginGraph& graph) {
     auto source = boost::source(edge, graph);
 
     auto vertex = Vertex(graph[source].GetName(), graph[edge]);
@@ -70,7 +70,7 @@ public:
     trail.push_back(vertex);
   }
 
-  void back_edge(edge_t edge, const PluginGraph& graph) {
+  void back_edge(edge_t edge, const RawPluginGraph& graph) {
     auto source = boost::source(edge, graph);
     auto target = boost::target(edge, graph);
 
@@ -117,54 +117,34 @@ std::string describeEdgeType(EdgeType edgeType) {
   }
 }
 
-std::vector<std::string> PluginSorter::Sort(Game& game) {
-  logger_ = getLogger();
+size_t PluginGraph::CountVertices() const {
+  return boost::num_vertices(graph_);
+}
 
-  // Clear existing data.
-  graph_.clear();
-  indexMap_.clear();
-  pathsCache_.clear();
+std::vector<std::string> PluginGraph::TopologicalSort() const {
+  // Build an index map, which std::list-based VertexList graphs don't have.
+  std::map<vertex_t, size_t> indexMap;
+  auto vertexIndexMap = vertex_map_t(indexMap);
+  size_t i = 0;
+  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) { put(vertexIndexMap, v, i++); }
 
-  AddPluginVertices(game);
-
-  // If there aren't any vertices, exit early, because sorting assumes
-  // there is at least one plugin.
-  if (boost::num_vertices(graph_) == 0)
-    return vector<std::string>();
-
-  if (logger_) {
-    logger_->info("Current load order: ");
-    for (const auto& plugin : game.GetLoadOrder()) {
-      logger_->info("\t\t{}", plugin);
-    }
-  }
-
-  // Now add the interactions between plugins to the graph as edges.
-  AddSpecificEdges();
-  AddHardcodedPluginEdges(game);
-  AddGroupEdges();
-  AddOverlapEdges();
-  AddTieBreakEdges();
-
-  CheckForCycles();
-
-  // Now we can sort.
   list<vertex_t> sortedVertices;
-  if (logger_) {
-    logger_->trace("Performing topological sort on plugin graph...");
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Performing topological sort on plugin graph...");
   }
   boost::topological_sort(graph_,
                           std::front_inserter(sortedVertices),
-                          boost::vertex_index_map(vertexIndexMap_));
+                          boost::vertex_index_map(vertexIndexMap));
 
   // Check that the sorted path is Hamiltonian (ie. unique).
-  if (logger_) {
-    logger_->trace("Checking uniqueness of calculated load order...");
+  if (logger) {
+    logger->trace("Checking uniqueness of calculated load order...");
   }
   for (auto it = sortedVertices.begin(); it != sortedVertices.end(); ++it) {
     if (next(it) != sortedVertices.end() &&
-        !boost::edge(*it, *next(it), graph_).second && logger_) {
-      logger_->error(
+        !boost::edge(*it, *next(it), graph_).second && logger) {
+      logger->error(
           "The calculated load order is not unique. No edge exists between {} "
           "and {}.",
           graph_[*it].GetName(),
@@ -173,21 +153,21 @@ std::vector<std::string> PluginSorter::Sort(Game& game) {
   }
 
   // Output a plugin list using the sorted vertices.
-  if (logger_) {
-    logger_->info("Calculated order: ");
+  if (logger) {
+    logger->info("Calculated order: ");
   }
   vector<std::string> plugins;
   for (const auto& vertex : sortedVertices) {
     plugins.push_back(graph_[vertex].GetName());
-    if (logger_) {
-      logger_->info("\t{}", plugins.back());
+    if (logger) {
+      logger->info("\t{}", plugins.back());
     }
   }
 
   return plugins;
 }
 
-void PluginSorter::AddPluginVertices(Game& game) {
+void PluginGraph::AddPluginVertices(Game& game) {
   // The resolution of tie-breaks in the plugin graph may be dependent
   // on the order in which vertices are iterated over, as an earlier tie
   // break resolution may cause a potential later tie break to instead
@@ -244,8 +224,6 @@ void PluginSorter::AddPluginVertices(Game& game) {
 
   // Map sets of transitive group dependencies to sets of transitive plugin
   // dependencies.
-  groups_ = game.GetDatabase()->GetGroups();
-
   auto groups = GetTransitiveAfterGroups(game.GetDatabase()->GetGroups(false),
                                          game.GetDatabase()->GetUserGroups());
   for (auto& group : groups) {
@@ -262,12 +240,13 @@ void PluginSorter::AddPluginVertices(Game& game) {
 
   // Add all transitive plugin dependencies for a group to the plugin's load
   // after metadata.
+  auto logger = getLogger();
   for (const auto& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
     PluginSortingData& plugin = graph_[vertex];
 
-    if (logger_) {
-      logger_->trace(
+    if (logger) {
+      logger->trace(
           "Plugin \"{}\" belongs to group \"{}\", setting after group plugins",
           plugin.GetName(),
           plugin.GetGroup());
@@ -280,15 +259,9 @@ void PluginSorter::AddPluginVertices(Game& game) {
       plugin.SetAfterGroupPlugins(groupsIt->second);
     }
   }
-
-  // Prebuild an index map, which std::list-based VertexList graphs don't have.
-  vertexIndexMap_ = vertex_map_t(indexMap_);
-  size_t i = 0;
-  BGL_FORALL_VERTICES(v, graph_, PluginGraph)
-  put(vertexIndexMap_, v, i++);
 }
 
-std::optional<vertex_t> PluginSorter::GetVertexByName(
+std::optional<vertex_t> PluginGraph::GetVertexByName(
     const std::string& name) const {
   for (const auto& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
@@ -300,15 +273,22 @@ std::optional<vertex_t> PluginSorter::GetVertexByName(
   return std::nullopt;
 }
 
-void PluginSorter::CheckForCycles() const {
-  if (logger_) {
-    logger_->trace("Checking plugin graph for cycles...");
+void PluginGraph::CheckForCycles() const {
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Checking plugin graph for cycles...");
   }
+
+  std::map<vertex_t, size_t> indexMap;
+  auto vertexIndexMap = vertex_map_t(indexMap);
+  size_t i = 0;
+  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) { put(vertexIndexMap, v, i++); }
+
   boost::depth_first_search(
-      graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap_));
+      graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap));
 }
 
-bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
+bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
                                     const vertex_t& toVertex) {
   if (pathsCache_.count(GraphPath(toVertex, fromVertex)) != 0) {
     return true;
@@ -365,7 +345,7 @@ bool PluginSorter::EdgeCreatesCycle(const vertex_t& fromVertex,
   return false;
 }
 
-void PluginSorter::AddEdge(const vertex_t& fromVertex,
+void PluginGraph::AddEdge(const vertex_t& fromVertex,
                            const vertex_t& toVertex,
                            EdgeType edgeType) {
   auto graphPath = GraphPath(fromVertex, toVertex);
@@ -374,8 +354,9 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex,
     return;
   }
 
-  if (logger_) {
-    logger_->trace("Adding {} edge from \"{}\" to \"{}\".",
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Adding {} edge from \"{}\" to \"{}\".",
                    describeEdgeType(edgeType),
                    graph_[fromVertex].GetName(),
                    graph_[toVertex].GetName());
@@ -385,12 +366,13 @@ void PluginSorter::AddEdge(const vertex_t& fromVertex,
   pathsCache_.insert(graphPath);
 }
 
-void PluginSorter::AddHardcodedPluginEdges(Game& game) {
+void PluginGraph::AddHardcodedPluginEdges(Game& game) {
   using std::filesystem::u8path;
 
   auto implicitlyActivePlugins =
       game.GetLoadOrderHandler()->GetImplicitlyActivePlugins();
 
+  auto logger = getLogger();
   std::set<std::filesystem::path> processedPluginPaths;
   for (const auto& plugin : implicitlyActivePlugins) {
     auto pluginPath = game.DataPath() / u8path(plugin);
@@ -398,8 +380,8 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
     try {
       processedPluginPaths.insert(std::filesystem::canonical(pluginPath));
     } catch (std::filesystem::filesystem_error& e) {
-      if (logger_) {
-        logger_->trace(
+      if (logger) {
+        logger->trace(
             "Skipping adding hardcoded plugin edges for \"{}\" as its "
             "canonical path could not be determined: {}",
             plugin,
@@ -410,8 +392,8 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
 
     if (game.Type() == GameType::tes5 &&
         loot::equivalent(plugin, "update.esm")) {
-      if (logger_) {
-        logger_->trace(
+      if (logger) {
+        logger->trace(
             "Skipping adding hardcoded plugin edges for Update.esm as it does "
             "not have a hardcoded position for Skyrim.");
         continue;
@@ -421,8 +403,8 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
     auto pluginVertex = GetVertexByName(plugin);
 
     if (!pluginVertex.has_value()) {
-      if (logger_) {
-        logger_->trace(
+      if (logger) {
+        logger->trace(
             "Skipping adding hardcoded plugin edges for \"{}\" as it has not "
             "been loaded.",
             plugin);
@@ -451,7 +433,7 @@ void PluginSorter::AddHardcodedPluginEdges(Game& game) {
   }
 }
 
-void PluginSorter::AddSpecificEdges() {
+void PluginGraph::AddSpecificEdges() {
   // Add edges for all relationships that aren't overlaps.
   vertex_it vit, vitend;
   for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
@@ -607,9 +589,11 @@ std::unordered_set<std::string> getGroupsInPaths(
   return groupsInPaths;
 }
 
-void PluginSorter::AddGroupEdges() {
+void PluginGraph::AddGroupEdges(const std::unordered_set<Group>& groups) {
   std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
   std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
+
+  auto logger = getLogger();
   for (const vertex_t& vertex :
        boost::make_iterator_range(boost::vertices(graph_))) {
     for (const auto& pluginName : graph_[vertex].GetAfterGroupPlugins()) {
@@ -622,8 +606,8 @@ void PluginSorter::AddGroupEdges() {
         auto& fromPlugin = graph_[parentVertex.value()];
         auto& toPlugin = graph_[vertex];
 
-        if (logger_) {
-          logger_->trace(
+        if (logger) {
+          logger->trace(
               "Skipping group edge from \"{}\" to \"{}\" as it would "
               "create a cycle.",
               fromPlugin.GetName(),
@@ -657,7 +641,7 @@ void PluginSorter::AddGroupEdges() {
         }
 
         auto groupsInPaths = getGroupsInPaths(
-            groups_, fromPlugin.GetGroup(), toPlugin.GetGroup());
+            groups, fromPlugin.GetGroup(), toPlugin.GetGroup());
 
         ignorePlugin(pluginToIgnore, groupsInPaths, groupPluginsToIgnore);
 
@@ -676,8 +660,8 @@ void PluginSorter::AddGroupEdges() {
 
     if (!ignore) {
       AddEdge(edgePair.first, edgePair.second, EdgeType::group);
-    } else if (logger_) {
-      logger_->trace(
+    } else if (logger) {
+      logger->trace(
           "Skipping group edge from \"{}\" to \"{}\" as it would "
           "create a multi-group cycle.",
           fromPlugin.GetName(),
@@ -686,14 +670,15 @@ void PluginSorter::AddGroupEdges() {
   }
 }
 
-void PluginSorter::AddOverlapEdges() {
+void PluginGraph::AddOverlapEdges() {
+  auto logger = getLogger();
   vertex_it vit, vitend;
   for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
     vertex_t vertex = *vit;
 
     if (graph_[vertex].NumOverrideFormIDs() == 0) {
-      if (logger_) {
-        logger_->trace(
+      if (logger) {
+        logger->trace(
             "Skipping vertex for \"{}\": the plugin contains no override "
             "records.",
             graph_[vertex].GetName());
@@ -771,7 +756,7 @@ int ComparePlugins(const PluginSortingData& plugin1,
   }
 }
 
-void PluginSorter::AddTieBreakEdges() {
+void PluginGraph::AddTieBreakEdges() {
   // In order for the sort to be performed stably, there must be only one
   // possible result. This can be enforced by adding edges between all vertices
   // that aren't already linked. Use existing load order to decide the direction

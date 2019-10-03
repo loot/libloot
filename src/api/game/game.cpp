@@ -26,13 +26,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <thread>
 
 #include <boost/algorithm/string.hpp>
 
 #include "api/api_database.h"
 #include "api/helpers/logging.h"
-#include "api/sorting/plugin_sorter.h"
+#include "api/sorting/plugin_sort.h"
 #include "loot/exception/file_access_error.h"
 
 #ifdef _WIN32
@@ -220,8 +221,7 @@ std::vector<std::string> Game::SortPlugins(
   LoadPlugins(plugins, false);
 
   // Sort plugins into their load order.
-  PluginSorter sorter;
-  return sorter.Sort(*this);
+  return loot::SortPlugins(*this);
 }
 
 void Game::LoadCurrentLoadOrderState() {

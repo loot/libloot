@@ -3,7 +3,7 @@
     A load order optimisation tool for Oblivion, Skyrim, Fallout 3 and
     Fallout: New Vegas.
 
-    Copyright (C) 2018    WrinklyNinja
+    Copyright (C) 2012-2016    WrinklyNinja
 
     This file is part of LOOT.
 
@@ -22,27 +22,16 @@
     <https://www.gnu.org/licenses/>.
     */
 
-#ifndef LOOT_API_SORTING_GROUP_SORT
-#define LOOT_API_SORTING_GROUP_SORT
+#ifndef LOOT_API_SORTING_PLUGIN_SORT
+#define LOOT_API_SORTING_PLUGIN_SORT
 
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
-#include "loot/vertex.h"
-#include "loot/metadata/group.h"
+#include "api/game/game.h"
 
 namespace loot {
-// Map entries are a group name and names of transitive load after groups.
-std::unordered_map<std::string, std::unordered_set<std::string>>
-GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
-                         const std::unordered_set<Group>& userGroups);
-
-std::vector<Vertex> GetGroupsPath(
-    const std::unordered_set<Group>& masterlistGroups,
-    const std::unordered_set<Group>& userGroups,
-    const std::string& fromGroupName,
-    const std::string& toGroupName);
+std::vector<std::string> SortPlugins(Game& game);
 }
+
 #endif

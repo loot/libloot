@@ -21,31 +21,40 @@
     along with LOOT.  If not, see
     <https://www.gnu.org/licenses/>.
     */
-#include "loot/exception/cyclic_interaction_error.h"
 
+#include "plugin_sort.h"
+
+#include "api/helpers/logging.h"
 #include "api/sorting/plugin_graph.h"
 
 namespace loot {
-// A.esp --[Master Flag]-> B.esp --Group->
-std::string describeCycle(const std::vector<Vertex>& cycle) {
-  std::string text;
-  for (const auto& vertex : cycle) {
-    text += vertex.GetName();
-    if (vertex.GetTypeOfEdgeToNextVertex().has_value()) {
-      text += " --[" + describeEdgeType(vertex.GetTypeOfEdgeToNextVertex().value()) +
-              "]-> ";
+std::vector<std::string> SortPlugins(Game& game) {
+  PluginGraph graph;
+
+  graph.AddPluginVertices(game);
+
+  // If there aren't any vertices, exit early, because sorting assumes
+  // there is at least one plugin.
+  if (graph.CountVertices() == 0)
+    return std::vector<std::string>();
+
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("Current load order: ");
+    for (const auto& plugin : game.GetLoadOrder()) {
+      logger->info("\t\t{}", plugin);
     }
   }
-  if (!cycle.empty()) {
-    text += cycle[0].GetName();
-  }
 
-  return text;
+  // Now add the interactions between plugins to the graph as edges.
+  graph.AddSpecificEdges();
+  graph.AddHardcodedPluginEdges(game);
+  graph.AddGroupEdges(game.GetDatabase()->GetGroups());
+  graph.AddOverlapEdges();
+  graph.AddTieBreakEdges();
+
+  graph.CheckForCycles();
+
+  return graph.TopologicalSort();
 }
-
-CyclicInteractionError::CyclicInteractionError(std::vector<Vertex> cycle) :
-    std::runtime_error("Cyclic interaction detected: " + describeCycle(cycle)),
-    cycle_(cycle) {}
-
-std::vector<Vertex> CyclicInteractionError::GetCycle() { return cycle_; }
 }
