@@ -16,6 +16,7 @@ addons:
       - language-pack-tr
       - gcc-8
       - g++-8
+      - python3-pip
 
 cache:
   cargo: true
@@ -25,9 +26,7 @@ install:
   # Get Boost.
   - curl -fsSL 'https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.bz2' | tar -xj -C "$HOME"
   # Install packages for generating documentation
-  - pyenv install 3.6.3
-  - pyenv global 3.6.3
-  - pip install --user -r docs/requirements.txt
+  - pip3 install --user -r docs/requirements.txt
   # Add sphinx-build to PATH
   - export PATH="$HOME/.local/bin:$PATH"
   # Install cbindgen for generating C++ headers for Rust dependencies.
