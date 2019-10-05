@@ -31,11 +31,8 @@ install:
   # Add sphinx-build to PATH
   - export PATH="$HOME/.local/bin:$PATH"
   # Install cbindgen for generating C++ headers for Rust dependencies.
-  - |
-    if [[ "$(cbindgen --version)" != *0.9.0 ]]
-    then
-      cargo install cbindgen --version 0.9.0 --force
-    fi
+  - wget -P "$HOME/.local/bin" https://github.com/eqrion/cbindgen/releases/download/v0.9.1/cbindgen
+  - chmod +x "$HOME/.local/bin/cbindgen"
 
 before_script:
   - mkdir build
