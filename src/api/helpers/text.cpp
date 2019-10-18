@@ -65,8 +65,9 @@ const std::vector<regex> versionRegexes({
           regex::ECMAScript | regex::icase),
     regex(
         /* The string below matches a number containing one or more digits
-           found at the start of the search string or preceded by 'v'. */
-        R"((?:^|v)(\d+))",
+           found at the start of the search string or preceded by 'v' or
+           'version:. */
+        R"((?:^|v|version:\s*)(\d+))",
         regex::ECMAScript | regex::icase),
 });
 

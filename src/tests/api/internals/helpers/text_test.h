@@ -47,22 +47,22 @@ Requires Skyrim Special Edition 1.5.39 or greater.
   auto tags = ExtractBashTags(description);
 
   std::set<Tag> expectedTags({
-    Tag("C.Climate"),
-    Tag("C.Encounter"),
-    Tag("C.ImageSpace"),
-    Tag("C.Light"),
-    Tag("C.Location"),
-    Tag("C.Music"),
-    Tag("C.Name"),
-    Tag("C.Owner"),
-    Tag("C.Water"),
-    Tag("Delev"),
-    Tag("Graphics"),
-    Tag("Invent"),
-    Tag("Names"),
-    Tag("Relev"),
-    Tag("Sound"),
-    Tag("Stats"),
+      Tag("C.Climate"),
+      Tag("C.Encounter"),
+      Tag("C.ImageSpace"),
+      Tag("C.Light"),
+      Tag("C.Location"),
+      Tag("C.Music"),
+      Tag("C.Name"),
+      Tag("C.Owner"),
+      Tag("C.Water"),
+      Tag("Delev"),
+      Tag("Graphics"),
+      Tag("Invent"),
+      Tag("Names"),
+      Tag("Relev"),
+      Tag("Sound"),
+      Tag("Stats"),
   });
 
   EXPECT_EQ(expectedTags, tags);
@@ -81,7 +81,8 @@ TEST(ExtractVersion, shouldExtractAVersionContainingMultipleNumbers) {
 }
 
 TEST(ExtractVersion, shouldExtractASemanticVersion) {
-  EXPECT_EQ("1.0.0-x.7.z.92", ExtractVersion("1.0.0-x.7.z.92+exp.sha.5114f85").value());
+  EXPECT_EQ("1.0.0-x.7.z.92",
+            ExtractVersion("1.0.0-x.7.z.92+exp.sha.5114f85").value());
 }
 
 TEST(ExtractVersion,
@@ -94,14 +95,16 @@ TEST(ExtractVersion, shouldExtractAVersionSubstring) {
 }
 
 TEST(ExtractVersion, shouldBeEmptyIfInputStringContainedNoVersion) {
-  EXPECT_FALSE(ExtractVersion("The quick brown fox jumped over the lazy dog.").has_value());
+  EXPECT_FALSE(ExtractVersion("The quick brown fox jumped over the lazy dog.")
+                   .has_value());
 }
 
 TEST(ExtractVersion, shouldExtractTimestampWithForwardslashDateSeparators) {
   // Found in a Bashed Patch. Though the timestamp isn't useful to
   // LOOT, it is semantically a ExtractVersion, and extracting it is far
   // easier than trying to skip it and the number of records changed.
-  auto text = ExtractVersion("Updated: 10/09/2016 13:15:18\r\n\r\nRecords Changed: 43");
+  auto text =
+      ExtractVersion("Updated: 10/09/2016 13:15:18\r\n\r\nRecords Changed: 43");
   EXPECT_EQ("10/09/2016 13:15:18", text.value());
 }
 
@@ -110,19 +113,25 @@ TEST(ExtractVersion, shouldNotExtractTrailingPeriods) {
   EXPECT_EQ("0.2", ExtractVersion("Version 0.2.").value());
 }
 
-TEST(ExtractVersion, shouldExtractVersionAfterTextWhenPrecededByVersionColonString) {
+TEST(ExtractVersion,
+     shouldExtractVersionAfterTextWhenPrecededByVersionColonString) {
   // Found in <http://www.nexusmods.com/skyrim/mods/71214/>.
-  EXPECT_EQ("3.0.0", ExtractVersion("Legendary Edition\r\n\r\nVersion: 3.0.0").value());
+  EXPECT_EQ("3.0.0",
+            ExtractVersion("Legendary Edition\r\n\r\nVersion: 3.0.0").value());
 }
 
 TEST(ExtractVersion, shouldIgnoreNumbersContainingCommas) {
   // Found in <http://www.nexusmods.com/oblivion/mods/5296/>.
-  EXPECT_EQ("3.5.3", ExtractVersion("fixing over 2,300 bugs so far! Version: 3.5.3").value());
+  EXPECT_EQ(
+      "3.5.3",
+      ExtractVersion("fixing over 2,300 bugs so far! Version: 3.5.3").value());
 }
 
 TEST(ExtractVersion, shouldExtractVersionBeforeText) {
   // Found in <http://www.nexusmods.com/fallout3/mods/19122/>.
-  EXPECT_EQ("2.1", ExtractVersion("Version: 2.1 The Unofficial Fallout 3 Patch").value());
+  EXPECT_EQ(
+      "2.1",
+      ExtractVersion("Version: 2.1 The Unofficial Fallout 3 Patch").value());
 }
 
 TEST(ExtractVersion, shouldExtractVersionWithPrecedingV) {
@@ -138,8 +147,8 @@ TEST(ExtractVersion, shouldExtractVersionWithPrecedingColonPeriodWhitespace) {
 TEST(ExtractVersion, shouldExtractVersionWithLettersImmediatelyAfterNumbers) {
   // Found in <http://www.nexusmods.com/skyrim/mods/19>.
   auto text = ExtractVersion(
-    "comprehensive bugfixing mod for The Elder Scrolls V: "
-    "Skyrim\r\n\r\nVersion: 2.1.3b\r\n\r\n");
+      "comprehensive bugfixing mod for The Elder Scrolls V: "
+      "Skyrim\r\n\r\nVersion: 2.1.3b\r\n\r\n");
   EXPECT_EQ("2.1.3b", text.value());
 }
 
@@ -175,6 +184,11 @@ TEST(ExtractVersion, shouldPreferVersionPrefixedNumbersOverVPrefixedNumber) {
       "Compatibility patch for AOS v2.5 and True Storms v1.5 (or "
       "later),\nPatch Version: 1.0");
   EXPECT_EQ("1.0", text.value());
+}
+
+TEST(ExtractVersion, shouldExtractSingleDigitAfterVersionColonSpace) {
+  // Found in <https://www.nexusmods.com/oblivion/mods/14720>
+  EXPECT_EQ("2", ExtractVersion("Version: 2 {{BASH:C.Water}}").value());
 }
 
 // MSVC interprets source files in the default code page, so
