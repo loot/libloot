@@ -27,6 +27,7 @@
 
 #include <filesystem>
 #include <list>
+#include <vector>
 #include <string>
 #include <unordered_set>
 
