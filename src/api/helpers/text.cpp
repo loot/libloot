@@ -35,6 +35,7 @@
 #endif
 
 using std::regex;
+using icu::UnicodeString;
 
 namespace loot {
 /* The string below matches timestamps that use forwardslashes for date
