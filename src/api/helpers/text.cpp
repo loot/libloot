@@ -32,10 +32,10 @@
 #else
 #include <unicode/uchar.h>
 #include <unicode/unistr.h>
+using icu::UnicodeString;
 #endif
 
 using std::regex;
-using icu::UnicodeString;
 
 namespace loot {
 /* The string below matches timestamps that use forwardslashes for date
