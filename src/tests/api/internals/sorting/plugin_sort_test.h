@@ -132,7 +132,7 @@ INSTANTIATE_TEST_CASE_P(,
                                           GameType::fo4));
 
 TEST_P(PluginSortTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
 
   EXPECT_TRUE(sorted.empty());
 }
@@ -145,7 +145,7 @@ TEST_P(PluginSortTest,
 
   // Check stability by running the sort 100 times.
   for (int i = 0; i < 100; i++) {
-    std::vector<std::string> sorted = SortPlugins(game_);
+    std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
     ASSERT_EQ(expectedSortedOrder, sorted) << " for sort " << i;
   }
 }
@@ -182,7 +182,7 @@ TEST_P(PluginSortTest, sortingShouldResolveGroupsAsTransitiveLoadAfterSets) {
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
   }
 
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -193,7 +193,7 @@ TEST_P(PluginSortTest, sortingShouldThrowIfAPluginHasAGroupThatDoesNotExist) {
   plugin.SetGroup("group1");
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
-  EXPECT_THROW(SortPlugins(game_), UndefinedGroupError);
+  EXPECT_THROW(SortPlugins(game_, game_.GetLoadOrder()), UndefinedGroupError);
 }
 
 TEST_P(PluginSortTest,
@@ -225,7 +225,7 @@ TEST_P(PluginSortTest,
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 3, blankEsl);
   }
 
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -269,7 +269,7 @@ TEST_P(
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
   }
 
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -309,7 +309,7 @@ TEST_P(
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 3, masterFile);
   }
 
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -334,7 +334,7 @@ TEST_P(
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   try {
-    SortPlugins(game_);
+    SortPlugins(game_, game_.GetLoadOrder());
     FAIL();
   } catch (CyclicInteractionError &e) {
     ASSERT_EQ(3, e.GetCycle().size());
@@ -348,8 +348,9 @@ TEST_P(
   }
 }
 
-TEST_P(PluginSortTest,
-       sortingShouldNotIgnoreIntermediatePluginsInAMultiGroupCycleIfTheEarlierPluginIsNotAMasterAndTheLaterIs) {
+TEST_P(
+    PluginSortTest,
+    sortingShouldNotIgnoreIntermediatePluginsInAMultiGroupCycleIfTheEarlierPluginIsNotAMasterAndTheLaterIs) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
@@ -383,7 +384,7 @@ TEST_P(PluginSortTest,
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 1, masterFile);
   }
 
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -421,7 +422,7 @@ TEST_P(
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 2, blankEsl);
   }
 
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -453,7 +454,7 @@ TEST_P(PluginSortTest,
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
   }
 
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -485,7 +486,7 @@ TEST_P(PluginSortTest,
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
   }
 
-  std::vector<std::string> sorted = SortPlugins(game_);
+  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -516,7 +517,8 @@ TEST_P(PluginSortTest,
       blankDifferentPluginDependentEsp,
   });
 
-  std::vector<std::string> sorted = SortPlugins(newGame);
+  std::vector<std::string> sorted =
+      SortPlugins(newGame, newGame.GetLoadOrder());
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
@@ -526,7 +528,8 @@ TEST_P(PluginSortTest, sortingShouldThrowIfACyclicInteractionIsEncountered) {
   plugin.SetLoadAfterFiles({File(blankMasterDependentEsm)});
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
-  EXPECT_THROW(SortPlugins(game_), CyclicInteractionError);
+  EXPECT_THROW(SortPlugins(game_, game_.GetLoadOrder()),
+               CyclicInteractionError);
 }
 }
 }

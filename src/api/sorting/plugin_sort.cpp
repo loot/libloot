@@ -28,10 +28,12 @@
 #include "api/sorting/plugin_graph.h"
 
 namespace loot {
-std::vector<std::string> SortPlugins(Game& game) {
+std::vector<std::string> SortPlugins(
+    Game& game,
+    const std::vector<std::string>& loadOrder) {
   PluginGraph graph;
 
-  graph.AddPluginVertices(game);
+  graph.AddPluginVertices(game, loadOrder);
 
   // If there aren't any vertices, exit early, because sorting assumes
   // there is at least one plugin.
@@ -41,7 +43,7 @@ std::vector<std::string> SortPlugins(Game& game) {
   auto logger = getLogger();
   if (logger) {
     logger->info("Current load order: ");
-    for (const auto& plugin : game.GetLoadOrder()) {
+    for (const auto& plugin : loadOrder) {
       logger->info("\t\t{}", plugin);
     }
   }

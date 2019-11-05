@@ -83,7 +83,7 @@ public:
   size_t CountVertices() const;
   void CheckForCycles() const;
   
-  void AddPluginVertices(Game& game);
+  void AddPluginVertices(Game& game, const std::vector<std::string>& loadOrder);
   void AddSpecificEdges();
   void AddHardcodedPluginEdges(Game& game);
   void AddGroupEdges(const std::unordered_set<Group>& groups);

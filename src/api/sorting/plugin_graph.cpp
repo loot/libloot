@@ -126,7 +126,9 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
   std::map<vertex_t, size_t> indexMap;
   auto vertexIndexMap = vertex_map_t(indexMap);
   size_t i = 0;
-  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) { put(vertexIndexMap, v, i++); }
+  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
+    put(vertexIndexMap, v, i++);
+  }
 
   list<vertex_t> sortedVertices;
   auto logger = getLogger();
@@ -167,7 +169,8 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
   return plugins;
 }
 
-void PluginGraph::AddPluginVertices(Game& game) {
+void PluginGraph::AddPluginVertices(Game& game,
+                                    const std::vector<std::string>& loadOrder) {
   // The resolution of tie-breaks in the plugin graph may be dependent
   // on the order in which vertices are iterated over, as an earlier tie
   // break resolution may cause a potential later tie break to instead
@@ -190,8 +193,6 @@ void PluginGraph::AddPluginVertices(Game& game) {
   // in the unordered map, as it's probably faster than copying the
   // full plugin objects then sorting them.
   std::map<std::string, std::vector<std::string>> groupPlugins;
-
-  auto loadOrder = game.GetLoadOrder();
 
   auto loadedPlugins = game.GetCache()->GetPlugins();
   for (const auto& plugin : loadedPlugins) {
@@ -282,14 +283,16 @@ void PluginGraph::CheckForCycles() const {
   std::map<vertex_t, size_t> indexMap;
   auto vertexIndexMap = vertex_map_t(indexMap);
   size_t i = 0;
-  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) { put(vertexIndexMap, v, i++); }
+  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
+    put(vertexIndexMap, v, i++);
+  }
 
   boost::depth_first_search(
       graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap));
 }
 
 bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
-                                    const vertex_t& toVertex) {
+                                   const vertex_t& toVertex) {
   if (pathsCache_.count(GraphPath(toVertex, fromVertex)) != 0) {
     return true;
   }
@@ -346,8 +349,8 @@ bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
 }
 
 void PluginGraph::AddEdge(const vertex_t& fromVertex,
-                           const vertex_t& toVertex,
-                           EdgeType edgeType) {
+                          const vertex_t& toVertex,
+                          EdgeType edgeType) {
   auto graphPath = GraphPath(fromVertex, toVertex);
 
   if (pathsCache_.count(graphPath) != 0) {
@@ -357,9 +360,9 @@ void PluginGraph::AddEdge(const vertex_t& fromVertex,
   auto logger = getLogger();
   if (logger) {
     logger->trace("Adding {} edge from \"{}\" to \"{}\".",
-                   describeEdgeType(edgeType),
-                   graph_[fromVertex].GetName(),
-                   graph_[toVertex].GetName());
+                  describeEdgeType(edgeType),
+                  graph_[fromVertex].GetName(),
+                  graph_[toVertex].GetName());
   }
 
   boost::add_edge(fromVertex, toVertex, edgeType, graph_);

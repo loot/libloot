@@ -118,7 +118,8 @@ public:
    *           applied to the load order used by the game. This function does
    *           not load or evaluate the masterlist or userlist.
    *  @param plugins
-   *         A vector of filenames of the plugins to sort.
+   *         A vector of filenames of the plugins to sort, in their current
+   *         load order.
    *  @returns A vector of the given plugin filenames in their sorted load
    *           order.
    */

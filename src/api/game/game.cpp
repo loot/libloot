@@ -221,7 +221,7 @@ std::vector<std::string> Game::SortPlugins(
   LoadPlugins(plugins, false);
 
   // Sort plugins into their load order.
-  return loot::SortPlugins(*this);
+  return loot::SortPlugins(*this, plugins);
 }
 
 void Game::LoadCurrentLoadOrderState() {
