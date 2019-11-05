@@ -2,6 +2,51 @@
 Version History
 ***************
 
+0.15.0 - 2019-11-05
+===================
+
+Changed
+-------
+
+- libloot now supports v0.15 of the metadata syntax.
+- The order of the plugins passed to :cpp:any:`SortPlugins` is now used
+  as the current load order during sorting. The order of plugins passed in did
+  not previously have any impact.
+- Constructors for the following classes and structs are now ``explicit``:
+
+  - :cpp:any:`loot::ConditionalMetadata`
+  - :cpp:any:`loot::File`
+  - :cpp:any:`loot::Group`
+  - :cpp:any:`loot::Location`
+  - :cpp:any:`loot::Message`
+  - :cpp:any:`loot::MessageContent`
+  - :cpp:any:`loot::PluginCleaningData`
+  - :cpp:any:`loot::PluginMetadata`
+  - :cpp:any:`loot::Tag`
+  - :cpp:any:`loot::MasterlistInfo`
+  - :cpp:any:`loot::Vertex`
+
+- Updated loot-condition-interpreter to v2.1.0.
+- Updated spdlog to v1.4.2.
+
+Removed
+-------
+
+- ``InitialiseLocale()``
+- ``PluginMetadata::GetLowercasedName()``
+- ``PluginMetadata::GetNormalizedName()``
+
+Fixed
+-----
+
+- libloot was unable to extract versions from plugin descriptions containing
+  ``version:`` followed by whitespace and one or more digits.
+- libloot did not error if masterlist metadata defined a group that loaded after
+  another group that was not defined in the masterlist, but which was defined in
+  user metadata. This was unintentional, and now all groups mentioned in
+  masterlist metadata must now be defined in the masterlist.
+- Build errors on Linux using GCC 9 and ICU 61+.
+
 0.14.10 - 2019-09-06
 ====================
 

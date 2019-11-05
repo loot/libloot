@@ -93,6 +93,10 @@ There are several conditions that can be tested for using the functions detailed
 
   Returns true if more than one active plugin matching ``regex`` is found, and false otherwise.
 
+.. describe:: is_master(file_path path)
+
+  Returns true if ``path`` is an installed master plugin, and false otherwise.
+
 .. describe:: checksum(file_path path, checksum expected_checksum)
 
   Returns true if the calculated CRC-32 checksum of ``path`` matches ``expected_checksum``, and false otherwise. Returns false if ``path`` does not exist.

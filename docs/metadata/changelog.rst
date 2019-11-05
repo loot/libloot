@@ -4,6 +4,15 @@ Version History
 
 The version history of the metadata syntax is given below.
 
+0.15 - 2019-11-05
+=================
+
+Added
+-----
+
+- The condition function ``is_master(file_path path)``, which checks if the
+  given file is an installed master plugin.
+
 0.14 - 2018-12-09
 =================
 
