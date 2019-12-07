@@ -2,6 +2,19 @@
 Version History
 ***************
 
+0.15.1 - 2019-12-07
+===================
+
+Changed
+-------
+
+- The range of FormIDs that are recognised as valid in light masters has been
+  extended for Fallout 4 plugins, from between 0x800 and 0xFFF inclusive to
+  between 0x001 and 0xFFF inclusive, to reflect the extended range supported by
+  Fallout 4 v1.10.162.0.0. The valid range for Skyrim Special Edition plugins is
+  unchanged. Via esplugin.
+- Updated esplugin to v3.3.0.
+
 0.15.0 - 2019-11-05
 ===================
 
@@ -63,6 +76,7 @@ Changed
   installed. If a plugin's masters are missing, the plugin's total record count
   will be used as if it was the plugin's override record count to ensure that
   sorting can still proceed, albeit with potentially reduced accuracy.
+- Updated esplugin to v3.2.0.
 - Updated libgit2 to v0.28.3.
 
 0.14.9 - 2019-07-23
