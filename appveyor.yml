@@ -22,7 +22,7 @@ cache:
   - C:\Users\appveyor\.cargo\bin\cbindgen.exe
 
 install:
-  - curl -sSf -o rustup-init.exe https://win.rustup.rs
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs/x86_64
   - rustup-init.exe -y
   - rustup target add i686-pc-windows-msvc
   - ps: |
