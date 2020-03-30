@@ -140,7 +140,8 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(plugin1.IsEnabled());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedGroupIfItIsExplicit) {
+TEST_P(PluginMetadataTest,
+  mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothExplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -148,10 +149,22 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldUseMergedGroupIfItIsExplicit) {
   plugin2.SetGroup("group2");
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ("group2", plugin1.GetGroup());
+  EXPECT_EQ("group1", plugin1.GetGroup());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseMergedGroupIfItIsImplicit) {
+TEST_P(PluginMetadataTest,
+       mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothImplicit) {
+  PluginMetadata plugin1;
+  PluginMetadata plugin2;
+
+  plugin1.MergeMetadata(plugin2);
+
+  EXPECT_FALSE(plugin1.GetGroup().has_value());
+}
+
+TEST_P(
+    PluginMetadataTest,
+    mergeMetadataShouldNotUseMergedGroupIfItIsImplicitAndCurrentGroupIsExplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -159,6 +172,18 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldNotUseMergedGroupIfItIsImplicit) {
   plugin1.MergeMetadata(plugin2);
 
   EXPECT_EQ("group1", plugin1.GetGroup());
+}
+
+TEST_P(
+    PluginMetadataTest,
+    mergeMetadataShouldUseMergedGroupIfItIsExplicitAndCurrentGroupIsImplicit) {
+  PluginMetadata plugin1;
+  PluginMetadata plugin2;
+
+  plugin2.SetGroup("group2");
+  plugin1.MergeMetadata(plugin2);
+
+  EXPECT_EQ("group2", plugin1.GetGroup());
 }
 
 TEST_P(PluginMetadataTest, mergeMetadataShouldMergeLoadAfterData) {

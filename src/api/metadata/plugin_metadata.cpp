@@ -59,7 +59,7 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   // but if the 'group' value is not explicit, ignore it.
   enabled_ = plugin.IsEnabled();
 
-  if (plugin.GetGroup()) {
+  if (!group_.has_value() && plugin.GetGroup()) {
     group_ = plugin.GetGroup();
   }
 
