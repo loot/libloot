@@ -212,14 +212,15 @@ std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(const std::string& 
 
   if (includeUserMetadata) {
     auto userMetadata = userlist_.FindPlugin(plugin);
-    if (metadata && userMetadata) {
-      metadata.value().MergeMetadata(userMetadata.value());
-    } else if (userMetadata) {
+    if (userMetadata.has_value()) {
+      if (metadata.has_value()) {
+        userMetadata.value().MergeMetadata(metadata.value());
+      }
       metadata = userMetadata;
     }
   }
 
-  if (evaluateConditions && metadata) {
+  if (evaluateConditions && metadata.has_value()) {
     return conditionEvaluator_->EvaluateAll(metadata.value());
   }
 
