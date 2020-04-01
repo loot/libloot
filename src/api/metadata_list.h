@@ -60,7 +60,7 @@ public:
   void Save(const std::filesystem::path& filepath) const;
   void Clear();
 
-  std::list<PluginMetadata> Plugins() const;
+  std::vector<PluginMetadata> Plugins() const;
   std::vector<Message> Messages() const;
   std::set<std::string> BashTags() const;
   std::unordered_set<Group> Groups() const;
@@ -84,11 +84,11 @@ protected:
   std::unordered_set<Group> groups_;
   std::set<std::string> bashTags_;
   std::unordered_set<PluginMetadata> plugins_;
-  std::list<PluginMetadata> regexPlugins_;
+  std::vector<PluginMetadata> regexPlugins_;
   std::vector<Message> messages_;
 
   std::unordered_set<PluginMetadata> unevaluatedPlugins_;
-  std::list<PluginMetadata> unevaluatedRegexPlugins_;
+  std::vector<PluginMetadata> unevaluatedRegexPlugins_;
   std::vector<Message> unevaluatedMessages_;
 };
 }

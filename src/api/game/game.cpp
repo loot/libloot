@@ -49,7 +49,6 @@
 #include "windows.h"
 #endif
 
-using std::list;
 using std::string;
 using std::thread;
 using std::vector;

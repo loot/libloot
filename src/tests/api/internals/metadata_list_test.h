@@ -97,7 +97,7 @@ TEST_P(MetadataListTest, loadShouldLoadPluginMetadata) {
   // Non-regex plugins can be outputted in any order, and regex entries can
   // match each other, so convert the list to a set of strings for
   // comparison.
-  std::list<PluginMetadata> result(metadataList.Plugins());
+  std::vector<PluginMetadata> result(metadataList.Plugins());
   std::set<std::string> names;
   std::transform(
       begin(result),
@@ -232,7 +232,7 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   // Non-regex plugins can be outputted in any order, and regex entries can
   // match each other, so convert the list to a set of strings for
   // comparison.
-  std::list<PluginMetadata> result(metadataList.Plugins());
+  std::vector<PluginMetadata> result(metadataList.Plugins());
   std::set<std::string> names;
   std::transform(
       begin(result),

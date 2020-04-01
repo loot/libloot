@@ -100,7 +100,7 @@ void MetadataList::Save(const std::filesystem::path& filepath) const {
     emitter << YAML::Key << "globals" << YAML::Value << messages_;
 
   auto plugins = Plugins();
-  plugins.sort([](const PluginMetadata& p1, const PluginMetadata& p2) {
+  std::sort(plugins.begin(), plugins.end(), [](const PluginMetadata& p1, const PluginMetadata& p2) {
     return CompareFilenames(p1.GetName(), p2.GetName()) < 0;
   });
 
@@ -124,13 +124,13 @@ void MetadataList::Clear() {
   messages_.clear();
 }
 
-std::list<PluginMetadata> MetadataList::Plugins() const {
-  std::list<PluginMetadata> pluginList(plugins_.begin(), plugins_.end());
+std::vector<PluginMetadata> MetadataList::Plugins() const {
+  std::vector<PluginMetadata> plugins;
+  plugins.reserve(plugins_.size() + regexPlugins_.size());
+  plugins.insert(plugins.end(), plugins_.begin(), plugins_.end());
+  plugins.insert(plugins.end(), regexPlugins_.begin(), regexPlugins_.end());
 
-  pluginList.insert(
-      pluginList.end(), regexPlugins_.begin(), regexPlugins_.end());
-
-  return pluginList;
+  return plugins;
 }
 
 std::vector<Message> MetadataList::Messages() const { return messages_; }

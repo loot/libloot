@@ -40,7 +40,6 @@
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/undefined_group_error.h"
 
-using std::list;
 using std::string;
 using std::vector;
 
@@ -130,7 +129,7 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
     put(vertexIndexMap, v, i++);
   }
 
-  list<vertex_t> sortedVertices;
+  std::list<vertex_t> sortedVertices;
   auto logger = getLogger();
   if (logger) {
     logger->trace("Performing topological sort on plugin graph...");
