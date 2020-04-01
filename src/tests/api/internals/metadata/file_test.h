@@ -49,30 +49,103 @@ TEST(File, stringsConstructorShouldStoreGivenStrings) {
   EXPECT_EQ("condition", file.GetCondition());
 }
 
-TEST(File, filesWithCaseInsensitiveEqualNameStringsShouldBeEqual) {
-  File file1("name", "display1", "condition1");
-  File file2("Name", "display2", "condition2");
+TEST(
+    File,
+    equalityShouldBeCaseInsensitiveOnNameAndDisplay) {
+  File file1("name", "display", "condition");
+  File file2("name", "display", "condition");
 
   EXPECT_TRUE(file1 == file2);
-}
 
-TEST(File, filesWithDifferentNamesShouldBeUnequal) {
-  File file1("name1");
-  File file2("name2");
+  file1 = File("name", "display", "condition");
+  file2 = File("Name", "display", "condition");
+
+  EXPECT_TRUE(file1 == file2);
+
+  file1 = File("name1", "display", "condition");
+  file2 = File("name2", "display", "condition");
 
   EXPECT_FALSE(file1 == file2);
 }
 
-TEST(File,
-     lessThanOperatorShouldUseCaseInsensitiveLexicographicalNameComparison) {
-  File file1("name", "display1", "condition1");
-  File file2("Name", "display2", "condition2");
+TEST(File, equalityShouldBeCaseSensitiveOnDisplayAndCondition) {
+  File file1("name", "display", "condition");
+  File file2("name", "display", "condition");
+
+  EXPECT_TRUE(file1 == file2);
+
+  file1 = File("name", "display", "condition");
+  file2 = File("name", "Display", "condition");
+
+  EXPECT_FALSE(file1 == file2);
+
+  file1 = File("name", "display", "condition");
+  file2 = File("name", "display", "Condition");
+
+  EXPECT_FALSE(file1 == file2);
+
+  file1 = File("name", "display1", "condition");
+  file2 = File("name", "display2", "condition");
+
+  EXPECT_FALSE(file1 == file2);
+
+  file1 = File("name", "display", "condition1");
+  file2 = File("name", "display", "condition2");
+
+  EXPECT_FALSE(file1 == file2);
+}
+
+TEST(
+    File,
+    lessThanOperatorShouldUseCaseInsensitiveLexicographicalComparisonForName) {
+  File file1("name", "display", "condition");
+  File file2("name", "display", "condition");
+
+  EXPECT_FALSE(file1 < file2);
+  EXPECT_FALSE(file2 < file1);
+
+  file1 = File("name", "display", "condition");
+  file2 = File("Name", "display", "condition");
 
   EXPECT_FALSE(file1 < file2);
   EXPECT_FALSE(file2 < file1);
 
   file1 = File("name1");
   file2 = File("name2");
+
+  EXPECT_TRUE(file1 < file2);
+  EXPECT_FALSE(file2 < file1);
+}
+
+TEST(
+    File,
+    lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForDisplayAndCondition) {
+  File file1("name", "display", "condition");
+  File file2("name", "display", "condition");
+
+  EXPECT_FALSE(file1 < file2);
+  EXPECT_FALSE(file2 < file1);
+
+  file1 = File("name", "display", "condition");
+  file2 = File("name", "Display", "condition");
+
+  EXPECT_TRUE(file2 < file1);
+  EXPECT_FALSE(file1 < file2);
+
+  file1 = File("name", "display", "condition");
+  file2 = File("name", "display", "Condition");
+
+  EXPECT_TRUE(file2 < file1);
+  EXPECT_FALSE(file1 < file2);
+
+  file1 = File("name", "display1");
+  file2 = File("name", "display2");
+
+  EXPECT_TRUE(file1 < file2);
+  EXPECT_FALSE(file2 < file1);
+
+  file1 = File("name", "display", "condition1");
+  file2 = File("name", "display", "condition2");
 
   EXPECT_TRUE(file1 < file2);
   EXPECT_FALSE(file2 < file1);

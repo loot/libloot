@@ -47,29 +47,37 @@ TEST(Location, stringsConstructorShouldStoreGivenStrings) {
   EXPECT_EQ("example", location.GetName());
 }
 
-TEST(Location, locationsWithCaseSensitiveEqualUrlsShouldBeEqual) {
-  Location location1("http://www.example.com", "example1");
-  Location location2("http://www.example.com", "example2");
+TEST(Location, equalityShouldBeCaseSensitiveOnUrlAndName) {
+  Location location1("http://www.example.com", "example");
+  Location location2("http://www.example.com", "example");
 
   EXPECT_TRUE(location1 == location2);
 
-  location1 = Location("http://www.example.com");
-  location2 = Location("HTTP://WWW.EXAMPLE.COM");
+  location1 = Location("http://www.example.com", "example");
+  location2 = Location("HTTP://WWW.EXAMPLE.COM", "example");
 
   EXPECT_FALSE(location1 == location2);
-}
 
-TEST(Location, locationsWithDifferentUrlsShouldBeUnequal) {
-  Location location1("http://www.example1.com");
-  Location location2("http://www.example2.com");
+  location1 = Location("http://www.example.com", "example");
+  location2 = Location("http://www.example.com", "Example");
+
+  EXPECT_FALSE(location1 == location2);
+
+  location1 = Location("http://www.example1.com", "example");
+  location2 = Location("http://www.example2.com", "example");
+
+  EXPECT_FALSE(location1 == location2);
+
+  location1 = Location("http://www.example.com", "example1");
+  location2 = Location("http://www.example.com", "example2");
 
   EXPECT_FALSE(location1 == location2);
 }
 
 TEST(Location,
-     lessThanOperatorShouldUseCaseSensitiveLexicographicalUrlComparison) {
-  Location location1("http://www.example.com", "example1");
-  Location location2("http://www.example.com", "example2");
+     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForNameAndUrl) {
+  Location location1("http://www.example.com", "example");
+  Location location2("http://www.example.com", "example");
 
   EXPECT_FALSE(location1 < location2);
   EXPECT_FALSE(location2 < location1);
@@ -80,11 +88,23 @@ TEST(Location,
   EXPECT_FALSE(location1 < location2);
   EXPECT_TRUE(location2 < location1);
 
+  location1 = Location("http://www.example.com", "example");
+  location2 = Location("http://www.example.com", "Example");
+
+  EXPECT_FALSE(location1 < location2);
+  EXPECT_TRUE(location2 < location1);
+
   location1 = Location("http://www.example1.com");
   location2 = Location("http://www.example2.com");
 
   EXPECT_TRUE(location1 < location2);
   EXPECT_FALSE(location2 < location1);
+
+  location1 = Location("http://www.example.com", "example1");
+  location2 = Location("http://www.example.com", "example2");
+
+  EXPECT_FALSE(location2 < location1);
+  EXPECT_TRUE(location1 < location2);
 }
 
 TEST(Location, emittingAsYamlShouldOutputAScalarIfTheNameStringIsEmpty) {

@@ -42,7 +42,9 @@ This structure holds information on which versions of a plugin are dirty or clea
 Equality
 --------
 
-Two cleaning data structures are equal if the values of their ``crc`` keys are identical.
+Two plugin cleaning data structures are equal if all their fields are equal.
+`util` field equality is case-sensitive. If the `info` field is a string, it
+is treated as a localised content data structure.
 
 Examples
 --------

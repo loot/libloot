@@ -59,9 +59,11 @@ protected:
     ASSERT_FALSE(exists(missingMetadataPath));
   }
 
-  void copyInvalidMetadataFile(const std::filesystem::path& sourceDirectory, const std::string& file) {
+  void copyInvalidMetadataFile(const std::filesystem::path& sourceDirectory,
+                               const std::string& file) {
     std::filesystem::create_directories(metadataFilesPath / "invalid");
-    std::filesystem::copy(sourceDirectory / "invalid" / file, metadataFilesPath / "invalid" / file);
+    std::filesystem::copy(sourceDirectory / "invalid" / file,
+                          metadataFilesPath / "invalid" / file);
     ASSERT_TRUE(std::filesystem::exists(metadataFilesPath / "invalid" / file));
   }
 
@@ -147,13 +149,13 @@ TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
 
   std::ofstream out(metadataPath);
   out << "common:" << endl
-    << "  - &earlier" << endl
-    << "    name: earlier" << endl
-    << "    after:" << endl
-    << "      - earliest" << endl
-    << "groups:" << endl
-    << "  - name: default" << endl
-    << "    <<: *earlier" << endl;
+      << "  - &earlier" << endl
+      << "    name: earlier" << endl
+      << "    after:" << endl
+      << "      - earliest" << endl
+      << "groups:" << endl
+      << "  - name: default" << endl
+      << "    <<: *earlier" << endl;
 
   out.close();
 
@@ -165,8 +167,8 @@ TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
   EXPECT_EQ(1, groups.size());
 
   EXPECT_EQ(1, groups.count(Group("default")));
-  EXPECT_EQ(std::unordered_set<std::string>({ "earliest" }),
-    groups.find(Group("default"))->GetAfterGroups());
+  EXPECT_EQ(std::unordered_set<std::string>({"earliest"}),
+            groups.find(Group("default"))->GetAfterGroups());
 }
 
 TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
@@ -291,8 +293,7 @@ TEST_P(
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
-  PluginMetadata plugin =
-      metadataList.FindPlugin(blankDifferentEsp).value();
+  PluginMetadata plugin = metadataList.FindPlugin(blankDifferentEsp).value();
 
   EXPECT_EQ(blankDifferentEsp, plugin.GetName());
   EXPECT_EQ(std::set<File>({
@@ -328,8 +329,7 @@ TEST_P(MetadataListTest, addPluginShouldStoreGivenRegexPluginMetadata) {
   plugin.SetGroup("group1");
   metadataList.AddPlugin(plugin);
 
-  plugin =
-      metadataList.FindPlugin(blankPluginDependentEsp).value();
+  plugin = metadataList.FindPlugin(blankPluginDependentEsp).value();
 
   EXPECT_EQ("group1", plugin.GetGroup());
 }
@@ -363,8 +363,7 @@ TEST_P(
     MetadataListTest,
     evalAllConditionsShouldEvaluateTheConditionsForThePluginsStoredInTheMetadataList) {
   Game game(GetParam(), dataPath.parent_path(), localPath);
-  ConditionEvaluator evaluator(game.Type(),
-                               game.DataPath());
+  ConditionEvaluator evaluator(game.Type(), game.DataPath());
 
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
@@ -374,7 +373,8 @@ TEST_P(
       std::vector<Message>({
           Message(MessageType::warn, "This is a warning."),
           Message(MessageType::say,
-                  "This message should be removed when evaluating conditions."),
+                  "This message should be removed when evaluating conditions.",
+                  "active(\"Blank - Different.esm\")"),
       }),
       plugin.GetMessages());
 

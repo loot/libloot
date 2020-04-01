@@ -82,38 +82,93 @@ TEST_P(
                std::invalid_argument);
 }
 
-TEST_P(MessageTest, messagesWithDifferentContentStringsShouldBeUnequal) {
-  Message message1(MessageType::say, "content1", "condition1");
-  Message message2(MessageType::say, "content2", "condition1");
+TEST_P(MessageTest, equalityShouldRequireEqualMessageTypes) {
+  Message message1(MessageType::say, "content");
+  Message message2(MessageType::say, "content");
+
+  EXPECT_TRUE(message1 == message2);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::warn, "content");
 
   EXPECT_FALSE(message1 == message2);
 }
 
-TEST_P(MessageTest, messagesWithEqualContentStringsShouldBeEqual) {
-  Message message1(MessageType::say,
-                   MessageContents({MessageContent("content1")}),
-                   "condition1");
-  Message message2(MessageType::warn,
-                   MessageContents({MessageContent("content1", french)}),
-                   "condition2");
+TEST_P(MessageTest, equalityShouldRequireCaseSensitiveEqualityOnCondition) {
+  Message message1(MessageType::say, "content", "condition");
+  Message message2(MessageType::say, "content", "condition");
 
   EXPECT_TRUE(message1 == message2);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "Condition");
+
+  EXPECT_FALSE(message1 == message2);
+
+  message1 = Message(MessageType::say, "content", "condition1");
+  message2 = Message(MessageType::say, "content", "condition2");
+
+  EXPECT_FALSE(message1 == message2);
+}
+
+TEST_P(MessageTest, equalityShouldRequireEqualContent) {
+  Message message1(MessageType::say, "content");
+  Message message2(MessageType::say, "content");
+
+  EXPECT_TRUE(message1 == message2);
+
+  message1 = Message(MessageType::say, "content1");
+  message2 = Message(MessageType::say, "content2");
+
+  EXPECT_FALSE(message1 == message2);
+}
+
+TEST_P(MessageTest, lessThanOperatorShouldCompareMessageTypes) {
+  Message message1(MessageType::say, "content");
+  Message message2(MessageType::say, "content");
+
+  EXPECT_FALSE(message1 < message2);
+  EXPECT_FALSE(message2 < message1);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::warn, "content");
+
+  EXPECT_TRUE(message1 < message2);
+  EXPECT_FALSE(message2 < message1);
+}
+
+TEST_P(MessageTest, lessThanOperatorShouldCompareContent) {
+  Message message1(MessageType::say, "content");
+  Message message2(MessageType::say, "content");
+
+  EXPECT_FALSE(message1 < message2);
+  EXPECT_FALSE(message2 < message1);
+
+  message1 = Message(MessageType::say, "content1");
+  message2 = Message(MessageType::say, "content2");
+
+  EXPECT_TRUE(message1 < message2);
+  EXPECT_FALSE(message2 < message1);
 }
 
 TEST_P(
     MessageTest,
-    lessThanOperatorShouldUseCaseInsensitiveLexicographicalContentStringComparison) {
-  Message message1(MessageType::say,
-                   MessageContents({MessageContent("content1")}),
-                   "condition1");
-  Message message2(MessageType::warn,
-                   MessageContents({MessageContent("content1", french)}),
-                   "condition2");
+    lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForConditions) {
+  Message message1(MessageType::say, "content", "condition");
+  Message message2(MessageType::say, "content", "condition");
+
   EXPECT_FALSE(message1 < message2);
   EXPECT_FALSE(message2 < message1);
 
-  message1 = Message(MessageType::say, "content1", "condition1");
-  message2 = Message(MessageType::say, "content2", "condition1");
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "Condition");
+
+  EXPECT_TRUE(message2 < message1);
+  EXPECT_FALSE(message1 < message2);
+
+  message1 = Message(MessageType::say, "content", "condition1");
+  message2 = Message(MessageType::say, "content", "condition2");
+
   EXPECT_TRUE(message1 < message2);
   EXPECT_FALSE(message2 < message1);
 }

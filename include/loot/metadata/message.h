@@ -79,14 +79,14 @@ public:
   /**
    * A less-than operator implemented with no semantics so that Message objects
    * can be stored in sets.
-   * @returns Returns true if this Message's content is lexicographically less
-   *          than the given Message's content, and false otherwise.
+   * @returns Returns true if this Message is less than the given Message, and
+   *          false otherwise.
    */
   LOOT_API bool operator<(const Message& rhs) const;
 
   /**
-   * Check if two Message objects are equal by comparing their content.
-   * @returns True if the contents are equal, false otherwise.
+   * Check if two Message objects are equal by comparing their fields.
+   * @returns True if the objects' fields are equal, false otherwise.
    */
   LOOT_API bool operator==(const Message& rhs) const;
 

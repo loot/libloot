@@ -57,8 +57,11 @@ If a message's ``content`` value is a string, the message will use the string as
 Equality
 --------
 
-The equality of two message data structures is determined by comparing the values of their ``content`` keys. If a content key is a string, it is treated as a localised content list
-containing a single English-language string. The two message data structures are then equal if their localised content lists are identical.
+Two message data structures are equal if their `type`, `content` and `condition`
+fields are equal, after any `subs` values have been substituted into `content`
+strings. If the `content` field is a string, it is treated as a localised
+content list containing a single English-language string. String equality is
+case sensitive.
 
 Examples
 --------

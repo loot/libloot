@@ -27,3 +27,9 @@ The localised content data structure is a key-value string map.
   Spanish               es
   Swedish               sv
   ====================  =====
+
+Equality
+--------
+
+Two localised content data structures are equal if all their fields are equal.
+Field equality is case-sensitive.

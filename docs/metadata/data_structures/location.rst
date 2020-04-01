@@ -22,7 +22,8 @@ The scalar form is simply the value of the map form's ``link`` key. Using the sc
 Equality
 --------
 
-Two location data structures are equal if the values of their ``link`` keys are identical.
+Two location data structures are equal if all their fields are equal. Field
+equality is case-sensitive.
 
 Examples
 --------

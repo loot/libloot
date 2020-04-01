@@ -60,17 +60,13 @@ public:
   /**
    * A less-than operator implemented with no semantics so that Tag objects
    * can be stored in sets.
-   * @returns True if this Tag is suggested for addition and the other is not.
-   *          If both Tags are suggested for addition or both are suggested for
-   *          removal, returns true if this Tag's name is lexicographically less
-   *          than the given Tag's name, false otherwise.
+   * @returns True if this Tag is less than the given Tag, false otherwise.
    */
   LOOT_API bool operator<(const Tag& rhs) const;
 
   /**
    * Check if two Tag objects are equal.
-   * @returns True if both Tags are suggested for addition or both are suggested
-   *          for removal, and the Tag names are equal, false otherwise.
+   * @returns True if the objects' fields are equal, false otherwise.
    */
   LOOT_API bool operator==(const Tag& rhs) const;
 

@@ -37,15 +37,24 @@ Tag::Tag(const std::string& tag,
     ConditionalMetadata(condition) {}
 
 bool Tag::operator<(const Tag& rhs) const {
-  if (addTag_ != rhs.IsAddition())
-    return addTag_ && !rhs.IsAddition();
-  else
-    return GetName() < rhs.GetName();
+  if (addTag_ != rhs.addTag_) {
+    return addTag_ && !rhs.addTag_;
+  }
+  
+  if (name_ < rhs.name_) {
+    return true;
+  }
+
+  if (rhs.name_ < name_) {
+    return false;
+  }
+  
+  return GetCondition() < rhs.GetCondition();
 }
 
 bool Tag::operator==(const Tag& rhs) const {
-  return addTag_ == rhs.IsAddition() &&
-          GetName() == rhs.GetName();
+  return addTag_ == rhs.addTag_ && name_ == rhs.name_ &&
+         GetCondition() == rhs.GetCondition();
 }
 
 bool Tag::IsAddition() const { return addTag_; }

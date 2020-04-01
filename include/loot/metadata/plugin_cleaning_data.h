@@ -84,14 +84,15 @@ public:
   /**
    * A less-than operator implemented with no semantics so that
    * PluginCleaningData objects can be stored in sets.
-   * @returns True if this PluginCleaningData's CRC is less than the given
-   *          PluginCleaningData's CRC, false otherwise.
+   * @returns True if this PluginCleaningData is less than the given
+   *          PluginCleaningData, false otherwise.
    */
   LOOT_API bool operator<(const PluginCleaningData& rhs) const;
 
   /**
-   * Check if two PluginCleaningData objects are equal by comparing their CRCs.
-   * @returns True if the CRCs are equal, false otherwise.
+   * Check if two PluginCleaningData objects are equal by comparing their 
+   * fields.
+   * @returns True if the objects' fields are equal, false otherwise.
    */
   LOOT_API bool operator==(const PluginCleaningData& rhs) const;
 

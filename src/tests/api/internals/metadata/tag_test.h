@@ -50,10 +50,9 @@ TEST(Tag, dataConstructorShouldSetFieldsToGivenValues) {
   EXPECT_EQ("condition", tag.GetCondition());
 }
 
-TEST(Tag,
-     tagsWithCaseInsensitiveEqualNamesAndEqualAdditionStatesShouldBeEqual) {
-  Tag tag1("name", true, "condition1");
-  Tag tag2("name", true, "condition2");
+TEST(Tag, equalityShouldBeCaseSensitiveOnNameAndCondition) {
+  Tag tag1("name", true, "condition");
+  Tag tag2("name", true, "condition");
 
   EXPECT_TRUE(tag1 == tag2);
 
@@ -61,27 +60,39 @@ TEST(Tag,
   tag2 = Tag("Name");
 
   EXPECT_FALSE(tag1 == tag2);
-}
 
-TEST(Tags, tagsWithUnequalNamesShouldNotBeEqual) {
-  Tag tag1("name1");
-  Tag tag2("name2");
+  tag1 = Tag("name", true, "condition");
+  tag2 = Tag("name", true, "Condition");
+
+  EXPECT_FALSE(tag1 == tag2);
+
+  tag1 = Tag("name1");
+  tag2 = Tag("name2");
+
+  EXPECT_FALSE(tag1 == tag2);
+
+  tag1 = Tag("name", true, "condition1");
+  tag2 = Tag("name", true, "condition2");
 
   EXPECT_FALSE(tag1 == tag2);
 }
 
-TEST(Tag, tagsWithUnequalAdditionStatesShouldNotBeEqual) {
-  Tag tag1("Name", true);
-  Tag tag2("name", false);
+TEST(Tag, equalityShouldRequireEqualAdditionStates) {
+  Tag tag1("name", true, "condition");
+  Tag tag2("name", true, "condition");
+
+  EXPECT_TRUE(tag1 == tag2);
+
+  tag1 = Tag("name", true);
+  tag2 = Tag("name", false);
 
   EXPECT_FALSE(tag1 == tag2);
 }
 
-TEST(
-    Tag,
-    lessThanOperatorShouldCaseSensitivelyLexicographicallyCompareNameStrings) {
-  Tag tag1("name");
-  Tag tag2("name");
+TEST(Tag,
+     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForNameAndCondition) {
+  Tag tag1("name", true, "condition");
+  Tag tag2("name", true, "condition");
 
   EXPECT_FALSE(tag1 < tag2);
   EXPECT_FALSE(tag2 < tag1);
@@ -92,8 +103,20 @@ TEST(
   EXPECT_FALSE(tag1 < tag2);
   EXPECT_TRUE(tag2 < tag1);
 
+  tag1 = Tag("name", true, "condition");
+  tag2 = Tag("name", true, "Condition");
+
+  EXPECT_FALSE(tag1 < tag2);
+  EXPECT_TRUE(tag2 < tag1);
+
   tag1 = Tag("name1");
   tag2 = Tag("name2");
+
+  EXPECT_TRUE(tag1 < tag2);
+  EXPECT_FALSE(tag2 < tag1);
+
+  tag1 = Tag("name", true, "condition1");
+  tag2 = Tag("name", true, "condition2");
 
   EXPECT_TRUE(tag1 < tag2);
   EXPECT_FALSE(tag2 < tag1);

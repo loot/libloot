@@ -73,14 +73,14 @@ public:
   /**
    * A less-than operator implemented with no semantics so that MessageContent
    * objects can be stored in sets.
-   * @returns True if this MessageContent's text is lexicographically less than
-   *          the given MessageContent's text, false otherwise.
+   * @returns True if this MessageContent is less than the given 
+   *          MessageContent, false otherwise.
    */
   LOOT_API bool operator<(const MessageContent& rhs) const;
 
   /**
-   * Check if two MessageContent objects are equal by comparing their texts.
-   * @returns True if the texts are equal, false otherwise.
+   * Check if two MessageContent objects are equal by comparing their fields.
+   * @returns True if the objects' fields are equal, false otherwise.
    */
   LOOT_API bool operator==(const MessageContent& rhs) const;
 

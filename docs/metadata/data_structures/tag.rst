@@ -22,7 +22,8 @@ The scalar form is simply the value of the map form's ``name`` key. Using the sc
 Equality
 --------
 
-Two tag data structures are equal if the values of their ``name`` keys are identical.
+Two tag data structures are equal if all their fields are equal. String equality
+is case-sensitive.
 
 Examples
 --------

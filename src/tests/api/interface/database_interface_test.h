@@ -529,7 +529,9 @@ TEST_P(DatabaseInterfaceTest,
   auto messages = db_->GetGeneralMessages();
 
   std::vector<Message> expectedMessages({
-      Message(MessageType::say, generalMasterlistMessage),
+      Message(MessageType::say,
+              generalMasterlistMessage,
+              "file(\"" + missingEsp + "\")"),
       Message(MessageType::say, generalUserlistMessage),
   });
   EXPECT_EQ(expectedMessages, messages);
@@ -577,12 +579,15 @@ TEST_P(DatabaseInterfaceTest,
 
   std::set<Tag> expectedTags({
       Tag("Actors.ACBS"),
+      Tag("Actors.ACBS", true, "file(\"" + missingEsp + "\")"),
       Tag("Actors.AIData"),
       Tag("C.Water", false),
   });
   EXPECT_EQ(expectedTags, metadata.GetTags());
-  EXPECT_EQ("file(\"" + missingEsp +
-            "\")" , metadata.GetTags().find(Tag("Actors.ACBS"))->GetCondition());
+  EXPECT_EQ("file(\"" + missingEsp + "\")",
+            metadata.GetTags()
+                .find(Tag("Actors.ACBS", true, "file(\"" + missingEsp + "\")"))
+                ->GetCondition());
 }
 
 TEST_P(
@@ -739,7 +744,8 @@ TEST_P(DatabaseInterfaceTest,
   auto messages = db_->GetGeneralMessages();
 
   std::vector<Message> expectedMessages({
-      Message(MessageType::say, generalMasterlistMessage),
+      Message(MessageType::say,
+              generalMasterlistMessage, "file(\"" + missingEsp + "\")"),
       Message(MessageType::say, generalUserlistMessage),
   });
   EXPECT_EQ(expectedMessages, messages);
@@ -786,7 +792,9 @@ TEST_P(
   auto messages = db_->GetGeneralMessages();
 
   std::vector<Message> expectedMessages({
-      Message(MessageType::say, generalMasterlistMessage),
+      Message(MessageType::say,
+              generalMasterlistMessage,
+              "file(\"" + missingEsp + "\")"),
   });
   EXPECT_EQ(expectedMessages, messages);
 

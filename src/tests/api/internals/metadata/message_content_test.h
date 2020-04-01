@@ -49,45 +49,64 @@ TEST(MessageContent, contentConstructorShouldStoreGivenStringAndLanguage) {
   EXPECT_EQ(french, content.GetLanguage());
 }
 
-TEST(MessageContent, contentShouldBeEqualIfStringsAreCaseInsensitivelyEqual) {
-  MessageContent content1("content");
-  MessageContent content2("content", french);
+TEST(MessageContent, equalityShouldRequireCaseSensitiveEqualityOnTextAndLanguage) {
+  MessageContent content1("content", "fr");
+  MessageContent content2("content", "fr");
 
   EXPECT_TRUE(content1 == content2);
 
-  content1 = MessageContent("content");
-  content2 = MessageContent("Content", french);
+  content1 = MessageContent("content", "fr");
+  content2 = MessageContent("Content", "fr");
+
+  EXPECT_FALSE(content1 == content2);
+
+  content1 = MessageContent("content", "fr");
+  content2 = MessageContent("content", "Fr");
+
+  EXPECT_FALSE(content1 == content2);
+
+  content1 = MessageContent("content1", "fr");
+  content2 = MessageContent("content2", "fr");
+
+  EXPECT_FALSE(content1 == content2);
+
+  content1 = MessageContent("content", "fr");
+  content2 = MessageContent("content", "de");
 
   EXPECT_FALSE(content1 == content2);
 }
 
 TEST(MessageContent,
-     contentShouldBeUnequalIfStringsAreNotCaseInsensitivelyEqual) {
-  MessageContent content1("content1", french);
-  MessageContent content2("content2", french);
-
-  EXPECT_FALSE(content1 == content2);
-}
-
-TEST(MessageContent,
-     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparison) {
-  MessageContent content1("content");
-  MessageContent content2("content", french);
+     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForTextAndLanguage) {
+  MessageContent content1("content", "fr");
+  MessageContent content2("content", "fr");
 
   EXPECT_FALSE(content1 < content2);
   EXPECT_FALSE(content2 < content1);
 
-  content1 = MessageContent("content", french);
-  content2 = MessageContent("Content");
+  content1 = MessageContent("content", "fr");
+  content2 = MessageContent("Content", "fr");
 
   EXPECT_FALSE(content1 < content2);
   EXPECT_TRUE(content2 < content1);
 
-  content1 = MessageContent("content1", french);
-  content2 = MessageContent("content2");
+  content1 = MessageContent("content", "fr");
+  content2 = MessageContent("content", "Fr");
+
+  EXPECT_TRUE(content2 < content1);
+  EXPECT_FALSE(content1 < content2);
+
+  content1 = MessageContent("content1", "fr");
+  content2 = MessageContent("content2", "fr");
 
   EXPECT_TRUE(content1 < content2);
   EXPECT_FALSE(content2 < content1);
+
+  content1 = MessageContent("content", "fr");
+  content2 = MessageContent("content", "de");
+
+  EXPECT_TRUE(content2 < content1);
+  EXPECT_FALSE(content1 < content2);
 }
 
 TEST(MessageContent, emittingAsYamlShouldOutputDataCorrectly) {

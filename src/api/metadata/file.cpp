@@ -24,8 +24,8 @@
 
 #include "loot/metadata/file.h"
 
-#include "api/metadata/yaml/file.h"
 #include "api/helpers/text.h"
+#include "api/metadata/yaml/file.h"
 
 namespace loot {
 File::File() {}
@@ -38,11 +38,28 @@ File::File(const std::string& name,
     ConditionalMetadata(condition) {}
 
 bool File::operator<(const File& rhs) const {
+  if (display_ < rhs.display_) {
+    return true;
+  }
+
+  if (rhs.display_ < display_) {
+    return false;
+  }
+
+  if (this->GetCondition() < rhs.GetCondition()) {
+    return true;
+  }
+
+  if (rhs.GetCondition() < this->GetCondition()) {
+    return false;
+  }
+
   return CompareFilenames(name_, rhs.name_) < 0;
 }
 
 bool File::operator==(const File& rhs) const {
-  return CompareFilenames(name_, rhs.name_) == 0;
+  return display_ == rhs.display_ && GetCondition() == rhs.GetCondition() &&
+         CompareFilenames(name_, rhs.name_) == 0;
 }
 
 std::string File::GetName() const { return name_; }

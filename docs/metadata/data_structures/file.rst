@@ -26,7 +26,8 @@ The scalar form is simply the value of the map form's ``name`` key. Using the sc
 Equality
 --------
 
-Two file data structures are equal if the lowercased values of their ``name`` keys are identical.
+Two file data structures are equal if all their fields are equal. ``name`` field
+equality is case-insensitive, the other fields use case-sensitive equality.
 
 Examples
 --------

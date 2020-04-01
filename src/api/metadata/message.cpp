@@ -59,11 +59,28 @@ Message::Message(const MessageType type,
 }
 
 bool Message::operator<(const Message& rhs) const {
+  if (type_ < rhs.type_) {
+    return true;
+  }
+
+  if (rhs.type_ < type_) {
+    return false;
+  }
+
+  if (GetCondition() < rhs.GetCondition()) {
+    return true;
+  }
+
+  if (rhs.GetCondition() < GetCondition()) {
+    return false;
+  }
+
   return content_ < rhs.GetContent();
 }
 
 bool Message::operator==(const Message& rhs) const {
-  return content_ == rhs.GetContent();
+  return type_ == rhs.type_ && GetCondition() == rhs.GetCondition() &&
+         content_ == rhs.GetContent();
 }
 
 MessageType Message::GetType() const { return type_; }

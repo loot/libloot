@@ -41,11 +41,19 @@ std::string MessageContent::GetText() const { return text_; }
 std::string MessageContent::GetLanguage() const { return language_; }
 
 bool MessageContent::operator<(const MessageContent& rhs) const {
-  return text_ < rhs.text_;
+  if (text_ < rhs.text_) {
+    return true;
+  }
+
+  if (rhs.text_ < text_) {
+    return false;
+  }
+
+  return language_ < rhs.language_;
 }
 
 bool MessageContent::operator==(const MessageContent& rhs) const {
-  return text_ == rhs.text_;
+  return text_ == rhs.text_ && language_ == rhs.language_;
 }
 MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
                                       const std::string& language) {

@@ -32,11 +32,19 @@ Location::Location(const std::string& url, const std::string& name) :
     name_(name) {}
 
 bool Location::operator<(const Location& rhs) const {
-  return url_ < rhs.url_;
+  if (url_ < rhs.url_) {
+    return true;
+  }
+
+  if (rhs.url_ < url_) {
+    return false;
+  }
+
+  return name_ < rhs.name_;
 }
 
 bool Location::operator==(const Location& rhs) const {
-  return url_ == rhs.url_;
+  return url_ == rhs.url_ && name_ == rhs.name_;
 }
 
 std::string Location::GetURL() const { return url_; }

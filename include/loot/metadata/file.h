@@ -58,15 +58,14 @@ public:
   /**
    * A less-than operator implemented with no semantics so that File objects can
    * be stored in sets.
-   * @returns True if this File's name is case-insensitively lexicographically
-   *          less than the given File's name, false otherwise.
+   * @returns True if this File is less than the given File, false otherwise.
    */
   LOOT_API bool operator<(const File& rhs) const;
 
   /**
-   * Check if two File objects are equal by comparing their filenames.
-   * @returns True if the filenames are case-insensitively equal, false
-   *          otherwise.
+   * Check if two File objects are equal by comparing their fields.
+   * @returns True if the filenames are case-insensitively equal and all other
+   *          fields are case-sensitively equal, false otherwise.
    */
   LOOT_API bool operator==(const File& rhs) const;
 

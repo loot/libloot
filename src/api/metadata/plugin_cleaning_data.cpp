@@ -53,11 +53,52 @@ PluginCleaningData::PluginCleaningData(uint32_t crc,
     info_(info) {}
 
 bool PluginCleaningData::operator<(const PluginCleaningData& rhs) const {
-  return crc_ < rhs.GetCRC();
+  if (crc_ < rhs.crc_) {
+    return true;
+  }
+
+  if (rhs.crc_ < crc_) {
+    return false;
+  }
+
+  if (utility_ < rhs.utility_) {
+    return true;
+  }
+
+  if (rhs.utility_ < utility_) {
+    return false;
+  }
+
+  if (itm_ < rhs.itm_) {
+    return true;
+  }
+
+  if (rhs.itm_ < itm_) {
+    return false;
+  }
+
+  if (ref_ < rhs.ref_) {
+    return true;
+  }
+
+  if (rhs.ref_ < ref_) {
+    return false;
+  }
+
+  if (nav_ < rhs.nav_) {
+    return true;
+  }
+
+  if (rhs.nav_ < nav_) {
+    return false;
+  }
+
+  return info_ < rhs.info_;
 }
 
 bool PluginCleaningData::operator==(const PluginCleaningData& rhs) const {
-  return crc_ == rhs.GetCRC();
+  return crc_ == rhs.crc_ && utility_ == rhs.utility_ && info_ == rhs.info_ &&
+         itm_ == rhs.itm_ && ref_ == rhs.ref_ && nav_ == rhs.nav_;
 }
 
 uint32_t PluginCleaningData::GetCRC() const { return crc_; }

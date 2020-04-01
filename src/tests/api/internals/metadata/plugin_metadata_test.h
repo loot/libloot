@@ -978,7 +978,7 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
             plugin.GetMessages());
   EXPECT_EQ(std::set<Tag>({Tag("Relev")}), plugin.GetTags());
   EXPECT_EQ(std::set<PluginCleaningData>(
-                {PluginCleaningData(5, "utility", info_, 0, 1, 2)}),
+                {PluginCleaningData(5, "utility", {}, 0, 1, 2)}),
             plugin.GetDirtyInfo());
   EXPECT_EQ(std::set<PluginCleaningData>({PluginCleaningData(6, "utility")}),
             plugin.GetCleanInfo());
@@ -999,7 +999,7 @@ TEST_P(PluginMetadataTest,
 
   EXPECT_EQ("Blank\\.esp", plugin.GetName());
   EXPECT_EQ(std::set<PluginCleaningData>(
-                {PluginCleaningData(5, "utility", info_, 0, 1, 2)}),
+                {PluginCleaningData(5, "utility", {}, 0, 1, 2)}),
             plugin.GetDirtyInfo());
 }
 
