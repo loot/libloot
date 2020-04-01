@@ -20,15 +20,14 @@ environment:
 
 cache:
   - C:\Users\appveyor\.cargo\bin\cbindgen.exe
+  - C:\Users\appveyor\.cargo\.crates.toml
+  - C:\Users\appveyor\.cargo\.crates2.json
 
 install:
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/x86_64
   - rustup-init.exe -y
   - rustup target add i686-pc-windows-msvc
-  - ps: |
-      $version = cbindgen --version
-      if (!([string]$version).endswith('0.9.0')) { $env:INSTALL_CBINDGEN=1 }
-  - IF "%INSTALL_CBINDGEN%" == "1" cargo install cbindgen --version 0.9.0 --force
+  - cargo install cbindgen --version 0.13.2
   - nuget install doxygen -Version 1.8.14
   - py -3.7 -m pip install -r docs/requirements.txt
   - ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Ortham/ci-scripts/2.1.3/delete_old_bintray_versions.py', "$env:APPVEYOR_BUILD_FOLDER\delete_old_bintray_versions.py")
