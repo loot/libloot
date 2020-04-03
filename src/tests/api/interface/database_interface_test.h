@@ -235,7 +235,7 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
 
 TEST_P(DatabaseInterfaceTest,
        updateMasterlistShouldThrowIfTheMasterlistPathGivenIsInvalid) {
-  EXPECT_THROW(db_->UpdateMasterlist(";//\?", url_, branch_), std::exception);
+  EXPECT_THROW(db_->UpdateMasterlist("//\?", url_, branch_), std::exception);
 }
 
 TEST_P(DatabaseInterfaceTest,

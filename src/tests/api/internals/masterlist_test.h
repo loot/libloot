@@ -82,7 +82,7 @@ INSTANTIATE_TEST_CASE_P(,
 TEST_P(MasterlistTest, updateShouldThrowIfAnInvalidPathIsGiven) {
   Masterlist masterlist;
 
-  EXPECT_THROW(masterlist.Update(";//\?", repoUrl, repoBranch),
+  EXPECT_THROW(masterlist.Update("//\?", repoUrl, repoBranch),
                std::system_error);
 }
 
