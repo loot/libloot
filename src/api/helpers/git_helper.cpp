@@ -63,10 +63,6 @@ GitHelper::GitData::GitData() :
 }
 
 GitHelper::GitData::~GitData() {
-  string path;
-  if (repo != nullptr)
-    path = git_repository_path(repo);
-
   git_commit_free(commit);
   git_object_free(object);
   git_config_free(config);
