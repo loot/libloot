@@ -36,7 +36,7 @@ protected:
   DatabaseInterfaceTest() :
       db_(nullptr),
       userlistPath_(localPath / "userlist.yaml"),
-      url_("https://github.com/loot/testing-metadata.git"),
+      url_("./testing-metadata.git"),
       branch_("master"),
       oldBranch_("old-branch"),
       minimalOutputPath_(localPath / "minimal.yml"),

@@ -440,6 +440,27 @@ add_custom_command(TARGET libloot_tests POST_BUILD
         ${SOURCE_DIR}
         "$<TARGET_FILE_DIR:libloot_tests>/testing-metadata")
 
+IF (GIT_FOUND)
+	# Clone a mirror of the testing-metadata repository for faster tests.
+    # Remove the directory if it already exists before cloning, as the clone
+    # will fail if the target directory exists and is not empty.
+	# Tests will fail if this is not done.
+
+	add_custom_command(TARGET libloot_internals_tests POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E remove_directory
+            "$<TARGET_FILE_DIR:libloot_internals_tests>/testing-metadata.git")
+
+	add_custom_command(TARGET libloot_internals_tests POST_BUILD
+		COMMAND git clone --bare https://github.com/loot/testing-metadata.git "$<TARGET_FILE_DIR:libloot_internals_tests>/testing-metadata.git")
+
+	add_custom_command(TARGET libloot_tests POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E remove_directory
+            "$<TARGET_FILE_DIR:libloot_tests>/testing-metadata.git")
+
+	add_custom_command(TARGET libloot_tests POST_BUILD
+		COMMAND git clone --bare https://github.com/loot/testing-metadata.git "$<TARGET_FILE_DIR:libloot_tests>/testing-metadata.git")
+ENDIF()
+
 # Copy testing plugins
 ExternalProject_Get_Property(testing-plugins SOURCE_DIR)
 add_custom_command(TARGET libloot_internals_tests POST_BUILD
