@@ -73,7 +73,8 @@ uint32_t GetCrc32(const std::filesystem::path& filename) {
 
     uint32_t checksum = result.checksum();
     if (logger) {
-      logger->debug("CRC32(\"{}\"): {:x}", filename.u8string(), checksum);
+      auto u8Filename = filename.u8string();
+      logger->debug("CRC32(\"{}\"): {:x}", u8Filename, checksum);
     }
     return checksum;
 
