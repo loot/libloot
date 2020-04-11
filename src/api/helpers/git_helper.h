@@ -34,8 +34,6 @@
 namespace loot {
 class GitHelper {
 public:
-  explicit GitHelper();
-
   void InitialiseOptions(const std::string& branch,
                          const std::string& filenameToCheckout);
   void Open(const std::filesystem::path& repoRoot);
@@ -101,7 +99,6 @@ private:
   const git_oid* GetCommitId(git_reference* reference);
 
   GitData data_;
-  std::shared_ptr<spdlog::logger> logger_;
 };
 }
 #endif

@@ -40,8 +40,6 @@ using std::string;
 namespace fs = std::filesystem;
 
 namespace loot {
-GitHelper::GitHelper() : logger_(getLogger()) {}
-
 GitHelper::GitData::GitData() :
     repo(nullptr),
     remote(nullptr),
@@ -82,8 +80,9 @@ GitHelper::GitData::~GitData() {
 
 void GitHelper::InitialiseOptions(const std::string& branch,
                                   const std::string& filenameToCheckout) {
-  if (logger_) {
-    logger_->debug(
+  auto logger = getLogger();
+  if (logger) {
+    logger->debug(
         "Setting up checkout options using branch {} and filename {}.",
         branch,
         filenameToCheckout);
@@ -106,8 +105,9 @@ void GitHelper::InitialiseOptions(const std::string& branch,
 }
 
 void GitHelper::Open(const std::filesystem::path& repoRoot) {
-  if (logger_) {
-    logger_->info("Attempting to open Git repository at: {}",
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("Attempting to open Git repository at: {}",
                   repoRoot.u8string());
   }
   Call(git_repository_open(&data_.repo, repoRoot.u8string().c_str()));
@@ -120,8 +120,9 @@ void GitHelper::SetRemoteUrl(const std::string& remote,
         "Cannot set remote URL for repository that has not been opened.");
   }
 
-  if (logger_) {
-    logger_->info("Setting URL for remote {} to {}", remote, url);
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("Setting URL for remote {} to {}", remote, url);
   }
 
   Call(git_remote_set_url(data_.repo, remote.c_str(), url.c_str()));
@@ -178,8 +179,9 @@ void GitHelper::Clone(const std::filesystem::path& path,
         "Cannot clone repository that has already been opened.");
 
   // Clone the remote repository.
-  if (logger_) {
-    logger_->info("Repository doesn't exist, cloning the remote repository at \"{}\".", url);
+  auto logger = getLogger();
+  if (logger) {
+    logger->info("Repository doesn't exist, cloning the remote repository at \"{}\".", url);
   }
 
   fs::create_directories(path.parent_path());
@@ -188,8 +190,8 @@ void GitHelper::Clone(const std::filesystem::path& path,
   // directory.
   fs::path repoPath;
   if (fs::exists(path) && !fs::is_empty(path)) {
-    if (logger_) {
-      logger_->trace("Target repo path not empty, cloning into temporary directory.");
+    if (logger) {
+      logger->trace("Target repo path not empty, cloning into temporary directory.");
     }
     auto directory = "LOOT-" + path.filename().u8string() + "-" +
                      boost::lexical_cast<std::string>((boost::uuids::random_generator())());
@@ -214,8 +216,8 @@ void GitHelper::Clone(const std::filesystem::path& path,
     git_repository_free(data_.repo);
     data_.repo = nullptr;
 
-    if (logger_) {
-      logger_->trace(
+    if (logger) {
+      logger->trace(
           "Target repo path not empty, moving cloned files in.");
     }
 
@@ -242,8 +244,8 @@ void GitHelper::Clone(const std::filesystem::path& path,
     try {
       fs::remove_all(repoPath);
     } catch (std::exception& e) {
-      if (logger_) {
-        logger_->error(
+      if (logger) {
+        logger->error(
           "Could not delete temporary repository path \"{}\": {}",
           repoPath.u8string(), e.what());
       }
@@ -259,8 +261,9 @@ void GitHelper::Fetch(const std::string& remote) {
     throw GitStateError(
         "Cannot fetch updates for repository that has not been opened.");
 
-  if (logger_) {
-    logger_->trace("Fetching updates from remote.");
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Fetching updates from remote.");
   }
 
   // Get the origin remote.
@@ -272,8 +275,8 @@ void GitHelper::Fetch(const std::string& remote) {
 
   // Log some stats on what was fetched either during update or clone.
   const git_transfer_progress* stats = git_remote_stats(data_.remote);
-  if (logger_) {
-    logger_->trace("Received {} of {} objects in {} bytes.",
+  if (logger) {
+    logger->trace("Received {} of {} objects in {} bytes.",
                    stats->indexed_objects,
                    stats->total_objects,
                    stats->received_bytes);
@@ -298,38 +301,39 @@ void GitHelper::CheckoutNewBranch(const std::string& remote,
     throw GitStateError(
         "Cannot fetch repository updates, reference memory already allocated.");
 
-  if (logger_) {
-    logger_->trace("Looking up commit referred to by the remote branch \"{}\".",
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Looking up commit referred to by the remote branch \"{}\".",
                    branch);
   }
   Call(git_revparse_single(
       &data_.object, data_.repo, (remote + "/" + branch).c_str()));
   const git_oid* commit_id = git_object_id(data_.object);
 
-  if (logger_) {
-    logger_->trace("Creating the new branch.");
+  if (logger) {
+    logger->trace("Creating the new branch.");
   }
   Call(git_commit_lookup(&data_.commit, data_.repo, commit_id));
   Call(git_branch_create(
       &data_.reference, data_.repo, branch.c_str(), data_.commit, 1));
 
-  if (logger_) {
-    logger_->trace("Setting the upstream for the new branch.");
+  if (logger) {
+    logger->trace("Setting the upstream for the new branch.");
   }
   Call(git_branch_set_upstream(data_.reference,
                                (remote + "/" + branch).c_str()));
 
   // Check if HEAD points to the desired branch and set it to if not.
   if (!git_branch_is_head(data_.reference)) {
-    if (logger_) {
-      logger_->trace("Setting HEAD to follow branch: {}", branch);
+    if (logger) {
+      logger->trace("Setting HEAD to follow branch: {}", branch);
     }
     Call(git_repository_set_head(data_.repo,
                                  (string("refs/heads/") + branch).c_str()));
   }
 
-  if (logger_) {
-    logger_->trace("Performing a Git checkout of HEAD.");
+  if (logger) {
+    logger->trace("Performing a Git checkout of HEAD.");
   }
   Call(git_checkout_head(data_.repo, &data_.checkout_options));
 
@@ -359,8 +363,9 @@ void GitHelper::CheckoutRevision(const std::string& revision) {
   Call(git_repository_set_head_detached(data_.repo, oid));
 
   // Checkout the new HEAD.
-  if (logger_) {
-    logger_->trace("Performing a Git checkout of HEAD.");
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Performing a Git checkout of HEAD.");
   }
   Call(git_checkout_head(data_.repo, &data_.checkout_options));
 
@@ -380,18 +385,19 @@ void GitHelper::DeleteBranch(const std::string& branch) {
   Call(git_branch_lookup(
       &data_.reference, data_.repo, branch.c_str(), GIT_BRANCH_LOCAL));
 
+  auto logger = getLogger();
   int ret = git_branch_is_head(data_.reference);
   if (ret == 1) {
-    if (logger_) {
-      logger_->debug("Detaching HEAD before deleting branch.");
+    if (logger) {
+      logger->debug("Detaching HEAD before deleting branch.");
     }
     git_repository_detach_head(data_.repo);
   } else {
     Call(ret);
   }
 
-  if (logger_) {
-    logger_->debug("Deleting branch.");
+  if (logger) {
+    logger->debug("Deleting branch.");
   }
 
   Call(git_branch_delete(data_.reference));
@@ -515,8 +521,9 @@ std::string GitHelper::GetHeadCommitId(bool shortId) {
     throw GitStateError(
         "Cannot fetch repository updates, buffer memory already allocated.");
 
-  if (logger_) {
-    logger_->trace("Getting the Git object for HEAD.");
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Getting the Git object for HEAD.");
   }
   Call(git_repository_head(&data_.reference, data_.repo));
 
@@ -524,8 +531,8 @@ std::string GitHelper::GetHeadCommitId(bool shortId) {
   if (shortId) {
     Call(git_reference_peel(&data_.object, data_.reference, GIT_OBJ_COMMIT));
 
-    if (logger_) {
-      logger_->trace("Generating hex string for Git object ID.");
+    if (logger) {
+      logger->trace("Generating hex string for Git object ID.");
     }
     Call(git_object_short_id(&data_.buffer, data_.object));
     id = data_.buffer.ptr;
@@ -559,8 +566,9 @@ std::string GitHelper::GetHeadCommitDate() {
         "Cannot get HEAD commit date, reference memory already allocated.");
   }
 
-  if (logger_) {
-    logger_->trace("Getting the Git reference for HEAD.");
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Getting the Git reference for HEAD.");
   }
   Call(git_repository_head(&data_.reference, data_.repo));
 
@@ -569,8 +577,8 @@ std::string GitHelper::GetHeadCommitDate() {
   git_reference_free(data_.reference);
   data_.reference = nullptr;
 
-  if (logger_) {
-    logger_->trace("Getting commit for ID.");
+  if (logger) {
+    logger->trace("Getting commit for ID.");
   }
 
   Call(git_commit_lookup(&data_.commit, data_.repo, commit_id));
