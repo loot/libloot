@@ -55,7 +55,6 @@ TEST_P(
   PluginMetadata plugin;
 
   EXPECT_TRUE(plugin.GetName().empty());
-  EXPECT_TRUE(plugin.IsEnabled());
   EXPECT_FALSE(plugin.GetGroup());
 }
 
@@ -65,7 +64,6 @@ TEST_P(
   PluginMetadata plugin(blankEsm);
 
   EXPECT_EQ(blankEsm, plugin.GetName());
-  EXPECT_TRUE(plugin.IsEnabled());
   EXPECT_FALSE(plugin.GetGroup());
 }
 
@@ -113,31 +111,6 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldNotChangeName) {
   plugin1.MergeMetadata(plugin2);
 
   EXPECT_EQ(blankEsm, plugin1.GetName());
-}
-
-TEST_P(PluginMetadataTest,
-       mergeMetadataShouldNotUseMergedEnabledStateIfMergedMetadataIsEmpty) {
-  PluginMetadata plugin1;
-  PluginMetadata plugin2;
-
-  plugin2.SetEnabled(false);
-  ASSERT_TRUE(plugin2.HasNameOnly());
-  plugin1.MergeMetadata(plugin2);
-
-  EXPECT_TRUE(plugin1.IsEnabled());
-}
-
-TEST_P(PluginMetadataTest,
-       mergeMetadataShouldUseMergedEnabledStateIfMergedMetadataIsNotEmpty) {
-  PluginMetadata plugin1;
-  PluginMetadata plugin2;
-
-  plugin2.SetEnabled(false);
-  plugin2.SetGroup("group1");
-  ASSERT_FALSE(plugin2.HasNameOnly());
-  plugin1.MergeMetadata(plugin2);
-
-  EXPECT_FALSE(plugin1.IsEnabled());
 }
 
 TEST_P(PluginMetadataTest,
@@ -298,21 +271,6 @@ TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginName) {
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
   EXPECT_EQ(blankEsm, newMetadata.GetName());
-}
-
-TEST_P(PluginMetadataTest, newMetadataShouldUseSourcePluginEnabledState) {
-  PluginMetadata plugin1;
-  PluginMetadata plugin2;
-
-  plugin2.SetEnabled(false);
-  PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
-
-  EXPECT_TRUE(newMetadata.IsEnabled());
-
-  plugin1.SetEnabled(false);
-  newMetadata = plugin1.NewMetadata(plugin2);
-
-  EXPECT_FALSE(newMetadata.IsEnabled());
 }
 
 TEST_P(PluginMetadataTest,
@@ -529,14 +487,6 @@ TEST_P(PluginMetadataTest,
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest,
-       hasNameOnlyShouldBeTrueIfThePluginMetadataIsDisabled) {
-  PluginMetadata plugin(blankEsp);
-  plugin.SetEnabled(false);
-
-  EXPECT_TRUE(plugin.HasNameOnly());
-}
-
 TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTheGroupIsExplicit) {
   PluginMetadata plugin;
   plugin.SetGroup("group");
@@ -687,35 +637,6 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(
-    PluginMetadataTest,
-    emittingAsYamlShouldOutputAPluginThatIsDisabledAndIsNotNameOnlyCorrectly) {
-  PluginMetadata plugin(blankEsm);
-  plugin.SetGroup("group1");
-  plugin.SetEnabled(false);
-
-  YAML::Emitter emitter;
-  emitter << plugin;
-
-  EXPECT_STREQ(
-      "name: 'Blank.esm'\n"
-      "enabled: false\n"
-      "group: 'group1'",
-      emitter.c_str());
-}
-
-TEST_P(
-    PluginMetadataTest,
-    emittingAsYamlShouldOutputAPluginThatIsDisabledAndIsNameOnlyAsAnEmptyString) {
-  PluginMetadata plugin(blankEsm);
-  plugin.SetEnabled(false);
-
-  YAML::Emitter emitter;
-  emitter << plugin;
-
-  EXPECT_STREQ("", emitter.c_str());
-}
-
 TEST_P(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithLoadAfterMetadataCorrectly) {
   PluginMetadata plugin(blankEsp);
@@ -847,7 +768,6 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldOmitAllUnsetFields) {
   node = plugin;
 
   EXPECT_EQ(plugin.GetName(), node["name"].as<std::string>());
-  EXPECT_FALSE(node["enabled"]);
   EXPECT_FALSE(node["after"]);
   EXPECT_FALSE(node["req"]);
   EXPECT_FALSE(node["inc"]);
@@ -856,15 +776,6 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldOmitAllUnsetFields) {
   EXPECT_FALSE(node["dirty"]);
   EXPECT_FALSE(node["clean"]);
   EXPECT_FALSE(node["url"]);
-}
-
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetEnabledFieldIfItIsFalse) {
-  PluginMetadata plugin(blankEsp);
-  plugin.SetEnabled(false);
-  YAML::Node node;
-  node = plugin;
-
-  EXPECT_FALSE(node["enabled"].as<bool>());
 }
 
 TEST_P(PluginMetadataTest,
@@ -946,7 +857,6 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetUrlFieldIfLocationsExist) {
 TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
   YAML::Node node = YAML::Load(
       "name: 'Blank.esp'\n"
-      "enabled: false\n"
       "after:\n"
       "  - 'Blank.esm'\n"
       "req:\n"

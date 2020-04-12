@@ -11,12 +11,6 @@ This is the structure that brings all the others together, and forms the main co
 
   Regular expression plugin filenames must be written in `modified ECMAScript <https://en.cppreference.com/w/cpp/regex/ecmascript>`_ syntax.
 
-.. describe:: enabled
-
-  ``boolean``
-
-  Enables or disables use of the plugin object. Used for user rules, but no reason to use it in the masterlist. If unspecified, defaults to ``true``.
-
 .. describe:: group
 
   ``string``
@@ -120,7 +114,6 @@ Merging Behaviour
 Key               Merge Behaviour (merging B into A)
 ===============   ==================================
 name              Not merged.
-enabled           Replaced by B's value.
 group             Replaced by B's value only if A has no value set.
 after             Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.
 req               Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.

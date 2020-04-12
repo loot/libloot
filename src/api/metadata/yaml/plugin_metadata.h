@@ -52,9 +52,6 @@ struct convert<loot::PluginMetadata> {
     Node node;
     node["name"] = rhs.GetName();
 
-    if (!rhs.IsEnabled())
-      node["enabled"] = rhs.IsEnabled();
-
     if (rhs.GetGroup())
       node["group"] = rhs.GetGroup().value();
 
@@ -102,9 +99,6 @@ struct convert<loot::PluginMetadata> {
       }
     }
 
-    if (node["enabled"])
-      rhs.SetEnabled(node["enabled"].as<bool>());
-
     if (node["group"])
       rhs.SetGroup(node["group"].as<std::string>());
 
@@ -137,9 +131,6 @@ inline Emitter& operator<<(Emitter& out, const loot::PluginMetadata& rhs) {
   if (!rhs.HasNameOnly()) {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
         << rhs.GetName();
-
-    if (!rhs.IsEnabled())
-      out << Key << "enabled" << Value << rhs.IsEnabled();
 
     if (rhs.GetGroup())
       out << Key << "group" << Value << YAML::SingleQuoted << rhs.GetGroup().value();

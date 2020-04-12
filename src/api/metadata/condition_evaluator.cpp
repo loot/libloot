@@ -121,7 +121,6 @@ bool ConditionEvaluator::Evaluate(const std::string& condition) {
 
 PluginMetadata ConditionEvaluator::EvaluateAll(const PluginMetadata& pluginMetadata) {
   PluginMetadata evaluatedMetadata(pluginMetadata.GetName());
-  evaluatedMetadata.SetEnabled(pluginMetadata.IsEnabled());
   evaluatedMetadata.SetLocations(pluginMetadata.GetLocations());
 
   if (pluginMetadata.GetGroup()) {

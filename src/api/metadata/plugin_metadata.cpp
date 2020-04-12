@@ -40,12 +40,10 @@ using std::set;
 using std::vector;
 
 namespace loot {
-PluginMetadata::PluginMetadata() :
-    enabled_(true) {}
+PluginMetadata::PluginMetadata() {}
 
 PluginMetadata::PluginMetadata(const std::string& n) :
-    name_(n),
-    enabled_(true) {
+    name_(n) {
   // If the name passed ends in '.ghost', that should be trimmed.
   if (boost::iends_with(name_, ".ghost"))
     name_ = name_.substr(0, name_.length() - 6);
@@ -54,10 +52,6 @@ PluginMetadata::PluginMetadata(const std::string& n) :
 void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   if (plugin.HasNameOnly())
     return;
-
-  // For 'enabled' and 'group' metadata, use the given plugin's values,
-  // but if the 'group' value is not explicit, ignore it.
-  enabled_ = plugin.IsEnabled();
 
   if (!group_.has_value() && plugin.GetGroup()) {
     group_ = plugin.GetGroup();
@@ -171,8 +165,6 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
 
 std::string PluginMetadata::GetName() const { return name_; }
 
-bool PluginMetadata::IsEnabled() const { return enabled_; }
-
 std::optional<std::string> PluginMetadata::GetGroup() const { return group_; }
 
 std::set<File> PluginMetadata::GetLoadAfterFiles() const { return loadAfter_; }
@@ -209,8 +201,6 @@ std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(
 
   return simpleMessages;
 }
-
-void PluginMetadata::SetEnabled(const bool e) { enabled_ = e; }
 
 void PluginMetadata::SetGroup(const std::string& group) {
   group_ = group;

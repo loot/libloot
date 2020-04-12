@@ -64,9 +64,8 @@ public:
    * Merge metadata from the given PluginMetadata object into this object.
    *
    * If an equal metadata object already exists in this PluginMetadata object,
-   * it is not duplicated. This object's enabled state is replaced by the given
-   * object's state. This object's group is replaced by the given object's group
-   * if the latter is explicit.
+   * it is not duplicated. This object's group is replaced by the given object's
+   * group if the latter is explicit.
    * @param plugin
    *        The plugin metadata to merge.
    */
@@ -79,7 +78,7 @@ public:
    *         The PluginMetadata object to compare against.
    * @return A PluginMetadata object containing the metadata in this object that
    *         is not in the given object. The returned object inherits this
-   *         object's enabled state and group.
+   *         object's group.
    */
   LOOT_API PluginMetadata NewMetadata(const PluginMetadata& plugin) const;
 
@@ -88,12 +87,6 @@ public:
    * @return The plugin name.
    */
   LOOT_API std::string GetName() const;
-
-  /**
-   * Check if the plugin metadata is enabled for use during sorting.
-   * @return True if the metadata will be used during sorting, false otherwise.
-   */
-  LOOT_API bool IsEnabled() const;
 
   /**
    * Get the plugin's group.
@@ -159,13 +152,6 @@ public:
    */
   LOOT_API std::vector<SimpleMessage> GetSimpleMessages(
       const std::string& language) const;
-
-  /**
-   * Set whether the plugin metadata is enabled for use during sorting or not.
-   * @param enabled
-   *        The value to set.
-   */
-  LOOT_API void SetEnabled(const bool enabled);
 
   /**
    * Set the plugin's group.
@@ -281,7 +267,6 @@ public:
 
 private:
   std::string name_;
-  bool enabled_;
   std::optional<std::string> group_;
   std::set<File> loadAfter_;
   std::set<File> requirements_;
