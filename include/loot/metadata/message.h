@@ -124,6 +124,35 @@ private:
   MessageType type_;
   std::vector<MessageContent> content_;
 };
+
+/**
+ * Check if two Message objects are not equal.
+ * @returns True if the Message objects are not equal, false otherwise.
+ */
+LOOT_API bool operator!=(const Message& lhs, const Message& rhs);
+
+/**
+ * Check if the first Message object is greater than the second Message object.
+ * @returns True if the second Message object is less than the first Message 
+ *          object, false otherwise.
+ */
+LOOT_API bool operator>(const Message& lhs, const Message& rhs);
+
+/**
+ * Check if the first Message object is less than or equal to the second
+ * Message object.
+ * @returns True if the first Message object is not greater than the second 
+ *          Message object, false otherwise.
+ */
+LOOT_API bool operator<=(const Message& lhs, const Message& rhs);
+
+/**
+ * Check if the first Message object is greater than or equal to the second 
+ * Message object.
+ * @returns True if the first Message object is not less than the second
+ *          Message object, false otherwise.
+ */
+LOOT_API bool operator>=(const Message& lhs, const Message& rhs);
 }
 
 #endif

@@ -55,6 +55,7 @@ bool MessageContent::operator<(const MessageContent& rhs) const {
 bool MessageContent::operator==(const MessageContent& rhs) const {
   return text_ == rhs.text_ && language_ == rhs.language_;
 }
+
 MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
                                       const std::string& language) {
   if (content.empty())
@@ -71,5 +72,21 @@ MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
     }
     return english;
   }
+}
+
+bool operator!=(const MessageContent& lhs, const MessageContent& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator>(const MessageContent& lhs, const MessageContent& rhs) {
+  return rhs < lhs;
+}
+
+bool operator<=(const MessageContent& lhs, const MessageContent& rhs) {
+  return !(lhs > rhs);
+}
+
+bool operator>=(const MessageContent& lhs, const MessageContent& rhs) {
+  return !(lhs < rhs);
 }
 }

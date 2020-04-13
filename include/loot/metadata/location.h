@@ -81,6 +81,36 @@ private:
   std::string url_;
   std::string name_;
 };
+
+/**
+ * Check if two Location objects are not equal.
+ * @returns True if the Location objects are not equal, false otherwise.
+ */
+LOOT_API bool operator!=(const Location& lhs, const Location& rhs);
+
+/**
+ * Check if the first Location object is greater than the second Location 
+ * object.
+ * @returns True if the second Location object is less than the first Location
+ *          object, false otherwise.
+ */
+LOOT_API bool operator>(const Location& lhs, const Location& rhs);
+
+/**
+ * Check if the first Location object is less than or equal to the second 
+ * Location object.
+ * @returns True if the first Location object is not greater than the second 
+ *          Location object, false otherwise.
+ */
+LOOT_API bool operator<=(const Location& lhs, const Location& rhs);
+
+/**
+ * Check if the first Location object is greater than or equal to the second 
+ * Location object.
+ * @returns True if the first Location object is not less than the second 
+ *          Location object, false otherwise.
+ */
+LOOT_API bool operator>=(const Location& lhs, const Location& rhs);
 }
 
 #endif

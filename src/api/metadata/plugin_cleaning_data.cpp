@@ -121,4 +121,20 @@ MessageContent PluginCleaningData::ChooseInfo(
     const std::string& language) const {
   return MessageContent::Choose(info_, language);
 }
+
+bool operator!=(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator>(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
+  return rhs < lhs;
+}
+
+bool operator<=(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
+  return !(lhs > rhs);
+}
+
+bool operator>=(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
+  return !(lhs < rhs);
+}
 }

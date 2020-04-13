@@ -70,4 +70,12 @@ std::string File::GetDisplayName() const {
   else
     return display_;
 }
+
+bool operator!=(const File& lhs, const File& rhs) { return !(lhs == rhs); }
+
+bool operator>(const File& lhs, const File& rhs) { return rhs < lhs; }
+
+bool operator<=(const File& lhs, const File& rhs) { return !(lhs > rhs); }
+
+bool operator>=(const File& lhs, const File& rhs) { return !(lhs < rhs); }
 }

@@ -50,4 +50,18 @@ bool Location::operator==(const Location& rhs) const {
 std::string Location::GetURL() const { return url_; }
 
 std::string Location::GetName() const { return name_; }
+
+bool operator!=(const Location& lhs, const Location& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator>(const Location& lhs, const Location& rhs) { return rhs < lhs; }
+
+bool operator<=(const Location& lhs, const Location& rhs) {
+  return !(lhs > rhs);
+}
+
+bool operator>=(const Location& lhs, const Location& rhs) {
+  return !(lhs < rhs);
+}
 }

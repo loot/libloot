@@ -103,6 +103,36 @@ private:
   std::string text_;
   std::string language_;
 };
+
+/**
+ * Check if two MessageContent objects are not equal.
+ * @returns True if the MessageContent objects are not equal, false otherwise.
+ */
+LOOT_API bool operator!=(const MessageContent& lhs, const MessageContent& rhs);
+
+/**
+ * Check if the first MessageContent object is greater than the second 
+ * MessageContent object.
+ * @returns True if the second MessageContent object is less than the first 
+ *          MessageContent object, false otherwise.
+ */
+LOOT_API bool operator>(const MessageContent& lhs, const MessageContent& rhs);
+
+/**
+ * Check if the first MessageContent object is less than or equal to the second
+ * MessageContent object.
+ * @returns True if the first MessageContent object is not greater than the 
+ *          second MessageContent object, false otherwise.
+ */
+LOOT_API bool operator<=(const MessageContent& lhs, const MessageContent& rhs);
+
+/**
+ * Check if the first MessageContent object is greater than or equal to the 
+ * second MessageContent object.
+ * @returns True if the first MessageContent object is not less than the second
+ *          MessageContent object, false otherwise.
+ */
+LOOT_API bool operator>=(const MessageContent& lhs, const MessageContent& rhs);
 }
 
 #endif

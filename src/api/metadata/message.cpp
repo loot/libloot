@@ -100,4 +100,14 @@ SimpleMessage Message::ToSimpleMessage(const std::string& language) const {
 
   return simpleMessage;
 }
+
+bool operator!=(const Message& lhs, const Message& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator>(const Message& lhs, const Message& rhs) { return rhs < lhs; }
+
+bool operator<=(const Message& lhs, const Message& rhs) { return !(lhs > rhs); }
+
+bool operator>=(const Message& lhs, const Message& rhs) { return !(lhs < rhs); }
 }

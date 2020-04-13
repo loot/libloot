@@ -89,8 +89,46 @@ TEST(Tag, equalityShouldRequireEqualAdditionStates) {
   EXPECT_FALSE(tag1 == tag2);
 }
 
-TEST(Tag,
-     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForNameAndCondition) {
+TEST(Tag, inequalityShouldBeTheInverseOfEquality) {
+  Tag tag1("name", true, "condition");
+  Tag tag2("name", true, "condition");
+
+  EXPECT_FALSE(tag1 != tag2);
+
+  tag1 = Tag("name");
+  tag2 = Tag("Name");
+
+  EXPECT_TRUE(tag1 != tag2);
+
+  tag1 = Tag("name", true, "condition");
+  tag2 = Tag("name", true, "Condition");
+
+  EXPECT_TRUE(tag1 != tag2);
+
+  tag1 = Tag("name1");
+  tag2 = Tag("name2");
+
+  EXPECT_TRUE(tag1 != tag2);
+
+  tag1 = Tag("name", true, "condition1");
+  tag2 = Tag("name", true, "condition2");
+
+  EXPECT_TRUE(tag1 != tag2);
+
+  tag1 = Tag("name", true, "condition");
+  tag2 = Tag("name", true, "condition");
+
+  EXPECT_FALSE(tag1 != tag2);
+
+  tag1 = Tag("name", true);
+  tag2 = Tag("name", false);
+
+  EXPECT_TRUE(tag1 != tag2);
+}
+
+TEST(
+    Tag,
+    lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForNameAndCondition) {
   Tag tag1("name", true, "condition");
   Tag tag2("name", true, "condition");
 
@@ -128,6 +166,123 @@ TEST(Tag, lessThanOperatorShouldTreatTagAdditionsAsBeingLessThanRemovals) {
 
   EXPECT_TRUE(tag1 < tag2);
   EXPECT_FALSE(tag2 < tag1);
+}
+
+TEST(
+    Tag, greaterThanOperatorShouldReturnTrueIfTheSecondTagIsLessThanTheFirst) {
+  Tag tag1("name", true, "condition");
+  Tag tag2("name", true, "condition");
+
+  EXPECT_FALSE(tag1 > tag2);
+  EXPECT_FALSE(tag2 > tag1);
+
+  tag1 = Tag("name");
+  tag2 = Tag("Name");
+
+  EXPECT_TRUE(tag1 > tag2);
+  EXPECT_FALSE(tag2 > tag1);
+
+  tag1 = Tag("name", true, "condition");
+  tag2 = Tag("name", true, "Condition");
+
+  EXPECT_TRUE(tag1 > tag2);
+  EXPECT_FALSE(tag2 > tag1);
+
+  tag1 = Tag("name1");
+  tag2 = Tag("name2");
+
+  EXPECT_FALSE(tag1 > tag2);
+  EXPECT_TRUE(tag2 > tag1);
+
+  tag1 = Tag("name", true, "condition1");
+  tag2 = Tag("name", true, "condition2");
+
+  EXPECT_FALSE(tag1 > tag2);
+  EXPECT_TRUE(tag2 > tag1);
+
+  tag1 = Tag("name", true);
+  tag2 = Tag("name", false);
+
+  EXPECT_FALSE(tag1 > tag2);
+  EXPECT_TRUE(tag2 > tag1);
+}
+
+TEST(Tag, lessThanOrEqualOperatorShouldReturnTrueIfTheFirstTagIsNotGreaterThanTheSecond) {
+  Tag tag1("name", true, "condition");
+  Tag tag2("name", true, "condition");
+
+  EXPECT_TRUE(tag1 <= tag2);
+  EXPECT_TRUE(tag2 <= tag1);
+
+  tag1 = Tag("name");
+  tag2 = Tag("Name");
+
+  EXPECT_FALSE(tag1 <= tag2);
+  EXPECT_TRUE(tag2 <= tag1);
+
+  tag1 = Tag("name", true, "condition");
+  tag2 = Tag("name", true, "Condition");
+
+  EXPECT_FALSE(tag1 <= tag2);
+  EXPECT_TRUE(tag2 <= tag1);
+
+  tag1 = Tag("name1");
+  tag2 = Tag("name2");
+
+  EXPECT_TRUE(tag1 <= tag2);
+  EXPECT_FALSE(tag2 <= tag1);
+
+  tag1 = Tag("name", true, "condition1");
+  tag2 = Tag("name", true, "condition2");
+
+  EXPECT_TRUE(tag1 <= tag2);
+  EXPECT_FALSE(tag2 <= tag1);
+
+  tag1 = Tag("name", true);
+  tag2 = Tag("name", false);
+
+  EXPECT_TRUE(tag1 <= tag2);
+  EXPECT_FALSE(tag2 <= tag1);
+}
+
+TEST(
+    Tag,
+    greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstTagIsNotLessThanTheSecond) {
+  Tag tag1("name", true, "condition");
+  Tag tag2("name", true, "condition");
+
+  EXPECT_TRUE(tag1 >= tag2);
+  EXPECT_TRUE(tag2 >= tag1);
+
+  tag1 = Tag("name");
+  tag2 = Tag("Name");
+
+  EXPECT_TRUE(tag1 >= tag2);
+  EXPECT_FALSE(tag2 >= tag1);
+
+  tag1 = Tag("name", true, "condition");
+  tag2 = Tag("name", true, "Condition");
+
+  EXPECT_TRUE(tag1 >= tag2);
+  EXPECT_FALSE(tag2 >= tag1);
+
+  tag1 = Tag("name1");
+  tag2 = Tag("name2");
+
+  EXPECT_FALSE(tag1 >= tag2);
+  EXPECT_TRUE(tag2 >= tag1);
+
+  tag1 = Tag("name", true, "condition1");
+  tag2 = Tag("name", true, "condition2");
+
+  EXPECT_FALSE(tag1 >= tag2);
+  EXPECT_TRUE(tag2 >= tag1);
+
+  tag1 = Tag("name", true);
+  tag2 = Tag("name", false);
+
+  EXPECT_FALSE(tag1 >= tag2);
+  EXPECT_TRUE(tag2 >= tag1);
 }
 
 TEST(

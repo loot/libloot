@@ -74,8 +74,36 @@ TEST(Location, equalityShouldBeCaseSensitiveOnUrlAndName) {
   EXPECT_FALSE(location1 == location2);
 }
 
-TEST(Location,
-     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForNameAndUrl) {
+TEST(Location, inequalityShouldBeTheInverseOfEquality) {
+  Location location1("http://www.example.com", "example");
+  Location location2("http://www.example.com", "example");
+
+  EXPECT_FALSE(location1 != location2);
+
+  location1 = Location("http://www.example.com", "example");
+  location2 = Location("HTTP://WWW.EXAMPLE.COM", "example");
+
+  EXPECT_TRUE(location1 != location2);
+
+  location1 = Location("http://www.example.com", "example");
+  location2 = Location("http://www.example.com", "Example");
+
+  EXPECT_TRUE(location1 != location2);
+
+  location1 = Location("http://www.example1.com", "example");
+  location2 = Location("http://www.example2.com", "example");
+
+  EXPECT_TRUE(location1 != location2);
+
+  location1 = Location("http://www.example.com", "example1");
+  location2 = Location("http://www.example.com", "example2");
+
+  EXPECT_TRUE(location1 != location2);
+}
+
+TEST(
+    Location,
+    lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForNameAndUrl) {
   Location location1("http://www.example.com", "example");
   Location location2("http://www.example.com", "example");
 
@@ -105,6 +133,106 @@ TEST(Location,
 
   EXPECT_FALSE(location2 < location1);
   EXPECT_TRUE(location1 < location2);
+}
+
+TEST(Location,
+     greaterThanOperatorShouldReturnTrueIfTheSecondLocationIsLessThanTheFirst) {
+  Location location1("http://www.example.com", "example");
+  Location location2("http://www.example.com", "example");
+
+  EXPECT_FALSE(location1 > location2);
+  EXPECT_FALSE(location2 > location1);
+
+  location1 = Location("http://www.example.com");
+  location2 = Location("HTTP://WWW.EXAMPLE.COM");
+
+  EXPECT_TRUE(location1 > location2);
+  EXPECT_FALSE(location2 > location1);
+
+  location1 = Location("http://www.example.com", "example");
+  location2 = Location("http://www.example.com", "Example");
+
+  EXPECT_TRUE(location1 > location2);
+  EXPECT_FALSE(location2 > location1);
+
+  location1 = Location("http://www.example1.com");
+  location2 = Location("http://www.example2.com");
+
+  EXPECT_FALSE(location1 > location2);
+  EXPECT_TRUE(location2 > location1);
+
+  location1 = Location("http://www.example.com", "example1");
+  location2 = Location("http://www.example.com", "example2");
+
+  EXPECT_TRUE(location2 > location1);
+  EXPECT_FALSE(location1 > location2);
+}
+
+TEST(
+    Location,
+    lessThanOrEqualOperatorShouldReturnTrueIfTheFirstLocationIsNotGreaterThanTheSecond) {
+  Location location1("http://www.example.com", "example");
+  Location location2("http://www.example.com", "example");
+
+  EXPECT_TRUE(location1 <= location2);
+  EXPECT_TRUE(location2 <= location1);
+
+  location1 = Location("http://www.example.com");
+  location2 = Location("HTTP://WWW.EXAMPLE.COM");
+
+  EXPECT_FALSE(location1 <= location2);
+  EXPECT_TRUE(location2 <= location1);
+
+  location1 = Location("http://www.example.com", "example");
+  location2 = Location("http://www.example.com", "Example");
+
+  EXPECT_FALSE(location1 <= location2);
+  EXPECT_TRUE(location2 <= location1);
+
+  location1 = Location("http://www.example1.com");
+  location2 = Location("http://www.example2.com");
+
+  EXPECT_TRUE(location1 <= location2);
+  EXPECT_FALSE(location2 <= location1);
+
+  location1 = Location("http://www.example.com", "example1");
+  location2 = Location("http://www.example.com", "example2");
+
+  EXPECT_FALSE(location2 <= location1);
+  EXPECT_TRUE(location1 <= location2);
+}
+
+TEST(Location,
+     greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstLocationIsNotLessThanTheSecond) {
+  Location location1("http://www.example.com", "example");
+  Location location2("http://www.example.com", "example");
+
+  EXPECT_TRUE(location1 >= location2);
+  EXPECT_TRUE(location2 >= location1);
+
+  location1 = Location("http://www.example.com");
+  location2 = Location("HTTP://WWW.EXAMPLE.COM");
+
+  EXPECT_TRUE(location1 >= location2);
+  EXPECT_FALSE(location2 >= location1);
+
+  location1 = Location("http://www.example.com", "example");
+  location2 = Location("http://www.example.com", "Example");
+
+  EXPECT_TRUE(location1 >= location2);
+  EXPECT_FALSE(location2 >= location1);
+
+  location1 = Location("http://www.example1.com");
+  location2 = Location("http://www.example2.com");
+
+  EXPECT_FALSE(location1 >= location2);
+  EXPECT_TRUE(location2 >= location1);
+
+  location1 = Location("http://www.example.com", "example1");
+  location2 = Location("http://www.example.com", "example2");
+
+  EXPECT_TRUE(location2 >= location1);
+  EXPECT_FALSE(location1 >= location2);
 }
 
 TEST(Location, emittingAsYamlShouldOutputAScalarIfTheNameStringIsEmpty) {

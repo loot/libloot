@@ -40,7 +40,7 @@ bool Tag::operator<(const Tag& rhs) const {
   if (addTag_ != rhs.addTag_) {
     return addTag_ && !rhs.addTag_;
   }
-  
+
   if (name_ < rhs.name_) {
     return true;
   }
@@ -48,7 +48,7 @@ bool Tag::operator<(const Tag& rhs) const {
   if (rhs.name_ < name_) {
     return false;
   }
-  
+
   return GetCondition() < rhs.GetCondition();
 }
 
@@ -60,4 +60,12 @@ bool Tag::operator==(const Tag& rhs) const {
 bool Tag::IsAddition() const { return addTag_; }
 
 std::string Tag::GetName() const { return name_; }
+
+bool operator!=(const Tag& lhs, const Tag& rhs) { return !(lhs == rhs); }
+
+bool operator>(const Tag& lhs, const Tag& rhs) { return rhs < lhs; }
+
+bool operator<=(const Tag& lhs, const Tag& rhs) { return !(lhs > rhs); }
+
+bool operator>=(const Tag& lhs, const Tag& rhs) { return !(lhs < rhs); }
 }

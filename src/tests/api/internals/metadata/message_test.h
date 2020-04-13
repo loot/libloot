@@ -123,6 +123,43 @@ TEST_P(MessageTest, equalityShouldRequireEqualContent) {
   EXPECT_FALSE(message1 == message2);
 }
 
+TEST_P(MessageTest, inequalityShouldBeTheInverseOfEquality) {
+  Message message1(MessageType::say, "content");
+  Message message2(MessageType::say, "content");
+
+  EXPECT_FALSE(message1 != message2);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::warn, "content");
+
+  EXPECT_TRUE(message1 != message2);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "condition");
+
+  EXPECT_FALSE(message1 != message2);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "Condition");
+
+  EXPECT_TRUE(message1 != message2);
+
+  message1 = Message(MessageType::say, "content", "condition1");
+  message2 = Message(MessageType::say, "content", "condition2");
+
+  EXPECT_TRUE(message1 != message2);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::say, "content");
+
+  EXPECT_FALSE(message1 != message2);
+
+  message1 = Message(MessageType::say, "content1");
+  message2 = Message(MessageType::say, "content2");
+
+  EXPECT_TRUE(message1 != message2);
+}
+
 TEST_P(MessageTest, lessThanOperatorShouldCompareMessageTypes) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
@@ -171,6 +208,144 @@ TEST_P(
 
   EXPECT_TRUE(message1 < message2);
   EXPECT_FALSE(message2 < message1);
+}
+
+TEST_P(
+    MessageTest,
+    greaterThanOperatorShouldReturnTrueIfTheSecondMessageIsLessThanTheFirst) {
+  Message message1(MessageType::say, "content");
+  Message message2(MessageType::say, "content");
+
+  EXPECT_FALSE(message1 > message2);
+  EXPECT_FALSE(message2 > message1);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::warn, "content");
+
+  EXPECT_FALSE(message1 > message2);
+  EXPECT_TRUE(message2 > message1);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::say, "content");
+
+  EXPECT_FALSE(message1 > message2);
+  EXPECT_FALSE(message2 > message1);
+
+  message1 = Message(MessageType::say, "content1");
+  message2 = Message(MessageType::say, "content2");
+
+  EXPECT_FALSE(message1 > message2);
+  EXPECT_TRUE(message2 > message1);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "condition");
+
+  EXPECT_FALSE(message1 > message2);
+  EXPECT_FALSE(message2 > message1);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "Condition");
+
+  EXPECT_FALSE(message2 > message1);
+  EXPECT_TRUE(message1 > message2);
+
+  message1 = Message(MessageType::say, "content", "condition1");
+  message2 = Message(MessageType::say, "content", "condition2");
+
+  EXPECT_FALSE(message1 > message2);
+  EXPECT_TRUE(message2 > message1);
+}
+
+TEST_P(
+    MessageTest,
+    lessThanOrEqualOperatorShouldReturnTrueIfTheFirstMessageIsNotGreaterThanTheSecond) {
+  Message message1(MessageType::say, "content");
+  Message message2(MessageType::say, "content");
+
+  EXPECT_TRUE(message1 <= message2);
+  EXPECT_TRUE(message2 <= message1);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::warn, "content");
+
+  EXPECT_TRUE(message1 <= message2);
+  EXPECT_FALSE(message2 <= message1);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::say, "content");
+
+  EXPECT_TRUE(message1 <= message2);
+  EXPECT_TRUE(message2 <= message1);
+
+  message1 = Message(MessageType::say, "content1");
+  message2 = Message(MessageType::say, "content2");
+
+  EXPECT_TRUE(message1 <= message2);
+  EXPECT_FALSE(message2 <= message1);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "condition");
+
+  EXPECT_TRUE(message1 <= message2);
+  EXPECT_TRUE(message2 <= message1);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "Condition");
+
+  EXPECT_TRUE(message2 <= message1);
+  EXPECT_FALSE(message1 <= message2);
+
+  message1 = Message(MessageType::say, "content", "condition1");
+  message2 = Message(MessageType::say, "content", "condition2");
+
+  EXPECT_TRUE(message1 <= message2);
+  EXPECT_FALSE(message2 <= message1);
+}
+
+TEST_P(
+    MessageTest,
+    greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstMessageIsNotLessThanTheSecond) {
+  Message message1(MessageType::say, "content");
+  Message message2(MessageType::say, "content");
+
+  EXPECT_TRUE(message1 >= message2);
+  EXPECT_TRUE(message2 >= message1);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::warn, "content");
+
+  EXPECT_FALSE(message1 >= message2);
+  EXPECT_TRUE(message2 >= message1);
+
+  message1 = Message(MessageType::say, "content");
+  message2 = Message(MessageType::say, "content");
+
+  EXPECT_TRUE(message1 >= message2);
+  EXPECT_TRUE(message2 >= message1);
+
+  message1 = Message(MessageType::say, "content1");
+  message2 = Message(MessageType::say, "content2");
+
+  EXPECT_FALSE(message1 >= message2);
+  EXPECT_TRUE(message2 >= message1);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "condition");
+
+  EXPECT_TRUE(message1 >= message2);
+  EXPECT_TRUE(message2 >= message1);
+
+  message1 = Message(MessageType::say, "content", "condition");
+  message2 = Message(MessageType::say, "content", "Condition");
+
+  EXPECT_FALSE(message2 >= message1);
+  EXPECT_TRUE(message1 >= message2);
+
+  message1 = Message(MessageType::say, "content", "condition1");
+  message2 = Message(MessageType::say, "content", "condition2");
+
+  EXPECT_FALSE(message1 >= message2);
+  EXPECT_TRUE(message2 >= message1);
 }
 
 TEST_P(MessageTest, getContentShouldReturnADefaultContentObjectIfNoneExists) {

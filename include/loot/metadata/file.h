@@ -52,8 +52,8 @@ public:
    * @return A File object.
    */
   LOOT_API explicit File(const std::string& name,
-                const std::string& display = "",
-                const std::string& condition = "");
+                         const std::string& display = "",
+                         const std::string& condition = "");
 
   /**
    * A less-than operator implemented with no semantics so that File objects can
@@ -85,6 +85,35 @@ private:
   std::string name_;
   std::string display_;
 };
+
+/**
+ * Check if two File objects are not equal.
+ * @returns True if the File objects are not equal, false otherwise.
+ */
+LOOT_API bool operator!=(const File& lhs, const File& rhs);
+
+/**
+ * Check if the first File object is greater than the second File object.
+ * @returns True if the second File object is less than the first File object, 
+ *          false otherwise.
+ */
+LOOT_API bool operator>(const File& lhs, const File& rhs);
+
+/**
+ * Check if the first File object is less than or equal to the second File
+ * object.
+ * @returns True if the first File object is not greater than the second File 
+ *          object, false otherwise.
+ */
+LOOT_API bool operator<=(const File& lhs, const File& rhs);
+
+/**
+ * Check if the first File object is greater than or equal to the second File
+ * object.
+ * @returns True if the first File object is not less than the second File
+ *          object, false otherwise.
+ */
+LOOT_API bool operator>=(const File& lhs, const File& rhs);
 }
 
 #endif
