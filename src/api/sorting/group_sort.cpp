@@ -102,7 +102,7 @@ private:
   std::vector<Vertex> trail;
 };
 
-std::string join(const std::unordered_set<std::string>& set) {
+std::string joinVector(const std::vector<std::string>& set) {
   std::string output;
   for (const auto& element : set) {
     output += element + ", ";
@@ -111,8 +111,17 @@ std::string join(const std::unordered_set<std::string>& set) {
   return output.substr(0, output.length() - 2);
 }
 
-GroupGraph BuildGraph(const std::unordered_set<Group>& masterlistGroups,
-                      const std::unordered_set<Group>& userGroups) {
+std::string joinUnorderedSet(const std::unordered_set<std::string>& set) {
+  std::string output;
+  for (const auto& element : set) {
+    output += element + ", ";
+  }
+
+  return output.substr(0, output.length() - 2);
+}
+
+GroupGraph BuildGraph(const std::vector<Group>& masterlistGroups,
+                      const std::vector<Group>& userGroups) {
   GroupGraph graph;
 
   std::unordered_map<std::string, vertex_t> groupVertices;
@@ -127,7 +136,7 @@ GroupGraph BuildGraph(const std::unordered_set<Group>& masterlistGroups,
       logger->trace(
           "Masterlist group \"{}\" directly loads after groups \"{}\"",
           group.GetName(),
-          join(group.GetAfterGroups()));
+          joinVector(group.GetAfterGroups()));
     }
 
     auto vertex = groupVertices.at(group.GetName());
@@ -153,7 +162,7 @@ GroupGraph BuildGraph(const std::unordered_set<Group>& masterlistGroups,
     if (logger) {
       logger->trace("Userlist group \"{}\" directly loads after groups \"{}\"",
                     group.GetName(),
-                    join(group.GetAfterGroups()));
+                    joinVector(group.GetAfterGroups()));
     }
 
     auto vertex = groupVertices.at(group.GetName());
@@ -172,8 +181,8 @@ GroupGraph BuildGraph(const std::unordered_set<Group>& masterlistGroups,
 }
 
 std::unordered_map<std::string, std::unordered_set<std::string>>
-GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
-                         const std::unordered_set<Group>& userGroups) {
+GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
+                         const std::vector<Group>& userGroups) {
   GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
 
   auto logger = getLogger();
@@ -205,7 +214,7 @@ GetTransitiveAfterGroups(const std::unordered_set<Group>& masterlistGroups,
     if (logger) {
       logger->trace("Group \"{}\" transitively loads after groups \"{}\"",
                     graph[vertex],
-                    join(visitedGroups));
+                    joinUnorderedSet(visitedGroups));
     }
   }
 
@@ -229,8 +238,8 @@ vertex_t GetVertexByName(const GroupGraph& graph, const std::string& name) {
 }
 
 std::vector<Vertex> GetGroupsPath(
-    const std::unordered_set<Group>& masterlistGroups,
-    const std::unordered_set<Group>& userGroups,
+    const std::vector<Group>& masterlistGroups,
+    const std::vector<Group>& userGroups,
     const std::string& fromGroupName,
     const std::string& toGroupName) {
   GroupGraph graph = BuildGraph(masterlistGroups, userGroups);

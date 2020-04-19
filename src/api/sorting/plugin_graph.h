@@ -86,7 +86,7 @@ public:
   void AddPluginVertices(Game& game, const std::vector<std::string>& loadOrder);
   void AddSpecificEdges();
   void AddHardcodedPluginEdges(Game& game);
-  void AddGroupEdges(const std::unordered_set<Group>& groups);
+  void AddGroupEdges(const std::unordered_map<std::string, Group>& groups);
   void AddOverlapEdges();
   void AddTieBreakEdges();
 

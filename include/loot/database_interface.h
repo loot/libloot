@@ -190,16 +190,18 @@ public:
    *        If true, any group metadata present in the userlist is included in
    *        the returned metadata, otherwise the metadata returned only includes
    *        metadata from the masterlist.
-   * @returns An unordered set of Group objects.
+   * @returns An vector of Group objects. Each Group's name is unique, if a
+   *          group has masterlist and user metadata the two are merged into a
+   *          single group object.
    */
-  virtual std::unordered_set<Group> GetGroups(
+  virtual std::vector<Group> GetGroups(
       bool includeUserMetadata = true) const = 0;
 
   /**
    * @brief Gets the groups that are defined or extended in the loaded userlist.
    * @returns An unordered set of Group objects.
    */
-  virtual std::unordered_set<Group> GetUserGroups() const = 0;
+  virtual std::vector<Group> GetUserGroups() const = 0;
 
   /**
    * @brief Sets the group definitions to store in the userlist, overwriting any
@@ -207,7 +209,7 @@ public:
    * @param groups
    *        The unordered set of Group objects to set.
    */
-  virtual void SetUserGroups(const std::unordered_set<Group>& groups) = 0;
+  virtual void SetUserGroups(const std::vector<Group>& groups) = 0;
 
   /**
    * @brief Get the "shortest" path between the two given groups according to

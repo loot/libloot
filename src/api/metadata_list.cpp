@@ -52,8 +52,8 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
   in.close();
 
   if (!metadataList.IsMap())
-    throw FileAccessError("The root of the metadata file " + filepath.u8string() +
-                          " is not a YAML map.");
+    throw FileAccessError("The root of the metadata file " +
+                          filepath.u8string() + " is not a YAML map.");
 
   if (metadataList["plugins"]) {
     for (const auto& node : metadataList["plugins"]) {
@@ -61,7 +61,7 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
       if (plugin.IsRegexPlugin())
         regexPlugins_.push_back(plugin);
       else if (!plugins_.insert(plugin).second)
-        throw FileAccessError("More than one entry exists for \"" +
+        throw FileAccessError("More than one entry exists for plugin \"" +
                               plugin.GetName() + "\"");
     }
   }
@@ -71,10 +71,23 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
   if (metadataList["bash_tags"])
     bashTags_ = metadataList["bash_tags"].as<std::set<std::string>>();
 
-  if (metadataList["groups"])
-    groups_ = metadataList["groups"].as<std::unordered_set<Group>>();
+  std::unordered_set<std::string> groupNames;
+  if (metadataList["groups"]) {
+    for (const auto& node : metadataList["groups"]) {
+      auto group = node.as<Group>();
+      if (groupNames.count(group.GetName()) != 0) {
+        throw FileAccessError("More than one entry exists for group \"" +
+                              group.GetName() + "\"");
+      }
+      groups_.push_back(group);
+      groupNames.insert(group.GetName());
+    }
+  }
 
-  groups_.insert(Group());
+  auto defaultGroup = Group();
+  if (groupNames.count(defaultGroup.GetName()) == 0) {
+    groups_.insert(groups_.cbegin(), Group());
+  }
 
   if (logger) {
     logger->debug("File loaded successfully.");
@@ -93,16 +106,19 @@ void MetadataList::Save(const std::filesystem::path& filepath) const {
   if (!bashTags_.empty())
     emitter << YAML::Key << "bash_tags" << YAML::Value << bashTags_;
 
-  if (!groups_.empty())
+  if (!groups_.empty()) {
     emitter << YAML::Key << "groups" << YAML::Value << groups_;
+  }
 
   if (!messages_.empty())
     emitter << YAML::Key << "globals" << YAML::Value << messages_;
 
   auto plugins = Plugins();
-  std::sort(plugins.begin(), plugins.end(), [](const PluginMetadata& p1, const PluginMetadata& p2) {
-    return CompareFilenames(p1.GetName(), p2.GetName()) < 0;
-  });
+  std::sort(plugins.begin(),
+            plugins.end(),
+            [](const PluginMetadata& p1, const PluginMetadata& p2) {
+              return CompareFilenames(p1.GetName(), p2.GetName()) < 0;
+            });
 
   if (!plugins.empty())
     emitter << YAML::Key << "plugins" << YAML::Value << plugins;
@@ -118,10 +134,15 @@ void MetadataList::Save(const std::filesystem::path& filepath) const {
 }
 
 void MetadataList::Clear() {
+  groups_.clear();
   bashTags_.clear();
   plugins_.clear();
   regexPlugins_.clear();
   messages_.clear();
+
+  unevaluatedPlugins_.clear();
+  unevaluatedRegexPlugins_.clear();
+  unevaluatedMessages_.clear();
 }
 
 std::vector<PluginMetadata> MetadataList::Plugins() const {
@@ -137,11 +158,29 @@ std::vector<Message> MetadataList::Messages() const { return messages_; }
 
 std::set<std::string> MetadataList::BashTags() const { return bashTags_; }
 
-std::unordered_set<Group> MetadataList::Groups() const { return groups_; }
+std::vector<Group> MetadataList::Groups() const {
+  if (groups_.empty()) {
+    return {Group()};
+  }
 
-void MetadataList::SetGroups(const std::unordered_set<Group>& groups) {
-  groups_ = groups;
-  groups_.insert(Group());
+  return groups_;
+}
+
+void MetadataList::SetGroups(const std::vector<Group>& groups) {
+  // In case the default group is missing.
+  auto defaultGroupName = Group().GetName();
+  auto defaultGroupsExists =
+      std::any_of(groups.cbegin(), groups.cend(), [&](const Group& group) {
+        return group.GetName() == defaultGroupName;
+      });
+
+  if (!defaultGroupsExists) {
+    groups_.clear();
+    groups_.push_back(Group());
+    groups_.insert(groups_.end(), groups.begin(), groups.end());
+  } else {
+    groups_ = groups;
+  }
 }
 
 // Merges multiple matching regex entries if any are found.
@@ -195,8 +234,7 @@ void MetadataList::AppendMessage(const Message& message) {
   messages_.push_back(message);
 }
 
-void MetadataList::EvalAllConditions(
-    ConditionEvaluator& conditionEvaluator) {
+void MetadataList::EvalAllConditions(ConditionEvaluator& conditionEvaluator) {
   if (unevaluatedPlugins_.empty())
     unevaluatedPlugins_.swap(plugins_);
   else

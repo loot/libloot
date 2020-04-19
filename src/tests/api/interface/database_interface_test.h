@@ -380,31 +380,30 @@ TEST_P(DatabaseInterfaceTest,
 
   auto groups = db_->GetGroups();
 
-  EXPECT_EQ(4, groups.size());
+  ASSERT_EQ(4, groups.size());
 
-  EXPECT_EQ(1, groups.count(Group("default")));
-  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+  EXPECT_EQ("default", groups[0].GetName());
+  EXPECT_TRUE(groups[0].GetAfterGroups().empty());
 
-  EXPECT_EQ(1, groups.count(Group("group1")));
-  EXPECT_TRUE(groups.find(Group("group1"))->GetAfterGroups().empty());
+  EXPECT_EQ("group1", groups[1].GetName());
+  EXPECT_TRUE(groups[1].GetAfterGroups().empty());
 
-  EXPECT_EQ(1, groups.count(Group("group2")));
-  EXPECT_EQ(std::unordered_set<std::string>({"group1", "default"}),
-            groups.find(Group("group2"))->GetAfterGroups());
+  EXPECT_EQ("group2", groups[2].GetName());
+  EXPECT_EQ(std::vector<std::string>({"group1", "default"}),
+            groups[2].GetAfterGroups());
 
-  EXPECT_EQ(1, groups.count(Group("group3")));
-  EXPECT_EQ(std::unordered_set<std::string>({"group1"}),
-            groups.find(Group("group3"))->GetAfterGroups());
+  EXPECT_EQ("group3", groups[3].GetName());
+  EXPECT_EQ(std::vector<std::string>({"group1"}), groups[3].GetAfterGroups());
 }
 
 TEST_P(DatabaseInterfaceTest,
        getGroupsShouldReturnDefaultGroupEvenIfNoMetadataIsLoaded) {
   auto groups = db_->GetGroups();
 
-  EXPECT_EQ(1, groups.size());
+  ASSERT_EQ(1, groups.size());
 
-  EXPECT_EQ("default", groups.begin()->GetName());
-  EXPECT_TRUE(groups.begin()->GetAfterGroups().empty());
+  EXPECT_EQ("default", groups[0].GetName());
+  EXPECT_TRUE(groups[0].GetAfterGroups().empty());
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -416,17 +415,17 @@ TEST_P(DatabaseInterfaceTest,
 
   auto groups = db_->GetGroups(false);
 
-  EXPECT_EQ(3, groups.size());
+  ASSERT_EQ(3, groups.size());
 
-  EXPECT_EQ(1, groups.count(Group("default")));
-  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+  EXPECT_EQ("default", groups[0].GetName());
+  EXPECT_TRUE(groups[0].GetAfterGroups().empty());
 
-  EXPECT_EQ(1, groups.count(Group("group1")));
-  EXPECT_TRUE(groups.find(Group("group1"))->GetAfterGroups().empty());
+  EXPECT_EQ("group1", groups[1].GetName());
+  EXPECT_TRUE(groups[1].GetAfterGroups().empty());
 
-  EXPECT_EQ(1, groups.count(Group("group2")));
-  EXPECT_EQ(std::unordered_set<std::string>({"group1"}),
-            groups.find(Group("group2"))->GetAfterGroups());
+  EXPECT_EQ("group2", groups[2].GetName());
+  EXPECT_EQ(std::vector<std::string>({"group1"}),
+            groups[2].GetAfterGroups());
 }
 
 TEST_P(
@@ -449,18 +448,16 @@ TEST_P(DatabaseInterfaceTest,
 
   auto groups = db_->GetUserGroups();
 
-  EXPECT_EQ(3, groups.size());
+  ASSERT_EQ(3, groups.size());
 
-  EXPECT_EQ(1, groups.count(Group("default")));
-  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+  EXPECT_EQ("default", groups[0].GetName());
+  EXPECT_TRUE(groups[0].GetAfterGroups().empty());
 
-  EXPECT_EQ(1, groups.count(Group("group2")));
-  EXPECT_EQ(std::unordered_set<std::string>({"default"}),
-            groups.find(Group("group2"))->GetAfterGroups());
+  EXPECT_EQ("group2", groups[1].GetName());
+  EXPECT_EQ(std::vector<std::string>({"default"}), groups[1].GetAfterGroups());
 
-  EXPECT_EQ(1, groups.count(Group("group3")));
-  EXPECT_EQ(std::unordered_set<std::string>({"group1"}),
-            groups.find(Group("group3"))->GetAfterGroups());
+  EXPECT_EQ("group3", groups[2].GetName());
+  EXPECT_EQ(std::vector<std::string>({"group1"}), groups[2].GetAfterGroups());
 }
 
 TEST_P(
@@ -471,19 +468,19 @@ TEST_P(
 
   ASSERT_NO_THROW(db_->LoadLists(masterlistPath, userlistPath_));
 
-  db_->SetUserGroups(std::unordered_set<Group>({
+  db_->SetUserGroups(std::vector<Group>({
       Group("group4"),
   }));
 
   auto groups = db_->GetUserGroups();
 
-  EXPECT_EQ(2, groups.size());
+  ASSERT_EQ(2, groups.size());
 
-  EXPECT_EQ(1, groups.count(Group("default")));
-  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+  EXPECT_EQ("default", groups[0].GetName());
+  EXPECT_TRUE(groups[0].GetAfterGroups().empty());
 
-  EXPECT_EQ(1, groups.count(Group("group4")));
-  EXPECT_TRUE(groups.find(Group("group4"))->GetAfterGroups().empty());
+  EXPECT_EQ("group4", groups[1].GetName());
+  EXPECT_TRUE(groups[1].GetAfterGroups().empty());
 }
 
 TEST_P(DatabaseInterfaceTest,

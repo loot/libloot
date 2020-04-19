@@ -63,9 +63,9 @@ public:
   std::vector<PluginMetadata> Plugins() const;
   std::vector<Message> Messages() const;
   std::set<std::string> BashTags() const;
-  std::unordered_set<Group> Groups() const;
+  std::vector<Group> Groups() const;
 
-  void SetGroups(const std::unordered_set<Group>& groups);
+  void SetGroups(const std::vector<Group>& groups);
 
   // Merges multiple matching regex entries if any are found.
   std::optional<PluginMetadata> FindPlugin(const std::string& pluginName) const;
@@ -81,7 +81,7 @@ public:
   void EvalAllConditions(ConditionEvaluator& conditionEvaluator);
 
 protected:
-  std::unordered_set<Group> groups_;
+  std::vector<Group> groups_;
   std::set<std::string> bashTags_;
   std::unordered_set<PluginMetadata> plugins_;
   std::vector<PluginMetadata> regexPlugins_;

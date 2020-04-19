@@ -30,14 +30,15 @@
 #include "api/game/game.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/plugin_metadata.h"
-#include "api/sorting/plugin_sort.h"
 #include "api/sorting/group_sort.h"
-#include "loot/metadata/group.h"
+#include "api/sorting/plugin_sort.h"
 #include "loot/exception/file_access_error.h"
+#include "loot/metadata/group.h"
 
 namespace loot {
-ApiDatabase::ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator) :
-  conditionEvaluator_(conditionEvaluator) {}
+ApiDatabase::ApiDatabase(
+    std::shared_ptr<ConditionEvaluator> conditionEvaluator) :
+    conditionEvaluator_(conditionEvaluator) {}
 
 ///////////////////////////////////
 // Database Loading Functions
@@ -90,7 +91,8 @@ bool ApiDatabase::UpdateMasterlist(const std::filesystem::path& masterlistPath,
                                    const std::string& remoteURL,
                                    const std::string& remoteBranch) {
   if (!std::filesystem::is_directory(masterlistPath.parent_path()))
-    throw std::invalid_argument("Given masterlist path \"" + masterlistPath.u8string() +
+    throw std::invalid_argument("Given masterlist path \"" +
+                                masterlistPath.u8string() +
                                 "\" does not have a valid parent directory.");
 
   Masterlist masterlist;
@@ -110,7 +112,7 @@ MasterlistInfo ApiDatabase::GetMasterlistRevision(
 
 bool ApiDatabase::IsLatestMasterlist(
     const std::filesystem::path& masterlist_path,
-                                     const std::string& branch) const {
+    const std::string& branch) const {
   return Masterlist::IsLatest(masterlist_path, branch);
 }
 
@@ -155,59 +157,62 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(
   return masterlistMessages;
 }
 
-std::unordered_set<Group> ApiDatabase::GetGroups(bool includeUserMetadata) const {
-  if (!includeUserMetadata) {
-    auto groups = masterlist_.Groups();
+std::vector<Group> ApiDatabase::GetGroups(
+    bool includeUserMetadata) const {
+  auto groups = masterlist_.Groups();
 
-    //Insert the default group in case the masterlist hasn't been loaded.
-    groups.insert(Group());
+  if (includeUserMetadata) {
+    std::vector<Group> newGroups;
+    for (const auto& userlistGroup : userlist_.Groups()) {
+      auto groupIt = std::find_if(groups.begin(), groups.end(), [&](const Group& existingGroup) {
+            return existingGroup.GetName() == userlistGroup.GetName();
+      });
 
-    return groups;
-  }
+      if (groupIt == groups.end()) {
+        newGroups.push_back(userlistGroup);
+      } else {
+        // Replace the masterlist group description with the userlist group
+        // description if the latter is not empty.
+        auto description = userlistGroup.GetDescription().empty()
+                               ? groupIt->GetDescription()
+                               : userlistGroup.GetDescription();
 
-  std::unordered_set<Group> mergedGroups;
+        auto afterGroups = groupIt->GetAfterGroups();
+        auto userAfterGroups = userlistGroup.GetAfterGroups();
+        afterGroups.insert(afterGroups.end(), userAfterGroups.begin(), userAfterGroups.end());
 
-  auto userlistGroups = userlist_.Groups();
-  for (const auto& group : masterlist_.Groups()) {
-    auto userlistGroup = userlistGroups.find(group);
-    if (userlistGroup != userlistGroups.end()) {
-      auto afterGroups = group.GetAfterGroups();
-      auto userlistAfterGroups = userlistGroup->GetAfterGroups();
-
-      afterGroups.insert(userlistAfterGroups.begin(), userlistAfterGroups.end());
-      mergedGroups.insert(Group(group.GetName(), afterGroups));
-    } else {
-      mergedGroups.insert(group);
+        *groupIt = Group(userlistGroup.GetName(), afterGroups, description);
+      }
     }
+
+    groups.insert(groups.end(), newGroups.cbegin(), newGroups.cend());
   }
-  mergedGroups.insert(userlistGroups.begin(), userlistGroups.end());
 
-  // Insert the default group if it's not already present.
-  mergedGroups.insert(Group());
-
-  return mergedGroups;
+  return groups;
 }
 
-std::unordered_set<Group> ApiDatabase::GetUserGroups() const {
+std::vector<Group> ApiDatabase::GetUserGroups() const {
   return userlist_.Groups();
 }
 
-void ApiDatabase::SetUserGroups(const std::unordered_set<Group>& groups) {
+void ApiDatabase::SetUserGroups(const std::vector<Group>& groups) {
   userlist_.SetGroups(groups);
 }
 
-
-std::vector<Vertex> ApiDatabase::GetGroupsPath(const std::string& fromGroupName,
-  const std::string& toGroupName) const {
+std::vector<Vertex> ApiDatabase::GetGroupsPath(
+    const std::string& fromGroupName,
+    const std::string& toGroupName) const {
   auto masterlistGroups = GetGroups(false);
   auto userGroups = GetUserGroups();
 
-  return loot::GetGroupsPath(masterlistGroups, userGroups, fromGroupName, toGroupName);
+  return loot::GetGroupsPath(
+      masterlistGroups, userGroups, fromGroupName, toGroupName);
 }
 
-std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(const std::string& plugin,
-                                              bool includeUserMetadata,
-                                              bool evaluateConditions) const {
+std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(
+    const std::string& plugin,
+    bool includeUserMetadata,
+    bool evaluateConditions) const {
   auto metadata = masterlist_.FindPlugin(plugin);
 
   if (includeUserMetadata) {

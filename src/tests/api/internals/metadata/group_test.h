@@ -50,34 +50,306 @@ TEST(Group,
 }
 
 TEST(Group, allArgsConstructorShouldStoreGivenValues) {
-  Group group(
-      "group1", std::unordered_set<std::string>({"other_group"}), "test");
+  Group group("group1", {"other_group"}, "test");
 
   EXPECT_EQ("group1", group.GetName());
   EXPECT_EQ("test", group.GetDescription());
-  EXPECT_EQ(std::unordered_set<std::string>({"other_group"}),
+  EXPECT_EQ(std::vector<std::string>({"other_group"}),
             group.GetAfterGroups());
 }
 
-TEST(Group, groupsWithCaseInsensitiveEqualNameStringsShouldNotBeEqual) {
-  Group group1("name");
-  Group group2("Name");
-
-  EXPECT_FALSE(group1 == group2);
-}
-
-TEST(Group, groupsWithCaseSensitiveEqualNameStringsShouldBeEqual) {
-  Group group1("name");
-  Group group2("name");
+TEST(Group, equalityShouldBeCaseSensitiveOnNameAndDescription) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
 
   EXPECT_TRUE(group1 == group2);
-}
 
-TEST(Group, groupsWithDifferentNamesShouldBeUnequal) {
-  Group group1("name1");
-  Group group2("name2");
+  group1 = Group("name");
+  group2 = Group("Name");
 
   EXPECT_FALSE(group1 == group2);
+
+  group1 = Group("name", {}, "description");
+  group2 = Group("name", {}, "Description");
+
+  EXPECT_FALSE(group1 == group2);
+
+  group1 = Group("name1");
+  group2 = Group("name2");
+
+  EXPECT_FALSE(group1 == group2);
+
+  group1 = Group("name", {}, "description1");
+  group2 = Group("name", {}, "description2");
+
+  EXPECT_FALSE(group1 == group2);
+}
+
+TEST(Group, equalityShouldRequireEqualAfterGroups) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
+
+  EXPECT_TRUE(group1 == group2);
+
+  group1 = Group("name", {}, "description");
+  group2 = Group("name", {"after1"}, "Description");
+
+  EXPECT_FALSE(group1 == group2);
+}
+
+TEST(Group, inequalityShouldBeTheInverseOfEquality) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
+
+  EXPECT_FALSE(group1 != group2);
+
+  group1 = Group("name");
+  group2 = Group("Name");
+
+  EXPECT_TRUE(group1 != group2);
+
+  group1 = Group("name", {}, "description");
+  group2 = Group("name", {}, "Description");
+
+  EXPECT_TRUE(group1 != group2);
+
+  group1 = Group("name1");
+  group2 = Group("name2");
+
+  EXPECT_TRUE(group1 != group2);
+
+  group1 = Group("name", {}, "description1");
+  group2 = Group("name", {}, "description2");
+
+  EXPECT_TRUE(group1 != group2);
+
+  group1 = Group("name", {}, "description");
+  group2 = Group("name", {"after1"}, "Description");
+
+  EXPECT_TRUE(group1 != group2);
+}
+
+TEST(Group,
+     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForNames) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
+
+  EXPECT_FALSE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+
+  group1 = Group("Name", {}, "description");
+  group2 = Group("name", {}, "description");
+
+  EXPECT_TRUE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+
+  group1 = Group("name1", {}, "description");
+  group2 = Group("name2", {}, "description");
+
+  EXPECT_TRUE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+}
+
+TEST(
+    Group,
+    lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForDescriptions) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
+
+  EXPECT_FALSE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+
+  group1 = Group("name", {}, "Description");
+  group2 = Group("name", {}, "description");
+
+  EXPECT_TRUE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+
+  group1 = Group("name", {}, "description1");
+  group2 = Group("name", {}, "description2");
+
+  EXPECT_TRUE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+}
+
+TEST(Group, lessThanOperatorShouldCompareAfterGroups) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
+
+  EXPECT_FALSE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+
+  group1 = Group("name", {}, "description");
+  group2 = Group("name", {"group"}, "description");
+
+  EXPECT_TRUE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+
+  group1 = Group("name", {"Group"}, "description");
+  group2 = Group("name", {"group"}, "description");
+
+  EXPECT_TRUE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+
+  group1 = Group("name", {"group1"}, "description");
+  group2 = Group("name", {"group2"}, "description");
+
+  EXPECT_TRUE(group1 < group2);
+  EXPECT_FALSE(group2 < group1);
+}
+
+TEST(
+    Group,
+       greaterThanOperatorShouldReturnTrueIfTheSecondGroupIsLessThanTheFirst) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
+
+  EXPECT_FALSE(group1 > group2);
+  EXPECT_FALSE(group2 > group1);
+
+  group1 = Group("Name", {}, "description");
+  group2 = Group("name", {}, "description");
+
+  EXPECT_FALSE(group1 > group2);
+  EXPECT_TRUE(group2 > group1);
+
+  group1 = Group("name1", {}, "description");
+  group2 = Group("name2", {}, "description");
+
+  EXPECT_FALSE(group1 > group2);
+  EXPECT_TRUE(group2 > group1);
+
+  group1 = Group("name", {}, "Description");
+  group2 = Group("name", {}, "description");
+
+  EXPECT_FALSE(group1 > group2);
+  EXPECT_TRUE(group2 > group1);
+
+  group1 = Group("name", {}, "description1");
+  group2 = Group("name", {}, "description2");
+
+  EXPECT_FALSE(group1 > group2);
+  EXPECT_TRUE(group2 > group1);
+
+  group1 = Group("name", {}, "description");
+  group2 = Group("name", {"group"}, "description");
+
+  EXPECT_FALSE(group1 > group2);
+  EXPECT_TRUE(group2 > group1);
+
+  group1 = Group("name", {"Group"}, "description");
+  group2 = Group("name", {"group"}, "description");
+
+  EXPECT_FALSE(group1 > group2);
+  EXPECT_TRUE(group2 > group1);
+
+  group1 = Group("name", {"group1"}, "description");
+  group2 = Group("name", {"group2"}, "description");
+
+  EXPECT_FALSE(group1 > group2);
+  EXPECT_TRUE(group2 > group1);
+}
+
+TEST(Group,
+       lessThanOrEqualToOperatorShouldReturnTrueIfTheFirstGroupIsNotGreaterThanTheSecond) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
+
+  EXPECT_TRUE(group1 <= group2);
+  EXPECT_TRUE(group2 <= group1);
+
+  group1 = Group("Name", {}, "description");
+  group2 = Group("name", {}, "description");
+
+  EXPECT_TRUE(group1 <= group2);
+  EXPECT_FALSE(group2 <= group1);
+
+  group1 = Group("name1", {}, "description");
+  group2 = Group("name2", {}, "description");
+
+  EXPECT_TRUE(group1 <= group2);
+  EXPECT_FALSE(group2 <= group1);
+
+  group1 = Group("name", {}, "Description");
+  group2 = Group("name", {}, "description");
+
+  EXPECT_TRUE(group1 <= group2);
+  EXPECT_FALSE(group2 <= group1);
+
+  group1 = Group("name", {}, "description1");
+  group2 = Group("name", {}, "description2");
+
+  EXPECT_TRUE(group1 <= group2);
+  EXPECT_FALSE(group2 <= group1);
+
+  group1 = Group("name", {}, "description");
+  group2 = Group("name", {"group"}, "description");
+
+  EXPECT_TRUE(group1 <= group2);
+  EXPECT_FALSE(group2 <= group1);
+
+  group1 = Group("name", {"Group"}, "description");
+  group2 = Group("name", {"group"}, "description");
+
+  EXPECT_TRUE(group1 <= group2);
+  EXPECT_FALSE(group2 <= group1);
+
+  group1 = Group("name", {"group1"}, "description");
+  group2 = Group("name", {"group2"}, "description");
+
+  EXPECT_TRUE(group1 <= group2);
+  EXPECT_FALSE(group2 <= group1);
+}
+
+TEST(Group,
+    greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstGroupIsNotLessThanTheSecond) {
+  Group group1("name", {}, "description");
+  Group group2("name", {}, "description");
+
+  EXPECT_TRUE(group1 >= group2);
+  EXPECT_TRUE(group2 >= group1);
+
+  group1 = Group("Name", {}, "description");
+  group2 = Group("name", {}, "description");
+
+  EXPECT_FALSE(group1 >= group2);
+  EXPECT_TRUE(group2 >= group1);
+
+  group1 = Group("name1", {}, "description");
+  group2 = Group("name2", {}, "description");
+
+  EXPECT_FALSE(group1 >= group2);
+  EXPECT_TRUE(group2 >= group1);
+
+  group1 = Group("name", {}, "Description");
+  group2 = Group("name", {}, "description");
+
+  EXPECT_FALSE(group1 >= group2);
+  EXPECT_TRUE(group2 >= group1);
+
+  group1 = Group("name", {}, "description1");
+  group2 = Group("name", {}, "description2");
+
+  EXPECT_FALSE(group1 >= group2);
+  EXPECT_TRUE(group2 >= group1);
+
+  group1 = Group("name", {}, "description");
+  group2 = Group("name", {"group"}, "description");
+
+  EXPECT_FALSE(group1 >= group2);
+  EXPECT_TRUE(group2 >= group1);
+
+  group1 = Group("name", {"Group"}, "description");
+  group2 = Group("name", {"group"}, "description");
+
+  EXPECT_FALSE(group1 >= group2);
+  EXPECT_TRUE(group2 >= group1);
+
+  group1 = Group("name", {"group1"}, "description");
+  group2 = Group("name", {"group2"}, "description");
+
+  EXPECT_FALSE(group1 >= group2);
+  EXPECT_TRUE(group2 >= group1);
 }
 
 TEST(Group, emittingAsYamlShouldOmitAfterKeyIfAfterGroupsIsEmpty) {
@@ -102,7 +374,7 @@ TEST(Group, emittingAsYamlShouldIncludeDescriptionKeyIfDescriptionIsNotEmpty) {
 }
 
 TEST(Group, emittingAsYamlShouldIncludeAfterKeyIfAfterGroupsIsNotEmpty) {
-  Group group("group1", std::unordered_set<std::string>({"other_group"}));
+  Group group("group1", {"other_group"});
 
   YAML::Emitter emitter;
   emitter << group;
@@ -142,14 +414,13 @@ TEST(Group, encodingAsYamlShouldOmitAfterKeyIfAfterGroupsIsEmpty) {
 }
 
 TEST(Group, encodingAsYamlShouldIncludeAfterKeyIfAfterGroupsIsNotEmpty) {
-  Group group("group1", std::unordered_set<std::string>({"other_group"}));
+  Group group("group1", {"other_group"});
   YAML::Node node;
   node = group;
 
-  std::unordered_set<std::string> expectedAfterGroups = {"other_group"};
+  std::vector<std::string> expectedAfterGroups = {"other_group"};
   EXPECT_EQ("group1", node["name"].as<std::string>());
-  EXPECT_EQ(expectedAfterGroups,
-            node["after"].as<std::unordered_set<std::string>>());
+  EXPECT_EQ(expectedAfterGroups, node["after"].as<std::vector<std::string>>());
 }
 
 TEST(Group, decodingFromYamlShouldSetGivenName) {
@@ -172,7 +443,7 @@ TEST(Group, decodingFromYamlShouldSetAfterGroupsIfAnyAreGiven) {
   YAML::Node node = YAML::Load("{name: group1, after: [ other_group ]}");
   Group group = node.as<Group>();
 
-  std::unordered_set<std::string> expectedAfterGroups = {"other_group"};
+  std::vector<std::string> expectedAfterGroups = {"other_group"};
   EXPECT_EQ("group1", group.GetName());
   EXPECT_EQ(expectedAfterGroups, group.GetAfterGroups());
 }

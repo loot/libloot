@@ -534,7 +534,7 @@ void ignorePlugin(const std::string& pluginName,
 std::unordered_set<std::string> pathfinder(
     const Group& group,
     const std::string& targetGroupName,
-    const std::unordered_set<Group>& groups,
+    const std::unordered_map<std::string, Group>& groups,
     std::unordered_set<std::string> visitedGroups) {
   // If the current group is the target group, return the set of groups in the
   // path leading to it.
@@ -552,10 +552,14 @@ std::unordered_set<std::string> pathfinder(
   // all return values.
   std::unordered_set<std::string> mergedVisitedGroups;
   for (const auto& afterGroupName : group.GetAfterGroups()) {
-    auto afterGroup = *groups.find(Group(afterGroupName));
+    auto groupIt = groups.find(afterGroupName);
+    if (groupIt == groups.end()) {
+      throw std::runtime_error("Cannot find group \"" + afterGroupName +
+                               "\" during sorting.");
+    }
 
     auto recursedVisitedGroups =
-        pathfinder(afterGroup, targetGroupName, groups, visitedGroups);
+        pathfinder(groupIt->second, targetGroupName, groups, visitedGroups);
 
     mergedVisitedGroups.insert(recursedVisitedGroups.begin(),
                                recursedVisitedGroups.end());
@@ -576,22 +580,26 @@ std::unordered_set<std::string> pathfinder(
 }
 
 std::unordered_set<std::string> getGroupsInPaths(
-    const std::unordered_set<Group>& groups,
+    const std::unordered_map<std::string, Group>& groups,
     const std::string& firstGroupName,
     const std::string& lastGroupName) {
   // Groups are linked in reverse order, i.e. firstGroup can be found from
   // lastGroup, but not the other way around.
-  auto lastGroup = *groups.find(Group(lastGroupName));
+  auto groupIt = groups.find(lastGroupName);
+  if (groupIt == groups.end()) {
+    throw std::runtime_error("Cannot find group \"" + lastGroupName +
+                             "\" during sorting.");
+  }
 
   auto groupsInPaths = pathfinder(
-      lastGroup, firstGroupName, groups, std::unordered_set<std::string>());
+      groupIt->second, firstGroupName, groups, std::unordered_set<std::string>());
 
   groupsInPaths.erase(lastGroupName);
 
   return groupsInPaths;
 }
 
-void PluginGraph::AddGroupEdges(const std::unordered_set<Group>& groups) {
+void PluginGraph::AddGroupEdges(const std::unordered_map<std::string, Group>& groups) {
   std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
   std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
 

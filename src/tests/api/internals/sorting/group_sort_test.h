@@ -35,7 +35,7 @@ along with LOOT.  If not, see
 namespace loot {
 namespace test {
 TEST(GetTransitiveAfterGroups, shouldMapGroupsToTheirTransitiveAfterGroups) {
-  std::unordered_set<Group> groups(
+  std::vector<Group> groups(
       {Group("a"), Group("b", {"a"}), Group("c", {"b"})});
 
   auto mapped = GetTransitiveAfterGroups(groups, {});
@@ -46,14 +46,14 @@ TEST(GetTransitiveAfterGroups, shouldMapGroupsToTheirTransitiveAfterGroups) {
 }
 
 TEST(GetTransitiveAfterGroups, shouldThrowIfAnAfterGroupDoesNotExist) {
-  std::unordered_set<Group> groups({Group("b", {"a"})});
+  std::vector<Group> groups({Group("b", {"a"})});
 
   EXPECT_THROW(GetTransitiveAfterGroups(groups, {}), UndefinedGroupError);
 }
 
 TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
-  std::unordered_set<Group> groups({Group("a"), Group("b", {"a"})});
-  std::unordered_set<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
+  std::vector<Group> groups({Group("a"), Group("b", {"a"})});
+  std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
   try {
     GetTransitiveAfterGroups(groups, userGroups);
@@ -101,16 +101,16 @@ TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
 }
 
 TEST(GetGroupsPath, shouldThrowIfTheFromGroupDoesNotExist) {
-  std::unordered_set<Group> groups({Group("a"), Group("b", {"a"})});
-  std::unordered_set<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
+  std::vector<Group> groups({Group("a"), Group("b", {"a"})});
+  std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
   EXPECT_THROW(GetGroupsPath(groups, userGroups, "d", "a"),
                std::invalid_argument);
 }
 
 TEST(GetGroupsPath, shouldThrowIfTheToGroupDoesNotExist) {
-  std::unordered_set<Group> groups({Group("a"), Group("b", {"a"})});
-  std::unordered_set<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
+  std::vector<Group> groups({Group("a"), Group("b", {"a"})});
+  std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
   EXPECT_THROW(GetGroupsPath(groups, userGroups, "a", "d"),
                std::invalid_argument);
@@ -118,7 +118,7 @@ TEST(GetGroupsPath, shouldThrowIfTheToGroupDoesNotExist) {
 
 TEST(GetGroupsPath,
      shouldReturnAnEmptyVectorIfThereIsNoPathBetweenTheTwoGroups) {
-  std::unordered_set<Group> groups({Group("a", {}),
+  std::vector<Group> groups({Group("a", {}),
                                     Group("b", {"a"}),
                                     Group("c", {"a"}),
                                     Group("d", {"c"}),
@@ -131,7 +131,7 @@ TEST(GetGroupsPath,
 
 TEST(GetGroupsPath,
      shouldFindThePathWithTheLeastNumberOfEdgesInAMasterlistOnlyGraph) {
-  std::unordered_set<Group> groups({Group("a", {}),
+  std::vector<Group> groups({Group("a", {}),
                                     Group("b", {"a"}),
                                     Group("c", {"a"}),
                                     Group("d", {"c"}),
@@ -152,11 +152,11 @@ TEST(GetGroupsPath,
 
 TEST(GetGroupsPath,
      shouldFindThePathWithTheLeastNumberOfEdgesThatContainsUserMetadata) {
-  std::unordered_set<Group> groups({Group("a", {}),
+  std::vector<Group> groups({Group("a", {}),
                                     Group("b", {"a"}),
                                     Group("c", {"a"}),
                                     Group("e", {"b"})});
-  std::unordered_set<Group> userGroups({Group("d", {"c"}), Group("e", {"d"})});
+  std::vector<Group> userGroups({Group("d", {"c"}), Group("e", {"d"})});
 
   auto path = GetGroupsPath(groups, userGroups, "a", "e");
 
@@ -175,11 +175,11 @@ TEST(GetGroupsPath,
 }
 
 TEST(GetGroupsPath, shouldThrowIfMasterlistGroupLoadsAfterAUserlistGroup) {
-  std::unordered_set<Group> groups({Group("a", {}),
+  std::vector<Group> groups({Group("a", {}),
                                     Group("b", {"a"}),
                                     Group("c", {"a"}),
                                     Group("e", {"b", "d"})});
-  std::unordered_set<Group> userGroups({Group("d", {"c"})});
+  std::vector<Group> userGroups({Group("d", {"c"})});
 
   EXPECT_THROW(GetGroupsPath(groups, userGroups, "a", "e"),
                UndefinedGroupError);

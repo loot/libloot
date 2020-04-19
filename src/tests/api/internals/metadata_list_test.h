@@ -130,18 +130,16 @@ TEST_P(MetadataListTest, loadShouldLoadGroups) {
 
   auto groups = metadataList.Groups();
 
-  EXPECT_EQ(3, groups.size());
+  ASSERT_EQ(3, groups.size());
 
-  EXPECT_EQ(1, groups.count(Group("default")));
-  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+  EXPECT_EQ("default", groups[0].GetName());
+  EXPECT_TRUE(groups[0].GetAfterGroups().empty());
 
-  EXPECT_EQ(1, groups.count(Group("group1")));
-  EXPECT_EQ(std::unordered_set<std::string>({"group2"}),
-            groups.find(Group("group1"))->GetAfterGroups());
+  EXPECT_EQ("group1", groups[1].GetName());
+  EXPECT_EQ(std::vector<std::string>({"group2"}), groups[1].GetAfterGroups());
 
-  EXPECT_EQ(1, groups.count(Group("group2")));
-  EXPECT_EQ(std::unordered_set<std::string>({"default"}),
-            groups.find(Group("group2"))->GetAfterGroups());
+  EXPECT_EQ("group2", groups[2].GetName());
+  EXPECT_EQ(std::vector<std::string>({"default"}), groups[2].GetAfterGroups());
 }
 
 TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
@@ -164,11 +162,10 @@ TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
 
   auto groups = metadataList.Groups();
 
-  EXPECT_EQ(1, groups.size());
+  ASSERT_EQ(1, groups.size());
 
-  EXPECT_EQ(1, groups.count(Group("default")));
-  EXPECT_EQ(std::unordered_set<std::string>({"earliest"}),
-            groups.find(Group("default"))->GetAfterGroups());
+  EXPECT_EQ("default", groups[0].GetName());
+  EXPECT_EQ(std::vector<std::string>({"earliest"}), groups[0].GetAfterGroups());
 }
 
 TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
@@ -222,9 +219,9 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   EXPECT_EQ(std::set<std::string>({"C.Climate", "Relev"}),
             metadataList.BashTags());
 
-  EXPECT_EQ(std::unordered_set<Group>(
-                {Group("default"), Group("group1"), Group("group2")}),
-            metadataList.Groups());
+  auto expectedGroups =
+      std::vector<Group>({Group("default"), Group("group1", {"group2"}), Group("group2", {"default"})});
+  EXPECT_EQ(expectedGroups, metadataList.Groups());
 
   EXPECT_EQ(std::vector<Message>({
                 Message(MessageType::say, "A global message."),
@@ -271,13 +268,13 @@ TEST_P(MetadataListTest, setGroupsShouldReplaceExistingGroups) {
 
   auto groups = metadataList.Groups();
 
-  EXPECT_EQ(2, groups.size());
+  ASSERT_EQ(2, groups.size());
 
-  EXPECT_EQ(1, groups.count(Group("default")));
-  EXPECT_TRUE(groups.find(Group("default"))->GetAfterGroups().empty());
+  EXPECT_EQ("default", groups[0].GetName());
+  EXPECT_TRUE(groups[0].GetAfterGroups().empty());
 
-  EXPECT_EQ(1, groups.count(Group("group4")));
-  EXPECT_TRUE(groups.find(Group("group4"))->GetAfterGroups().empty());
+  EXPECT_EQ("group4", groups[1].GetName());
+  EXPECT_TRUE(groups[1].GetAfterGroups().empty());
 }
 
 TEST_P(

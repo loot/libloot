@@ -67,9 +67,9 @@ struct ApiDatabase : public DatabaseInterface {
   std::vector<Message> GetGeneralMessages(
       bool evaluateConditions = false) const;
 
-  std::unordered_set<Group> GetGroups(bool includeUserMetadata = true) const;
-  std::unordered_set<Group> GetUserGroups() const;
-  void SetUserGroups(const std::unordered_set<Group>& groups);
+  std::vector<Group> GetGroups(bool includeUserMetadata = true) const;
+  std::vector<Group> GetUserGroups() const;
+  void SetUserGroups(const std::vector<Group>& groups);
   std::vector<Vertex> GetGroupsPath(const std::string& fromGroupName,
                                     const std::string& toGroupName) const;
 

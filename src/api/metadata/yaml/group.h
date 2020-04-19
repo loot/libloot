@@ -64,14 +64,14 @@ struct convert<loot::Group> {
 
     std::string name = node["name"].as<std::string>();
     std::string description;
-    std::unordered_set<std::string> afterGroups;
+    std::vector<std::string> afterGroups;
 
     if (node["description"]) {
       description = node["description"].as<std::string>();
     }
 
     if (node["after"]) {
-      afterGroups = node["after"].as<std::unordered_set<std::string>>();
+      afterGroups = node["after"].as<std::vector<std::string>>();
     }
 
     rhs = loot::Group(name, afterGroups, description);

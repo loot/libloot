@@ -51,7 +51,12 @@ std::vector<std::string> SortPlugins(
   // Now add the interactions between plugins to the graph as edges.
   graph.AddSpecificEdges();
   graph.AddHardcodedPluginEdges(game);
-  graph.AddGroupEdges(game.GetDatabase()->GetGroups());
+
+  std::unordered_map<std::string, Group> groups;
+  for (const auto& group : game.GetDatabase()->GetGroups()) {
+    groups.emplace(group.GetName(), group);
+  }
+  graph.AddGroupEdges(groups);
   graph.AddOverlapEdges();
   graph.AddTieBreakEdges();
 
