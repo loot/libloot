@@ -170,6 +170,7 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
 
 void PluginGraph::AddPluginVertices(Game& game,
                                     const std::vector<std::string>& loadOrder) {
+  std::unordered_map<std::string, std::vector<std::string>> groupPlugins;
   // The resolution of tie-breaks in the plugin graph may be dependent
   // on the order in which vertices are iterated over, as an earlier tie
   // break resolution may cause a potential later tie break to instead
@@ -184,16 +185,24 @@ void PluginGraph::AddPluginVertices(Game& game,
   // dependent on its insertion order.
   // Given that, the order of vertex creation should be made consistent
   // in order to produce consistent sorting results. While MSVC 2013
-  // doesn't strictly need this, there is no guaruntee that this
+  // doesn't strictly need this, there is no guarantee that this
   // unspecified behaviour will remain in future compiler updates, so
   // implement it generally.
-
-  // Using a set of plugin names followed by finding the matching key
-  // in the unordered map, as it's probably faster than copying the
-  // full plugin objects then sorting them.
-  std::map<std::string, std::vector<std::string>> groupPlugins;
-
   auto loadedPlugins = game.GetCache()->GetPlugins();
+  std::sort(loadedPlugins.begin(),
+                   loadedPlugins.end(),
+                   [](const auto& lhs, const auto& rhs) {
+                     if (!lhs) {
+                       return false;
+                     }
+
+                     if (!rhs) {
+                       return true;
+                     }
+
+                     return *lhs < *rhs;
+                   });
+
   for (const auto& plugin : loadedPlugins) {
     auto masterlistMetadata =
         game.GetDatabase()
@@ -591,15 +600,18 @@ std::unordered_set<std::string> getGroupsInPaths(
                              "\" during sorting.");
   }
 
-  auto groupsInPaths = pathfinder(
-      groupIt->second, firstGroupName, groups, std::unordered_set<std::string>());
+  auto groupsInPaths = pathfinder(groupIt->second,
+                                  firstGroupName,
+                                  groups,
+                                  std::unordered_set<std::string>());
 
   groupsInPaths.erase(lastGroupName);
 
   return groupsInPaths;
 }
 
-void PluginGraph::AddGroupEdges(const std::unordered_map<std::string, Group>& groups) {
+void PluginGraph::AddGroupEdges(
+    const std::unordered_map<std::string, Group>& groups) {
   std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
   std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
 

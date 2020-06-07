@@ -39,7 +39,7 @@ public:
 
   GameCache& operator=(const GameCache& cache);
 
-  std::set<std::shared_ptr<const Plugin>> GetPlugins() const;
+  std::vector<std::shared_ptr<const Plugin>> GetPlugins() const;
   std::shared_ptr<const Plugin> GetPlugin(const std::string& pluginName) const;
   void AddPlugin(const Plugin&& plugin);
 
@@ -53,24 +53,6 @@ private:
   std::set<std::filesystem::path> archivePaths_;
 
   mutable std::mutex mutex_;
-};
-}
-
-namespace std {
-template<>
-struct less<std::shared_ptr<const loot::Plugin>> {
-  bool operator()(const std::shared_ptr<const loot::Plugin>& lhs,
-                  const std::shared_ptr<const loot::Plugin>& rhs) const {
-    if (!lhs) {
-      return false;
-    }
-
-    if (!rhs) {
-      return true;
-    }
-
-    return *lhs < *rhs;
-  }
 };
 }
 

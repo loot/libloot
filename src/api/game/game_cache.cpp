@@ -56,17 +56,13 @@ GameCache& GameCache::operator=(const GameCache& cache) {
   return *this;
 }
 
-std::set<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
+std::vector<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
   lock_guard<mutex> lock(mutex_);
 
-  std::set<std::shared_ptr<const Plugin>> output;
+  std::vector<std::shared_ptr<const Plugin>> output(plugins_.size());
   std::transform(
-      begin(plugins_),
-      end(plugins_),
-      std::inserter<std::set<std::shared_ptr<const Plugin>>>(output,
-                                                             begin(output)),
-      [](const pair<string, std::shared_ptr<const Plugin>>& pluginPair) {
-        return pluginPair.second;
+      begin(plugins_), end(plugins_), begin(output), [](const auto& pair) {
+        return pair.second;
       });
   return output;
 }

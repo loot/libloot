@@ -62,7 +62,7 @@ public:
   std::shared_ptr<const PluginInterface> GetPlugin(
       const std::string& pluginName) const;
 
-  std::set<std::shared_ptr<const PluginInterface>> GetLoadedPlugins() const;
+  std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins() const;
 
   void IdentifyMainMasterFile(const std::string& masterFile);
 

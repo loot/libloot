@@ -199,11 +199,11 @@ std::shared_ptr<const PluginInterface> Game::GetPlugin(
   return cache_->GetPlugin(pluginName);
 }
 
-std::set<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
+std::vector<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
     const {
-  std::set<std::shared_ptr<const PluginInterface>> interfacePointers;
+  std::vector<std::shared_ptr<const PluginInterface>> interfacePointers;
   for (auto& plugin : cache_->GetPlugins()) {
-    interfacePointers.insert(
+    interfacePointers.push_back(
         std::static_pointer_cast<const PluginInterface>(plugin));
   }
 

@@ -36,7 +36,7 @@ public:
                     const PluginMetadata& userMetadata,
                     const std::vector<std::string>& loadOrder,
                     const GameType gameType,
-                    const std::set<std::shared_ptr<const Plugin>>& loadedPlugins);
+                    const std::vector<std::shared_ptr<const Plugin>>& loadedPlugins);
 
   std::string GetName() const;
   bool IsMaster() const;

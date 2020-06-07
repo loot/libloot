@@ -94,7 +94,7 @@ public:
    *          valid until the ``LoadPlugins()`` or ``SortPlugins()`` functions
    *          are next called or this GameInterface is destroyed.
    */
-  virtual std::set<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
+  virtual std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
       const = 0;
 
   /**

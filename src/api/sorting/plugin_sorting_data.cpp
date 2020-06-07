@@ -31,7 +31,7 @@
 
 namespace loot {
 std::vector<std::shared_ptr<const Plugin>> GetPluginsSubset(
-    const std::set<std::shared_ptr<const Plugin>>& plugins,
+    const std::vector<std::shared_ptr<const Plugin>>& plugins,
     const std::vector<std::string>& pluginNames) {
   std::vector<std::shared_ptr<const Plugin>> pluginsSubset;
 
@@ -54,7 +54,7 @@ PluginSortingData::PluginSortingData(
     const PluginMetadata& userMetadata,
     const std::vector<std::string>& loadOrder,
     const GameType gameType,
-    const std::set<std::shared_ptr<const Plugin>>& loadedPlugins) :
+    const std::vector<std::shared_ptr<const Plugin>>& loadedPlugins) :
     plugin_(plugin),
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),
