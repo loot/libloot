@@ -105,7 +105,7 @@ struct convert<loot::PluginMetadata> {
     if (node["after"])
       rhs.SetLoadAfterFiles(node["after"].as<std::vector<loot::File>>());
     if (node["req"])
-      rhs.SetRequirements(node["req"].as<std::set<loot::File>>());
+      rhs.SetRequirements(node["req"].as<std::vector<loot::File>>());
     if (node["inc"])
       rhs.SetIncompatibilities(node["inc"].as<std::set<loot::File>>());
     if (node["msg"])

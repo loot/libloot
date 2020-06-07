@@ -657,7 +657,7 @@ TEST_P(
   ASSERT_NO_THROW(db_->LoadLists(masterlistPath, userlistPath_));
 
   PluginMetadata newMetadata(blankDifferentEsp);
-  newMetadata.SetRequirements(std::set<File>({File(masterFile)}));
+  newMetadata.SetRequirements(std::vector<File>({File(masterFile)}));
 
   db_->SetPluginUserMetadata(newMetadata);
 
@@ -677,7 +677,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(db_->LoadLists(masterlistPath, userlistPath_));
 
   PluginMetadata newMetadata(blankEsm);
-  newMetadata.SetRequirements(std::set<File>({File(masterFile)}));
+  newMetadata.SetRequirements(std::vector<File>({File(masterFile)}));
 
   db_->SetPluginUserMetadata(newMetadata);
 

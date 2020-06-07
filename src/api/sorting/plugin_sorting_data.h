@@ -52,8 +52,8 @@ public:
 
   const std::vector<File>& GetMasterlistLoadAfterFiles() const;
   const std::vector<File>& GetUserLoadAfterFiles() const;
-  const std::set<File>& GetMasterlistRequirements() const;
-  const std::set<File>& GetUserRequirements() const;
+  const std::vector<File>& GetMasterlistRequirements() const;
+  const std::vector<File>& GetUserRequirements() const;
 
   const std::optional<size_t>& GetLoadOrderIndex() const;
 
@@ -64,8 +64,8 @@ private:
 
   std::vector<File> masterlistLoadAfter_;
   std::vector<File> userLoadAfter_;
-  std::set<File> masterlistReq_;
-  std::set<File> userReq_;
+  std::vector<File> masterlistReq_;
+  std::vector<File> userReq_;
 
   std::optional<size_t> loadOrderIndex_;
   size_t numOverrideFormIDs;

@@ -142,11 +142,11 @@ const std::vector<File>& PluginSortingData::GetUserLoadAfterFiles() const {
   return userLoadAfter_;
 }
 
-const std::set<File>& PluginSortingData::GetMasterlistRequirements() const {
+const std::vector<File>& PluginSortingData::GetMasterlistRequirements() const {
   return masterlistReq_;
 }
 
-const std::set<File>& PluginSortingData::GetUserRequirements() const {
+const std::vector<File>& PluginSortingData::GetUserRequirements() const {
   return userReq_;
 }
 const std::optional<size_t>& PluginSortingData::GetLoadOrderIndex() const {

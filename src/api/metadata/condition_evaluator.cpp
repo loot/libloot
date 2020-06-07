@@ -134,14 +134,14 @@ PluginMetadata ConditionEvaluator::EvaluateAll(const PluginMetadata& pluginMetad
   }
   evaluatedMetadata.SetLoadAfterFiles(files);
 
-  std::set<File> fileSet;
-  fileSet.clear();
+  files.clear();
   for (const auto& file : pluginMetadata.GetRequirements()) {
     if (Evaluate(file.GetCondition()))
-      fileSet.insert(file);
+      files.push_back(file);
   }
-  evaluatedMetadata.SetRequirements(fileSet);
+  evaluatedMetadata.SetRequirements(files);
 
+  std::set<File> fileSet;
   fileSet.clear();
   for (const auto& file : pluginMetadata.GetIncompatibilities()) {
     if (Evaluate(file.GetCondition()))

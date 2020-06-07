@@ -182,7 +182,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeRequirementData) {
   plugin2.SetRequirements({file1, file2});
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ(std::set<File>({file1, file2}), plugin1.GetRequirements());
+  EXPECT_EQ(std::vector<File>({file1, file2}), plugin1.GetRequirements());
 }
 
 TEST_P(PluginMetadataTest, mergeMetadataShouldMergeIncompatibilityData) {
@@ -340,7 +340,7 @@ TEST_P(
   plugin2.SetRequirements({file1, file3});
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
-  EXPECT_EQ(std::set<File>({file2}), newMetadata.GetRequirements());
+  EXPECT_EQ(std::vector<File>({file2}), newMetadata.GetRequirements());
 }
 
 TEST_P(
@@ -794,7 +794,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetReqFieldIfRequirementsExist) {
   YAML::Node node;
   node = plugin;
 
-  EXPECT_EQ(plugin.GetRequirements(), node["req"].as<std::set<File>>());
+  EXPECT_EQ(plugin.GetRequirements(), node["req"].as<std::vector<File>>());
 }
 
 TEST_P(PluginMetadataTest,
@@ -882,7 +882,7 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
 
   EXPECT_EQ("Blank.esp", plugin.GetName());
   EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetLoadAfterFiles());
-  EXPECT_EQ(std::set<File>({File("Blank.esm")}), plugin.GetRequirements());
+  EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetRequirements());
   EXPECT_EQ(std::set<File>({File("Blank.esm")}), plugin.GetIncompatibilities());
   EXPECT_EQ(std::vector<Message>({Message(MessageType::say, "content")}),
             plugin.GetMessages());

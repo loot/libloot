@@ -58,7 +58,7 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   }
 
   loadAfter_ = mergeVectors(loadAfter_, plugin.loadAfter_);
-  requirements_.insert(begin(plugin.requirements_), end(plugin.requirements_));
+  requirements_ = mergeVectors(requirements_, plugin.requirements_);
   incompatibilities_.insert(begin(plugin.incompatibilities_),
                             end(plugin.incompatibilities_));
 
@@ -88,16 +88,9 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
 
   // Compare this plugin against the given plugin.
   p.SetLoadAfterFiles(diffVectors(loadAfter_, plugin.loadAfter_));
+  p.SetRequirements(diffVectors(requirements_, plugin.requirements_));
 
   set<File> filesDiff;
-  filesDiff.clear();
-  set_difference(begin(requirements_),
-                 end(requirements_),
-                 begin(plugin.requirements_),
-                 end(plugin.requirements_),
-                 inserter(filesDiff, begin(filesDiff)));
-  p.SetRequirements(filesDiff);
-
   filesDiff.clear();
   set_difference(begin(incompatibilities_),
                  end(incompatibilities_),
@@ -161,7 +154,7 @@ std::vector<File> PluginMetadata::GetLoadAfterFiles() const {
   return loadAfter_;
 }
 
-std::set<File> PluginMetadata::GetRequirements() const { return requirements_; }
+std::vector<File> PluginMetadata::GetRequirements() const { return requirements_; }
 
 std::set<File> PluginMetadata::GetIncompatibilities() const {
   return incompatibilities_;
@@ -202,7 +195,7 @@ void PluginMetadata::SetLoadAfterFiles(const std::vector<File>& l) {
   loadAfter_ = l;
 }
 
-void PluginMetadata::SetRequirements(const std::set<File>& r) {
+void PluginMetadata::SetRequirements(const std::vector<File>& r) {
   requirements_ = r;
 }
 
