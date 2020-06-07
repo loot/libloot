@@ -169,7 +169,7 @@ public:
    *  @details Bash Tag suggestions can include plugins not in this list.
    *  @returns A set of Bash Tag names.
    */
-  virtual std::set<std::string> GetKnownBashTags() const = 0;
+  virtual std::vector<std::string> GetKnownBashTags() const = 0;
 
   /**
    *  @brief Get all general messages listen in the loaded metadata lists.

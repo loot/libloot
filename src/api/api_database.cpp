@@ -120,12 +120,14 @@ bool ApiDatabase::IsLatestMasterlist(
 // DB Access Functions
 //////////////////////////
 
-std::set<std::string> ApiDatabase::GetKnownBashTags() const {
+std::vector<std::string> ApiDatabase::GetKnownBashTags() const {
   auto masterlistTags = masterlist_.BashTags();
   auto userlistTags = userlist_.BashTags();
 
   if (!userlistTags.empty()) {
-    masterlistTags.insert(std::begin(userlistTags), std::end(userlistTags));
+    masterlistTags.insert(std::end(masterlistTags),
+                          std::begin(userlistTags),
+                          std::end(userlistTags));
   }
 
   return masterlistTags;
@@ -157,16 +159,16 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(
   return masterlistMessages;
 }
 
-std::vector<Group> ApiDatabase::GetGroups(
-    bool includeUserMetadata) const {
+std::vector<Group> ApiDatabase::GetGroups(bool includeUserMetadata) const {
   auto groups = masterlist_.Groups();
 
   if (includeUserMetadata) {
     std::vector<Group> newGroups;
     for (const auto& userlistGroup : userlist_.Groups()) {
-      auto groupIt = std::find_if(groups.begin(), groups.end(), [&](const Group& existingGroup) {
+      auto groupIt = std::find_if(
+          groups.begin(), groups.end(), [&](const Group& existingGroup) {
             return existingGroup.GetName() == userlistGroup.GetName();
-      });
+          });
 
       if (groupIt == groups.end()) {
         newGroups.push_back(userlistGroup);
@@ -179,7 +181,8 @@ std::vector<Group> ApiDatabase::GetGroups(
 
         auto afterGroups = groupIt->GetAfterGroups();
         auto userAfterGroups = userlistGroup.GetAfterGroups();
-        afterGroups.insert(afterGroups.end(), userAfterGroups.begin(), userAfterGroups.end());
+        afterGroups.insert(
+            afterGroups.end(), userAfterGroups.begin(), userAfterGroups.end());
 
         *groupIt = Group(userlistGroup.GetName(), afterGroups, description);
       }

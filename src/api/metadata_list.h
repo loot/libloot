@@ -62,7 +62,7 @@ public:
 
   std::vector<PluginMetadata> Plugins() const;
   std::vector<Message> Messages() const;
-  std::set<std::string> BashTags() const;
+  std::vector<std::string> BashTags() const;
   std::vector<Group> Groups() const;
 
   void SetGroups(const std::vector<Group>& groups);
@@ -82,7 +82,7 @@ public:
 
 protected:
   std::vector<Group> groups_;
-  std::set<std::string> bashTags_;
+  std::vector<std::string> bashTags_;
   std::unordered_set<PluginMetadata> plugins_;
   std::vector<PluginMetadata> regexPlugins_;
   std::vector<Message> messages_;

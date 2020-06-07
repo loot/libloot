@@ -508,11 +508,11 @@ TEST_P(DatabaseInterfaceTest,
 
   auto tags = db_->GetKnownBashTags();
 
-  std::set<std::string> expectedTags({
-      "RaceRelations",
-      "C.Lighting",
+  std::vector<std::string> expectedTags({
       "Actors.ACBS",
       "C.Climate",
+      "RaceRelations",
+      "C.Lighting",
   });
   EXPECT_EQ(expectedTags, tags);
 }
@@ -758,11 +758,11 @@ TEST_P(DatabaseInterfaceTest,
 
   auto tags = db_->GetKnownBashTags();
 
-  std::set<std::string> expectedTags({
-      "RaceRelations",
-      "C.Lighting",
+  std::vector<std::string> expectedTags({
       "Actors.ACBS",
       "C.Climate",
+      "RaceRelations",
+      "C.Lighting",
   });
   EXPECT_EQ(expectedTags, tags);
 }
@@ -797,7 +797,7 @@ TEST_P(
 
   auto tags = db_->GetKnownBashTags();
 
-  std::set<std::string> expectedTags({
+  std::vector<std::string> expectedTags({
       "Actors.ACBS",
       "C.Climate",
   });

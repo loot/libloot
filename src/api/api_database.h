@@ -62,7 +62,7 @@ struct ApiDatabase : public DatabaseInterface {
   bool IsLatestMasterlist(const std::filesystem::path& masterlist_path,
                           const std::string& branch) const;
 
-  std::set<std::string> GetKnownBashTags() const;
+  std::vector<std::string> GetKnownBashTags() const;
 
   std::vector<Message> GetGeneralMessages(
       bool evaluateConditions = false) const;

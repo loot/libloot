@@ -68,8 +68,18 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
   if (metadataList["globals"])
     messages_ = metadataList["globals"].as<std::vector<Message>>();
 
-  if (metadataList["bash_tags"])
-    bashTags_ = metadataList["bash_tags"].as<std::set<std::string>>();
+  std::unordered_set<std::string> bashTags;
+  if (metadataList["bash_tags"]) {
+    for (const auto& node : metadataList["bash_tags"]) {
+      auto bashTag = node.as<std::string>();
+      if (bashTags.count(bashTag) != 0) {
+        throw FileAccessError("More than one entry exists for Bash Tag \"" +
+                              bashTag + "\"");
+      }
+      bashTags_.push_back(bashTag);
+      bashTags.insert(bashTag);
+    }
+  }
 
   std::unordered_set<std::string> groupNames;
   if (metadataList["groups"]) {
@@ -156,7 +166,7 @@ std::vector<PluginMetadata> MetadataList::Plugins() const {
 
 std::vector<Message> MetadataList::Messages() const { return messages_; }
 
-std::set<std::string> MetadataList::BashTags() const { return bashTags_; }
+std::vector<std::string> MetadataList::BashTags() const { return bashTags_; }
 
 std::vector<Group> MetadataList::Groups() const {
   if (groups_.empty()) {

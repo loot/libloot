@@ -120,7 +120,7 @@ TEST_P(MetadataListTest, loadShouldLoadBashTags) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
-  EXPECT_EQ(std::set<std::string>({"C.Climate", "Relev"}),
+  EXPECT_EQ(std::vector<std::string>({"C.Climate", "Relev"}),
             metadataList.BashTags());
 }
 
@@ -216,7 +216,7 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   // Check the new file contains the same metadata.
   EXPECT_NO_THROW(metadataList.Load(savedMetadataPath));
 
-  EXPECT_EQ(std::set<std::string>({"C.Climate", "Relev"}),
+  EXPECT_EQ(std::vector<std::string>({"C.Climate", "Relev"}),
             metadataList.BashTags());
 
   auto expectedGroups =
