@@ -155,12 +155,12 @@ PluginMetadata ConditionEvaluator::EvaluateAll(const PluginMetadata& pluginMetad
   }
   evaluatedMetadata.SetMessages(messages);
 
-  std::set<Tag> tagSet;
+  std::vector<Tag> tags;
   for (const auto& tag : pluginMetadata.GetTags()) {
     if (Evaluate(tag.GetCondition()))
-      tagSet.insert(tag);
+      tags.push_back(tag);
   }
-  evaluatedMetadata.SetTags(tagSet);
+  evaluatedMetadata.SetTags(tags);
 
   if (!evaluatedMetadata.IsRegexPlugin()) {
     std::set<PluginCleaningData> infoSet;

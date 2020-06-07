@@ -124,7 +124,7 @@ public:
    * Get the plugin's Bash Tag suggestions.
    * @return The plugin's Bash Tag suggestions.
    */
-  LOOT_API std::set<Tag> GetTags() const;
+  LOOT_API std::vector<Tag> GetTags() const;
 
   /**
    * Get the plugin's dirty plugin information.
@@ -198,7 +198,7 @@ public:
    * @param tags
    *        The Bash Tag suggestions to set.
    */
-  LOOT_API void SetTags(const std::set<Tag>& tags);
+  LOOT_API void SetTags(const std::vector<Tag>& tags);
 
   /**
    * Set the plugin's dirty information.
@@ -272,7 +272,7 @@ private:
   std::vector<File> requirements_;
   std::vector<File> incompatibilities_;
   std::vector<Message> messages_;
-  std::set<Tag> tags_;
+  std::vector<Tag> tags_;
   std::set<PluginCleaningData> dirtyInfo_;
   std::set<PluginCleaningData> cleanInfo_;
   std::set<Location> locations_;

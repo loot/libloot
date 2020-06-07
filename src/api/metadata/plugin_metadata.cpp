@@ -61,9 +61,7 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   requirements_ = mergeVectors(requirements_, plugin.requirements_);
   incompatibilities_ = mergeVectors(incompatibilities_, plugin.incompatibilities_);
 
-  // Merge Bash Tags too. Conditions are ignored during comparison, but
-  // if a tag is added and removed, both instances will be in the set.
-  tags_.insert(begin(plugin.tags_), end(plugin.tags_));
+  tags_ = mergeVectors(tags_, plugin.tags_);
 
   // Messages are in an ordered list, and should be fully merged.
   messages_.insert(
@@ -102,13 +100,7 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
                  inserter(mDiff, begin(mDiff)));
   p.SetMessages(mDiff);
 
-  set<Tag> tagDiff;
-  set_difference(begin(tags_),
-                 end(tags_),
-                 begin(plugin.tags_),
-                 end(plugin.tags_),
-                 inserter(tagDiff, begin(tagDiff)));
-  p.SetTags(tagDiff);
+  p.SetTags(diffVectors(tags_, plugin.tags_));
 
   set<PluginCleaningData> dirtDiff;
   set_difference(begin(dirtyInfo_),
@@ -153,7 +145,7 @@ std::vector<File> PluginMetadata::GetIncompatibilities() const {
 
 std::vector<Message> PluginMetadata::GetMessages() const { return messages_; }
 
-std::set<Tag> PluginMetadata::GetTags() const { return tags_; }
+std::vector<Tag> PluginMetadata::GetTags() const { return tags_; }
 
 std::set<PluginCleaningData> PluginMetadata::GetDirtyInfo() const {
   return dirtyInfo_;
@@ -198,7 +190,7 @@ void PluginMetadata::SetMessages(const std::vector<Message>& m) {
   messages_ = m;
 }
 
-void PluginMetadata::SetTags(const std::set<Tag>& t) { tags_ = t; }
+void PluginMetadata::SetTags(const std::vector<Tag>& t) { tags_ = t; }
 
 void PluginMetadata::SetDirtyInfo(
     const std::set<PluginCleaningData>& dirtyInfo) {

@@ -221,7 +221,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeTags) {
   plugin2.SetTags({tag1, tag2, tag3});
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ(std::set<Tag>({tag1, tag2, tag3}), plugin1.GetTags());
+  EXPECT_EQ(std::vector<Tag>({tag1, tag2, tag3}), plugin1.GetTags());
 }
 
 TEST_P(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
@@ -386,7 +386,7 @@ TEST_P(PluginMetadataTest,
   plugin2.SetTags({tag1, tag3});
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
-  EXPECT_EQ(std::set<Tag>({tag2}), newMetadata.GetTags());
+  EXPECT_EQ(std::vector<Tag>({tag2}), newMetadata.GetTags());
 }
 
 TEST_P(
@@ -822,7 +822,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetTagFieldIfTagsExist) {
   YAML::Node node;
   node = plugin;
 
-  EXPECT_EQ(plugin.GetTags(), node["tag"].as<std::set<Tag>>());
+  EXPECT_EQ(plugin.GetTags(), node["tag"].as<std::vector<Tag>>());
 }
 
 TEST_P(PluginMetadataTest, encodingAsYamlShouldSetDirtyFieldIfDirtyInfoExists) {
@@ -886,7 +886,7 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
   EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetIncompatibilities());
   EXPECT_EQ(std::vector<Message>({Message(MessageType::say, "content")}),
             plugin.GetMessages());
-  EXPECT_EQ(std::set<Tag>({Tag("Relev")}), plugin.GetTags());
+  EXPECT_EQ(std::vector<Tag>({Tag("Relev")}), plugin.GetTags());
   EXPECT_EQ(std::set<PluginCleaningData>(
                 {PluginCleaningData(5, "utility", {}, 0, 1, 2)}),
             plugin.GetDirtyInfo());

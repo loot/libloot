@@ -195,7 +195,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
   EXPECT_EQ(expectedFiles, plugin.GetRequirements());
   EXPECT_EQ(expectedFiles, plugin.GetIncompatibilities());
   EXPECT_EQ(std::vector<Message>({message1}), plugin.GetMessages());
-  EXPECT_EQ(std::set<Tag>({tag1}), plugin.GetTags());
+  EXPECT_EQ(std::vector<Tag>({tag1}), plugin.GetTags());
   EXPECT_EQ(std::set<PluginCleaningData>({info1}), plugin.GetDirtyInfo());
   EXPECT_EQ(std::set<PluginCleaningData>({info1}), plugin.GetCleanInfo());
 }

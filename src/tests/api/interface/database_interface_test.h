@@ -574,17 +574,15 @@ TEST_P(DatabaseInterfaceTest,
 
   auto metadata = db_->GetPluginMetadata(blankEsm, true).value();
 
-  std::set<Tag> expectedTags({
-      Tag("Actors.ACBS"),
+  std::vector<Tag> expectedTags({
       Tag("Actors.ACBS", true, "file(\"" + missingEsp + "\")"),
+      Tag("Actors.ACBS"),
       Tag("Actors.AIData"),
       Tag("C.Water", false),
   });
   EXPECT_EQ(expectedTags, metadata.GetTags());
   EXPECT_EQ("file(\"" + missingEsp + "\")",
-            metadata.GetTags()
-                .find(Tag("Actors.ACBS", true, "file(\"" + missingEsp + "\")"))
-                ->GetCondition());
+            metadata.GetTags()[0].GetCondition());
 }
 
 TEST_P(
