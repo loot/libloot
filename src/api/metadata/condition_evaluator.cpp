@@ -127,13 +127,14 @@ PluginMetadata ConditionEvaluator::EvaluateAll(const PluginMetadata& pluginMetad
     evaluatedMetadata.SetGroup(pluginMetadata.GetGroup().value());
   }
 
-  std::set<File> fileSet;
+  std::vector<File> files;
   for (const auto& file : pluginMetadata.GetLoadAfterFiles()) {
     if (Evaluate(file.GetCondition()))
-      fileSet.insert(file);
+      files.push_back(file);
   }
-  evaluatedMetadata.SetLoadAfterFiles(fileSet);
+  evaluatedMetadata.SetLoadAfterFiles(files);
 
+  std::set<File> fileSet;
   fileSet.clear();
   for (const auto& file : pluginMetadata.GetRequirements()) {
     if (Evaluate(file.GetCondition()))

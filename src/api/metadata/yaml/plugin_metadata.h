@@ -103,7 +103,7 @@ struct convert<loot::PluginMetadata> {
       rhs.SetGroup(node["group"].as<std::string>());
 
     if (node["after"])
-      rhs.SetLoadAfterFiles(node["after"].as<std::set<loot::File>>());
+      rhs.SetLoadAfterFiles(node["after"].as<std::vector<loot::File>>());
     if (node["req"])
       rhs.SetRequirements(node["req"].as<std::set<loot::File>>());
     if (node["inc"])

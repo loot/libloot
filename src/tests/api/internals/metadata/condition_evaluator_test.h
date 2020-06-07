@@ -189,11 +189,12 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
 
   EXPECT_NO_THROW(plugin = evaluator_.EvaluateAll(plugin));
 
-  std::set<File> expectedFiles({file1});
+  std::vector<File> expectedFiles({file1});
+  std::set<File> expectedFileSet({file1});
   EXPECT_EQ("group1", plugin.GetGroup().value());
   EXPECT_EQ(expectedFiles, plugin.GetLoadAfterFiles());
-  EXPECT_EQ(expectedFiles, plugin.GetRequirements());
-  EXPECT_EQ(expectedFiles, plugin.GetIncompatibilities());
+  EXPECT_EQ(expectedFileSet, plugin.GetRequirements());
+  EXPECT_EQ(expectedFileSet, plugin.GetIncompatibilities());
   EXPECT_EQ(std::vector<Message>({message1}), plugin.GetMessages());
   EXPECT_EQ(std::set<Tag>({tag1}), plugin.GetTags());
   EXPECT_EQ(std::set<PluginCleaningData>({info1}), plugin.GetDirtyInfo());

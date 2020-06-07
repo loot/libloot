@@ -293,7 +293,7 @@ TEST_P(
   PluginMetadata plugin = metadataList.FindPlugin(blankDifferentEsp).value();
 
   EXPECT_EQ(blankDifferentEsp, plugin.GetName());
-  EXPECT_EQ(std::set<File>({
+  EXPECT_EQ(std::vector<File>({
                 File(blankEsm),
             }),
             plugin.GetLoadAfterFiles());

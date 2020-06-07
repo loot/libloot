@@ -50,8 +50,8 @@ public:
   std::unordered_set<std::string> GetAfterGroupPlugins() const;
   void SetAfterGroupPlugins(std::unordered_set<std::string> plugins);
 
-  const std::set<File>& GetMasterlistLoadAfterFiles() const;
-  const std::set<File>& GetUserLoadAfterFiles() const;
+  const std::vector<File>& GetMasterlistLoadAfterFiles() const;
+  const std::vector<File>& GetUserLoadAfterFiles() const;
   const std::set<File>& GetMasterlistRequirements() const;
   const std::set<File>& GetUserRequirements() const;
 
@@ -62,8 +62,8 @@ private:
   std::string group_;
   std::unordered_set<std::string> afterGroupPlugins_;
 
-  std::set<File> masterlistLoadAfter_;
-  std::set<File> userLoadAfter_;
+  std::vector<File> masterlistLoadAfter_;
+  std::vector<File> userLoadAfter_;
   std::set<File> masterlistReq_;
   std::set<File> userReq_;
 

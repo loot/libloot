@@ -85,7 +85,7 @@ PluginSortingData::PluginSortingData(
       } else {
         // Not all masters are loaded, fall back to using the plugin's
         // total record count (Morrowind doesn't have groups). This is OK
-        // because plugins with missing masters can't be loaded by the game, 
+        // because plugins with missing masters can't be loaded by the game,
         // so the correctness of their load order positions is less important
         // (it may not matter at all, depending on the sophistication/usage of
         // merge patches in Morrowind). It's better for LOOT to sort a load
@@ -134,11 +134,11 @@ void PluginSortingData::SetAfterGroupPlugins(
   afterGroupPlugins_ = plugins;
 }
 
-const std::set<File>& PluginSortingData::GetMasterlistLoadAfterFiles() const {
+const std::vector<File>& PluginSortingData::GetMasterlistLoadAfterFiles() const {
   return masterlistLoadAfter_;
 }
 
-const std::set<File>& PluginSortingData::GetUserLoadAfterFiles() const {
+const std::vector<File>& PluginSortingData::GetUserLoadAfterFiles() const {
   return userLoadAfter_;
 }
 

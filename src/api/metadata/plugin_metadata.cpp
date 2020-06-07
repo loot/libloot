@@ -30,6 +30,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "api/game/game.h"
+#include "api/helpers/collections.h"
 #include "api/helpers/logging.h"
 #include "api/helpers/text.h"
 
@@ -42,8 +43,7 @@ using std::vector;
 namespace loot {
 PluginMetadata::PluginMetadata() {}
 
-PluginMetadata::PluginMetadata(const std::string& n) :
-    name_(n) {
+PluginMetadata::PluginMetadata(const std::string& n) : name_(n) {
   // If the name passed ends in '.ghost', that should be trimmed.
   if (boost::iends_with(name_, ".ghost"))
     name_ = name_.substr(0, name_.length() - 6);
@@ -57,12 +57,7 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
     group_ = plugin.GetGroup();
   }
 
-  // Merge the following. If any files in the source already exist in the
-  // destination, they will be skipped. Files have display strings and
-  // condition strings which aren't considered when comparing them, so
-  // will be lost if the plugin being merged in has additional data in
-  // these strings.
-  loadAfter_.insert(begin(plugin.loadAfter_), end(plugin.loadAfter_));
+  loadAfter_ = mergeVectors(loadAfter_, plugin.loadAfter_);
   requirements_.insert(begin(plugin.requirements_), end(plugin.requirements_));
   incompatibilities_.insert(begin(plugin.incompatibilities_),
                             end(plugin.incompatibilities_));
@@ -92,14 +87,9 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
   }
 
   // Compare this plugin against the given plugin.
-  set<File> filesDiff;
-  set_difference(begin(loadAfter_),
-                 end(loadAfter_),
-                 begin(plugin.loadAfter_),
-                 end(plugin.loadAfter_),
-                 inserter(filesDiff, begin(filesDiff)));
-  p.SetLoadAfterFiles(filesDiff);
+  p.SetLoadAfterFiles(diffVectors(loadAfter_, plugin.loadAfter_));
 
+  set<File> filesDiff;
   filesDiff.clear();
   set_difference(begin(requirements_),
                  end(requirements_),
@@ -167,7 +157,9 @@ std::string PluginMetadata::GetName() const { return name_; }
 
 std::optional<std::string> PluginMetadata::GetGroup() const { return group_; }
 
-std::set<File> PluginMetadata::GetLoadAfterFiles() const { return loadAfter_; }
+std::vector<File> PluginMetadata::GetLoadAfterFiles() const {
+  return loadAfter_;
+}
 
 std::set<File> PluginMetadata::GetRequirements() const { return requirements_; }
 
@@ -202,15 +194,11 @@ std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(
   return simpleMessages;
 }
 
-void PluginMetadata::SetGroup(const std::string& group) {
-  group_ = group;
-}
+void PluginMetadata::SetGroup(const std::string& group) { group_ = group; }
 
-void PluginMetadata::UnsetGroup() {
-  group_ = std::nullopt;
-}
+void PluginMetadata::UnsetGroup() { group_ = std::nullopt; }
 
-void PluginMetadata::SetLoadAfterFiles(const std::set<File>& l) {
+void PluginMetadata::SetLoadAfterFiles(const std::vector<File>& l) {
   loadAfter_ = l;
 }
 
@@ -242,8 +230,7 @@ void PluginMetadata::SetLocations(const std::set<Location>& locations) {
 }
 
 bool PluginMetadata::HasNameOnly() const {
-  return !group_.has_value() &&
-         loadAfter_.empty() && requirements_.empty() &&
+  return !group_.has_value() && loadAfter_.empty() && requirements_.empty() &&
          incompatibilities_.empty() && messages_.empty() && tags_.empty() &&
          dirtyInfo_.empty() && cleanInfo_.empty() && locations_.empty();
 }

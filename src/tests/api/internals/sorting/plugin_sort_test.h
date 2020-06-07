@@ -240,7 +240,7 @@ TEST_P(
   PluginMetadata plugin(blankEsp);
 
   plugin = PluginMetadata(blankDifferentMasterDependentEsp);
-  plugin.SetLoadAfterFiles(std::set<File>({File(blankMasterDependentEsp)}));
+  plugin.SetLoadAfterFiles({File(blankMasterDependentEsp)});
   game_.GetDatabase()->SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankDifferentEsp);

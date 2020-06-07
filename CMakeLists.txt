@@ -272,6 +272,7 @@ set (LIBLOOT_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_graph.h"
                       "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sorting_data.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/git_helper.h"
+                      "${CMAKE_SOURCE_DIR}/src/api/helpers/collections.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/logging.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/text.h")

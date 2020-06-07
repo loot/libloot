@@ -559,9 +559,9 @@ TEST_P(
 
   auto metadata = db_->GetPluginMetadata(blankEsm, true).value();
 
-  std::set<File> expectedLoadAfter({
-      File(masterFile),
+  std::vector<File> expectedLoadAfter({
       File(blankDifferentEsm),
+      File(masterFile),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
 }
@@ -596,7 +596,7 @@ TEST_P(
 
   auto metadata = db_->GetPluginMetadata(blankEsm, false).value();
 
-  std::set<File> expectedLoadAfter({
+  std::vector<File> expectedLoadAfter({
       File(masterFile),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
@@ -631,7 +631,7 @@ TEST_P(DatabaseInterfaceTest,
 
   auto metadata = db_->GetPluginUserMetadata(blankEsm).value();
 
-  std::set<File> expectedLoadAfter({
+  std::vector<File> expectedLoadAfter({
       File(blankDifferentEsm),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
@@ -683,7 +683,7 @@ TEST_P(DatabaseInterfaceTest,
 
   auto metadata = db_->GetPluginMetadata(blankEsm).value();
 
-  std::set<File> expectedLoadAfter({
+  std::vector<File> expectedLoadAfter({
       File(masterFile),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
@@ -711,7 +711,7 @@ TEST_P(
 
   auto metadata = db_->GetPluginMetadata(blankEsm).value();
 
-  std::set<File> expectedLoadAfter({
+  std::vector<File> expectedLoadAfter({
       File(masterFile),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
@@ -781,7 +781,7 @@ TEST_P(
 
   auto metadata = db_->GetPluginMetadata(blankEsm).value();
 
-  std::set<File> expectedLoadAfter({
+  std::vector<File> expectedLoadAfter({
       File(masterFile),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());

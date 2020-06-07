@@ -100,7 +100,7 @@ public:
    * Get the plugins that the plugin must load after.
    * @return The plugins that the plugin must load after.
    */
-  LOOT_API std::set<File> GetLoadAfterFiles() const;
+  LOOT_API std::vector<File> GetLoadAfterFiles() const;
 
   /**
    * Get the files that the plugin requires to be installed.
@@ -170,7 +170,7 @@ public:
    * @param after
    *        The files to set.
    */
-  LOOT_API void SetLoadAfterFiles(const std::set<File>& after);
+  LOOT_API void SetLoadAfterFiles(const std::vector<File>& after);
 
   /**
    * Set the files that the plugin requires to be installed.
@@ -268,7 +268,7 @@ public:
 private:
   std::string name_;
   std::optional<std::string> group_;
-  std::set<File> loadAfter_;
+  std::vector<File> loadAfter_;
   std::set<File> requirements_;
   std::set<File> incompatibilities_;
   std::vector<Message> messages_;
