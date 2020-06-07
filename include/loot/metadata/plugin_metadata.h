@@ -112,7 +112,7 @@ public:
    * Get the files that the plugin is incompatible with.
    * @return The files that the plugin is incompatible with.
    */
-  LOOT_API std::set<File> GetIncompatibilities() const;
+  LOOT_API std::vector<File> GetIncompatibilities() const;
 
   /**
    * Get the plugin's messages.
@@ -184,7 +184,7 @@ public:
    * @param incompatibilities
    *        The files to set.
    */
-  LOOT_API void SetIncompatibilities(const std::set<File>& incompatibilities);
+  LOOT_API void SetIncompatibilities(const std::vector<File>& incompatibilities);
 
   /**
    * Set the plugin's messages.
@@ -270,7 +270,7 @@ private:
   std::optional<std::string> group_;
   std::vector<File> loadAfter_;
   std::vector<File> requirements_;
-  std::set<File> incompatibilities_;
+  std::vector<File> incompatibilities_;
   std::vector<Message> messages_;
   std::set<Tag> tags_;
   std::set<PluginCleaningData> dirtyInfo_;

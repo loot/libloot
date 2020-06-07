@@ -107,7 +107,7 @@ struct convert<loot::PluginMetadata> {
     if (node["req"])
       rhs.SetRequirements(node["req"].as<std::vector<loot::File>>());
     if (node["inc"])
-      rhs.SetIncompatibilities(node["inc"].as<std::set<loot::File>>());
+      rhs.SetIncompatibilities(node["inc"].as<std::vector<loot::File>>());
     if (node["msg"])
       rhs.SetMessages(node["msg"].as<std::vector<loot::Message>>());
     if (node["tag"])

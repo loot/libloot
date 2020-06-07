@@ -59,8 +59,7 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
 
   loadAfter_ = mergeVectors(loadAfter_, plugin.loadAfter_);
   requirements_ = mergeVectors(requirements_, plugin.requirements_);
-  incompatibilities_.insert(begin(plugin.incompatibilities_),
-                            end(plugin.incompatibilities_));
+  incompatibilities_ = mergeVectors(incompatibilities_, plugin.incompatibilities_);
 
   // Merge Bash Tags too. Conditions are ignored during comparison, but
   // if a tag is added and removed, both instances will be in the set.
@@ -89,15 +88,7 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
   // Compare this plugin against the given plugin.
   p.SetLoadAfterFiles(diffVectors(loadAfter_, plugin.loadAfter_));
   p.SetRequirements(diffVectors(requirements_, plugin.requirements_));
-
-  set<File> filesDiff;
-  filesDiff.clear();
-  set_difference(begin(incompatibilities_),
-                 end(incompatibilities_),
-                 begin(plugin.incompatibilities_),
-                 end(plugin.incompatibilities_),
-                 inserter(filesDiff, begin(filesDiff)));
-  p.SetIncompatibilities(filesDiff);
+  p.SetIncompatibilities(diffVectors(incompatibilities_, plugin.incompatibilities_));
 
   vector<Message> msgs1 = plugin.GetMessages();
   vector<Message> msgs2 = messages_;
@@ -156,7 +147,7 @@ std::vector<File> PluginMetadata::GetLoadAfterFiles() const {
 
 std::vector<File> PluginMetadata::GetRequirements() const { return requirements_; }
 
-std::set<File> PluginMetadata::GetIncompatibilities() const {
+std::vector<File> PluginMetadata::GetIncompatibilities() const {
   return incompatibilities_;
 }
 
@@ -199,7 +190,7 @@ void PluginMetadata::SetRequirements(const std::vector<File>& r) {
   requirements_ = r;
 }
 
-void PluginMetadata::SetIncompatibilities(const std::set<File>& i) {
+void PluginMetadata::SetIncompatibilities(const std::vector<File>& i) {
   incompatibilities_ = i;
 }
 

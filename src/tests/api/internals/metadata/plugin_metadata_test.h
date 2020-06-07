@@ -195,7 +195,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeIncompatibilityData) {
   plugin2.SetIncompatibilities({file1, file2});
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ(std::set<File>({file1, file2}), plugin1.GetIncompatibilities());
+  EXPECT_EQ(std::vector<File>({file1, file2}), plugin1.GetIncompatibilities());
 }
 
 TEST_P(PluginMetadataTest, mergeMetadataShouldMergeMessages) {
@@ -356,7 +356,7 @@ TEST_P(
   plugin2.SetIncompatibilities({file1, file3});
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
-  EXPECT_EQ(std::set<File>({file2}), newMetadata.GetIncompatibilities());
+  EXPECT_EQ(std::vector<File>({file2}), newMetadata.GetIncompatibilities());
 }
 
 TEST_P(PluginMetadataTest,
@@ -804,7 +804,7 @@ TEST_P(PluginMetadataTest,
   YAML::Node node;
   node = plugin;
 
-  EXPECT_EQ(plugin.GetIncompatibilities(), node["inc"].as<std::set<File>>());
+  EXPECT_EQ(plugin.GetIncompatibilities(), node["inc"].as<std::vector<File>>());
 }
 
 TEST_P(PluginMetadataTest, encodingAsYamlShouldSetMsgFieldIfMessagesExist) {
@@ -883,7 +883,7 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
   EXPECT_EQ("Blank.esp", plugin.GetName());
   EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetLoadAfterFiles());
   EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetRequirements());
-  EXPECT_EQ(std::set<File>({File("Blank.esm")}), plugin.GetIncompatibilities());
+  EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetIncompatibilities());
   EXPECT_EQ(std::vector<Message>({Message(MessageType::say, "content")}),
             plugin.GetMessages());
   EXPECT_EQ(std::set<Tag>({Tag("Relev")}), plugin.GetTags());

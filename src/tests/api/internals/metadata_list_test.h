@@ -297,7 +297,7 @@ TEST_P(
                 File(blankEsm),
             }),
             plugin.GetLoadAfterFiles());
-  EXPECT_EQ(std::set<File>({
+  EXPECT_EQ(std::vector<File>({
                 File(blankEsp),
             }),
             plugin.GetIncompatibilities());
