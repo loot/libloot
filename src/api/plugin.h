@@ -52,7 +52,7 @@ public:
   float GetHeaderVersion() const;
   std::optional<std::string> GetVersion() const;
   std::vector<std::string> GetMasters() const;
-  std::set<Tag> GetBashTags() const;
+  std::vector<Tag> GetBashTags() const;
   std::optional<uint32_t> GetCRC() const;
 
   bool IsMaster() const;
@@ -92,7 +92,7 @@ private:
   const std::string name_;
   std::optional<std::string> version_;  // Obtained from description field.
   std::optional<uint32_t> crc_;
-  std::set<Tag> tags_;
+  std::vector<Tag> tags_;
 
   // Useful caches.
   size_t numOverrideRecords_;

@@ -26,13 +26,13 @@
 #define LOOT_API_HELPERS_TEXT
 
 #include <optional>
-#include <set>
 #include <string>
+#include <vector>
 
 #include "loot/metadata/tag.h"
 
 namespace loot {
-std::set<Tag> ExtractBashTags(const std::string& description);
+std::vector<Tag> ExtractBashTags(const std::string& description);
 
 std::optional<std::string> ExtractVersion(const std::string& text);
 

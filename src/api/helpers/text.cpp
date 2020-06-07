@@ -71,8 +71,8 @@ const std::vector<regex> versionRegexes({
         regex::ECMAScript | regex::icase),
 });
 
-std::set<Tag> ExtractBashTags(const std::string& description) {
-  std::set<Tag> tags;
+std::vector<Tag> ExtractBashTags(const std::string& description) {
+  std::vector<Tag> tags;
 
   size_t startPos = description.find("{{BASH:");
   if (startPos == std::string::npos || startPos + 7 >= description.length()) {
@@ -92,7 +92,7 @@ std::set<Tag> ExtractBashTags(const std::string& description) {
 
   for (auto& tag : bashTags) {
     boost::trim(tag);
-    tags.insert(Tag(tag));
+    tags.push_back(Tag(tag));
   }
 
   return tags;

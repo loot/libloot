@@ -120,7 +120,7 @@ std::vector<std::string> Plugin::GetMasters() const {
   return mastersVec;
 }
 
-std::set<Tag> Plugin::GetBashTags() const { return tags_; }
+std::vector<Tag> Plugin::GetBashTags() const { return tags_; }
 
 std::optional<uint32_t> Plugin::GetCRC() const { return crc_; }
 
@@ -210,7 +210,7 @@ size_t Plugin::GetOverlapSize(
 
 size_t Plugin::NumOverrideFormIDs() const { return numOverrideRecords_; }
 
-uint32_t Plugin::GetRecordAndGroupCount() const { 
+uint32_t Plugin::GetRecordAndGroupCount() const {
   uint32_t recordAndGroupCount = 0;
   auto ret =
       esp_plugin_record_and_group_count(esPlugin.get(), &recordAndGroupCount);

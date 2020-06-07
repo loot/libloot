@@ -46,7 +46,7 @@ Requires Skyrim Special Edition 1.5.39 or greater.
 
   auto tags = ExtractBashTags(description);
 
-  std::set<Tag> expectedTags({
+  std::vector<Tag> expectedTags({
       Tag("C.Climate"),
       Tag("C.Encounter"),
       Tag("C.ImageSpace"),
