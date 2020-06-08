@@ -121,7 +121,7 @@ struct convert<loot::PluginMetadata> {
           node["clean"].as<std::vector<loot::PluginCleaningData>>());
     }
     if (node["url"])
-      rhs.SetLocations(node["url"].as<std::set<loot::Location>>());
+      rhs.SetLocations(node["url"].as<std::vector<loot::Location>>());
 
     return true;
   }

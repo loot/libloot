@@ -142,7 +142,7 @@ public:
    * Get the locations at which this plugin can be found.
    * @return The locations at which this plugin can be found.
    */
-  LOOT_API std::set<Location> GetLocations() const;
+  LOOT_API std::vector<Location> GetLocations() const;
 
   /**
    * Get the plugin's messages as SimpleMessage objects for the given language.
@@ -219,7 +219,7 @@ public:
    * @param locations
    *        The locations to set.
    */
-  LOOT_API void SetLocations(const std::set<Location>& locations);
+  LOOT_API void SetLocations(const std::vector<Location>& locations);
 
   /**
    * Check if no plugin metadata is set.
@@ -275,7 +275,7 @@ private:
   std::vector<Tag> tags_;
   std::vector<PluginCleaningData> dirtyInfo_;
   std::vector<PluginCleaningData> cleanInfo_;
-  std::set<Location> locations_;
+  std::vector<Location> locations_;
 };
 }
 
