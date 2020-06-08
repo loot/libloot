@@ -163,14 +163,14 @@ PluginMetadata ConditionEvaluator::EvaluateAll(const PluginMetadata& pluginMetad
   evaluatedMetadata.SetTags(tags);
 
   if (!evaluatedMetadata.IsRegexPlugin()) {
-    std::set<PluginCleaningData> infoSet;
+    std::vector<PluginCleaningData> infoVector;
     for (const auto& info : pluginMetadata.GetDirtyInfo()) {
       if (Evaluate(info, pluginMetadata.GetName()))
-        infoSet.insert(info);
+        infoVector.push_back(info);
     }
-    evaluatedMetadata.SetDirtyInfo(infoSet);
+    evaluatedMetadata.SetDirtyInfo(infoVector);
 
-    infoSet.clear();
+    std::set<PluginCleaningData> infoSet;
     for (const auto& info : pluginMetadata.GetCleanInfo()) {
       if (Evaluate(info, pluginMetadata.GetName()))
         infoSet.insert(info);

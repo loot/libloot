@@ -114,7 +114,7 @@ struct convert<loot::PluginMetadata> {
       rhs.SetTags(node["tag"].as<std::vector<loot::Tag>>());
     if (node["dirty"]) {
       rhs.SetDirtyInfo(
-          node["dirty"].as<std::set<loot::PluginCleaningData>>());
+          node["dirty"].as<std::vector<loot::PluginCleaningData>>());
     }
     if (node["clean"]) {
        rhs.SetCleanInfo(

@@ -67,7 +67,7 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   messages_.insert(
       end(messages_), begin(plugin.messages_), end(plugin.messages_));
 
-  dirtyInfo_.insert(begin(plugin.dirtyInfo_), end(plugin.dirtyInfo_));
+  dirtyInfo_ = mergeVectors(dirtyInfo_, plugin.dirtyInfo_);
   cleanInfo_.insert(begin(plugin.cleanInfo_), end(plugin.cleanInfo_));
   locations_.insert(begin(plugin.locations_), end(plugin.locations_));
 
@@ -101,14 +101,7 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
   p.SetMessages(mDiff);
 
   p.SetTags(diffVectors(tags_, plugin.tags_));
-
-  set<PluginCleaningData> dirtDiff;
-  set_difference(begin(dirtyInfo_),
-                 end(dirtyInfo_),
-                 begin(plugin.dirtyInfo_),
-                 end(plugin.dirtyInfo_),
-                 inserter(dirtDiff, begin(dirtDiff)));
-  p.SetDirtyInfo(dirtDiff);
+  p.SetDirtyInfo(diffVectors(dirtyInfo_, plugin.dirtyInfo_));
 
   set<PluginCleaningData> cleanDiff;
   set_difference(begin(cleanInfo_),
@@ -147,7 +140,7 @@ std::vector<Message> PluginMetadata::GetMessages() const { return messages_; }
 
 std::vector<Tag> PluginMetadata::GetTags() const { return tags_; }
 
-std::set<PluginCleaningData> PluginMetadata::GetDirtyInfo() const {
+std::vector<PluginCleaningData> PluginMetadata::GetDirtyInfo() const {
   return dirtyInfo_;
 }
 
@@ -193,7 +186,7 @@ void PluginMetadata::SetMessages(const std::vector<Message>& m) {
 void PluginMetadata::SetTags(const std::vector<Tag>& t) { tags_ = t; }
 
 void PluginMetadata::SetDirtyInfo(
-    const std::set<PluginCleaningData>& dirtyInfo) {
+    const std::vector<PluginCleaningData>& dirtyInfo) {
   dirtyInfo_ = dirtyInfo;
 }
 

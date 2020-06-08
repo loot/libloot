@@ -234,7 +234,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
   plugin2.SetDirtyInfo({info1, info2});
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ(std::set<PluginCleaningData>({info1, info2}),
+  EXPECT_EQ(std::vector<PluginCleaningData>({info1, info2}),
             plugin1.GetDirtyInfo());
 }
 TEST_P(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
@@ -402,7 +402,8 @@ TEST_P(
   plugin2.SetDirtyInfo({info1, info3});
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
-  EXPECT_EQ(std::set<PluginCleaningData>({info2}), newMetadata.GetDirtyInfo());
+  EXPECT_EQ(std::vector<PluginCleaningData>({info2}),
+            newMetadata.GetDirtyInfo());
 }
 
 TEST_P(
@@ -832,7 +833,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetDirtyFieldIfDirtyInfoExists) {
   node = plugin;
 
   EXPECT_EQ(plugin.GetDirtyInfo(),
-            node["dirty"].as<std::set<PluginCleaningData>>());
+            node["dirty"].as<std::vector<PluginCleaningData>>());
 }
 
 TEST_P(PluginMetadataTest, encodingAsYamlShouldSetCleanFieldIfCleanInfoExists) {
@@ -887,7 +888,7 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
   EXPECT_EQ(std::vector<Message>({Message(MessageType::say, "content")}),
             plugin.GetMessages());
   EXPECT_EQ(std::vector<Tag>({Tag("Relev")}), plugin.GetTags());
-  EXPECT_EQ(std::set<PluginCleaningData>(
+  EXPECT_EQ(std::vector<PluginCleaningData>(
                 {PluginCleaningData(5, "utility", {}, 0, 1, 2)}),
             plugin.GetDirtyInfo());
   EXPECT_EQ(std::set<PluginCleaningData>({PluginCleaningData(6, "utility")}),
@@ -908,7 +909,7 @@ TEST_P(PluginMetadataTest,
   PluginMetadata plugin = node.as<PluginMetadata>();
 
   EXPECT_EQ("Blank\\.esp", plugin.GetName());
-  EXPECT_EQ(std::set<PluginCleaningData>(
+  EXPECT_EQ(std::vector<PluginCleaningData>(
                 {PluginCleaningData(5, "utility", {}, 0, 1, 2)}),
             plugin.GetDirtyInfo());
 }

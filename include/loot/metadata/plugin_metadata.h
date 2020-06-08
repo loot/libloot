@@ -130,7 +130,7 @@ public:
    * Get the plugin's dirty plugin information.
    * @return The PluginCleaningData objects that identify the plugin as dirty.
    */
-  LOOT_API std::set<PluginCleaningData> GetDirtyInfo() const;
+  LOOT_API std::vector<PluginCleaningData> GetDirtyInfo() const;
 
   /**
    * Get the plugin's clean plugin information.
@@ -205,7 +205,7 @@ public:
    * @param info
    *        The dirty information to set.
    */
-  LOOT_API void SetDirtyInfo(const std::set<PluginCleaningData>& info);
+  LOOT_API void SetDirtyInfo(const std::vector<PluginCleaningData>& info);
 
   /**
    * Set the plugin's clean information.
@@ -273,7 +273,7 @@ private:
   std::vector<File> incompatibilities_;
   std::vector<Message> messages_;
   std::vector<Tag> tags_;
-  std::set<PluginCleaningData> dirtyInfo_;
+  std::vector<PluginCleaningData> dirtyInfo_;
   std::set<PluginCleaningData> cleanInfo_;
   std::set<Location> locations_;
 };
