@@ -170,12 +170,12 @@ PluginMetadata ConditionEvaluator::EvaluateAll(const PluginMetadata& pluginMetad
     }
     evaluatedMetadata.SetDirtyInfo(infoVector);
 
-    std::set<PluginCleaningData> infoSet;
+    infoVector.clear();
     for (const auto& info : pluginMetadata.GetCleanInfo()) {
       if (Evaluate(info, pluginMetadata.GetName()))
-        infoSet.insert(info);
+        infoVector.push_back(info);
     }
-    evaluatedMetadata.SetCleanInfo(infoSet);
+    evaluatedMetadata.SetCleanInfo(infoVector);
   }
 
   return evaluatedMetadata;

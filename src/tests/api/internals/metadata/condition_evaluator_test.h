@@ -197,7 +197,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
   EXPECT_EQ(std::vector<Message>({message1}), plugin.GetMessages());
   EXPECT_EQ(std::vector<Tag>({tag1}), plugin.GetTags());
   EXPECT_EQ(std::vector<PluginCleaningData>({info1}), plugin.GetDirtyInfo());
-  EXPECT_EQ(std::set<PluginCleaningData>({info1}), plugin.GetCleanInfo());
+  EXPECT_EQ(std::vector<PluginCleaningData>({info1}), plugin.GetCleanInfo());
 }
 
 TEST_P(ConditionEvaluatorTest, evaluateAllShouldPreserveGroupExplicitness) {

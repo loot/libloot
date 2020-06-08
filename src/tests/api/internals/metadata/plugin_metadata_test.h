@@ -247,7 +247,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
   plugin2.SetCleanInfo({info1, info2});
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ(std::set<PluginCleaningData>({info1, info2}),
+  EXPECT_EQ(std::vector<PluginCleaningData>({info1, info2}),
             plugin1.GetCleanInfo());
 }
 
@@ -419,7 +419,8 @@ TEST_P(
   plugin2.SetCleanInfo({info1, info3});
   PluginMetadata newMetadata = plugin1.NewMetadata(plugin2);
 
-  EXPECT_EQ(std::set<PluginCleaningData>({info2}), newMetadata.GetCleanInfo());
+  EXPECT_EQ(std::vector<PluginCleaningData>({info2}),
+            newMetadata.GetCleanInfo());
 }
 
 TEST_P(PluginMetadataTest,
@@ -843,7 +844,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetCleanFieldIfCleanInfoExists) {
   node = plugin;
 
   EXPECT_EQ(plugin.GetCleanInfo(),
-            node["clean"].as<std::set<PluginCleaningData>>());
+            node["clean"].as<std::vector<PluginCleaningData>>());
 }
 
 TEST_P(PluginMetadataTest, encodingAsYamlShouldSetUrlFieldIfLocationsExist) {
@@ -891,7 +892,7 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
   EXPECT_EQ(std::vector<PluginCleaningData>(
                 {PluginCleaningData(5, "utility", {}, 0, 1, 2)}),
             plugin.GetDirtyInfo());
-  EXPECT_EQ(std::set<PluginCleaningData>({PluginCleaningData(6, "utility")}),
+  EXPECT_EQ(std::vector<PluginCleaningData>({PluginCleaningData(6, "utility")}),
             plugin.GetCleanInfo());
   EXPECT_EQ(std::set<Location>({Location("http://www.example.com")}),
             plugin.GetLocations());
@@ -924,7 +925,7 @@ TEST_P(PluginMetadataTest,
   PluginMetadata plugin = node.as<PluginMetadata>();
 
   EXPECT_EQ("Blank\\.esp", plugin.GetName());
-  EXPECT_EQ(std::set<PluginCleaningData>({PluginCleaningData(5, "utility")}),
+  EXPECT_EQ(std::vector<PluginCleaningData>({PluginCleaningData(5, "utility")}),
             plugin.GetCleanInfo());
 }
 

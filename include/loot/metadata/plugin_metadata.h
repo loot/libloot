@@ -136,7 +136,7 @@ public:
    * Get the plugin's clean plugin information.
    * @return The PluginCleaningData objects that identify the plugin as clean.
    */
-  LOOT_API std::set<PluginCleaningData> GetCleanInfo() const;
+  LOOT_API std::vector<PluginCleaningData> GetCleanInfo() const;
 
   /**
    * Get the locations at which this plugin can be found.
@@ -212,7 +212,7 @@ public:
    * @param info
    *        The clean information to set.
    */
-  LOOT_API void SetCleanInfo(const std::set<PluginCleaningData>& info);
+  LOOT_API void SetCleanInfo(const std::vector<PluginCleaningData>& info);
 
   /**
    * Set the plugin's locations.
@@ -274,7 +274,7 @@ private:
   std::vector<Message> messages_;
   std::vector<Tag> tags_;
   std::vector<PluginCleaningData> dirtyInfo_;
-  std::set<PluginCleaningData> cleanInfo_;
+  std::vector<PluginCleaningData> cleanInfo_;
   std::set<Location> locations_;
 };
 }
