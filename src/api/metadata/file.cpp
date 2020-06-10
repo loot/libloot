@@ -33,7 +33,7 @@ File::File() {}
 File::File(const std::string& name,
            const std::string& display,
            const std::string& condition) :
-    name_(name),
+    name_(Filename(name)),
     display_(display),
     ConditionalMetadata(condition) {}
 
@@ -54,19 +54,19 @@ bool File::operator<(const File& rhs) const {
     return false;
   }
 
-  return CompareFilenames(name_, rhs.name_) < 0;
+  return name_ < rhs.name_;
 }
 
 bool File::operator==(const File& rhs) const {
   return display_ == rhs.display_ && GetCondition() == rhs.GetCondition() &&
-         CompareFilenames(name_, rhs.name_) == 0;
+         name_ == rhs.name_;
 }
 
-std::string File::GetName() const { return name_; }
+Filename File::GetName() const { return name_; }
 
 std::string File::GetDisplayName() const {
   if (display_.empty())
-    return name_;
+    return std::string(name_);
   else
     return display_;
 }

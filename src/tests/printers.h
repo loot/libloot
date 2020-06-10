@@ -41,7 +41,7 @@ along with LOOT.  If not, see
 namespace loot {
 namespace test {
 void PrintTo(const File& value, ::std::ostream* os) {
-  *os << "File(\"" << value.GetName() << "\", "
+  *os << "File(\"" << std::string(value.GetName()) << "\", "
       << "\"" << value.GetDisplayName() << "\", "
       << "\"" << value.GetCondition() << "\""
       << ")";

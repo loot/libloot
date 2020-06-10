@@ -36,7 +36,7 @@ namespace test {
 TEST(File, defaultConstructorShouldInitialiseEmptyStrings) {
   File file;
 
-  EXPECT_EQ("", file.GetName());
+  EXPECT_EQ("", std::string(file.GetName()));
   EXPECT_EQ("", file.GetDisplayName());
   EXPECT_EQ("", file.GetCondition());
 }
@@ -44,7 +44,7 @@ TEST(File, defaultConstructorShouldInitialiseEmptyStrings) {
 TEST(File, stringsConstructorShouldStoreGivenStrings) {
   File file("name", "display", "condition");
 
-  EXPECT_EQ("name", file.GetName());
+  EXPECT_EQ("name", std::string(file.GetName()));
   EXPECT_EQ("display", file.GetDisplayName());
   EXPECT_EQ("condition", file.GetCondition());
 }
@@ -279,9 +279,9 @@ TEST(File, emittingAsYamlShouldSingleQuoteValues) {
   File file("name1", "display1", "condition1");
   YAML::Emitter emitter;
   emitter << file;
-  std::string expected = "name: '" + file.GetName() + "'\ncondition: '" +
-                         file.GetCondition() + "'\ndisplay: '" +
-                         file.GetDisplayName() + "'";
+  std::string expected = "name: '" + std::string(file.GetName()) +
+                         "'\ncondition: '" + file.GetCondition() +
+                         "'\ndisplay: '" + file.GetDisplayName() + "'";
 
   EXPECT_EQ(expected, emitter.c_str());
 }
@@ -291,7 +291,7 @@ TEST(File, emittingAsYamlShouldOutputAsAScalarIfOnlyTheNameStringIsNotEmpty) {
   YAML::Emitter emitter;
   emitter << file;
 
-  EXPECT_EQ("'" + file.GetName() + "'", emitter.c_str());
+  EXPECT_EQ("'" + std::string(file.GetName()) + "'", emitter.c_str());
 }
 
 TEST(File, emittingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameField) {
@@ -299,15 +299,15 @@ TEST(File, emittingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameField) {
   YAML::Emitter emitter;
   emitter << file;
 
-  EXPECT_EQ("'" + file.GetName() + "'", emitter.c_str());
+  EXPECT_EQ("'" + std::string(file.GetName()) + "'", emitter.c_str());
 }
 
 TEST(File, emittingAsYamlShouldOmitAnEmptyConditionString) {
   File file("name1", "display1");
   YAML::Emitter emitter;
   emitter << file;
-  std::string expected = "name: '" + file.GetName() + "'\ndisplay: '" +
-                         file.GetDisplayName() + "'";
+  std::string expected = "name: '" + std::string(file.GetName()) +
+                         "'\ndisplay: '" + file.GetDisplayName() + "'";
 
   EXPECT_EQ(expected, emitter.c_str());
 }
@@ -317,7 +317,7 @@ TEST(File, encodingAsYamlShouldStoreDataCorrectly) {
   YAML::Node node;
   node = file;
 
-  EXPECT_EQ(file.GetName(), node["name"].as<std::string>());
+  EXPECT_EQ(std::string(file.GetName()), node["name"].as<std::string>());
   EXPECT_EQ(file.GetDisplayName(), node["display"].as<std::string>());
   EXPECT_EQ(file.GetCondition(), node["condition"].as<std::string>());
 }
@@ -327,7 +327,7 @@ TEST(File, encodingAsYamlShouldOmitEmptyFields) {
   YAML::Node node;
   node = file;
 
-  EXPECT_EQ(file.GetName(), node["name"].as<std::string>());
+  EXPECT_EQ(std::string(file.GetName()), node["name"].as<std::string>());
   EXPECT_FALSE(node["display"]);
   EXPECT_FALSE(node["condition"]);
 }
@@ -337,7 +337,7 @@ TEST(File, encodingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameField) {
   YAML::Node node;
   node = file;
 
-  EXPECT_EQ(file.GetName(), node["name"].as<std::string>());
+  EXPECT_EQ(std::string(file.GetName()), node["name"].as<std::string>());
   EXPECT_FALSE(node["display"]);
   EXPECT_FALSE(node["condition"]);
 }
@@ -347,7 +347,7 @@ TEST(File, decodingFromYamlShouldSetDataCorrectly) {
       "{name: name1, display: display1, condition: 'file(\"Foo.esp\")'}");
   File file = node.as<File>();
 
-  EXPECT_EQ(node["name"].as<std::string>(), file.GetName());
+  EXPECT_EQ(node["name"].as<std::string>(), std::string(file.GetName()));
   EXPECT_EQ(node["display"].as<std::string>(), file.GetDisplayName());
   EXPECT_EQ(node["condition"].as<std::string>(), file.GetCondition());
 }
@@ -357,7 +357,7 @@ TEST(File,
   YAML::Node node = YAML::Load("{name: name1, display: display1}");
   File file = node.as<File>();
 
-  EXPECT_EQ(node["name"].as<std::string>(), file.GetName());
+  EXPECT_EQ(node["name"].as<std::string>(), std::string(file.GetName()));
   EXPECT_EQ(node["display"].as<std::string>(), file.GetDisplayName());
   EXPECT_TRUE(file.GetCondition().empty());
 }
@@ -368,7 +368,7 @@ TEST(
   YAML::Node node = YAML::Load("name1");
   File file = node.as<File>();
 
-  EXPECT_EQ(node.as<std::string>(), file.GetName());
+  EXPECT_EQ(node.as<std::string>(), std::string(file.GetName()));
   EXPECT_EQ(node.as<std::string>(), file.GetDisplayName());
   EXPECT_TRUE(file.GetCondition().empty());
 }

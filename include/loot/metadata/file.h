@@ -28,6 +28,7 @@
 
 #include "loot/api_decorator.h"
 #include "loot/metadata/conditional_metadata.h"
+#include "loot/metadata/filename.h"
 
 namespace loot {
 /**
@@ -73,7 +74,7 @@ public:
    * Get the filename of the file.
    * @return The file's filename.
    */
-  LOOT_API std::string GetName() const;
+  LOOT_API Filename GetName() const;
 
   /**
    * Get the display name of the file.
@@ -82,7 +83,7 @@ public:
   LOOT_API std::string GetDisplayName() const;
 
 private:
-  std::string name_;
+  Filename name_;
   std::string display_;
 };
 
@@ -94,7 +95,7 @@ LOOT_API bool operator!=(const File& lhs, const File& rhs);
 
 /**
  * Check if the first File object is greater than the second File object.
- * @returns True if the second File object is less than the first File object, 
+ * @returns True if the second File object is less than the first File object,
  *          false otherwise.
  */
 LOOT_API bool operator>(const File& lhs, const File& rhs);
@@ -102,7 +103,7 @@ LOOT_API bool operator>(const File& lhs, const File& rhs);
 /**
  * Check if the first File object is less than or equal to the second File
  * object.
- * @returns True if the first File object is not greater than the second File 
+ * @returns True if the first File object is not greater than the second File
  *          object, false otherwise.
  */
 LOOT_API bool operator<=(const File& lhs, const File& rhs);

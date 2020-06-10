@@ -37,12 +37,12 @@ template<>
 struct convert<loot::File> {
   static Node encode(const loot::File& rhs) {
     Node node;
-    node["name"] = rhs.GetName();
+    node["name"] = std::string(rhs.GetName());
 
     if (rhs.IsConditional())
       node["condition"] = rhs.GetCondition();
 
-    if (rhs.GetDisplayName() != rhs.GetName())
+    if (rhs.GetDisplayName() != std::string(rhs.GetName()))
       node["display"] = rhs.GetDisplayName();
 
     return node;
@@ -84,17 +84,18 @@ struct convert<loot::File> {
 
 inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
   if (!rhs.IsConditional() &&
-      (rhs.GetDisplayName().empty() || rhs.GetDisplayName() == rhs.GetName()))
-    out << YAML::SingleQuoted << rhs.GetName();
+      (rhs.GetDisplayName().empty() ||
+       rhs.GetDisplayName() == std::string(rhs.GetName())))
+    out << YAML::SingleQuoted << std::string(rhs.GetName());
   else {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
-        << rhs.GetName();
+        << std::string(rhs.GetName());
 
     if (rhs.IsConditional())
       out << Key << "condition" << Value << YAML::SingleQuoted
           << rhs.GetCondition();
 
-    if (rhs.GetDisplayName() != rhs.GetName())
+    if (rhs.GetDisplayName() != std::string(rhs.GetName()))
       out << Key << "display" << Value << YAML::SingleQuoted
           << rhs.GetDisplayName();
 

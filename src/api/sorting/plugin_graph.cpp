@@ -190,18 +190,18 @@ void PluginGraph::AddPluginVertices(Game& game,
   // implement it generally.
   auto loadedPlugins = game.GetCache()->GetPlugins();
   std::sort(loadedPlugins.begin(),
-                   loadedPlugins.end(),
-                   [](const auto& lhs, const auto& rhs) {
-                     if (!lhs) {
-                       return false;
-                     }
+            loadedPlugins.end(),
+            [](const auto& lhs, const auto& rhs) {
+              if (!lhs) {
+                return false;
+              }
 
-                     if (!rhs) {
-                       return true;
-                     }
+              if (!rhs) {
+                return true;
+              }
 
-                     return *lhs < *rhs;
-                   });
+              return *lhs < *rhs;
+            });
 
   for (const auto& plugin : loadedPlugins) {
     auto masterlistMetadata =
@@ -472,26 +472,26 @@ void PluginGraph::AddSpecificEdges() {
     }
 
     for (const auto& file : graph_[*vit].GetMasterlistRequirements()) {
-      auto parentVertex = GetVertexByName(file.GetName());
+      auto parentVertex = GetVertexByName(std::string(file.GetName()));
       if (parentVertex.has_value()) {
         AddEdge(parentVertex.value(), *vit, EdgeType::masterlistRequirement);
       }
     }
     for (const auto& file : graph_[*vit].GetUserRequirements()) {
-      auto parentVertex = GetVertexByName(file.GetName());
+      auto parentVertex = GetVertexByName(std::string(file.GetName()));
       if (parentVertex.has_value()) {
         AddEdge(parentVertex.value(), *vit, EdgeType::userRequirement);
       }
     }
 
     for (const auto& file : graph_[*vit].GetMasterlistLoadAfterFiles()) {
-      auto parentVertex = GetVertexByName(file.GetName());
+      auto parentVertex = GetVertexByName(std::string(file.GetName()));
       if (parentVertex.has_value()) {
         AddEdge(parentVertex.value(), *vit, EdgeType::masterlistLoadAfter);
       }
     }
     for (const auto& file : graph_[*vit].GetUserLoadAfterFiles()) {
-      auto parentVertex = GetVertexByName(file.GetName());
+      auto parentVertex = GetVertexByName(std::string(file.GetName()));
       if (parentVertex.has_value()) {
         AddEdge(parentVertex.value(), *vit, EdgeType::userLoadAfter);
       }
