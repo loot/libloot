@@ -60,7 +60,7 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
       PluginMetadata plugin(node.as<PluginMetadata>());
       if (plugin.IsRegexPlugin())
         regexPlugins_.push_back(plugin);
-      else if (!plugins_.insert(plugin).second)
+      else if (!plugins_.emplace(Filename(plugin.GetName()), plugin).second)
         throw FileAccessError("More than one entry exists for plugin \"" +
                               plugin.GetName() + "\"");
     }
@@ -158,7 +158,9 @@ void MetadataList::Clear() {
 std::vector<PluginMetadata> MetadataList::Plugins() const {
   std::vector<PluginMetadata> plugins;
   plugins.reserve(plugins_.size() + regexPlugins_.size());
-  plugins.insert(plugins.end(), plugins_.begin(), plugins_.end());
+  for (const auto& pluginPair : plugins_) {
+    plugins.push_back(pluginPair.second);
+  }
   plugins.insert(plugins.end(), regexPlugins_.begin(), regexPlugins_.end());
 
   return plugins;
@@ -198,17 +200,20 @@ std::optional<PluginMetadata> MetadataList::FindPlugin(
     const std::string& pluginName) const {
   PluginMetadata match(pluginName);
 
-  auto it = plugins_.find(match);
+  auto it = plugins_.find(Filename(pluginName));
 
   if (it != plugins_.end())
-    match = *it;
+    match = it->second;
 
   // Now we want to also match possibly multiple regex entries.
-  auto regIt = find(regexPlugins_.begin(), regexPlugins_.end(), match);
+  auto nameMatches = [&](const PluginMetadata& pluginMetadata) {
+    return pluginMetadata.NameMatches(pluginName);
+  };
+  auto regIt = find_if(regexPlugins_.begin(), regexPlugins_.end(), nameMatches);
   while (regIt != regexPlugins_.end()) {
     match.MergeMetadata(*regIt);
 
-    regIt = find(++regIt, regexPlugins_.end(), match);
+    regIt = find_if(++regIt, regexPlugins_.end(), nameMatches);
   }
 
   if (match.HasNameOnly()) {
@@ -222,7 +227,7 @@ void MetadataList::AddPlugin(const PluginMetadata& plugin) {
   if (plugin.IsRegexPlugin())
     regexPlugins_.push_back(plugin);
   else {
-    if (!plugins_.insert(plugin).second)
+    if (!plugins_.emplace(Filename(plugin.GetName()), plugin).second)
       throw std::invalid_argument(
           "Cannot add \"" + plugin.GetName() +
           "\" to the metadata list as another entry already exists.");
@@ -232,7 +237,7 @@ void MetadataList::AddPlugin(const PluginMetadata& plugin) {
 // Doesn't erase matching regex entries, because they might also
 // be required for other plugins.
 void MetadataList::ErasePlugin(const std::string& pluginName) {
-  auto it = plugins_.find(PluginMetadata(pluginName));
+  auto it = plugins_.find(Filename(pluginName));
 
   if (it != plugins_.end()) {
     plugins_.erase(it);
@@ -251,7 +256,7 @@ void MetadataList::EvalAllConditions(ConditionEvaluator& conditionEvaluator) {
     plugins_.clear();
 
   for (const auto& plugin : unevaluatedPlugins_) {
-    plugins_.insert(conditionEvaluator.EvaluateAll(plugin));
+    plugins_.emplace(plugin.first, conditionEvaluator.EvaluateAll(plugin.second));
   }
 
   if (unevaluatedRegexPlugins_.empty())

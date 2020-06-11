@@ -68,40 +68,26 @@ TEST_P(
 }
 
 TEST_P(PluginMetadataTest,
-       equalityOperatorShouldUseCaseInsensitiveNameComparisonForNonRegexNames) {
-  PluginMetadata plugin1(blankEsm);
-  PluginMetadata plugin2(boost::to_lower_copy(blankEsm));
-  EXPECT_TRUE(plugin1 == plugin2);
+       nameMatchesShouldUseCaseInsensitiveNameComparisonForNonRegexNames) {
+  PluginMetadata plugin(blankEsm);
 
-  plugin1 = PluginMetadata(blankEsm);
-  plugin2 = PluginMetadata(blankDifferentEsm);
-  EXPECT_FALSE(plugin1 == plugin2);
+  EXPECT_TRUE(plugin.NameMatches(boost::to_lower_copy(blankEsm)));
+  EXPECT_FALSE(plugin.NameMatches(blankDifferentEsm));
 }
 
 TEST_P(PluginMetadataTest,
-       equalityOperatorShouldUseCaseInsensitiveNameComparisonForTwoRegexNames) {
-  PluginMetadata plugin1("Blan.\\.esm");
-  PluginMetadata plugin2("blan.\\.esm");
-  EXPECT_TRUE(plugin1 == plugin2);
-  EXPECT_TRUE(plugin2 == plugin1);
+       nameMatchesShouldTreatGivenPluginNameStringsAsLiterals) {
+  PluginMetadata plugin(blankEsm);
+  std::string regex = "blan.\\.esm";
 
-  plugin1 = PluginMetadata("Blan(k|p).esm");
-  plugin2 = PluginMetadata("Blan.\\.esm");
-  EXPECT_FALSE(plugin1 == plugin2);
-  EXPECT_FALSE(plugin2 == plugin1);
+  EXPECT_FALSE(plugin.NameMatches(regex));
 }
 
-TEST_P(PluginMetadataTest,
-       equalityOperatorShouldUseRegexMatchingForARegexNameAndANonRegexName) {
-  PluginMetadata plugin1("Blank.esm");
-  PluginMetadata plugin2("Blan.\\.esm");
-  EXPECT_TRUE(plugin1 == plugin2);
-  EXPECT_TRUE(plugin2 == plugin1);
+TEST_P(PluginMetadataTest, nameMatchesShouldUseCaseInsensitiveRegexMatchingForARegexName) {
+  PluginMetadata plugin("Blan.\\.esm");
 
-  plugin1 = PluginMetadata("Blan.esm");
-  plugin2 = PluginMetadata("Blan.\\.esm");
-  EXPECT_FALSE(plugin1 == plugin2);
-  EXPECT_FALSE(plugin2 == plugin1);
+  EXPECT_TRUE(plugin.NameMatches(boost::to_lower_copy(blankEsm)));
+  EXPECT_FALSE(plugin.NameMatches(blankDifferentEsm));
 }
 
 TEST_P(PluginMetadataTest, mergeMetadataShouldNotChangeName) {
@@ -114,7 +100,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldNotChangeName) {
 }
 
 TEST_P(PluginMetadataTest,
-  mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothExplicit) {
+       mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothExplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -886,7 +872,8 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
   EXPECT_EQ("Blank.esp", plugin.GetName());
   EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetLoadAfterFiles());
   EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetRequirements());
-  EXPECT_EQ(std::vector<File>({File("Blank.esm")}), plugin.GetIncompatibilities());
+  EXPECT_EQ(std::vector<File>({File("Blank.esm")}),
+            plugin.GetIncompatibilities());
   EXPECT_EQ(std::vector<Message>({Message(MessageType::say, "content")}),
             plugin.GetMessages());
   EXPECT_EQ(std::vector<Tag>({Tag("Relev")}), plugin.GetTags());

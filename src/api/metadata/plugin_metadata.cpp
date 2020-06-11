@@ -199,20 +199,13 @@ bool PluginMetadata::IsRegexPlugin() const {
   return strpbrk(name_.c_str(), ":\\*?|") != nullptr;
 }
 
-bool PluginMetadata::operator==(const PluginMetadata& rhs) const {
-  if (IsRegexPlugin() == rhs.IsRegexPlugin()) {
-    return CompareFilenames(name_, rhs.name_) == 0;
+bool PluginMetadata::NameMatches(const std::string& pluginName) const {
+  if (IsRegexPlugin()) {
+    return std::regex_match(
+        pluginName,
+        std::regex(name_, std::regex::ECMAScript | std::regex::icase));
   }
 
-  if (IsRegexPlugin())
-    return regex_match(rhs.GetName(),
-                       regex(name_, regex::ECMAScript | regex::icase));
-  else
-    return regex_match(name_,
-                       regex(rhs.GetName(), regex::ECMAScript | regex::icase));
-}
-
-bool PluginMetadata::operator!=(const PluginMetadata& rhs) const {
-  return !(*this == rhs);
+  return CompareFilenames(name_, pluginName) == 0;
 }
 }

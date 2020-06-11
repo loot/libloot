@@ -37,20 +37,12 @@
 #include "loot/metadata/plugin_metadata.h"
 
 namespace std {
-  /**
-    * A specialisation of std::hash for loot::PluginMetadata.
-    */
-  template<>
-  struct hash<loot::PluginMetadata> {
-    /**
-      * Calculate a hash value for an object of a class that implements
-      * loot::PluginMetadata.
-      * @return The hash generated from the plugin's normalized filename.
-      */
-    size_t operator()(const loot::PluginMetadata& plugin) const {
-      return hash<string>()(loot::NormalizeFilename(plugin.GetName()));
-    }
-  };
+template<>
+struct hash<loot::Filename> {
+  size_t operator()(const loot::Filename& filename) const {
+    return hash<string>()(loot::NormalizeFilename(std::string(filename)));
+  }
+};
 }
 
 namespace loot {
@@ -83,11 +75,11 @@ public:
 protected:
   std::vector<Group> groups_;
   std::vector<std::string> bashTags_;
-  std::unordered_set<PluginMetadata> plugins_;
+  std::unordered_map<Filename, PluginMetadata> plugins_;
   std::vector<PluginMetadata> regexPlugins_;
   std::vector<Message> messages_;
 
-  std::unordered_set<PluginMetadata> unevaluatedPlugins_;
+  std::unordered_map<Filename, PluginMetadata> unevaluatedPlugins_;
   std::vector<PluginMetadata> unevaluatedRegexPlugins_;
   std::vector<Message> unevaluatedMessages_;
 };

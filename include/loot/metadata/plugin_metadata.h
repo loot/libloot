@@ -236,20 +236,18 @@ public:
   LOOT_API bool IsRegexPlugin() const;
 
   /**
-   * Check if two PluginMetadata objects are equal by comparing their name
-   * values.
-   * @returns True if the plugin names are case-insensitively equal, false
-   *          otherwise.
+   * Check if the given plugin name matches this plugin metadata object's
+   * name field.
+   *
+   * If the name field is a regular expression, the given plugin name will be
+   * matched against it, otherwise the strings will be compared
+   * case-insensitively. The given plugin name must be literal, i.e. not a
+   * regular expression.
+   * @returns True if the given plugin name matches this metadata's plugin 
+   *          name, false otherwise.
    */
-  LOOT_API bool operator==(const PluginMetadata& rhs) const;
+  LOOT_API bool NameMatches(const std::string& pluginName) const;
 
-  /**
-   * Check if two PluginMetadata objects are not equal by comparing their name
-   * values.
-   * @returns True if the plugin names are not case-insensitively equal, false
-   *          otherwise.
-   */
-  LOOT_API bool operator!=(const PluginMetadata& rhs) const;
 private:
   std::string name_;
   std::optional<std::string> group_;
