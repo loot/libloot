@@ -250,21 +250,6 @@ public:
    *          otherwise.
    */
   LOOT_API bool operator!=(const PluginMetadata& rhs) const;
-
-  /**
-   * Check if object's name value is equal to the given string.
-   * @returns True if the plugin name is case-insensitively equal to the given
-   *          string, false otherwise.
-   */
-  LOOT_API bool operator==(const std::string& rhs) const;
-
-  /**
-   * Check if object's name value is not equal to the given string.
-   * @returns True if the plugin name is not case-insensitively equal to the
-   *          given string, false otherwise.
-   */
-  LOOT_API bool operator!=(const std::string& rhs) const;
-
 private:
   std::string name_;
   std::optional<std::string> group_;

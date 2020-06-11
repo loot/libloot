@@ -215,12 +215,4 @@ bool PluginMetadata::operator==(const PluginMetadata& rhs) const {
 bool PluginMetadata::operator!=(const PluginMetadata& rhs) const {
   return !(*this == rhs);
 }
-
-bool PluginMetadata::operator==(const std::string& rhs) const {
-  return *this == PluginMetadata(rhs);
-}
-
-bool PluginMetadata::operator!=(const std::string& rhs) const {
-  return !(*this == rhs);
-}
 }
