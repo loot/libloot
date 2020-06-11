@@ -438,27 +438,6 @@ TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAGhostedPlugin) {
 }
 
 TEST_P(PluginTest,
-       lessThanOperatorShouldUseCaseInsensitiveLexicographicalNameComparison) {
-  Plugin plugin1(
-      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, true);
-  Plugin plugin2(game_.Type(),
-                 game_.GetCache(),
-                 game_.DataPath() / lowercaseBlankEsp,
-                 true);
-
-  EXPECT_FALSE(plugin1 < plugin2);
-  EXPECT_FALSE(plugin2 < plugin1);
-
-  Plugin plugin3 =
-      Plugin(game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, true);
-  Plugin plugin4 =
-      Plugin(game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, true);
-
-  EXPECT_TRUE(plugin3 < plugin4);
-  EXPECT_FALSE(plugin4 < plugin3);
-}
-
-TEST_P(PluginTest,
        doFormIDsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);

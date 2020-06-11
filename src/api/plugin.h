@@ -73,8 +73,6 @@ public:
                       const std::filesystem::path& pluginPath);
   static uintmax_t GetFileSize(std::filesystem::path pluginPath);
 
-  bool operator<(const Plugin& rhs) const;
-
 private:
   void Load(const std::filesystem::path& path,
             GameType gameType,

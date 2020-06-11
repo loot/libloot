@@ -261,10 +261,6 @@ uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
   return std::filesystem::file_size(pluginPath);
 }
 
-bool Plugin::operator<(const Plugin& rhs) const {
-  return CompareFilenames(name_, rhs.name_) < 0;
-}
-
 void Plugin::Load(const std::filesystem::path& path,
                   GameType gameType,
                   bool headerOnly) {

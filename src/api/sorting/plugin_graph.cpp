@@ -200,7 +200,7 @@ void PluginGraph::AddPluginVertices(Game& game,
                 return true;
               }
 
-              return *lhs < *rhs;
+              return lhs->GetName() < rhs->GetName();
             });
 
   for (const auto& plugin : loadedPlugins) {
