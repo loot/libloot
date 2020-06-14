@@ -2,6 +2,26 @@
 Version History
 ***************
 
+0.15.2 - 2020-06-14
+===================
+
+Changed
+-------
+
+- :cpp:any:`MergeMetadata()` now only uses the group value of the given metadata
+  object if there is not already one set, matching the behaviour for all other
+  merged metadata.
+- Updated esplugin to v3.3.1.
+- Updated libgit2 to v1.0.1.
+- Updated loot-condition-interpreter to v2.1.1.
+- Updated spdlog to v1.6.1.
+
+Fixed
+-----
+
+- :cpp:any:`GetPluginMetadata()` preferred masterlist metadata over userlist
+  metadata when merging them, which was the opposite of the intended behaviour.
+
 0.15.1 - 2019-12-07
 ===================
 

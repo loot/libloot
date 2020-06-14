@@ -121,7 +121,7 @@ Key               Merge Behaviour (merging B into A)
 ===============   ==================================
 name              Not merged.
 enabled           Replaced by B's value.
-group             Replaced by B's value.
+group             Replaced by B's value only if A has no value set.
 after             Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.
 req               Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.
 inc               Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.
