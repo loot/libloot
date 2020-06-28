@@ -36,8 +36,7 @@ using std::string;
 namespace loot {
 GameCache::GameCache() {}
 
-GameCache::GameCache(const GameCache& cache) :
-    plugins_(cache.plugins_) {}
+GameCache::GameCache(const GameCache& cache) : plugins_(cache.plugins_) {}
 
 GameCache& GameCache::operator=(const GameCache& cache) {
   if (&cache != this) {
@@ -78,31 +77,22 @@ void GameCache::AddPlugin(const Plugin&& plugin) {
   if (it != end(plugins_))
     plugins_.erase(it);
 
-  plugins_.emplace(normalizedName,
-                   std::make_shared<Plugin>(std::move(plugin)));
+  plugins_.emplace(normalizedName, std::make_shared<Plugin>(std::move(plugin)));
 }
 
-std::set<std::filesystem::path> GameCache::GetArchivePaths() const
-{
+std::set<std::filesystem::path> GameCache::GetArchivePaths() const {
   return archivePaths_;
 }
 
-void GameCache::CacheArchivePath(const std::filesystem::path& path)
-{
+void GameCache::CacheArchivePaths(std::set<std::filesystem::path>&& paths) {
   lock_guard<mutex> lock(mutex_);
 
-  archivePaths_.insert(path);
+  archivePaths_ = paths;
 }
 
 void GameCache::ClearCachedPlugins() {
   lock_guard<mutex> guard(mutex_);
 
   plugins_.clear();
-}
-
-void GameCache::ClearCachedArchivePaths() {
-  lock_guard<mutex> guard(mutex_);
-
-  archivePaths_.clear();
 }
 }

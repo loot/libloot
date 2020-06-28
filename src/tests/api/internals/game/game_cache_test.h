@@ -113,8 +113,8 @@ TEST_P(GameCacheTest,
 
 TEST_P(GameCacheTest,
   gettingArchivePathsShouldReturnASetOfPathsIfPathsHaveBeenCached) {
-  cache_.CacheArchivePath(game_.DataPath() / blankEsm);
-  cache_.CacheArchivePath(game_.DataPath() / blankMasterDependentEsm);
+  cache_.CacheArchivePaths({game_.DataPath() / blankEsm,
+                            game_.DataPath() / blankMasterDependentEsm});
 
   auto expected = std::set<std::filesystem::path>({
     game_.DataPath() / blankEsm,
@@ -136,18 +136,6 @@ TEST_P(GameCacheTest, clearingCachedPluginsShouldClearAnyCachedPlugins) {
   cache_.ClearCachedPlugins();
 
   EXPECT_TRUE(cache_.GetPlugins().empty());
-}
-
-TEST_P(GameCacheTest,
-  clearingCachedArchivePathsShouldNotThrowIfNoPathsAreCached) {
-  EXPECT_NO_THROW(cache_.GetArchivePaths());
-}
-
-TEST_P(GameCacheTest, clearingCachedArchivePathsShouldClearAnyCachedPaths) {
-  cache_.CacheArchivePath(game_.DataPath() / blankEsm);
-  cache_.ClearCachedArchivePaths();
-
-  EXPECT_TRUE(cache_.GetArchivePaths().empty());
 }
 }
 }

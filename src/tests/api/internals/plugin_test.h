@@ -91,10 +91,10 @@ protected:
     out.open(nonAsciiPrefixArchivePath);
     out.close();
 
-    game_.GetCache()->CacheArchivePath(dataPath / blankArchive);
-    game_.GetCache()->CacheArchivePath(dataPath / blankSuffixArchive);
-    game_.GetCache()->CacheArchivePath(dataPath / nonAsciiArchivePath);
-    game_.GetCache()->CacheArchivePath(dataPath / nonAsciiPrefixArchivePath);
+    game_.GetCache()->CacheArchivePaths({dataPath / blankArchive,
+                                         dataPath / blankSuffixArchive,
+                                         dataPath / nonAsciiArchivePath,
+                                         dataPath / nonAsciiPrefixArchivePath});
   }
 
   uintmax_t getGhostedPluginFileSize() {

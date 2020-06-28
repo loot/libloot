@@ -153,7 +153,6 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
 
   // Clear the existing plugin and archive caches.
   cache_->ClearCachedPlugins();
-  cache_->ClearCachedArchivePaths();
 
   // Search for and cache archives.
   CacheArchives();
@@ -243,17 +242,20 @@ void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
 void Game::CacheArchives() {
   const auto archiveFileExtension = GetArchiveFileExtension(Type());
 
+  std::set<std::filesystem::path> archivePaths;
   for (std::filesystem::directory_iterator it(DataPath());
        it != std::filesystem::directory_iterator();
        ++it) {
-    // Check if the path is an archive by checking if replacing its
-    // file extension with the archive extension resolves to the same file.
-    // Could use boost::iends_with, but it's less obvious here that the
-    // test string is ASCII-only.
-    if (loot::equivalent(it->path(),
-                         replaceExtension(it->path(), archiveFileExtension))) {
-      cache_->CacheArchivePath(it->path());
+    // This is only correct for ASCII strings, but that's all that
+    // GetArchiveFileExtension() can return. It's a lot faster than the more
+    // generally-correct approach of testing file path equivalence when
+    // there are a lot of entries in DataPath().
+    if (it->is_regular_file() &&
+        boost::iends_with(it->path().u8string(), archiveFileExtension)) {
+      archivePaths.insert(it->path());
     }
   }
+
+  cache_->CacheArchivePaths(std::move(archivePaths));
 }
 }

@@ -44,10 +44,9 @@ public:
   void AddPlugin(const Plugin&& plugin);
 
   std::set<std::filesystem::path> GetArchivePaths() const;
-  void CacheArchivePath(const std::filesystem::path& path);
+  void CacheArchivePaths(std::set<std::filesystem::path>&& paths);
 
   void ClearCachedPlugins();
-  void ClearCachedArchivePaths();
 
 private:
   std::unordered_map<std::string, std::shared_ptr<const Plugin>> plugins_;
