@@ -36,11 +36,18 @@ using std::string;
 namespace loot {
 GameCache::GameCache() {}
 
-GameCache::GameCache(const GameCache& cache) :
-    plugins_(cache.plugins_),
-    archivePaths_(cache.archivePaths_) {}
+GameCache::GameCache(const GameCache& cache) {
+  lock_guard<mutex> lock(mutex_);
+  lock_guard<mutex> otherLock(cache.mutex_);
+
+  plugins_ = cache.plugins_;
+  archivePaths_ = cache.archivePaths_;
+}
 
 GameCache& GameCache::operator=(const GameCache& cache) {
+  lock_guard<mutex> lock(mutex_);
+  lock_guard<mutex> otherLock(cache.mutex_);
+
   if (&cache != this) {
     plugins_ = cache.plugins_;
     archivePaths_ = cache.archivePaths_;
@@ -50,6 +57,8 @@ GameCache& GameCache::operator=(const GameCache& cache) {
 }
 
 std::set<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
+  lock_guard<mutex> lock(mutex_);
+
   std::set<std::shared_ptr<const Plugin>> output;
   std::transform(
       begin(plugins_),
@@ -64,6 +73,8 @@ std::set<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
 
 std::shared_ptr<const Plugin> GameCache::GetPlugin(
     const std::string& pluginName) const {
+  lock_guard<mutex> lock(mutex_);
+
   auto it = plugins_.find(NormalizeFilename(pluginName));
   if (it != end(plugins_))
     return it->second;
@@ -84,6 +95,8 @@ void GameCache::AddPlugin(const Plugin&& plugin) {
 }
 
 std::set<std::filesystem::path> GameCache::GetArchivePaths() const {
+  lock_guard<mutex> lock(mutex_);
+
   return archivePaths_;
 }
 
