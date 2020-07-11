@@ -315,6 +315,14 @@ std::filesystem::path replaceExtension(std::filesystem::path path,
   return path.replace_extension(std::filesystem::u8path(newExtension));
 }
 
+std::filesystem::path getTexturesArchivePath(std::filesystem::path pluginPath,
+                                             const std::string& newExtension) {
+  // replace_extension() with no argument just removes the existing extension.
+  pluginPath.replace_extension();
+  pluginPath += " - Textures" + newExtension;
+  return pluginPath;
+}
+
 bool equivalent(const std::filesystem::path& path1,
                 const std::filesystem::path& path2) {
   // If the paths are identical, they've got to be equivalent,
@@ -351,13 +359,27 @@ bool Plugin::LoadsArchive(const GameType gameType,
   const string archiveExtension = GetArchiveFileExtension(gameType);
 
   if (gameType == GameType::tes5) {
-    // Skyrim plugins only load BSAs that exactly match their basename.
-    return std::filesystem::exists(
-        replaceExtension(pluginPath, archiveExtension));
+    // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
+    // basename, ignoring file extensions.
+    auto archiveFilename = replaceExtension(pluginPath, archiveExtension);
+
+    return std::filesystem::exists(archiveFilename);
+  } else if (gameType == GameType::tes5se || gameType == GameType::tes5vr) {
+    // Skyrim SE can load BSAs that have exactly the same
+    // basename, ignoring file extensions, and also BSAs with filenames of
+    // the form "<basename> - Textures.bsa" (case-insensitively).
+    // I'm assuming Skyrim VR works the same way as Skyrim SE.
+    auto archiveFilename = replaceExtension(pluginPath, archiveExtension);
+    auto texturesArchiveFilename =
+        getTexturesArchivePath(pluginPath, archiveExtension);
+
+    return std::filesystem::exists(archiveFilename) ||
+           std::filesystem::exists(texturesArchiveFilename);
   } else if (gameType != GameType::tes4 ||
              boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
     // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
     // begin with the plugin basename.
+    // I'm assuming that FO4 VR works the same way as FO4.
 
     auto basenameLength = pluginPath.stem().native().length();
     auto pluginExtension = pluginPath.extension().native();

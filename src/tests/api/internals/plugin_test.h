@@ -341,7 +341,7 @@ TEST_P(
                           .LoadsArchive();
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::tes4 ||
-      GetParam() == GameType::tes5)
+      GetParam() == GameType::tes5 || GetParam() == GameType::tes5se)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
@@ -356,7 +356,8 @@ TEST_P(
                              true)
                           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes5)
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes5 ||
+      GetParam() == GameType::tes5se)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
@@ -373,7 +374,8 @@ TEST_P(
              true)
           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes5)
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes5 ||
+      GetParam() == GameType::tes5se)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
