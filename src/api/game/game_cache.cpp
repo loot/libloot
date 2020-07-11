@@ -36,11 +36,14 @@ using std::string;
 namespace loot {
 GameCache::GameCache() {}
 
-GameCache::GameCache(const GameCache& cache) : plugins_(cache.plugins_) {}
+GameCache::GameCache(const GameCache& cache) :
+    plugins_(cache.plugins_),
+    archivePaths_(cache.archivePaths_) {}
 
 GameCache& GameCache::operator=(const GameCache& cache) {
   if (&cache != this) {
     plugins_ = cache.plugins_;
+    archivePaths_ = cache.archivePaths_;
   }
 
   return *this;
