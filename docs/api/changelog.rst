@@ -2,6 +2,96 @@
 Version History
 ***************
 
+0.16.0 - 2020-07-12
+===================
+
+Added
+-----
+
+- The ``!=``, ``>``, ``<=`` and ``>=`` comparison operators are now implemented
+  for :cpp:any:`loot::File`, :cpp:any:`loot::Location`,
+  :cpp:any:`loot::Message`, :cpp:any:`loot::MessageContent`,
+  :cpp:any:`loot::PluginCleaningData` and :cpp:any:`loot::Tag`.
+- The ``!=``, ``<``, ``>``, ``<=`` and ``>=`` comparison operators are now
+  implemented for :cpp:any:`loot::Group`.
+- A new :cpp:any:`Filename` class for representing strings handled as
+  case-insensitive filenames.
+- ``PluginMetadata::NameMatches()`` checks if the given plugin filename matches
+  the plugin name of the metadata object it is called on. If the plugin metadata
+  name is a regular expression, the given plugin filename will be matched
+  against it, otherwise the comparison is case-insensitive equality.
+
+
+Changed
+-------
+
+- ``File::GetName()`` now returns a :cpp:any:`Filename` instead of a
+  ``std::string``.
+- :cpp:any:`GetGroups()` and :cpp:any:`GetUserGroups()` now return
+  ``std::vector<Group>`` instead of ``std::unordered_set<Group>``.
+- :cpp:any:`SetUserGroups()` now takes a ``const std::vector<Group>&`` instead
+  of a ``const std::unordered_set<std::string>&``.
+- :cpp:any:`loot::Group`'s three-argument constructor now takes a
+  ``const std::vector<std::string>&`` instead of a
+  ``const std::unordered_set<std::string>&`` as its second parameter.
+- :cpp:any:`GetAfterGroups()` now returns a ``std::vector<std::string>``
+  instead of a ``std::unordered_set<std::string>``.
+- ``std::set<>`` usage has been replaced by ``std::vector<>`` throughout the
+  public API. This affects the following functions:
+
+  - ``PluginInterface::GetBashTags()``
+  - ``DatabaseInterface::GetKnownBashTags()``
+  - ``GameInterface::GetLoadedPlugins()``
+  - ``PluginMetadata::GetLoadAfterFiles()``
+  - ``PluginMetadata::SetLoadAfterFiles()``
+  - ``PluginMetadata::GetRequirements()``
+  - ``PluginMetadata::SetRequirements()``
+  - ``PluginMetadata::GetIncompatibilities()``
+  - ``PluginMetadata::SetIncompatibilities()``
+  - ``PluginMetadata::GetTags()``
+  - ``PluginMetadata::SetTags()``
+  - ``PluginMetadata::GetDirtyInfo()``
+  - ``PluginMetadata::SetDirtyInfo()``
+  - ``PluginMetadata::GetCleanInfo()``
+  - ``PluginMetadata::SetCleanInfo()``
+  - ``PluginMetadata::GetLocations()``
+  - ``PluginMetadata::SetLocations()``
+
+- :cpp:any:`loot::File`, :cpp:any:`loot::Location`, :cpp:any:`loot::Message`,
+  :cpp:any:`loot::MessageContent`, :cpp:any:`loot::PluginCleaningData`,
+  :cpp:any:`loot::Tag` and :cpp:any:`loot::Group` now implement their comparison
+  operators by comparing all their fields (including inherited fields), using
+  the same operator for the fields. For example, comparing two
+  :cpp:any:`loot::File` objects using ``==`` will now compare each of their
+  fields using ``==``.
+- When loading plugins, the speed at which LOOT identifies their corresponding
+  archive files (``*.bsa`` or ``.ba2``, depending on the game) has been
+  improved.
+
+
+Removed
+-------
+
+- ``PluginMetadata::IsEnabled()`` and ``PluginMetadata::SetEnabled()``, as it is
+  no longer possible to disable plugin metadata (though doing so never had any
+  effect).
+- :cpp:any:`PluginMetadata` no longer implements the ``==`` or ``!=`` comparison
+  operators.
+- ``std::hash`` is no longer specialised for :cpp:any:`loot::Group`.
+
+Fixed
+-----
+
+- :cpp:any:`LoadsArchive()` now correctly identifies the BSAs that a Skyrim SE
+  or Skyrim VR loads. This assumes that Skyrim VR plugins load BSAs in the same
+  way as Skyrim SE. Previously LOOT would use the same rules as the Fallout
+  games for Skyrim SE or VR, which was incorrect.
+- Some operations involving loaded plugins or copies of game interface objects
+  could potentially cause data races due to a lack of mutex locking in some data
+  read operations.
+- Copying a game interface object did not copy its cached archive files, leaving
+  the new copy with no cached archive files.
+
 0.15.2 - 2020-06-14
 ===================
 

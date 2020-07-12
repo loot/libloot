@@ -4,6 +4,21 @@ Version History
 
 The version history of the metadata syntax is given below.
 
+0.16 - 2020-07-12
+=================
+
+Changed
+-------
+
+- Equality for all metadata data structures is now determined by comparison of
+  all their fields. String comparison is case-sensitive, with the exception of
+  ``File``'s ``name`` field.
+
+Removed
+-------
+
+- The ``enabled`` field has been removed from plugin metadata objects.
+
 0.15 - 2019-11-05
 =================
 
