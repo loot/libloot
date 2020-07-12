@@ -65,8 +65,7 @@ public:
 
   /**
    * Check if two File objects are equal by comparing their fields.
-   * @returns True if the filenames are case-insensitively equal and all other
-   *          fields are case-sensitively equal, false otherwise.
+   * @returns True if the objects' fields are equal, false otherwise.
    */
   LOOT_API bool operator==(const File& rhs) const;
 

@@ -59,7 +59,7 @@ public:
 
   /**
    * Check if two Group objects are equal by comparing their names.
-   * @returns True if the names are case-sensitively equal, false otherwise.
+   * @returns True if the objects' fields are equal, false otherwise.
    */
   LOOT_API bool operator==(const Group& rhs) const;
 
