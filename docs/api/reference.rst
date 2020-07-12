@@ -51,6 +51,9 @@ Classes
 .. doxygenclass:: loot::ConditionalMetadata
    :members:
 
+.. doxygenclass:: loot::Filename
+   :members:
+
 .. doxygenclass:: loot::File
    :members:
 
