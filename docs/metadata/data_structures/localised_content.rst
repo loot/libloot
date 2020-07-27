@@ -5,7 +5,7 @@ The localised content data structure is a key-value string map.
 
 .. describe:: text
 
-  **Required.** The actual message content string.
+  **Required.** The GitHub Flavored Markdown message content string.
 
 .. describe:: lang
 

@@ -12,7 +12,7 @@ Map Form
 
 .. describe:: display
 
-  A substitute string to be displayed instead of the file path in any generated messages, eg. the name of the mod the file belongs to. If undefined, the ``name`` key's value is used.
+  A GitHub Flavored Markdown string, to be displayed instead of the file path in any generated messages, eg. the name of the mod the file belongs to.
 
 .. describe:: condition
 

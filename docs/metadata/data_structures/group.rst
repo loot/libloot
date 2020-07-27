@@ -16,8 +16,8 @@ This structure can be used to hold group definitions. It is a key-value map.
 
   ``string``
 
-  A description of the group, e.g. what sort of plugins it contains. If
-  undefined, the description is an empty string.
+  A GitHub Flavored Markdown description of the group, e.g. what sort of plugins
+  it contains. If undefined, the description is an empty string.
 
 .. describe:: after
 

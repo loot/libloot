@@ -17,3 +17,7 @@ An important point that is more specific to how LOOT uses YAML:
 * File paths cannot reference a path outside of the game's folder structure, ie. they cannot contain the substring ``../../``.
 
 In this document, where a value's type is given as ``X list`` this is equivalent to a YAML sequence of values which are of the data type ``X``. Where a value's type is given as ``X set``, this is equivalent to a YAML sequence of **unique** values which are of the data type ``X``. Uniqueness is determined using the equality criteria for that data type. All the non-standard data types that LOOT's metadata syntax uses have their equality criteria defined later in this document.
+
+Some strings are interpreted as `GitHub Flavored Markdown`_: where this is the case, the strings are interpreted according to version ``0.29-gfm`` of the specification.
+
+.. _GitHub Flavored Markdown: https://github.github.com/gfm/
