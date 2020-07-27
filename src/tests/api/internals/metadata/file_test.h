@@ -275,6 +275,31 @@ TEST(
   EXPECT_TRUE(file2 >= file1);
 }
 
+TEST(File, getDisplayNameShouldReturnDisplayStringIfItIsNotEmpty) {
+  File file("name", "display");
+
+  EXPECT_EQ("display", file.GetDisplayName());
+}
+
+TEST(File, getDisplayNameShouldReturnNameStringIfDisplayStringIsEmpty) {
+  File file("name", "");
+
+  EXPECT_EQ("name", file.GetDisplayName());
+}
+TEST(File, getDisplayNameShouldNotEscapeASCIIPunctuationInDisplayString) {
+  auto display = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+  File file("name", display);
+
+  EXPECT_EQ(display, file.GetDisplayName());
+}
+
+TEST(File, getDisplayNameShouldEscapeASCIIPunctuationInNameString) {
+  File file("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
+
+  EXPECT_EQ(R"raw(\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~)raw",
+            file.GetDisplayName());
+}
+
 TEST(File, emittingAsYamlShouldSingleQuoteValues) {
   File file("name1", "display1", "condition1");
   YAML::Emitter emitter;
@@ -287,19 +312,21 @@ TEST(File, emittingAsYamlShouldSingleQuoteValues) {
 }
 
 TEST(File, emittingAsYamlShouldOutputAsAScalarIfOnlyTheNameStringIsNotEmpty) {
-  File file("name1");
+  File file("file.esp");
   YAML::Emitter emitter;
   emitter << file;
 
   EXPECT_EQ("'" + std::string(file.GetName()) + "'", emitter.c_str());
 }
 
-TEST(File, emittingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameField) {
-  File file("name1", "name1");
+TEST(
+    File,
+    emittingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameFieldAfterEscapingASCIIPunctuation) {
+  File file("file.esp", "file\\.esp");
   YAML::Emitter emitter;
   emitter << file;
 
-  EXPECT_EQ("'" + std::string(file.GetName()) + "'", emitter.c_str());
+  EXPECT_STREQ("'file.esp'", emitter.c_str());
 }
 
 TEST(File, emittingAsYamlShouldOmitAnEmptyConditionString) {
@@ -323,7 +350,7 @@ TEST(File, encodingAsYamlShouldStoreDataCorrectly) {
 }
 
 TEST(File, encodingAsYamlShouldOmitEmptyFields) {
-  File file("name1");
+  File file("file.esp");
   YAML::Node node;
   node = file;
 
@@ -332,8 +359,10 @@ TEST(File, encodingAsYamlShouldOmitEmptyFields) {
   EXPECT_FALSE(node["condition"]);
 }
 
-TEST(File, encodingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameField) {
-  File file("name1", "name1");
+TEST(
+    File,
+    encodingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameFieldAfterEscapingASCIIPunctuation) {
+  File file("file.esp", "file\\.esp");
   YAML::Node node;
   node = file;
 

@@ -65,10 +65,11 @@ bool File::operator==(const File& rhs) const {
 Filename File::GetName() const { return name_; }
 
 std::string File::GetDisplayName() const {
-  if (display_.empty())
-    return std::string(name_);
-  else
-    return display_;
+  if (display_.empty()) {
+    return EscapeMarkdownASCIIPunctuation(std::string(name_));
+  }
+
+  return display_;
 }
 
 bool operator!=(const File& lhs, const File& rhs) { return !(lhs == rhs); }

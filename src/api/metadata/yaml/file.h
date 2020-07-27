@@ -31,6 +31,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "loot/metadata/file.h"
+#include "api/helpers/text.h"
 
 namespace YAML {
 template<>
@@ -42,8 +43,11 @@ struct convert<loot::File> {
     if (rhs.IsConditional())
       node["condition"] = rhs.GetCondition();
 
-    if (rhs.GetDisplayName() != std::string(rhs.GetName()))
+    auto escapedName =
+        loot::EscapeMarkdownASCIIPunctuation(std::string(rhs.GetName()));
+    if (rhs.GetDisplayName() != escapedName) {
       node["display"] = rhs.GetDisplayName();
+    }
 
     return node;
   }
@@ -83,9 +87,11 @@ struct convert<loot::File> {
 };
 
 inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
+  auto escapedName = loot::EscapeMarkdownASCIIPunctuation(std::string(rhs.GetName()));
+
   if (!rhs.IsConditional() &&
       (rhs.GetDisplayName().empty() ||
-       rhs.GetDisplayName() == std::string(rhs.GetName())))
+       rhs.GetDisplayName() == escapedName))
     out << YAML::SingleQuoted << std::string(rhs.GetName());
   else {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
@@ -95,7 +101,7 @@ inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
       out << Key << "condition" << Value << YAML::SingleQuoted
           << rhs.GetCondition();
 
-    if (rhs.GetDisplayName() != std::string(rhs.GetName()))
+    if (rhs.GetDisplayName() != escapedName)
       out << Key << "display" << Value << YAML::SingleQuoted
           << rhs.GetDisplayName();
 

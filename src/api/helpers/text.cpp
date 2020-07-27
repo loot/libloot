@@ -71,6 +71,13 @@ const std::vector<regex> versionRegexes({
         regex::ECMAScript | regex::icase),
 });
 
+// As defined by <https://github.github.com/gfm/#ascii-punctuation-character>.
+const regex asciiPunctuationCharacters("([!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`{|}~])");
+
+std::string EscapeMarkdownASCIIPunctuation(const std::string& text) {
+  return std::regex_replace(text, asciiPunctuationCharacters, "\\$1");
+}
+
 std::vector<Tag> ExtractBashTags(const std::string& description) {
   std::vector<Tag> tags;
 

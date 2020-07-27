@@ -32,6 +32,8 @@
 #include "loot/metadata/tag.h"
 
 namespace loot {
+std::string EscapeMarkdownASCIIPunctuation(const std::string& text);
+
 std::vector<Tag> ExtractBashTags(const std::string& description);
 
 std::optional<std::string> ExtractVersion(const std::string& text);

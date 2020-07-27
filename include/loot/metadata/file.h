@@ -47,7 +47,8 @@ public:
    * @param  name
    *         The filename of the file.
    * @param  display
-   *         The name to be displayed for the file in messages.
+   *         The name to be displayed for the file in messages, formatted using
+   *         GitHub Flavored Markdown.
    * @param  condition
    *         The File's condition string.
    * @return A File object.
@@ -77,7 +78,12 @@ public:
 
   /**
    * Get the display name of the file.
-   * @return The file's display name.
+   *
+   * If the File was constructed with an empty display string, the name field
+   * will be returned instead, with any `ASCII punctuation characters
+   * <https://github.github.com/gfm/#ascii-punctuation-character>`_ escaped.
+   * Escaping is not performed if returning the value of the display string.
+   * @return The file's display name or filename.
    */
   LOOT_API std::string GetDisplayName() const;
 
