@@ -36,8 +36,10 @@ install:
 before_script:
   - mkdir build
   - cd build
-  # Link dynamically to the C++ standard library runtime.
-  - cmake .. -DBOOST_ROOT=~/boost_1_67_0
+  # Get the full repo history before trying to run git describe.
+  - git fetch --unshallow
+  - export PACKAGE_VERSION=$(git describe --tags --long --always --abbrev=7)_${TRAVIS_BRANCH}
+  - cmake .. -DBOOST_ROOT=~/boost_1_67_0 -DCPACK_PACKAGE_VERSION=$PACKAGE_VERSION
 
 script:
   - make all
@@ -53,13 +55,10 @@ after_success:
   - cd build
   - cpack
   - cd ..
-  # Get the full repo history before trying to run git describe.
-  - git fetch --unshallow
-  - GIT_DESCRIBE=$(git describe --tags --long --always --abbrev=7)
   # Make copies of the archives for GitHub deployment to find.
   - cp $(ls build/package/libloot-*.tar.xz) build/libloot.tar.xz
   # Need to replace the Bintray config files' version placeholders.
-  - sed -i "s/REPLACE_THIS_VERSION/${GIT_DESCRIBE}_${TRAVIS_BRANCH}/" scripts/travis/libloot.bintray.json
+  - sed -i "s/REPLACE_THIS_VERSION/${PACKAGE_VERSION}/" scripts/travis/libloot.bintray.json
 
 deploy:
   - provider: bintray

@@ -54,7 +54,7 @@ IF (NOT Boost_USE_STATIC_LIBS)
 ENDIF ()
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    IF (NOT "${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
+    IF ("${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32")
         set(RUST_TARGET i686-pc-windows-msvc)
     ELSE ()
         set(RUST_TARGET x86_64-pc-windows-msvc)
@@ -499,20 +499,18 @@ install(DIRECTORY "${CMAKE_BINARY_DIR}/docs/html/"
 # CPack
 ########################################
 
-IF (GIT_FOUND)
-    execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --long --always --abbrev=7
-                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                  OUTPUT_VARIABLE GIT_DESCRIBE_STRING
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+IF (NOT DEFINED CPACK_PACKAGE_VERSION)
+    IF (GIT_FOUND)
+        execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --long --always --abbrev=7
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                    OUTPUT_VARIABLE GIT_DESCRIBE_STRING
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    ELSE()
+        SET (GIT_DESCRIBE_STRING "unknown-version")
+    ENDIF ()
 
-    IF (DEFINED ENV{APPVEYOR_REPO_BRANCH})
-        set(GIT_DESCRIBE_STRING "${GIT_DESCRIBE_STRING}_$ENV{APPVEYOR_REPO_BRANCH}")
-    ELSEIF (DEFINED ENV{TRAVIS_BRANCH})
-        set(GIT_DESCRIBE_STRING "${GIT_DESCRIBE_STRING}_$ENV{TRAVIS_BRANCH}")
-    ENDIF()
-ELSE()
-    SET (GIT_DESCRIBE_STRING "unknown-version")
-ENDIF ()
+    set(CPACK_PACKAGE_VERSION ${GIT_DESCRIBE_STRING})
+ENDIF()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(CPACK_GENERATOR "7Z")
@@ -520,7 +518,6 @@ else()
     set(CPACK_GENERATOR "TXZ")
 endif()
 
-set(CPACK_PACKAGE_VERSION ${GIT_DESCRIBE_STRING})
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/package")
 
 include(CPack)

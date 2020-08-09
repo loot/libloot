@@ -1,0 +1,131 @@
+name: Release
+
+on:
+  push:
+    tags: '*'
+
+env:
+  CARGO_TERM_COLOR: always
+  CBINDGEN_VERSION: 0.13.2
+  MSVC_CONFIG: RelWithDebInfo
+
+jobs:
+  create_release:
+    runs-on: ubuntu-18.04
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      git_tag: ${{ steps.get-git-tag.outputs.name }}
+
+    steps:
+      - name: Get Git tag
+        id: get-git-tag
+        run: |
+          GIT_REF=${{ github.ref }}
+          echo "::set-output name=name::${GIT_REF#refs/*/}"
+
+      - id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get-git-tag.outputs.name }}
+          release_name: libloot v${{ steps.get-git-tag.outputs.name }}
+          body: |
+            Requires Windows 7 or later and the [MSVC 2017 x86 redistributable](https://download.visualstudio.microsoft.com/download/pr/749aa419-f9e4-4578-a417-a43786af205e/d59197078cc425377be301faba7dd87a/vc_redist.x86.exe), and [7-Zip](http://www.7-zip.org/) to extract the archives.
+
+            ## Change Logs
+            - [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)
+            - [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)
+
+            *Note: The files below with `tar.xz` extensions contain Linux binaries. They won't work on Windows computers.*
+
+  windows:
+    runs-on: windows-2016
+    needs: create_release
+
+    strategy:
+      matrix:
+        platform: [Win32, x64]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Cache cargo
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cbindgen
+        id: cache-cbindgen
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/bin/cbindgen.exe
+          key: ${{ runner.os }}-cbindgen-${{ env.CBINDGEN_VERSION }}
+
+      - name: Install Rust i686-pc-windows-msvc target
+        run: rustup target add i686-pc-windows-msvc
+
+      - name: Install cbindgen
+        run: |
+          cargo install cbindgen --version ${{ env.CBINDGEN_VERSION }}
+          echo "::add-path::~/.cargo/bin"
+        if: steps.cache-cbindgen.outputs.cache-hit != 'true'
+
+      - name: Get descriptive libloot version
+        id: get-libloot-version
+        shell: bash
+        run: |
+          GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
+          GIT_REF=${{ github.ref }}
+          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GIT_REF#refs/*/}
+          LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
+          echo "::set-output name=version::$LIBLOOT_SAFE_DESC_REF"
+
+      - name: Run CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. -G "Visual Studio 15 2017" -A ${{ matrix.platform }} -DBOOST_ROOT="${env:BOOST_ROOT_1_69_0}" -DBOOST_LIBRARYDIR="${env:BOOST_ROOT_1_69_0}\lib" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake --build . --config ${{ env.MSVC_CONFIG }}
+
+      - name: Install packages for building docs
+        run: |
+          nuget install doxygen -Version 1.8.14
+          echo "::add-path::${{ github.workspace }}\Doxygen.1.8.14\tools"
+          python -m pip install -r docs/requirements.txt
+
+      - name: Build docs
+        run: ${{ runner.tool_cache }}\Python\3.7.8\x64\Scripts\sphinx-build -b html docs build\docs\html
+
+      - name: Build archive
+        id: build-archive
+        shell: bash
+        run: |
+          cd build
+          cpack -C ${{ env.MSVC_CONFIG }}
+
+          VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          if [[ "${{ matrix.platform }}" == "Win32" ]]
+          then
+            PLATFORM=win32
+          else
+            PLATFORM=win64
+          fi
+
+          echo "::set-output name=filename::libloot-${VERSION}-${PLATFORM}.7z"
+
+      - name: Upload Archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: build/package/${{ steps.build-archive.outputs.filename }}
+          asset_name: ${{ steps.build-archive.outputs.filename }}
+          asset_content_type: application/x-7z-compressed

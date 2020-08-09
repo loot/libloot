@@ -1,6 +1,6 @@
 # libloot
 
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/48a540m7ywuqcl3b/branch/master?svg=true)](https://ci.appveyor.com/project/LOOT/libloot/branch/master)
+![CI](https://github.com/loot/libloot/workflows/CI/badge.svg?branch=master&event=push)
 [![Travis Build Status](https://travis-ci.org/loot/libloot.svg?branch=master)](https://travis-ci.org/loot/libloot)
 [![Documentation Status](https://readthedocs.org/projects/loot-api/badge/?version=latest)](http://loot-api.readthedocs.io/en/latest/?badge=latest)
 
@@ -24,7 +24,7 @@ libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform
 
 ### Windows
 
-Refer to `appveyor.yml` for the build process.
+Refer to `.github/workflows/release.yml` for the build process.
 
 ### Linux
 
