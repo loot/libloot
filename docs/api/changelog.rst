@@ -2,6 +2,17 @@
 Version History
 ***************
 
+0.16.1 - 2020-08-22
+===================
+
+Fixed
+-----
+
+- ``File::GetDisplayName()`` now escapes ASCII punctuation characters when
+  returning the file's name, i.e. when no display name is explicitly set. For
+  example, ``File("plugin.esp").GetDisplayName()`` will now return
+  ``plugin\.esp``.
+
 0.16.0 - 2020-07-12
 ===================
 
