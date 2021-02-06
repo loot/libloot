@@ -100,7 +100,7 @@ ENDIF ()
 ExternalProject_Add(libgit2
                     PREFIX "external"
                     URL "https://github.com/libgit2/libgit2/archive/v1.1.0.tar.gz"
-                    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DSTATIC_CRT=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DREGEX_BACKEND=builtin
+                    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DUSE_SSH=OFF -DSTATIC_CRT=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DREGEX_BACKEND=builtin
                     BUILD_COMMAND ${CMAKE_COMMAND} --build . --target git2 --config $(CONFIGURATION)
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(libgit2 SOURCE_DIR BINARY_DIR)
