@@ -97,6 +97,13 @@ jobs:
           VERSION="${{ steps.get-libloot-version.outputs.version }}"
           echo "::set-output name=filename::libloot-${VERSION}-Linux.tar.xz"
 
+      - name: Upload archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.build-archive.outputs.filename }}
+          path: build/package/${{ steps.build-archive.outputs.filename }}
+        if: github.event_name == 'push'
+
       - name: Upload archive to BinTray
         shell: bash
         run: |
@@ -177,6 +184,13 @@ jobs:
           fi
 
           echo "::set-output name=filename::libloot-${VERSION}-${PLATFORM}.7z"
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.build-archive.outputs.filename }}
+          path: build/package/${{ steps.build-archive.outputs.filename }}
+        if: github.event_name == 'push'
 
       - name: Upload archive to BinTray
         shell: bash
