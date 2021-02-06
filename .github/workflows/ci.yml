@@ -24,6 +24,92 @@ jobs:
           python3 delete_old_bintray_versions.py -g loot/libloot -b loot/snapshots/libloot -u wrinklyninja -k ${{ secrets.BINTRAY_API_KEY }} -t ${{ secrets.GITHUB_TOKEN }} -n 30
         if: github.event_name == 'push'
 
+  linux:
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Cache cargo
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cbindgen
+        run: |
+          wget -P "$HOME/.local/bin" https://github.com/eqrion/cbindgen/releases/download/v0.13.2/cbindgen
+          chmod +x "$HOME/.local/bin/cbindgen"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Get descriptive libloot version
+        id: get-libloot-version
+        shell: bash
+        run: |
+          GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
+          GIT_REF=${{ github.ref }}
+          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GIT_REF#refs/*/}
+          LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
+          echo "::set-output name=version::$LIBLOOT_SAFE_DESC_REF"
+
+      - name: Install APT package dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-upgrade \
+            doxygen \
+            language-pack-el \
+            language-pack-tr \
+            libbz2-dev \
+            libcurl4-gnutls-dev \
+            libhttp-parser-dev \
+            libicu-dev \
+            libssh2-1-dev \
+            libssl-dev
+
+      - name: Run CMake
+        run: |
+          mkdir build
+          cd build
+          export CXX="g++-8" CC="gcc-8"
+          cmake .. -DBOOST_ROOT="$BOOST_ROOT_1_72_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          make all
+
+      - name: Run tests
+        run: |
+          cd build
+          git config --global user.email "github@github-actions"
+          git config --global user.name "GitHub"
+          ./libloot_internals_tests
+          ./libloot_tests
+
+      - name: Install packages for building docs
+        run: pip3 install --user -r docs/requirements.txt
+
+      - name: Build docs
+        run: sphinx-build -b html docs build/docs/html
+
+      - name: Build archive
+        id: build-archive
+        shell: bash
+        run: |
+          cd build
+          cpack
+
+          VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          echo "::set-output name=filename::libloot-${VERSION}-Linux.tar.xz"
+
+      - name: Upload archive to BinTray
+        shell: bash
+        run: |
+          VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          FILENAME="${{ steps.build-archive.outputs.filename }}"
+          curl -sfSL -T "build/package/$FILENAME" -u "wrinklyninja:${{ secrets.BINTRAY_API_KEY }}" "https://bintray.com/api/v1/content/loot/snapshots/libloot/${VERSION}/${FILENAME}?publish=1&override=1"
+        if: github.event_name == 'push'
+
   windows:
     runs-on: windows-2016
 
@@ -42,7 +128,6 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache cbindgen

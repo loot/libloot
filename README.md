@@ -1,7 +1,6 @@
 # libloot
 
 ![CI](https://github.com/loot/libloot/workflows/CI/badge.svg?branch=master&event=push)
-[![Travis Build Status](https://travis-ci.org/loot/libloot.svg?branch=master)](https://travis-ci.org/loot/libloot)
 [![Documentation Status](https://readthedocs.org/projects/loot-api/badge/?version=latest)](http://loot-api.readthedocs.io/en/latest/?badge=latest)
 
 ## Introduction
@@ -22,25 +21,23 @@ libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform
 
 ## Building libloot
 
-### Windows
-
 Refer to `.github/workflows/release.yml` for the build process.
 
 ### Linux
 
-Refer to `.travis.yml` for the build process. It assumes that you have already
-cloned the libloot repository, that the current working directory is its root,
-and that the following applications are already installed:
+The build process assumes that you have already cloned the libloot repository,
+that the current working directory is its root, and that the following
+applications are already installed:
 
 - `cmake`
-- `curl` and libcurl (`libcurl4-openssl-dev` on Ubuntu)
+- `curl`
 - `git`
-- `python` and `pip` (2.7 or 3, it shouldn't matter)
+- `pip3` (and therefore Python 3)
 - `cargo` and the rest of the Rust toolchain (e.g. via
   [rustup](https://rustup.rs/))
 - `wget`
 
-(The list above may be incomplete.)
+The list above may be incomplete.
 
 ### CMake Variables
 
