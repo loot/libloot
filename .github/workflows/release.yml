@@ -6,7 +6,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  CBINDGEN_VERSION: 0.13.2
   MSVC_CONFIG: RelWithDebInfo
 
 jobs:
@@ -54,12 +53,6 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install cbindgen
-        run: |
-          wget -P "$HOME/.local/bin" https://github.com/eqrion/cbindgen/releases/download/v0.13.2/cbindgen
-          chmod +x "$HOME/.local/bin/cbindgen"
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Get descriptive libloot version
         id: get-libloot-version
@@ -148,21 +141,8 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Cache cbindgen
-        id: cache-cbindgen
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/bin/cbindgen.exe
-          key: ${{ runner.os }}-cbindgen-${{ env.CBINDGEN_VERSION }}
-
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
-
-      - name: Install cbindgen
-        run: |
-          cargo install cbindgen --version ${{ env.CBINDGEN_VERSION }}
-          echo "~/.cargo/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        if: steps.cache-cbindgen.outputs.cache-hit != 'true'
 
       - name: Get descriptive libloot version
         id: get-libloot-version
