@@ -51,8 +51,7 @@ jobs:
         shell: bash
         run: |
           GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
-          GIT_REF=${{ github.ref }}
-          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GIT_REF#refs/*/}
+          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
           LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
           echo "::set-output name=version::$LIBLOOT_SAFE_DESC_REF"
 
@@ -151,8 +150,7 @@ jobs:
         shell: bash
         run: |
           GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
-          GIT_REF=${{ github.ref }}
-          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GIT_REF#refs/*/}
+          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
           LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
           echo "::set-output name=version::$LIBLOOT_SAFE_DESC_REF"
 
