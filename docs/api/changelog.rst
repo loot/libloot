@@ -2,6 +2,19 @@
 Version History
 ***************
 
+0.16.2 - 2021-02-13
+===================
+
+Changed
+-------
+
+- Updated libgit2 to v1.1.0.
+- Updated loot-condition-interpreter to v2.1.2.
+- Updated Boost to v1.72.0.
+- Linux releases are now built on GitHub Actions.
+- Masterlist updates can no longer be fetched using SSH URLs. This support was
+  never tested or documented.
+
 0.16.1 - 2020-08-22
 ===================
 
