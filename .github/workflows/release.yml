@@ -94,7 +94,10 @@ jobs:
           ./libloot_tests
 
       - name: Install packages for building docs
-        run: pip3 install --user -r docs/requirements.txt
+        shell: bash
+        run: |
+          pip3 install --user -r docs/requirements.txt
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Build docs
         run: sphinx-build -b html docs build/docs/html
