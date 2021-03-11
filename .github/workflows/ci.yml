@@ -98,6 +98,11 @@ jobs:
           LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
           echo "::set-output name=version::$LIBLOOT_SAFE_DESC_REF"
 
+      - name: Download Boost
+        run: |
+          wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
+          tar -xf boost_1_72_0.tar.gz
+
       - name: Install APT package dependencies
         run: |
           sudo apt-get update
@@ -117,7 +122,7 @@ jobs:
           mkdir build
           cd build
           export CXX="g++-8" CC="gcc-8"
-          cmake .. -DBOOST_ROOT="$BOOST_ROOT_1_72_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -DBOOST_ROOT="boost_1_72_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           make all
 
       - name: Run tests
@@ -185,6 +190,11 @@ jobs:
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
 
+      - name: Download Boost
+        run: |
+          curl -sSfLO https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.7z
+          7z x boost_1_72_0.7z
+
       - name: Get descriptive libloot version
         id: get-libloot-version
         shell: bash
@@ -198,7 +208,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 15 2017" -A ${{ matrix.platform }} -DBOOST_ROOT="${env:BOOST_ROOT_1_72_0}" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -G "Visual Studio 15 2017" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_72_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
       - name: Run tests
