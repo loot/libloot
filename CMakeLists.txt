@@ -49,10 +49,6 @@ ELSE()
     set (Boost_USE_STATIC_RUNTIME OFF)
 ENDIF()
 
-IF (NOT Boost_USE_STATIC_LIBS)
-    add_definitions(-DBOOST_LOG_DYN_LINK)
-ENDIF ()
-
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     IF ("${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32")
         set(RUST_TARGET i686-pc-windows-msvc)
