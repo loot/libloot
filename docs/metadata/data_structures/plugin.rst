@@ -119,9 +119,9 @@ after             Merged. If B's file set contains an item that is equal to one 
 req               Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.
 inc               Merged. If B's file set contains an item that is equal to one already present in A's file set, B's item is discarded.
 msg               Merged. B's message list is appended to A's message list.
-tag               Merged.If B's tag set contains an item that is equal to one already present in A's tag set, B's item is discarded.
+tag               Merged. If B's tag set contains an item that is equal to one already present in A's tag set, B's item is discarded.
 url               Merged. If B's location set contains an item that is equal to one already present in A's location set, B's item is discarded.
-dirty             Merged.If B's dirty data set contain an item that is equal to one already present in A's dirty data set, B's item is discarded.
+dirty             Merged. If B's dirty data set contain an item that is equal to one already present in A's dirty data set, B's item is discarded.
 clean             Merged. If B's clean data set contain an item that is equal to one already present in A's clean data set, B's item is discarded.
 ===============   ==================================
 
