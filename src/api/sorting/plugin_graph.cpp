@@ -384,25 +384,13 @@ void PluginGraph::AddHardcodedPluginEdges(Game& game) {
       game.GetLoadOrderHandler()->GetImplicitlyActivePlugins();
 
   auto logger = getLogger();
-  std::set<std::filesystem::path> processedPluginPaths;
+  std::set<std::string> processedPluginPaths;
   for (const auto& plugin : implicitlyActivePlugins) {
-    auto pluginPath = game.DataPath() / u8path(plugin);
-
-    try {
-      processedPluginPaths.insert(std::filesystem::canonical(pluginPath));
-    } catch (std::filesystem::filesystem_error& e) {
-      if (logger) {
-        logger->trace(
-            "Skipping adding hardcoded plugin edges for \"{}\" as its "
-            "canonical path could not be determined: {}",
-            plugin,
-            e.what());
-      }
-      continue;
-    }
+    processedPluginPaths.insert(NormalizeFilename(plugin));
 
     if (game.Type() == GameType::tes5 &&
-        loot::equivalent(plugin, "update.esm")) {
+        loot::equivalent(game.DataPath() / u8path(plugin),
+                         game.DataPath() / "update.esm")) {
       if (logger) {
         logger->trace(
             "Skipping adding hardcoded plugin edges for Update.esm as it does "
@@ -425,19 +413,12 @@ void PluginGraph::AddHardcodedPluginEdges(Game& game) {
 
     vertex_it vit, vitend;
     for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
-      auto& graphPlugin = graph_[*vit];
-
-      auto graphPluginPath = game.DataPath() / u8path(graphPlugin.GetName());
-      if (!std::filesystem::exists(graphPluginPath)) {
-        graphPluginPath += ".ghost";
-      }
-
-      if (!std::filesystem::exists(graphPluginPath)) {
+      if (*vit == pluginVertex.value()) {
         continue;
       }
 
       if (processedPluginPaths.count(
-              std::filesystem::canonical(graphPluginPath)) == 0) {
+              NormalizeFilename(graph_[*vit].GetName())) == 0) {
         AddEdge(pluginVertex.value(), *vit, EdgeType::hardcoded);
       }
     }

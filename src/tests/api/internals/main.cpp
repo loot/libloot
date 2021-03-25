@@ -251,29 +251,6 @@ TEST(Filesystem, equivalentShouldBeCaseSensitive) {
 }
 #endif
 
-TEST(Filesystem, canonicalShouldRequireThatThePathExists) {
-  EXPECT_THROW(std::filesystem::canonical("license2"), std::filesystem::filesystem_error);
-}
-
-#ifdef _WIN32
-TEST(Filesystem, canonicalShouldFoldCase) {
-  auto upper = std::filesystem::canonical("LICENSE");
-  auto lower = std::filesystem::canonical("license");
-
-  EXPECT_EQ(lower, upper);
-}
-#else
-TEST(Filesystem, canonicalShouldNotFoldCase) {
-  std::ofstream out("license");
-  out.close();
-
-  auto upper = std::filesystem::canonical("LICENSE");
-  auto lower = std::filesystem::canonical("license");
-
-  EXPECT_NE(lower, upper);
-}
-#endif
-
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
