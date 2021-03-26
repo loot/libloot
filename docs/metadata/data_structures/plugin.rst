@@ -55,6 +55,8 @@ This is the structure that brings all the others together, and forms the main co
 
   Plugins that this plugin must load after, but which are not dependencies. Used to resolve specific compatibility issues. If undefined, the set is empty.
 
+  **Note:** since an ``after`` entry uses a ``file`` structure, its ``name`` value can't be a regex. This applies to ``req`` & ``inc`` entries too.
+
 .. describe:: req
 
   ``file set``
