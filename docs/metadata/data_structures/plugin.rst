@@ -61,6 +61,8 @@ This is the structure that brings all the others together, and forms the main co
 
   Files that this plugin requires to be present. This plugin will load after any plugins listed. If any of these files are missing, an error message will be displayed. Intended for use specifying implicit dependencies, as LOOT will detect a plugin's explicit masters itself. If undefined, the set is empty.
 
+  **Note:** if a ``condition`` is used in a ``req`` entry, a requirement message will only be displayed if the file isn't present *and* the ``condition`` is true.
+
 .. describe:: inc
 
   ``file set``
