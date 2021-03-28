@@ -102,23 +102,6 @@ TEST(Filesystem,
   EXPECT_NE(utf8, path.u8string());
   EXPECT_NE(utf16, path.u16string());
 }
-
-TEST(Filesystem,
-  pathStringAndLocaleConstructorConvertsCharacterEncodingFromUtf8ToNativeIfLocaleHasCodeCvtFacet) {
-  std::string utf8 = u8"Andr\u00E9_settings.toml";
-  std::u16string utf16 = u"Andr\u00E9_settings.toml";
-
-  ASSERT_EQ('\xc3', utf8[4]);
-  ASSERT_EQ('\xa9', utf8[5]);
-
-  auto locale = std::locale(std::locale::classic(), new std::codecvt_utf8_utf16<wchar_t>());
-  std::filesystem::path path(utf8, locale);
-
-  EXPECT_NE(utf8, path.string());
-
-  EXPECT_EQ(utf8, path.u8string());
-  EXPECT_EQ(utf16, path.u16string());
-}
 #else
 TEST(Filesystem,
   pathStringConstructorUsesNativeEncodingOfUtf8) {
@@ -144,22 +127,6 @@ TEST(Filesystem,
   ASSERT_EQ('\xa9', utf8[5]);
 
   std::filesystem::path path(utf8, std::locale("C.UTF-8"));
-
-  EXPECT_EQ(utf8, path.string());
-  EXPECT_EQ(utf8, path.u8string());
-  EXPECT_EQ(utf16, path.u16string());
-}
-
-TEST(Filesystem,
-  pathStringAndLocaleConstructorUsesNativeEncodingOfUtf8WithLocaleWithCodeCvtFacet) {
-  std::string utf8 = u8"Andr\u00E9_settings.toml";
-  std::u16string utf16 = u"Andr\u00E9_settings.toml";
-
-  ASSERT_EQ('\xc3', utf8[4]);
-  ASSERT_EQ('\xa9', utf8[5]);
-
-  auto locale = std::locale(std::locale::classic(), new std::codecvt_utf8_utf16<wchar_t>());
-  std::filesystem::path path(utf8, locale);
 
   EXPECT_EQ(utf8, path.string());
   EXPECT_EQ(utf8, path.u8string());
