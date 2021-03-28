@@ -37,7 +37,7 @@ class MessageContent {
 public:
   /**
    * The code for the default language assumed for message content, which is
-   * English.
+   * "en" (English).
    */
   LOOT_API static const std::string defaultLanguage;
 
@@ -73,7 +73,7 @@ public:
   /**
    * A less-than operator implemented with no semantics so that MessageContent
    * objects can be stored in sets.
-   * @returns True if this MessageContent is less than the given 
+   * @returns True if this MessageContent is less than the given
    *          MessageContent, false otherwise.
    */
   LOOT_API bool operator<(const MessageContent& rhs) const;
@@ -89,11 +89,26 @@ public:
    * @param  content
    *         The MessageContent objects to choose between.
    * @param  language
-   *         The language code for the preferred language to select. If no
-   *         message in the preferred language is present, the English
-   *         MessageContent will be returned.
-   * @return A MessageContent object. If the given vector is empty, a
-   *         default-constructed MessageContent is returned.
+   *         The locale or language code for the preferred language to select.
+   *         Locale codes are of the form <language code>_<country code>.
+   * @return A MessageContent object.
+   *
+   *         If the vector only contains a single element, that element is
+   *         returned.
+   *
+   *         If content with a language that exactly matches the given locale
+   *         or language code is present, that content is returned.
+   *
+   *         If a locale code is given and there is no exact match but content
+   *         for that locale's language is present, that content is returned.
+   *
+   *         If a language code is given and there is no exact match but content
+   *         for a locale in that langauge is present, that content is returned.
+   *
+   *         If no locale or language code matches are found and content in the
+   *         default language is present, that content is returned.
+   *
+   *         Otherwise, a default-constructed MessageContent is returned.
    */
   LOOT_API static MessageContent Choose(
       const std::vector<MessageContent> content,
@@ -111,9 +126,9 @@ private:
 LOOT_API bool operator!=(const MessageContent& lhs, const MessageContent& rhs);
 
 /**
- * Check if the first MessageContent object is greater than the second 
+ * Check if the first MessageContent object is greater than the second
  * MessageContent object.
- * @returns True if the second MessageContent object is less than the first 
+ * @returns True if the second MessageContent object is less than the first
  *          MessageContent object, false otherwise.
  */
 LOOT_API bool operator>(const MessageContent& lhs, const MessageContent& rhs);
@@ -121,13 +136,13 @@ LOOT_API bool operator>(const MessageContent& lhs, const MessageContent& rhs);
 /**
  * Check if the first MessageContent object is less than or equal to the second
  * MessageContent object.
- * @returns True if the first MessageContent object is not greater than the 
+ * @returns True if the first MessageContent object is not greater than the
  *          second MessageContent object, false otherwise.
  */
 LOOT_API bool operator<=(const MessageContent& lhs, const MessageContent& rhs);
 
 /**
- * Check if the first MessageContent object is greater than or equal to the 
+ * Check if the first MessageContent object is greater than or equal to the
  * second MessageContent object.
  * @returns True if the first MessageContent object is not less than the second
  *          MessageContent object, false otherwise.

@@ -25,11 +25,10 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_CONTENT_TEST
 #define LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_CONTENT_TEST
 
-#include "loot/metadata/message_content.h"
-
 #include <gtest/gtest.h>
 
 #include "api/metadata/yaml/message_content.h"
+#include "loot/metadata/message_content.h"
 
 namespace loot {
 namespace test {
@@ -238,6 +237,98 @@ TEST(
 
   EXPECT_FALSE(content2 >= content1);
   EXPECT_TRUE(content1 >= content2);
+}
+
+TEST(MessageContent,
+     chooseShouldReturnAnEmptyEnglishMessageIfTheVectorIsEmpty) {
+  auto content = MessageContent::Choose(std::vector<MessageContent>(), "fr");
+
+  EXPECT_EQ("en", content.GetLanguage());
+  EXPECT_EQ("", content.GetText());
+}
+
+TEST(MessageContent, chooseShouldReturnTheOnlyElementOfASingleElementVector) {
+  MessageContent content("test", "de");
+  auto chosen = MessageContent::Choose({MessageContent("test", "de")}, "fr");
+
+  EXPECT_EQ(content, chosen);
+}
+
+TEST(
+    MessageContent,
+    chooseShouldReturnAnEmptyEnglishMessageIfTheVectorHasNoEnglishOrMatchingLanguageContentWithTwoOrMoreElements) {
+  auto contents = {MessageContent("test1", "de"),
+                   MessageContent("test2", "fr")};
+  auto content = MessageContent::Choose(contents, "pt");
+
+  EXPECT_EQ("en", content.GetLanguage());
+  EXPECT_EQ("", content.GetText());
+}
+
+TEST(MessageContent,
+     chooseShouldReturnElementWithExactlyMatchingLocaleCodeIfPresent) {
+  auto contents = {MessageContent("test1", "en"),
+                   MessageContent("test2", "de"),
+                   MessageContent("test3", "pt"),
+                   MessageContent("test4", "pt_PT"),
+                   MessageContent("test5", "pt_BR")};
+  auto content = MessageContent::Choose(contents, "pt_BR");
+
+  EXPECT_EQ("pt_BR", content.GetLanguage());
+  EXPECT_EQ("test5", content.GetText());
+}
+
+TEST(
+    MessageContent,
+    chooseShouldReturnElementWithMatchingLanguageCodeIfExactlyMatchingLocaleCodeIsNotPresent) {
+  auto contents = {MessageContent("test1", "en"),
+                   MessageContent("test2", "de"),
+                   MessageContent("test3", "pt_PT"),
+                   MessageContent("test4", "pt")};
+  auto content = MessageContent::Choose(contents, "pt_BR");
+
+  EXPECT_EQ("pt", content.GetLanguage());
+  EXPECT_EQ("test4", content.GetText());
+}
+
+TEST(
+    MessageContent,
+    chooseShouldReturnElementWithEnLanguageCodeIfNoMatchingLanguageCodeIsPresent) {
+  auto contents = {MessageContent("test1", "en"),
+                   MessageContent("test2", "de"),
+                   MessageContent("test3", "pt_PT")};
+  auto content = MessageContent::Choose(contents, "pt_BR");
+
+  EXPECT_EQ("en", content.GetLanguage());
+  EXPECT_EQ("test1", content.GetText());
+}
+
+TEST(
+    MessageContent,
+    chooseShouldReturnElementWithExactlyMatchingLanguageCodeIfLanguageCodeIsGiven) {
+  auto contents = {
+      MessageContent("test1", "en"),
+      MessageContent("test2", "de"),
+      MessageContent("test3", "pt_BR"),
+      MessageContent("test4", "pt"),
+  };
+  auto content = MessageContent::Choose(contents, "pt");
+
+  EXPECT_EQ("pt", content.GetLanguage());
+  EXPECT_EQ("test4", content.GetText());
+}
+
+TEST(
+    MessageContent,
+    chooseShouldReturnFirstElementWithMatchingLanguageCodeIfLanguageCodeIsGivenAndNoExactMatchIsPresent) {
+  auto contents = {MessageContent("test1", "en"),
+                   MessageContent("test2", "de"),
+                   MessageContent("test3", "pt_PT"),
+                   MessageContent("test4", "pt_BR")};
+  auto content = MessageContent::Choose(contents, "pt");
+
+  EXPECT_EQ("pt_PT", content.GetLanguage());
+  EXPECT_EQ("test3", content.GetText());
 }
 
 TEST(MessageContent, emittingAsYamlShouldOutputDataCorrectly) {

@@ -24,6 +24,8 @@
 
 #include "loot/metadata/message_content.h"
 
+#include <optional>
+
 #include <boost/algorithm/string.hpp>
 
 namespace loot {
@@ -33,8 +35,7 @@ MessageContent::MessageContent() : language_(MessageContent::defaultLanguage) {}
 
 MessageContent::MessageContent(const std::string& text,
                                const std::string& language) :
-    text_(text),
-    language_(language) {}
+    text_(text), language_(language) {}
 
 std::string MessageContent::GetText() const { return text_; }
 
@@ -63,13 +64,39 @@ MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
   else if (content.size() == 1)
     return content[0];
   else {
+    auto languageCode = language.substr(0, language.find("_"));
+    auto isCountryCodeGiven = languageCode.length() != language.length();
+
+    std::optional<MessageContent> matchedLanguage;
     MessageContent english;
     for (const auto& mc : content) {
-      if (mc.GetLanguage() == language) {
+      auto contentLanguage = mc.GetLanguage();
+
+      if (contentLanguage == language) {
         return mc;
-      } else if (mc.GetLanguage() == MessageContent::defaultLanguage)
-        english = mc;
+      } else if (!matchedLanguage.has_value()) {
+        if (isCountryCodeGiven && contentLanguage == languageCode) {
+          matchedLanguage = mc;
+        } else if (!isCountryCodeGiven) {
+          auto underscorePos = contentLanguage.find("_");
+          if (underscorePos != std::string::npos) {
+            auto contentLanguageCode = contentLanguage.substr(0, underscorePos);
+            if (contentLanguageCode == language) {
+              matchedLanguage = mc;
+            }
+          }
+        }
+
+        if (contentLanguage == MessageContent::defaultLanguage) {
+          english = mc;
+        }
+      }
     }
+
+    if (matchedLanguage.has_value()) {
+      return matchedLanguage.value();
+    }
+
     return english;
   }
 }
