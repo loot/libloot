@@ -30,9 +30,9 @@ Examples
 
 Scalar form::
 
-  'http://skyrim.nexusmods.com/mods/19/'
+  'https://www.nexusmods.com/skyrim/mods/71214'
 
 Map form::
 
-  link: 'https://steamcommunity.com/sharedfiles/filedetails/?id=419668499'
-  name: 'Unofficial Skyrim Patch on Steam Workshop'
+  link: 'https://www.nexusmods.com/skyrim/mods/71214'
+  name: 'USLEEP on Skyrim Nexus'
