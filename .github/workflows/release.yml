@@ -80,7 +80,8 @@ jobs:
             libhttp-parser-dev \
             libicu-dev \
             libssh2-1-dev \
-            libssl-dev
+            libssl-dev \
+            g++-8
 
       - name: Run CMake
         run: |
