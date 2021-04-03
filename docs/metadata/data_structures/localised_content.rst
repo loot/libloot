@@ -14,15 +14,20 @@ The localised content data structure is a key-value string map.
   ====================  =====
   Language              Code
   ====================  =====
-  Brazilian Portuguese  pt_BR
-  Chinese               zh_CN
+  Bulgarian             bg
+  Chinese (Simplified)  zh_CN
+  Czech                 cs
   Danish                da
   English               en
   Finnish               fi
   French                fr
   German                de
+  Italian               it
+  Japanese              ja
   Korean                ko
   Polish                pl
+  Portuguese            pt_PT
+  Portuguese (Brazil)   pt_BR
   Russian               ru
   Spanish               es
   Swedish               sv
