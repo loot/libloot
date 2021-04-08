@@ -72,23 +72,21 @@ case sensitive.
 Examples
 --------
 
-*Translations by Google*
-
 .. code-block:: yaml
 
   type: say
-  condition: 'file("foo.esp")'
   content:
     - lang: en
       text: 'An example link: <http://www.example.com>'
-    - lang: ru
-      text: 'Это пример ссылки: <http://www.example.com>'
+    - lang: zh_CN
+      text: '一个例子链接: <http://www.example.com>'
+  condition: 'file("foo.esp")'
 
 would be displayed as
 
-  отмечать: Это пример ссылки: http://www.example.com
+  * 一个例子链接: http://www.example.com
 
-if the current language was Russian and ``foo.esp`` was installed, while
+if the current language was Simplified Chinese and ``foo.esp`` was installed, while
 
 .. code-block:: yaml
 
@@ -97,7 +95,7 @@ if the current language was Russian and ``foo.esp`` was installed, while
 
 would be displayed as
 
-  отмечать: An alternative `example link <http://www.example.com>`_, with no translations.
+  * An alternative `example link <http://www.example.com>`_, with no translations.
 
 In English,
 
@@ -111,4 +109,4 @@ In English,
 
 would be displayed as
 
-  Note: A newer version of this plugin `is available <http://www.example.com>`_.
+  * A newer version of this plugin `is available <http://www.example.com>`_.
