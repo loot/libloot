@@ -44,7 +44,21 @@ Messages are given as key-value maps.
 Language Support
 ----------------
 
-If a message's ``content`` value is a string, the message will use the string as its content if displayed. Otherwise, the first localised content structure with a language that matches LOOT's current language will be used as the message's content if displayed. If there are no matches, then the first structure in English will be used.
+If a message's ``content`` value is a string, the message will use the string as
+its content if displayed. Otherwise, the first localised content structure with
+a language or locale code that matches LOOT's current language will be used as
+the message's content if displayed. If there are no exact matches, LOOT will try
+to find a close match. If LOOT's current language uses a locale code, it will
+display the first structure with the same language code, but not another locale
+code with the same language code. For example, if LOOT's current language has
+locale code ``pt_BR``, it will display the first structure with language code
+``pt`` (but not locale code ``pt_PT``) if none exist with locale code ``pt_BR``.
+If LOOT's current language has a language code, it will display the first
+structure with a locale code that contains that language code. For example, if
+LOOT's current language has language code ``pt``, it will display the first
+structure with locale code ``pt_PT`` or ``pt_BR`` if none exist with language
+code ``pt``. If there are no exact or close matches, then the first structure in
+English will be used.
 
 Equality
 --------
@@ -58,23 +72,21 @@ case sensitive.
 Examples
 --------
 
-*Translations by Google*
-
 .. code-block:: yaml
 
   type: say
-  condition: 'file("foo.esp")'
   content:
     - lang: en
       text: 'An example link: <http://www.example.com>'
-    - lang: ru
-      text: 'Это пример ссылки: <http://www.example.com>'
+    - lang: zh_CN
+      text: '一个例子链接: <http://www.example.com>'
+  condition: 'file("foo.esp")'
 
 would be displayed as
 
-  отмечать: Это пример ссылки: http://www.example.com
+  * 一个例子链接: http://www.example.com
 
-if the current language was Russian and ``foo.esp`` was installed, while
+if the current language was Simplified Chinese and ``foo.esp`` was installed, while
 
 .. code-block:: yaml
 
@@ -83,7 +95,7 @@ if the current language was Russian and ``foo.esp`` was installed, while
 
 would be displayed as
 
-  отмечать: An alternative `example link <http://www.example.com>`_, with no translations.
+  * An alternative `example link <http://www.example.com>`_, with no translations.
 
 In English,
 
@@ -97,4 +109,4 @@ In English,
 
 would be displayed as
 
-  Note: A newer version of this plugin `is available <http://www.example.com>`_.
+  * A newer version of this plugin `is available <http://www.example.com>`_.
