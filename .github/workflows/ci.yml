@@ -12,17 +12,6 @@ env:
   MSVC_CONFIG: RelWithDebInfo
 
 jobs:
-  bintray-cleanup:
-    runs-on: ubuntu-18.04
-
-    steps:
-      - name: Remove old artifacts from Bintray
-        shell: bash
-        run: |
-          curl -sfSLO 'https://raw.githubusercontent.com/Ortham/ci-scripts/2.1.4/delete_old_bintray_versions.py'
-          python3 delete_old_bintray_versions.py -g loot/libloot -b loot/snapshots/libloot -u wrinklyninja -k ${{ secrets.BINTRAY_API_KEY }} -t ${{ secrets.GITHUB_TOKEN }} -n 30
-        if: github.event_name == 'push'
-
   # Publish to Artifactory as a separate job that runs after the build jobs
   # because we must first clean out any existing artifacts for this Git ref,
   # and we don't want to do that as a pre-build step in case the build fails
@@ -100,7 +89,7 @@ jobs:
 
       - name: Download Boost
         run: |
-          wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
+          wget https://boostorg.jfrog.io/artifactory/main/release//1.72.0/source/boost_1_72_0.tar.gz
           tar -xf boost_1_72_0.tar.gz
 
       - name: Install APT package dependencies
@@ -160,14 +149,6 @@ jobs:
           path: build/package/${{ steps.build-archive.outputs.filename }}
         if: github.event_name == 'push'
 
-      - name: Upload archive to BinTray
-        shell: bash
-        run: |
-          VERSION="${{ steps.get-libloot-version.outputs.version }}"
-          FILENAME="${{ steps.build-archive.outputs.filename }}"
-          curl -sfSL -T "build/package/$FILENAME" -u "wrinklyninja:${{ secrets.BINTRAY_API_KEY }}" "https://bintray.com/api/v1/content/loot/snapshots/libloot/${VERSION}/${FILENAME}?publish=1&override=1"
-        if: github.event_name == 'push'
-
   windows:
     runs-on: windows-2016
 
@@ -193,7 +174,7 @@ jobs:
 
       - name: Download Boost
         run: |
-          curl -sSfLO https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.7z
+          curl -sSfLO https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.7z
           7z x boost_1_72_0.7z
 
       - name: Get descriptive libloot version
@@ -251,12 +232,4 @@ jobs:
         with:
           name: ${{ steps.build-archive.outputs.filename }}
           path: build/package/${{ steps.build-archive.outputs.filename }}
-        if: github.event_name == 'push'
-
-      - name: Upload archive to BinTray
-        shell: bash
-        run: |
-          VERSION="${{ steps.get-libloot-version.outputs.version }}"
-          FILENAME="${{ steps.build-archive.outputs.filename }}"
-          curl -sfSL -T "build/package/$FILENAME" -u "wrinklyninja:${{ secrets.BINTRAY_API_KEY }}" "https://bintray.com/api/v1/content/loot/snapshots/libloot/${VERSION}/${FILENAME}?publish=1&override=1"
         if: github.event_name == 'push'

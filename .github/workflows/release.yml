@@ -65,7 +65,7 @@ jobs:
 
       - name: Download Boost
         run: |
-          wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
+          wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
           tar -xf boost_1_72_0.tar.gz
 
       - name: Install APT package dependencies
@@ -155,7 +155,7 @@ jobs:
 
       - name: Download Boost
         run: |
-          curl -sSfLO https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.7z
+          curl -sSfLO https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.7z
           7z x boost_1_72_0.7z
 
       - name: Get descriptive libloot version

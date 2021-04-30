@@ -13,7 +13,7 @@ libloot provides access to LOOT's metadata and sorting functionality, and the LO
 
 ## Downloads
 
-Releases are hosted on [GitHub](https://github.com/loot/libloot/releases), and snapshot builds are available on [Bintray](https://bintray.com/loot/snapshots/libloot). The snapshot build archives are named like so:
+Releases are hosted on [GitHub](https://github.com/loot/libloot/releases), and snapshot builds are available on [Artifactory](https://loot.jfrog.io/ui/repos/tree/General/libloot). The snapshot build archives are named like so:
 
 ```
 libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.7z
