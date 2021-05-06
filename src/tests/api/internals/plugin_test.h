@@ -150,7 +150,9 @@ public:
 
   bool IsMaster() const { return false; }
   bool IsLightMaster() const { return false; }
+  bool IsLightPlugin() const { return false; }
   bool IsValidAsLightMaster() const { return false; }
+  bool IsValidAsLightPlugin() const { return false; }
   bool IsEmpty() const { return false; }
   bool LoadsArchive() const { return false; }
   bool DoFormIDsOverlap(const PluginInterface& plugin) const { return true; }
@@ -254,7 +256,7 @@ TEST_P(PluginTest, loadingANonMasterPluginShouldReadTheMasterFlagAsFalse) {
 
 TEST_P(
     PluginTest,
-    isLightMasterShouldBeTrueForAPluginWithEslFileExtensionForFallout4AndSkyrimSeAndFalseOtherwise) {
+    isLightPluginShouldBeTrueForAPluginWithEslFileExtensionForFallout4AndSkyrimSeAndFalseOtherwise) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, true);
   Plugin plugin2(game_.Type(),
@@ -264,10 +266,10 @@ TEST_P(
   Plugin plugin3(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsl, true);
 
-  EXPECT_FALSE(plugin1.IsLightMaster());
-  EXPECT_FALSE(plugin2.IsLightMaster());
+  EXPECT_FALSE(plugin1.IsLightPlugin());
+  EXPECT_FALSE(plugin2.IsLightPlugin());
   EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::tes5se,
-            plugin3.IsLightMaster());
+            plugin3.IsLightPlugin());
 }
 
 TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
@@ -410,10 +412,10 @@ TEST_P(PluginTest, isValidShouldReturnFalseForAnEmptyFile) {
 
 TEST_P(
     PluginTest,
-    isValidAsLightMasterShouldReturnTrueOnlyForASkyrimSEOrFallout4PluginWithNewFormIdsBetween0x800And0xFFFInclusive) {
+    isValidAsLightPluginShouldReturnTrueOnlyForASkyrimSEOrFallout4PluginWithNewFormIdsBetween0x800And0xFFFInclusive) {
   bool valid =
       Plugin(game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, true)
-          .IsValidAsLightMaster();
+          .IsValidAsLightPlugin();
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     EXPECT_TRUE(valid);
   } else {

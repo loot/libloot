@@ -78,7 +78,7 @@ INSTANTIATE_TEST_CASE_P(,
                                           GameType::fo4));
 
 TEST_P(PluginSortingDataTest,
-       lightMasterFlaggedEspFilesShouldNotBeTreatedAsMasters) {
+       lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     ASSERT_NO_THROW(
         std::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
@@ -114,14 +114,14 @@ TEST_P(PluginSortingDataTest,
         game_.GetCache()->GetPlugins());
     EXPECT_TRUE(lightMaster.IsMaster());
 
-    auto lightMasterEsp = PluginSortingData(
+    auto lightPlugin = PluginSortingData(
         *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp).get()),
         PluginMetadata(),
         PluginMetadata(),
         getLoadOrder(),
         game_.Type(),
         game_.GetCache()->GetPlugins());
-    EXPECT_FALSE(lightMasterEsp.IsMaster());
+    EXPECT_FALSE(lightPlugin.IsMaster());
   }
 }
 

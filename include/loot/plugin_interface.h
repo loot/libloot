@@ -91,17 +91,33 @@ public:
   virtual bool IsMaster() const = 0;
 
   /**
-   * Check if the plugin is a light master.
-   * @return True if plugin is a light master, false otherwise.
+   * Check if the plugin is a light plugin.
+   * @return True if plugin is a light plugin, false otherwise.
+   * @deprecated Use IsLightPlugin() instead.
    */
+  [[deprecated("Use IsLightPlugin() instead.")]]
   virtual bool IsLightMaster() const = 0;
+
+  /**
+   * Check if the plugin is a light plugin.
+   * @return True if plugin is a light plugin, false otherwise.
+   */
+  virtual bool IsLightPlugin() const = 0;
 
   /**
    * Check if the plugin is or would be valid as a light master.
    * @return True if the plugin is a valid light master or would be a valid
    *         light master, false otherwise.
    */
+  [[deprecated("Use IsValidAsLightPlugin() instead.")]]
   virtual bool IsValidAsLightMaster() const = 0;
+
+  /**
+   * Check if the plugin is or would be valid as a light master.
+   * @return True if the plugin is a valid light master or would be a valid
+   *         light master, false otherwise.
+   */
+  virtual bool IsValidAsLightPlugin() const = 0;
 
   /**
    * Check if the plugin contains any records other than its TES4 header.

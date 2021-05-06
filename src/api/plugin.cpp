@@ -136,19 +136,27 @@ bool Plugin::IsMaster() const {
 }
 
 bool Plugin::IsLightMaster() const {
-  bool isLightMaster;
-  auto ret = esp_plugin_is_light_master(esPlugin.get(), &isLightMaster);
+  return IsLightPlugin();
+}
+
+bool Plugin::IsLightPlugin() const {
+  bool isLightPlugin;
+  auto ret = esp_plugin_is_light_plugin(esPlugin.get(), &isLightPlugin);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
   }
 
-  return isLightMaster;
+  return isLightPlugin;
 }
 
 bool Plugin::IsValidAsLightMaster() const {
+  return IsValidAsLightPlugin();
+}
+
+bool Plugin::IsValidAsLightPlugin() const {
   bool isValid;
-  auto ret = esp_plugin_is_valid_as_light_master(esPlugin.get(), &isValid);
+  auto ret = esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -422,13 +430,13 @@ bool hasPluginFileExtension(std::string filename, GameType gameType) {
     filename = filename.substr(0, filename.length() - 6);
   }
 
-  bool espOrEsm = boost::iends_with(filename, ".esp") ||
+  bool isEspOrEsm = boost::iends_with(filename, ".esp") ||
                   boost::iends_with(filename, ".esm");
-  bool lightMaster =
+  bool isEsl =
       (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
        gameType == GameType::tes5se || gameType == GameType::tes5vr) &&
       boost::iends_with(filename, ".esl");
 
-  return espOrEsm || lightMaster;
+  return isEspOrEsm || isEsl;
 }
 }
