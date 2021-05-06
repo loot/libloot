@@ -2,6 +2,64 @@
 Version History
 ***************
 
+0.16.3 - 2021-05-06
+===================
+
+Added
+-----
+
+- :cpp:any:`PluginInterface::IsLightPlugin()` as a more accurately named
+  equivalent to :cpp:any:`PluginInterface::IsLightMaster()`.
+- :cpp:any:`PluginInterface::IsValidAsLightPlugin()` as a more accurately named
+  equivalent to :cpp:any:`PluginInterface::IsValidAsLightMaster()`.
+- Support for parsing inverted metadata conditions (``not (<expression>)``).
+  Note however that this is not yet part of any released version of LOOT's
+  metadata syntax and must not be used where compatibility with older releases
+  of LOOT is required. Via loot-condition-interpreter.
+
+Changed
+-------
+
+- :cpp:any:`loot::MessageContent::Choose()` now compares locale and language
+  codes so that if an exact match is not present but a more or less specific
+  match is present, that will be preferred over the default language message
+  content.
+- Regular expression functions in metadata conditions now handle ghosted plugins
+  in the same way as their path function counterparts.
+- Updated esplugin to v3.5.0.
+- Updated libloadorder to v13.0.0.
+- Updated loot-condition-interpreter to v2.2.1.
+- Updated spdlog to v1.8.5.
+
+Fixed
+-----
+
+- ``.ghost`` file extensionms are no longer recursively trimmed when checking if
+  a file has a valid plugin file extension during metadata condition evaluation.
+  Via loot-condition-interpreter.
+- When looking for a plugin file matching a path during metadata condition
+  evaluation, a ``.ghost`` extension is only added to the path if one was not
+  already present. Via loot-condition-interpreter.
+- When comparing versions during metadata condition evaluation, the comparison
+  now compares numeric against non-numeric release identifiers (and vice versa)
+  by comparing the numeric value against the numeric value of leading digits in
+  the non-numeric value, and treating the latter as greater if the two numeric
+  values are equal. The numeric value is treated as less than the non-numeric
+  value if the latter has no leading digits. Previously all non-numeric
+  identifiers were always greater than any numeric identifier. For example, 78b
+  was previously considered to be greater than 86, but is now considered to be
+  less than 86. Via loot-condition-interpreter.
+- Linux builds did not correctly handle case-insensitivity of plugin names
+  during sorting on filesystems with case folding enabled.
+
+Deprecated
+----------
+
+- :cpp:any:`PluginInterface::IsLightMaster()`: use
+  :cpp:any:`PluginInterface::IsLightPlugin()` instead.
+- :cpp:any:`PluginInterface::IsValidAsLightMaster()`: use
+  :cpp:any:`PluginInterface::IsValidAsLightPlugin()` instead.
+
 0.16.2 - 2021-02-13
 ===================
 
