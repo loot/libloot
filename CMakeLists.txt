@@ -78,7 +78,7 @@ set (GTEST_LIBRARIES "${BINARY_DIR}/googlemock/gtest/${CMAKE_CFG_INTDIR}/${CMAKE
 
 ExternalProject_Add(esplugin
                     PREFIX "external"
-                    URL "https://github.com/Ortham/esplugin/archive/3.3.1.tar.gz"
+                    URL "https://github.com/Ortham/esplugin/archive/3.5.0.tar.gz"
                     CONFIGURE_COMMAND ""
                     BUILD_IN_SOURCE 1
                     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
