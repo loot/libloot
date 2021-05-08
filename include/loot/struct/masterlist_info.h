@@ -35,16 +35,13 @@ struct MasterlistInfo {
   inline explicit MasterlistInfo() : is_modified(false) {}
 
   /**
-   * @brief The revision hash for the masterlist. If the masterlist doesn't
-   *        exist, or there is no Git repository at its location, this will be
-   *        empty.
+   * @brief The revision hash for the masterlist.
    */
   std::string revision_id;
 
   /**
    * @brief A pointer to a string containing the ISO 8601 formatted revision
-   *        date, ie. YYYY-MM-DD. If the masterlist doesn't exist, or there is
-   *        no Git repository at its location, this will be empty.
+   *        date, ie. YYYY-MM-DD.
    */
   std::string revision_date;
 
