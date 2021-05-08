@@ -90,12 +90,17 @@ Plugin::Plugin(const GameType gameType,
 
 std::string Plugin::GetName() const { return name_; }
 
-float Plugin::GetHeaderVersion() const {
+std::optional<float> Plugin::GetHeaderVersion() const {
   float version;
+
   auto ret = esp_plugin_header_version(esPlugin.get(), &version);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
+  }
+
+  if (std::isnan(version)) {
+    return std::nullopt;
   }
 
   return version;

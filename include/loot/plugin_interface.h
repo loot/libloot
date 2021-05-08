@@ -48,10 +48,10 @@ public:
   /**
    * Get the value of the version field in the HEDR subrecord of the plugin's
    * TES4 record.
-   * @return The value of the version field, or NaN if the field could not be
-   *         found.
+   * @return The value of the version field, or an empty optional if that value
+   *         is NaN or could not be found.
    */
-  virtual float GetHeaderVersion() const = 0;
+  virtual std::optional<float> GetHeaderVersion() const = 0;
 
   /**
    * Get the plugin's version number from its description field.

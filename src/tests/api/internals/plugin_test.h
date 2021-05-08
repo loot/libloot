@@ -140,7 +140,7 @@ private:
 class OtherPluginType : public PluginInterface {
 public:
   std::string GetName() const { return ""; }
-  float GetHeaderVersion() const { return 0.0f; }
+  std::optional<float> GetHeaderVersion() const { return 0.0f; }
   std::optional<std::string> GetVersion() const { return std::nullopt; }
   std::vector<std::string> GetMasters() const {
     return std::vector<std::string>();
@@ -189,11 +189,11 @@ TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
   EXPECT_EQ("5.0", plugin.GetVersion());
 
   if (GetParam() == GameType::tes3) {
-    EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion());
+    EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion().value());
   } else if (GetParam() == GameType::tes4) {
-    EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion());
+    EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion().value());
   } else {
-    EXPECT_FLOAT_EQ(0.94f, plugin.GetHeaderVersion());
+    EXPECT_FLOAT_EQ(0.94f, plugin.GetHeaderVersion().value());
   }
 }
 
@@ -215,11 +215,11 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
   EXPECT_EQ("5.0", plugin.GetVersion());
 
   if (GetParam() == GameType::tes3) {
-    EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion());
+    EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion().value());
   } else if (GetParam() == GameType::tes4) {
-    EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion());
+    EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion().value());
   } else {
-    EXPECT_FLOAT_EQ(0.94f, plugin.GetHeaderVersion());
+    EXPECT_FLOAT_EQ(0.94f, plugin.GetHeaderVersion().value());
   }
 }
 
