@@ -57,12 +57,8 @@ public:
 
   bool IsMaster() const;
 
-  [[deprecated("Use IsLightPlugin() instead.")]]
-  bool IsLightMaster() const;
   bool IsLightPlugin() const;
 
-  [[deprecated("Use IsValidAsLightPlugin() instead.")]]
-  bool IsValidAsLightMaster() const;
   bool IsValidAsLightPlugin() const;
   bool IsEmpty() const;
   bool LoadsArchive() const;

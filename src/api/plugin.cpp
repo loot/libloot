@@ -135,10 +135,6 @@ bool Plugin::IsMaster() const {
   return isMaster;
 }
 
-bool Plugin::IsLightMaster() const {
-  return IsLightPlugin();
-}
-
 bool Plugin::IsLightPlugin() const {
   bool isLightPlugin;
   auto ret = esp_plugin_is_light_plugin(esPlugin.get(), &isLightPlugin);
@@ -148,10 +144,6 @@ bool Plugin::IsLightPlugin() const {
   }
 
   return isLightPlugin;
-}
-
-bool Plugin::IsValidAsLightMaster() const {
-  return IsValidAsLightPlugin();
 }
 
 bool Plugin::IsValidAsLightPlugin() const {

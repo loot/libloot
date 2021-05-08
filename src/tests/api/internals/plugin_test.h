@@ -149,9 +149,7 @@ public:
   std::optional<uint32_t> GetCRC() const { return std::nullopt; }
 
   bool IsMaster() const { return false; }
-  bool IsLightMaster() const { return false; }
   bool IsLightPlugin() const { return false; }
-  bool IsValidAsLightMaster() const { return false; }
   bool IsValidAsLightPlugin() const { return false; }
   bool IsEmpty() const { return false; }
   bool LoadsArchive() const { return false; }
