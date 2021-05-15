@@ -41,7 +41,7 @@ struct convert<loot::PluginCleaningData> {
     Node node;
     node["crc"] = rhs.GetCRC();
     node["util"] = rhs.GetCleaningUtility();
-    node["info"] = rhs.GetInfo();
+    node["detail"] = rhs.GetDetail();
 
     if (rhs.GetITMCount() > 0)
       node["itm"] = rhs.GetITMCount();
@@ -78,20 +78,20 @@ struct convert<loot::PluginCleaningData> {
 
     std::string utility = node["util"].as<std::string>();
 
-    std::vector<loot::MessageContent> info;
-    if (node["info"]) {
-      if (node["info"].IsSequence())
-        info = node["info"].as<std::vector<loot::MessageContent>>();
+    std::vector<loot::MessageContent> detail;
+    if (node["detail"]) {
+      if (node["detail"].IsSequence())
+        detail = node["detail"].as<std::vector<loot::MessageContent>>();
       else {
-        info.push_back(loot::MessageContent(node["info"].as<std::string>()));
+        detail.push_back(loot::MessageContent(node["detail"].as<std::string>()));
       }
     }
 
     // Check now that at least one item in info is English if there are multiple
     // items.
-    if (info.size() > 1) {
+    if (detail.size() > 1) {
       bool found = false;
-      for (const auto& mc : info) {
+      for (const auto& mc : detail) {
         if (mc.GetLanguage() == loot::MessageContent::defaultLanguage)
           found = true;
       }
@@ -101,7 +101,7 @@ struct convert<loot::PluginCleaningData> {
                                       "must contain an English info string");
     }
 
-    rhs = loot::PluginCleaningData(crc, utility, info, itm, ref, nav);
+    rhs = loot::PluginCleaningData(crc, utility, detail, itm, ref, nav);
 
     return true;
   }
@@ -111,12 +111,12 @@ inline Emitter& operator<<(Emitter& out, const loot::PluginCleaningData& rhs) {
   out << BeginMap << Key << "crc" << Value << Hex << rhs.GetCRC() << Dec << Key
       << "util" << Value << YAML::SingleQuoted << rhs.GetCleaningUtility();
 
-  if (!rhs.GetInfo().empty()) {
-    if (rhs.GetInfo().size() == 1)
-      out << Key << "info" << Value << YAML::SingleQuoted
-          << rhs.GetInfo().front().GetText();
+  if (!rhs.GetDetail().empty()) {
+    if (rhs.GetDetail().size() == 1)
+      out << Key << "detail" << Value << YAML::SingleQuoted
+          << rhs.GetDetail().front().GetText();
     else
-      out << Key << "info" << Value << rhs.GetInfo();
+      out << Key << "detail" << Value << rhs.GetDetail();
   }
 
   if (rhs.GetITMCount() > 0)

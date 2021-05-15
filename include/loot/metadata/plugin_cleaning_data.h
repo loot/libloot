@@ -41,7 +41,7 @@ public:
   /**
    * Construct a PluginCleaningData object with zero CRC, ITM count, deleted
    * reference count and deleted navmesh count values, an empty utility string
-   * and no info.
+   * and no detail.
    * @return A PluginCleaningData object.
    */
   LOOT_API explicit PluginCleaningData();
@@ -49,7 +49,7 @@ public:
   /**
    * Construct a PluginCleaningData object with the given CRC and utility,
    * zero ITM count, deleted reference count and deleted navmesh count
-   * values and no info.
+   * values and no detail.
    * @param  crc
    *         The CRC of a plugin.
    * @param  utility
@@ -65,7 +65,7 @@ public:
    *         A clean or dirty plugin's CRC.
    * @param  utility
    *         The utility that the plugin cleanliness was checked with.
-   * @param  info
+   * @param  detail
    *         A vector of localised information message strings about the plugin
    *         cleanliness.
    * @param  itm
@@ -78,7 +78,7 @@ public:
    */
   LOOT_API explicit PluginCleaningData(uint32_t crc,
                                        const std::string& utility,
-                                       const std::vector<MessageContent>& info,
+                                       const std::vector<MessageContent>& detail,
                                        unsigned int itm,
                                        unsigned int ref,
                                        unsigned int nav);
@@ -135,16 +135,16 @@ public:
    * cleaning steps.
    * @return A vector of localised MessageContent objects.
    */
-  LOOT_API std::vector<MessageContent> GetInfo() const;
+  LOOT_API std::vector<MessageContent> GetDetail() const;
 
   /**
-   * Choose an info MessageContent object given a preferred language.
+   * Choose a detail MessageContent object given a preferred language.
    * @param  language
    *         The preferred language's code.
    * @return The MessageContent object for the preferred language, or if one
    *         does not exist, the English-language MessageContent object.
    */
-  LOOT_API MessageContent ChooseInfo(const std::string& language) const;
+  LOOT_API MessageContent ChooseDetail(const std::string& language) const;
 
 private:
   uint32_t crc_;
@@ -152,7 +152,7 @@ private:
   unsigned int ref_;
   unsigned int nav_;
   std::string utility_;
-  std::vector<MessageContent> info_;
+  std::vector<MessageContent> detail_;
 };
 
 /**

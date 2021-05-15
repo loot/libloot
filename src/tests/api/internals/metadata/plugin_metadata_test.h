@@ -714,7 +714,7 @@ TEST_P(PluginMetadataTest,
       "dirty:\n"
       "  - crc: 0x5\n"
       "    util: 'utility'\n"
-      "    info: 'info'\n"
+      "    detail: 'info'\n"
       "    udr: 1\n"
       "    nav: 2",
       emitter.c_str());

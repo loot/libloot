@@ -57,7 +57,7 @@ TEST_P(PluginCleaningDataTest,
   EXPECT_EQ(0, info.GetDeletedReferenceCount());
   EXPECT_EQ(0, info.GetDeletedNavmeshCount());
   EXPECT_TRUE(info.GetCleaningUtility().empty());
-  EXPECT_TRUE(info.GetInfo().empty());
+  EXPECT_TRUE(info.GetDetail().empty());
 }
 
 TEST_P(PluginCleaningDataTest, contentConstructorShouldStoreAllGivenData) {
@@ -67,7 +67,7 @@ TEST_P(PluginCleaningDataTest, contentConstructorShouldStoreAllGivenData) {
   EXPECT_EQ(10, info.GetDeletedReferenceCount());
   EXPECT_EQ(30, info.GetDeletedNavmeshCount());
   EXPECT_EQ("cleaner", info.GetCleaningUtility());
-  EXPECT_EQ(info_, info.GetInfo());
+  EXPECT_EQ(info_, info.GetDetail());
 }
 
 TEST_P(PluginCleaningDataTest, equalityShouldCheckEqualityOfAllFields) {
@@ -319,24 +319,24 @@ TEST_P(
 }
 
 TEST_P(PluginCleaningDataTest,
-       chooseInfoShouldCreateADefaultContentObjectIfNoneExists) {
+       chooseDetailShouldCreateADefaultContentObjectIfNoneExists) {
   PluginCleaningData dirtyInfo(
       0xDEADBEEF, "cleaner", std::vector<MessageContent>(), 2, 10, 30);
   EXPECT_EQ(MessageContent(),
-            dirtyInfo.ChooseInfo(MessageContent::defaultLanguage));
+            dirtyInfo.ChooseDetail(MessageContent::defaultLanguage));
 }
 
 TEST_P(PluginCleaningDataTest,
-       chooseInfoShouldLeaveTheContentUnchangedIfOnlyOneStringExists) {
+       chooseDetailShouldLeaveTheContentUnchangedIfOnlyOneStringExists) {
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info_, 2, 10, 30);
 
-  EXPECT_EQ(info_[0], dirtyInfo.ChooseInfo(french));
-  EXPECT_EQ(info_[0], dirtyInfo.ChooseInfo(MessageContent::defaultLanguage));
+  EXPECT_EQ(info_[0], dirtyInfo.ChooseDetail(french));
+  EXPECT_EQ(info_[0], dirtyInfo.ChooseDetail(MessageContent::defaultLanguage));
 }
 
 TEST_P(
     PluginCleaningDataTest,
-    chooseInfoShouldSelectTheEnglishStringIfNoStringExistsForTheGivenLanguage) {
+    chooseDetailShouldSelectTheEnglishStringIfNoStringExistsForTheGivenLanguage) {
   MessageContent content("content1", MessageContent::defaultLanguage);
   std::vector<MessageContent> info({
       content,
@@ -344,11 +344,11 @@ TEST_P(
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 
-  EXPECT_EQ(content, dirtyInfo.ChooseInfo(french));
+  EXPECT_EQ(content, dirtyInfo.ChooseDetail(french));
 }
 
 TEST_P(PluginCleaningDataTest,
-       chooseInfoShouldSelectTheStringForTheGivenLanguageIfOneExists) {
+       chooseDetailShouldSelectTheStringForTheGivenLanguageIfOneExists) {
   MessageContent frenchContent("content3", french);
   std::vector<MessageContent> info({
       MessageContent("content1", german),
@@ -357,7 +357,7 @@ TEST_P(PluginCleaningDataTest,
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 
-  EXPECT_EQ(frenchContent, dirtyInfo.ChooseInfo(french));
+  EXPECT_EQ(frenchContent, dirtyInfo.ChooseDetail(french));
 }
 
 TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {
@@ -366,7 +366,7 @@ TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {
   emitter << info;
 
   EXPECT_STREQ(
-      "crc: 0x12345678\nutil: 'cleaner'\ninfo: 'info'\nitm: 2\nudr: 10\nnav: "
+      "crc: 0x12345678\nutil: 'cleaner'\ndetail: 'info'\nitm: 2\nudr: 10\nnav: "
       "30",
       emitter.c_str());
 }
@@ -376,7 +376,7 @@ TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOmitAllZeroCounts) {
   YAML::Emitter emitter;
   emitter << info;
 
-  EXPECT_STREQ("crc: 0x12345678\nutil: 'cleaner'\ninfo: 'info'",
+  EXPECT_STREQ("crc: 0x12345678\nutil: 'cleaner'\ndetail: 'info'",
                emitter.c_str());
 }
 
@@ -387,7 +387,7 @@ TEST_P(PluginCleaningDataTest, encodingAsYamlShouldOmitAllZeroCountFields) {
 
   EXPECT_EQ(0x12345678, node["crc"].as<uint32_t>());
   EXPECT_EQ("cleaner", node["util"].as<std::string>());
-  EXPECT_EQ(info_, node["info"].as<std::vector<MessageContent>>());
+  EXPECT_EQ(info_, node["detail"].as<std::vector<MessageContent>>());
   EXPECT_FALSE(node["itm"]);
   EXPECT_FALSE(node["udr"]);
   EXPECT_FALSE(node["nav"]);
@@ -401,7 +401,7 @@ TEST_P(PluginCleaningDataTest,
 
   EXPECT_EQ(0x12345678, node["crc"].as<uint32_t>());
   EXPECT_EQ("cleaner", node["util"].as<std::string>());
-  EXPECT_EQ(info_, node["info"].as<std::vector<MessageContent>>());
+  EXPECT_EQ(info_, node["detail"].as<std::vector<MessageContent>>());
   EXPECT_EQ(2, node["itm"].as<unsigned int>());
   EXPECT_EQ(10, node["udr"].as<unsigned int>());
   EXPECT_EQ(30, node["nav"].as<unsigned int>());
@@ -413,7 +413,7 @@ TEST_P(PluginCleaningDataTest,
   PluginCleaningData info = node.as<PluginCleaningData>();
 
   EXPECT_EQ(0x12345678, info.GetCRC());
-  EXPECT_TRUE(info.GetInfo().empty());
+  EXPECT_TRUE(info.GetDetail().empty());
   EXPECT_EQ(0, info.GetITMCount());
   EXPECT_EQ(0, info.GetDeletedReferenceCount());
   EXPECT_EQ(0, info.GetDeletedNavmeshCount());
@@ -422,11 +422,11 @@ TEST_P(PluginCleaningDataTest,
 
 TEST_P(PluginCleaningDataTest, decodingFromYamlShouldStoreAllNonZeroCounts) {
   YAML::Node node = YAML::Load(
-      "{crc: 0x12345678, util: cleaner, info: info, itm: 2, udr: 10, nav: 30}");
+      "{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: 30}");
   PluginCleaningData info = node.as<PluginCleaningData>();
 
   EXPECT_EQ(0x12345678, info.GetCRC());
-  EXPECT_EQ(info_, info.GetInfo());
+  EXPECT_EQ(info_, info.GetDetail());
   EXPECT_EQ(2, info.GetITMCount());
   EXPECT_EQ(10, info.GetDeletedReferenceCount());
   EXPECT_EQ(30, info.GetDeletedNavmeshCount());

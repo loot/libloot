@@ -15,7 +15,7 @@ This structure holds information on which versions of a plugin are dirty or clea
 
   **Required.** The utility that was used to check the plugin for dirty edits. If available, the version of the utility used should also be included (e.g. ``TES5Edit v3.11``). The string will be interpreted as GitHub Flavored Markdown.
 
-.. describe:: info
+.. describe:: detail
 
   ``string`` or ``localised content list``
 
@@ -43,7 +43,7 @@ Equality
 --------
 
 Two plugin cleaning data structures are equal if all their fields are equal.
-`util` field equality is case-sensitive. If the `info` field is a string, it
+`util` field equality is case-sensitive. If the `detail` field is a string, it
 is treated as a localised content data structure.
 
 Examples
@@ -53,7 +53,7 @@ A dirty plugin::
 
   crc: 0x3DF62ABC
   util: '[TES5Edit](http://www.nexusmods.com/skyrim/mods/25859) v3.1.1'
-  info: 'A cleaning guide is available [here](http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit).'
+  detail: 'A cleaning guide is available [here](http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit).'
   itm: 4
   udr: 160
 

@@ -41,7 +41,7 @@ PluginCleaningData::PluginCleaningData(uint32_t crc,
 
 PluginCleaningData::PluginCleaningData(uint32_t crc,
                                        const std::string& utility,
-                                       const std::vector<MessageContent>& info,
+                                       const std::vector<MessageContent>& detail,
                                        unsigned int itm,
                                        unsigned int ref,
                                        unsigned int nav) :
@@ -50,7 +50,7 @@ PluginCleaningData::PluginCleaningData(uint32_t crc,
     ref_(ref),
     nav_(nav),
     utility_(utility),
-    info_(info) {}
+    detail_(detail) {}
 
 bool PluginCleaningData::operator<(const PluginCleaningData& rhs) const {
   if (crc_ < rhs.crc_) {
@@ -93,11 +93,11 @@ bool PluginCleaningData::operator<(const PluginCleaningData& rhs) const {
     return false;
   }
 
-  return info_ < rhs.info_;
+  return detail_ < rhs.detail_;
 }
 
 bool PluginCleaningData::operator==(const PluginCleaningData& rhs) const {
-  return crc_ == rhs.crc_ && utility_ == rhs.utility_ && info_ == rhs.info_ &&
+  return crc_ == rhs.crc_ && utility_ == rhs.utility_ && detail_ == rhs.detail_ &&
          itm_ == rhs.itm_ && ref_ == rhs.ref_ && nav_ == rhs.nav_;
 }
 
@@ -113,13 +113,13 @@ unsigned int PluginCleaningData::GetDeletedNavmeshCount() const { return nav_; }
 
 std::string PluginCleaningData::GetCleaningUtility() const { return utility_; }
 
-std::vector<MessageContent> PluginCleaningData::GetInfo() const {
-  return info_;
+std::vector<MessageContent> PluginCleaningData::GetDetail() const {
+  return detail_;
 }
 
-MessageContent PluginCleaningData::ChooseInfo(
+MessageContent PluginCleaningData::ChooseDetail(
     const std::string& language) const {
-  return MessageContent::Choose(info_, language);
+  return MessageContent::Choose(detail_, language);
 }
 
 bool operator!=(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
