@@ -26,12 +26,13 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
-#include <string>
-
 #include <yaml-cpp/yaml.h>
 
-#include "loot/metadata/file.h"
+#include <string>
+
 #include "api/helpers/text.h"
+#include "api/metadata/yaml/message_content.h"
+#include "loot/metadata/file.h"
 
 namespace YAML {
 template<>
@@ -47,6 +48,10 @@ struct convert<loot::File> {
         loot::EscapeMarkdownASCIIPunctuation(std::string(rhs.GetName()));
     if (rhs.GetDisplayName() != escapedName) {
       node["display"] = rhs.GetDisplayName();
+    }
+
+    if (!rhs.GetDetail().empty()) {
+      node["detail"] = rhs.GetDetail();
     }
 
     return node;
@@ -65,11 +70,36 @@ struct convert<loot::File> {
 
       std::string name = node["name"].as<std::string>();
       std::string condition, display;
+      std::vector<loot::MessageContent> detail;
       if (node["condition"])
         condition = node["condition"].as<std::string>();
       if (node["display"])
         display = node["display"].as<std::string>();
-      rhs = loot::File(name, display, condition);
+
+      if (node["detail"]) {
+        if (node["detail"].IsSequence()) {
+          detail = node["detail"].as<std::vector<loot::MessageContent>>();
+        } else {
+          detail.push_back(
+              loot::MessageContent(node["detail"].as<std::string>()));
+        }
+      }
+
+      // Check now that at least one item in info is English if there are
+      // multiple items.
+      if (detail.size() > 1) {
+        bool found = false;
+        for (const auto& mc : detail) {
+          if (mc.GetLanguage() == loot::MessageContent::defaultLanguage)
+            found = true;
+        }
+        if (!found)
+          throw RepresentationException(node.Mark(),
+                                        "bad conversion: multilingual messages "
+                                        "must contain an English info string");
+      }
+
+      rhs = loot::File(name, display, condition, detail);
     } else
       rhs = loot::File(node.as<std::string>());
 
@@ -87,11 +117,11 @@ struct convert<loot::File> {
 };
 
 inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
-  auto escapedName = loot::EscapeMarkdownASCIIPunctuation(std::string(rhs.GetName()));
+  auto escapedName =
+      loot::EscapeMarkdownASCIIPunctuation(std::string(rhs.GetName()));
 
-  if (!rhs.IsConditional() &&
-      (rhs.GetDisplayName().empty() ||
-       rhs.GetDisplayName() == escapedName))
+  if (!rhs.IsConditional() && rhs.GetDetail().empty() &&
+      (rhs.GetDisplayName().empty() || rhs.GetDisplayName() == escapedName))
     out << YAML::SingleQuoted << std::string(rhs.GetName());
   else {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
@@ -104,6 +134,13 @@ inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
     if (rhs.GetDisplayName() != escapedName)
       out << Key << "display" << Value << YAML::SingleQuoted
           << rhs.GetDisplayName();
+
+    if (rhs.GetDetail().size() == 1) {
+      out << Key << "detail" << Value << YAML::SingleQuoted
+          << rhs.GetDetail().front().GetText();
+    } else if (!rhs.GetDetail().empty()) {
+      out << Key << "detail" << Value << rhs.GetDetail();
+    }
 
     out << EndMap;
   }

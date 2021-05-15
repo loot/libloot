@@ -29,6 +29,7 @@
 #include "loot/api_decorator.h"
 #include "loot/metadata/conditional_metadata.h"
 #include "loot/metadata/filename.h"
+#include "loot/metadata/message_content.h"
 
 namespace loot {
 /**
@@ -55,7 +56,8 @@ public:
    */
   LOOT_API explicit File(const std::string& name,
                          const std::string& display = "",
-                         const std::string& condition = "");
+                         const std::string& condition = "",
+                         const std::vector<MessageContent>& detail = {});
 
   /**
    * A less-than operator implemented with no semantics so that File objects can
@@ -87,9 +89,28 @@ public:
    */
   LOOT_API std::string GetDisplayName() const;
 
+  /**
+   * Get the detail message content of the file.
+   *
+   * If this file causes an error message to be displayed, the detail message
+   * content should be appended to that message, as it provides more detail
+   * about the error (e.g. suggestions for how to resolve it).
+   */
+  LOOT_API std::vector<MessageContent> GetDetail() const;
+
+  /**
+   * Choose a detail MessageContent object given a preferred language.
+   * @param  language
+   *         The preferred language's code.
+   * @return The MessageContent object for the preferred language, or if one
+   *         does not exist, the English-language MessageContent object.
+   */
+  LOOT_API MessageContent ChooseDetail(const std::string& language) const;
+
 private:
   Filename name_;
   std::string display_;
+  std::vector<MessageContent> detail_;
 };
 
 /**

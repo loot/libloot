@@ -32,9 +32,11 @@ File::File() {}
 
 File::File(const std::string& name,
            const std::string& display,
-           const std::string& condition) :
+           const std::string& condition,
+           const std::vector<MessageContent>& detail) :
     name_(Filename(name)),
     display_(display),
+    detail_(detail),
     ConditionalMetadata(condition) {}
 
 bool File::operator<(const File& rhs) const {
@@ -54,12 +56,20 @@ bool File::operator<(const File& rhs) const {
     return false;
   }
 
-  return name_ < rhs.name_;
+  if (name_ < rhs.name_) {
+    return true;
+  }
+
+  if (rhs.name_ < name_) {
+    return false;
+  }
+
+  return detail_ < rhs.detail_;
 }
 
 bool File::operator==(const File& rhs) const {
   return display_ == rhs.display_ && GetCondition() == rhs.GetCondition() &&
-         name_ == rhs.name_;
+         name_ == rhs.name_ && detail_ == rhs.detail_;
 }
 
 Filename File::GetName() const { return name_; }
@@ -70,6 +80,12 @@ std::string File::GetDisplayName() const {
   }
 
   return display_;
+}
+
+std::vector<MessageContent> File::GetDetail() const { return detail_; }
+
+MessageContent File::ChooseDetail(const std::string& language) const {
+  return MessageContent::Choose(detail_, language);
 }
 
 bool operator!=(const File& lhs, const File& rhs) { return !(lhs == rhs); }
