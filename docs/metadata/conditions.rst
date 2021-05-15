@@ -20,7 +20,7 @@ Types
 
 .. describe:: file_path
 
-  A double-quoted file path, or ``"LOOT"``, which references the LOOT executable being run.
+  A double-quoted file path, or ``"LOOT"``, which resolves to `LOOT.exe` in the current working directory. Bear in mind that `LOOT.exe` may not be present if the condition is being evaluated by an application other than LOOT.
 
 .. describe:: regular_expression
 
