@@ -433,6 +433,33 @@ TEST_P(PluginCleaningDataTest, decodingFromYamlShouldStoreAllNonZeroCounts) {
   EXPECT_EQ("cleaner", info.GetCleaningUtility());
 }
 
+TEST_P(PluginCleaningDataTest,
+       decodingFromYamlShouldNotThrowIfTheOnlyDetailStringIsNotEnglish) {
+  YAML::Node node = YAML::Load(
+      "crc: 0x12345678\n"
+      "util: cleaner\n"
+      "detail:\n"
+      "  - lang: fr\n"
+      "    text: content1");
+
+  EXPECT_NO_THROW(node.as<PluginCleaningData>());
+}
+
+TEST_P(
+    PluginCleaningDataTest,
+    decodingFromYamlShouldThrowIfMultipleDetailStringsAreGivenAndNoneAreEnglish) {
+  YAML::Node node = YAML::Load(
+      "crc: 0x12345678\n"
+      "util: cleaner\n"
+      "detail:\n"
+      "  - lang: de\n"
+      "    text: content1\n"
+      "  - lang: fr\n"
+      "    text: content2");
+
+  EXPECT_THROW(node.as<PluginCleaningData>(), YAML::RepresentationException);
+}
+
 TEST_P(PluginCleaningDataTest, decodingFromYamlScalarShouldThrow) {
   YAML::Node node = YAML::Load("scalar");
 
