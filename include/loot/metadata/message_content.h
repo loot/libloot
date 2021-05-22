@@ -26,6 +26,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 #include "loot/api_decorator.h"
 
@@ -108,9 +109,9 @@ public:
    *         If no locale or language code matches are found and content in the
    *         default language is present, that content is returned.
    *
-   *         Otherwise, a default-constructed MessageContent is returned.
+   *         Otherwise, an empty optional is returned.
    */
-  LOOT_API static MessageContent Choose(
+  LOOT_API static std::optional<MessageContent> Choose(
       const std::vector<MessageContent> content,
       const std::string& language);
 

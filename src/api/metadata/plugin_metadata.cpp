@@ -140,13 +140,14 @@ std::vector<Location> PluginMetadata::GetLocations() const {
 
 std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(
     const std::string& language) const {
-  std::vector<SimpleMessage> simpleMessages(messages_.size());
-  std::transform(begin(messages_),
-                 end(messages_),
-                 begin(simpleMessages),
-                 [&](const Message& message) {
-                   return message.ToSimpleMessage(language);
-                 });
+  std::vector<SimpleMessage> simpleMessages;
+
+  for (auto message : messages_) {
+    auto simpleMessage = message.ToSimpleMessage(language);
+    if (simpleMessage.has_value()) {
+      simpleMessages.push_back(simpleMessage.value());
+    }
+  }
 
   return simpleMessages;
 }

@@ -144,7 +144,7 @@ public:
    * @return The MessageContent object for the preferred language, or if one
    *         does not exist, the English-language MessageContent object.
    */
-  LOOT_API MessageContent ChooseDetail(const std::string& language) const;
+  LOOT_API std::optional<MessageContent> ChooseDetail(const std::string& language) const;
 
 private:
   uint32_t crc_;

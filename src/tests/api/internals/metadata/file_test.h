@@ -373,7 +373,7 @@ TEST(File, chooseDetailShouldReturnTheGivenLanguageMessageContentIfItExists) {
                                          MessageContent("french", "fr")};
   File file("", "", "", content);
 
-  EXPECT_EQ(content[1], file.ChooseDetail("fr"));
+  EXPECT_EQ(content[1], file.ChooseDetail("fr").value());
 }
 
 TEST(
@@ -383,7 +383,7 @@ TEST(
                                          MessageContent("french", "fr")};
   File file("", "", "", content);
 
-  EXPECT_EQ(content[0], file.ChooseDetail("de"));
+  EXPECT_EQ(content[0], file.ChooseDetail("de").value());
 }
 
 TEST(
@@ -393,7 +393,7 @@ TEST(
                                          MessageContent("french", "fr")};
   File file("", "", "", content);
 
-  EXPECT_EQ(MessageContent(), file.ChooseDetail("es"));
+  EXPECT_FALSE(file.ChooseDetail("es").has_value());
 }
 
 TEST(File, emittingAsYamlShouldSingleQuoteValues) {

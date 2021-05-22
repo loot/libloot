@@ -86,16 +86,23 @@ bool Message::operator==(const Message& rhs) const {
 MessageType Message::GetType() const { return type_; }
 
 std::vector<MessageContent> Message::GetContent() const { return content_; }
-MessageContent Message::GetContent(const std::string& language) const {
+
+std::optional<MessageContent> Message::GetContent(
+    const std::string& language) const {
   return MessageContent::Choose(content_, language);
 }
-SimpleMessage Message::ToSimpleMessage(const std::string& language) const {
-  MessageContent content = GetContent(language);
+std::optional<SimpleMessage> Message::ToSimpleMessage(
+    const std::string& language) const {
+  auto content = GetContent(language);
+  if (!content.has_value()) {
+    return std::nullopt;
+  }
+
   SimpleMessage simpleMessage;
 
   simpleMessage.type = GetType();
-  simpleMessage.language = content.GetLanguage();
-  simpleMessage.text = content.GetText();
+  simpleMessage.language = content.value().GetLanguage();
+  simpleMessage.text = content.value().GetText();
   simpleMessage.condition = GetCondition();
 
   return simpleMessage;

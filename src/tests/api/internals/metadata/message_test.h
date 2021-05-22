@@ -348,10 +348,9 @@ TEST_P(
   EXPECT_TRUE(message2 >= message1);
 }
 
-TEST_P(MessageTest, getContentShouldReturnADefaultContentObjectIfNoneExists) {
+TEST_P(MessageTest, getContentShouldReturnANulloptIfNoneExists) {
   Message message;
-  EXPECT_EQ(MessageContent(),
-            message.GetContent(MessageContent::defaultLanguage));
+  EXPECT_FALSE(message.GetContent(MessageContent::defaultLanguage).has_value());
 }
 
 TEST_P(
@@ -363,7 +362,7 @@ TEST_P(
                       MessageContent("content2"),
                   }));
 
-  EXPECT_EQ("content2", message.GetContent(french).GetText());
+  EXPECT_EQ("content2", message.GetContent(french).value().GetText());
 }
 
 TEST_P(MessageTest, getContentShouldSelectTheGivenLanguageStringIfItExists) {
@@ -374,7 +373,7 @@ TEST_P(MessageTest, getContentShouldSelectTheGivenLanguageStringIfItExists) {
                       MessageContent("content3", french),
                   }));
 
-  EXPECT_EQ("content3", message.GetContent(french).GetText());
+  EXPECT_EQ("content3", message.GetContent(french).value().GetText());
 }
 
 TEST_P(MessageTest, getContentShouldSelectTheContentStringIfOnlyOneExists) {
@@ -384,7 +383,7 @@ TEST_P(MessageTest, getContentShouldSelectTheContentStringIfOnlyOneExists) {
                   }));
 
   EXPECT_EQ("content1",
-            message.GetContent(MessageContent::defaultLanguage).GetText());
+      message.GetContent(MessageContent::defaultLanguage).value().GetText());
 }
 
 TEST_P(MessageTest, toSimpleMessageShouldSelectTextAndLanguageUsingGetContent) {
@@ -396,7 +395,7 @@ TEST_P(MessageTest, toSimpleMessageShouldSelectTextAndLanguageUsingGetContent) {
                   }),
                   "condition1");
 
-  SimpleMessage simpleMessage = message.ToSimpleMessage(french);
+  SimpleMessage simpleMessage = message.ToSimpleMessage(french).value();
 
   EXPECT_EQ(MessageType::warn, simpleMessage.type);
   EXPECT_EQ("content3", simpleMessage.text);

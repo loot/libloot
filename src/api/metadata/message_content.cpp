@@ -57,10 +57,11 @@ bool MessageContent::operator==(const MessageContent& rhs) const {
   return text_ == rhs.text_ && language_ == rhs.language_;
 }
 
-MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
+std::optional<MessageContent> MessageContent::Choose(
+    const std::vector<MessageContent> content,
                                       const std::string& language) {
   if (content.empty())
-    return MessageContent();
+    return std::nullopt;
   else if (content.size() == 1)
     return content[0];
   else {
@@ -68,7 +69,7 @@ MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
     auto isCountryCodeGiven = languageCode.length() != language.length();
 
     std::optional<MessageContent> matchedLanguage;
-    MessageContent english;
+    std::optional<MessageContent> english;
     for (const auto& mc : content) {
       auto contentLanguage = mc.GetLanguage();
 
@@ -94,10 +95,14 @@ MessageContent MessageContent::Choose(const std::vector<MessageContent> content,
     }
 
     if (matchedLanguage.has_value()) {
-      return matchedLanguage.value();
+      return matchedLanguage;
     }
 
-    return english;
+    if (english.has_value()) {
+      return english;
+    }
+
+    return std::nullopt;
   }
 }
 

@@ -84,7 +84,7 @@ std::string File::GetDisplayName() const {
 
 std::vector<MessageContent> File::GetDetail() const { return detail_; }
 
-MessageContent File::ChooseDetail(const std::string& language) const {
+std::optional<MessageContent> File::ChooseDetail(const std::string& language) const {
   return MessageContent::Choose(detail_, language);
 }
 

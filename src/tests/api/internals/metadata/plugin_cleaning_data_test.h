@@ -322,16 +322,16 @@ TEST_P(PluginCleaningDataTest,
        chooseDetailShouldCreateADefaultContentObjectIfNoneExists) {
   PluginCleaningData dirtyInfo(
       0xDEADBEEF, "cleaner", std::vector<MessageContent>(), 2, 10, 30);
-  EXPECT_EQ(MessageContent(),
-            dirtyInfo.ChooseDetail(MessageContent::defaultLanguage));
+  EXPECT_FALSE(dirtyInfo.ChooseDetail(MessageContent::defaultLanguage).has_value());
 }
 
 TEST_P(PluginCleaningDataTest,
        chooseDetailShouldLeaveTheContentUnchangedIfOnlyOneStringExists) {
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info_, 2, 10, 30);
 
-  EXPECT_EQ(info_[0], dirtyInfo.ChooseDetail(french));
-  EXPECT_EQ(info_[0], dirtyInfo.ChooseDetail(MessageContent::defaultLanguage));
+  EXPECT_EQ(info_[0], dirtyInfo.ChooseDetail(french).value());
+  EXPECT_EQ(info_[0],
+            dirtyInfo.ChooseDetail(MessageContent::defaultLanguage).value());
 }
 
 TEST_P(
@@ -344,7 +344,7 @@ TEST_P(
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 
-  EXPECT_EQ(content, dirtyInfo.ChooseDetail(french));
+  EXPECT_EQ(content, dirtyInfo.ChooseDetail(french).value());
 }
 
 TEST_P(PluginCleaningDataTest,
@@ -357,7 +357,7 @@ TEST_P(PluginCleaningDataTest,
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
 
-  EXPECT_EQ(frenchContent, dirtyInfo.ChooseDetail(french));
+  EXPECT_EQ(frenchContent, dirtyInfo.ChooseDetail(french).value());
 }
 
 TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {

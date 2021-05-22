@@ -117,7 +117,7 @@ std::vector<MessageContent> PluginCleaningData::GetDetail() const {
   return detail_;
 }
 
-MessageContent PluginCleaningData::ChooseDetail(
+std::optional<MessageContent> PluginCleaningData::ChooseDetail(
     const std::string& language) const {
   return MessageContent::Choose(detail_, language);
 }

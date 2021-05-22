@@ -240,11 +240,10 @@ TEST(
 }
 
 TEST(MessageContent,
-     chooseShouldReturnAnEmptyEnglishMessageIfTheVectorIsEmpty) {
+     chooseShouldReturnANulloptIfTheVectorIsEmpty) {
   auto content = MessageContent::Choose(std::vector<MessageContent>(), "fr");
 
-  EXPECT_EQ("en", content.GetLanguage());
-  EXPECT_EQ("", content.GetText());
+  EXPECT_FALSE(content.has_value());
 }
 
 TEST(MessageContent, chooseShouldReturnTheOnlyElementOfASingleElementVector) {
@@ -261,8 +260,7 @@ TEST(
                    MessageContent("test2", "fr")};
   auto content = MessageContent::Choose(contents, "pt");
 
-  EXPECT_EQ("en", content.GetLanguage());
-  EXPECT_EQ("", content.GetText());
+  EXPECT_FALSE(content.has_value());
 }
 
 TEST(MessageContent,
@@ -274,8 +272,9 @@ TEST(MessageContent,
                    MessageContent("test5", "pt_BR")};
   auto content = MessageContent::Choose(contents, "pt_BR");
 
-  EXPECT_EQ("pt_BR", content.GetLanguage());
-  EXPECT_EQ("test5", content.GetText());
+  EXPECT_TRUE(content.has_value());
+  EXPECT_EQ("pt_BR", content.value().GetLanguage());
+  EXPECT_EQ("test5", content.value().GetText());
 }
 
 TEST(
@@ -287,8 +286,9 @@ TEST(
                    MessageContent("test4", "pt")};
   auto content = MessageContent::Choose(contents, "pt_BR");
 
-  EXPECT_EQ("pt", content.GetLanguage());
-  EXPECT_EQ("test4", content.GetText());
+  EXPECT_TRUE(content.has_value());
+  EXPECT_EQ("pt", content.value().GetLanguage());
+  EXPECT_EQ("test4", content.value().GetText());
 }
 
 TEST(
@@ -299,8 +299,9 @@ TEST(
                    MessageContent("test3", "pt_PT")};
   auto content = MessageContent::Choose(contents, "pt_BR");
 
-  EXPECT_EQ("en", content.GetLanguage());
-  EXPECT_EQ("test1", content.GetText());
+  EXPECT_TRUE(content.has_value());
+  EXPECT_EQ("en", content.value().GetLanguage());
+  EXPECT_EQ("test1", content.value().GetText());
 }
 
 TEST(
@@ -314,8 +315,9 @@ TEST(
   };
   auto content = MessageContent::Choose(contents, "pt");
 
-  EXPECT_EQ("pt", content.GetLanguage());
-  EXPECT_EQ("test4", content.GetText());
+  EXPECT_TRUE(content.has_value());
+  EXPECT_EQ("pt", content.value().GetLanguage());
+  EXPECT_EQ("test4", content.value().GetText());
 }
 
 TEST(
@@ -327,8 +329,9 @@ TEST(
                    MessageContent("test4", "pt_BR")};
   auto content = MessageContent::Choose(contents, "pt");
 
-  EXPECT_EQ("pt_PT", content.GetLanguage());
-  EXPECT_EQ("test3", content.GetText());
+  EXPECT_TRUE(content.has_value());
+  EXPECT_EQ("pt_PT", content.value().GetLanguage());
+  EXPECT_EQ("test3", content.value().GetText());
 }
 
 TEST(MessageContent, emittingAsYamlShouldOutputDataCorrectly) {

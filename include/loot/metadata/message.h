@@ -109,7 +109,7 @@ public:
    * @return A MessageContent object for the preferred language, or for English
    *         if a MessageContent object is not available for the given language.
    */
-  LOOT_API MessageContent GetContent(const std::string& language) const;
+  LOOT_API std::optional<MessageContent> GetContent(const std::string& language) const;
 
   /**
    * Get the message as a SimpleMessage given a language.
@@ -118,7 +118,7 @@ public:
    * @return A SimpleMessage object for the preferred language, or for English
    *         if message text is not available for the given language.
    */
-  LOOT_API SimpleMessage ToSimpleMessage(const std::string& language) const;
+  LOOT_API std::optional<SimpleMessage> ToSimpleMessage(const std::string& language) const;
 
 private:
   MessageType type_;
@@ -133,7 +133,7 @@ LOOT_API bool operator!=(const Message& lhs, const Message& rhs);
 
 /**
  * Check if the first Message object is greater than the second Message object.
- * @returns True if the second Message object is less than the first Message 
+ * @returns True if the second Message object is less than the first Message
  *          object, false otherwise.
  */
 LOOT_API bool operator>(const Message& lhs, const Message& rhs);
@@ -141,13 +141,13 @@ LOOT_API bool operator>(const Message& lhs, const Message& rhs);
 /**
  * Check if the first Message object is less than or equal to the second
  * Message object.
- * @returns True if the first Message object is not greater than the second 
+ * @returns True if the first Message object is not greater than the second
  *          Message object, false otherwise.
  */
 LOOT_API bool operator<=(const Message& lhs, const Message& rhs);
 
 /**
- * Check if the first Message object is greater than or equal to the second 
+ * Check if the first Message object is greater than or equal to the second
  * Message object.
  * @returns True if the first Message object is not less than the second
  *          Message object, false otherwise.
