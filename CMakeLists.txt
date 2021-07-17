@@ -93,11 +93,17 @@ ELSE ()
     set (ESPLUGIN_LIBRARIES ${ESPLUGIN_LIBRARIES} dl)
 ENDIF ()
 
+IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(LIBGIT2_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target git2 --config $(CONFIGURATION))
+ELSE ()
+    set(LIBGIT2_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target git2)
+ENDIF()
+
 ExternalProject_Add(libgit2
                     PREFIX "external"
                     URL "https://github.com/libgit2/libgit2/archive/v1.1.0.tar.gz"
                     CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DUSE_SSH=OFF -DSTATIC_CRT=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DREGEX_BACKEND=builtin
-                    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target git2 --config $(CONFIGURATION)
+                    BUILD_COMMAND ${LIBGIT2_BUILD_COMMAND}
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(libgit2 SOURCE_DIR BINARY_DIR)
 set(LIBGIT2_INCLUDE_DIRS "${SOURCE_DIR}/include")
@@ -161,11 +167,18 @@ ExternalProject_Add(spdlog
 ExternalProject_Get_Property(spdlog SOURCE_DIR)
 set(SPDLOG_INCLUDE_DIRS "${SOURCE_DIR}/include")
 
+
+IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(YAMLCPP_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target yaml-cpp --config $(CONFIGURATION))
+ELSE ()
+    set(YAMLCPP_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target yaml-cpp)
+ENDIF()
+
 ExternalProject_Add(yaml-cpp
                     PREFIX "external"
                     URL "https://github.com/loot/yaml-cpp/archive/yaml-cpp-0.6.2+merge-key-support.2.tar.gz"
                     CMAKE_ARGS -DMSVC_SHARED_RT=${MSVC_SHARED_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-                    BUILD_COMMAND ${CMAKE_COMMAND} --build . --target yaml-cpp --config $(CONFIGURATION)
+                    BUILD_COMMAND ${YAMLCPP_BUILD_COMMAND}
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(yaml-cpp SOURCE_DIR BINARY_DIR)
 
