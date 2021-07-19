@@ -50,7 +50,7 @@ protected:
 // but we only have the one so no prefix is necessary.
 // Just test with one game_ because if it works for one it will work for them
 // all.
-INSTANTIATE_TEST_CASE_P(, GameCacheTest, ::testing::Values(GameType::tes5));
+INSTANTIATE_TEST_SUITE_P(, GameCacheTest, ::testing::Values(GameType::tes5));
 
 TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
   cache_.AddPlugin(Plugin(game_.Type(),
