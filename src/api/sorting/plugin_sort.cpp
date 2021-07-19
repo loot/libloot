@@ -57,9 +57,18 @@ std::vector<std::string> SortPlugins(
     groups.emplace(group.GetName(), group);
   }
   graph.AddGroupEdges(groups);
+
+  // Check for cycles now because from this point on edges are only added if
+  // they don't cause cycles, and adding tie-break edges is by far the slowest
+  // part of the process, so if there is a cycle checking now will provide
+  // quicker feedback than checking later.
+  graph.CheckForCycles();
+
   graph.AddOverlapEdges();
   graph.AddTieBreakEdges();
 
+  // Check for cycles again, just in case there's a bug that lets some occur.
+  // The check doesn't take a significant amount of time.
   graph.CheckForCycles();
 
   return graph.TopologicalSort();
