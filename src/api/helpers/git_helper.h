@@ -47,7 +47,6 @@ public:
   void Fetch(const std::string& remote);
 
   void CheckoutNewBranch(const std::string& remote, const std::string& branch);
-  void CheckoutRevision(const std::string& revision);
 
   // Deletes the branch, detaching HEAD if it's currently set to the branch.
   void DeleteBranch(const std::string& branch);

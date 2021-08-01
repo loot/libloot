@@ -34,7 +34,7 @@
 namespace loot {
 class Masterlist : public MetadataList {
 public:
-  bool Update(const std::filesystem::path& path,
+  static bool Update(const std::filesystem::path& path,
               const std::string& repoURL,
               const std::string& repoBranch);
 

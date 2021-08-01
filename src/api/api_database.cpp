@@ -95,13 +95,7 @@ bool ApiDatabase::UpdateMasterlist(const std::filesystem::path& masterlistPath,
                                 masterlistPath.u8string() +
                                 "\" does not have a valid parent directory.");
 
-  Masterlist masterlist;
-  if (masterlist.Update(masterlistPath, remoteURL, remoteBranch)) {
-    masterlist_ = masterlist;
-    return true;
-  }
-
-  return false;
+  return Masterlist::Update(masterlistPath, remoteURL, remoteBranch);
 }
 
 MasterlistInfo ApiDatabase::GetMasterlistRevision(

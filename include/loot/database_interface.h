@@ -95,8 +95,7 @@ public:
    *  @details Uses Git to update the given masterlist to a given remote.
    *           If the masterlist doesn't exist, this will create it. This
    *           function also initialises a Git repository in the given
-   *           masterlist's parent folder. If the masterlist was not already
-   *           up-to-date, it will be re-loaded, but not re-evaluated.
+   *           masterlist's parent folder.
    *
    *           If a Git repository is already present, it will be used to
    *           perform a diff-only update, but if for any reason a
@@ -120,8 +119,7 @@ public:
    *         check their repositories to see which is the latest release branch.
    *  @returns `true` if the masterlist was updated. `false` if no update was
    *           necessary, ie. it was already up-to-date. If `true`, the
-   *           masterlist will have been re-loaded, but will need to be
-   *           re-evaluated separately.
+   *           masterlist will need to be re-loaded and re-evaluated separately.
    */
   virtual bool UpdateMasterlist(const std::filesystem::path& masterlist_path,
                                 const std::string& remote_url,

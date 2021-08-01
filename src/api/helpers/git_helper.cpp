@@ -346,33 +346,6 @@ void GitHelper::CheckoutNewBranch(const std::string& remote,
   data_.reference = nullptr;
 }
 
-void GitHelper::CheckoutRevision(const std::string& revision) {
-  if (data_.repo == nullptr)
-    throw GitStateError(
-        "Cannot checkout revision for repository that has not been opened.");
-  else if (data_.object != nullptr)
-    throw GitStateError(
-        "Cannot fetch repository updates, object memory already allocated.");
-
-  // Get an object ID for 'HEAD^'.
-  Call(git_revparse_single(&data_.object, data_.repo, revision.c_str()));
-  const git_oid* oid = git_object_id(data_.object);
-
-  // Detach HEAD to HEAD~1. This will roll back HEAD by one commit each time it
-  // is called.
-  Call(git_repository_set_head_detached(data_.repo, oid));
-
-  // Checkout the new HEAD.
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Performing a Git checkout of HEAD.");
-  }
-  Call(git_checkout_head(data_.repo, &data_.checkout_options));
-
-  git_object_free(data_.object);
-  data_.object = nullptr;
-}
-
 void GitHelper::DeleteBranch(const std::string& branch) {
   if (data_.repo == nullptr) {
     throw GitStateError(

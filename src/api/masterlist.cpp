@@ -150,25 +150,7 @@ bool Masterlist::Update(const std::filesystem::path& path,
   }
 
   // Now whether the repository was cloned or updated, the working directory
-  // contains the latest masterlist. Try parsing it: on failure, detach the HEAD
-  // back one commit and try again.
-  while (true) {
-    try {
-      this->Load(path);
-
-      return true;
-    } catch (std::exception& e) {
-      if (logger) {
-        logger->error("Masterlist parsing failed. Masterlist revision {}: {}",
-                      git.GetHeadCommitId(true),
-                      e.what());
-      }
-      git.CheckoutRevision("HEAD^");
-    }
-  }
-
-  // This should never be reached as git.CheckoutRevision() will throw if it
-  // tries to go one back from the start of history.
+  // contains the latest masterlist.
   return true;
 }
 }
