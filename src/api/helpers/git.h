@@ -22,16 +22,31 @@
     <https://www.gnu.org/licenses/>.
     */
 
-#ifndef LOOT_API_HELPERS_GIT_HELPER
-#define LOOT_API_HELPERS_GIT_HELPER
-
-#include <filesystem>
-#include <string>
+#ifndef LOOT_API_HELPERS_GIT
+#define LOOT_API_HELPERS_GIT
 
 #include <git2.h>
 #include <spdlog/spdlog.h>
 
+#include <filesystem>
+#include <string>
+
+#include "loot/struct/file_revision.h"
+
 namespace loot {
+namespace git {
+// The given path must be to a file in the root of a Git repository.
+bool UpdateFile(const std::filesystem::path& path,
+                const std::string& repoURL,
+                const std::string& repoBranch);
+
+// The given path must be to a file in the root of a Git repository.
+FileRevision GetVersionInfo(const std::filesystem::path& path, bool shortID);
+
+// The given path must be to a file in the root of a Git repository.
+bool IsLatest(const std::filesystem::path& path, const std::string& repoBranch);
+}
+
 class GitHelper {
 public:
   void InitialiseOptions(const std::string& branch,

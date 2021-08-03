@@ -46,7 +46,7 @@ ApiDatabase::ApiDatabase(
 
 void ApiDatabase::LoadLists(const std::filesystem::path& masterlistPath,
                             const std::filesystem::path& userlistPath) {
-  Masterlist temp;
+  MetadataList temp;
   MetadataList userTemp;
 
   if (!masterlistPath.empty()) {
@@ -95,19 +95,19 @@ bool ApiDatabase::UpdateMasterlist(const std::filesystem::path& masterlistPath,
                                 masterlistPath.u8string() +
                                 "\" does not have a valid parent directory.");
 
-  return Masterlist::Update(masterlistPath, remoteURL, remoteBranch);
+  return git::UpdateFile(masterlistPath, remoteURL, remoteBranch);
 }
 
 FileRevision ApiDatabase::GetMasterlistRevision(
     const std::filesystem::path& masterlistPath,
     const bool getShortID) const {
-  return Masterlist::GetInfo(masterlistPath, getShortID);
+  return git::GetVersionInfo(masterlistPath, getShortID);
 }
 
 bool ApiDatabase::IsLatestMasterlist(
     const std::filesystem::path& masterlist_path,
     const std::string& branch) const {
-  return Masterlist::IsLatest(masterlist_path, branch);
+  return git::IsLatest(masterlist_path, branch);
 }
 
 //////////////////////////

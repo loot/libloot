@@ -31,7 +31,7 @@
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
-#include "api/masterlist.h"
+#include "api/helpers/git.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata_list.h"
 #include "loot/database_interface.h"
@@ -90,7 +90,7 @@ struct ApiDatabase : public DatabaseInterface {
 
 private:
   std::shared_ptr<ConditionEvaluator> conditionEvaluator_;
-  Masterlist masterlist_;
+  MetadataList masterlist_;
   MetadataList userlist_;
 };
 }
