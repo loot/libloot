@@ -29,7 +29,7 @@
 #include <string>
 
 #include "api/metadata_list.h"
-#include "loot/struct/masterlist_info.h"
+#include "loot/struct/file_revision.h"
 
 namespace loot {
 class Masterlist : public MetadataList {
@@ -38,7 +38,7 @@ public:
               const std::string& repoURL,
               const std::string& repoBranch);
 
-  static MasterlistInfo GetInfo(const std::filesystem::path& path,
+  static FileRevision GetInfo(const std::filesystem::path& path,
                                 bool shortID);
 
   static bool IsLatest(const std::filesystem::path& path,

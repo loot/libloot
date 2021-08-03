@@ -98,7 +98,7 @@ bool ApiDatabase::UpdateMasterlist(const std::filesystem::path& masterlistPath,
   return Masterlist::Update(masterlistPath, remoteURL, remoteBranch);
 }
 
-MasterlistInfo ApiDatabase::GetMasterlistRevision(
+FileRevision ApiDatabase::GetMasterlistRevision(
     const std::filesystem::path& masterlistPath,
     const bool getShortID) const {
   return Masterlist::GetInfo(masterlistPath, getShortID);

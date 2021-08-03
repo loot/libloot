@@ -35,11 +35,11 @@ using std::string;
 namespace fs = std::filesystem;
 
 namespace loot {
-MasterlistInfo Masterlist::GetInfo(const std::filesystem::path& path,
+FileRevision Masterlist::GetInfo(const std::filesystem::path& path,
                                    bool shortID) {
   // Compare HEAD and working copy, and get revision info.
   GitHelper git;
-  MasterlistInfo info;
+  FileRevision revision;
 
   auto logger = getLogger();
 
@@ -59,16 +59,16 @@ MasterlistInfo Masterlist::GetInfo(const std::filesystem::path& path,
 
   git.Open(path.parent_path());
 
-  info.revision_id = git.GetHeadCommitId(shortID);
-  info.revision_date = git.GetHeadCommitDate();
+  revision.id = git.GetHeadCommitId(shortID);
+  revision.date = git.GetHeadCommitDate();
 
   if (logger) {
     logger->trace("Diffing masterlist HEAD and working copy.");
   }
-  info.is_modified =
+  revision.is_modified =
       GitHelper::IsFileDifferent(path.parent_path(), path.filename().u8string());
 
-  return info;
+  return revision;
 }
 
 bool Masterlist::IsLatest(const std::filesystem::path& path,

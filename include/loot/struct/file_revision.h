@@ -21,33 +21,32 @@
     along with LOOT.  If not, see
     <https://www.gnu.org/licenses/>.
     */
-#ifndef LOOT_MASTERLIST_INFO
-#define LOOT_MASTERLIST_INFO
+#ifndef LOOT_FILE_REVISION
+#define LOOT_FILE_REVISION
 
 #include <string>
 
 namespace loot {
 /**
- * @brief A structure that holds data about a masterlist's source control
- *        revision.
+ * @brief A structure that holds data about a file's source control revision.
  */
-struct MasterlistInfo {
-  inline explicit MasterlistInfo() : is_modified(false) {}
+struct FileRevision {
+  inline explicit FileRevision() : is_modified(false) {}
 
   /**
-   * @brief The revision hash for the masterlist.
+   * @brief The revision hash for the file.
    */
-  std::string revision_id;
+  std::string id;
 
   /**
-   * @brief A pointer to a string containing the ISO 8601 formatted revision
-   *        date, ie. YYYY-MM-DD.
+   * @brief A string containing the ISO 8601 formatted revision date, ie.
+   *        YYYY-MM-DD.
    */
-  std::string revision_date;
+  std::string date;
 
   /**
-   * @brief `true` if the masterlist has been edited since the outputted
-   *        revision, or `false` if it is at exactly the revision given.
+   * @brief `true` if the file has been edited since the revision identified by
+   *        `id`, or `false` if it is at exactly the revision given.
    */
   bool is_modified;
 };

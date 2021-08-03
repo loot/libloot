@@ -296,12 +296,12 @@ TEST_P(
 
 TEST_P(DatabaseInterfaceTest,
        getMasterlistRevisionShouldThrowIfNoMasterlistIsPresent) {
-  MasterlistInfo info;
-  EXPECT_THROW(info = db_->GetMasterlistRevision(masterlistPath, false),
+  FileRevision revision;
+  EXPECT_THROW(revision = db_->GetMasterlistRevision(masterlistPath, false),
                FileAccessError);
-  EXPECT_TRUE(info.revision_id.empty());
-  EXPECT_TRUE(info.revision_date.empty());
-  EXPECT_FALSE(info.is_modified);
+  EXPECT_TRUE(revision.id.empty());
+  EXPECT_TRUE(revision.date.empty());
+  EXPECT_FALSE(revision.is_modified);
 }
 
 TEST_P(
@@ -309,12 +309,12 @@ TEST_P(
     getMasterlistRevisionShouldThrowIfANonVersionControlledMasterlistIsPresent) {
   ASSERT_NO_THROW(GenerateMasterlist());
 
-  MasterlistInfo info;
-  EXPECT_THROW(info = db_->GetMasterlistRevision(masterlistPath, false),
+  FileRevision revision;
+  EXPECT_THROW(revision = db_->GetMasterlistRevision(masterlistPath, false),
                GitStateError);
-  EXPECT_TRUE(info.revision_id.empty());
-  EXPECT_TRUE(info.revision_date.empty());
-  EXPECT_FALSE(info.is_modified);
+  EXPECT_TRUE(revision.id.empty());
+  EXPECT_TRUE(revision.date.empty());
+  EXPECT_FALSE(revision.is_modified);
 }
 
 TEST_P(
@@ -322,11 +322,11 @@ TEST_P(
     getMasterlistRevisionShouldOutputLongStringsAndBooleanFalseIfAVersionControlledMasterlistIsPresentAndGetShortIdParameterIsFalse) {
   ASSERT_NO_THROW(db_->UpdateMasterlist(masterlistPath, url_, branch_));
 
-  MasterlistInfo info;
-  EXPECT_NO_THROW(info = db_->GetMasterlistRevision(masterlistPath, false));
-  EXPECT_EQ(40, info.revision_id.length());
-  EXPECT_EQ(10, info.revision_date.length());
-  EXPECT_FALSE(info.is_modified);
+  FileRevision revision;
+  EXPECT_NO_THROW(revision = db_->GetMasterlistRevision(masterlistPath, false));
+  EXPECT_EQ(40, revision.id.length());
+  EXPECT_EQ(10, revision.date.length());
+  EXPECT_FALSE(revision.is_modified);
 }
 
 TEST_P(
@@ -334,12 +334,12 @@ TEST_P(
     getMasterlistRevisionShouldOutputShortStringsAndBooleanFalseIfAVersionControlledMasterlistIsPresentAndGetShortIdParameterIsTrue) {
   ASSERT_NO_THROW(db_->UpdateMasterlist(masterlistPath, url_, branch_));
 
-  MasterlistInfo info;
-  EXPECT_NO_THROW(info = db_->GetMasterlistRevision(masterlistPath, false));
-  EXPECT_GE(size_t(40), info.revision_id.length());
-  EXPECT_LE(size_t(7), info.revision_id.length());
-  EXPECT_EQ(10, info.revision_date.length());
-  EXPECT_FALSE(info.is_modified);
+  FileRevision revision;
+  EXPECT_NO_THROW(revision = db_->GetMasterlistRevision(masterlistPath, false));
+  EXPECT_GE(size_t(40), revision.id.length());
+  EXPECT_LE(size_t(7), revision.id.length());
+  EXPECT_EQ(10, revision.date.length());
+  EXPECT_FALSE(revision.is_modified);
 }
 
 TEST_P(
@@ -348,11 +348,11 @@ TEST_P(
   ASSERT_NO_THROW(db_->UpdateMasterlist(masterlistPath, url_, branch_));
   ASSERT_NO_THROW(GenerateMasterlist());
 
-  MasterlistInfo info;
-  EXPECT_NO_THROW(info = db_->GetMasterlistRevision(masterlistPath, false));
-  EXPECT_EQ(40, info.revision_id.length());
-  EXPECT_EQ(10, info.revision_date.length());
-  EXPECT_TRUE(info.is_modified);
+  FileRevision revision;
+  EXPECT_NO_THROW(revision = db_->GetMasterlistRevision(masterlistPath, false));
+  EXPECT_EQ(40, revision.id.length());
+  EXPECT_EQ(10, revision.date.length());
+  EXPECT_TRUE(revision.is_modified);
 }
 
 TEST_P(

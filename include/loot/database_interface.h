@@ -33,7 +33,7 @@
 #include "loot/metadata/group.h"
 #include "loot/metadata/message.h"
 #include "loot/metadata/plugin_metadata.h"
-#include "loot/struct/masterlist_info.h"
+#include "loot/struct/file_revision.h"
 #include "loot/struct/simple_message.h"
 
 namespace loot {
@@ -138,7 +138,7 @@ public:
    *         character hash will be outputted.
    *  @returns The revision data.
    */
-  virtual MasterlistInfo GetMasterlistRevision(
+  virtual FileRevision GetMasterlistRevision(
       const std::filesystem::path& masterlist_path,
       const bool get_short_id) const = 0;
 

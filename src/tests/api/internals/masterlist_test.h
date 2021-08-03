@@ -199,10 +199,10 @@ TEST_P(
   Masterlist masterlist;
   ASSERT_TRUE(masterlist.Update(masterlistPath, repoPath, repoBranch));
 
-  MasterlistInfo info = masterlist.GetInfo(masterlistPath, false);
-  EXPECT_EQ(40, info.revision_id.length());
-  EXPECT_EQ(10, info.revision_date.length());
-  EXPECT_FALSE(info.is_modified);
+  FileRevision revision = masterlist.GetInfo(masterlistPath, false);
+  EXPECT_EQ(40, revision.id.length());
+  EXPECT_EQ(10, revision.date.length());
+  EXPECT_FALSE(revision.is_modified);
 }
 
 TEST_P(
@@ -211,11 +211,11 @@ TEST_P(
   Masterlist masterlist;
   ASSERT_TRUE(masterlist.Update(masterlistPath, repoPath, repoBranch));
 
-  MasterlistInfo info = masterlist.GetInfo(masterlistPath, true);
-  EXPECT_GE((unsigned)40, info.revision_id.length());
-  EXPECT_LE((unsigned)7, info.revision_id.length());
-  EXPECT_EQ(10, info.revision_date.length());
-  EXPECT_FALSE(info.is_modified);
+  FileRevision revision = masterlist.GetInfo(masterlistPath, true);
+  EXPECT_GE((unsigned)40, revision.id.length());
+  EXPECT_LE((unsigned)7, revision.id.length());
+  EXPECT_EQ(10, revision.date.length());
+  EXPECT_FALSE(revision.is_modified);
 }
 
 TEST_P(
@@ -226,10 +226,10 @@ TEST_P(
   std::ofstream out(masterlistPath);
   out.close();
 
-  MasterlistInfo info = masterlist.GetInfo(masterlistPath, false);
-  EXPECT_EQ(40, info.revision_id.length());
-  EXPECT_EQ(10, info.revision_date.length());
-  EXPECT_TRUE(info.is_modified);
+  FileRevision revision = masterlist.GetInfo(masterlistPath, false);
+  EXPECT_EQ(40, revision.id.length());
+  EXPECT_EQ(10, revision.date.length());
+  EXPECT_TRUE(revision.is_modified);
 }
 
 TEST_P(MasterlistTest,
@@ -245,10 +245,10 @@ TEST_P(MasterlistTest,
   std::ofstream out(nonAsciiPath);
   out.close();
 
-  MasterlistInfo info = masterlist.GetInfo(nonAsciiPath, false);
-  EXPECT_EQ(40, info.revision_id.length());
-  EXPECT_EQ(10, info.revision_date.length());
-  EXPECT_TRUE(info.is_modified);
+  FileRevision revision = masterlist.GetInfo(nonAsciiPath, false);
+  EXPECT_EQ(40, revision.id.length());
+  EXPECT_EQ(10, revision.date.length());
+  EXPECT_TRUE(revision.is_modified);
 }
 
 TEST_P(MasterlistTest,

@@ -55,7 +55,7 @@ struct ApiDatabase : public DatabaseInterface {
                         const std::string& remote_url,
                         const std::string& remote_branch);
 
-  MasterlistInfo GetMasterlistRevision(
+  FileRevision GetMasterlistRevision(
       const std::filesystem::path& masterlist_path,
       const bool get_short_id) const;
 
