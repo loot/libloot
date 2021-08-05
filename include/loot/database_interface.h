@@ -46,7 +46,8 @@ public:
    */
 
   /**
-   *  @brief Loads the masterlist and userlist from the paths specified.
+   *  @brief Loads the masterlist, userlist and masterlist prelude from the
+   *         paths specified.
    *  @details Can be called multiple times, each time replacing the
    *           previously-loaded data.
    *  @param masterlist_path
@@ -56,9 +57,14 @@ public:
    *         The relative or absolute path to the userlist file that should be
    *         loaded, or an empty path. If an empty path, no userlist will be
    *         loaded.
+   *  @param masterlist_prelude_path
+   *         The relative or absolute path to the masterlist prelude file that
+   *         should be loaded. If an empty path, no masterlist prelude will be
+   *         loaded.
    */
   virtual void LoadLists(const std::filesystem::path& masterlist_path,
-                         const std::filesystem::path& userlist_path = "") = 0;
+                         const std::filesystem::path& userlist_path = "",
+                         const std::filesystem::path& masterlist_prelude_path = "") = 0;
 
   /**
    * Writes a metadata file containing all loaded user-added metadata.
@@ -91,47 +97,42 @@ public:
    */
 
   /**
-   *  @brief Update the given masterlist.
-   *  @details Uses Git to update the given masterlist to a given remote.
-   *           If the masterlist doesn't exist, this will create it. This
+   *  @brief Update the given masterlist or masterlist prelude file.
+   *  @details Uses Git to update the given file using a given remote.
+   *           If the file doesn't exist, this will create it. This
    *           function also initialises a Git repository in the given
-   *           masterlist's parent folder.
+   *           file's parent folder.
    *
    *           If a Git repository is already present, it will be used to
    *           perform a diff-only update, but if for any reason a
    *           fast-forward merge update is not possible, the existing
    *           repository will be deleted and a new repository cloned from
    *           the given remote.
-   *  @param masterlist_path
-   *         The relative or absolute path to the masterlist file that should be
-   *         updated. The filename must match the filename of the masterlist
-   *         file in the given remote repository, otherwise it will not be
-   *         updated correctly. Although LOOT itself expects this filename to be
-   *         "masterlist.yaml", the API does not check for any specific
-   *         filename.
+   *  @param file_path
+   *         The relative or absolute path to the file that should be
+   *         updated. The filename must match the filename of the file in the
+   *         given remote repository, otherwise it will not be updated
+   *         correctly. The file must be present in the repository's root
+   *         directory.
    *  @param remote_url
    *         The URL of the remote from which to fetch updates. This can also be
    *         a relative or absolute path to a local repository.
    *  @param remote_branch
-   *         The branch of the remote from which to apply updates. LOOT's
-   *         official masterlists are versioned using separate branches for each
-   *         new version of the masterlist syntax, so if you're using them,
-   *         check their repositories to see which is the latest release branch.
-   *  @returns `true` if the masterlist was updated. `false` if no update was
+   *         The branch of the remote from which to apply updates.
+   *  @returns `true` if the file was updated. `false` if no update was
    *           necessary, ie. it was already up-to-date. If `true`, the
-   *           masterlist will need to be re-loaded and re-evaluated separately.
+   *           file will need to be re-loaded and re-evaluated separately.
    */
-  virtual bool UpdateMasterlist(const std::filesystem::path& masterlist_path,
+  virtual bool UpdateMasterlist(const std::filesystem::path& file_path,
                                 const std::string& remote_url,
                                 const std::string& remote_branch) = 0;
 
   /**
-   *  @brief Get the given masterlist's revision.
-   *  @details Getting a masterlist's revision is only possible if it is found
-   *           inside a local Git repository.
-   *  @param masterlist_path
-   *         The relative or absolute path to the masterlist file that should be
-   *         queried.
+   *  @brief Get the given masterlist or masterlist prelude file's revision.
+   *  @details Getting a file's revision is only possible if it is found
+   *           in the root of a local Git repository.
+   *  @param file_path
+   *         The relative or absolute path to the file that should be queried.
    *  @param get_short_id
    *         If `true`, the shortest unique hexadecimal revision hash that is at
    *         least 7 characters long will be outputted. Otherwise, the full 40
@@ -139,21 +140,22 @@ public:
    *  @returns The revision data.
    */
   virtual FileRevision GetMasterlistRevision(
-      const std::filesystem::path& masterlist_path,
+      const std::filesystem::path& file_path,
       const bool get_short_id) const = 0;
 
   /**
-   * Check if the given masterlist is the latest available for a given branch.
-   * @param  masterlist_path
-   *         The relative or absolute path to the masterlist file for which the
-   *         latest revision should be obtained. It needs to be in a local Git
-   *         repository.
+   * Check if the given masterlist or masterlist prelude file is the latest
+   * available for a given branch.
+   * @param  file_path
+   *         The relative or absolute path to the file for which the latest
+   *         revision should be obtained. It needs to be in the root of a local
+   *         Git repository.
    * @param  branch
    *         The branch to check against.
-   * @return True if the masterlist revision matches the latest masterlist
-   *         revision for the given branch, and false otherwise.
+   * @return True if the file's current revision matches its latest revision
+   *         for the given branch, and false otherwise.
    */
-  virtual bool IsLatestMasterlist(const std::filesystem::path& masterlist_path,
+  virtual bool IsLatestMasterlist(const std::filesystem::path& file_path,
                                   const std::string& branch) const = 0;
 
   /**

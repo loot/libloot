@@ -24,8 +24,10 @@
 
 #include "api/metadata_list.h"
 
+#include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
@@ -36,6 +38,105 @@
 #include "loot/exception/file_access_error.h"
 
 namespace loot {
+constexpr std::string_view PRELUDE_ON_FIRST_LINE = "prelude:";
+constexpr std::string_view PRELUDE_ON_NEW_LINE = "\nprelude:";
+
+std::string read_to_string(const std::filesystem::path& filePath) {
+  std::ifstream in(filePath);
+  if (!in.good()) {
+    throw FileAccessError("Cannot open " + filePath.u8string());
+  }
+
+  auto content = std::string(std::istreambuf_iterator<char>(in),
+                             std::istreambuf_iterator<char>());
+
+  in.close();
+
+  return content;
+}
+
+std::optional<std::pair<size_t, size_t>> FindPreludeBounds(const std::string& masterlist) {
+  size_t startOfPrelude = std::string::npos;
+  size_t endOfPrelude = std::string::npos;
+
+  // This assumes that the metadata file is using block style at
+  // the top level, that ? indicators and tags are not used, and
+  // that key strings are unquoted.
+  if (boost::starts_with(masterlist, PRELUDE_ON_FIRST_LINE)) {
+    startOfPrelude = PRELUDE_ON_FIRST_LINE.size();
+  } else {
+    startOfPrelude = masterlist.find(PRELUDE_ON_NEW_LINE);
+
+    if (startOfPrelude != std::string::npos) {
+      // Skip the leading line break.
+      startOfPrelude += PRELUDE_ON_NEW_LINE.size();
+    }
+  }
+
+  if (startOfPrelude == std::string::npos) {
+    // No prelude to replace.
+    return std::nullopt;
+  }
+
+  // The end of the prelude is marked by a line break followed by a
+  // non-space, non-hash (#) character, as this means what follows is
+  // unindented content.
+  auto pos = startOfPrelude;
+  auto lastIndex = masterlist.size() - 1;
+  while (endOfPrelude == std::string::npos) {
+    auto nextLineBreakPos = masterlist.find("\n", pos);
+    if (nextLineBreakPos == std::string::npos ||
+        nextLineBreakPos == lastIndex) {
+      break;
+    }
+
+    pos = nextLineBreakPos + 1;
+
+    auto nextChar = masterlist[pos];
+    if (nextChar != ' ' && nextChar != '#' && nextChar != '\n') {
+      endOfPrelude = nextLineBreakPos;
+      break;
+    }
+  }
+
+  return std::make_pair(startOfPrelude, endOfPrelude);
+}
+
+// Indent all prelude content by two spaces to ensure it's parsed as part
+// of the prelude.
+std::string IndentPrelude(const std::string& prelude) {
+  auto newPrelude = "\n  " + boost::replace_all_copy(prelude, "\n", "\n  ");
+
+  boost::replace_all(newPrelude, "  \n", "\n");
+
+  if (boost::ends_with(newPrelude, "\n  ")) {
+    return newPrelude.substr(0, newPrelude.size() - 2);
+  }
+
+  return newPrelude;
+}
+
+std::string ReplaceMetadataListPrelude(const std::string& prelude,
+                                       const std::string& masterlist) {
+  auto preludeBounds = FindPreludeBounds(masterlist);
+
+  if (!preludeBounds.has_value()) {
+    // No prelude to replace.
+    return masterlist;
+  }
+
+  auto newPrelude = IndentPrelude(prelude);
+
+  auto [startOfPrelude, endOfPrelude] = preludeBounds.value();
+
+  if (endOfPrelude == std::string::npos) {
+    return masterlist.substr(0, startOfPrelude) + newPrelude;
+  }
+
+  return masterlist.substr(0, startOfPrelude) + newPrelude +
+         masterlist.substr(endOfPrelude);
+}
+
 void MetadataList::Load(const std::filesystem::path& filepath) {
   Clear();
 
@@ -48,12 +149,36 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
   if (!in.good())
     throw FileAccessError("Cannot open " + filepath.u8string());
 
-  YAML::Node metadataList = YAML::Load(in);
+  this->Load(in, filepath);
+
   in.close();
+}
+
+void MetadataList::LoadWithPrelude(const std::filesystem::path& filePath,
+                                   const std::filesystem::path& preludePath) {
+  // Parsing YAML resolves references such that replacing the
+  // referenced keys entirely (rather than just replacing their values)
+  // does not cause aliases to be re-resolved, so the old values are
+  // retained.
+  // As such, replacing the prelude needs to happen before parsing,
+  // which means reading the files and performing string manipulation.
+  auto prelude_content = read_to_string(preludePath);
+  auto masterlist_content = read_to_string(filePath);
+
+  masterlist_content =
+      ReplaceMetadataListPrelude(prelude_content, masterlist_content);
+
+  auto stream = std::istringstream(masterlist_content);
+  this->Load(stream, filePath);
+}
+
+void MetadataList::Load(std::istream& istream,
+                        const std::filesystem::path& source_path) {
+  YAML::Node metadataList = YAML::Load(istream);
 
   if (!metadataList.IsMap())
     throw FileAccessError("The root of the metadata file " +
-                          filepath.u8string() + " is not a YAML map.");
+                          source_path.u8string() + " is not a YAML map.");
 
   if (metadataList["plugins"]) {
     for (const auto& node : metadataList["plugins"]) {
@@ -99,6 +224,7 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
     groups_.insert(groups_.cbegin(), Group());
   }
 
+  auto logger = getLogger();
   if (logger) {
     logger->debug("File loaded successfully.");
   }
@@ -256,7 +382,8 @@ void MetadataList::EvalAllConditions(ConditionEvaluator& conditionEvaluator) {
     plugins_.clear();
 
   for (const auto& plugin : unevaluatedPlugins_) {
-    plugins_.emplace(plugin.first, conditionEvaluator.EvaluateAll(plugin.second));
+    plugins_.emplace(plugin.first,
+                     conditionEvaluator.EvaluateAll(plugin.second));
   }
 
   if (unevaluatedRegexPlugins_.empty())

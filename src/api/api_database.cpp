@@ -44,14 +44,26 @@ ApiDatabase::ApiDatabase(
 // Database Loading Functions
 ///////////////////////////////////
 
-void ApiDatabase::LoadLists(const std::filesystem::path& masterlistPath,
-                            const std::filesystem::path& userlistPath) {
+void ApiDatabase::LoadLists(
+    const std::filesystem::path& masterlistPath,
+    const std::filesystem::path& userlistPath,
+    const std::filesystem::path& masterlistPreludePath) {
   MetadataList temp;
   MetadataList userTemp;
 
   if (!masterlistPath.empty()) {
     if (std::filesystem::exists(masterlistPath)) {
-      temp.Load(masterlistPath);
+      if (!masterlistPreludePath.empty()) {
+        if (std::filesystem::exists(masterlistPreludePath)) {
+          temp.LoadWithPrelude(masterlistPath, masterlistPreludePath);
+        } else {
+          throw FileAccessError(
+              "The given masterlist prelude path does not exist: " +
+              masterlistPreludePath.u8string());
+        }
+      } else {
+        temp.Load(masterlistPath);
+      }
     } else {
       throw FileAccessError("The given masterlist path does not exist: " +
                             masterlistPath.u8string());
@@ -91,7 +103,7 @@ bool ApiDatabase::UpdateMasterlist(const std::filesystem::path& masterlistPath,
                                    const std::string& remoteURL,
                                    const std::string& remoteBranch) {
   if (!std::filesystem::is_directory(masterlistPath.parent_path()))
-    throw std::invalid_argument("Given masterlist path \"" +
+    throw std::invalid_argument("The path \"" +
                                 masterlistPath.u8string() +
                                 "\" does not have a valid parent directory.");
 

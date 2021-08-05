@@ -43,7 +43,8 @@ struct ApiDatabase : public DatabaseInterface {
   explicit ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator);
 
   void LoadLists(const std::filesystem::path& masterlist_path,
-                 const std::filesystem::path& userlist_path = "");
+                 const std::filesystem::path& userlist_path = "",
+                 const std::filesystem::path& masterlist_prelude_path = "");
 
   void WriteUserMetadata(const std::filesystem::path& outputFile,
                          const bool overwrite) const;

@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_METADATA_LIST_TEST
 
 #include "api/metadata_list.h"
-
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -205,6 +204,38 @@ TEST_P(MetadataListTest,
   EXPECT_TRUE(metadataList.BashTags().empty());
 }
 
+TEST_P(
+    MetadataListTest,
+    loadWithPreludeShouldReplaceThePreludeInTheFirstFileWithTheContentOfTheSecond) {
+  using std::endl;
+
+  std::ofstream out(metadataPath);
+  out << "prelude:" << endl
+      << "  - &ref" << endl
+      << "    type: say" << endl
+      << "    content: Loaded from same file" << endl
+      << "globals:" << endl
+      << "  - *ref" << endl;
+
+  out.close();
+
+  auto preludePath = metadataFilesPath / "prelude.yaml";
+  out.open(preludePath);
+  out << "common:" << endl
+      << "  - &ref" << endl
+      << "    type: say" << endl
+      << "    content: Loaded from prelude" << endl;
+
+  MetadataList metadataList;
+  ASSERT_NO_THROW(metadataList.LoadWithPrelude(metadataPath, preludePath));
+
+  auto messages = metadataList.Messages();
+  ASSERT_EQ(1, messages.size());
+  EXPECT_EQ(MessageType::say, messages[0].GetType());
+  ASSERT_EQ(1, messages[0].GetContent().size());
+  EXPECT_EQ("Loaded from prelude", messages[0].GetContent()[0].GetText());
+}
+
 TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
@@ -219,8 +250,9 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   EXPECT_EQ(std::vector<std::string>({"C.Climate", "Relev"}),
             metadataList.BashTags());
 
-  auto expectedGroups =
-      std::vector<Group>({Group("default"), Group("group1", {"group2"}), Group("group2", {"default"})});
+  auto expectedGroups = std::vector<Group>({Group("default"),
+                                            Group("group1", {"group2"}),
+                                            Group("group2", {"default"})});
   EXPECT_EQ(expectedGroups, metadataList.Groups());
 
   EXPECT_EQ(std::vector<Message>({
@@ -390,6 +422,230 @@ TEST_P(
   plugin = metadataList.FindPlugin(blankEsp).value();
   EXPECT_EQ(blankEsp, plugin.GetName());
   EXPECT_TRUE(plugin.GetDirtyInfo().empty());
+}
+
+TEST(ReplaceMetadataListPrelude, shouldReturnAnEmptyStringIfGivenEmptyStrings) {
+  std::string prelude = "";
+  std::string masterlist = "";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  EXPECT_EQ(masterlist, result);
+}
+
+TEST(ReplaceMetadataListPrelude, shouldNotChangeAMasterlistWithNoPrelude) {
+  std::string prelude = R"(globals:
+  - type: note
+    content: A message.
+)";
+  std::string masterlist = R"(plugins:
+  - name: a.esp
+)";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  EXPECT_EQ(masterlist, result);
+}
+
+TEST(ReplaceMetadataListPrelude,
+     shouldReplaceAPreludeAtTheStartOfTheMasterlist) {
+  std::string prelude = R"(globals:
+  - type: note
+    content: A message.
+)";
+  std::string masterlist = R"(prelude:
+  a: b
+
+plugins:
+  - name: a.esp
+)";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  auto expectedResult = R"(prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+)";
+
+  EXPECT_EQ(expectedResult, result);
+}
+
+TEST(ReplaceMetadataListPrelude, shouldChangeAMasterlistThatEndsWithAPrelude) {
+  std::string prelude = R"(globals:
+  - type: note
+    content: A message.
+)";
+  std::string masterlist = R"(plugins:
+  - name: a.esp
+prelude:
+  a: b
+
+)";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  auto expectedResult = R"(plugins:
+  - name: a.esp
+prelude:
+  globals:
+    - type: note
+      content: A message.
+)";
+
+  EXPECT_EQ(expectedResult, result);
+}
+
+TEST(ReplaceMetadataListPrelude, shouldReplaceOnlyThePreludeInTheMasterlist) {
+  std::string prelude = R"(
+
+globals:
+  - type: note
+    content: A message.
+
+)";
+  std::string masterlist = R"(
+common:
+  key: value
+prelude:
+  a: b
+plugins:
+  - name: a.esp
+)";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  auto expectedResult = R"(
+common:
+  key: value
+prelude:
+
+
+  globals:
+    - type: note
+      content: A message.
+
+
+plugins:
+  - name: a.esp
+)";
+
+  EXPECT_EQ(expectedResult, result);
+}
+
+TEST(ReplaceMetadataListPrelude,
+     shouldSucceedIfGivenABlockStylePreludeAndABlockStyleMasterlist) {
+  std::string prelude = R"(globals:
+  - type: note
+    content: A message.
+)";
+  std::string masterlist = R"(prelude:
+  a: b
+
+plugins:
+  - name: a.esp
+)";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  auto expectedResult = R"(prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+)";
+
+  EXPECT_EQ(expectedResult, result);
+}
+
+TEST(ReplaceMetadataListPrelude,
+  shouldSucceedIfGivenAFlowStylePreludeAndABlockStyleMasterlist) {
+  std::string prelude = "globals: [{type: note, content: A message.}]";
+  std::string masterlist = R"(prelude:
+  a: b
+
+plugins:
+  - name: a.esp
+)";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  auto expectedResult = R"(prelude:
+  globals: [{type: note, content: A message.}]
+plugins:
+  - name: a.esp
+)";
+
+  EXPECT_EQ(expectedResult, result);
+}
+
+TEST(ReplaceMetadataListPrelude, doesNotChangeAFlowStyleMasterlist) {
+  std::string prelude = "globals: [{type: note, content: A message.}]";
+  std::string masterlist = "{prelude: {}, plugins: [{name: a.esp}]}";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  EXPECT_EQ(masterlist, result);
+}
+
+TEST(ReplaceMetadataListPrelude, shouldNotStopAtComments) {
+  std::string prelude = R"(globals:
+  - type: note
+    content: A message.
+)";
+  std::string masterlist = R"(prelude:
+  a: b
+# Comment line
+  c: d
+
+plugins:
+  - name: a.esp
+)";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  auto expectedResult = R"(prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+)";
+
+  EXPECT_EQ(expectedResult, result);
+}
+
+TEST(ReplaceMetadataListPrelude, shouldNotStopAtABlankLine) {
+  std::string prelude = R"(globals:
+  - type: note
+    content: A message.
+)";
+  std::string masterlist = R"(prelude:
+  a: b
+
+
+plugins:
+  - name: a.esp
+)";
+
+  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+
+  auto expectedResult = R"(prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+)";
+
+  EXPECT_EQ(expectedResult, result);
 }
 }
 }

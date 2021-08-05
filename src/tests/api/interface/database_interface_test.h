@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERFACE_DATABASE_INTERFACE_TEST
 
 #include "loot/api.h"
-
 #include "tests/api/interface/api_game_operations_test.h"
 
 namespace loot {
@@ -124,13 +123,13 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        DatabaseInterfaceTest,
-                        ::testing::Values(GameType::tes4,
-                                          GameType::tes5,
-                                          GameType::fo3,
-                                          GameType::fonv,
-                                          GameType::fo4,
-                                          GameType::tes5se));
+                         DatabaseInterfaceTest,
+                         ::testing::Values(GameType::tes4,
+                                           GameType::tes5,
+                                           GameType::fo3,
+                                           GameType::fonv,
+                                           GameType::fo4,
+                                           GameType::tes5se));
 
 TEST_P(DatabaseInterfaceTest,
        loadListsShouldSucceedEvenIfGameHandleIsDiscarded) {
@@ -167,6 +166,47 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(std::filesystem::copy(masterlistPath, userlistPath_));
 
   EXPECT_NO_THROW(db_->LoadLists(masterlistPath, userlistPath_));
+}
+
+TEST_P(
+    DatabaseInterfaceTest,
+    loadListsShouldThrowIfAMasterlistIsPresentButAPreludeDoesNotExistAtTheGivenPath) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+
+  auto preludePath = localPath / "prelude.yaml";
+
+  EXPECT_THROW(db_->LoadLists(masterlistPath, "", preludePath),
+               FileAccessError);
+}
+
+TEST_P(DatabaseInterfaceTest,
+       loadListsShouldSucceedIfTheMasterlistAndPreludeAreBothPresent) {
+  using std::endl;
+
+  std::ofstream out(masterlistPath);
+  out << "prelude:" << endl
+      << "  - &ref" << endl
+      << "    type: say" << endl
+      << "    content: Loaded from same file" << endl
+      << "globals:" << endl
+      << "  - *ref" << endl;
+
+  out.close();
+
+  auto preludePath = localPath / "prelude.yaml";
+  out.open(preludePath);
+  out << "common:" << endl
+      << "  - &ref" << endl
+      << "    type: say" << endl
+      << "    content: Loaded from prelude" << endl;
+
+  EXPECT_NO_THROW(db_->LoadLists(masterlistPath, "", preludePath));
+
+  auto messages = db_->GetGeneralMessages();
+  ASSERT_EQ(1, messages.size());
+  EXPECT_EQ(MessageType::say, messages[0].GetType());
+  ASSERT_EQ(1, messages[0].GetContent().size());
+  EXPECT_EQ("Loaded from prelude", messages[0].GetContent()[0].GetText());
 }
 
 TEST_P(
@@ -424,8 +464,7 @@ TEST_P(DatabaseInterfaceTest,
   EXPECT_TRUE(groups[1].GetAfterGroups().empty());
 
   EXPECT_EQ("group2", groups[2].GetName());
-  EXPECT_EQ(std::vector<std::string>({"group1"}),
-            groups[2].GetAfterGroups());
+  EXPECT_EQ(std::vector<std::string>({"group1"}), groups[2].GetAfterGroups());
 }
 
 TEST_P(
@@ -740,7 +779,8 @@ TEST_P(DatabaseInterfaceTest,
 
   std::vector<Message> expectedMessages({
       Message(MessageType::say,
-              generalMasterlistMessage, "file(\"" + missingEsp + "\")"),
+              generalMasterlistMessage,
+              "file(\"" + missingEsp + "\")"),
       Message(MessageType::say, generalUserlistMessage),
   });
   EXPECT_EQ(expectedMessages, messages);

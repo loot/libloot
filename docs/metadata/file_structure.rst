@@ -4,11 +4,17 @@ Metadata File Structure
 
 The root of a metadata file is a key-value map. LOOT will recognise the following keys, none of which are required. Other keys may also be present, but are not processed by LOOT.
 
+.. describe:: prelude
+
+  The prelude can have any value, but if a masterlist prelude path is provided when loading metadata, the masterlist's ``prelude`` value will be replaced by the parsed content of the masterlist prelude file. The prelude exists so that metadata that is common across different masterlists can be shared without duplication.
+
+  Note that prelude replacement is only supported when using YAML's block style and an unquoted ``prelude`` key that is not preceded by a mapping key indicator and that is immediately followed by a colon separator, i.e. ``prelude:``.
+
 .. describe:: bash_tags
 
   string list
 
-  A list of Bash Tags that are supported by the masterlist's game. These Bash Tags are used to provide autocomplete suggestions in LOOT's metadata editor.
+  A list of Bash Tags that are supported by the game. These Bash Tags are used to provide autocomplete suggestions in LOOT's metadata editor.
 
 .. describe:: globals
 
@@ -35,14 +41,18 @@ Example
 
 .. code-block:: yaml
 
+  prelude:
+    - &thanksForUsing
+      type: say
+      content: 'Thanks for using LOOT!'
+      condition: 'file("LOOT")'
+
   bash_tags:
     - 'C.Climate'
     - 'Relev'
 
   globals:
-    - type: say
-      content: 'You are using the latest version of LOOT.'
-      condition: 'version("LOOT", "0.5.0.0", ==)'
+    - *thanksForUsing
 
   groups:
     - name: 'Map Markers'

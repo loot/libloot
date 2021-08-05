@@ -46,9 +46,18 @@ struct hash<loot::Filename> {
 }
 
 namespace loot {
+
+// This assumes that the prelude and masterlist files both use
+// YAML's block style (at least up to the end of the prelude in the
+// latter). This is true for all official files.
+std::string ReplaceMetadataListPrelude(const std::string& prelude,
+                                       const std::string& masterlist);
+
 class MetadataList {
 public:
   void Load(const std::filesystem::path& filepath);
+  void LoadWithPrelude(const std::filesystem::path& filePath,
+                       const std::filesystem::path& preludePath);
   void Save(const std::filesystem::path& filepath) const;
   void Clear();
 
@@ -82,6 +91,8 @@ protected:
   std::unordered_map<Filename, PluginMetadata> unevaluatedPlugins_;
   std::vector<PluginMetadata> unevaluatedRegexPlugins_;
   std::vector<Message> unevaluatedMessages_;
+
+  void Load(std::istream& istream, const std::filesystem::path& source_path);
 };
 }
 
