@@ -31,7 +31,6 @@
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
-#include "api/helpers/git.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata_list.h"
 #include "loot/database_interface.h"
@@ -51,17 +50,6 @@ struct ApiDatabase : public DatabaseInterface {
 
   void WriteMinimalList(const std::filesystem::path& outputFile,
                         const bool overwrite) const;
-
-  bool UpdateMasterlist(const std::filesystem::path& masterlist_path,
-                        const std::string& remote_url,
-                        const std::string& remote_branch);
-
-  FileRevision GetMasterlistRevision(
-      const std::filesystem::path& masterlist_path,
-      const bool get_short_id) const;
-
-  bool IsLatestMasterlist(const std::filesystem::path& masterlist_path,
-                          const std::string& branch) const;
 
   std::vector<std::string> GetKnownBashTags() const;
 

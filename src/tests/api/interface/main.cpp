@@ -27,6 +27,7 @@
 #include "loot/api.h"
 #include "tests/api/interface/create_game_handle_test.h"
 #include "tests/api/interface/database_interface_test.h"
+#include "tests/api/interface/file_versioning_test.h"
 #include "tests/api/interface/game_interface_test.h"
 #include "tests/api/interface/is_compatible_test.h"
 

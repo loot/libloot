@@ -311,6 +311,7 @@ set(LIBLOOT_TESTS_SRC "${CMAKE_SOURCE_DIR}/src/tests/api/interface/main.cpp")
 set(LIBLOOT_TESTS_HEADERS  "${CMAKE_SOURCE_DIR}/src/tests/api/interface/api_game_operations_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/create_game_handle_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/database_interface_test.h"
+                            "${CMAKE_SOURCE_DIR}/src/tests/api/interface/file_versioning_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/game_interface_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/is_compatible_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h")

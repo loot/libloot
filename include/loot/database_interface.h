@@ -92,74 +92,6 @@ public:
 
   /**
    *  @}
-   *  @name Masterlist Update
-   *  @{
-   */
-
-  /**
-   *  @brief Update the given masterlist or masterlist prelude file.
-   *  @details Uses Git to update the given file using a given remote.
-   *           If the file doesn't exist, this will create it. This
-   *           function also initialises a Git repository in the given
-   *           file's parent folder.
-   *
-   *           If a Git repository is already present, it will be used to
-   *           perform a diff-only update, but if for any reason a
-   *           fast-forward merge update is not possible, the existing
-   *           repository will be deleted and a new repository cloned from
-   *           the given remote.
-   *  @param file_path
-   *         The relative or absolute path to the file that should be
-   *         updated. The filename must match the filename of the file in the
-   *         given remote repository, otherwise it will not be updated
-   *         correctly. The file must be present in the repository's root
-   *         directory.
-   *  @param remote_url
-   *         The URL of the remote from which to fetch updates. This can also be
-   *         a relative or absolute path to a local repository.
-   *  @param remote_branch
-   *         The branch of the remote from which to apply updates.
-   *  @returns `true` if the file was updated. `false` if no update was
-   *           necessary, ie. it was already up-to-date. If `true`, the
-   *           file will need to be re-loaded and re-evaluated separately.
-   */
-  virtual bool UpdateMasterlist(const std::filesystem::path& file_path,
-                                const std::string& remote_url,
-                                const std::string& remote_branch) = 0;
-
-  /**
-   *  @brief Get the given masterlist or masterlist prelude file's revision.
-   *  @details Getting a file's revision is only possible if it is found
-   *           in the root of a local Git repository.
-   *  @param file_path
-   *         The relative or absolute path to the file that should be queried.
-   *  @param get_short_id
-   *         If `true`, the shortest unique hexadecimal revision hash that is at
-   *         least 7 characters long will be outputted. Otherwise, the full 40
-   *         character hash will be outputted.
-   *  @returns The revision data.
-   */
-  virtual FileRevision GetMasterlistRevision(
-      const std::filesystem::path& file_path,
-      const bool get_short_id) const = 0;
-
-  /**
-   * Check if the given masterlist or masterlist prelude file is the latest
-   * available for a given branch.
-   * @param  file_path
-   *         The relative or absolute path to the file for which the latest
-   *         revision should be obtained. It needs to be in the root of a local
-   *         Git repository.
-   * @param  branch
-   *         The branch to check against.
-   * @return True if the file's current revision matches its latest revision
-   *         for the given branch, and false otherwise.
-   */
-  virtual bool IsLatestMasterlist(const std::filesystem::path& file_path,
-                                  const std::string& branch) const = 0;
-
-  /**
-   *  @}
    *  @name Non-plugin Data Access
    *  @{
    */
@@ -229,9 +161,6 @@ public:
   virtual std::vector<Vertex> GetGroupsPath(
       const std::string& fromGroupName,
       const std::string& toGroupName) const = 0;
-
-  /**
-   * @brief Set the groups
 
   /**
    *  @}

@@ -33,6 +33,12 @@ Functions
 
 .. doxygenfunction:: loot::CreateGameHandle
 
+.. doxygenfunction:: loot::UpdateFile
+
+.. doxygenfunction:: loot::GetFileRevision
+
+.. doxygenfunction:: loot::IsLatestFile
+
 Interfaces
 ==========
 

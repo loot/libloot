@@ -28,6 +28,7 @@
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
+#include "api/helpers/git.h"
 
 namespace fs = std::filesystem;
 
@@ -96,5 +97,27 @@ LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
                                 "\" does not resolve to a valid directory.");
 
   return std::make_shared<Game>(game, resolvedGamePath, resolvedGameLocalPath);
+}
+
+bool UpdateFile(const std::filesystem::path& masterlistPath,
+                                   const std::string& remoteURL,
+                                   const std::string& remoteBranch) {
+  if (!std::filesystem::is_directory(masterlistPath.parent_path()))
+    throw std::invalid_argument("The path \"" + masterlistPath.u8string() +
+                                "\" does not have a valid parent directory.");
+
+  return git::UpdateFile(masterlistPath, remoteURL, remoteBranch);
+}
+
+FileRevision GetFileRevision(
+    const std::filesystem::path& masterlistPath,
+    const bool getShortID) {
+  return git::GetVersionInfo(masterlistPath, getShortID);
+}
+
+bool IsLatestFile(
+    const std::filesystem::path& masterlist_path,
+    const std::string& branch) {
+  return git::IsLatest(masterlist_path, branch);
 }
 }

@@ -95,33 +95,6 @@ void ApiDatabase::WriteUserMetadata(const std::filesystem::path& outputFile,
   userlist_.Save(outputFile);
 }
 
-////////////////////////////////////
-// LOOT Functionality Functions
-////////////////////////////////////
-
-bool ApiDatabase::UpdateMasterlist(const std::filesystem::path& masterlistPath,
-                                   const std::string& remoteURL,
-                                   const std::string& remoteBranch) {
-  if (!std::filesystem::is_directory(masterlistPath.parent_path()))
-    throw std::invalid_argument("The path \"" +
-                                masterlistPath.u8string() +
-                                "\" does not have a valid parent directory.");
-
-  return git::UpdateFile(masterlistPath, remoteURL, remoteBranch);
-}
-
-FileRevision ApiDatabase::GetMasterlistRevision(
-    const std::filesystem::path& masterlistPath,
-    const bool getShortID) const {
-  return git::GetVersionInfo(masterlistPath, getShortID);
-}
-
-bool ApiDatabase::IsLatestMasterlist(
-    const std::filesystem::path& masterlist_path,
-    const std::string& branch) const {
-  return git::IsLatest(masterlist_path, branch);
-}
-
 //////////////////////////
 // DB Access Functions
 //////////////////////////
