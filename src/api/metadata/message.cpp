@@ -34,10 +34,9 @@ Message::Message() : type_(MessageType::say) {}
 Message::Message(const MessageType type,
                  const std::string& content,
                  const std::string& condition) :
-    type_(type),
-    ConditionalMetadata(condition) {
-  content_.push_back(MessageContent(content));
-}
+    type_(type), 
+    content_({MessageContent(content)}),
+    ConditionalMetadata(condition) {}
 
 Message::Message(const MessageType type,
                  const std::vector<MessageContent>& content,
@@ -57,6 +56,11 @@ Message::Message(const MessageType type,
           "content string");
   }
 }
+
+Message::Message(const SimpleMessage& message) :
+    type_(message.type),
+    content_({MessageContent(message.text, message.language)}),
+    ConditionalMetadata(message.condition) {}
 
 bool Message::operator<(const Message& rhs) const {
   if (type_ < rhs.type_) {

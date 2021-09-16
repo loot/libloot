@@ -77,6 +77,14 @@ public:
                    const std::string& condition = "");
 
   /**
+   * Construct a Message object from a SimpleMessage object.
+   * @param  message
+   *         The SimpleMessage object.
+   * @return A Message object.
+   */
+  LOOT_API explicit Message(const SimpleMessage& message);
+
+  /**
    * A less-than operator implemented with no semantics so that Message objects
    * can be stored in sets.
    * @returns Returns true if this Message is less than the given Message, and

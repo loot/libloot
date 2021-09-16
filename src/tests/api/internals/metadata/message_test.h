@@ -82,6 +82,22 @@ TEST_P(
                std::invalid_argument);
 }
 
+TEST_P(MessageTest,
+  simpleMessageConstructorShouldCreateAMessageWithASingleContentString) {
+  SimpleMessage simple;
+  simple.type = MessageType::error;
+  simple.text = "ERROR";
+  simple.language = "fr";
+  simple.condition = "condition";
+
+  Message message(simple);
+
+  EXPECT_EQ(MessageType::error, message.GetType());
+  EXPECT_EQ(MessageContents({MessageContent(simple.text, simple.language)}),
+            message.GetContent());
+  EXPECT_EQ("condition", message.GetCondition());
+}
+
 TEST_P(MessageTest, equalityShouldRequireEqualMessageTypes) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
