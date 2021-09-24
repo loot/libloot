@@ -2,6 +2,69 @@
 Version History
 ***************
 
+0.17.0 - 2021-09-24
+===================
+
+Added
+-----
+
+- :cpp:any:`DatabaseInterface::LoadLists()` now accepts an optional third
+  parameter that is the path to a masterlist prelude file to load. If loaded, it
+  will be used to replace the value of the prelude in the loaded masterlist
+  (if the masterlist has a prelude).
+- The :cpp:any:`Message` class has gained a constructor that takes a
+  :cpp:any:`SimpleMessage`.
+- The :cpp:any:`File` class has been gained support for the metadata structure's
+  new ``detail`` field, adding:
+
+  - An optional ``const std::vector<MessageContent>&`` parameter to the
+    multiple-parameter constructor.
+  - A new :cpp:any:`File::GetDetail()` member function.
+  - A new :cpp:any:`File::ChooseDetail()` member function.
+
+Changed
+-------
+
+- ``MasterlistInfo`` has been renamed to :cpp:any:`FileRevision`, and its
+  ``revision_id`` and ``revision_date`` fields are now named ``id`` and ``date``
+  respectively.
+- The ``UpdateMasterlist``, ``GetMasterlistRevision`` and ``IsLatestMasterlist``
+  member functions have been moved out of ``DatabaseInterface`` and are now free
+  functions named :cpp:any:`UpdateFile`, :cpp:any:`GetFileRevision` and
+  :cpp:any:`IsLatestFile` respectively.
+- :cpp:any:`PluginInterface::GetHeaderVersion()` now returns a
+  ``std::optional<float>`` instead of a ``float``. The return value is
+  ``std::nullopt`` if no header version field was found or if its value was NaN.
+- Sorting now checks for cycles before adding overlap edges, so that any cycles
+  are caught before the slowest steps in the sorting process.
+- ``PluginCleaningData::GetInfo()`` has been renamed to
+  ``PluginCleaningData::GetDetail()``.
+- ``PluginCleaningData::ChooseInfo()`` has been renamed to
+  ``PluginCleaningData::ChooseDetail()``.
+- All API functions that returned a ``MessageContent`` or ``SimpleMessage`` now
+  return a ``std::optional<MessageContent>`` or ``std::optional<SimpleMessage>``
+  respectively. This affects the following member functions:
+
+  - :cpp:any:`Message::GetContent()`
+  - :cpp:any:`Message::ToSimpleMessage()`
+  - :cpp:any:`MessageContent::Choose()`
+  - :cpp:any:`PluginCleaningData::ChooseDetail()`
+
+- Updated libgit2 to v1.1.1.
+- Updated Google Test to v1.11.0.
+- Updated spdlog to v1.9.2.
+- Updated yaml-cpp to v0.7.0+merge-key-support.1.
+
+Removed
+-------
+
+- :cpp:any:`PluginInterface::IsLightMaster()`
+- :cpp:any:`PluginInterface::IsValidAsLightMaster()`
+- Updating the masterlist no longer reloads it, the masterlist must now be
+  reloaded separately.
+- Masterlist update no longer supports rolling back through revisions until a
+  revision that can be successfully loaded is found.
+
 0.16.3 - 2021-05-06
 ===================
 

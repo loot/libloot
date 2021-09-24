@@ -4,6 +4,24 @@ Version History
 
 The version history of the metadata syntax is given below.
 
+0.17 - 2021-09-24
+=================
+
+Added
+-----
+
+- The ``File`` data structure now has a ``detail`` key that takes a string or
+  localised content list.
+- The top-level ``prelude`` key can be used to supply common data structure
+  definitions, and in masterlists its value is replaced by the contents of the
+  masterlist prelude file, if present.
+
+Changed
+-------
+
+- The cleaning data structure's ``info`` key has been renamed to ``detail`` for
+  consistency.
+
 0.16 - 2020-07-12
 =================
 
