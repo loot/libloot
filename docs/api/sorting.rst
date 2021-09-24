@@ -53,6 +53,10 @@ the group-derived plugin to the plugin would cause a cycle, and if not the edge
 is recorded. Once all potential edges have been checked, the recorded edges are
 added to the graph.
 
+At this point the plugin graph is checked for cycles, and an error is thrown if
+any are encountered, so that metadata (or indeed plugin data) that cause them
+can be corrected.
+
 Plugin overlap edges are then added. Two plugins overlap if they contain the
 same record, i.e. if they both edit the same record or if one edits a record the
 other plugin adds.
@@ -89,9 +93,8 @@ Topologically sort the plugin graph
 ===================================
 
 Note that edges for explicit interdependencies are the only edges allowed to
-create cycles: this is because the first step of this stage is to check the
-plugin graph for cycles, and throw an error if any are encountered, so that
-metadata (or indeed plugin data) that cause them can be corrected.
+create cycles. However, the graph is again checked for cycles to guard against
+potential logic bugs, and if a cycle is encountered an error is thrown.
 
 Once the graph is confirmed to be cycle-free, a topological sort is performed on
 the graph, outputting a list of plugins in their newly-sorted load order.
