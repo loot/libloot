@@ -127,6 +127,11 @@ std::optional<std::string> ExtractVersion(const std::string& text) {
 #ifdef _WIN32
 std::wstring ToWinWide(const std::string& str) {
   size_t len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), 0, 0);
+
+  if (len == 0) {
+    return std::wstring();
+  }
+
   std::wstring wstr(len, 0);
   MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &wstr[0], len);
   return wstr;
@@ -135,6 +140,11 @@ std::wstring ToWinWide(const std::string& str) {
 std::string FromWinWide(const std::wstring& wstr) {
   size_t len = WideCharToMultiByte(
       CP_UTF8, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
+
+  if (len == 0) {
+    return std::string();
+  }
+
   std::string str(len, 0);
   WideCharToMultiByte(
       CP_UTF8, 0, wstr.c_str(), wstr.length(), &str[0], len, NULL, NULL);
@@ -170,6 +180,11 @@ int CompareFilenames(const std::string& lhs, const std::string& rhs) {
 std::string NormalizeFilename(const std::string& filename) {
 #ifdef _WIN32
   auto wideString = ToWinWide(filename);
+
+  if (wideString.empty()) {
+    return std::string();
+  }
+
   CharUpperBuffW(&wideString[0], wideString.length());
   return FromWinWide(wideString);
 #else

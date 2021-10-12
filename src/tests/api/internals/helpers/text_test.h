@@ -288,6 +288,11 @@ TEST(NormalizeFilename, shouldUppercaseStringsAndBeLocaleInvariant) {
   // Reset locale.
   std::locale::global(std::locale::classic());
 }
+
+TEST(NormalizeFilename, shouldReturnAnEmptyStringIfGivenAnEmptyString) {
+  EXPECT_EQ("", NormalizeFilename(std::string()));
+  EXPECT_EQ("", NormalizeFilename(""));
+}
 #else
 TEST(NormalizeFilename, shouldCaseFoldStringsAndBeLocaleInvariant) {
   // ICU folds all greek rhos to the lowercase rho, unlike Windows. The result

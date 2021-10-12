@@ -191,7 +191,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
       thread.join();
   }
 
-  conditionEvaluator_->RefreshState(cache_);
+  conditionEvaluator_->RefreshLoadedPluginsState(GetLoadedPlugins());
 }
 
 std::shared_ptr<const PluginInterface> Game::GetPlugin(
@@ -224,7 +224,7 @@ std::vector<std::string> Game::SortPlugins(
 
 void Game::LoadCurrentLoadOrderState() {
   loadOrderHandler_->LoadCurrentState();
-  conditionEvaluator_->RefreshState(loadOrderHandler_);
+  conditionEvaluator_->RefreshActivePluginsState(loadOrderHandler_->GetActivePlugins());
 }
 
 bool Game::IsPluginActive(const std::string& pluginName) const {

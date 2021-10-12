@@ -186,28 +186,34 @@ void ConditionEvaluator::ClearConditionCache() {
   HandleError("clear the condition cache", result);
 }
 
-void ConditionEvaluator::RefreshState(std::shared_ptr<LoadOrderHandler> loadOrderHandler) {
+void ConditionEvaluator::RefreshActivePluginsState(
+    std::vector<std::string> activePluginNames) {
   ClearConditionCache();
 
-  std::vector<std::string> activePluginNameStrings = loadOrderHandler->GetActivePlugins();
-  std::vector<const char *> activePluginNames;
-  for (auto& pluginName : activePluginNameStrings) {
-    activePluginNames.push_back(pluginName.c_str());
+  std::vector<const char *> activePluginNameCStrings;
+  for (auto& pluginName : activePluginNames) {
+    activePluginNameCStrings.push_back(pluginName.c_str());
   }
 
-  int result = lci_state_set_active_plugins(lciState_.get(),
-    &activePluginNames[0],
-    activePluginNames.size());
+  const char* const* cActivePluginNames;
+  if (activePluginNameCStrings.empty()) {
+    cActivePluginNames = {};
+  } else {
+    cActivePluginNames = &activePluginNameCStrings[0];
+  }
+
+  int result = lci_state_set_active_plugins(lciState_.get(), cActivePluginNames, activePluginNameCStrings.size());
   HandleError("cache active plugins for condition evaluation", result);
 }
 
-void ConditionEvaluator::RefreshState(std::shared_ptr<GameCache> gameCache) {
+void ConditionEvaluator::RefreshLoadedPluginsState(
+    std::vector<std::shared_ptr<const PluginInterface>> plugins) {
   ClearConditionCache();
 
   std::vector<std::string> pluginNames;
   std::vector<std::string> pluginVersionStrings;
   std::vector<uint32_t> crcs;
-  for (auto plugin : gameCache->GetPlugins()) {
+  for (auto plugin : plugins) {
     pluginNames.push_back(plugin->GetName());
     pluginVersionStrings.push_back(plugin->GetVersion().value_or(""));
     crcs.push_back(plugin->GetCRC().value_or(0));
@@ -231,13 +237,25 @@ void ConditionEvaluator::RefreshState(std::shared_ptr<GameCache> gameCache) {
     }
   }
 
-  int result = lci_state_set_plugin_versions(lciState_.get(),
-    &pluginVersions[0],
+  const plugin_version* cPluginVersions;
+  if (pluginVersions.empty()) {
+    cPluginVersions = {};
+  } else {
+    cPluginVersions = &pluginVersions[0];
+  }
+
+  int result = lci_state_set_plugin_versions(lciState_.get(), cPluginVersions,
     pluginVersions.size());
   HandleError("cache plugin versions for condition evaluation", result);
 
-  result = lci_state_set_crc_cache(lciState_.get(),
-    &pluginCrcs[0],
+  const plugin_crc* cPluginCrcs;
+  if (pluginCrcs.empty()) {
+    cPluginCrcs = {};
+  } else {
+    cPluginCrcs = &pluginCrcs[0];
+  }
+
+  result = lci_state_set_crc_cache(lciState_.get(), cPluginCrcs,
     pluginCrcs.size());
   HandleError("fill CRC cache for condition evaluation", result);
 }

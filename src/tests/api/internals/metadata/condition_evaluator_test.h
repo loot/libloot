@@ -54,8 +54,9 @@ protected:
     out.close();
 
     loadInstalledPlugins();
-    evaluator_.RefreshState(game_.GetCache());
-    evaluator_.RefreshState(game_.GetLoadOrderHandler());
+    evaluator_.RefreshLoadedPluginsState(game_.GetLoadedPlugins());
+    evaluator_.RefreshActivePluginsState(
+        game_.GetLoadOrderHandler()->GetActivePlugins());
   }
 
   std::string IntToHexString(const uint32_t value) {
@@ -205,6 +206,54 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldPreserveGroupExplicitness) {
 
   EXPECT_NO_THROW(plugin = evaluator_.EvaluateAll(plugin));
   EXPECT_FALSE(plugin.GetGroup());
+}
+
+TEST_P(ConditionEvaluatorTest,
+  refreshActivePluginsStateShouldClearTheConditionCache) {
+  std::string condition("active(\"" + blankEsm + "\")");
+  ASSERT_TRUE(evaluator_.Evaluate(condition));
+
+  evaluator_.RefreshActivePluginsState({blankEsp});
+
+  EXPECT_FALSE(evaluator_.Evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
+       refreshActivePluginsStateShouldClearTheActivePluginsCacheIfGivenAnEmptyVector) {
+  std::string condition("active(\"" + blankEsm + "\")");
+  ASSERT_TRUE(evaluator_.Evaluate(condition));
+
+  evaluator_.RefreshActivePluginsState({});
+
+  EXPECT_FALSE(evaluator_.Evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
+       refreshLoadedPluginsStateShouldClearTheConditionCache) {
+  std::string condition("version(\"" + blankEsm + "\", \"5.0\", ==)");
+
+  ASSERT_TRUE(evaluator_.Evaluate(condition));
+
+  auto plugins = game_.GetLoadedPlugins();
+  auto pluginsIt =
+      std::find_if(plugins.cbegin(), plugins.cend(), [&](auto plugin) {
+        return plugin->GetName() == blankEsm;
+      });
+  plugins.erase(pluginsIt);
+  evaluator_.RefreshLoadedPluginsState(plugins);
+
+  EXPECT_FALSE(evaluator_.Evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
+    refreshLoadedPluginsStateShouldClearTheVersionsCacheIfGivenAnEmptyVector) {
+  std::string condition("version(\"" + blankEsm + "\", \"5.0\", ==)");
+
+  ASSERT_TRUE(evaluator_.Evaluate(condition));
+
+  evaluator_.RefreshLoadedPluginsState({});
+
+  EXPECT_FALSE(evaluator_.Evaluate(condition));
 }
 }
 }

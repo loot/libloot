@@ -45,8 +45,9 @@ public:
   PluginMetadata EvaluateAll(const PluginMetadata& pluginMetadata);
 
   void ClearConditionCache();
-  void RefreshState(std::shared_ptr<LoadOrderHandler> loadOrderHandler);
-  void RefreshState(std::shared_ptr<GameCache> gameCache);
+  void RefreshActivePluginsState(std::vector<std::string> activePluginNames);
+  void RefreshLoadedPluginsState(std::vector<std::shared_ptr<const PluginInterface>> plugins);
+
 private:
   bool Evaluate(const PluginCleaningData& cleaningData,
     const std::string& pluginName);
