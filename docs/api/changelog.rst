@@ -2,6 +2,15 @@
 Version History
 ***************
 
+0.17.0 - 2021-11-13
+===================
+
+Fixed
+-----
+
+- Out-of-bounds array access that could occur in some situations and which could
+  cause crashes in Linux builds.
+
 0.17.0 - 2021-09-24
 ===================
 
