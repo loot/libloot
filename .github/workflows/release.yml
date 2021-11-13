@@ -99,6 +99,10 @@ jobs:
           ./libloot_internals_tests
           ./libloot_tests
 
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
       - name: Install packages for building docs
         shell: bash
         run: |
@@ -173,6 +177,10 @@ jobs:
           cd build
           cmake .. -G "Visual Studio 15 2017" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_72_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
 
       - name: Install packages for building docs
         run: |
