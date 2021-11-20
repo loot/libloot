@@ -4,13 +4,6 @@ project (libloot)
 include(ExternalProject)
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
-option(MSVC_STATIC_RUNTIME "Build with static runtime libs (/MT)" OFF)
-
-IF (${MSVC_STATIC_RUNTIME})
-    set (MSVC_SHARED_RUNTIME OFF)
-ELSE()
-    set (MSVC_SHARED_RUNTIME ON)
-ENDIF()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -42,12 +35,7 @@ configure_file("${CMAKE_SOURCE_DIR}/src/api/loot_version.cpp.in" "${CMAKE_BINARY
 
 set (Boost_USE_STATIC_LIBS ON)
 set (Boost_USE_MULTITHREADED ON)
-
-IF (MSVC)
-    set (Boost_USE_STATIC_RUNTIME ${MSVC_STATIC_RUNTIME})
-ELSE()
-    set (Boost_USE_STATIC_RUNTIME OFF)
-ENDIF()
+set (Boost_USE_STATIC_RUNTIME OFF)
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     IF ("${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32")
@@ -70,7 +58,7 @@ endif()
 ExternalProject_Add(GTest
                     PREFIX "external"
                     URL "https://github.com/google/googletest/archive/release-1.11.0.tar.gz"
-                    CMAKE_ARGS -Dgtest_force_shared_crt=${MSVC_SHARED_RUNTIME} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                    CMAKE_ARGS -Dgtest_force_shared_crt=ON -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
 set (GTEST_INCLUDE_DIRS "${SOURCE_DIR}/googletest/include")
@@ -102,7 +90,7 @@ ENDIF()
 ExternalProject_Add(libgit2
                     PREFIX "external"
                     URL "https://github.com/libgit2/libgit2/archive/v1.1.1.tar.gz"
-                    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DUSE_SSH=OFF -DSTATIC_CRT=${MSVC_STATIC_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DREGEX_BACKEND=builtin
+                    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DUSE_SSH=OFF -DSTATIC_CRT=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DREGEX_BACKEND=builtin
                     BUILD_COMMAND ${LIBGIT2_BUILD_COMMAND}
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(libgit2 SOURCE_DIR BINARY_DIR)
@@ -177,7 +165,7 @@ ENDIF()
 ExternalProject_Add(yaml-cpp
                     PREFIX "external"
                     URL "https://github.com/loot/yaml-cpp/archive/yaml-cpp-0.7.0+merge-key-support.1.tar.gz"
-                    CMAKE_ARGS -DYAML_MSVC_SHARED_RT=${MSVC_SHARED_RUNTIME} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DYAML_BUILD_SHARED_LIBS=OFF
+                    CMAKE_ARGS -DYAML_MSVC_SHARED_RT=ON -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DYAML_BUILD_SHARED_LIBS=OFF
                     BUILD_COMMAND ${YAMLCPP_BUILD_COMMAND}
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(yaml-cpp SOURCE_DIR BINARY_DIR)
@@ -373,18 +361,6 @@ IF (MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /bigobj")
 
-    # Update compiler flags.
-    IF (MSVC_STATIC_RUNTIME)
-        FOREACH(flag
-            CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO
-            CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_DEBUG_INIT
-            CMAKE_CXX_FLAGS_RELEASE  CMAKE_CXX_FLAGS_RELWITHDEBINFO
-            CMAKE_CXX_FLAGS_DEBUG  CMAKE_CXX_FLAGS_DEBUG_INIT)
-            STRING(REPLACE "/MD"  "/MT" "${flag}" "${${flag}}")
-            SET("${flag}" "${${flag}} /EHsc")
-        ENDFOREACH()
-    ENDIF ()
-
     set (LOOT_LIBS  version
                     ws2_32
                     shlwapi
@@ -419,11 +395,7 @@ target_link_libraries(libloot_tests loot ${GTEST_LIBRARIES})
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     set_target_properties (libloot_internals_tests PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_STATIC")
-    IF (BUILD_SHARED_LIBS)
-        set_target_properties (loot PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_EXPORT")
-    ELSE ()
-        set_target_properties (loot PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_STATIC")
-    ENDIF ()
+    set_target_properties (loot PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LOOT_EXPORT")
 ENDIF ()
 
 

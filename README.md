@@ -46,7 +46,6 @@ libloot uses the following CMake variables to set build parameters:
 Parameter | Values | Default |Description
 ----------|--------|---------|-----------
 `BUILD_SHARED_LIBS` | `ON`, `OFF` | `ON` | Whether or not to build a shared libloot binary.
-`MSVC_STATIC_RUNTIME` | `ON`, `OFF` | `OFF` | Whether to link the C++ runtime statically or not when building with MSVC.
 
 You may also need to set `BOOST_ROOT` if CMake cannot find Boost.
 
