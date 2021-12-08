@@ -24,6 +24,8 @@
 #ifndef LOOT_SIMPLE_MESSAGE
 #define LOOT_SIMPLE_MESSAGE
 
+#include <string>
+
 #include "loot/enum/message_type.h"
 
 namespace loot {
