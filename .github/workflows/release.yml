@@ -65,8 +65,8 @@ jobs:
 
       - name: Download Boost
         run: |
-          wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
-          tar -xf boost_1_72_0.tar.gz
+          wget https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz
+          tar -xf boost_1_78_0.tar.gz
 
       - name: Install APT package dependencies
         run: |
@@ -88,7 +88,7 @@ jobs:
           mkdir build
           cd build
           export CXX="g++-8" CC="gcc-8"
-          cmake .. -DBOOST_ROOT="boost_1_72_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           make all
 
       - name: Run tests
@@ -159,8 +159,8 @@ jobs:
 
       - name: Download Boost
         run: |
-          curl -sSfLO https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.7z
-          7z x boost_1_72_0.7z
+          curl -sSfLO https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.7z
+          7z x boost_1_78_0.7z
 
       - name: Get descriptive libloot version
         id: get-libloot-version
@@ -175,7 +175,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 15 2017" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_72_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -G "Visual Studio 15 2017" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
       - uses: actions/setup-python@v2
