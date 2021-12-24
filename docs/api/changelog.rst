@@ -2,6 +2,21 @@
 Version History
 ***************
 
+0.17.2 - 2021-12-24
+===================
+
+Fixed
+-----
+
+- A missing ``<string>`` include in ``include/loot/struct/simple_message.h``.
+- Invalid configuration causing Read The Docs to fail to build the
+  documentation.
+
+Changed
+-------
+
+- Updated libgit2 to v1.3.0.
+
 0.17.1 - 2021-11-13
 ===================
 
