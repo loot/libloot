@@ -24,15 +24,15 @@
 
 #include "loot/metadata/plugin_metadata.h"
 
+#include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <regex>
-
-#include <boost/algorithm/string.hpp>
 
 #include "api/game/game.h"
 #include "api/helpers/collections.h"
 #include "api/helpers/logging.h"
 #include "api/helpers/text.h"
+#include "api/metadata/yaml/plugin_metadata.h"
 
 using std::inserter;
 using std::regex;
@@ -59,7 +59,8 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
 
   loadAfter_ = mergeVectors(loadAfter_, plugin.loadAfter_);
   requirements_ = mergeVectors(requirements_, plugin.requirements_);
-  incompatibilities_ = mergeVectors(incompatibilities_, plugin.incompatibilities_);
+  incompatibilities_ =
+      mergeVectors(incompatibilities_, plugin.incompatibilities_);
 
   tags_ = mergeVectors(tags_, plugin.tags_);
 
@@ -86,7 +87,8 @@ PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
   // Compare this plugin against the given plugin.
   p.SetLoadAfterFiles(diffVectors(loadAfter_, plugin.loadAfter_));
   p.SetRequirements(diffVectors(requirements_, plugin.requirements_));
-  p.SetIncompatibilities(diffVectors(incompatibilities_, plugin.incompatibilities_));
+  p.SetIncompatibilities(
+      diffVectors(incompatibilities_, plugin.incompatibilities_));
 
   vector<Message> msgs1 = plugin.GetMessages();
   vector<Message> msgs2 = messages_;
@@ -116,7 +118,9 @@ std::vector<File> PluginMetadata::GetLoadAfterFiles() const {
   return loadAfter_;
 }
 
-std::vector<File> PluginMetadata::GetRequirements() const { return requirements_; }
+std::vector<File> PluginMetadata::GetRequirements() const {
+  return requirements_;
+}
 
 std::vector<File> PluginMetadata::GetIncompatibilities() const {
   return incompatibilities_;
@@ -208,5 +212,13 @@ bool PluginMetadata::NameMatches(const std::string& pluginName) const {
   }
 
   return CompareFilenames(name_, pluginName) == 0;
+}
+
+LOOT_API std::string PluginMetadata::AsYaml() const {
+  YAML::Emitter emitter;
+  emitter.SetIndent(2);
+  emitter << *this;
+
+  return std::string(emitter.c_str());
 }
 }

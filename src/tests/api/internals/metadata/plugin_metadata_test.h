@@ -25,11 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_METADATA_PLUGIN_METADATA_TEST
 #define LOOT_TESTS_API_INTERNALS_METADATA_PLUGIN_METADATA_TEST
 
-#include "loot/metadata/plugin_metadata.h"
-
-#include "tests/common_game_test_fixture.h"
-
 #include "api/metadata/yaml/plugin_metadata.h"
+#include "loot/metadata/plugin_metadata.h"
+#include "tests/common_game_test_fixture.h"
 
 namespace loot {
 namespace test {
@@ -46,8 +44,8 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        PluginMetadataTest,
-                        ::testing::Values(GameType::tes5));
+                         PluginMetadataTest,
+                         ::testing::Values(GameType::tes5));
 
 TEST_P(
     PluginMetadataTest,
@@ -83,7 +81,8 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(plugin.NameMatches(regex));
 }
 
-TEST_P(PluginMetadataTest, nameMatchesShouldUseCaseInsensitiveRegexMatchingForARegexName) {
+TEST_P(PluginMetadataTest,
+       nameMatchesShouldUseCaseInsensitiveRegexMatchingForARegexName) {
   PluginMetadata plugin("Blan.\\.esm");
 
   EXPECT_TRUE(plugin.NameMatches(boost::to_lower_copy(blankEsm)));
@@ -586,6 +585,18 @@ TEST_P(PluginMetadataTest,
   PluginMetadata plugin("Blank|.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
+}
+
+TEST_P(PluginMetadataTest,
+       asYamlShouldReturnAStringContainingTheMetadataEmittedAsYaml) {
+  PluginMetadata plugin(blankEsm);
+  plugin.SetLoadAfterFiles({File(blankEsm)});
+
+  EXPECT_EQ(
+      "name: 'Blank.esm'\n"
+      "after:\n"
+      "  - 'Blank.esm'",
+      plugin.AsYaml());
 }
 
 TEST_P(PluginMetadataTest,

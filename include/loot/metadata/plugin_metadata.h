@@ -184,7 +184,8 @@ public:
    * @param incompatibilities
    *        The files to set.
    */
-  LOOT_API void SetIncompatibilities(const std::vector<File>& incompatibilities);
+  LOOT_API void SetIncompatibilities(
+      const std::vector<File>& incompatibilities);
 
   /**
    * Set the plugin's messages.
@@ -243,10 +244,16 @@ public:
    * matched against it, otherwise the strings will be compared
    * case-insensitively. The given plugin name must be literal, i.e. not a
    * regular expression.
-   * @returns True if the given plugin name matches this metadata's plugin 
+   * @returns True if the given plugin name matches this metadata's plugin
    *          name, false otherwise.
    */
   LOOT_API bool NameMatches(const std::string& pluginName) const;
+
+  /**
+   *  @brief Serialises the plugin metadata as YAML.
+   *  @returns The serialised plugin metadata.
+   */
+  LOOT_API std::string AsYaml() const;
 
 private:
   std::string name_;
