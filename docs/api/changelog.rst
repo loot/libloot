@@ -2,6 +2,19 @@
 Version History
 ***************
 
+0.17.3 - 2022-01-02
+===================
+
+Added
+-----
+
+- :cpp:any:`PluginMetadata::AsYaml()` can be used to serialise plugin metadata as YAML.
+
+Changed
+-------
+
+- Plugin name regular expression objects are now cached between calls to :cpp:any:`DatabaseInterface::LoadLists()`.
+
 0.17.2 - 2021-12-24
 ===================
 
