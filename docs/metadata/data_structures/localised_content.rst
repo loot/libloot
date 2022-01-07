@@ -31,6 +31,7 @@ The localised content data structure is a key-value string map.
   Russian               ru
   Spanish               es
   Swedish               sv
+  Ukrainian             uk_UA
   ====================  =====
 
 Equality
