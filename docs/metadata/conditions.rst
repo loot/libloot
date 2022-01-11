@@ -7,8 +7,9 @@ Condition strings can be used to ensure that data is only acted on by LOOT under
 Omitting optional parentheses (see below), their `EBNF`_ grammar is:
 
 .. productionlist::
-  compound_condition: condition, { ( logical_and | logical_or ), condition }
-  condition: [ logical_not ], function
+  expression: condition, { logical_or, compound_condition }
+  compound_condition: condition, { logical_and, condition }
+  condition: ( [ logical_not ], function ) | ( [ logical_not ], "(", expression, ")" )
   logical_and: "and"
   logical_or: "or"
   logical_not: "not"

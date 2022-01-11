@@ -15,6 +15,7 @@ Added
 - The top-level ``prelude`` key can be used to supply common data structure
   definitions, and in masterlists its value is replaced by the contents of the
   masterlist prelude file, if present.
+- Support for parsing inverted metadata conditions (``not (<expression>)``).
 
 Changed
 -------
