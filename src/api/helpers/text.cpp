@@ -23,9 +23,8 @@
     */
 #include "api/helpers/text.h"
 
-#include <regex>
-
 #include <boost/algorithm/string.hpp>
+#include <regex>
 
 #ifdef _WIN32
 #include "windows.h"
@@ -72,7 +71,8 @@ const std::vector<regex> versionRegexes({
 });
 
 // As defined by <https://github.github.com/gfm/#ascii-punctuation-character>.
-const regex asciiPunctuationCharacters("([!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`{|}~])");
+const regex asciiPunctuationCharacters(
+    "([!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`{|}~])");
 
 std::string EscapeMarkdownASCIIPunctuation(const std::string& text) {
   return std::regex_replace(text, asciiPunctuationCharacters, "\\$1");

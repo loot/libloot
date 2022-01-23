@@ -78,9 +78,6 @@ data from the filesystem:
 
 Evaluating conditions may also involve filesystem read access.
 
-:cpp:any:`UpdateFile()` may involve network communication if given the URL of a
-remote server.
-
 :cpp:any:`GameInterface::SortPlugins()` is expensive, as it involves loading
 all the content of all the plugins, apart from the game's main master file, which is skipped as an optimisation (it doesn't depend on anything else and is much bigger than any other plugin, so is unnecessary and slow to load).
 

@@ -81,22 +81,6 @@ ELSE ()
     set (ESPLUGIN_LIBRARIES ${ESPLUGIN_LIBRARIES} dl)
 ENDIF ()
 
-IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    set(LIBGIT2_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target git2 --config $(CONFIGURATION))
-ELSE ()
-    set(LIBGIT2_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target git2)
-ENDIF()
-
-ExternalProject_Add(libgit2
-                    PREFIX "external"
-                    URL "https://github.com/libgit2/libgit2/archive/v1.3.0.tar.gz"
-                    CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DUSE_SSH=OFF -DSTATIC_CRT=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE} -DREGEX_BACKEND=builtin
-                    BUILD_COMMAND ${LIBGIT2_BUILD_COMMAND}
-                    INSTALL_COMMAND "")
-ExternalProject_Get_Property(libgit2 SOURCE_DIR BINARY_DIR)
-set(LIBGIT2_INCLUDE_DIRS "${SOURCE_DIR}/include")
-set(LIBGIT2_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}git2${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
 ExternalProject_Add(libloadorder
                     PREFIX "external"
                     URL "https://github.com/Ortham/libloadorder/archive/13.0.0.tar.gz"
@@ -206,7 +190,6 @@ set (LIBLOOT_SRC "${CMAKE_BINARY_DIR}/generated/loot_version.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_graph.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sorting_data.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.cpp"
-                  "${CMAKE_SOURCE_DIR}/src/api/helpers/git.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/helpers/text.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/vertex.cpp"
                   "${CMAKE_SOURCE_DIR}/src/api/resource.rc")
@@ -218,7 +201,6 @@ set (LIBLOOT_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/exception/condition_syntax_error.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/exception/cyclic_interaction_error.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/exception/file_access_error.h"
-                      "${CMAKE_SOURCE_DIR}/include/loot/exception/git_state_error.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/exception/undefined_group_error.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/enum/edge_type.h"
                       "${CMAKE_SOURCE_DIR}/include/loot/enum/game_type.h"
@@ -260,7 +242,6 @@ set (LIBLOOT_HEADERS "${CMAKE_SOURCE_DIR}/include/loot/api.h"
                       "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sort.h"
                       "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_graph.h"
                       "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sorting_data.h"
-                      "${CMAKE_SOURCE_DIR}/src/api/helpers/git.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/collections.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.h"
                       "${CMAKE_SOURCE_DIR}/src/api/helpers/logging.h"
@@ -271,7 +252,6 @@ set (LOOT_TESTS_SRC "${CMAKE_SOURCE_DIR}/src/tests/api/internals/main.cpp")
 set (LOOT_TESTS_HEADERS "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_cache_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/load_order_handler_test.h"
-                        "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/git_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/crc_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/text_test.h"
                         "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/yaml_set_helpers_test.h"
@@ -299,7 +279,6 @@ set(LIBLOOT_TESTS_SRC "${CMAKE_SOURCE_DIR}/src/tests/api/interface/main.cpp")
 set(LIBLOOT_TESTS_HEADERS  "${CMAKE_SOURCE_DIR}/src/tests/api/interface/api_game_operations_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/create_game_handle_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/database_interface_test.h"
-                            "${CMAKE_SOURCE_DIR}/src/tests/api/interface/file_versioning_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/game_interface_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/api/interface/is_compatible_test.h"
                             "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h")
@@ -316,7 +295,6 @@ source_group("Source Files\\tests" FILES ${LIBLOOT_TESTS_SRC})
 include_directories ("${CMAKE_SOURCE_DIR}/src"
                      "${CMAKE_SOURCE_DIR}/include"
                      ${LIBLOADORDER_INCLUDE_DIRS}
-                     ${LIBGIT2_INCLUDE_DIRS}
                      ${ESPLUGIN_INCLUDE_DIRS}
                      ${LCI_INCLUDE_DIRS}
                      ${Boost_INCLUDE_DIRS}
@@ -366,7 +344,8 @@ IF (MSVC)
                     shlwapi
                     winhttp
                     crypt32
-                    Rpcrt4)
+                    Rpcrt4
+                    bcrypt)
 ENDIF ()
 
 
@@ -376,13 +355,13 @@ ENDIF ()
 
 # Build tests.
 add_executable       (libloot_internals_tests ${LIBLOOT_SRC} ${LIBLOOT_HEADERS} ${LOOT_TESTS_SRC} ${LOOT_TESTS_HEADERS})
-add_dependencies     (libloot_internals_tests esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp GTest testing-metadata testing-plugins)
-target_link_libraries(libloot_internals_tests ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES} ${ICU_LIBRARIES})
+add_dependencies     (libloot_internals_tests esplugin libloadorder loot-condition-interpreter spdlog yaml-cpp GTest testing-metadata testing-plugins)
+target_link_libraries(libloot_internals_tests ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${GTEST_LIBRARIES} ${ICU_LIBRARIES})
 
 # Build API.
 add_library          (loot ${LIBLOOT_SRC} ${LIBLOOT_HEADERS})
-add_dependencies     (loot esplugin libgit2 libloadorder loot-condition-interpreter spdlog yaml-cpp)
-target_link_libraries(loot ${LIBGIT2_LIBRARIES} ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${ICU_LIBRARIES})
+add_dependencies     (loot esplugin libloadorder loot-condition-interpreter spdlog yaml-cpp)
+target_link_libraries(loot ${ESPLUGIN_LIBRARIES} ${LIBLOADORDER_LIBRARIES} ${LOOT_LIBS} ${LCI_LIBRARIES} ${YAML_CPP_LIBRARIES} ${ICU_LIBRARIES})
 
 # Build API tests.
 add_executable       (libloot_tests ${LIBLOOT_TESTS_SRC} ${LIBLOOT_TESTS_HEADERS})

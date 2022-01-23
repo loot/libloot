@@ -26,7 +26,6 @@
 #include "tests/api/internals/game/game_test.h"
 #include "tests/api/internals/game/load_order_handler_test.h"
 #include "tests/api/internals/helpers/crc_test.h"
-#include "tests/api/internals/helpers/git_test.h"
 #include "tests/api/internals/helpers/text_test.h"
 #include "tests/api/internals/helpers/yaml_set_helpers_test.h"
 #include "tests/api/internals/metadata/condition_evaluator_test.h"

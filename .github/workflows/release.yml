@@ -94,8 +94,6 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          git config --global user.email "github@github-actions"
-          git config --global user.name "GitHub"
           ./libloot_internals_tests
           ./libloot_tests
 

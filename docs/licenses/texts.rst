@@ -12,14 +12,6 @@ Copyright License Texts
 .. include:: Boost Software License v1.0.txt
   :literal:
 
-`libgit2`_
-==========
-
-.. _libgit2: https://github.com/libgit2/libgit2
-
-.. include:: GNU GPL v2 (libgit2).txt
-  :literal:
-
 libloot, `esplugin`_ & `Libloadorder`_
 ======================================
 
