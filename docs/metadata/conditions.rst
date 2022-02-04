@@ -116,10 +116,8 @@ There are several conditions that can be tested for using the functions detailed
   number, its version is assumed to be ``0``. If ``path`` isn't a plugin or an
   executable, an error will occur.
 
-  The comparison uses the precedence rules defined by `Semantic Versioning
-  <http://semver.org/>`_, extended to allow leading zeroes, an arbitrary number
-  of release version numbers, case-insensitivity and a wider range of separator
-  characters.
+  The supported version syntax and precedence rules are detailed in the section
+  below.
 
 .. describe:: product_version(file_path path, version given_version, comparison_operator comparator)
 
@@ -133,10 +131,81 @@ There are several conditions that can be tested for using the functions detailed
   exist or does not have a version number, its version is assumed to be ``0``.
   If ``path`` is not an executable, an error will occur.
 
-  The comparison uses the precedence rules defined by `Semantic Versioning
-  <http://semver.org/>`_, extended to allow leading zeroes, an arbitrary number
-  of release version numbers, case-insensitivity and a wider range of separator
-  characters.
+  The supported version syntax and precedence rules are detailed in the section
+  below.
+
+Version Syntax & Comparison Rules
+---------------------------------
+
+Version parsing and comparison is compatible with
+`Semantic Versioning <http://semver.org/>`_, with the following exceptions:
+
+* Pre-release identifiers may not include hyphens (``-``), as they are treated
+  as separators. For example, a SemVer-compliant parser would treat
+  ``1.0.0-alpha.1.x-y-z.--`` as ``([1, 0, 0], ["alpha", 1, "x-y-z", "--"])`` but
+  libloot treats it as ``([1, 0, 0], ["alpha", 1, "x", "y", "z", "", ""])``.
+* Identifiers that contain non-digit characters are lowercased before being
+  compared lexically, so that their comparison is case-insensitive instead of
+  case-sensitive. For example, SemVer specifies that ``1.0.0-alpha`` is greater
+  than ``1.0.0-Beta``, but libloot compares them with the opposite result.
+
+These exceptions are necessary to support an extended range of real-world
+versions that do not conform to SemVer. The supported extensions are:
+
+* Leading zeroes are allowed and ignored in major, minor and patch version
+  numbers and numeric pre-release IDs. For example, ``01.02.03`` and ``1.2.3``
+  are equal.
+* An arbitrary number of version numbers is allowed. To support this, the major,
+  minor and patch version numbers are treated as a sequence of numeric release
+  IDs, and any subsequent version numbers are just additional release IDs that
+  get appended to the sequence. For example, ``1.2.3`` may be represented as the
+  sequence ``[1, 2, 3]``, and ``1.2.3.4`` would be represented as
+  ``[1, 2, 3, 4]``.
+
+  If two versions with a different number of release identifiers are compared,
+  the version with fewer release identifiers is padded with zero values until
+  they are the same length. Each release identifier in one version is then
+  compared against the release identifier in the same position in the other
+  version. For example, ``1-beta`` is padded to ``1.0.0-beta`` before being
+  compared against ``1.0.1-beta``, and the result is that ``1.0.1-beta`` is
+  greater than ``1-beta``.
+* Release IDs may be separated by a period (``.``) or a comma (``,``). For
+  example, ``1.2.3.4`` and ``1,2,3,4`` are equal.
+* The separator between release IDs and pre-release IDs may be a hyphen (``-``),
+  a space (" "), a colon (``:``) or an underscore (``_``). For example,
+  ``1.2.3-alpha``, ``1.2.3 alpha``, ``1.2.3:alpha`` and ``1.2.3_alpha`` are all
+  equal.
+* Pre-release IDs may be separated by a period (``.``), a hyphen (``-``), a
+  space (" "), a colon (``:``) or an underscore (``_``). For example,
+  ``1.2.3-alpha.1``, ``1.2.3-alpha-1``, ``1.2.3-alpha 1``, ``1.2.3-alpha:1`` and
+  ``1.2.3-alpha_1`` are all equal.
+* Non-numeric release IDs are allowed. A non-numeric release ID may contain any
+  character (not just ASCII characters) that is not one of the separators listed
+  above or a plus sign (``+``). For example, ``0.78b.1`` is allowed.
+
+  Non-numeric release IDs use the same comparison rules as non-numeric
+  pre-release IDs, with the exception that a non-numeric release ID is not
+  always greater than a numeric release ID:
+
+  * If the non-numeric release ID has no leading digits, it is greater than the
+    numeric release ID. For example, ``1.A`` is greater than ``1.1``.
+  * If the non-numeric release ID has leading digits, they are parsed as a
+    number, and this is compared against the numeric release ID:
+
+    * If the two numbers are equal then the non-numeric release ID is greater
+      than the numeric release ID. For example, ``1.1A`` is greater than
+      ``1.1``.
+    * Otherwise, the result of comparing the two numbers is used as the result
+      of comparing the two release IDs. For example, ``1.2`` is greater than
+      ``1.1A`` and ``1.1A`` is greater than ``1.0``.
+
+* Pre-release IDs may contain any character (not just ASCII characters) that is
+  not one of the pre-release ID separators listed above or a plus sign (``+``).
+* Before non-numeric IDs (release or pre-release) are compared, they are
+  lowercased according to Unicode's lowercasing rules.
+* As a special case, version strings that are four comma-and-space-separated
+  sequences of digits are interpreted as if the comma-and-space separators were
+  periods (``.``). For example, ``0, 2, 0, 12`` and ``0.2.0.12`` are equal.
 
 Logical Operators
 =================
