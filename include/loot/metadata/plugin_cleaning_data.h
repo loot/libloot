@@ -124,7 +124,7 @@ public:
   /**
    * Get the name of the cleaning utility that was used to check the plugin.
    * @return A cleaning utility name, possibly related information such as
-   *         a version number and/or a Markdown-formatted URL to the utility's
+   *         a version number and/or a CommonMark-formatted URL to the utility's
    *         download location.
    */
   LOOT_API std::string GetCleaningUtility() const;

@@ -49,7 +49,7 @@ public:
    *         The filename of the file.
    * @param  display
    *         The name to be displayed for the file in messages, formatted using
-   *         GitHub Flavored Markdown.
+   *         CommonMark.
    * @param  condition
    *         The File's condition string.
    * @return A File object.

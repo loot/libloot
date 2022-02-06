@@ -25,7 +25,7 @@ Messages are given as key-value maps.
 
   ``string`` or ``localised content list``
 
-  **Required.** Either simply a GitHub Flavored Markdown string, or a list of localised content data structures. If the latter, one of the structures must be for English.
+  **Required.** Either simply a CommonMark string, or a list of localised content data structures. If the latter, one of the structures must be for English.
 
 .. describe:: condition
 
@@ -37,7 +37,7 @@ Messages are given as key-value maps.
 
   ``string list``
 
-  A list of GitHub Flavored Markdown strings to be substituted into the message content string. The content string must use numbered specifiers (``%1%``, ``%2%``, etc.), where the numbers correspond to the position of the substitution string in this list to use, to denote where these strings are to be substituted.
+  A list of CommonMark strings to be substituted into the message content string. The content string must use numbered specifiers (``%1%``, ``%2%``, etc.), where the numbers correspond to the position of the substitution string in this list to use, to denote where these strings are to be substituted.
 
 .. _languages:
 

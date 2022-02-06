@@ -39,9 +39,7 @@ struct SimpleMessage {
   std::string language;
 
   /**
-   * @brief The message string, which may be formatted using
-   * [GitHub Flavored
-   * Markdown](https://help.github.com/articles/github-flavored-markdown).
+   * @brief The message string, which may be formatted using CommonMark.
    */
   std::string text;
 

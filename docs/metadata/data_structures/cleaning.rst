@@ -13,13 +13,13 @@ This structure holds information on which versions of a plugin are dirty or clea
 
   ``string``
 
-  **Required.** The utility that was used to check the plugin for dirty edits. If available, the version of the utility used should also be included (e.g. ``TES5Edit v3.11``). The string will be interpreted as GitHub Flavored Markdown.
+  **Required.** The utility that was used to check the plugin for dirty edits. If available, the version of the utility used should also be included (e.g. ``TES5Edit v3.11``). The string will be interpreted as CommonMark.
 
 .. describe:: detail
 
   ``string`` or ``localised content list``
 
-  A message that will be displayed to the user. If a string is provided, it will be interpreted as GitHub Flavored Markdown. If a localised content list is provided, one of the structures must be for English. This is only used if the plugin is dirty, and is intended for providing cleaning instructions to the user. If undefined, defaults to an empty string.
+  A message that will be displayed to the user. If a string is provided, it will be interpreted as CommonMark. If a localised content list is provided, one of the structures must be for English. This is only used if the plugin is dirty, and is intended for providing cleaning instructions to the user. If undefined, defaults to an empty string.
 
 .. describe:: itm
 

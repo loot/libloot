@@ -12,7 +12,7 @@ Map Form
 
 .. describe:: display
 
-  A GitHub Flavored Markdown string, to be displayed instead of the file path in any generated messages, eg. the name of the mod the file belongs to.
+  A CommonMark string, to be displayed instead of the file path in any generated messages, eg. the name of the mod the file belongs to.
 
 .. describe:: detail
 
@@ -20,9 +20,9 @@ Map Form
 
   if this file causes an error message to be displayed (e.g. because it's a
   missing requirement), this detail message content will be appended to that
-  error message. If a string is provided, it will be interpreted as GitHub
-  Flavored Markdown. If a localised content list is provided, one of the
-  structures must be for English. If undefined, defaults to an empty string.
+  error message. If a string is provided, it will be interpreted as CommonMark.
+  If a localised content list is provided, one of the structures must be for
+  English. If undefined, defaults to an empty string.
 
 .. describe:: condition
 
