@@ -123,6 +123,7 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
 
   HandleError("get the load order", ret);
 
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
   lo_free_string_array(pluginArr, pluginArrSize);
 
@@ -142,6 +143,7 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
 
   HandleError("get active plugins", ret);
 
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
   lo_free_string_array(pluginArr, pluginArrSize);
 
@@ -162,6 +164,7 @@ std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
 
   HandleError("get implicitly active plugins", ret);
 
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
   lo_free_string_array(pluginArr, pluginArrSize);
 

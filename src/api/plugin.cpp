@@ -118,6 +118,7 @@ std::vector<std::string> Plugin::GetMasters() const {
                           " : esplugin error code: " + std::to_string(ret));
   }
 
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   std::vector<std::string> mastersVec(masters, masters + numMasters);
   esp_string_array_free(masters, numMasters);
 

@@ -492,6 +492,7 @@ if(RUN_CLANG_TIDY)
         "cppcoreguidelines-narrowing-conventions"
         "cppcoreguidelines-no-malloc"
         "cppcoreguidelines-pro-bounds-constant-array-index"
+        "cppcoreguidelines-pro-bounds-pointer-arithmetic"
         "cppcoreguidelines-pro-type-const-cast"
         "cppcoreguidelines-pro-type-cstyle-cast"
         "cppcoreguidelines-pro-type-reinterpret-cast"
