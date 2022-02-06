@@ -54,6 +54,8 @@ You may also need to set `BOOST_ROOT` if CMake cannot find Boost.
 The documentation is built using [Doxygen](http://www.stack.nl/~dimitri/doxygen/), [Breathe](https://breathe.readthedocs.io/en/latest/) and [Sphinx](http://www.sphinx-doc.org/en/stable/). Install Doxygen and Python (2 or 3) and make sure they're accessible from your `PATH`, then run:
 
 ```
-pip install -r docs/api/requirements.txt
+pip install -r docs/requirements.txt
 sphinx-build -b html docs build/docs/html
 ```
+
+Alternatively, you can use Docker to avoid changing your development environment, by running `docker run -it --rm -v ${PWD}/docs:/docs/docs -v ${PWD}/build:/docs/build sphinxdoc/sphinx:4.2.0 bash` to obtain a shell that you can use to run `apt-get update && apt-get install -y doxygen` and then the two commands above.
