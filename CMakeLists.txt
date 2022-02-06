@@ -444,12 +444,14 @@ endif()
 
 if(MSVC)
     # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
-    target_compile_options(loot PRIVATE "/permissive-")
-    target_compile_options(libloot_tests PRIVATE "/permissive-")
+    target_compile_options(loot PRIVATE "/permissive-" "/W4")
+    target_compile_options(libloot_tests PRIVATE "/permissive-" "/W4")
 
     # Set /bigobj to allow building Debug and RelWithDebInfo tests
     target_compile_options(libloot_internals_tests PRIVATE
-        "/permissive-" "$<$<OR:$<CONFIG:DEBUG>,$<CONFIG:RelWithDebInfo>>:/bigobj>")
+        "/permissive-"
+        "/W4"
+        "$<$<OR:$<CONFIG:DEBUG>,$<CONFIG:RelWithDebInfo>>:/bigobj>")
 
     set(LOOT_LIBS
         version

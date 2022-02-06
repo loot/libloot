@@ -22,19 +22,18 @@
     <https://www.gnu.org/licenses/>.
     */
 
-#include <string>
-
 #include "loot/exception/error_categories.h"
+
+#include <string>
 
 namespace loot {
 namespace detail {
 class libloadorder_category : public std::error_category {
   virtual const char* name() const noexcept { return "libloadorder"; }
 
-  virtual std::string message(int ev) const { return "Libloadorder error"; }
+  virtual std::string message(int) const { return "Libloadorder error"; }
 
-  virtual bool equivalent(const std::error_code& code, int condition) const
-      noexcept {
+  virtual bool equivalent(const std::error_code& code) const noexcept {
     return code.category().name() == name();
   }
 };

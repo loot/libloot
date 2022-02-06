@@ -25,9 +25,8 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_PLUGIN_TEST
 #define LOOT_TESTS_API_INTERNALS_PLUGIN_TEST
 
-#include "api/plugin.h"
-
 #include "api/game/game.h"
+#include "api/plugin.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -153,20 +152,20 @@ public:
   bool IsValidAsLightPlugin() const { return false; }
   bool IsEmpty() const { return false; }
   bool LoadsArchive() const { return false; }
-  bool DoFormIDsOverlap(const PluginInterface& plugin) const { return true; }
+  bool DoFormIDsOverlap(const PluginInterface&) const { return true; }
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        PluginTest,
-                        ::testing::Values(GameType::tes3,
-                                          GameType::tes4,
-                                          GameType::tes5,
-                                          GameType::fo3,
-                                          GameType::fonv,
-                                          GameType::fo4,
-                                          GameType::tes5se));
+                         PluginTest,
+                         ::testing::Values(GameType::tes3,
+                                           GameType::tes4,
+                                           GameType::tes5,
+                                           GameType::fo3,
+                                           GameType::fonv,
+                                           GameType::fo4,
+                                           GameType::tes5se));
 
 TEST_P(PluginTest, loadingShouldHandleNonAsciiFilenamesCorrectly) {
   Plugin plugin(game_.Type(),
@@ -548,11 +547,11 @@ TEST_P(PluginTest, getRecordAndGroupCountShouldReturnTheHeaderFieldValue) {
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, true);
 
   if (GetParam() == GameType::tes3) {
-    EXPECT_EQ(10, plugin.GetRecordAndGroupCount());
+    EXPECT_EQ(10u, plugin.GetRecordAndGroupCount());
   } else if (GetParam() == GameType::tes4) {
-    EXPECT_EQ(14, plugin.GetRecordAndGroupCount());
+    EXPECT_EQ(14u, plugin.GetRecordAndGroupCount());
   } else {
-    EXPECT_EQ(15, plugin.GetRecordAndGroupCount());
+    EXPECT_EQ(15u, plugin.GetRecordAndGroupCount());
   }
 }
 

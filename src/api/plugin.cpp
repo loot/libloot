@@ -24,9 +24,8 @@
 
 #include "api/plugin.h"
 
-#include <filesystem>
-
 #include <boost/algorithm/string.hpp>
+#include <filesystem>
 
 #include "api/game/game.h"
 #include "api/helpers/crc.h"
@@ -233,10 +232,10 @@ bool Plugin::IsValid(const GameType gameType,
   // Check that the file has a valid extension.
   if (hasPluginFileExtension(pluginPath.filename().u8string(), gameType)) {
     bool isValid;
-    int returnCode = esp_plugin_is_valid(GetEspluginGameId(gameType),
-                                         pluginPath.u8string().c_str(),
-                                         true,
-                                         &isValid);
+    auto returnCode = esp_plugin_is_valid(GetEspluginGameId(gameType),
+                                          pluginPath.u8string().c_str(),
+                                          true,
+                                          &isValid);
 
     if (returnCode != ESP_OK || !isValid) {
       // Try adding .ghost extension.
@@ -270,7 +269,7 @@ void Plugin::Load(const std::filesystem::path& path,
                   GameType gameType,
                   bool headerOnly) {
   ::Plugin* plugin;
-  int ret = esp_plugin_new(
+  auto ret = esp_plugin_new(
       &plugin, GetEspluginGameId(gameType), path.u8string().c_str());
   if (ret != ESP_OK) {
     throw FileAccessError(path.u8string() +
@@ -428,11 +427,10 @@ bool hasPluginFileExtension(std::string filename, GameType gameType) {
   }
 
   bool isEspOrEsm = boost::iends_with(filename, ".esp") ||
-                  boost::iends_with(filename, ".esm");
-  bool isEsl =
-      (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
-       gameType == GameType::tes5se || gameType == GameType::tes5vr) &&
-      boost::iends_with(filename, ".esl");
+                    boost::iends_with(filename, ".esm");
+  bool isEsl = (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
+                gameType == GameType::tes5se || gameType == GameType::tes5vr) &&
+               boost::iends_with(filename, ".esl");
 
   return isEspOrEsm || isEsl;
 }

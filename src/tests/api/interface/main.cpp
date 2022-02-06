@@ -37,12 +37,12 @@ int main(int argc, char **argv) {
 
 namespace loot {
 namespace test {
-void testLoggingCallback(LogLevel level, const char * message) {
+void testLoggingCallback(LogLevel, const char *) {
   // Do nothing.
 }
 
 struct TestLogger {
-  void callback(LogLevel level, const char * message) {
+  void callback(LogLevel, const char *message) {
     loggedMessages += std::string(message);
   }
 
@@ -55,9 +55,8 @@ TEST(SetLoggingCallback, shouldAcceptAFreeFunction) {
   try {
     CreateGameHandle(GameType::tes4, "dummy");
     FAIL();
-  }
-  catch (...) {
-    //SetLoggingCallback([](LogLevel, const char *) {});
+  } catch (...) {
+    SetLoggingCallback([](LogLevel, const char *) {});
   }
 }
 
@@ -98,7 +97,7 @@ TEST(SetLoggingCallback, shouldNotBreakLoggingIfPassedMemberFunctionGoesOutOfSco
 
 TEST(SetLoggingCallback, shouldAcceptALambdaFunction) {
   std::string loggedMessages;
-  auto callback = [&](LogLevel level, const char *string) {
+  auto callback = [&](LogLevel, const char *string) {
     loggedMessages += std::string(string);
   };
   SetLoggingCallback(callback);
@@ -119,7 +118,7 @@ TEST(SetLoggingCallback, shouldAcceptALambdaFunction) {
 TEST(SetLoggingCallback, shouldNotBreakLoggingIfPassedLambdaFunctionGoesOutOfScope) {
   std::string loggedMessages;
   {
-    SetLoggingCallback([&](LogLevel level, const char *string) {
+    SetLoggingCallback([&](LogLevel, const char *string) {
       loggedMessages += std::string(string);
     });
   }

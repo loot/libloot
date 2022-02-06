@@ -85,8 +85,9 @@ TEST(Filesystem,
   EXPECT_NE(utf16, path.u16string());
 }
 
-TEST(Filesystem,
-  pathStringAndLocaleConstructorDoesNotConvertCharacterEncodingFromUtf8WithClassicLocale) {
+TEST(
+    Filesystem,
+    pathStringAndLocaleConstructorDoesNotConvertCharacterEncodingFromUtf8WithClassicLocale) {
   std::string utf8 = u8"Andr\u00E9_settings.toml";
   std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
@@ -101,8 +102,7 @@ TEST(Filesystem,
   EXPECT_NE(utf16, path.u16string());
 }
 #else
-TEST(Filesystem,
-  pathStringConstructorUsesNativeEncodingOfUtf8) {
+TEST(Filesystem, pathStringConstructorUsesNativeEncodingOfUtf8) {
   std::string utf8 = u8"Andr\u00E9_settings.toml";
   std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
@@ -117,7 +117,7 @@ TEST(Filesystem,
 }
 
 TEST(Filesystem,
-  pathStringAndLocaleConstructorUsesNativeEncodingOfUtf8WithCUtf8Locale) {
+     pathStringAndLocaleConstructorUsesNativeEncodingOfUtf8WithCUtf8Locale) {
   std::string utf8 = u8"Andr\u00E9_settings.toml";
   std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
@@ -184,7 +184,8 @@ TEST(Filesystem, equivalentShouldRequireThatBothPathsExist) {
   auto upper = std::filesystem::path("LICENSE");
   auto lower = std::filesystem::path("license2");
 
-  EXPECT_THROW(std::filesystem::equivalent(lower, upper), std::filesystem::filesystem_error);
+  EXPECT_THROW(std::ignore = std::filesystem::equivalent(lower, upper),
+               std::filesystem::filesystem_error);
 }
 
 TEST(Filesystem, equivalentShouldBeCaseInsensitive) {
@@ -194,11 +195,16 @@ TEST(Filesystem, equivalentShouldBeCaseInsensitive) {
   EXPECT_TRUE(std::filesystem::equivalent(lower, upper));
 }
 
-TEST(Filesystem, equivalentCannotHandleCharactersThatAreUnrepresentableInTheSystemCodePage) {
-  auto path1 = std::filesystem::u8path(u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
-  auto path2 = std::filesystem::u8path(u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
+TEST(
+    Filesystem,
+    equivalentCannotHandleCharactersThatAreUnrepresentableInTheSystemCodePage) {
+  auto path1 = std::filesystem::u8path(
+      u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
+  auto path2 = std::filesystem::u8path(
+      u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
 
-  EXPECT_THROW(std::filesystem::equivalent(path1, path2), std::system_error);
+  EXPECT_THROW(std::ignore = std::filesystem::equivalent(path1, path2),
+               std::system_error);
 }
 #else
 TEST(Filesystem, equivalentShouldNotRequireThatBothPathsExist) {

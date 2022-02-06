@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_SORTING_PLUGIN_SORTING_DATA_TEST
 
 #include "api/sorting/plugin_sorting_data.h"
-
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -37,7 +36,7 @@ protected:
       game_(GetParam(), dataPath.parent_path(), localPath),
       blankEslEsp("Blank.esl.esp") {}
 
-  void loadInstalledPlugins(Game &game_, bool headersOnly) {
+  void loadInstalledPlugins(Game &game, bool headersOnly) {
     std::vector<std::string> plugins({
         masterFile,
         blankEsm,
@@ -60,9 +59,9 @@ protected:
       }
     }
 
-    game_.IdentifyMainMasterFile(masterFile);
-    game_.LoadCurrentLoadOrderState();
-    game_.LoadPlugins(plugins, headersOnly);
+    game.IdentifyMainMasterFile(masterFile);
+    game.LoadCurrentLoadOrderState();
+    game.LoadPlugins(plugins, headersOnly);
   }
 
   Game game_;
@@ -72,13 +71,12 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        PluginSortingDataTest,
-                        ::testing::Values(GameType::tes3,
-                                          GameType::tes4,
-                                          GameType::fo4));
+                         PluginSortingDataTest,
+                         ::testing::Values(GameType::tes3,
+                                           GameType::tes4,
+                                           GameType::fo4));
 
-TEST_P(PluginSortingDataTest,
-       lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
+TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     ASSERT_NO_THROW(
         std::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
@@ -140,8 +138,9 @@ TEST_P(PluginSortingDataTest,
   EXPECT_EQ(4, plugin.NumOverrideFormIDs());
 }
 
-TEST_P(PluginSortingDataTest,
-       constructorShouldUseTotalRecordCountAsOverrideFormIdCountForTes3PluginWithAMasterThatIsNotLoaded) {
+TEST_P(
+    PluginSortingDataTest,
+    constructorShouldUseTotalRecordCountAsOverrideFormIdCountForTes3PluginWithAMasterThatIsNotLoaded) {
   if (GetParam() != GameType::tes3) {
     return;
   }

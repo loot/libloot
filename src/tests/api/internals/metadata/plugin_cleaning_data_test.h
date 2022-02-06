@@ -25,10 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_METADATA_PLUGIN_CLEANING_DATA
 #define LOOT_TESTS_API_INTERNALS_METADATA_PLUGIN_CLEANING_DATA
 
-#include "loot/metadata/plugin_cleaning_data.h"
-
 #include "api/game/game.h"
 #include "api/metadata/yaml/plugin_cleaning_data.h"
+#include "loot/metadata/plugin_cleaning_data.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -46,26 +45,26 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        PluginCleaningDataTest,
-                        ::testing::Values(GameType::tes4));
+                         PluginCleaningDataTest,
+                         ::testing::Values(GameType::tes4));
 
 TEST_P(PluginCleaningDataTest,
        defaultConstructorShouldLeaveAllCountsAtZeroAndTheUtilityStringEmpty) {
   PluginCleaningData info;
-  EXPECT_EQ(0, info.GetCRC());
-  EXPECT_EQ(0, info.GetITMCount());
-  EXPECT_EQ(0, info.GetDeletedReferenceCount());
-  EXPECT_EQ(0, info.GetDeletedNavmeshCount());
+  EXPECT_EQ(0u, info.GetCRC());
+  EXPECT_EQ(0u, info.GetITMCount());
+  EXPECT_EQ(0u, info.GetDeletedReferenceCount());
+  EXPECT_EQ(0u, info.GetDeletedNavmeshCount());
   EXPECT_TRUE(info.GetCleaningUtility().empty());
   EXPECT_TRUE(info.GetDetail().empty());
 }
 
 TEST_P(PluginCleaningDataTest, contentConstructorShouldStoreAllGivenData) {
   PluginCleaningData info(0x12345678, "cleaner", info_, 2, 10, 30);
-  EXPECT_EQ(0x12345678, info.GetCRC());
-  EXPECT_EQ(2, info.GetITMCount());
-  EXPECT_EQ(10, info.GetDeletedReferenceCount());
-  EXPECT_EQ(30, info.GetDeletedNavmeshCount());
+  EXPECT_EQ(0x12345678u, info.GetCRC());
+  EXPECT_EQ(2u, info.GetITMCount());
+  EXPECT_EQ(10u, info.GetDeletedReferenceCount());
+  EXPECT_EQ(30u, info.GetDeletedNavmeshCount());
   EXPECT_EQ("cleaner", info.GetCleaningUtility());
   EXPECT_EQ(info_, info.GetDetail());
 }
@@ -322,7 +321,8 @@ TEST_P(PluginCleaningDataTest,
        chooseDetailShouldCreateADefaultContentObjectIfNoneExists) {
   PluginCleaningData dirtyInfo(
       0xDEADBEEF, "cleaner", std::vector<MessageContent>(), 2, 10, 30);
-  EXPECT_FALSE(dirtyInfo.ChooseDetail(MessageContent::defaultLanguage).has_value());
+  EXPECT_FALSE(
+      dirtyInfo.ChooseDetail(MessageContent::defaultLanguage).has_value());
 }
 
 TEST_P(PluginCleaningDataTest,
@@ -385,7 +385,7 @@ TEST_P(PluginCleaningDataTest, encodingAsYamlShouldOmitAllZeroCountFields) {
   YAML::Node node;
   node = info;
 
-  EXPECT_EQ(0x12345678, node["crc"].as<uint32_t>());
+  EXPECT_EQ(0x12345678u, node["crc"].as<uint32_t>());
   EXPECT_EQ("cleaner", node["util"].as<std::string>());
   EXPECT_EQ(info_, node["detail"].as<std::vector<MessageContent>>());
   EXPECT_FALSE(node["itm"]);
@@ -399,12 +399,12 @@ TEST_P(PluginCleaningDataTest,
   YAML::Node node;
   node = info;
 
-  EXPECT_EQ(0x12345678, node["crc"].as<uint32_t>());
+  EXPECT_EQ(0x12345678u, node["crc"].as<uint32_t>());
   EXPECT_EQ("cleaner", node["util"].as<std::string>());
   EXPECT_EQ(info_, node["detail"].as<std::vector<MessageContent>>());
-  EXPECT_EQ(2, node["itm"].as<unsigned int>());
-  EXPECT_EQ(10, node["udr"].as<unsigned int>());
-  EXPECT_EQ(30, node["nav"].as<unsigned int>());
+  EXPECT_EQ(2u, node["itm"].as<unsigned int>());
+  EXPECT_EQ(10u, node["udr"].as<unsigned int>());
+  EXPECT_EQ(30u, node["nav"].as<unsigned int>());
 }
 
 TEST_P(PluginCleaningDataTest,
@@ -412,24 +412,25 @@ TEST_P(PluginCleaningDataTest,
   YAML::Node node = YAML::Load("{crc: 0x12345678, util: cleaner}");
   PluginCleaningData info = node.as<PluginCleaningData>();
 
-  EXPECT_EQ(0x12345678, info.GetCRC());
+  EXPECT_EQ(0x12345678u, info.GetCRC());
   EXPECT_TRUE(info.GetDetail().empty());
-  EXPECT_EQ(0, info.GetITMCount());
-  EXPECT_EQ(0, info.GetDeletedReferenceCount());
-  EXPECT_EQ(0, info.GetDeletedNavmeshCount());
+  EXPECT_EQ(0u, info.GetITMCount());
+  EXPECT_EQ(0u, info.GetDeletedReferenceCount());
+  EXPECT_EQ(0u, info.GetDeletedNavmeshCount());
   EXPECT_EQ("cleaner", info.GetCleaningUtility());
 }
 
 TEST_P(PluginCleaningDataTest, decodingFromYamlShouldStoreAllNonZeroCounts) {
   YAML::Node node = YAML::Load(
-      "{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: 30}");
+      "{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: "
+      "30}");
   PluginCleaningData info = node.as<PluginCleaningData>();
 
-  EXPECT_EQ(0x12345678, info.GetCRC());
+  EXPECT_EQ(0x12345678u, info.GetCRC());
   EXPECT_EQ(info_, info.GetDetail());
-  EXPECT_EQ(2, info.GetITMCount());
-  EXPECT_EQ(10, info.GetDeletedReferenceCount());
-  EXPECT_EQ(30, info.GetDeletedNavmeshCount());
+  EXPECT_EQ(2u, info.GetITMCount());
+  EXPECT_EQ(10u, info.GetDeletedReferenceCount());
+  EXPECT_EQ(30u, info.GetDeletedNavmeshCount());
   EXPECT_EQ("cleaner", info.GetCleaningUtility());
 }
 

@@ -65,7 +65,7 @@ LOOT_API void SetLoggingCallback(
 
 LOOT_API bool IsCompatible(const unsigned int versionMajor,
                            const unsigned int versionMinor,
-                           const unsigned int versionPatch) {
+                           const unsigned int) {
   if (versionMajor > 0)
     return versionMajor == loot::LootVersion::major;
   else
@@ -92,7 +92,8 @@ LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
 
   auto resolvedGameLocalPath = ResolvePath(gameLocalPath);
   if (!gameLocalPath.empty() && !fs::is_directory(resolvedGameLocalPath))
-    throw std::invalid_argument("Given game local path \"" + gameLocalPath.u8string() +
+    throw std::invalid_argument("Given game local path \"" +
+                                gameLocalPath.u8string() +
                                 "\" does not resolve to a valid directory.");
 
   return std::make_shared<Game>(game, resolvedGamePath, resolvedGameLocalPath);

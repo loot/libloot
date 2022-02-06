@@ -41,7 +41,7 @@ protected:
       cccPath_(dataPath.parent_path() / getCCCFilename()),
       blankEslEsp("Blank.esl.esp") {}
 
-  void loadInstalledPlugins(Game &game_, bool headersOnly) {
+  void loadInstalledPlugins(Game &game, bool headersOnly) {
     std::vector<std::string> plugins({
         masterFile,
         blankEsm,
@@ -64,9 +64,9 @@ protected:
       }
     }
 
-    game_.IdentifyMainMasterFile(masterFile);
-    game_.LoadCurrentLoadOrderState();
-    game_.LoadPlugins(plugins, headersOnly);
+    game.IdentifyMainMasterFile(masterFile);
+    game.LoadCurrentLoadOrderState();
+    game.LoadPlugins(plugins, headersOnly);
   }
 
   void GenerateMasterlist() {
