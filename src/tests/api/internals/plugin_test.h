@@ -38,10 +38,10 @@ protected:
       lowercaseBlankEsp("blank.esp"),
       nonAsciiEsp(u8"non\u00C1scii.esp"),
       otherNonAsciiEsp(u8"other non\u00C1scii.esp"),
-      game_(GetParam(), dataPath.parent_path(), localPath),
       blankArchive("Blank" + GetArchiveFileExtension(game_.Type())),
       blankSuffixArchive("Blank - Different - suffix" +
-                         GetArchiveFileExtension(game_.Type())) {}
+                         GetArchiveFileExtension(game_.Type())),
+      game_(GetParam(), dataPath.parent_path(), localPath) {}
 
   void SetUp() {
     CommonGameTestFixture::SetUp();
@@ -118,14 +118,14 @@ protected:
     }
   }
 
-  Game game_;
-
   const std::string emptyFile;
   const std::string lowercaseBlankEsp;
   const std::string nonAsciiEsp;
   const std::string otherNonAsciiEsp;
   const std::string blankArchive;
   const std::string blankSuffixArchive;
+
+  Game game_;
 
 private:
   static std::string GetArchiveFileExtension(const GameType gameType) {

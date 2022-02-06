@@ -32,7 +32,7 @@ Group::Group() : name_("default") {}
 Group::Group(const std::string& name,
              const std::vector<std::string>& afterGroups,
              const std::string& description) :
-    name_(name), afterGroups_(afterGroups), description_(description) {}
+    name_(name), description_(description), afterGroups_(afterGroups) {}
 
 bool Group::operator==(const Group& rhs) const {
   return name_ == rhs.name_ && description_ == rhs.description_ &&

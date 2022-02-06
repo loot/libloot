@@ -34,10 +34,10 @@ File::File(const std::string& name,
            const std::string& display,
            const std::string& condition,
            const std::vector<MessageContent>& detail) :
+    ConditionalMetadata(condition),
     name_(Filename(name)),
     display_(display),
-    detail_(detail),
-    ConditionalMetadata(condition) {}
+    detail_(detail) {}
 
 bool File::operator<(const File& rhs) const {
   if (display_ < rhs.display_) {

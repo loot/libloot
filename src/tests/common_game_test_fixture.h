@@ -54,9 +54,9 @@ std::filesystem::path getRootTestPath() {
 class CommonGameTestFixture : public ::testing::TestWithParam<GameType> {
 protected:
   CommonGameTestFixture() :
+      rootTestPath(getRootTestPath()),
       french("fr"),
       german("de"),
-      rootTestPath(getRootTestPath()),
       missingPath(rootTestPath / "missing"),
       dataPath(rootTestPath / "game" / getPluginsFolder()),
       localPath(rootTestPath / "local" / "game"),

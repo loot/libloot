@@ -33,13 +33,13 @@ namespace test {
 class DatabaseInterfaceTest : public ApiGameOperationsTest {
 protected:
   DatabaseInterfaceTest() :
-      db_(nullptr),
       userlistPath_(localPath / "userlist.yaml"),
+      minimalOutputPath_(localPath / "minimal.yml"),
       url_("./testing-metadata.git"),
       branch_("master"),
       oldBranch_("old-branch"),
-      minimalOutputPath_(localPath / "minimal.yml"),
-      generalUserlistMessage("A general userlist message.") {}
+      generalUserlistMessage("A general userlist message."),
+      db_(nullptr) {}
 
   void SetUp() {
     ApiGameOperationsTest::SetUp();

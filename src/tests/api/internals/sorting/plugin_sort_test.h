@@ -36,9 +36,9 @@ class PluginSortTest : public CommonGameTestFixture {
 protected:
   PluginSortTest() :
       game_(GetParam(), dataPath.parent_path(), localPath),
+      blankEslEsp("Blank.esl.esp"),
       masterlistPath_(metadataFilesPath / "userlist.yaml"),
-      cccPath_(dataPath.parent_path() / getCCCFilename()),
-      blankEslEsp("Blank.esl.esp") {}
+      cccPath_(dataPath.parent_path() / getCCCFilename()) {}
 
   void loadInstalledPlugins(Game &game, bool headersOnly) {
     std::vector<std::string> plugins({

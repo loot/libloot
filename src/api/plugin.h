@@ -85,18 +85,15 @@ private:
                            const std::filesystem::path& pluginPath);
   static unsigned int GetEspluginGameId(GameType gameType);
 
+  const std::string name_;
+  std::shared_ptr<std::remove_pointer<::Plugin>::type> esPlugin;
   bool isEmpty_;  // Does the plugin contain any records other than the TES4
                   // header?
   bool loadsArchive_;
-  const std::string name_;
+  size_t numOverrideRecords_;
   std::optional<std::string> version_;  // Obtained from description field.
   std::optional<uint32_t> crc_;
   std::vector<Tag> tags_;
-
-  // Useful caches.
-  size_t numOverrideRecords_;
-
-  std::shared_ptr<std::remove_pointer<::Plugin>::type> esPlugin;
 };
 
 std::string GetArchiveFileExtension(const GameType gameType);

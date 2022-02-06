@@ -33,7 +33,7 @@ PluginCleaningData::PluginCleaningData() : crc_(0), itm_(0), ref_(0), nav_(0) {}
 
 PluginCleaningData::PluginCleaningData(uint32_t crc,
                                        const std::string& utility) :
-    crc_(crc), utility_(utility), itm_(0), ref_(0), nav_(0) {}
+    crc_(crc), itm_(0), ref_(0), nav_(0), utility_(utility) {}
 
 PluginCleaningData::PluginCleaningData(
     uint32_t crc,

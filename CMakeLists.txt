@@ -384,9 +384,11 @@ target_link_libraries(libloot_tests PRIVATE loot ${GTEST_LIBRARIES})
 # Set Target-Specific Flags
 ##############################
 
-set(LIBLOOT_COMMON_INCLUDE_DIRS
+set(LIBLOOT_INCLUDE_DIRS
     "${CMAKE_SOURCE_DIR}/src"
-    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/include")
+
+set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${LIBLOADORDER_INCLUDE_DIRS}
     ${ESPLUGIN_INCLUDE_DIRS}
     ${LCI_INCLUDE_DIRS}
@@ -396,13 +398,19 @@ set(LIBLOOT_COMMON_INCLUDE_DIRS
     ${YAML_CPP_INCLUDE_DIRS})
 
 target_include_directories(libloot_internals_tests PRIVATE
-    ${LIBLOOT_COMMON_INCLUDE_DIRS}
+    ${LIBLOOT_INCLUDE_DIRS})
+
+target_include_directories(libloot_internals_tests SYSTEM PRIVATE
+    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS}
     ${GTEST_INCLUDE_DIRS})
 
-target_include_directories(loot PRIVATE ${LIBLOOT_COMMON_INCLUDE_DIRS})
+target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
+target_include_directories(loot SYSTEM PRIVATE
+    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
-target_include_directories(libloot_tests PRIVATE
-    ${LIBLOOT_COMMON_INCLUDE_DIRS}
+target_include_directories(libloot_tests PRIVATE ${LIBLOOT_INCLUDE_DIRS})
+target_include_directories(libloot_tests SYSTEM PRIVATE
+    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS}
     ${GTEST_INCLUDE_DIRS})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -420,6 +428,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         PROPERTIES
             INSTALL_RPATH "${CMAKE_INSTALL_RPATH};."
             BUILD_WITH_INSTALL_RPATH ON)
+
+    target_compile_options(libloot_internals_tests PRIVATE "-Wall" "-Wextra")
+    target_compile_options(loot PRIVATE "-Wall" "-Wextra")
+    target_compile_options(libloot_tests PRIVATE "-Wall" "-Wextra")
 
     set(LOOT_LIBS ssl
         curl

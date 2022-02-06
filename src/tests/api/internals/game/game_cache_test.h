@@ -34,9 +34,9 @@ namespace test {
 class GameCacheTest : public CommonGameTestFixture {
 protected:
   GameCacheTest() :
+      game_(GetParam(), dataPath.parent_path(), localPath),
       condition("Condition"),
-      conditionLowercase("condition"),
-      game_(GetParam(), dataPath.parent_path(), localPath) {}
+      conditionLowercase("condition") {}
 
   Game game_;
   GameCache cache_;

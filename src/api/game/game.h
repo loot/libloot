@@ -79,13 +79,13 @@ public:
 private:
   void CacheArchives();
 
+  const GameType type_;
+  const std::filesystem::path gamePath_;
+
   std::shared_ptr<GameCache> cache_;
   std::shared_ptr<LoadOrderHandler> loadOrderHandler_;
   std::shared_ptr<ConditionEvaluator> conditionEvaluator_;
   std::shared_ptr<DatabaseInterface> database_;
-
-  const GameType type_;
-  const std::filesystem::path gamePath_;
 
   std::string masterFilename_;
 };

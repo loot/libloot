@@ -334,11 +334,11 @@ bool equivalent(const std::filesystem::path& path1,
   // so check with the filesystem.
   try {
     return std::filesystem::equivalent(path1, path2);
-  } catch (std::filesystem::filesystem_error) {
+  } catch (const std::filesystem::filesystem_error&) {
     // One of the paths checked for equivalence doesn't exist,
     // so they can't be equivalent.
     return false;
-  } catch (std::system_error) {
+  } catch (const std::system_error&) {
     // This can be thrown if one or both of the paths contains a character
     // that can't be represented in Windows' multi-byte code page (e.g.
     // Windows-1252), even though Unicode paths shouldn't be a problem,
