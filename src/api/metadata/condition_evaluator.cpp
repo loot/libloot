@@ -199,15 +199,9 @@ void ConditionEvaluator::RefreshActivePluginsState(
     activePluginNameCStrings.push_back(pluginName.c_str());
   }
 
-  const char* const* cActivePluginNames;
-  if (activePluginNameCStrings.empty()) {
-    cActivePluginNames = {};
-  } else {
-    cActivePluginNames = &activePluginNameCStrings[0];
-  }
-
-  int result = lci_state_set_active_plugins(
-      lciState_.get(), cActivePluginNames, activePluginNameCStrings.size());
+  int result = lci_state_set_active_plugins(lciState_.get(),
+                                            activePluginNameCStrings.data(),
+                                            activePluginNameCStrings.size());
   HandleError("cache active plugins for condition evaluation", result);
 }
 
@@ -242,26 +236,12 @@ void ConditionEvaluator::RefreshLoadedPluginsState(
     }
   }
 
-  const plugin_version* cPluginVersions;
-  if (pluginVersions.empty()) {
-    cPluginVersions = {};
-  } else {
-    cPluginVersions = &pluginVersions[0];
-  }
-
   int result = lci_state_set_plugin_versions(
-      lciState_.get(), cPluginVersions, pluginVersions.size());
+      lciState_.get(), pluginVersions.data(), pluginVersions.size());
   HandleError("cache plugin versions for condition evaluation", result);
 
-  const plugin_crc* cPluginCrcs;
-  if (pluginCrcs.empty()) {
-    cPluginCrcs = {};
-  } else {
-    cPluginCrcs = &pluginCrcs[0];
-  }
-
-  result =
-      lci_state_set_crc_cache(lciState_.get(), cPluginCrcs, pluginCrcs.size());
+  result = lci_state_set_crc_cache(
+      lciState_.get(), pluginCrcs.data(), pluginCrcs.size());
   HandleError("fill CRC cache for condition evaluation", result);
 }
 

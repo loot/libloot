@@ -116,8 +116,8 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
     logger->trace("Getting load order.");
   }
 
-  char** pluginArr;
-  size_t pluginArrSize;
+  char** pluginArr = nullptr;
+  size_t pluginArrSize = 0;
 
   unsigned int ret = lo_get_load_order(gh_, &pluginArr, &pluginArrSize);
 
@@ -136,8 +136,8 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
     logger->trace("Getting active plugins.");
   }
 
-  char** pluginArr;
-  size_t pluginArrSize;
+  char** pluginArr = nullptr;
+  size_t pluginArrSize = 0;
 
   unsigned int ret = lo_get_active_plugins(gh_, &pluginArr, &pluginArrSize);
 
@@ -156,8 +156,8 @@ std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
     logger->trace("Getting implicitly active plugins.");
   }
 
-  char** pluginArr;
-  size_t pluginArrSize;
+  char** pluginArr = nullptr;
+  size_t pluginArrSize = 0;
 
   unsigned int ret =
       lo_get_implicitly_active_plugins(gh_, &pluginArr, &pluginArrSize);

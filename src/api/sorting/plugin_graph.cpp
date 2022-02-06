@@ -434,14 +434,9 @@ void PluginGraph::AddSpecificEdges() {
       if (graph_[*vit].IsMaster() == graph_[*vit2].IsMaster())
         continue;
 
-      vertex_t vertex, parentVertex;
-      if (graph_[*vit2].IsMaster()) {
-        parentVertex = *vit2;
-        vertex = *vit;
-      } else {
-        parentVertex = *vit;
-        vertex = *vit2;
-      }
+      auto isOtherPluginAMaster = graph_[*vit2].IsMaster();
+      vertex_t vertex = isOtherPluginAMaster ? *vit : *vit2;
+      vertex_t parentVertex = isOtherPluginAMaster ? *vit2 : *vit;
 
       AddEdge(parentVertex, vertex, EdgeType::masterFlag);
     }
@@ -702,15 +697,12 @@ void PluginGraph::AddOverlapEdges() {
         continue;
       }
 
-      vertex_t toVertex, fromVertex;
-      if (graph_[vertex].NumOverrideFormIDs() >
-          graph_[otherVertex].NumOverrideFormIDs()) {
-        fromVertex = vertex;
-        toVertex = otherVertex;
-      } else {
-        fromVertex = otherVertex;
-        toVertex = vertex;
-      }
+      auto thisPluginOverridesMoreFormIDs =
+          graph_[vertex].NumOverrideFormIDs() >
+          graph_[otherVertex].NumOverrideFormIDs();
+      vertex_t fromVertex =
+          thisPluginOverridesMoreFormIDs ? vertex : otherVertex;
+      vertex_t toVertex = thisPluginOverridesMoreFormIDs ? otherVertex : vertex;
 
       if (!EdgeCreatesCycle(fromVertex, toVertex))
         AddEdge(fromVertex, toVertex, EdgeType::overlap);
@@ -772,14 +764,10 @@ void PluginGraph::AddTieBreakEdges() {
     for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
       vertex_t otherVertex = *vit2;
 
-      vertex_t toVertex, fromVertex;
-      if (ComparePlugins(graph_[vertex], graph_[otherVertex]) < 0) {
-        fromVertex = vertex;
-        toVertex = otherVertex;
-      } else {
-        fromVertex = otherVertex;
-        toVertex = vertex;
-      }
+      auto thisPluginShouldLoadEarlier =
+          ComparePlugins(graph_[vertex], graph_[otherVertex]) < 0;
+      vertex_t fromVertex = thisPluginShouldLoadEarlier ? vertex : otherVertex;
+      vertex_t toVertex = thisPluginShouldLoadEarlier ? otherVertex : vertex;
 
       if (!EdgeCreatesCycle(fromVertex, toVertex))
         AddEdge(fromVertex, toVertex, EdgeType::tieBreak);

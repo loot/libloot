@@ -90,7 +90,7 @@ Plugin::Plugin(const GameType gameType,
 std::string Plugin::GetName() const { return name_; }
 
 std::optional<float> Plugin::GetHeaderVersion() const {
-  float version;
+  float version = 0.0f;
 
   auto ret = esp_plugin_header_version(esPlugin.get(), &version);
   if (ret != ESP_OK) {
@@ -110,8 +110,8 @@ std::optional<std::string> Plugin::GetVersion() const {
 }
 
 std::vector<std::string> Plugin::GetMasters() const {
-  char** masters;
-  uint8_t numMasters;
+  char** masters = nullptr;
+  uint8_t numMasters = 0;
   auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
@@ -130,7 +130,7 @@ std::vector<Tag> Plugin::GetBashTags() const { return tags_; }
 std::optional<uint32_t> Plugin::GetCRC() const { return crc_; }
 
 bool Plugin::IsMaster() const {
-  bool isMaster;
+  bool isMaster = false;
   auto ret = esp_plugin_is_master(esPlugin.get(), &isMaster);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
@@ -141,7 +141,7 @@ bool Plugin::IsMaster() const {
 }
 
 bool Plugin::IsLightPlugin() const {
-  bool isLightPlugin;
+  bool isLightPlugin = false;
   auto ret = esp_plugin_is_light_plugin(esPlugin.get(), &isLightPlugin);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
@@ -152,7 +152,7 @@ bool Plugin::IsLightPlugin() const {
 }
 
 bool Plugin::IsValidAsLightPlugin() const {
-  bool isValid;
+  bool isValid = false;
   auto ret = esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
@@ -170,7 +170,7 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
   try {
     auto otherPlugin = dynamic_cast<const Plugin&>(plugin);
 
-    bool doPluginsOverlap;
+    bool doPluginsOverlap = false;
     auto ret = esp_plugin_do_records_overlap(
         esPlugin.get(), otherPlugin.esPlugin.get(), &doPluginsOverlap);
     if (ret != ESP_OK) {
@@ -202,7 +202,7 @@ size_t Plugin::GetOverlapSize(
     esPlugins.push_back(plugin->esPlugin.get());
   }
 
-  size_t overlapSize;
+  size_t overlapSize = 0;
   auto ret = esp_plugin_records_overlap_size(
       esPlugin.get(), &esPlugins[0], esPlugins.size(), &overlapSize);
   if (ret != ESP_OK) {
@@ -232,7 +232,7 @@ bool Plugin::IsValid(const GameType gameType,
                      const std::filesystem::path& pluginPath) {
   // Check that the file has a valid extension.
   if (hasPluginFileExtension(pluginPath.filename().u8string(), gameType)) {
-    bool isValid;
+    bool isValid = false;
     auto returnCode = esp_plugin_is_valid(GetEspluginGameId(gameType),
                                           pluginPath.u8string().c_str(),
                                           true,
@@ -269,7 +269,7 @@ uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
 void Plugin::Load(const std::filesystem::path& path,
                   GameType gameType,
                   bool headerOnly) {
-  ::Plugin* plugin;
+  ::Plugin* plugin = nullptr;
   auto ret = esp_plugin_new(
       &plugin, GetEspluginGameId(gameType), path.u8string().c_str());
   if (ret != ESP_OK) {
@@ -288,7 +288,7 @@ void Plugin::Load(const std::filesystem::path& path,
 }
 
 std::string Plugin::GetDescription() const {
-  char* description;
+  char* description = nullptr;
   auto ret = esp_plugin_description(esPlugin.get(), &description);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
