@@ -40,7 +40,7 @@
 namespace loot {
 class GameCache;
 
-class Plugin : public PluginInterface {
+class Plugin final : public PluginInterface {
 public:
   explicit Plugin(const GameType gameType,
                   std::shared_ptr<GameCache> gameCache,

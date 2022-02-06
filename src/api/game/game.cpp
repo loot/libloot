@@ -101,7 +101,6 @@ bool Game::IsValidPlugin(const std::string& plugin) const {
 void Game::LoadPlugins(const std::vector<std::string>& plugins,
                        bool loadHeadersOnly) {
   auto logger = getLogger();
-  uintmax_t meanFileSize = 0;
   std::multimap<uintmax_t, string> sizeMap;
 
   // First get the plugin sizes.
@@ -110,7 +109,6 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
       throw std::invalid_argument("\"" + plugin + "\" is not a valid plugin");
 
     uintmax_t fileSize = Plugin::GetFileSize(DataPath() / u8path(plugin));
-    meanFileSize += fileSize;
 
     // Trim .ghost extension if present.
     if (boost::iends_with(plugin, ".ghost"))
@@ -118,7 +116,6 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
     else
       sizeMap.emplace(fileSize, plugin);
   }
-  meanFileSize /= sizeMap.size();  // Rounding error, but not important.
 
   // Get the number of threads to use.
   // hardware_concurrency() may be zero, if so then use only one thread.

@@ -283,6 +283,7 @@ std::optional<vertex_t> PluginGraph::GetVertexByName(
 
 void PluginGraph::CheckForCycles() const {
   auto logger = getLogger();
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
   if (logger) {
     logger->trace("Checking plugin graph for cycles...");
   }
@@ -290,6 +291,7 @@ void PluginGraph::CheckForCycles() const {
   std::map<vertex_t, size_t> indexMap;
   auto vertexIndexMap = vertex_map_t(indexMap);
   size_t i = 0;
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
   BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
     put(vertexIndexMap, v, i++);
   }

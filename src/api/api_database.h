@@ -38,7 +38,7 @@
 #include "loot/vertex.h"
 
 namespace loot {
-struct ApiDatabase : public DatabaseInterface {
+struct ApiDatabase final : public DatabaseInterface {
   explicit ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator);
 
   void LoadLists(const std::filesystem::path& masterlist_path,

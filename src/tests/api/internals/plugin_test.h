@@ -38,9 +38,9 @@ protected:
       lowercaseBlankEsp("blank.esp"),
       nonAsciiEsp(u8"non\u00C1scii.esp"),
       otherNonAsciiEsp(u8"other non\u00C1scii.esp"),
-      blankArchive("Blank" + GetArchiveFileExtension(game_.Type())),
+      blankArchive("Blank" + GetArchiveFileExtension(GetParam())),
       blankSuffixArchive("Blank - Different - suffix" +
-                         GetArchiveFileExtension(game_.Type())),
+                         GetArchiveFileExtension(GetParam())),
       game_(GetParam(), dataPath.parent_path(), localPath) {}
 
   void SetUp() {
@@ -136,7 +136,7 @@ private:
   }
 };
 
-class OtherPluginType : public PluginInterface {
+class OtherPluginType final : public PluginInterface {
 public:
   std::string GetName() const { return ""; }
   std::optional<float> GetHeaderVersion() const { return 0.0f; }

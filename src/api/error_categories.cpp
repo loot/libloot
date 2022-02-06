@@ -29,11 +29,11 @@
 namespace loot {
 namespace detail {
 class libloadorder_category : public std::error_category {
-  virtual const char* name() const noexcept { return "libloadorder"; }
+  const char* name() const noexcept override { return "libloadorder"; }
 
-  virtual std::string message(int) const { return "Libloadorder error"; }
+  std::string message(int) const override { return "Libloadorder error"; }
 
-  virtual bool equivalent(const std::error_code& code) const noexcept {
+  bool equivalent(const std::error_code& code, int) const noexcept override {
     return code.category().name() == name();
   }
 };

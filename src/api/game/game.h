@@ -34,7 +34,7 @@
 #include "loot/game_interface.h"
 
 namespace loot {
-class Game : public GameInterface {
+class Game final : public GameInterface {
 public:
   explicit Game(const GameType gameType,
                 const std::filesystem::path& gamePath,
