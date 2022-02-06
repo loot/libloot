@@ -52,6 +52,10 @@ public:
    *         CommonMark.
    * @param  condition
    *         The File's condition string.
+   * @param  detail
+   *         The detail message content, which may be appended to any messages
+   *         generated for this file. If multilingual, one language must be
+   *         English.
    * @return A File object.
    */
   LOOT_API explicit File(const std::string& name,

@@ -46,6 +46,9 @@ public:
    */
   LOOT_API explicit Filename(const std::string& filename);
 
+  /**
+   * Get this Filename as a string.
+   */
   LOOT_API explicit operator std::string() const;
 
 private:
