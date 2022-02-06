@@ -4,6 +4,7 @@ project(libloot)
 include(ExternalProject)
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
+option(RUN_CLANG_TIDY "Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator." OFF)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -476,6 +477,53 @@ if(MSVC)
 
     target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
+endif()
+
+##############################
+# Configure clang-tidy
+##############################
+
+if(RUN_CLANG_TIDY)
+    set(CLANG_TIDY_COMMON_CHECKS
+        "cppcoreguidelines-avoid-c-arrays"
+        "cppcoreguidelines-c-copy-assignment-signature"
+        "cppcoreguidelines-interfaces-global-init"
+        "cppcoreguidelines-macro-usage"
+        "cppcoreguidelines-narrowing-conventions"
+        "cppcoreguidelines-no-malloc"
+        "cppcoreguidelines-pro-bounds-constant-array-index"
+        "cppcoreguidelines-pro-type-const-cast"
+        "cppcoreguidelines-pro-type-cstyle-cast"
+        "cppcoreguidelines-pro-type-reinterpret-cast"
+        "cppcoreguidelines-pro-type-static-cast-downcast"
+        "cppcoreguidelines-pro-type-union-access"
+        "cppcoreguidelines-pro-type-vararg"
+        "cppcoreguidelines-pro-type-slicing")
+
+    set(CLANG_TIDY_LIB_CHECKS
+        ${CLANG_TIDY_COMMON_CHECKS}
+        "cppcoreguidelines-avoid-goto")
+
+    # Skip some checks for tests because they're not worth the noise (e.g. GTest
+    # happens to use goto).
+    set(CLANG_TIDY_TEST_CHECKS ${CLANG_TIDY_COMMON_CHECKS})
+
+    list(JOIN CLANG_TIDY_LIB_CHECKS "," CLANG_TIDY_LIB_CHECKS_JOINED)
+    list(JOIN CLANG_TIDY_TEST_CHECKS "," CLANG_TIDY_TEST_CHECKS_JOINED)
+
+    set(CLANG_TIDY_LIB
+        clang-tidy "-header-filter=.*" "-checks=${CLANG_TIDY_LIB_CHECKS_JOINED}")
+
+    set(CLANG_TIDY_TEST
+        clang-tidy "-header-filter=.*" "-checks=${CLANG_TIDY_TEST_CHECKS_JOINED}")
+
+    set_target_properties(loot
+        PROPERTIES
+            CXX_CLANG_TIDY "${CLANG_TIDY_LIB}")
+
+    set_target_properties(libloot_internals_tests libloot_tests
+        PROPERTIES
+            CXX_CLANG_TIDY "${CLANG_TIDY_TEST}")
 endif()
 
 ##############################

@@ -46,6 +46,7 @@ libloot uses the following CMake variables to set build parameters:
 Parameter | Values | Default |Description
 ----------|--------|---------|-----------
 `BUILD_SHARED_LIBS` | `ON`, `OFF` | `ON` | Whether or not to build a shared libloot binary.
+`RUN_CLANG_TIDY` | `ON`, `OFF` | `OFF` | Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator.
 
 You may also need to set `BOOST_ROOT` if CMake cannot find Boost.
 
