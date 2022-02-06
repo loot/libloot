@@ -43,7 +43,7 @@ protected:
                          GetArchiveFileExtension(GetParam())),
       game_(GetParam(), dataPath.parent_path(), localPath) {}
 
-  void SetUp() {
+  void SetUp() override {
     CommonGameTestFixture::SetUp();
 
     game_.LoadCurrentLoadOrderState();
@@ -138,21 +138,23 @@ private:
 
 class OtherPluginType final : public PluginInterface {
 public:
-  std::string GetName() const { return ""; }
-  std::optional<float> GetHeaderVersion() const { return 0.0f; }
-  std::optional<std::string> GetVersion() const { return std::nullopt; }
-  std::vector<std::string> GetMasters() const {
+  std::string GetName() const override { return ""; }
+  std::optional<float> GetHeaderVersion() const override { return 0.0f; }
+  std::optional<std::string> GetVersion() const override {
+    return std::nullopt;
+  }
+  std::vector<std::string> GetMasters() const override {
     return std::vector<std::string>();
   }
-  std::vector<Tag> GetBashTags() const { return std::vector<Tag>(); }
-  std::optional<uint32_t> GetCRC() const { return std::nullopt; }
+  std::vector<Tag> GetBashTags() const override { return std::vector<Tag>(); }
+  std::optional<uint32_t> GetCRC() const override { return std::nullopt; }
 
-  bool IsMaster() const { return false; }
-  bool IsLightPlugin() const { return false; }
-  bool IsValidAsLightPlugin() const { return false; }
-  bool IsEmpty() const { return false; }
-  bool LoadsArchive() const { return false; }
-  bool DoFormIDsOverlap(const PluginInterface&) const { return true; }
+  bool IsMaster() const override { return false; }
+  bool IsLightPlugin() const override { return false; }
+  bool IsValidAsLightPlugin() const override { return false; }
+  bool IsEmpty() const override { return false; }
+  bool LoadsArchive() const override { return false; }
+  bool DoFormIDsOverlap(const PluginInterface&) const override { return true; }
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,

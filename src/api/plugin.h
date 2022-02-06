@@ -47,21 +47,21 @@ public:
                   std::filesystem::path pluginPath,
                   const bool headerOnly);
 
-  std::string GetName() const;
-  std::optional<float> GetHeaderVersion() const;
-  std::optional<std::string> GetVersion() const;
-  std::vector<std::string> GetMasters() const;
-  std::vector<Tag> GetBashTags() const;
-  std::optional<uint32_t> GetCRC() const;
+  std::string GetName() const override;
+  std::optional<float> GetHeaderVersion() const override;
+  std::optional<std::string> GetVersion() const override;
+  std::vector<std::string> GetMasters() const override;
+  std::vector<Tag> GetBashTags() const override;
+  std::optional<uint32_t> GetCRC() const override;
 
-  bool IsMaster() const;
+  bool IsMaster() const override;
 
-  bool IsLightPlugin() const;
+  bool IsLightPlugin() const override;
 
-  bool IsValidAsLightPlugin() const;
-  bool IsEmpty() const;
-  bool LoadsArchive() const;
-  bool DoFormIDsOverlap(const PluginInterface& plugin) const;
+  bool IsValidAsLightPlugin() const override;
+  bool IsEmpty() const override;
+  bool LoadsArchive() const override;
+  bool DoFormIDsOverlap(const PluginInterface& plugin) const override;
   size_t GetOverlapSize(
       const std::vector<std::shared_ptr<const Plugin>> plugins) const;
 

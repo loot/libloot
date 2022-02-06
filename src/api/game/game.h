@@ -52,29 +52,31 @@ public:
   // Game Interface Methods //
   ////////////////////////////
 
-  std::shared_ptr<DatabaseInterface> GetDatabase();
+  std::shared_ptr<DatabaseInterface> GetDatabase() override;
 
-  bool IsValidPlugin(const std::string& plugin) const;
+  bool IsValidPlugin(const std::string& plugin) const override;
 
   void LoadPlugins(const std::vector<std::string>& plugins,
-                   bool loadHeadersOnly);
+                   bool loadHeadersOnly) override;
 
   std::shared_ptr<const PluginInterface> GetPlugin(
-      const std::string& pluginName) const;
+      const std::string& pluginName) const override;
 
-  std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins() const;
+  std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
+      const override;
 
-  void IdentifyMainMasterFile(const std::string& masterFile);
+  void IdentifyMainMasterFile(const std::string& masterFile) override;
 
-  std::vector<std::string> SortPlugins(const std::vector<std::string>& plugins);
+  std::vector<std::string> SortPlugins(
+      const std::vector<std::string>& plugins) override;
 
-  void LoadCurrentLoadOrderState();
+  void LoadCurrentLoadOrderState() override;
 
-  bool IsPluginActive(const std::string& pluginName) const;
+  bool IsPluginActive(const std::string& pluginName) const override;
 
-  std::vector<std::string> GetLoadOrder() const;
+  std::vector<std::string> GetLoadOrder() const override;
 
-  void SetLoadOrder(const std::vector<std::string>& loadOrder);
+  void SetLoadOrder(const std::vector<std::string>& loadOrder) override;
 
 private:
   void CacheArchives();

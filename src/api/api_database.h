@@ -41,41 +41,43 @@ namespace loot {
 struct ApiDatabase final : public DatabaseInterface {
   explicit ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator);
 
-  void LoadLists(const std::filesystem::path& masterlist_path,
-                 const std::filesystem::path& userlist_path = "",
-                 const std::filesystem::path& masterlist_prelude_path = "");
+  void LoadLists(
+      const std::filesystem::path& masterlist_path,
+      const std::filesystem::path& userlist_path = "",
+      const std::filesystem::path& masterlist_prelude_path = "") override;
 
   void WriteUserMetadata(const std::filesystem::path& outputFile,
-                         const bool overwrite) const;
+                         const bool overwrite) const override;
 
   void WriteMinimalList(const std::filesystem::path& outputFile,
-                        const bool overwrite) const;
+                        const bool overwrite) const override;
 
-  std::vector<std::string> GetKnownBashTags() const;
+  std::vector<std::string> GetKnownBashTags() const override;
 
   std::vector<Message> GetGeneralMessages(
-      bool evaluateConditions = false) const;
+      bool evaluateConditions = false) const override;
 
-  std::vector<Group> GetGroups(bool includeUserMetadata = true) const;
-  std::vector<Group> GetUserGroups() const;
+  std::vector<Group> GetGroups(bool includeUserMetadata = true) const override;
+  std::vector<Group> GetUserGroups() const override;
   void SetUserGroups(const std::vector<Group>& groups);
-  std::vector<Vertex> GetGroupsPath(const std::string& fromGroupName,
-                                    const std::string& toGroupName) const;
+  std::vector<Vertex> GetGroupsPath(
+      const std::string& fromGroupName,
+      const std::string& toGroupName) const override;
 
   std::optional<PluginMetadata> GetPluginMetadata(
       const std::string& plugin,
       bool includeUserMetadata = true,
-      bool evaluateConditions = false) const;
+      bool evaluateConditions = false) const override;
 
   std::optional<PluginMetadata> GetPluginUserMetadata(
       const std::string& plugin,
-      bool evaluateConditions = false) const;
+      bool evaluateConditions = false) const override;
 
-  void SetPluginUserMetadata(const PluginMetadata& pluginMetadata);
+  void SetPluginUserMetadata(const PluginMetadata& pluginMetadata) override;
 
-  void DiscardPluginUserMetadata(const std::string& plugin);
+  void DiscardPluginUserMetadata(const std::string& plugin) override;
 
-  void DiscardAllUserMetadata();
+  void DiscardAllUserMetadata() override;
 
 private:
   std::shared_ptr<ConditionEvaluator> conditionEvaluator_;

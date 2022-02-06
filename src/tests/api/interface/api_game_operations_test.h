@@ -46,7 +46,7 @@ protected:
       errorMessage("Obsolete. Remove this and install Enhanced Weather."),
       generalMasterlistMessage("A general masterlist message.") {}
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     CommonGameTestFixture::SetUp();
 
     ASSERT_FALSE(std::filesystem::exists(masterlistPath));

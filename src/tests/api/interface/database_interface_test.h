@@ -41,7 +41,7 @@ protected:
       generalUserlistMessage("A general userlist message."),
       db_(nullptr) {}
 
-  void SetUp() {
+  void SetUp() override {
     ApiGameOperationsTest::SetUp();
 
     db_ = handle_->GetDatabase();

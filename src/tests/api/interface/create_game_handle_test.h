@@ -42,7 +42,7 @@ protected:
       localPathJunctionLink(localPath.string() + ".junction"),
       originalWorkingDirectory(std::filesystem::current_path()) {}
 
-  void SetUp() {
+  void SetUp() override {
     using std::filesystem::file_type;
     using std::filesystem::status;
     CommonGameTestFixture::SetUp();
@@ -70,7 +70,7 @@ protected:
     std::filesystem::current_path(dataPath.parent_path().parent_path());
   }
 
-  void TearDown() { std::filesystem::current_path(originalWorkingDirectory); }
+  void TearDown() override { std::filesystem::current_path(originalWorkingDirectory); }
 
   std::shared_ptr<GameInterface> handle_;
 
