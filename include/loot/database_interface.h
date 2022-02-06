@@ -41,26 +41,26 @@ namespace loot {
 class DatabaseInterface {
 public:
   /**
-   *  @name Data Reading & Writing
-   *  @{
+   * @name Data Reading & Writing
+   * @{
    */
 
   /**
-   *  @brief Loads the masterlist, userlist and masterlist prelude from the
-   *         paths specified.
-   *  @details Can be called multiple times, each time replacing the
-   *           previously-loaded data.
-   *  @param masterlist_path
-   *         The relative or absolute path to the masterlist file that should be
-   *         loaded.
-   *  @param userlist_path
-   *         The relative or absolute path to the userlist file that should be
-   *         loaded, or an empty path. If an empty path, no userlist will be
-   *         loaded.
-   *  @param masterlist_prelude_path
-   *         The relative or absolute path to the masterlist prelude file that
-   *         should be loaded. If an empty path, no masterlist prelude will be
-   *         loaded.
+   * @brief Loads the masterlist, userlist and masterlist prelude from the
+   *        paths specified.
+   * @details Can be called multiple times, each time replacing the
+   *          previously-loaded data.
+   * @param masterlist_path
+   *        The relative or absolute path to the masterlist file that should be
+   *        loaded.
+   * @param userlist_path
+   *        The relative or absolute path to the userlist file that should be
+   *        loaded, or an empty path. If an empty path, no userlist will be
+   *        loaded.
+   * @param masterlist_prelude_path
+   *        The relative or absolute path to the masterlist prelude file that
+   *        should be loaded. If an empty path, no masterlist prelude will be
+   *        loaded.
    */
   virtual void LoadLists(
       const std::filesystem::path& masterlist_path,
@@ -70,49 +70,49 @@ public:
   /**
    * Writes a metadata file containing all loaded user-added metadata.
    * @param outputFile
-   *         The path to which the file shall be written.
+   *        The path to which the file shall be written.
    * @param overwrite
-   *         If `false` and `outputFile` already exists, no data will be
-   *         written. Otherwise, data will be written.
+   *        If `false` and `outputFile` already exists, no data will be
+   *        written. Otherwise, data will be written.
    */
   virtual void WriteUserMetadata(const std::filesystem::path& outputFile,
                                  const bool overwrite) const = 0;
 
   /**
-   *  @brief Writes a minimal metadata file that only contains plugins with
-   *         Bash Tag suggestions and/or dirty info, plus the suggestions and
-   *         info themselves.
-   *  @param outputFile
-   *         The path to which the file shall be written.
-   *  @param overwrite
-   *         If `false` and `outputFile` already exists, no data will be
-   *         written. Otherwise, data will be written.
+   * @brief Writes a minimal metadata file that only contains plugins with
+   *        Bash Tag suggestions and/or dirty info, plus the suggestions and
+   *        info themselves.
+   * @param outputFile
+   *        The path to which the file shall be written.
+   * @param overwrite
+   *        If `false` and `outputFile` already exists, no data will be
+   *        written. Otherwise, data will be written.
    */
   virtual void WriteMinimalList(const std::filesystem::path& outputFile,
                                 const bool overwrite) const = 0;
 
   /**
-   *  @}
-   *  @name Non-plugin Data Access
-   *  @{
+   * @}
+   * @name Non-plugin Data Access
+   * @{
    */
 
   /**
-   *  @brief Gets the Bash Tags that are listed in the loaded metadata lists.
-   *  @details Bash Tag suggestions can include plugins not in this list.
-   *  @returns A set of Bash Tag names.
+   * @brief Gets the Bash Tags that are listed in the loaded metadata lists.
+   * @details Bash Tag suggestions can include plugins not in this list.
+   * @returns A set of Bash Tag names.
    */
   virtual std::vector<std::string> GetKnownBashTags() const = 0;
 
   /**
-   *  @brief Get all general messages listen in the loaded metadata lists.
-   *  @param evaluateConditions
-   *         If true, any metadata conditions are evaluated before the metadata
-   *         is returned, otherwise unevaluated metadata is returned. Evaluating
-   *         general message conditions also clears the condition cache before
-   *         evaluating conditions.
-   *  @returns A vector of messages supplied in the metadata lists but not
-   *           attached to any particular plugin.
+   * @brief Get all general messages listen in the loaded metadata lists.
+   * @param evaluateConditions
+   *        If true, any metadata conditions are evaluated before the metadata
+   *        is returned, otherwise unevaluated metadata is returned. Evaluating
+   *        general message conditions also clears the condition cache before
+   *        evaluating conditions.
+   * @returns A vector of messages supplied in the metadata lists but not
+   *          attached to any particular plugin.
    */
   virtual std::vector<Message> GetGeneralMessages(
       bool evaluateConditions = false) const = 0;
@@ -164,25 +164,25 @@ public:
       const std::string& toGroupName) const = 0;
 
   /**
-   *  @}
-   *  @name Plugin Data Access
-   *  @{
+   * @}
+   * @name Plugin Data Access
+   * @{
    */
 
   /**
-   *  @brief Get all a plugin's loaded metadata.
-   *  @param plugin
-   *         The filename of the plugin to look up metadata for.
-   *  @param includeUserMetadata
-   *         If true, any user metadata the plugin has is included in the
-   *         returned metadata, otherwise the metadata returned only includes
-   *         metadata from the masterlist.
-   *  @param evaluateConditions
-   *         If true, any metadata conditions are evaluated before the metadata
-   *         is returned, otherwise unevaluated metadata is returned. Evaluating
-   *         plugin metadata conditions does not clear the condition cache.
-   *  @returns If the plugin has metadata, an optional containing that metadata,
-   *           otherwise an optional containing no value.
+   * @brief Get all a plugin's loaded metadata.
+   * @param plugin
+   *        The filename of the plugin to look up metadata for.
+   * @param includeUserMetadata
+   *        If true, any user metadata the plugin has is included in the
+   *        returned metadata, otherwise the metadata returned only includes
+   *        metadata from the masterlist.
+   * @param evaluateConditions
+   *        If true, any metadata conditions are evaluated before the metadata
+   *        is returned, otherwise unevaluated metadata is returned. Evaluating
+   *        plugin metadata conditions does not clear the condition cache.
+   * @returns If the plugin has metadata, an optional containing that metadata,
+   *          otherwise an optional containing no value.
    */
   virtual std::optional<PluginMetadata> GetPluginMetadata(
       const std::string& plugin,
@@ -190,26 +190,26 @@ public:
       bool evaluateConditions = false) const = 0;
 
   /**
-   *  @brief Get a plugin's metadata loaded from the given userlist.
-   *  @param plugin
-   *         The filename of the plugin to look up user-added metadata for.
-   *  @param evaluateConditions
-   *         If true, any metadata conditions are evaluated before the metadata
-   *         is returned, otherwise unevaluated metadata is returned. Evaluating
-   *         plugin metadata conditions does not clear the condition cache.
-   *  @returns If the plugin has user-added metadata, an optional containing
-   *           that metadata, otherwise an optional containing no value.
+   * @brief Get a plugin's metadata loaded from the given userlist.
+   * @param plugin
+   *        The filename of the plugin to look up user-added metadata for.
+   * @param evaluateConditions
+   *        If true, any metadata conditions are evaluated before the metadata
+   *        is returned, otherwise unevaluated metadata is returned. Evaluating
+   *        plugin metadata conditions does not clear the condition cache.
+   * @returns If the plugin has user-added metadata, an optional containing
+   *          that metadata, otherwise an optional containing no value.
    */
   virtual std::optional<PluginMetadata> GetPluginUserMetadata(
       const std::string& plugin,
       bool evaluateConditions = false) const = 0;
 
   /**
-   *  @brief Sets a plugin's user metadata, overwriting any existing user
-   *         metadata.
-   *  @param pluginMetadata
-   *         The user metadata you want to set, with plugin.Name() being the
-   *         filename of the plugin the metadata is for.
+   * @brief Sets a plugin's user metadata, overwriting any existing user
+   *        metadata.
+   * @param pluginMetadata
+   *        The user metadata you want to set, with plugin.Name() being the
+   *        filename of the plugin the metadata is for.
    */
   virtual void SetPluginUserMetadata(const PluginMetadata& pluginMetadata) = 0;
 

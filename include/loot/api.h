@@ -42,13 +42,11 @@
 #include "loot/loot_version.h"
 
 namespace loot {
-/**@}*/
-/**********************************************************************/ /**
-                                                                          *  @name
-                                                                          *Logging
-                                                                          *Functions
-                                                                          *************************************************************************/
-/**@{*/
+/**
+ * @}
+ * @name Logging Functions
+ * @{
+ */
 
 /**
  * @brief Set the callback function that is called when logging.
@@ -61,56 +59,51 @@ namespace loot {
 LOOT_API void SetLoggingCallback(
     std::function<void(LogLevel, const char*)> callback);
 
-/**@}*/
-/**********************************************************************/ /**
-                                                                          *  @name
-                                                                          *Version
-                                                                          *Functions
-                                                                          *************************************************************************/
-/**@{*/
+/**
+ * @}
+ * @name Version Functions
+ * @{
+ */
 
 /**
- *  @brief Checks for API compatibility.
- *  @details Checks whether the loaded API is compatible with the given
- *           version of the API, abstracting API stability policy away from
- *           clients. The version numbering used is major.minor.patch.
- *  @param major
- *         The major version number to check.
- *  @param minor
- *         The minor version number to check.
- *  @param patch
- *         The patch version number to check.
- *  @returns True if the API versions are compatible, false otherwise.
+ * @brief Checks for API compatibility.
+ * @details Checks whether the loaded API is compatible with the given
+ *          version of the API, abstracting API stability policy away from
+ *          clients. The version numbering used is major.minor.patch.
+ * @param major
+ *        The major version number to check.
+ * @param minor
+ *        The minor version number to check.
+ * @param patch
+ *        The patch version number to check.
+ * @returns True if the API versions are compatible, false otherwise.
  */
 LOOT_API bool IsCompatible(const unsigned int major,
                            const unsigned int minor,
                            const unsigned int patch);
 
-/**@}*/
-/**********************************************************************/ /**
-                                                                          *  @name
-                                                                          *Lifecycle
-                                                                          *Management
-                                                                          *Functions
-                                                                          *************************************************************************/
-/**@{*/
+/**
+ * @}
+ * @name Lifecycle Management Functions
+ * @{
+ */
 
 /**
- *  @brief Initialise a new game handle.
- *  @details Creates a handle for a game, which is then used by all
- *           game-specific functions.
- *  @param game
- *         A game code for which to create the handle.
- *  @param game_path
- *         The relative or absolute path to the directory containing the
- *         game's executable.
- *  @param game_local_path
- *         The relative or absolute path to the game's folder in
- *         `%%LOCALAPPDATA%` or an empty path. If an empty path, the API will
- *         attempt to look up the path that `%%LOCALAPPDATA%` corresponds to.
- *         This parameter is provided so that systems lacking that environmental
- *         variable (eg. Linux) can still use the API.
- *  @returns The new game handle.
+ * @brief Initialise a new game handle.
+ * @details Creates a handle for a game, which is then used by all
+ *          game-specific functions.
+ * @param game
+ *        A game code for which to create the handle.
+ * @param game_path
+ *        The relative or absolute path to the directory containing the
+ *        game's executable.
+ * @param game_local_path
+ *        The relative or absolute path to the game's folder in
+ *        `%%LOCALAPPDATA%` or an empty path. If an empty path, the API will
+ *        attempt to look up the path that `%%LOCALAPPDATA%` corresponds to.
+ *        This parameter is provided so that systems lacking that environmental
+ *        variable (eg. Linux) can still use the API.
+ * @returns The new game handle.
  */
 LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
     const GameType game,

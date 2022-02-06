@@ -30,10 +30,11 @@
 #include "loot/api_decorator.h"
 
 namespace loot {
-/** @brief Get the error category that can be used to identify system_error
- *         exceptions that are due to libloadorder errors.
- *  @returns A reference to the static object of unspecified runtime type,
-             derived from std::error_category.
+/**
+ * @brief Get the error category that can be used to identify system_error
+ *        exceptions that are due to libloadorder errors.
+ * @returns A reference to the static object of unspecified runtime type,
+ *          derived from std::error_category.
  */
 LOOT_API const std::error_category& libloadorder_category();
 }

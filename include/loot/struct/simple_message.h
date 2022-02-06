@@ -29,21 +29,20 @@
 #include "loot/enum/message_type.h"
 
 namespace loot {
-/** @brief A structure that holds the type of a message and the message string
- * itself. */
+/**
+ * A structure that holds the type of a message and the message string itself.
+ */
 struct SimpleMessage {
-  /** @brief The type of the message. */
+  /** The type of the message. */
   MessageType type;
 
-  /** @brief The language the message string is written in. */
+  /** The language the message string is written in. */
   std::string language;
 
-  /**
-   * @brief The message string, which may be formatted using CommonMark.
-   */
+  /** The message string, which may be formatted using CommonMark. */
   std::string text;
 
-  /** @brief The message's condition string. */
+  /** The message's condition string. */
   std::string condition;
 };
 }
