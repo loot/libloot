@@ -45,8 +45,13 @@ PluginMetadata::PluginMetadata() {}
 
 PluginMetadata::PluginMetadata(const std::string& n) : name_(n) {
   // If the name passed ends in '.ghost', that should be trimmed.
-  if (boost::iends_with(name_, ".ghost"))
+  if (boost::iends_with(name_, ".ghost")) {
     name_ = name_.substr(0, name_.length() - 6);
+  }
+
+  if (IsRegexPlugin()) {
+    nameRegex_ = std::regex(name_, std::regex::ECMAScript | std::regex::icase);
+  }
 }
 
 void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
@@ -206,9 +211,11 @@ bool PluginMetadata::IsRegexPlugin() const {
 
 bool PluginMetadata::NameMatches(const std::string& pluginName) const {
   if (IsRegexPlugin()) {
-    return std::regex_match(
-        pluginName,
-        std::regex(name_, std::regex::ECMAScript | std::regex::icase));
+    if (!nameRegex_.has_value()) {
+      throw std::runtime_error("Regex plugin does not have regex object");
+    }
+
+    return std::regex_match(pluginName, nameRegex_.value());
   }
 
   return CompareFilenames(name_, pluginName) == 0;

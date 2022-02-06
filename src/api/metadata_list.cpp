@@ -280,8 +280,6 @@ void MetadataList::Clear() {
   unevaluatedPlugins_.clear();
   unevaluatedRegexPlugins_.clear();
   unevaluatedMessages_.clear();
-
-  pluginRegexNamesCache.clear();
 }
 
 std::vector<PluginMetadata> MetadataList::Plugins() const {
@@ -336,25 +334,7 @@ std::optional<PluginMetadata> MetadataList::FindPlugin(
 
   // Now we want to also match possibly multiple regex entries.
   auto nameMatches = [&](const PluginMetadata& pluginMetadata) {
-    // This doesn't call PluginMetadata::NameMatches() because that
-    // creates a std::regex object every time it's called, which is
-    // inefficient. NameMatches() can't be easily improved without
-    // breaking binary compatibility, so instead perform similar logic
-    // but cache plugin name regexes in the MetadataList object.
-    auto name = pluginMetadata.GetName();
-
-    if (pluginMetadata.IsRegexPlugin()) {
-      auto it = pluginRegexNamesCache.find(name);
-      if (it == pluginRegexNamesCache.end()) {
-        auto regex =
-            std::regex(name, std::regex::ECMAScript | std::regex::icase);
-        it = pluginRegexNamesCache.emplace(name, regex).first;
-      }
-
-      return std::regex_match(pluginName, it->second);
-    }
-
-    return CompareFilenames(name, pluginName) == 0;
+    return pluginMetadata.NameMatches(pluginName);
   };
   auto regIt = find_if(regexPlugins_.begin(), regexPlugins_.end(), nameMatches);
   while (regIt != regexPlugins_.end()) {

@@ -257,6 +257,8 @@ public:
 
 private:
   std::string name_;
+  std::optional<std::regex> nameRegex_;
+
   std::optional<std::string> group_;
   std::vector<File> loadAfter_;
   std::vector<File> requirements_;

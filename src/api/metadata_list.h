@@ -92,8 +92,6 @@ protected:
   std::vector<PluginMetadata> unevaluatedRegexPlugins_;
   std::vector<Message> unevaluatedMessages_;
 
-  mutable std::unordered_map<std::string, std::regex> pluginRegexNamesCache;
-
   void Load(std::istream& istream, const std::filesystem::path& source_path);
 };
 }

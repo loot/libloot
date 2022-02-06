@@ -84,18 +84,13 @@ struct convert<loot::PluginMetadata> {
           node.Mark(),
           "bad conversion: 'name' key missing from 'plugin metadata' object");
 
-    rhs = loot::PluginMetadata(node["name"].as<std::string>());
-
-    // Test for valid regex.
-    if (rhs.IsRegexPlugin()) {
-      try {
-        std::regex(rhs.GetName(), std::regex::ECMAScript | std::regex::icase);
-      } catch (std::regex_error& e) {
-        throw RepresentationException(
-            node.Mark(),
-            std::string("bad conversion: invalid regex in 'name' key: ") +
-                e.what());
-      }
+    try {
+      rhs = loot::PluginMetadata(node["name"].as<std::string>());
+    } catch (std::regex_error& e) {
+      throw RepresentationException(
+          node.Mark(),
+          std::string("bad conversion: invalid regex in 'name' key: ") +
+              e.what());
     }
 
     if (node["group"])
