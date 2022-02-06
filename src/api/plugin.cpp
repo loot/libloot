@@ -51,7 +51,7 @@ Plugin::Plugin(const GameType gameType,
   try {
     // In case the plugin is ghosted.
     if (!std::filesystem::exists(pluginPath)) {
-      pluginPath += ".ghost";
+      pluginPath += GHOST_FILE_EXTENSION;
     }
 
     Load(pluginPath, gameType, headerOnly);
@@ -240,7 +240,7 @@ bool Plugin::IsValid(const GameType gameType,
 
     if (returnCode != ESP_OK || !isValid) {
       // Try adding .ghost extension.
-      auto ghostedFilename = pluginPath.u8string() + ".ghost";
+      auto ghostedFilename = pluginPath.u8string() + GHOST_FILE_EXTENSION;
       returnCode = esp_plugin_is_valid(
           GetEspluginGameId(gameType), ghostedFilename.c_str(), true, &isValid);
     }
@@ -261,7 +261,7 @@ bool Plugin::IsValid(const GameType gameType,
 
 uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
   if (!std::filesystem::exists(pluginPath))
-    pluginPath += ".ghost";
+    pluginPath += GHOST_FILE_EXTENSION;
 
   return std::filesystem::file_size(pluginPath);
 }
@@ -423,8 +423,9 @@ unsigned int Plugin::GetEspluginGameId(GameType gameType) {
 }
 
 bool hasPluginFileExtension(std::string filename, GameType gameType) {
-  if (boost::iends_with(filename, ".ghost")) {
-    filename = filename.substr(0, filename.length() - 6);
+  if (boost::iends_with(filename, GHOST_FILE_EXTENSION)) {
+    filename =
+        filename.substr(0, filename.length() - GHOST_FILE_EXTENSION_LENGTH);
   }
 
   bool isEspOrEsm = boost::iends_with(filename, ".esp") ||

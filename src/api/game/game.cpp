@@ -111,8 +111,10 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
     uintmax_t fileSize = Plugin::GetFileSize(DataPath() / u8path(plugin));
 
     // Trim .ghost extension if present.
-    if (boost::iends_with(plugin, ".ghost"))
-      sizeMap.emplace(fileSize, plugin.substr(0, plugin.length() - 6));
+    if (boost::iends_with(plugin, GHOST_FILE_EXTENSION))
+      sizeMap.emplace(
+          fileSize,
+          plugin.substr(0, plugin.length() - GHOST_FILE_EXTENSION_LENGTH));
     else
       sizeMap.emplace(fileSize, plugin);
   }

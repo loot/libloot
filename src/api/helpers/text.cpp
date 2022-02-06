@@ -81,11 +81,16 @@ std::string EscapeMarkdownASCIIPunctuation(const std::string& text) {
 std::vector<Tag> ExtractBashTags(const std::string& description) {
   std::vector<Tag> tags;
 
+  static constexpr const char* BASH_TAGS_OPENER = "{{BASH:";
+  static constexpr std::size_t BASH_TAGS_OPENER_LENGTH =
+      std::char_traits<char>::length(BASH_TAGS_OPENER);
+
   size_t startPos = description.find("{{BASH:");
-  if (startPos == std::string::npos || startPos + 7 >= description.length()) {
+  if (startPos == std::string::npos ||
+      startPos + BASH_TAGS_OPENER_LENGTH >= description.length()) {
     return tags;
   }
-  startPos += 7;
+  startPos += BASH_TAGS_OPENER_LENGTH;
 
   size_t endPos = description.find("}}", startPos);
   if (endPos == std::string::npos) {

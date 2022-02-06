@@ -251,7 +251,9 @@ std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
   std::map<edge_t, int> weightMap;
   for (const auto& edge : boost::make_iterator_range(boost::edges(graph))) {
     if (graph[edge] == EdgeType::userLoadAfter) {
-      weightMap[edge] = -1000000;  // Magnitude is an arbitrarily large number.
+      // Magnitude is an arbitrarily large number.
+      static constexpr int USER_LOAD_AFTER_EDGE_WEIGHT = -1000000;
+      weightMap[edge] = USER_LOAD_AFTER_EDGE_WEIGHT;
     } else {
       weightMap[edge] = 1;
     }
