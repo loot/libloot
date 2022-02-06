@@ -81,7 +81,7 @@ public:
   // Eval plugin conditions.
   void EvalAllConditions(ConditionEvaluator& conditionEvaluator);
 
-protected:
+private:
   std::vector<Group> groups_;
   std::vector<std::string> bashTags_;
   std::unordered_map<Filename, PluginMetadata> plugins_;

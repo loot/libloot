@@ -503,7 +503,8 @@ if(RUN_CLANG_TIDY)
 
     set(CLANG_TIDY_LIB_CHECKS
         ${CLANG_TIDY_COMMON_CHECKS}
-        "cppcoreguidelines-avoid-goto")
+        "cppcoreguidelines-avoid-goto"
+        "cppcoreguidelines-non-private-member-variables-in-classes")
 
     # Skip some checks for tests because they're not worth the noise (e.g. GTest
     # happens to use goto).
