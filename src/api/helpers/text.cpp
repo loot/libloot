@@ -143,8 +143,8 @@ std::wstring ToWinWide(const std::string& str) {
                       0,
                       str.c_str(),
                       static_cast<int>(str.length()),
-                      &wstr[0],
-                      static_cast<int>(len));
+                      wstr.data(),
+                      static_cast<int>(wstr.length()));
   return wstr;
 }
 
@@ -167,8 +167,8 @@ std::string FromWinWide(const std::wstring& wstr) {
                       0,
                       wstr.c_str(),
                       static_cast<int>(wstr.length()),
-                      &str[0],
-                      static_cast<int>(len),
+                      str.data(),
+                      static_cast<int>(str.length()),
                       NULL,
                       NULL);
   return str;
@@ -208,7 +208,7 @@ std::string NormalizeFilename(const std::string& filename) {
     return std::string();
   }
 
-  CharUpperBuffW(&wideString[0], static_cast<int>(wideString.length()));
+  CharUpperBuffW(wideString.data(), static_cast<int>(wideString.length()));
   return FromWinWide(wideString);
 #else
   std::string normalizedFilename;

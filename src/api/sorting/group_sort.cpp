@@ -269,7 +269,7 @@ std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
       boost::weight_map(edge_map_t(weightMap))
           .predecessor_map(boost::make_iterator_property_map(
               predecessors.begin(), get(boost::vertex_index, graph)))
-          .distance_map(&distance[0])
+          .distance_map(distance.data())
           .root_vertex(toVertex));
 
   std::vector<Vertex> path;

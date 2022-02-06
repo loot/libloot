@@ -204,7 +204,7 @@ size_t Plugin::GetOverlapSize(
 
   size_t overlapSize = 0;
   auto ret = esp_plugin_records_overlap_size(
-      esPlugin.get(), &esPlugins[0], esPlugins.size(), &overlapSize);
+      esPlugin.get(), esPlugins.data(), esPlugins.size(), &overlapSize);
   if (ret != ESP_OK) {
     throw FileAccessError("Error getting overlap size for \"" + name_ +
                           "\". esplugin error code: " + std::to_string(ret));
