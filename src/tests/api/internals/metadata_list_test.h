@@ -40,7 +40,7 @@ protected:
           {metadataFilesPath / "invalid" / "non_map_root.yaml",
            metadataFilesPath / "invalid" / "non_unique.yaml"}) {}
 
-  inline virtual void SetUp() override {
+  inline void SetUp() override {
     CommonGameTestFixture::SetUp();
 
     using std::filesystem::copy;

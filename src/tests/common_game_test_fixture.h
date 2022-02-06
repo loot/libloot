@@ -146,7 +146,7 @@ protected:
     ASSERT_TRUE(std::filesystem::exists(dataPath / filename));
   }
 
-  void TearDown() {
+  void TearDown() override {
     // Grant write permissions to everything in rootTestPath
     // in case the test made anything read only.
     for (const auto& path :

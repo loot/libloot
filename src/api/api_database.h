@@ -59,7 +59,7 @@ struct ApiDatabase final : public DatabaseInterface {
 
   std::vector<Group> GetGroups(bool includeUserMetadata = true) const override;
   std::vector<Group> GetUserGroups() const override;
-  void SetUserGroups(const std::vector<Group>& groups);
+  void SetUserGroups(const std::vector<Group>& groups) override;
   std::vector<Vertex> GetGroupsPath(
       const std::string& fromGroupName,
       const std::string& toGroupName) const override;

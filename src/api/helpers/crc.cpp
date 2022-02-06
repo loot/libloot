@@ -56,7 +56,7 @@ uint32_t GetCrc32(const std::filesystem::path& filename) {
     ifile.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 
     static constexpr size_t BUFFER_SIZE = 8192;
-    std::array<char, BUFFER_SIZE> buffer;
+    std::array<char, BUFFER_SIZE> buffer{};
     boost::crc_32_type result;
     size_t bytesLeft = GetStreamSize(ifile);
     while (bytesLeft > 0) {

@@ -34,7 +34,7 @@ namespace loot {
  */
 struct SimpleMessage {
   /** The type of the message. */
-  MessageType type;
+  MessageType type{MessageType::say};
 
   /** The language the message string is written in. */
   std::string language;
