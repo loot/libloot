@@ -206,7 +206,9 @@ GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
     // Create a color map.
     std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
     auto colorMap = boost::make_iterator_property_map(
-        colorVec.begin(), boost::get(boost::vertex_index, graph), colorVec[0]);
+        colorVec.begin(),
+        boost::get(boost::vertex_index, graph),
+        colorVec.at(0));
 
     boost::depth_first_visit(graph, vertex, afterGroupsVisitor, colorMap);
     transitiveAfterGroups[graph[vertex]] = visitedGroups;
