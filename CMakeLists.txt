@@ -491,6 +491,7 @@ if(RUN_CLANG_TIDY)
         "cppcoreguidelines-macro-usage"
         "cppcoreguidelines-narrowing-conventions"
         "cppcoreguidelines-no-malloc"
+        "cppcoreguidelines-pro-bounds-array-to-pointer-decay"
         "cppcoreguidelines-pro-bounds-constant-array-index"
         "cppcoreguidelines-pro-bounds-pointer-arithmetic"
         "cppcoreguidelines-pro-type-const-cast"
