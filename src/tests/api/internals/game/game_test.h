@@ -26,16 +26,13 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_GAME_GAME_TEST
 
 #include "api/game/game.h"
-
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
 namespace test {
 class GameTest : public CommonGameTestFixture {
 protected:
-  GameTest() :
-    blankArchive("Blank" + GetArchiveFileExtension(GetParam())) {
-
+  GameTest() : blankArchive("Blank" + GetArchiveFileExtension(GetParam())) {
     std::ofstream out(dataPath / blankArchive);
     out.close();
   }
@@ -63,13 +60,13 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        GameTest,
-                        ::testing::Values(GameType::tes4,
-                                          GameType::tes5,
-                                          GameType::fo3,
-                                          GameType::fonv,
-                                          GameType::fo4,
-                                          GameType::tes5se));
+                         GameTest,
+                         ::testing::Values(GameType::tes4,
+                                           GameType::tes5,
+                                           GameType::fo3,
+                                           GameType::fonv,
+                                           GameType::fo4,
+                                           GameType::tes5se));
 
 TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
@@ -127,7 +124,7 @@ TEST_P(GameTest,
        loadPluginsWithAnInvalidPluginShouldNotAddItToTheLoadedPlugins) {
   ASSERT_FALSE(std::filesystem::exists(dataPath / invalidPlugin));
   ASSERT_NO_THROW(std::filesystem::copy_file(dataPath / blankEsm,
-                                               dataPath / invalidPlugin));
+                                             dataPath / invalidPlugin));
   ASSERT_TRUE(std::filesystem::exists(dataPath / invalidPlugin));
   std::ofstream out(dataPath / invalidPlugin, std::fstream::app);
   out << "GRUP0";
@@ -156,20 +153,18 @@ TEST_P(GameTest,
   EXPECT_EQ(blankEsmCrc, plugin->GetCRC().value());
 }
 
-TEST_P(GameTest,
-  loadPluginsShouldFindAndCacheArchivesForLoadDetectionWhenLoadingPlugins) {
+TEST_P(
+    GameTest,
+    loadPluginsShouldFindAndCacheArchivesForLoadDetectionWhenLoadingPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
 
-  auto expected = std::set<std::filesystem::path>({
-    dataPath / blankArchive
-  });
+  auto expected = std::set<std::filesystem::path>({dataPath / blankArchive});
   EXPECT_EQ(expected, game.GetCache()->GetArchivePaths());
 }
 
-TEST_P(GameTest,
-  loadPluginsShouldClearTheArchivesCacheBeforeFindingArchives) {
+TEST_P(GameTest, loadPluginsShouldClearTheArchivesCacheBeforeFindingArchives) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
@@ -177,9 +172,12 @@ TEST_P(GameTest,
   EXPECT_EQ(1, game.GetCache()->GetArchivePaths().size());
 }
 
-TEST_P(GameTest,
-  loadPluginsShouldNotThrowIfAFilenameHasNonWindows1252EncodableCharacters) {
-  auto path = dataPath / std::filesystem::u8path(u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
+TEST_P(
+    GameTest,
+    loadPluginsShouldNotThrowIfAFilenameHasNonWindows1252EncodableCharacters) {
+  auto path =
+      dataPath / std::filesystem::u8path(
+                     u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
   std::ofstream out(path);
   out.close();
 

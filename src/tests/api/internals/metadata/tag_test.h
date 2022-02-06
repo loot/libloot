@@ -25,11 +25,10 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_METADATA_TAG_TEST
 #define LOOT_TESTS_API_INTERNALS_METADATA_TAG_TEST
 
-#include "loot/metadata/tag.h"
-
 #include <gtest/gtest.h>
 
 #include "api/metadata/yaml/tag.h"
+#include "loot/metadata/tag.h"
 
 namespace loot {
 namespace test {
@@ -168,8 +167,7 @@ TEST(Tag, lessThanOperatorShouldTreatTagAdditionsAsBeingLessThanRemovals) {
   EXPECT_FALSE(tag2 < tag1);
 }
 
-TEST(
-    Tag, greaterThanOperatorShouldReturnTrueIfTheSecondTagIsLessThanTheFirst) {
+TEST(Tag, greaterThanOperatorShouldReturnTrueIfTheSecondTagIsLessThanTheFirst) {
   Tag tag1("name", true, "condition");
   Tag tag2("name", true, "condition");
 
@@ -207,7 +205,9 @@ TEST(
   EXPECT_TRUE(tag2 > tag1);
 }
 
-TEST(Tag, lessThanOrEqualOperatorShouldReturnTrueIfTheFirstTagIsNotGreaterThanTheSecond) {
+TEST(
+    Tag,
+    lessThanOrEqualOperatorShouldReturnTrueIfTheFirstTagIsNotGreaterThanTheSecond) {
   Tag tag1("name", true, "condition");
   Tag tag2("name", true, "condition");
 

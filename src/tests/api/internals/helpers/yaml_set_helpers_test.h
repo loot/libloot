@@ -25,9 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_HELPERS_YAML_SET_HELPERS_TEST
 #define LOOT_TESTS_API_INTERNALS_HELPERS_YAML_SET_HELPERS_TEST
 
-#include "api/metadata/yaml/set.h"
-
 #include <gtest/gtest.h>
+
+#include "api/metadata/yaml/set.h"
 
 namespace loot {
 namespace test {

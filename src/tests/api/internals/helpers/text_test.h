@@ -25,10 +25,10 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_HELPERS_TEXT_TEST
 #define LOOT_TESTS_API_INTERNALS_HELPERS_TEXT_TEST
 
+#include <gtest/gtest.h>
+
 #include "api/helpers/text.h"
 #include "loot/loot_version.h"
-
-#include <gtest/gtest.h>
 
 namespace loot {
 namespace test {
@@ -204,12 +204,12 @@ TEST(CompareFilenames, shouldBeCaseInsensitiveAndLocaleInvariant) {
   // ICU sees all three greek rhos as case-insensitively equal, unlike Windows.
   // A small enough deviation that it should hopefully be insignificant.
 #ifdef _WIN32
-  const char * turkishLocale = "tr-TR";
-  const char * greekLocale = "el-GR";
+  const char* turkishLocale = "tr-TR";
+  const char* greekLocale = "el-GR";
   const int expectedRhoSymbolOrder = 1;
 #else
-  const char * turkishLocale = "tr_TR.UTF-8";
-  const char * greekLocale = "el_GR.UTF-8";
+  const char* turkishLocale = "tr_TR.UTF-8";
+  const char* greekLocale = "el_GR.UTF-8";
   const int expectedRhoSymbolOrder = 0;
 #endif
 

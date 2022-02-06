@@ -26,16 +26,14 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
+#include <yaml-cpp/yaml.h>
+
 #include <cstdint>
 #include <list>
 #include <regex>
 #include <set>
 #include <string>
 #include <vector>
-
-#include <yaml-cpp/yaml.h>
-
-#include "loot/metadata/plugin_metadata.h"
 
 #include "api/metadata/yaml/file.h"
 #include "api/metadata/yaml/location.h"
@@ -44,6 +42,7 @@
 #include "api/metadata/yaml/plugin_cleaning_data.h"
 #include "api/metadata/yaml/set.h"
 #include "api/metadata/yaml/tag.h"
+#include "loot/metadata/plugin_metadata.h"
 
 namespace YAML {
 template<>
@@ -117,7 +116,7 @@ struct convert<loot::PluginMetadata> {
           node["dirty"].as<std::vector<loot::PluginCleaningData>>());
     }
     if (node["clean"]) {
-       rhs.SetCleanInfo(
+      rhs.SetCleanInfo(
           node["clean"].as<std::vector<loot::PluginCleaningData>>());
     }
     if (node["url"])
@@ -133,7 +132,8 @@ inline Emitter& operator<<(Emitter& out, const loot::PluginMetadata& rhs) {
         << rhs.GetName();
 
     if (rhs.GetGroup())
-      out << Key << "group" << Value << YAML::SingleQuoted << rhs.GetGroup().value();
+      out << Key << "group" << Value << YAML::SingleQuoted
+          << rhs.GetGroup().value();
 
     if (!rhs.GetLoadAfterFiles().empty())
       out << Key << "after" << Value << rhs.GetLoadAfterFiles();

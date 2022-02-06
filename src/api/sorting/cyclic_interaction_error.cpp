@@ -32,7 +32,8 @@ std::string describeCycle(const std::vector<Vertex>& cycle) {
   for (const auto& vertex : cycle) {
     text += vertex.GetName();
     if (vertex.GetTypeOfEdgeToNextVertex().has_value()) {
-      text += " --[" + describeEdgeType(vertex.GetTypeOfEdgeToNextVertex().value()) +
+      text += " --[" +
+              describeEdgeType(vertex.GetTypeOfEdgeToNextVertex().value()) +
               "]-> ";
     }
   }

@@ -239,8 +239,7 @@ TEST(
   EXPECT_TRUE(content1 >= content2);
 }
 
-TEST(MessageContent,
-     chooseShouldReturnANulloptIfTheVectorIsEmpty) {
+TEST(MessageContent, chooseShouldReturnANulloptIfTheVectorIsEmpty) {
   auto content = MessageContent::Choose(std::vector<MessageContent>(), "fr");
 
   EXPECT_FALSE(content.has_value());

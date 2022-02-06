@@ -24,13 +24,12 @@
 
 #include "plugin_graph.h"
 
-#include <cstdlib>
-#include <queue>
-
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/topological_sort.hpp>
+#include <cstdlib>
+#include <queue>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"

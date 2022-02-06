@@ -32,9 +32,7 @@ Tag::Tag() : addTag_(true) {}
 Tag::Tag(const std::string& tag,
          const bool isAddition,
          const std::string& condition) :
-    name_(tag),
-    addTag_(isAddition),
-    ConditionalMetadata(condition) {}
+    name_(tag), addTag_(isAddition), ConditionalMetadata(condition) {}
 
 bool Tag::operator<(const Tag& rhs) const {
   if (addTag_ != rhs.addTag_) {

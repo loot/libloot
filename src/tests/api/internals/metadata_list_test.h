@@ -564,7 +564,7 @@ plugins:
 }
 
 TEST(ReplaceMetadataListPrelude,
-  shouldSucceedIfGivenAFlowStylePreludeAndABlockStyleMasterlist) {
+     shouldSucceedIfGivenAFlowStylePreludeAndABlockStyleMasterlist) {
   std::string prelude = "globals: [{type: note, content: A message.}]";
   std::string masterlist = R"(prelude:
   a: b

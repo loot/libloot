@@ -76,12 +76,13 @@ public:
    *         The number of deleted navmeshes found in the plugin.
    * @return A PluginCleaningData object.
    */
-  LOOT_API explicit PluginCleaningData(uint32_t crc,
-                                       const std::string& utility,
-                                       const std::vector<MessageContent>& detail,
-                                       unsigned int itm,
-                                       unsigned int ref,
-                                       unsigned int nav);
+  LOOT_API explicit PluginCleaningData(
+      uint32_t crc,
+      const std::string& utility,
+      const std::vector<MessageContent>& detail,
+      unsigned int itm,
+      unsigned int ref,
+      unsigned int nav);
   /**
    * A less-than operator implemented with no semantics so that
    * PluginCleaningData objects can be stored in sets.
@@ -144,7 +145,8 @@ public:
    * @return The MessageContent object for the preferred language, or if one
    *         does not exist, the English-language MessageContent object.
    */
-  LOOT_API std::optional<MessageContent> ChooseDetail(const std::string& language) const;
+  LOOT_API std::optional<MessageContent> ChooseDetail(
+      const std::string& language) const;
 
 private:
   uint32_t crc_;

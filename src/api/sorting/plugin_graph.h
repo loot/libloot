@@ -27,12 +27,12 @@
 
 #define FMT_NO_FMT_STRING_ALIAS
 
-#include <map>
-
 #include <spdlog/spdlog.h>
+
 #include <boost/container_hash/hash.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
+#include <map>
 
 #include "api/game/game.h"
 #include "api/plugin.h"
@@ -82,7 +82,7 @@ class PluginGraph {
 public:
   size_t CountVertices() const;
   void CheckForCycles() const;
-  
+
   void AddPluginVertices(Game& game, const std::vector<std::string>& loadOrder);
   void AddSpecificEdges();
   void AddHardcodedPluginEdges(Game& game);

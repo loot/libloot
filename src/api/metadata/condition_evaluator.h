@@ -25,10 +25,10 @@
 #ifndef LOOT_API_METADATA_CONDITION_EVALUATOR
 #define LOOT_API_METADATA_CONDITION_EVALUATOR
 
+#include <loot_condition_interpreter.h>
+
 #include <filesystem>
 #include <string>
-
-#include <loot_condition_interpreter.h>
 
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
@@ -39,18 +39,19 @@ namespace loot {
 class ConditionEvaluator {
 public:
   explicit ConditionEvaluator(const GameType gameType,
-    const std::filesystem::path& dataPath);
+                              const std::filesystem::path& dataPath);
 
   bool Evaluate(const std::string& condition);
   PluginMetadata EvaluateAll(const PluginMetadata& pluginMetadata);
 
   void ClearConditionCache();
   void RefreshActivePluginsState(std::vector<std::string> activePluginNames);
-  void RefreshLoadedPluginsState(std::vector<std::shared_ptr<const PluginInterface>> plugins);
+  void RefreshLoadedPluginsState(
+      std::vector<std::shared_ptr<const PluginInterface>> plugins);
 
 private:
   bool Evaluate(const PluginCleaningData& cleaningData,
-    const std::string& pluginName);
+                const std::string& pluginName);
 
   std::shared_ptr<lci_state> lciState_;
 };

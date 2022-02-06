@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERFACE_GAME_INTERFACE_TEST
 
 #include "loot/api.h"
-
 #include "tests/api/interface/api_game_operations_test.h"
 
 namespace loot {
@@ -51,7 +50,7 @@ protected:
       }) {
     // Make sure the plugin with a non-ASCII filename exists.
     std::filesystem::copy_file(dataPath / blankEsm,
-      dataPath / std::filesystem::u8path(nonAsciiEsm));
+                               dataPath / std::filesystem::u8path(nonAsciiEsm));
   }
 
   const std::string emptyFile;
@@ -62,19 +61,20 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        GameInterfaceTest,
-                        ::testing::Values(GameType::tes4,
-                                          GameType::tes5,
-                                          GameType::fo3,
-                                          GameType::fonv,
-                                          GameType::fo4,
-                                          GameType::tes5se));
+                         GameInterfaceTest,
+                         ::testing::Values(GameType::tes4,
+                                           GameType::tes5,
+                                           GameType::fo3,
+                                           GameType::fonv,
+                                           GameType::fo4,
+                                           GameType::tes5se));
 
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidPlugin) {
   EXPECT_TRUE(handle_->IsValidPlugin(blankEsm));
 }
 
-TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidNonAsciiPlugin) {
+TEST_P(GameInterfaceTest,
+       isValidPluginShouldReturnTrueForAValidNonAsciiPlugin) {
   EXPECT_TRUE(handle_->IsValidPlugin(nonAsciiEsm));
 }
 
@@ -121,7 +121,7 @@ TEST_P(GameInterfaceTest,
 }
 
 TEST_P(GameInterfaceTest, loadPluginsWithANonAsciiPluginShouldLoadIt) {
-  handle_->LoadPlugins({ nonAsciiEsm }, false);
+  handle_->LoadPlugins({nonAsciiEsm}, false);
   EXPECT_EQ(1, handle_->GetLoadedPlugins().size());
 
   // Check that one plugin's header has been read.
@@ -161,8 +161,7 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
   }
 
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase()->LoadLists(masterlistPath, ""));
+  ASSERT_NO_THROW(handle_->GetDatabase()->LoadLists(masterlistPath, ""));
 
   std::vector<std::string> pluginsToSort({
       blankEsp,

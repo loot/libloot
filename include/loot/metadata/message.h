@@ -58,8 +58,8 @@ public:
    * @return A Message object.
    */
   LOOT_API explicit Message(const MessageType type,
-                   const std::string& content,
-                   const std::string& condition = "");
+                            const std::string& content,
+                            const std::string& condition = "");
 
   /**
    * Construct a Message object with the given type, content and condition
@@ -73,8 +73,8 @@ public:
    * @return A Message object.
    */
   LOOT_API explicit Message(const MessageType type,
-                   const std::vector<MessageContent>& content,
-                   const std::string& condition = "");
+                            const std::vector<MessageContent>& content,
+                            const std::string& condition = "");
 
   /**
    * Construct a Message object from a SimpleMessage object.
@@ -117,7 +117,8 @@ public:
    * @return A MessageContent object for the preferred language, or for English
    *         if a MessageContent object is not available for the given language.
    */
-  LOOT_API std::optional<MessageContent> GetContent(const std::string& language) const;
+  LOOT_API std::optional<MessageContent> GetContent(
+      const std::string& language) const;
 
   /**
    * Get the message as a SimpleMessage given a language.
@@ -126,7 +127,8 @@ public:
    * @return A SimpleMessage object for the preferred language, or for English
    *         if message text is not available for the given language.
    */
-  LOOT_API std::optional<SimpleMessage> ToSimpleMessage(const std::string& language) const;
+  LOOT_API std::optional<SimpleMessage> ToSimpleMessage(
+      const std::string& language) const;
 
 private:
   MessageType type_;

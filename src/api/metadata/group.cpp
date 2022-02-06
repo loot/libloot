@@ -32,9 +32,7 @@ Group::Group() : name_("default") {}
 Group::Group(const std::string& name,
              const std::vector<std::string>& afterGroups,
              const std::string& description) :
-    name_(name),
-    afterGroups_(afterGroups),
-    description_(description) {}
+    name_(name), afterGroups_(afterGroups), description_(description) {}
 
 bool Group::operator==(const Group& rhs) const {
   return name_ == rhs.name_ && description_ == rhs.description_ &&
@@ -65,13 +63,9 @@ std::string Group::GetName() const { return name_; }
 
 std::string Group::GetDescription() const { return description_; }
 
-std::vector<std::string> Group::GetAfterGroups() const {
-  return afterGroups_;
-}
+std::vector<std::string> Group::GetAfterGroups() const { return afterGroups_; }
 
-bool operator!=(const Group& lhs, const Group& rhs) {
-  return !(lhs == rhs);
-}
+bool operator!=(const Group& lhs, const Group& rhs) { return !(lhs == rhs); }
 
 bool operator>(const Group& lhs, const Group& rhs) { return rhs < lhs; }
 

@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_HELPERS_CRC_TEST
 
 #include "api/helpers/crc.h"
-
 #include "loot/exception/file_access_error.h"
 #include "tests/common_game_test_fixture.h"
 

@@ -27,10 +27,10 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
+#include <yaml-cpp/yaml.h>
+
 #include <cstdint>
 #include <string>
-
-#include <yaml-cpp/yaml.h>
 
 #include "loot/metadata/plugin_cleaning_data.h"
 
@@ -83,7 +83,8 @@ struct convert<loot::PluginCleaningData> {
       if (node["detail"].IsSequence())
         detail = node["detail"].as<std::vector<loot::MessageContent>>();
       else {
-        detail.push_back(loot::MessageContent(node["detail"].as<std::string>()));
+        detail.push_back(
+            loot::MessageContent(node["detail"].as<std::string>()));
       }
     }
 

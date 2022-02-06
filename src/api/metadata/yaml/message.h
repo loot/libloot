@@ -26,11 +26,11 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
+#include <yaml-cpp/yaml.h>
+
+#include <boost/format.hpp>
 #include <string>
 #include <vector>
-
-#include <yaml-cpp/yaml.h>
-#include <boost/format.hpp>
 
 #include "loot/metadata/message.h"
 

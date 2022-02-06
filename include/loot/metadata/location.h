@@ -49,12 +49,13 @@ public:
    *         A name for the URL, eg. the page or site name.
    * @return A Location object.
    */
-  LOOT_API explicit Location(const std::string& url, const std::string& name = "");
+  LOOT_API explicit Location(const std::string& url,
+                             const std::string& name = "");
 
   /**
    * A less-than operator implemented with no semantics so that Location objects
    * can be stored in sets.
-   * @returns True if this Location is less than the given Location, false 
+   * @returns True if this Location is less than the given Location, false
    *          otherwise.
    */
   LOOT_API bool operator<(const Location& rhs) const;
@@ -89,7 +90,7 @@ private:
 LOOT_API bool operator!=(const Location& lhs, const Location& rhs);
 
 /**
- * Check if the first Location object is greater than the second Location 
+ * Check if the first Location object is greater than the second Location
  * object.
  * @returns True if the second Location object is less than the first Location
  *          object, false otherwise.
@@ -97,17 +98,17 @@ LOOT_API bool operator!=(const Location& lhs, const Location& rhs);
 LOOT_API bool operator>(const Location& lhs, const Location& rhs);
 
 /**
- * Check if the first Location object is less than or equal to the second 
+ * Check if the first Location object is less than or equal to the second
  * Location object.
- * @returns True if the first Location object is not greater than the second 
+ * @returns True if the first Location object is not greater than the second
  *          Location object, false otherwise.
  */
 LOOT_API bool operator<=(const Location& lhs, const Location& rhs);
 
 /**
- * Check if the first Location object is greater than or equal to the second 
+ * Check if the first Location object is greater than or equal to the second
  * Location object.
- * @returns True if the first Location object is not less than the second 
+ * @returns True if the first Location object is not less than the second
  *          Location object, false otherwise.
  */
 LOOT_API bool operator>=(const Location& lhs, const Location& rhs);

@@ -25,11 +25,10 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_METADATA_LOCATION_TEST
 #define LOOT_TESTS_API_INTERNALS_METADATA_LOCATION_TEST
 
-#include "loot/metadata/location.h"
-
 #include <gtest/gtest.h>
 
 #include "api/metadata/yaml/location.h"
+#include "loot/metadata/location.h"
 
 namespace loot {
 namespace test {
@@ -202,8 +201,9 @@ TEST(
   EXPECT_TRUE(location1 <= location2);
 }
 
-TEST(Location,
-     greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstLocationIsNotLessThanTheSecond) {
+TEST(
+    Location,
+    greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstLocationIsNotLessThanTheSecond) {
   Location location1("http://www.example.com", "example");
   Location location2("http://www.example.com", "example");
 

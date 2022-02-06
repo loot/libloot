@@ -25,18 +25,16 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_SORTING_GROUP_SORT_TEST
 #define LOOT_TESTS_API_INTERNALS_SORTING_GROUP_SORT_TEST
 
-#include "api/sorting/group_sort.h"
-
 #include <gtest/gtest.h>
 
+#include "api/sorting/group_sort.h"
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/undefined_group_error.h"
 
 namespace loot {
 namespace test {
 TEST(GetTransitiveAfterGroups, shouldMapGroupsToTheirTransitiveAfterGroups) {
-  std::vector<Group> groups(
-      {Group("a"), Group("b", {"a"}), Group("c", {"b"})});
+  std::vector<Group> groups({Group("a"), Group("b", {"a"}), Group("c", {"b"})});
 
   auto mapped = GetTransitiveAfterGroups(groups, {});
 
@@ -119,10 +117,10 @@ TEST(GetGroupsPath, shouldThrowIfTheToGroupDoesNotExist) {
 TEST(GetGroupsPath,
      shouldReturnAnEmptyVectorIfThereIsNoPathBetweenTheTwoGroups) {
   std::vector<Group> groups({Group("a", {}),
-                                    Group("b", {"a"}),
-                                    Group("c", {"a"}),
-                                    Group("d", {"c"}),
-                                    Group("e", {"b", "d"})});
+                             Group("b", {"a"}),
+                             Group("c", {"a"}),
+                             Group("d", {"c"}),
+                             Group("e", {"b", "d"})});
 
   auto path = GetGroupsPath(groups, {}, "b", "d");
 
@@ -132,10 +130,10 @@ TEST(GetGroupsPath,
 TEST(GetGroupsPath,
      shouldFindThePathWithTheLeastNumberOfEdgesInAMasterlistOnlyGraph) {
   std::vector<Group> groups({Group("a", {}),
-                                    Group("b", {"a"}),
-                                    Group("c", {"a"}),
-                                    Group("d", {"c"}),
-                                    Group("e", {"b", "d"})});
+                             Group("b", {"a"}),
+                             Group("c", {"a"}),
+                             Group("d", {"c"}),
+                             Group("e", {"b", "d"})});
 
   auto path = GetGroupsPath(groups, {}, "a", "e");
 
@@ -153,9 +151,9 @@ TEST(GetGroupsPath,
 TEST(GetGroupsPath,
      shouldFindThePathWithTheLeastNumberOfEdgesThatContainsUserMetadata) {
   std::vector<Group> groups({Group("a", {}),
-                                    Group("b", {"a"}),
-                                    Group("c", {"a"}),
-                                    Group("e", {"b"})});
+                             Group("b", {"a"}),
+                             Group("c", {"a"}),
+                             Group("e", {"b"})});
   std::vector<Group> userGroups({Group("d", {"c"}), Group("e", {"d"})});
 
   auto path = GetGroupsPath(groups, userGroups, "a", "e");
@@ -176,9 +174,9 @@ TEST(GetGroupsPath,
 
 TEST(GetGroupsPath, shouldThrowIfMasterlistGroupLoadsAfterAUserlistGroup) {
   std::vector<Group> groups({Group("a", {}),
-                                    Group("b", {"a"}),
-                                    Group("c", {"a"}),
-                                    Group("e", {"b", "d"})});
+                             Group("b", {"a"}),
+                             Group("c", {"a"}),
+                             Group("e", {"b", "d"})});
   std::vector<Group> userGroups({Group("d", {"c"})});
 
   EXPECT_THROW(GetGroupsPath(groups, userGroups, "a", "e"),

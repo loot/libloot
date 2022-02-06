@@ -25,10 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_TEST
 #define LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_TEST
 
-#include "loot/metadata/message.h"
-
 #include "api/game/game.h"
 #include "api/metadata/yaml/message.h"
+#include "loot/metadata/message.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -83,7 +82,7 @@ TEST_P(
 }
 
 TEST_P(MessageTest,
-  simpleMessageConstructorShouldCreateAMessageWithASingleContentString) {
+       simpleMessageConstructorShouldCreateAMessageWithASingleContentString) {
   SimpleMessage simple;
   simple.type = MessageType::error;
   simple.text = "ERROR";
@@ -398,7 +397,8 @@ TEST_P(MessageTest, getContentShouldSelectTheContentStringIfOnlyOneExists) {
                       MessageContent("content1", french),
                   }));
 
-  EXPECT_EQ("content1",
+  EXPECT_EQ(
+      "content1",
       message.GetContent(MessageContent::defaultLanguage).value().GetText());
 }
 

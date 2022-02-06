@@ -26,10 +26,10 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
+#include <yaml-cpp/yaml.h>
+
 #include <string>
 #include <vector>
-
-#include <yaml-cpp/yaml.h>
 
 #include "loot/metadata/location.h"
 

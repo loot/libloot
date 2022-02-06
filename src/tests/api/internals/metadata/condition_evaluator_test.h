@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_METADATA_CONDITION_EVALUATOR_TEST
 
 #include "api/metadata/condition_evaluator.h"
-
 #include "loot/exception/condition_syntax_error.h"
 #include "tests/common_game_test_fixture.h"
 
@@ -39,13 +38,12 @@ protected:
           MessageContent("info"),
       })),
       game_(GetParam(), dataPath.parent_path(), localPath),
-      evaluator_(game_.Type(),
-                 game_.DataPath()),
+      evaluator_(game_.Type(), game_.DataPath()),
       nonAsciiEsm(u8"non\u00C1scii.esm"),
       nonAsciiNestedFile(u8"non\u00C1scii/test.txt") {
     // Make sure the plugin with a non-ASCII filename exists.
     std::filesystem::copy_file(dataPath / blankEsm,
-      dataPath / std::filesystem::u8path(nonAsciiEsm));
+                               dataPath / std::filesystem::u8path(nonAsciiEsm));
 
     auto nonAsciiPath = dataPath / std::filesystem::u8path(nonAsciiNestedFile);
     std::filesystem::create_directory(nonAsciiPath.parent_path());
@@ -79,7 +77,7 @@ protected:
         blankPluginDependentEsp,
         blankDifferentPluginDependentEsp,
         nonAsciiEsm,
-      });
+    });
 
     if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
       plugins.push_back(blankEsl);
@@ -101,14 +99,14 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        ConditionEvaluatorTest,
-                        ::testing::Values(GameType::tes3,
-                                          GameType::tes4,
-                                          GameType::tes5,
-                                          GameType::fo3,
-                                          GameType::fonv,
-                                          GameType::fo4,
-                                          GameType::tes5se));
+                         ConditionEvaluatorTest,
+                         ::testing::Values(GameType::tes3,
+                                           GameType::tes4,
+                                           GameType::tes5,
+                                           GameType::fo3,
+                                           GameType::fonv,
+                                           GameType::fo4,
+                                           GameType::tes5se));
 
 TEST_P(ConditionEvaluatorTest,
        evaluateShouldReturnTrueForAnEmptyConditionString) {
@@ -125,37 +123,38 @@ TEST_P(ConditionEvaluatorTest,
 }
 
 TEST_P(ConditionEvaluatorTest,
-  evaluateFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
+       evaluateFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
   EXPECT_TRUE(evaluator_.Evaluate("file(\"" + nonAsciiEsm + "\")"));
 }
 
 TEST_P(ConditionEvaluatorTest,
-  evaluateChecksumConditionShouldBeAbleToGetTheCrcOfANonAsciiFile) {
+       evaluateChecksumConditionShouldBeAbleToGetTheCrcOfANonAsciiFile) {
   std::string condition("checksum(\"" + nonAsciiEsm + "\", " +
-    IntToHexString(blankEsmCrc) + ")");
+                        IntToHexString(blankEsmCrc) + ")");
   EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
 
 TEST_P(ConditionEvaluatorTest,
-  evaluateVersionConditionShouldBeAbleToGetTheVersionOfANonAsciiFile) {
+       evaluateVersionConditionShouldBeAbleToGetTheVersionOfANonAsciiFile) {
   std::string condition("version(\"" + nonAsciiEsm + "\", \"5.0\", ==)");
   EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
 
 TEST_P(ConditionEvaluatorTest,
-  evaluateActiveConditionShouldReturnTrueForAnActivePlugin) {
+       evaluateActiveConditionShouldReturnTrueForAnActivePlugin) {
   std::string condition("active(\"" + blankEsm + "\")");
   EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
 
 TEST_P(ConditionEvaluatorTest,
-  evaluateRegexFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
+       evaluateRegexFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
   std::string condition(u8"file(\"non\u00C1scii.*\\.esm\")");
   EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
 
-TEST_P(ConditionEvaluatorTest,
-  evaluateRegexFileConditionShouldReturnTrueForANonAsciiNestedFileThatExists) {
+TEST_P(
+    ConditionEvaluatorTest,
+    evaluateRegexFileConditionShouldReturnTrueForANonAsciiNestedFileThatExists) {
   std::string condition(u8"file(\"non\u00C1scii/.+\\.txt\")");
   EXPECT_TRUE(evaluator_.Evaluate(condition));
 }
@@ -209,7 +208,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldPreserveGroupExplicitness) {
 }
 
 TEST_P(ConditionEvaluatorTest,
-  refreshActivePluginsStateShouldClearTheConditionCache) {
+       refreshActivePluginsStateShouldClearTheConditionCache) {
   std::string condition("active(\"" + blankEsm + "\")");
   ASSERT_TRUE(evaluator_.Evaluate(condition));
 
@@ -218,8 +217,9 @@ TEST_P(ConditionEvaluatorTest,
   EXPECT_FALSE(evaluator_.Evaluate(condition));
 }
 
-TEST_P(ConditionEvaluatorTest,
-       refreshActivePluginsStateShouldClearTheActivePluginsCacheIfGivenAnEmptyVector) {
+TEST_P(
+    ConditionEvaluatorTest,
+    refreshActivePluginsStateShouldClearTheActivePluginsCacheIfGivenAnEmptyVector) {
   std::string condition("active(\"" + blankEsm + "\")");
   ASSERT_TRUE(evaluator_.Evaluate(condition));
 
@@ -245,7 +245,8 @@ TEST_P(ConditionEvaluatorTest,
   EXPECT_FALSE(evaluator_.Evaluate(condition));
 }
 
-TEST_P(ConditionEvaluatorTest,
+TEST_P(
+    ConditionEvaluatorTest,
     refreshLoadedPluginsStateShouldClearTheVersionsCacheIfGivenAnEmptyVector) {
   std::string condition("version(\"" + blankEsm + "\", \"5.0\", ==)");
 

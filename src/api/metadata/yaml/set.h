@@ -27,10 +27,10 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
+#include <yaml-cpp/yaml.h>
+
 #include <set>
 #include <unordered_set>
-
-#include <yaml-cpp/yaml.h>
 
 namespace YAML {
 template<class T, class Compare>

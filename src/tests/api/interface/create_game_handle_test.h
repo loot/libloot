@@ -25,10 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERFACE_CREATE_GAME_HANDLE_TEST
 #define LOOT_TESTS_API_INTERFACE_CREATE_GAME_HANDLE_TEST
 
-#include "loot/api.h"
-
 #include <climits>
 
+#include "loot/api.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -85,13 +84,13 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        CreateGameHandleTest,
-                        ::testing::Values(GameType::tes4,
-                                          GameType::tes5,
-                                          GameType::fo3,
-                                          GameType::fonv,
-                                          GameType::fo4,
-                                          GameType::tes5se));
+                         CreateGameHandleTest,
+                         ::testing::Values(GameType::tes4,
+                                           GameType::tes5,
+                                           GameType::fo3,
+                                           GameType::fonv,
+                                           GameType::fo4,
+                                           GameType::tes5se));
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {

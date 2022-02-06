@@ -95,15 +95,15 @@ LOOT_API bool operator!=(const Tag& lhs, const Tag& rhs);
 
 /**
  * Check if the first Tag object is greater than the second Tag object.
- * @returns True if the second Tag object is less than the first Tag object, 
+ * @returns True if the second Tag object is less than the first Tag object,
  *          false otherwise.
  */
 LOOT_API bool operator>(const Tag& lhs, const Tag& rhs);
 
 /**
- * Check if the first Tag object is less than or equal to the second Tag 
+ * Check if the first Tag object is less than or equal to the second Tag
  * object.
- * @returns True if the first Tag object is not greater than the second Tag 
+ * @returns True if the first Tag object is not greater than the second Tag
  *          object, false otherwise.
  */
 LOOT_API bool operator<=(const Tag& lhs, const Tag& rhs);
@@ -111,7 +111,7 @@ LOOT_API bool operator<=(const Tag& lhs, const Tag& rhs);
 /**
  * Check if the first Tag object is greater than or equal to the second Tag
  * object.
- * @returns True if the first Tag object is not less than the second Tag 
+ * @returns True if the first Tag object is not less than the second Tag
  *          object, false otherwise.
  */
 LOOT_API bool operator>=(const Tag& lhs, const Tag& rhs);

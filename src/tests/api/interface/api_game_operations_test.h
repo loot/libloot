@@ -25,10 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERFACE_API_GAME_OPERATIONS_TEST
 #define LOOT_TESTS_API_INTERFACE_API_GAME_OPERATIONS_TEST
 
-#include "loot/api.h"
-
 #include <fstream>
 
+#include "loot/api.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -52,8 +51,7 @@ protected:
 
     ASSERT_FALSE(std::filesystem::exists(masterlistPath));
 
-    handle_ = CreateGameHandle(
-        GetParam(), dataPath.parent_path(), localPath);
+    handle_ = CreateGameHandle(GetParam(), dataPath.parent_path(), localPath);
   }
 
   void GenerateMasterlist() {

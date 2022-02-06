@@ -43,8 +43,7 @@ void HandleError(const std::string operation, int returnCode) {
   lci_get_error_message(&message);
   if (message == nullptr) {
     err += "Error code: " + std::to_string(returnCode);
-  }
-  else {
+  } else {
     err += "Details: " + std::string(message);
   }
 
@@ -58,26 +57,28 @@ void HandleError(const std::string operation, int returnCode) {
 
 int mapGameType(GameType gameType) {
   switch (gameType) {
-  case GameType::tes3:
-    return LCI_GAME_MORROWIND;
-  case GameType::tes4:
-    return LCI_GAME_OBLIVION;
-  case GameType::tes5:
-    return LCI_GAME_SKYRIM;
-  case GameType::tes5se:
-    return LCI_GAME_SKYRIM_SE;
-  case GameType::tes5vr:
-    return LCI_GAME_SKYRIM_VR;
-  case GameType::fo3:
-    return LCI_GAME_FALLOUT_3;
-  case GameType::fonv:
-    return LCI_GAME_FALLOUT_NV;
-  case GameType::fo4:
-    return LCI_GAME_FALLOUT_4;
-  case GameType::fo4vr:
-    return LCI_GAME_FALLOUT_4_VR;
-  default:
-    throw std::runtime_error("Unrecognised game type encountered while mapping for condition evaluation.");
+    case GameType::tes3:
+      return LCI_GAME_MORROWIND;
+    case GameType::tes4:
+      return LCI_GAME_OBLIVION;
+    case GameType::tes5:
+      return LCI_GAME_SKYRIM;
+    case GameType::tes5se:
+      return LCI_GAME_SKYRIM_SE;
+    case GameType::tes5vr:
+      return LCI_GAME_SKYRIM_VR;
+    case GameType::fo3:
+      return LCI_GAME_FALLOUT_3;
+    case GameType::fonv:
+      return LCI_GAME_FALLOUT_NV;
+    case GameType::fo4:
+      return LCI_GAME_FALLOUT_4;
+    case GameType::fo4vr:
+      return LCI_GAME_FALLOUT_4_VR;
+    default:
+      throw std::runtime_error(
+          "Unrecognised game type encountered while mapping for condition "
+          "evaluation.");
   }
 }
 
@@ -87,19 +88,21 @@ std::string IntToHexString(const uint32_t value) {
   return stream.str();
 }
 
-ConditionEvaluator::ConditionEvaluator(
-    const GameType gameType,
-    const std::filesystem::path& dataPath) {
-    lci_state * state = nullptr;
+ConditionEvaluator::ConditionEvaluator(const GameType gameType,
+                                       const std::filesystem::path& dataPath) {
+  lci_state* state = nullptr;
 
-    // This probably isn't correct for API users other than LOOT.
-    // But that probably doesn't matter, as the only things conditional
-    // on LOOT's version are LOOT-specific messages.
-    auto lootPath = std::filesystem::absolute("LOOT.exe");
-    int result = lci_state_create(&state, mapGameType(gameType), dataPath.u8string().c_str(), lootPath.u8string().c_str());
-    HandleError("create state object for condition evaluation", result);
+  // This probably isn't correct for API users other than LOOT.
+  // But that probably doesn't matter, as the only things conditional
+  // on LOOT's version are LOOT-specific messages.
+  auto lootPath = std::filesystem::absolute("LOOT.exe");
+  int result = lci_state_create(&state,
+                                mapGameType(gameType),
+                                dataPath.u8string().c_str(),
+                                lootPath.u8string().c_str());
+  HandleError("create state object for condition evaluation", result);
 
-    lciState_ = std::shared_ptr<lci_state>(state, lci_state_destroy);
+  lciState_ = std::shared_ptr<lci_state>(state, lci_state_destroy);
 }
 
 bool ConditionEvaluator::Evaluate(const std::string& condition) {
@@ -119,7 +122,8 @@ bool ConditionEvaluator::Evaluate(const std::string& condition) {
   return result == LCI_RESULT_TRUE;
 }
 
-PluginMetadata ConditionEvaluator::EvaluateAll(const PluginMetadata& pluginMetadata) {
+PluginMetadata ConditionEvaluator::EvaluateAll(
+    const PluginMetadata& pluginMetadata) {
   PluginMetadata evaluatedMetadata(pluginMetadata.GetName());
   evaluatedMetadata.SetLocations(pluginMetadata.GetLocations());
 
@@ -190,7 +194,7 @@ void ConditionEvaluator::RefreshActivePluginsState(
     std::vector<std::string> activePluginNames) {
   ClearConditionCache();
 
-  std::vector<const char *> activePluginNameCStrings;
+  std::vector<const char*> activePluginNameCStrings;
   for (auto& pluginName : activePluginNames) {
     activePluginNameCStrings.push_back(pluginName.c_str());
   }
@@ -202,7 +206,8 @@ void ConditionEvaluator::RefreshActivePluginsState(
     cActivePluginNames = &activePluginNameCStrings[0];
   }
 
-  int result = lci_state_set_active_plugins(lciState_.get(), cActivePluginNames, activePluginNameCStrings.size());
+  int result = lci_state_set_active_plugins(
+      lciState_.get(), cActivePluginNames, activePluginNameCStrings.size());
   HandleError("cache active plugins for condition evaluation", result);
 }
 
@@ -244,8 +249,8 @@ void ConditionEvaluator::RefreshLoadedPluginsState(
     cPluginVersions = &pluginVersions[0];
   }
 
-  int result = lci_state_set_plugin_versions(lciState_.get(), cPluginVersions,
-    pluginVersions.size());
+  int result = lci_state_set_plugin_versions(
+      lciState_.get(), cPluginVersions, pluginVersions.size());
   HandleError("cache plugin versions for condition evaluation", result);
 
   const plugin_crc* cPluginCrcs;
@@ -255,17 +260,18 @@ void ConditionEvaluator::RefreshLoadedPluginsState(
     cPluginCrcs = &pluginCrcs[0];
   }
 
-  result = lci_state_set_crc_cache(lciState_.get(), cPluginCrcs,
-    pluginCrcs.size());
+  result =
+      lci_state_set_crc_cache(lciState_.get(), cPluginCrcs, pluginCrcs.size());
   HandleError("fill CRC cache for condition evaluation", result);
 }
 
 bool ConditionEvaluator::Evaluate(const PluginCleaningData& cleaningData,
-  const std::string& pluginName) {
+                                  const std::string& pluginName) {
   if (pluginName.empty())
     return false;
 
-  return Evaluate("checksum(\"" + pluginName + "\", " + IntToHexString(cleaningData.GetCRC()) + ")");
+  return Evaluate("checksum(\"" + pluginName + "\", " +
+                  IntToHexString(cleaningData.GetCRC()) + ")");
 }
 
 void ParseCondition(const std::string& condition) {

@@ -24,9 +24,8 @@
 
 #include "loot/metadata/message_content.h"
 
-#include <optional>
-
 #include <boost/algorithm/string.hpp>
+#include <optional>
 
 namespace loot {
 const std::string MessageContent::defaultLanguage = "en";
@@ -59,7 +58,7 @@ bool MessageContent::operator==(const MessageContent& rhs) const {
 
 std::optional<MessageContent> MessageContent::Choose(
     const std::vector<MessageContent> content,
-                                      const std::string& language) {
+    const std::string& language) {
   if (content.empty())
     return std::nullopt;
   else if (content.size() == 1)

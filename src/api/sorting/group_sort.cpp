@@ -237,11 +237,10 @@ vertex_t GetVertexByName(const GroupGraph& graph, const std::string& name) {
   throw std::invalid_argument("Can't find group with name \"" + name + "\"");
 }
 
-std::vector<Vertex> GetGroupsPath(
-    const std::vector<Group>& masterlistGroups,
-    const std::vector<Group>& userGroups,
-    const std::string& fromGroupName,
-    const std::string& toGroupName) {
+std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
+                                  const std::vector<Group>& userGroups,
+                                  const std::string& fromGroupName,
+                                  const std::string& toGroupName) {
   GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
 
   auto logger = getLogger();

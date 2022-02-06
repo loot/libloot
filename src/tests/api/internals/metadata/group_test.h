@@ -25,11 +25,10 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_METADATA_GROUP_TEST
 #define LOOT_TESTS_API_INTERNALS_METADATA_GROUP_TEST
 
-#include "loot/metadata/group.h"
-
 #include <gtest/gtest.h>
 
 #include "api/metadata/yaml/group.h"
+#include "loot/metadata/group.h"
 
 namespace loot {
 namespace test {
@@ -54,8 +53,7 @@ TEST(Group, allArgsConstructorShouldStoreGivenValues) {
 
   EXPECT_EQ("group1", group.GetName());
   EXPECT_EQ("test", group.GetDescription());
-  EXPECT_EQ(std::vector<std::string>({"other_group"}),
-            group.GetAfterGroups());
+  EXPECT_EQ(std::vector<std::string>({"other_group"}), group.GetAfterGroups());
 }
 
 TEST(Group, equalityShouldBeCaseSensitiveOnNameAndDescription) {
@@ -198,9 +196,8 @@ TEST(Group, lessThanOperatorShouldCompareAfterGroups) {
   EXPECT_FALSE(group2 < group1);
 }
 
-TEST(
-    Group,
-       greaterThanOperatorShouldReturnTrueIfTheSecondGroupIsLessThanTheFirst) {
+TEST(Group,
+     greaterThanOperatorShouldReturnTrueIfTheSecondGroupIsLessThanTheFirst) {
   Group group1("name", {}, "description");
   Group group2("name", {}, "description");
 
@@ -250,8 +247,9 @@ TEST(
   EXPECT_TRUE(group2 > group1);
 }
 
-TEST(Group,
-       lessThanOrEqualToOperatorShouldReturnTrueIfTheFirstGroupIsNotGreaterThanTheSecond) {
+TEST(
+    Group,
+    lessThanOrEqualToOperatorShouldReturnTrueIfTheFirstGroupIsNotGreaterThanTheSecond) {
   Group group1("name", {}, "description");
   Group group2("name", {}, "description");
 
@@ -301,7 +299,8 @@ TEST(Group,
   EXPECT_FALSE(group2 <= group1);
 }
 
-TEST(Group,
+TEST(
+    Group,
     greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstGroupIsNotLessThanTheSecond) {
   Group group1("name", {}, "description");
   Group group2("name", {}, "description");

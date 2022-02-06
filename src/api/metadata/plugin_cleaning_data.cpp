@@ -33,18 +33,15 @@ PluginCleaningData::PluginCleaningData() : crc_(0), itm_(0), ref_(0), nav_(0) {}
 
 PluginCleaningData::PluginCleaningData(uint32_t crc,
                                        const std::string& utility) :
-    crc_(crc),
-    utility_(utility),
-    itm_(0),
-    ref_(0),
-    nav_(0) {}
+    crc_(crc), utility_(utility), itm_(0), ref_(0), nav_(0) {}
 
-PluginCleaningData::PluginCleaningData(uint32_t crc,
-                                       const std::string& utility,
-                                       const std::vector<MessageContent>& detail,
-                                       unsigned int itm,
-                                       unsigned int ref,
-                                       unsigned int nav) :
+PluginCleaningData::PluginCleaningData(
+    uint32_t crc,
+    const std::string& utility,
+    const std::vector<MessageContent>& detail,
+    unsigned int itm,
+    unsigned int ref,
+    unsigned int nav) :
     crc_(crc),
     itm_(itm),
     ref_(ref),
@@ -97,8 +94,9 @@ bool PluginCleaningData::operator<(const PluginCleaningData& rhs) const {
 }
 
 bool PluginCleaningData::operator==(const PluginCleaningData& rhs) const {
-  return crc_ == rhs.crc_ && utility_ == rhs.utility_ && detail_ == rhs.detail_ &&
-         itm_ == rhs.itm_ && ref_ == rhs.ref_ && nav_ == rhs.nav_;
+  return crc_ == rhs.crc_ && utility_ == rhs.utility_ &&
+         detail_ == rhs.detail_ && itm_ == rhs.itm_ && ref_ == rhs.ref_ &&
+         nav_ == rhs.nav_;
 }
 
 uint32_t PluginCleaningData::GetCRC() const { return crc_; }

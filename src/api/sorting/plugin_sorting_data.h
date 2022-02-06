@@ -31,12 +31,13 @@
 namespace loot {
 class PluginSortingData {
 public:
-  explicit PluginSortingData(const Plugin& plugin,
-                    const PluginMetadata& masterlistMetadata,
-                    const PluginMetadata& userMetadata,
-                    const std::vector<std::string>& loadOrder,
-                    const GameType gameType,
-                    const std::vector<std::shared_ptr<const Plugin>>& loadedPlugins);
+  explicit PluginSortingData(
+      const Plugin& plugin,
+      const PluginMetadata& masterlistMetadata,
+      const PluginMetadata& userMetadata,
+      const std::vector<std::string>& loadOrder,
+      const GameType gameType,
+      const std::vector<std::shared_ptr<const Plugin>>& loadedPlugins);
 
   std::string GetName() const;
   bool IsMaster() const;

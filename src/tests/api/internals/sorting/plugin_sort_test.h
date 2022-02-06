@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_SORTING_PLUGIN_SORT_TEST
 
 #include "api/sorting/plugin_sort.h"
-
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/undefined_group_error.h"
 #include "tests/common_game_test_fixture.h"
@@ -126,10 +125,10 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        PluginSortTest,
-                        ::testing::Values(GameType::tes3,
-                                          GameType::tes4,
-                                          GameType::fo4));
+                         PluginSortTest,
+                         ::testing::Values(GameType::tes3,
+                                           GameType::tes4,
+                                           GameType::fo4));
 
 TEST_P(PluginSortTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
   std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());

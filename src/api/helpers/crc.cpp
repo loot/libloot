@@ -24,12 +24,10 @@
 
 #include "api/helpers/crc.h"
 
+#include <boost/crc.hpp>
 #include <fstream>
 
-#include <boost/crc.hpp>
-
 #include "api/helpers/logging.h"
-
 #include "loot/exception/file_access_error.h"
 
 using std::string;

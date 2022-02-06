@@ -24,9 +24,10 @@
 
 #include "plugin_sorting_data.h"
 
+#include <loot/metadata/group.h>
+
 #include <boost/algorithm/string.hpp>
 
-#include <loot/metadata/group.h>
 #include "api/helpers/text.h"
 
 namespace loot {
@@ -134,7 +135,8 @@ void PluginSortingData::SetAfterGroupPlugins(
   afterGroupPlugins_ = plugins;
 }
 
-const std::vector<File>& PluginSortingData::GetMasterlistLoadAfterFiles() const {
+const std::vector<File>& PluginSortingData::GetMasterlistLoadAfterFiles()
+    const {
   return masterlistLoadAfter_;
 }
 

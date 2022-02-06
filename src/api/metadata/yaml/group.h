@@ -26,10 +26,10 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
+#include <yaml-cpp/yaml.h>
+
 #include <set>
 #include <string>
-
-#include <yaml-cpp/yaml.h>
 
 #include "api/metadata/yaml/set.h"
 #include "loot/metadata/group.h"

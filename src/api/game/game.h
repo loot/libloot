@@ -37,8 +37,8 @@ namespace loot {
 class Game : public GameInterface {
 public:
   explicit Game(const GameType gameType,
-       const std::filesystem::path& gamePath,
-       const std::filesystem::path& gameLocalDataPath = "");
+                const std::filesystem::path& gamePath,
+                const std::filesystem::path& gameLocalDataPath = "");
 
   // Internal Methods //
   //////////////////////

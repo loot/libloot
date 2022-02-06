@@ -34,16 +34,14 @@ Message::Message() : type_(MessageType::say) {}
 Message::Message(const MessageType type,
                  const std::string& content,
                  const std::string& condition) :
-    type_(type), 
+    type_(type),
     content_({MessageContent(content)}),
     ConditionalMetadata(condition) {}
 
 Message::Message(const MessageType type,
                  const std::vector<MessageContent>& content,
                  const std::string& condition) :
-    type_(type),
-    content_(content),
-    ConditionalMetadata(condition) {
+    type_(type), content_(content), ConditionalMetadata(condition) {
   if (content.size() > 1) {
     bool englishStringExists = false;
     for (const auto& mc : content) {

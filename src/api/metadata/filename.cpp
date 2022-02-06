@@ -29,8 +29,7 @@
 namespace loot {
 Filename::Filename() {}
 
-Filename::Filename(const std::string& filename) :
-    filename_(filename) {}
+Filename::Filename(const std::string& filename) : filename_(filename) {}
 
 Filename::operator std::string() const { return filename_; }
 
@@ -38,7 +37,9 @@ bool operator==(const Filename& lhs, const Filename& rhs) {
   return CompareFilenames(std::string(lhs), std::string(rhs)) == 0;
 }
 
-bool operator!=(const Filename& lhs, const Filename& rhs) { return !(lhs == rhs); }
+bool operator!=(const Filename& lhs, const Filename& rhs) {
+  return !(lhs == rhs);
+}
 
 bool operator<(const Filename& lhs, const Filename& rhs) {
   return CompareFilenames(std::string(lhs), std::string(rhs)) < 0;
@@ -46,7 +47,11 @@ bool operator<(const Filename& lhs, const Filename& rhs) {
 
 bool operator>(const Filename& lhs, const Filename& rhs) { return rhs < lhs; }
 
-bool operator<=(const Filename& lhs, const Filename& rhs) { return !(lhs > rhs); }
+bool operator<=(const Filename& lhs, const Filename& rhs) {
+  return !(lhs > rhs);
+}
 
-bool operator>=(const Filename& lhs, const Filename& rhs) { return !(lhs < rhs); }
+bool operator>=(const Filename& lhs, const Filename& rhs) {
+  return !(lhs < rhs);
+}
 }

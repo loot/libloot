@@ -26,12 +26,11 @@
 #define LOOT_API_GAME_LOAD_ORDER_HANDLER
 
 #include <filesystem>
+#include <libloadorder.hpp>
 #include <list>
-#include <vector>
 #include <string>
 #include <unordered_set>
-
-#include <libloadorder.hpp>
+#include <vector>
 
 #include "loot/enum/game_type.h"
 

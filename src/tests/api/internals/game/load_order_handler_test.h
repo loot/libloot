@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_LOAD_ORDER_HANDLER_TEST
 
 #include "api/game/load_order_handler.h"
-
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -107,14 +106,14 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        LoadOrderHandlerTest,
-                        ::testing::Values(GameType::tes3,
-                                          GameType::tes4,
-                                          GameType::tes5,
-                                          GameType::fo3,
-                                          GameType::fonv,
-                                          GameType::fo4,
-                                          GameType::tes5se));
+                         LoadOrderHandlerTest,
+                         ::testing::Values(GameType::tes3,
+                                           GameType::tes4,
+                                           GameType::tes5,
+                                           GameType::fo3,
+                                           GameType::fonv,
+                                           GameType::fo4,
+                                           GameType::tes5se));
 
 TEST_P(LoadOrderHandlerTest, initShouldThrowIfNoGamePathIsSet) {
   EXPECT_THROW(loadOrderHandler_.Init(GetParam(), ""), std::invalid_argument);
@@ -182,25 +181,21 @@ TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
 }
 
 TEST_P(LoadOrderHandlerTest,
-  getActivePluginsShouldThrowIfTheHandlerHasNotBeenInitialised) {
-  EXPECT_THROW(loadOrderHandler_.GetActivePlugins(),
-    std::system_error);
+       getActivePluginsShouldThrowIfTheHandlerHasNotBeenInitialised) {
+  EXPECT_THROW(loadOrderHandler_.GetActivePlugins(), std::system_error);
 }
 
 TEST_P(LoadOrderHandlerTest,
-  getActivePluginsShouldReturnAnEmptyVectorIfStateHasNotBeenLoaded) {
+       getActivePluginsShouldReturnAnEmptyVectorIfStateHasNotBeenLoaded) {
   initialiseHandler();
 
   EXPECT_TRUE(loadOrderHandler_.GetActivePlugins().empty());
 }
-TEST_P(
-  LoadOrderHandlerTest,
-  getActivePluginsShouldReturnOnlyActivePlugins) {
+TEST_P(LoadOrderHandlerTest, getActivePluginsShouldReturnOnlyActivePlugins) {
   initialiseHandler();
   loadOrderHandler_.LoadCurrentState();
 
-  ASSERT_EQ(getActivePlugins(),
-    loadOrderHandler_.GetActivePlugins());
+  ASSERT_EQ(getActivePlugins(), loadOrderHandler_.GetActivePlugins());
 }
 
 TEST_P(LoadOrderHandlerTest,

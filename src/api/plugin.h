@@ -25,13 +25,12 @@
 #define LOOT_API_PLUGIN
 
 #include <cstdint>
+#include <esplugin.hpp>
 #include <list>
 #include <set>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-#include <esplugin.hpp>
 
 #include "api/game/load_order_handler.h"
 #include "loot/enum/game_type.h"
@@ -44,9 +43,9 @@ class GameCache;
 class Plugin : public PluginInterface {
 public:
   explicit Plugin(const GameType gameType,
-         std::shared_ptr<GameCache> gameCache,
-         std::filesystem::path pluginPath,
-         const bool headerOnly);
+                  std::shared_ptr<GameCache> gameCache,
+                  std::filesystem::path pluginPath,
+                  const bool headerOnly);
 
   std::string GetName() const;
   std::optional<float> GetHeaderVersion() const;
@@ -104,9 +103,11 @@ std::string GetArchiveFileExtension(const GameType gameType);
 
 bool hasPluginFileExtension(std::string filename, GameType gameType);
 
-bool equivalent(const std::filesystem::path& path1, const std::filesystem::path& path2);
+bool equivalent(const std::filesystem::path& path1,
+                const std::filesystem::path& path2);
 
-std::filesystem::path replaceExtension(std::filesystem::path path, const std::string& newExtension);
+std::filesystem::path replaceExtension(std::filesystem::path path,
+                                       const std::string& newExtension);
 }
 
 #endif

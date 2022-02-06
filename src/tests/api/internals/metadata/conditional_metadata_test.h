@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_METADATA_CONDITIONAL_METADATA_TEST
 
 #include "loot/metadata/conditional_metadata.h"
-
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -39,13 +38,13 @@ protected:
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
-                        ConditionalMetadataTest,
-                        ::testing::Values(GameType::tes4,
-                                          GameType::tes5,
-                                          GameType::fo3,
-                                          GameType::fonv,
-                                          GameType::fo4,
-                                          GameType::tes5se));
+                         ConditionalMetadataTest,
+                         ::testing::Values(GameType::tes4,
+                                           GameType::tes5,
+                                           GameType::fo3,
+                                           GameType::fonv,
+                                           GameType::fo4,
+                                           GameType::tes5se));
 
 TEST_P(ConditionalMetadataTest,
        defaultConstructorShouldSetEmptyConditionString) {

@@ -24,9 +24,9 @@
 #ifndef LOOT_METADATA_MESSAGE_CONTENT
 #define LOOT_METADATA_MESSAGE_CONTENT
 
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 
 #include "loot/api_decorator.h"
 
@@ -56,8 +56,9 @@ public:
    *         The language that the message is written in.
    * @return A MessageContent object.
    */
-  LOOT_API explicit MessageContent(const std::string& text,
-                          const std::string& language = defaultLanguage);
+  LOOT_API explicit MessageContent(
+      const std::string& text,
+      const std::string& language = defaultLanguage);
 
   /**
    * Get the message text.

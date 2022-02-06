@@ -25,9 +25,8 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_GAME_GAME_CACHE_TEST
 #define LOOT_TESTS_API_INTERNALS_GAME_GAME_CACHE_TEST
 
-#include "api/game/game_cache.h"
-
 #include "api/game/game.h"
+#include "api/game/game_cache.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -107,18 +106,18 @@ TEST_P(GameCacheTest,
 }
 
 TEST_P(GameCacheTest,
-  gettingArchivePathsShouldReturnAnEmptySetIfNoPathsHaveBeenCached) {
+       gettingArchivePathsShouldReturnAnEmptySetIfNoPathsHaveBeenCached) {
   EXPECT_TRUE(cache_.GetArchivePaths().empty());
 }
 
 TEST_P(GameCacheTest,
-  gettingArchivePathsShouldReturnASetOfPathsIfPathsHaveBeenCached) {
+       gettingArchivePathsShouldReturnASetOfPathsIfPathsHaveBeenCached) {
   cache_.CacheArchivePaths({game_.DataPath() / blankEsm,
                             game_.DataPath() / blankMasterDependentEsm});
 
   auto expected = std::set<std::filesystem::path>({
-    game_.DataPath() / blankEsm,
-    game_.DataPath() / blankMasterDependentEsm,
+      game_.DataPath() / blankEsm,
+      game_.DataPath() / blankMasterDependentEsm,
   });
 
   EXPECT_EQ(expected, cache_.GetArchivePaths());

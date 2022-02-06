@@ -532,8 +532,7 @@ TEST(File, decodingFromYamlWithAListOfMessageContentDetailsShouldReadThemAll) {
   EXPECT_EQ(expectedDetail, file.GetDetail());
 }
 
-TEST(File,
-       decodingFromYamlShouldNotThrowIfTheOnlyDetailStringIsNotEnglish) {
+TEST(File, decodingFromYamlShouldNotThrowIfTheOnlyDetailStringIsNotEnglish) {
   YAML::Node node = YAML::Load(
       "name: name1\n"
       "detail:\n"

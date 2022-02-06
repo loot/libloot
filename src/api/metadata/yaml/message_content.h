@@ -26,9 +26,9 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
-#include <string>
-
 #include <yaml-cpp/yaml.h>
+
+#include <string>
 
 #include "loot/metadata/message_content.h"
 

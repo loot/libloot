@@ -27,8 +27,7 @@ namespace loot {
 Vertex::Vertex(std::string name) : name_(name) {}
 
 Vertex::Vertex(std::string name, EdgeType outEdgeType) :
-    name_(name),
-    outEdgeType_(outEdgeType) {}
+    name_(name), outEdgeType_(outEdgeType) {}
 
 std::string Vertex::GetName() const { return name_; }
 

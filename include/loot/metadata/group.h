@@ -54,8 +54,8 @@ public:
    * @return A Group object.
    */
   LOOT_API explicit Group(const std::string& name,
-                 const std::vector<std::string>& afterGroups = {},
-                 const std::string& description = "");
+                          const std::vector<std::string>& afterGroups = {},
+                          const std::string& description = "");
 
   /**
    * Check if two Group objects are equal by comparing their names.

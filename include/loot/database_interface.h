@@ -62,9 +62,10 @@ public:
    *         should be loaded. If an empty path, no masterlist prelude will be
    *         loaded.
    */
-  virtual void LoadLists(const std::filesystem::path& masterlist_path,
-                         const std::filesystem::path& userlist_path = "",
-                         const std::filesystem::path& masterlist_prelude_path = "") = 0;
+  virtual void LoadLists(
+      const std::filesystem::path& masterlist_path,
+      const std::filesystem::path& userlist_path = "",
+      const std::filesystem::path& masterlist_prelude_path = "") = 0;
 
   /**
    * Writes a metadata file containing all loaded user-added metadata.

@@ -25,9 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERFACE_IS_COMPATIBLE_TEST
 #define LOOT_TESTS_API_INTERFACE_IS_COMPATIBLE_TEST
 
-#include "loot/api.h"
-
 #include <gtest/gtest.h>
+
+#include "loot/api.h"
 
 namespace loot {
 namespace test {
