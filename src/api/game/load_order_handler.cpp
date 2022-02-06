@@ -32,26 +32,26 @@ using std::string;
 namespace loot {
 unsigned int mapGameId(GameType gameType) {
   switch (gameType) {
-  case GameType::tes3:
-    return LIBLO_GAME_TES3;
-  case GameType::tes4:
-    return LIBLO_GAME_TES4;
-  case GameType::tes5:
-    return LIBLO_GAME_TES5;
-  case GameType::tes5se:
-    return LIBLO_GAME_TES5SE;
-  case GameType::tes5vr:
-    return LIBLO_GAME_TES5VR;
-  case GameType::fo3:
-    return LIBLO_GAME_FO3;
-  case GameType::fonv:
-    return LIBLO_GAME_FNV;
-  case GameType::fo4:
-    return LIBLO_GAME_FO4;
-  case GameType::fo4vr:
-    return LIBLO_GAME_FO4VR;
-  default:
-    return (unsigned int)-1;
+    case GameType::tes3:
+      return LIBLO_GAME_TES3;
+    case GameType::tes4:
+      return LIBLO_GAME_TES4;
+    case GameType::tes5:
+      return LIBLO_GAME_TES5;
+    case GameType::tes5se:
+      return LIBLO_GAME_TES5SE;
+    case GameType::tes5vr:
+      return LIBLO_GAME_TES5VR;
+    case GameType::fo3:
+      return LIBLO_GAME_FO3;
+    case GameType::fonv:
+      return LIBLO_GAME_FNV;
+    case GameType::fo4:
+      return LIBLO_GAME_FO4;
+    case GameType::fo4vr:
+      return LIBLO_GAME_FO4VR;
+    default:
+      return (unsigned int)-1;
   }
 }
 
@@ -77,8 +77,10 @@ void LoadOrderHandler::Init(const GameType& gameType,
     gh_ = nullptr;
   }
 
-  int ret = lo_create_handle(
-    &gh_, mapGameId(gameType), gamePath.u8string().c_str(), gameLocalDataPath);
+  int ret = lo_create_handle(&gh_,
+                             mapGameId(gameType),
+                             gamePath.u8string().c_str(),
+                             gameLocalDataPath);
 
   HandleError("create a game handle", ret);
 }
@@ -136,8 +138,7 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
   char** pluginArr;
   size_t pluginArrSize;
 
-  unsigned int ret =
-    lo_get_active_plugins(gh_, &pluginArr, &pluginArrSize);
+  unsigned int ret = lo_get_active_plugins(gh_, &pluginArr, &pluginArrSize);
 
   HandleError("get active plugins", ret);
 
@@ -174,23 +175,17 @@ void LoadOrderHandler::SetLoadOrder(
     logger->info("Setting load order.");
   }
 
-  size_t pluginArrSize = loadOrder.size();
-  char** pluginArr = new char*[pluginArrSize];
-  int i = 0;
+  std::vector<const char*> plugins;
+  plugins.reserve(loadOrder.size());
   for (const auto& plugin : loadOrder) {
     if (logger) {
       logger->info("\t\t{}", plugin);
     }
 
-    pluginArr[i] = new char[plugin.length() + 1];
-    strcpy(pluginArr[i], plugin.c_str());
-    ++i;
+    plugins.push_back(plugin.c_str());
   }
 
-  unsigned int ret = lo_set_load_order(gh_, pluginArr, pluginArrSize);
-
-  for (size_t i = 0; i < pluginArrSize; i++) delete[] pluginArr[i];
-  delete[] pluginArr;
+  unsigned int ret = lo_set_load_order(gh_, plugins.data(), plugins.size());
 
   HandleError("set the load order", ret);
 

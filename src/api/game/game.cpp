@@ -25,11 +25,10 @@
 #include "api/game/game.h"
 
 #include <algorithm>
+#include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <map>
 #include <thread>
-
-#include <boost/algorithm/string.hpp>
 
 #include "api/api_database.h"
 #include "api/helpers/logging.h"
@@ -128,9 +127,9 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   threadsToUse = ::std::max(threadsToUse, (size_t)1);
 
   // Divide the plugins up by thread.
-  unsigned int pluginsPerThread = ceil((double)sizeMap.size() / threadsToUse);
   vector<vector<string>> pluginGroups(threadsToUse);
   if (logger) {
+    auto pluginsPerThread = sizeMap.size() / threadsToUse;
     logger->info(
         "Loading {} plugins using {} threads, with up to {} plugins per "
         "thread.",
@@ -224,7 +223,8 @@ std::vector<std::string> Game::SortPlugins(
 
 void Game::LoadCurrentLoadOrderState() {
   loadOrderHandler_->LoadCurrentState();
-  conditionEvaluator_->RefreshActivePluginsState(loadOrderHandler_->GetActivePlugins());
+  conditionEvaluator_->RefreshActivePluginsState(
+      loadOrderHandler_->GetActivePlugins());
 }
 
 bool Game::IsPluginActive(const std::string& pluginName) const {

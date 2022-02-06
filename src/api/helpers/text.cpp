@@ -126,28 +126,46 @@ std::optional<std::string> ExtractVersion(const std::string& text) {
 
 #ifdef _WIN32
 std::wstring ToWinWide(const std::string& str) {
-  size_t len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), 0, 0);
+  size_t len = MultiByteToWideChar(
+      CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), 0, 0);
 
   if (len == 0) {
     return std::wstring();
   }
 
   std::wstring wstr(len, 0);
-  MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &wstr[0], len);
+  MultiByteToWideChar(CP_UTF8,
+                      0,
+                      str.c_str(),
+                      static_cast<int>(str.length()),
+                      &wstr[0],
+                      static_cast<int>(len));
   return wstr;
 }
 
 std::string FromWinWide(const std::wstring& wstr) {
-  size_t len = WideCharToMultiByte(
-      CP_UTF8, 0, wstr.c_str(), wstr.length(), NULL, 0, NULL, NULL);
+  size_t len = WideCharToMultiByte(CP_UTF8,
+                                   0,
+                                   wstr.c_str(),
+                                   static_cast<int>(wstr.length()),
+                                   NULL,
+                                   0,
+                                   NULL,
+                                   NULL);
 
   if (len == 0) {
     return std::string();
   }
 
   std::string str(len, 0);
-  WideCharToMultiByte(
-      CP_UTF8, 0, wstr.c_str(), wstr.length(), &str[0], len, NULL, NULL);
+  WideCharToMultiByte(CP_UTF8,
+                      0,
+                      wstr.c_str(),
+                      static_cast<int>(wstr.length()),
+                      &str[0],
+                      static_cast<int>(len),
+                      NULL,
+                      NULL);
   return str;
 }
 #endif
@@ -185,7 +203,7 @@ std::string NormalizeFilename(const std::string& filename) {
     return std::string();
   }
 
-  CharUpperBuffW(&wideString[0], wideString.length());
+  CharUpperBuffW(&wideString[0], static_cast<int>(wideString.length()));
   return FromWinWide(wideString);
 #else
   std::string normalizedFilename;
