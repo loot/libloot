@@ -72,7 +72,7 @@ struct convert<loot::Tag> {
     // Test condition syntax.
     try {
       rhs.ParseCondition();
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
       throw RepresentationException(
           node.Mark(),
           std::string("bad conversion: invalid condition syntax: ") + e.what());

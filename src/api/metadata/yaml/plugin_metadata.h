@@ -86,7 +86,7 @@ struct convert<loot::PluginMetadata> {
 
     try {
       rhs = loot::PluginMetadata(node["name"].as<std::string>());
-    } catch (std::regex_error& e) {
+    } catch (const std::regex_error& e) {
       throw RepresentationException(
           node.Mark(),
           std::string("bad conversion: invalid regex in 'name' key: ") +

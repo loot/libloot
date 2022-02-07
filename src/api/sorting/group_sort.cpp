@@ -141,7 +141,7 @@ GroupGraph BuildGraph(const std::vector<Group>& masterlistGroups,
 
     auto vertex = groupVertices.at(group.GetName());
     for (const auto& otherGroupName : group.GetAfterGroups()) {
-      auto otherVertex = groupVertices.find(otherGroupName);
+      const auto otherVertex = groupVertices.find(otherGroupName);
       if (otherVertex == groupVertices.end()) {
         throw UndefinedGroupError(otherGroupName);
       }
@@ -167,7 +167,7 @@ GroupGraph BuildGraph(const std::vector<Group>& masterlistGroups,
 
     auto vertex = groupVertices.at(group.GetName());
     for (const auto& otherGroupName : group.GetAfterGroups()) {
-      auto otherVertex = groupVertices.find(otherGroupName);
+      const auto otherVertex = groupVertices.find(otherGroupName);
       if (otherVertex == groupVertices.end()) {
         throw UndefinedGroupError(otherGroupName);
       }
@@ -201,11 +201,11 @@ GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
   for (const vertex_t& vertex :
        boost::make_iterator_range(boost::vertices(graph))) {
     std::unordered_set<std::string> visitedGroups;
-    AfterGroupsVisitor afterGroupsVisitor(visitedGroups);
+    const AfterGroupsVisitor afterGroupsVisitor(visitedGroups);
 
     // Create a color map.
     std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
-    auto colorMap = boost::make_iterator_property_map(
+    const auto colorMap = boost::make_iterator_property_map(
         colorVec.begin(),
         boost::get(boost::vertex_index, graph),
         colorVec.at(0));
@@ -288,7 +288,7 @@ std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
       return std::vector<Vertex>();
     }
 
-    auto pair = boost::edge(nextVertex, currentVertex, graph);
+    const auto pair = boost::edge(nextVertex, currentVertex, graph);
     if (!pair.second) {
       throw std::runtime_error("Unexpectedly couldn't find edge between \"" +
                                graph[currentVertex] + "\" and \"" +

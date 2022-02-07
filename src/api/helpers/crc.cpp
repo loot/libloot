@@ -35,10 +35,10 @@ using std::wstring;
 
 namespace loot {
 size_t GetStreamSize(std::istream& stream) {
-  std::streampos startingPosition = stream.tellg();
+  const std::streampos startingPosition = stream.tellg();
 
   stream.seekg(0, std::ios_base::end);
-  size_t streamSize = stream.tellg();
+  const size_t streamSize = stream.tellg();
   stream.seekg(startingPosition, std::ios_base::beg);
 
   return streamSize;
@@ -76,7 +76,7 @@ uint32_t GetCrc32(const std::filesystem::path& filename) {
     }
     return checksum;
 
-  } catch (std::exception& e) {
+  } catch (const std::exception& e) {
     throw FileAccessError("Unable to open \"" + filename.u8string() +
                           "\" for CRC calulation: " + e.what());
   }

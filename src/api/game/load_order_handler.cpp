@@ -106,7 +106,7 @@ void LoadOrderHandler::LoadCurrentState() {
     logger->info("Loading the current load order state.");
   }
 
-  unsigned int ret = lo_load_current_state(gh_);
+  const unsigned int ret = lo_load_current_state(gh_);
 
   HandleError("load the current load order state", ret);
 }
@@ -118,7 +118,8 @@ bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
   }
 
   bool result = false;
-  unsigned int ret = lo_get_plugin_active(gh_, pluginName.c_str(), &result);
+  const unsigned int ret =
+      lo_get_plugin_active(gh_, pluginName.c_str(), &result);
 
   HandleError("check if a plugin is active", ret);
 
@@ -134,7 +135,7 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
   char** pluginArr = nullptr;
   size_t pluginArrSize = 0;
 
-  unsigned int ret = lo_get_load_order(gh_, &pluginArr, &pluginArrSize);
+  const unsigned int ret = lo_get_load_order(gh_, &pluginArr, &pluginArrSize);
 
   HandleError("get the load order", ret);
 
@@ -154,7 +155,8 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
   char** pluginArr = nullptr;
   size_t pluginArrSize = 0;
 
-  unsigned int ret = lo_get_active_plugins(gh_, &pluginArr, &pluginArrSize);
+  const unsigned int ret =
+      lo_get_active_plugins(gh_, &pluginArr, &pluginArrSize);
 
   HandleError("get active plugins", ret);
 
@@ -174,7 +176,7 @@ std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
   char** pluginArr = nullptr;
   size_t pluginArrSize = 0;
 
-  unsigned int ret =
+  const unsigned int ret =
       lo_get_implicitly_active_plugins(gh_, &pluginArr, &pluginArrSize);
 
   HandleError("get implicitly active plugins", ret);
@@ -203,7 +205,8 @@ void LoadOrderHandler::SetLoadOrder(
     plugins.push_back(plugin.c_str());
   }
 
-  unsigned int ret = lo_set_load_order(gh_, plugins.data(), plugins.size());
+  const unsigned int ret =
+      lo_set_load_order(gh_, plugins.data(), plugins.size());
 
   HandleError("set the load order", ret);
 

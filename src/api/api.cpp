@@ -41,7 +41,7 @@ std::filesystem::path ResolvePath(const std::filesystem::path& path) {
   try {
     if (fs::is_symlink(path))
       return fs::read_symlink(path);
-  } catch (std::exception& e) {
+  } catch (const std::exception& e) {
     auto logger = getLogger();
     if (logger) {
       logger->error("Could not check or read potential symlink path \"{}\": {}",

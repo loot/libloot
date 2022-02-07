@@ -65,7 +65,7 @@ std::optional<MessageContent> MessageContent::Choose(
     return content[0];
   else {
     auto languageCode = language.substr(0, language.find("_"));
-    auto isCountryCodeGiven = languageCode.length() != language.length();
+    const auto isCountryCodeGiven = languageCode.length() != language.length();
 
     std::optional<MessageContent> matchedLanguage;
     std::optional<MessageContent> english;
@@ -78,7 +78,7 @@ std::optional<MessageContent> MessageContent::Choose(
         if (isCountryCodeGiven && contentLanguage == languageCode) {
           matchedLanguage = mc;
         } else if (!isCountryCodeGiven) {
-          auto underscorePos = contentLanguage.find("_");
+          const auto underscorePos = contentLanguage.find("_");
           if (underscorePos != std::string::npos) {
             auto contentLanguageCode = contentLanguage.substr(0, underscorePos);
             if (contentLanguageCode == language) {

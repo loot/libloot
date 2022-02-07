@@ -114,7 +114,7 @@ bool ConditionEvaluator::Evaluate(const std::string& condition) {
     logger->trace("Evaluating condition: {}", condition);
   }
 
-  int result = lci_condition_eval(condition.c_str(), lciState_.get());
+  const int result = lci_condition_eval(condition.c_str(), lciState_.get());
   if (result != LCI_RESULT_FALSE && result != LCI_RESULT_TRUE) {
     HandleError("evaluate condition \"" + condition + "\"", result);
   }
@@ -186,7 +186,7 @@ PluginMetadata ConditionEvaluator::EvaluateAll(
 }
 
 void ConditionEvaluator::ClearConditionCache() {
-  int result = lci_state_clear_condition_cache(lciState_.get());
+  const int result = lci_state_clear_condition_cache(lciState_.get());
   HandleError("clear the condition cache", result);
 }
 
@@ -199,9 +199,10 @@ void ConditionEvaluator::RefreshActivePluginsState(
     activePluginNameCStrings.push_back(pluginName.c_str());
   }
 
-  int result = lci_state_set_active_plugins(lciState_.get(),
-                                            activePluginNameCStrings.data(),
-                                            activePluginNameCStrings.size());
+  const int result =
+      lci_state_set_active_plugins(lciState_.get(),
+                                   activePluginNameCStrings.data(),
+                                   activePluginNameCStrings.size());
   HandleError("cache active plugins for condition evaluation", result);
 }
 
@@ -260,7 +261,7 @@ void ParseCondition(const std::string& condition) {
     logger->trace("Testing condition syntax: {}", condition);
   }
 
-  int result = lci_condition_parse(condition.c_str());
+  const int result = lci_condition_parse(condition.c_str());
   HandleError("parse condition \"" + condition + "\"", result);
 }
 }

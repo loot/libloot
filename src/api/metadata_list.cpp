@@ -83,9 +83,9 @@ std::optional<std::pair<size_t, size_t>> FindPreludeBounds(
   // non-space, non-hash (#) character, as this means what follows is
   // unindented content.
   auto pos = startOfPrelude;
-  auto lastIndex = masterlist.size() - 1;
+  const auto lastIndex = masterlist.size() - 1;
   while (endOfPrelude == std::string::npos) {
-    auto nextLineBreakPos = masterlist.find("\n", pos);
+    const auto nextLineBreakPos = masterlist.find("\n", pos);
     if (nextLineBreakPos == std::string::npos ||
         nextLineBreakPos == lastIndex) {
       break;
@@ -93,7 +93,7 @@ std::optional<std::pair<size_t, size_t>> FindPreludeBounds(
 
     pos = nextLineBreakPos + 1;
 
-    auto nextChar = masterlist[pos];
+    const auto nextChar = masterlist[pos];
     if (nextChar != ' ' && nextChar != '#' && nextChar != '\n') {
       endOfPrelude = nextLineBreakPos;
       break;
@@ -128,7 +128,7 @@ std::string ReplaceMetadataListPrelude(const std::string& prelude,
 
   auto newPrelude = IndentPrelude(prelude);
 
-  auto [startOfPrelude, endOfPrelude] = preludeBounds.value();
+  const auto [startOfPrelude, endOfPrelude] = preludeBounds.value();
 
   if (endOfPrelude == std::string::npos) {
     return masterlist.substr(0, startOfPrelude) + newPrelude;
@@ -308,7 +308,7 @@ std::vector<Group> MetadataList::Groups() const {
 void MetadataList::SetGroups(const std::vector<Group>& groups) {
   // In case the default group is missing.
   auto defaultGroupName = Group().GetName();
-  auto defaultGroupsExists =
+  const auto defaultGroupsExists =
       std::any_of(groups.cbegin(), groups.cend(), [&](const Group& group) {
         return group.GetName() == defaultGroupName;
       });
@@ -327,13 +327,13 @@ std::optional<PluginMetadata> MetadataList::FindPlugin(
     const std::string& pluginName) const {
   PluginMetadata match(pluginName);
 
-  auto it = plugins_.find(Filename(pluginName));
+  const auto it = plugins_.find(Filename(pluginName));
 
   if (it != plugins_.end())
     match = it->second;
 
   // Now we want to also match possibly multiple regex entries.
-  auto nameMatches = [&](const PluginMetadata& pluginMetadata) {
+  const auto nameMatches = [&](const PluginMetadata& pluginMetadata) {
     return pluginMetadata.NameMatches(pluginName);
   };
   auto regIt = find_if(regexPlugins_.begin(), regexPlugins_.end(), nameMatches);
@@ -364,7 +364,7 @@ void MetadataList::AddPlugin(const PluginMetadata& plugin) {
 // Doesn't erase matching regex entries, because they might also
 // be required for other plugins.
 void MetadataList::ErasePlugin(const std::string& pluginName) {
-  auto it = plugins_.find(Filename(pluginName));
+  const auto it = plugins_.find(Filename(pluginName));
 
   if (it != plugins_.end()) {
     plugins_.erase(it);

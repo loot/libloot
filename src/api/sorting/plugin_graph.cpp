@@ -122,7 +122,7 @@ size_t PluginGraph::CountVertices() const {
 std::vector<std::string> PluginGraph::TopologicalSort() const {
   // Build an index map, which std::list-based VertexList graphs don't have.
   std::map<vertex_t, size_t> indexMap;
-  auto vertexIndexMap = vertex_map_t(indexMap);
+  const auto vertexIndexMap = vertex_map_t(indexMap);
   size_t i = 0;
   BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
     put(vertexIndexMap, v, i++);
@@ -219,7 +219,7 @@ void PluginGraph::AddPluginVertices(Game& game,
                                                loadedPlugins);
 
     auto groupName = pluginSortingData.GetGroup();
-    auto groupIt = groupPlugins.find(groupName);
+    const auto groupIt = groupPlugins.find(groupName);
     if (groupIt == groupPlugins.end()) {
       groupPlugins.emplace(groupName,
                            std::vector<std::string>({plugin->GetName()}));
@@ -237,7 +237,7 @@ void PluginGraph::AddPluginVertices(Game& game,
   for (auto& group : groups) {
     std::unordered_set<std::string> transitivePlugins;
     for (const auto& afterGroup : group.second) {
-      auto pluginsIt = groupPlugins.find(afterGroup);
+      const auto pluginsIt = groupPlugins.find(afterGroup);
       if (pluginsIt != groupPlugins.end()) {
         transitivePlugins.insert(pluginsIt->second.begin(),
                                  pluginsIt->second.end());
@@ -260,7 +260,7 @@ void PluginGraph::AddPluginVertices(Game& game,
           plugin.GetGroup());
     }
 
-    auto groupsIt = groups.find(plugin.GetGroup());
+    const auto groupsIt = groups.find(plugin.GetGroup());
     if (groupsIt == groups.end()) {
       throw UndefinedGroupError(plugin.GetGroup());
     } else {
@@ -289,7 +289,7 @@ void PluginGraph::CheckForCycles() const {
   }
 
   std::map<vertex_t, size_t> indexMap;
-  auto vertexIndexMap = vertex_map_t(indexMap);
+  const auto vertexIndexMap = vertex_map_t(indexMap);
   size_t i = 0;
   // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
   BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
@@ -360,7 +360,7 @@ bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
 void PluginGraph::AddEdge(const vertex_t& fromVertex,
                           const vertex_t& toVertex,
                           EdgeType edgeType) {
-  auto graphPath = GraphPath(fromVertex, toVertex);
+  const auto graphPath = GraphPath(fromVertex, toVertex);
 
   if (pathsCache_.count(graphPath) != 0) {
     return;
@@ -434,7 +434,7 @@ void PluginGraph::AddSpecificEdges() {
       if (graph_[*vit].IsMaster() == graph_[*vit2].IsMaster())
         continue;
 
-      auto isOtherPluginAMaster = graph_[*vit2].IsMaster();
+      const auto isOtherPluginAMaster = graph_[*vit2].IsMaster();
       vertex_t vertex = isOtherPluginAMaster ? *vit : *vit2;
       vertex_t parentVertex = isOtherPluginAMaster ? *vit2 : *vit;
 
@@ -481,7 +481,7 @@ bool shouldIgnorePlugin(
     const std::string& pluginName,
     const std::map<std::string, std::unordered_set<std::string>>&
         groupPluginsToIgnore) {
-  auto pluginsToIgnore = groupPluginsToIgnore.find(group);
+  const auto pluginsToIgnore = groupPluginsToIgnore.find(group);
   if (pluginsToIgnore != groupPluginsToIgnore.end()) {
     return pluginsToIgnore->second.count(pluginName) > 0;
   }
@@ -505,7 +505,7 @@ void ignorePlugin(const std::string& pluginName,
                   std::map<std::string, std::unordered_set<std::string>>&
                       groupPluginsToIgnore) {
   for (const auto& group : groups) {
-    auto pluginsToIgnore = groupPluginsToIgnore.find(group);
+    const auto pluginsToIgnore = groupPluginsToIgnore.find(group);
     if (pluginsToIgnore != groupPluginsToIgnore.end()) {
       pluginsToIgnore->second.insert(pluginName);
     } else {
@@ -538,7 +538,7 @@ std::unordered_set<std::string> pathfinder(
   // all return values.
   std::unordered_set<std::string> mergedVisitedGroups;
   for (const auto& afterGroupName : group.GetAfterGroups()) {
-    auto groupIt = groups.find(afterGroupName);
+    const auto groupIt = groups.find(afterGroupName);
     if (groupIt == groups.end()) {
       throw std::runtime_error("Cannot find group \"" + afterGroupName +
                                "\" during sorting.");
@@ -571,7 +571,7 @@ std::unordered_set<std::string> getGroupsInPaths(
     const std::string& lastGroupName) {
   // Groups are linked in reverse order, i.e. firstGroup can be found from
   // lastGroup, but not the other way around.
-  auto groupIt = groups.find(lastGroupName);
+  const auto groupIt = groups.find(lastGroupName);
   if (groupIt == groups.end()) {
     throw std::runtime_error("Cannot find group \"" + lastGroupName +
                              "\" during sorting.");
@@ -654,7 +654,7 @@ void PluginGraph::AddGroupEdges(
   for (const auto& edgePair : acyclicEdgePairs) {
     auto& fromPlugin = graph_[edgePair.first];
     auto& toPlugin = graph_[edgePair.second];
-    bool ignore =
+    const bool ignore =
         shouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
 
     if (!ignore) {
@@ -697,7 +697,7 @@ void PluginGraph::AddOverlapEdges() {
         continue;
       }
 
-      auto thisPluginOverridesMoreFormIDs =
+      const auto thisPluginOverridesMoreFormIDs =
           graph_[vertex].NumOverrideFormIDs() >
           graph_[otherVertex].NumOverrideFormIDs();
       vertex_t fromVertex =
@@ -739,7 +739,7 @@ int ComparePlugins(const PluginSortingData& plugin1,
   auto basename1 = name1.substr(0, name1.length() - 4);
   auto basename2 = name2.substr(0, name2.length() - 4);
 
-  int result = CompareFilenames(basename1, basename2);
+  const int result = CompareFilenames(basename1, basename2);
 
   if (result != 0) {
     return result;
@@ -764,7 +764,7 @@ void PluginGraph::AddTieBreakEdges() {
     for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
       vertex_t otherVertex = *vit2;
 
-      auto thisPluginShouldLoadEarlier =
+      const auto thisPluginShouldLoadEarlier =
           ComparePlugins(graph_[vertex], graph_[otherVertex]) < 0;
       vertex_t fromVertex = thisPluginShouldLoadEarlier ? vertex : otherVertex;
       vertex_t toVertex = thisPluginShouldLoadEarlier ? otherVertex : vertex;

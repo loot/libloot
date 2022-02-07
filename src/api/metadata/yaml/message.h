@@ -111,7 +111,7 @@ struct convert<loot::Message> {
 
         try {
           mc = loot::MessageContent(f.str(), mc.GetLanguage());
-        } catch (boost::io::format_error& e) {
+        } catch (const boost::io::format_error& e) {
           throw RepresentationException(
               node.Mark(),
               std::string("bad conversion: content substitution error: ") +
@@ -129,7 +129,7 @@ struct convert<loot::Message> {
     // Test condition syntax.
     try {
       rhs.ParseCondition();
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
       throw RepresentationException(
           node.Mark(),
           std::string("bad conversion: invalid condition syntax: ") + e.what());

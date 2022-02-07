@@ -171,7 +171,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
               loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
 
           cache_->AddPlugin(Plugin(Type(), cache_, pluginPath, loadHeader));
-        } catch (std::exception& e) {
+        } catch (const std::exception& e) {
           if (logger) {
             logger->error(
                 "Caught exception while trying to add {} to the cache: {}",

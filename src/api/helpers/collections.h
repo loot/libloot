@@ -35,9 +35,9 @@ namespace loot {
 template<typename T>
 std::vector<T> mergeVectors(std::vector<T> first,
                             const std::vector<T>& second) {
-  auto initialSizeOfFirst = first.size();
+  const auto initialSizeOfFirst = first.size();
   for (const auto& element : second) {
-    auto end = first.cbegin() + initialSizeOfFirst;
+    const auto end = first.cbegin() + initialSizeOfFirst;
 
     if (std::find(first.cbegin(), end, element) == end) {
       first.push_back(element);

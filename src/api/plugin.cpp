@@ -77,7 +77,7 @@ Plugin::Plugin(const GameType gameType,
 
     tags_ = ExtractBashTags(GetDescription());
     loadsArchive_ = LoadsArchive(gameType, gameCache, pluginPath);
-  } catch (std::exception& e) {
+  } catch (const std::exception& e) {
     if (logger) {
       logger->error(
           "Cannot read plugin file \"{}\". Details: {}", name_, e.what());
@@ -92,7 +92,7 @@ std::string Plugin::GetName() const { return name_; }
 std::optional<float> Plugin::GetHeaderVersion() const {
   float version = 0.0f;
 
-  auto ret = esp_plugin_header_version(esPlugin.get(), &version);
+  const auto ret = esp_plugin_header_version(esPlugin.get(), &version);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -112,7 +112,7 @@ std::optional<std::string> Plugin::GetVersion() const {
 std::vector<std::string> Plugin::GetMasters() const {
   char** masters = nullptr;
   uint8_t numMasters = 0;
-  auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
+  const auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -131,7 +131,7 @@ std::optional<uint32_t> Plugin::GetCRC() const { return crc_; }
 
 bool Plugin::IsMaster() const {
   bool isMaster = false;
-  auto ret = esp_plugin_is_master(esPlugin.get(), &isMaster);
+  const auto ret = esp_plugin_is_master(esPlugin.get(), &isMaster);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -142,7 +142,7 @@ bool Plugin::IsMaster() const {
 
 bool Plugin::IsLightPlugin() const {
   bool isLightPlugin = false;
-  auto ret = esp_plugin_is_light_plugin(esPlugin.get(), &isLightPlugin);
+  const auto ret = esp_plugin_is_light_plugin(esPlugin.get(), &isLightPlugin);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -153,7 +153,8 @@ bool Plugin::IsLightPlugin() const {
 
 bool Plugin::IsValidAsLightPlugin() const {
   bool isValid = false;
-  auto ret = esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
+  const auto ret =
+      esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -171,7 +172,7 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
     auto otherPlugin = dynamic_cast<const Plugin&>(plugin);
 
     bool doPluginsOverlap = false;
-    auto ret = esp_plugin_do_records_overlap(
+    const auto ret = esp_plugin_do_records_overlap(
         esPlugin.get(), otherPlugin.esPlugin.get(), &doPluginsOverlap);
     if (ret != ESP_OK) {
       throw FileAccessError(name_ +
@@ -203,7 +204,7 @@ size_t Plugin::GetOverlapSize(
   }
 
   size_t overlapSize = 0;
-  auto ret = esp_plugin_records_overlap_size(
+  const auto ret = esp_plugin_records_overlap_size(
       esPlugin.get(), esPlugins.data(), esPlugins.size(), &overlapSize);
   if (ret != ESP_OK) {
     throw FileAccessError("Error getting overlap size for \"" + name_ +
@@ -217,7 +218,7 @@ size_t Plugin::NumOverrideFormIDs() const { return numOverrideRecords_; }
 
 uint32_t Plugin::GetRecordAndGroupCount() const {
   uint32_t recordAndGroupCount = 0;
-  auto ret =
+  const auto ret =
       esp_plugin_record_and_group_count(esPlugin.get(), &recordAndGroupCount);
   if (ret != ESP_OK) {
     throw FileAccessError("Error getting record and group count for \"" +
@@ -289,7 +290,7 @@ void Plugin::Load(const std::filesystem::path& path,
 
 std::string Plugin::GetDescription() const {
   char* description = nullptr;
-  auto ret = esp_plugin_description(esPlugin.get(), &description);
+  const auto ret = esp_plugin_description(esPlugin.get(), &description);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));

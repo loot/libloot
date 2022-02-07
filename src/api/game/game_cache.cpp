@@ -87,7 +87,7 @@ std::shared_ptr<const Plugin> GameCache::GetPlugin(
     const std::string& pluginName) const {
   lock_guard<mutex> lock(mutex_);
 
-  auto it = plugins_.find(NormalizeFilename(pluginName));
+  const auto it = plugins_.find(NormalizeFilename(pluginName));
   if (it != end(plugins_))
     return it->second;
 
@@ -99,7 +99,7 @@ void GameCache::AddPlugin(Plugin&& plugin) {
 
   auto normalizedName = NormalizeFilename(plugin.GetName());
 
-  auto it = plugins_.find(normalizedName);
+  const auto it = plugins_.find(normalizedName);
   if (it != end(plugins_))
     plugins_.erase(it);
 

@@ -92,7 +92,7 @@ std::vector<Tag> ExtractBashTags(const std::string& description) {
   }
   startPos += BASH_TAGS_OPENER_LENGTH;
 
-  size_t endPos = description.find("}}", startPos);
+  const size_t endPos = description.find("}}", startPos);
   if (endPos == std::string::npos) {
     return tags;
   }
@@ -131,7 +131,7 @@ std::optional<std::string> ExtractVersion(const std::string& text) {
 
 #ifdef _WIN32
 std::wstring ToWinWide(const std::string& str) {
-  size_t len = MultiByteToWideChar(
+  const size_t len = MultiByteToWideChar(
       CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), 0, 0);
 
   if (len == 0) {
@@ -149,14 +149,14 @@ std::wstring ToWinWide(const std::string& str) {
 }
 
 std::string FromWinWide(const std::wstring& wstr) {
-  size_t len = WideCharToMultiByte(CP_UTF8,
-                                   0,
-                                   wstr.c_str(),
-                                   static_cast<int>(wstr.length()),
-                                   NULL,
-                                   0,
-                                   NULL,
-                                   NULL);
+  const size_t len = WideCharToMultiByte(CP_UTF8,
+                                         0,
+                                         wstr.c_str(),
+                                         static_cast<int>(wstr.length()),
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL);
 
   if (len == 0) {
     return std::string();
