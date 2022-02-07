@@ -167,10 +167,10 @@ std::string FromWinWide(const std::wstring& wstr) {
                                          0,
                                          wstr.c_str(),
                                          narrow(wstr.length()),
-                                         NULL,
+                                         nullptr,
                                          0,
-                                         NULL,
-                                         NULL);
+                                         nullptr,
+                                         nullptr);
 
   if (len == 0) {
     return std::string();
@@ -183,8 +183,8 @@ std::string FromWinWide(const std::wstring& wstr) {
                       narrow(wstr.length()),
                       str.data(),
                       narrow(str.length()),
-                      NULL,
-                      NULL);
+                      nullptr,
+                      nullptr);
   return str;
 }
 #endif
