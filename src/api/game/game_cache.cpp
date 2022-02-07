@@ -115,7 +115,7 @@ std::set<std::filesystem::path> GameCache::GetArchivePaths() const {
 void GameCache::CacheArchivePaths(std::set<std::filesystem::path>&& paths) {
   lock_guard<mutex> lock(mutex_);
 
-  archivePaths_ = paths;
+  archivePaths_ = std::move(paths);
 }
 
 void GameCache::ClearCachedPlugins() {
