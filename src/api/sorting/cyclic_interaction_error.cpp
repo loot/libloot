@@ -38,7 +38,7 @@ std::string describeCycle(const std::vector<Vertex>& cycle) {
     }
   }
   if (!cycle.empty()) {
-    text += cycle[0].GetName();
+    text += cycle.at(0).GetName();
   }
 
   return text;

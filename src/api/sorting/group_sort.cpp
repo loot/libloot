@@ -264,7 +264,7 @@ std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
   std::vector<vertex_t> predecessors(boost::num_vertices(graph));
   std::vector<int> distance(predecessors.size(),
                             (std::numeric_limits<int>::max)());
-  distance[toVertex] = 0;
+  distance.at(toVertex) = 0;
 
   bellman_ford_shortest_paths(
       graph,
@@ -277,7 +277,7 @@ std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
   std::vector<Vertex> path;
   vertex_t currentVertex = fromVertex;
   while (currentVertex != toVertex) {
-    auto nextVertex = predecessors[currentVertex];
+    auto nextVertex = predecessors.at(currentVertex);
     if (nextVertex == currentVertex) {
       if (logger) {
         logger->error(

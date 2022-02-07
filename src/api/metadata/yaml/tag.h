@@ -64,7 +64,7 @@ struct convert<loot::Tag> {
     } else
       tag = node.as<std::string>();
 
-    if (!tag.empty() && tag[0] == '-')
+    if (!tag.empty() && tag.at(0) == '-')
       rhs = loot::Tag(tag.substr(1), false, condition);
     else
       rhs = loot::Tag(tag, true, condition);

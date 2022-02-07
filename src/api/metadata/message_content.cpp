@@ -62,7 +62,7 @@ std::optional<MessageContent> MessageContent::Choose(
   if (content.empty())
     return std::nullopt;
   else if (content.size() == 1)
-    return content[0];
+    return content.at(0);
   else {
     auto languageCode = language.substr(0, language.find("_"));
     const auto isCountryCodeGiven = languageCode.length() != language.length();

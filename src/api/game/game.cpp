@@ -145,7 +145,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
       currentGroup = 0;
     }
 
-    pluginGroups[currentGroup].push_back(plugin.second);
+    pluginGroups.at(currentGroup).push_back(plugin.second);
     ++currentGroup;
   }
 
@@ -162,7 +162,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   auto masterPath = DataPath() / u8path(masterFilename_);
   vector<thread> threads;
   while (threads.size() < threadsToUse) {
-    vector<string>& pluginGroup = pluginGroups[threads.size()];
+    vector<string>& pluginGroup = pluginGroups.at(threads.size());
     threads.push_back(thread([&]() {
       for (auto pluginName : pluginGroup) {
         try {

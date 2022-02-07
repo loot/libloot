@@ -70,7 +70,7 @@ PluginSortingData::PluginSortingData(
   }
 
   for (size_t i = 0; i < loadOrder.size(); i++) {
-    if (CompareFilenames(plugin.GetName(), loadOrder[i]) == 0) {
+    if (CompareFilenames(plugin.GetName(), loadOrder.at(i)) == 0) {
       loadOrderIndex_ = i;
     }
   }

@@ -222,17 +222,17 @@ void ConditionEvaluator::RefreshLoadedPluginsState(
   std::vector<plugin_version> pluginVersions;
   std::vector<plugin_crc> pluginCrcs;
   for (size_t i = 0; i < pluginNames.size(); ++i) {
-    if (!pluginVersionStrings[i].empty()) {
+    if (!pluginVersionStrings.at(i).empty()) {
       plugin_version pluginVersion;
-      pluginVersion.plugin_name = pluginNames[i].c_str();
-      pluginVersion.version = pluginVersionStrings[i].c_str();
+      pluginVersion.plugin_name = pluginNames.at(i).c_str();
+      pluginVersion.version = pluginVersionStrings.at(i).c_str();
       pluginVersions.push_back(pluginVersion);
     }
 
-    if (crcs[i] != 0) {
+    if (crcs.at(i) != 0) {
       plugin_crc pluginCrc;
-      pluginCrc.plugin_name = pluginNames[i].c_str();
-      pluginCrc.crc = crcs[i];
+      pluginCrc.plugin_name = pluginNames.at(i).c_str();
+      pluginCrc.crc = crcs.at(i);
       pluginCrcs.push_back(pluginCrc);
     }
   }

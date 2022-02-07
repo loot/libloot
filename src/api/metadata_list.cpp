@@ -93,7 +93,7 @@ std::optional<std::pair<size_t, size_t>> FindPreludeBounds(
 
     pos = nextLineBreakPos + 1;
 
-    const auto nextChar = masterlist[pos];
+    const auto nextChar = masterlist.at(pos);
     if (nextChar != ' ' && nextChar != '#' && nextChar != '\n') {
       endOfPrelude = nextLineBreakPos;
       break;
