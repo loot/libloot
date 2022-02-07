@@ -94,7 +94,7 @@ std::shared_ptr<const Plugin> GameCache::GetPlugin(
   return nullptr;
 }
 
-void GameCache::AddPlugin(const Plugin&& plugin) {
+void GameCache::AddPlugin(Plugin&& plugin) {
   lock_guard<mutex> lock(mutex_);
 
   auto normalizedName = NormalizeFilename(plugin.GetName());

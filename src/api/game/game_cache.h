@@ -44,7 +44,7 @@ public:
 
   std::vector<std::shared_ptr<const Plugin>> GetPlugins() const;
   std::shared_ptr<const Plugin> GetPlugin(const std::string& pluginName) const;
-  void AddPlugin(const Plugin&& plugin);
+  void AddPlugin(Plugin&& plugin);
 
   std::set<std::filesystem::path> GetArchivePaths() const;
   void CacheArchivePaths(std::set<std::filesystem::path>&& paths);
