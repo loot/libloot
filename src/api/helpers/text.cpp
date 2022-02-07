@@ -40,41 +40,29 @@ namespace loot {
 /* The string below matches timestamps that use forwardslashes for date
    separators. However, Pseudosem v1.0.1 will only compare the first
    two digits as it does not recognise forwardslashes as separators. */
-const std::string dateRegex =
+static constexpr const char* dateRegex =
     R"((\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2}))";
 
 /* The string below matches the range of version strings supported by
    Pseudosem v1.0.1, excluding space separators, as they make version
    extraction from inside sentences very tricky and have not been
    seen "in the wild". */
-const std::string pseudosemVersionRegex =
+static constexpr const char* pseudosemVersionRegex =
     R"((\d+(?:\.\d+)+(?:[-._:]?[A-Za-z0-9]+)*))"
     // The string below prevents version numbers followed by a comma from
     // matching.
     R"((?!,))";
 
-/* There are a few different version formats that can appear in strings
-   together, and in order to extract the correct one, they must be searched
-   for in order of priority. */
-const std::vector<regex> versionRegexes({
-    regex(dateRegex, regex::ECMAScript | regex::icase),
-    regex(R"(version:?\s)" + pseudosemVersionRegex,
-          regex::ECMAScript | regex::icase),
-    regex(R"((?:^|v|\s))" + pseudosemVersionRegex,
-          regex::ECMAScript | regex::icase),
-    regex(
-        /* The string below matches a number containing one or more digits
-           found at the start of the search string or preceded by 'v' or
-           'version:. */
-        R"((?:^|v|version:\s*)(\d+))",
-        regex::ECMAScript | regex::icase),
-});
-
-// As defined by <https://github.github.com/gfm/#ascii-punctuation-character>.
-const regex asciiPunctuationCharacters(
-    "([!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`{|}~])");
+/* The string below matches a number containing one or more
+   digits found at the start of the search string or preceded by
+   'v' or 'version:. */
+static constexpr const char* digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))";
 
 std::string EscapeMarkdownASCIIPunctuation(const std::string& text) {
+  // As defined by <https://github.github.com/gfm/#ascii-punctuation-character>.
+  static const regex asciiPunctuationCharacters(
+      "([!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`{|}~])");
+
   return std::regex_replace(text, asciiPunctuationCharacters, "\\$1");
 }
 
@@ -111,6 +99,18 @@ std::vector<Tag> ExtractBashTags(const std::string& description) {
 }
 
 std::optional<std::string> ExtractVersion(const std::string& text) {
+  /* There are a few different version formats that can appear in strings
+   together, and in order to extract the correct one, they must be searched
+   for in order of priority. */
+  static const std::vector<regex> versionRegexes({
+      regex(dateRegex, regex::ECMAScript | regex::icase),
+      regex(std::string(R"(version:?\s)") + pseudosemVersionRegex,
+            regex::ECMAScript | regex::icase),
+      regex(std::string(R"((?:^|v|\s))") + pseudosemVersionRegex,
+            regex::ECMAScript | regex::icase),
+      regex(digitsVersionRegex, regex::ECMAScript | regex::icase),
+  });
+
   std::smatch what;
   for (const auto& versionRegex : versionRegexes) {
     if (std::regex_search(text, what, versionRegex)) {
