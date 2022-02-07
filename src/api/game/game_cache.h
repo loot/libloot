@@ -35,9 +35,12 @@ namespace loot {
 class GameCache {
 public:
   explicit GameCache();
-  explicit GameCache(const GameCache& cache);
+  GameCache(const GameCache& cache);
+  GameCache(GameCache&& cache);
+  ~GameCache() = default;
 
   GameCache& operator=(const GameCache& cache);
+  GameCache& operator=(GameCache&& cache);
 
   std::vector<std::shared_ptr<const Plugin>> GetPlugins() const;
   std::shared_ptr<const Plugin> GetPlugin(const std::string& pluginName) const;

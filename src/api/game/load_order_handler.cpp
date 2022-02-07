@@ -57,7 +57,22 @@ unsigned int mapGameId(GameType gameType) {
 
 LoadOrderHandler::LoadOrderHandler() : gh_(nullptr) {}
 
+LoadOrderHandler::LoadOrderHandler(LoadOrderHandler&& other) : gh_(other.gh_) {
+  other.gh_ = nullptr;
+}
+
 LoadOrderHandler::~LoadOrderHandler() { lo_destroy_handle(gh_); }
+
+LoadOrderHandler& LoadOrderHandler::operator=(LoadOrderHandler&& other) {
+  if (&other != this) {
+    lo_destroy_handle(gh_);
+
+    gh_ = other.gh_;
+    other.gh_ = nullptr;
+  }
+
+  return *this;
+}
 
 void LoadOrderHandler::Init(const GameType& gameType,
                             const std::filesystem::path& gamePath,

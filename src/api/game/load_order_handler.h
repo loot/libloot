@@ -38,7 +38,12 @@ namespace loot {
 class LoadOrderHandler {
 public:
   explicit LoadOrderHandler();
+  LoadOrderHandler(const LoadOrderHandler&) = delete;
+  LoadOrderHandler(LoadOrderHandler&& other);
   ~LoadOrderHandler();
+
+  LoadOrderHandler& operator=(const LoadOrderHandler&) = delete;
+  LoadOrderHandler& operator=(LoadOrderHandler&& other);
 
   void Init(const GameType& game,
             const std::filesystem::path& gamePath,

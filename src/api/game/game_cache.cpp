@@ -37,20 +37,36 @@ namespace loot {
 GameCache::GameCache() {}
 
 GameCache::GameCache(const GameCache& cache) {
-  lock_guard<mutex> lock(mutex_);
-  lock_guard<mutex> otherLock(cache.mutex_);
+  lock_guard<mutex> lock(cache.mutex_);
 
   plugins_ = cache.plugins_;
   archivePaths_ = cache.archivePaths_;
 }
 
-GameCache& GameCache::operator=(const GameCache& cache) {
-  lock_guard<mutex> lock(mutex_);
-  lock_guard<mutex> otherLock(cache.mutex_);
+GameCache::GameCache(GameCache&& cache) {
+  lock_guard<mutex> lock(cache.mutex_);
 
+  plugins_ = std::move(cache.plugins_);
+  archivePaths_ = std::move(cache.archivePaths_);
+}
+
+GameCache& GameCache::operator=(const GameCache& cache) {
   if (&cache != this) {
+    std::scoped_lock lock(mutex_, cache.mutex_);
+
     plugins_ = cache.plugins_;
     archivePaths_ = cache.archivePaths_;
+  }
+
+  return *this;
+}
+
+GameCache& GameCache::operator=(GameCache&& cache) {
+  if (&cache != this) {
+    std::scoped_lock lock(mutex_, cache.mutex_);
+
+    plugins_ = std::move(cache.plugins_);
+    archivePaths_ = std::move(cache.archivePaths_);
   }
 
   return *this;
