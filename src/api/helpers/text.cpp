@@ -130,6 +130,20 @@ std::optional<std::string> ExtractVersion(const std::string& text) {
 }
 
 #ifdef _WIN32
+int narrow(size_t value) {
+  auto castValue = static_cast<int>(value);
+
+  // Cast back again to check if any data has been lost.
+  // Because one type is signed and the other is unsigned, also check that
+  // the sign has been preserved.
+  if (static_cast<size_t>(castValue) != value ||
+      ((castValue < int{}) != (value < size_t{}))) {
+    throw std::runtime_error("Failed to losslessly convert from size_t to int");
+  }
+
+  return castValue;
+}
+
 std::wstring ToWinWide(const std::string& str) {
   const size_t len = MultiByteToWideChar(
       CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), 0, 0);
@@ -142,9 +156,9 @@ std::wstring ToWinWide(const std::string& str) {
   MultiByteToWideChar(CP_UTF8,
                       0,
                       str.c_str(),
-                      static_cast<int>(str.length()),
+                      narrow(str.length()),
                       wstr.data(),
-                      static_cast<int>(wstr.length()));
+                      narrow(wstr.length()));
   return wstr;
 }
 
@@ -152,7 +166,7 @@ std::string FromWinWide(const std::wstring& wstr) {
   const size_t len = WideCharToMultiByte(CP_UTF8,
                                          0,
                                          wstr.c_str(),
-                                         static_cast<int>(wstr.length()),
+                                         narrow(wstr.length()),
                                          NULL,
                                          0,
                                          NULL,
@@ -166,9 +180,9 @@ std::string FromWinWide(const std::wstring& wstr) {
   WideCharToMultiByte(CP_UTF8,
                       0,
                       wstr.c_str(),
-                      static_cast<int>(wstr.length()),
+                      narrow(wstr.length()),
                       str.data(),
-                      static_cast<int>(str.length()),
+                      narrow(str.length()),
                       NULL,
                       NULL);
   return str;
@@ -208,7 +222,7 @@ std::string NormalizeFilename(const std::string& filename) {
     return std::string();
   }
 
-  CharUpperBuffW(wideString.data(), static_cast<int>(wideString.length()));
+  CharUpperBuffW(wideString.data(), narrow(wideString.length()));
   return FromWinWide(wideString);
 #else
   std::string normalizedFilename;
