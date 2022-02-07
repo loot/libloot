@@ -152,7 +152,7 @@ jobs:
         if: github.event_name == 'push'
 
   windows:
-    runs-on: windows-2016
+    runs-on: windows-2019
 
     strategy:
       matrix:
@@ -192,7 +192,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 15 2017" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
       - name: Run tests

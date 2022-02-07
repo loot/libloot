@@ -28,7 +28,7 @@ jobs:
           tag_name: ${{ steps.get-git-tag.outputs.name }}
           release_name: libloot v${{ steps.get-git-tag.outputs.name }}
           body: |
-            Requires Windows 7 or later and the [MSVC 2017 x86 redistributable](https://download.visualstudio.microsoft.com/download/pr/749aa419-f9e4-4578-a417-a43786af205e/d59197078cc425377be301faba7dd87a/vc_redist.x86.exe), and [7-Zip](http://www.7-zip.org/) to extract the archives.
+            Requires Windows 7 or later, the MSVC 2019 [x86](https://aka.ms/vs/16/release/vc_redist.x86.exe) or [x64](https://aka.ms/vs/16/release/vc_redist.x64.exe) redistributable for 32-bit and 64-bit builds respectively, and [7-Zip](http://www.7-zip.org/) to extract the archives.
 
             ## Change Logs
             - [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)
@@ -131,7 +131,7 @@ jobs:
           asset_content_type: application/octet-stream
 
   windows:
-    runs-on: windows-2016
+    runs-on: windows-2019
     needs: create_release
 
     strategy:
@@ -173,7 +173,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 15 2017" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
       - uses: actions/setup-python@v2
