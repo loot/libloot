@@ -51,7 +51,7 @@ unsigned int mapGameId(GameType gameType) {
     case GameType::fo4vr:
       return LIBLO_GAME_FO4VR;
     default:
-      return (unsigned int)-1;
+      throw std::logic_error("Unexpected game type");
   }
 }
 
