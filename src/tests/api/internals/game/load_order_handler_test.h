@@ -51,9 +51,8 @@ protected:
     }
   }
 
-  void initialiseHandler() {
-    ASSERT_NO_THROW(
-        loadOrderHandler_.Init(GetParam(), dataPath.parent_path(), localPath));
+  LoadOrderHandler createHandler() {
+    return LoadOrderHandler(GetParam(), dataPath.parent_path(), localPath);
   }
 
   std::vector<std::string> getImplicitlyActivePlugins() {
@@ -99,7 +98,6 @@ protected:
     return activePlugins;
   }
 
-  LoadOrderHandler loadOrderHandler_;
   std::vector<std::string> loadOrderToSet_;
 };
 
@@ -115,119 +113,94 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo4,
                                            GameType::tes5se));
 
-TEST_P(LoadOrderHandlerTest, initShouldThrowIfNoGamePathIsSet) {
-  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), ""), std::invalid_argument);
-  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), ""), std::invalid_argument);
-  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), "", localPath),
+TEST_P(LoadOrderHandlerTest, constructorShouldThrowIfNoGamePathIsSet) {
+  EXPECT_THROW(LoadOrderHandler(GetParam(), ""), std::invalid_argument);
+  EXPECT_THROW(LoadOrderHandler(GetParam(), ""), std::invalid_argument);
+  EXPECT_THROW(LoadOrderHandler(GetParam(), "", localPath),
                std::invalid_argument);
-  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), "", localPath),
+  EXPECT_THROW(LoadOrderHandler(GetParam(), "", localPath),
                std::invalid_argument);
 }
 
 #ifndef _WIN32
-TEST_P(LoadOrderHandlerTest, initShouldThrowOnLinuxIfNoLocalPathIsSet) {
-  EXPECT_THROW(loadOrderHandler_.Init(GetParam(), dataPath.parent_path()),
+TEST_P(LoadOrderHandlerTest, constructorShouldThrowOnLinuxIfNoLocalPathIsSet) {
+  EXPECT_THROW(LoadOrderHandler(GetParam(), dataPath.parent_path()),
                std::system_error);
 }
 #endif
 
 TEST_P(LoadOrderHandlerTest,
-       initShouldNotThrowIfAValidGameIdAndGamePathAndLocalPathAreSet) {
+       constructorShouldNotThrowIfAValidGameIdAndGamePathAndLocalPathAreSet) {
   EXPECT_NO_THROW(
-      loadOrderHandler_.Init(GetParam(), dataPath.parent_path(), localPath));
-}
-
-TEST_P(LoadOrderHandlerTest,
-       isPluginActiveShouldThrowIfTheHandlerHasNotBeenInitialised) {
-  EXPECT_THROW(loadOrderHandler_.IsPluginActive(masterFile), std::system_error);
+      LoadOrderHandler(GetParam(), dataPath.parent_path(), localPath));
 }
 
 TEST_P(LoadOrderHandlerTest,
        isPluginActiveShouldReturnFalseIfLoadOrderStateHasNotBeenLoaded) {
-  initialiseHandler();
+  auto loadOrderHandler = createHandler();
 
-  EXPECT_FALSE(loadOrderHandler_.IsPluginActive(masterFile));
-  EXPECT_FALSE(loadOrderHandler_.IsPluginActive(blankEsm));
-  EXPECT_FALSE(loadOrderHandler_.IsPluginActive(blankEsp));
+  EXPECT_FALSE(loadOrderHandler.IsPluginActive(masterFile));
+  EXPECT_FALSE(loadOrderHandler.IsPluginActive(blankEsm));
+  EXPECT_FALSE(loadOrderHandler.IsPluginActive(blankEsp));
 }
 
 TEST_P(LoadOrderHandlerTest,
        isPluginActiveShouldReturnCorrectPluginStatesAfterInitialisation) {
-  initialiseHandler();
-  loadOrderHandler_.LoadCurrentState();
+  auto loadOrderHandler = createHandler();
+  loadOrderHandler.LoadCurrentState();
 
-  EXPECT_TRUE(loadOrderHandler_.IsPluginActive(masterFile));
-  EXPECT_TRUE(loadOrderHandler_.IsPluginActive(blankEsm));
-  EXPECT_FALSE(loadOrderHandler_.IsPluginActive(blankEsp));
-}
-
-TEST_P(LoadOrderHandlerTest,
-       getLoadOrderShouldThrowIfTheHandlerHasNotBeenInitialised) {
-  EXPECT_THROW(loadOrderHandler_.GetLoadOrder(), std::system_error);
+  EXPECT_TRUE(loadOrderHandler.IsPluginActive(masterFile));
+  EXPECT_TRUE(loadOrderHandler.IsPluginActive(blankEsm));
+  EXPECT_FALSE(loadOrderHandler.IsPluginActive(blankEsp));
 }
 
 TEST_P(LoadOrderHandlerTest,
        getLoadOrderShouldReturnAnEmptyVectorIfStateHasNotBeenLoaded) {
-  initialiseHandler();
+  auto loadOrderHandler = createHandler();
 
-  EXPECT_TRUE(loadOrderHandler_.GetLoadOrder().empty());
+  EXPECT_TRUE(loadOrderHandler.GetLoadOrder().empty());
 }
 
 TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
-  initialiseHandler();
-  loadOrderHandler_.LoadCurrentState();
+  auto loadOrderHandler = createHandler();
+  loadOrderHandler.LoadCurrentState();
 
-  ASSERT_EQ(getLoadOrder(), loadOrderHandler_.GetLoadOrder());
-}
-
-TEST_P(LoadOrderHandlerTest,
-       getActivePluginsShouldThrowIfTheHandlerHasNotBeenInitialised) {
-  EXPECT_THROW(loadOrderHandler_.GetActivePlugins(), std::system_error);
+  ASSERT_EQ(getLoadOrder(), loadOrderHandler.GetLoadOrder());
 }
 
 TEST_P(LoadOrderHandlerTest,
        getActivePluginsShouldReturnAnEmptyVectorIfStateHasNotBeenLoaded) {
-  initialiseHandler();
+  auto loadOrderHandler = createHandler();
 
-  EXPECT_TRUE(loadOrderHandler_.GetActivePlugins().empty());
+  EXPECT_TRUE(loadOrderHandler.GetActivePlugins().empty());
 }
+
 TEST_P(LoadOrderHandlerTest, getActivePluginsShouldReturnOnlyActivePlugins) {
-  initialiseHandler();
-  loadOrderHandler_.LoadCurrentState();
+  auto loadOrderHandler = createHandler();
+  loadOrderHandler.LoadCurrentState();
 
-  ASSERT_EQ(getActivePlugins(), loadOrderHandler_.GetActivePlugins());
+  ASSERT_EQ(getActivePlugins(), loadOrderHandler.GetActivePlugins());
 }
 
-TEST_P(LoadOrderHandlerTest,
-       getImplicitlyActivePluginsShouldThrowIfTheHandlerHasNotBeenInitialised) {
-  EXPECT_THROW(loadOrderHandler_.GetImplicitlyActivePlugins(),
-               std::system_error);
-}
 TEST_P(
     LoadOrderHandlerTest,
     getImplicitlyActivePluginsShouldReturnValidDataEvenIfStateHasNotBeenLoaded) {
-  initialiseHandler();
+  auto loadOrderHandler = createHandler();
 
   ASSERT_EQ(getImplicitlyActivePlugins(),
-            loadOrderHandler_.GetImplicitlyActivePlugins());
+            loadOrderHandler.GetImplicitlyActivePlugins());
 
-  loadOrderHandler_.LoadCurrentState();
+  loadOrderHandler.LoadCurrentState();
 
   ASSERT_EQ(getImplicitlyActivePlugins(),
-            loadOrderHandler_.GetImplicitlyActivePlugins());
-}
-
-TEST_P(LoadOrderHandlerTest,
-       setLoadOrderShouldThrowIfTheHandlerHasNotBeenInitialised) {
-  EXPECT_THROW(loadOrderHandler_.SetLoadOrder(loadOrderToSet_),
-               std::system_error);
+            loadOrderHandler.GetImplicitlyActivePlugins());
 }
 
 TEST_P(LoadOrderHandlerTest, setLoadOrderShouldSetTheLoadOrder) {
-  initialiseHandler();
-  loadOrderHandler_.LoadCurrentState();
+  auto loadOrderHandler = createHandler();
+  loadOrderHandler.LoadCurrentState();
 
-  EXPECT_NO_THROW(loadOrderHandler_.SetLoadOrder(loadOrderToSet_));
+  EXPECT_NO_THROW(loadOrderHandler.SetLoadOrder(loadOrderToSet_));
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
     loadOrderToSet_.erase(begin(loadOrderToSet_));

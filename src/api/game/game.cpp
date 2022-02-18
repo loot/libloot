@@ -59,6 +59,7 @@ Game::Game(const GameType gameType,
            const std::filesystem::path& localDataPath) :
     type_(gameType),
     gamePath_(gamePath),
+    loadOrderHandler_(type_, gamePath_, localDataPath),
     conditionEvaluator_(
         std::make_shared<ConditionEvaluator>(Type(), DataPath())),
     database_(ApiDatabase(conditionEvaluator_)) {
@@ -68,8 +69,6 @@ Game::Game(const GameType gameType,
                  (int)type_,
                  gamePath_.u8string());
   }
-
-  loadOrderHandler_.Init(type_, gamePath_, localDataPath);
 }
 
 GameType Game::Type() const { return type_; }

@@ -55,28 +55,13 @@ unsigned int mapGameId(GameType gameType) {
   }
 }
 
-LoadOrderHandler::LoadOrderHandler() : gh_(nullptr) {}
-
-LoadOrderHandler::LoadOrderHandler(LoadOrderHandler&& other) : gh_(other.gh_) {
-  other.gh_ = nullptr;
-}
-
-LoadOrderHandler::~LoadOrderHandler() { lo_destroy_handle(gh_); }
-
-LoadOrderHandler& LoadOrderHandler::operator=(LoadOrderHandler&& other) {
-  if (&other != this) {
-    lo_destroy_handle(gh_);
-
-    gh_ = other.gh_;
-    other.gh_ = nullptr;
-  }
-
-  return *this;
-}
-
-void LoadOrderHandler::Init(const GameType& gameType,
-                            const std::filesystem::path& gamePath,
-                            const std::filesystem::path& gameLocalAppData) {
+LoadOrderHandler::LoadOrderHandler(
+    const GameType& gameType,
+    const std::filesystem::path& gamePath,
+    const std::filesystem::path& gameLocalAppData) :
+    gh_(std::unique_ptr<std::remove_pointer<lo_game_handle>::type,
+                        decltype(&lo_destroy_handle)>(nullptr,
+                                                      lo_destroy_handle)) {
   if (gamePath.empty()) {
     throw std::invalid_argument("Game path is not initialised.");
   }
@@ -86,18 +71,18 @@ void LoadOrderHandler::Init(const GameType& gameType,
   if (!tempPathString.empty())
     gameLocalDataPath = tempPathString.c_str();
 
-  // If the handle has already been initialised, close it and open another.
-  if (gh_ != nullptr) {
-    lo_destroy_handle(gh_);
-    gh_ = nullptr;
-  }
+  lo_game_handle handle = nullptr;
 
-  int ret = lo_create_handle(&gh_,
+  int ret = lo_create_handle(&handle,
                              mapGameId(gameType),
                              gamePath.u8string().c_str(),
                              gameLocalDataPath);
 
   HandleError("create a game handle", ret);
+
+  gh_ =
+      std::unique_ptr<std::remove_pointer<lo_game_handle>::type,
+                      decltype(&lo_destroy_handle)>(handle, lo_destroy_handle);
 }
 
 void LoadOrderHandler::LoadCurrentState() {
@@ -106,7 +91,7 @@ void LoadOrderHandler::LoadCurrentState() {
     logger->info("Loading the current load order state.");
   }
 
-  const unsigned int ret = lo_load_current_state(gh_);
+  const unsigned int ret = lo_load_current_state(gh_.get());
 
   HandleError("load the current load order state", ret);
 }
@@ -119,7 +104,7 @@ bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
 
   bool result = false;
   const unsigned int ret =
-      lo_get_plugin_active(gh_, pluginName.c_str(), &result);
+      lo_get_plugin_active(gh_.get(), pluginName.c_str(), &result);
 
   HandleError("check if a plugin is active", ret);
 
@@ -135,7 +120,8 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
   char** pluginArr = nullptr;
   size_t pluginArrSize = 0;
 
-  const unsigned int ret = lo_get_load_order(gh_, &pluginArr, &pluginArrSize);
+  const unsigned int ret =
+      lo_get_load_order(gh_.get(), &pluginArr, &pluginArrSize);
 
   HandleError("get the load order", ret);
 
@@ -156,7 +142,7 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
   size_t pluginArrSize = 0;
 
   const unsigned int ret =
-      lo_get_active_plugins(gh_, &pluginArr, &pluginArrSize);
+      lo_get_active_plugins(gh_.get(), &pluginArr, &pluginArrSize);
 
   HandleError("get active plugins", ret);
 
@@ -177,7 +163,7 @@ std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
   size_t pluginArrSize = 0;
 
   const unsigned int ret =
-      lo_get_implicitly_active_plugins(gh_, &pluginArr, &pluginArrSize);
+      lo_get_implicitly_active_plugins(gh_.get(), &pluginArr, &pluginArrSize);
 
   HandleError("get implicitly active plugins", ret);
 
@@ -206,7 +192,7 @@ void LoadOrderHandler::SetLoadOrder(
   }
 
   const unsigned int ret =
-      lo_set_load_order(gh_, plugins.data(), plugins.size());
+      lo_set_load_order(gh_.get(), plugins.data(), plugins.size());
 
   HandleError("set the load order", ret);
 

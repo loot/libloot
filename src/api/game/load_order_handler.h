@@ -37,17 +37,9 @@
 namespace loot {
 class LoadOrderHandler {
 public:
-  explicit LoadOrderHandler();
-  LoadOrderHandler(const LoadOrderHandler&) = delete;
-  LoadOrderHandler(LoadOrderHandler&& other);
-  ~LoadOrderHandler();
-
-  LoadOrderHandler& operator=(const LoadOrderHandler&) = delete;
-  LoadOrderHandler& operator=(LoadOrderHandler&& other);
-
-  void Init(const GameType& game,
-            const std::filesystem::path& gamePath,
-            const std::filesystem::path& gameLocalAppData = "");
+  explicit LoadOrderHandler(const GameType& game,
+                            const std::filesystem::path& gamePath,
+                            const std::filesystem::path& gameLocalAppData = "");
 
   void LoadCurrentState();
 
@@ -64,7 +56,9 @@ public:
 private:
   void HandleError(const std::string& operation, unsigned int returnCode) const;
 
-  lo_game_handle gh_;
+  std::unique_ptr<std::remove_pointer<lo_game_handle>::type,
+                  decltype(&lo_destroy_handle)>
+      gh_;
 };
 }
 
