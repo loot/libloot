@@ -27,7 +27,7 @@
 #include "api/metadata/yaml/group.h"
 
 namespace loot {
-Group::Group() : name_("default") {}
+Group::Group() : name_(Group::DEFAULT_NAME) {}
 
 Group::Group(const std::string& name,
              const std::vector<std::string>& afterGroups,
