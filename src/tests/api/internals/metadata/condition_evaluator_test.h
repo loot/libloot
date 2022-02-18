@@ -54,7 +54,7 @@ protected:
     loadInstalledPlugins();
     evaluator_.RefreshLoadedPluginsState(game_.GetLoadedPlugins());
     evaluator_.RefreshActivePluginsState(
-        game_.GetLoadOrderHandler()->GetActivePlugins());
+        game_.GetLoadOrderHandler().GetActivePlugins());
   }
 
   std::string IntToHexString(const uint32_t value) {

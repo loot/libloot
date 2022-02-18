@@ -89,7 +89,10 @@ std::string IntToHexString(const uint32_t value) {
 }
 
 ConditionEvaluator::ConditionEvaluator(const GameType gameType,
-                                       const std::filesystem::path& dataPath) {
+                                       const std::filesystem::path& dataPath) :
+    lciState_(std::unique_ptr<lci_state, decltype(&lci_state_destroy)>(
+        nullptr,
+        lci_state_destroy)) {
   lci_state* state = nullptr;
 
   // This probably isn't correct for API users other than LOOT.
@@ -102,7 +105,8 @@ ConditionEvaluator::ConditionEvaluator(const GameType gameType,
                                 lootPath.u8string().c_str());
   HandleError("create state object for condition evaluation", result);
 
-  lciState_ = std::shared_ptr<lci_state>(state, lci_state_destroy);
+  lciState_ = std::unique_ptr<lci_state, decltype(&lci_state_destroy)>(
+      state, lci_state_destroy);
 }
 
 bool ConditionEvaluator::Evaluate(const std::string& condition) {
@@ -191,7 +195,7 @@ void ConditionEvaluator::ClearConditionCache() {
 }
 
 void ConditionEvaluator::RefreshActivePluginsState(
-    std::vector<std::string> activePluginNames) {
+    const std::vector<std::string>& activePluginNames) {
   ClearConditionCache();
 
   std::vector<const char*> activePluginNameCStrings;
@@ -207,7 +211,7 @@ void ConditionEvaluator::RefreshActivePluginsState(
 }
 
 void ConditionEvaluator::RefreshLoadedPluginsState(
-    std::vector<std::shared_ptr<const PluginInterface>> plugins) {
+    const std::vector<const PluginInterface*>& plugins) {
   ClearConditionCache();
 
   std::vector<std::string> pluginNames;

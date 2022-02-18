@@ -90,10 +90,10 @@ protected:
     out.open(nonAsciiPrefixArchivePath);
     out.close();
 
-    game_.GetCache()->CacheArchivePaths({dataPath / blankArchive,
-                                         dataPath / blankSuffixArchive,
-                                         dataPath / nonAsciiArchivePath,
-                                         dataPath / nonAsciiPrefixArchivePath});
+    game_.GetCache().CacheArchivePaths({dataPath / blankArchive,
+                                        dataPath / blankSuffixArchive,
+                                        dataPath / nonAsciiArchivePath,
+                                        dataPath / nonAsciiPrefixArchivePath});
   }
 
   uintmax_t getGhostedPluginFileSize() {
@@ -493,11 +493,7 @@ TEST_P(PluginTest, getOverlapSizeShouldCountEachRecordOnce) {
                  game_.DataPath() / blankMasterDependentEsm,
                  false);
 
-  std::vector<std::shared_ptr<const Plugin>> plugins = {
-      std::make_shared<const Plugin>(plugin2),
-      std::make_shared<const Plugin>(plugin2)};
-
-  EXPECT_EQ(4, plugin1.GetOverlapSize(plugins));
+  EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin2}));
 }
 
 TEST_P(PluginTest, getOverlapSizeShouldCheckAgainstAllGivenPlugins) {
@@ -510,11 +506,7 @@ TEST_P(PluginTest, getOverlapSizeShouldCheckAgainstAllGivenPlugins) {
                  game_.DataPath() / blankMasterDependentEsm,
                  false);
 
-  std::vector<std::shared_ptr<const Plugin>> plugins = {
-      std::make_shared<const Plugin>(plugin2),
-      std::make_shared<const Plugin>(plugin3)};
-
-  EXPECT_EQ(4, plugin1.GetOverlapSize(plugins));
+  EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin3}));
 }
 
 TEST_P(PluginTest,
@@ -526,10 +518,7 @@ TEST_P(PluginTest,
                  game_.DataPath() / blankMasterDependentEsm,
                  true);
 
-  std::vector<std::shared_ptr<const Plugin>> plugins = {
-      std::make_shared<const Plugin>(plugin2)};
-
-  EXPECT_EQ(0, plugin1.GetOverlapSize(plugins));
+  EXPECT_EQ(0, plugin1.GetOverlapSize({&plugin2}));
 }
 
 TEST_P(PluginTest, getOverlapSizeShouldReturnZeroForPluginsThatDoNotOverlap) {
@@ -538,10 +527,7 @@ TEST_P(PluginTest, getOverlapSizeShouldReturnZeroForPluginsThatDoNotOverlap) {
   Plugin plugin2(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false);
 
-  std::vector<std::shared_ptr<const Plugin>> plugins = {
-      std::make_shared<const Plugin>(plugin2)};
-
-  EXPECT_EQ(0, plugin1.GetOverlapSize(plugins));
+  EXPECT_EQ(0, plugin1.GetOverlapSize({&plugin2}));
 }
 
 TEST_P(PluginTest, getRecordAndGroupCountShouldReturnTheHeaderFieldValue) {

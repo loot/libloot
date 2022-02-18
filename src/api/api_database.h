@@ -29,8 +29,6 @@
 #include <string>
 #include <vector>
 
-#include "api/game/game_cache.h"
-#include "api/game/load_order_handler.h"
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata_list.h"
 #include "loot/database_interface.h"

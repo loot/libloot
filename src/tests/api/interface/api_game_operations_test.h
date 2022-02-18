@@ -115,7 +115,7 @@ protected:
     masterlist.close();
   }
 
-  std::shared_ptr<GameInterface> handle_;
+  std::unique_ptr<GameInterface> handle_;
 
   const std::filesystem::path masterlistPath;
 

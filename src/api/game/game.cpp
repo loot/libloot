@@ -59,8 +59,9 @@ Game::Game(const GameType gameType,
            const std::filesystem::path& localDataPath) :
     type_(gameType),
     gamePath_(gamePath),
-    cache_(std::make_shared<GameCache>()),
-    loadOrderHandler_(std::make_shared<LoadOrderHandler>()) {
+    conditionEvaluator_(
+        std::make_shared<ConditionEvaluator>(Type(), DataPath())),
+    database_(ApiDatabase(conditionEvaluator_)) {
   auto logger = getLogger();
   if (logger) {
     logger->info("Initialising load order data for game of type {} at: {}",
@@ -68,12 +69,7 @@ Game::Game(const GameType gameType,
                  gamePath_.u8string());
   }
 
-  loadOrderHandler_->Init(type_, gamePath_, localDataPath);
-
-  conditionEvaluator_ =
-      std::make_shared<ConditionEvaluator>(Type(), DataPath());
-
-  database_ = std::make_shared<ApiDatabase>(conditionEvaluator_);
+  loadOrderHandler_.Init(type_, gamePath_, localDataPath);
 }
 
 GameType Game::Type() const { return type_; }
@@ -86,13 +82,11 @@ std::filesystem::path Game::DataPath() const {
   }
 }
 
-std::shared_ptr<GameCache> Game::GetCache() { return cache_; }
+GameCache& Game::GetCache() { return cache_; }
 
-std::shared_ptr<LoadOrderHandler> Game::GetLoadOrderHandler() {
-  return loadOrderHandler_;
-}
+LoadOrderHandler& Game::GetLoadOrderHandler() { return loadOrderHandler_; }
 
-std::shared_ptr<DatabaseInterface> Game::GetDatabase() { return database_; }
+DatabaseInterface& Game::GetDatabase() { return database_; }
 
 bool Game::IsValidPlugin(const std::string& plugin) const {
   return Plugin::IsValid(Type(), DataPath() / u8path(plugin));
@@ -150,7 +144,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   }
 
   // Clear the existing plugin and archive caches.
-  cache_->ClearCachedPlugins();
+  cache_.ClearCachedPlugins();
 
   // Search for and cache archives.
   CacheArchives();
@@ -170,7 +164,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
           const bool loadHeader =
               loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
 
-          cache_->AddPlugin(Plugin(Type(), cache_, pluginPath, loadHeader));
+          cache_.AddPlugin(Plugin(Type(), cache_, pluginPath, loadHeader));
         } catch (const std::exception& e) {
           if (logger) {
             logger->error(
@@ -192,17 +186,14 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   conditionEvaluator_->RefreshLoadedPluginsState(GetLoadedPlugins());
 }
 
-std::shared_ptr<const PluginInterface> Game::GetPlugin(
-    const std::string& pluginName) const {
-  return cache_->GetPlugin(pluginName);
+const PluginInterface* Game::GetPlugin(const std::string& pluginName) const {
+  return cache_.GetPlugin(pluginName);
 }
 
-std::vector<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
-    const {
-  std::vector<std::shared_ptr<const PluginInterface>> interfacePointers;
-  for (auto& plugin : cache_->GetPlugins()) {
-    interfacePointers.push_back(
-        std::static_pointer_cast<const PluginInterface>(plugin));
+std::vector<const PluginInterface*> Game::GetLoadedPlugins() const {
+  std::vector<const PluginInterface*> interfacePointers;
+  for (const auto plugin : cache_.GetPlugins()) {
+    interfacePointers.push_back(plugin);
   }
 
   return interfacePointers;
@@ -221,21 +212,21 @@ std::vector<std::string> Game::SortPlugins(
 }
 
 void Game::LoadCurrentLoadOrderState() {
-  loadOrderHandler_->LoadCurrentState();
+  loadOrderHandler_.LoadCurrentState();
   conditionEvaluator_->RefreshActivePluginsState(
-      loadOrderHandler_->GetActivePlugins());
+      loadOrderHandler_.GetActivePlugins());
 }
 
 bool Game::IsPluginActive(const std::string& pluginName) const {
-  return loadOrderHandler_->IsPluginActive(pluginName);
+  return loadOrderHandler_.IsPluginActive(pluginName);
 }
 
 std::vector<std::string> Game::GetLoadOrder() const {
-  return loadOrderHandler_->GetLoadOrder();
+  return loadOrderHandler_.GetLoadOrder();
 }
 
 void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
-  loadOrderHandler_->SetLoadOrder(loadOrder);
+  loadOrderHandler_.SetLoadOrder(loadOrder);
 }
 
 void Game::CacheArchives() {
@@ -255,6 +246,6 @@ void Game::CacheArchives() {
     }
   }
 
-  cache_->CacheArchivePaths(std::move(archivePaths));
+  cache_.CacheArchivePaths(std::move(archivePaths));
 }
 }

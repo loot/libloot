@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <string>
 
+#include "api/api_database.h"
 #include "api/game/game_cache.h"
 #include "api/game/load_order_handler.h"
 #include "api/metadata/condition_evaluator.h"
@@ -46,24 +47,23 @@ public:
   GameType Type() const;
   std::filesystem::path DataPath() const;
 
-  std::shared_ptr<GameCache> GetCache();
-  std::shared_ptr<LoadOrderHandler> GetLoadOrderHandler();
+  GameCache& GetCache();
+  LoadOrderHandler& GetLoadOrderHandler();
 
   // Game Interface Methods //
   ////////////////////////////
 
-  std::shared_ptr<DatabaseInterface> GetDatabase() override;
+  DatabaseInterface& GetDatabase() override;
 
   bool IsValidPlugin(const std::string& plugin) const override;
 
   void LoadPlugins(const std::vector<std::string>& plugins,
                    bool loadHeadersOnly) override;
 
-  std::shared_ptr<const PluginInterface> GetPlugin(
+  const PluginInterface* GetPlugin(
       const std::string& pluginName) const override;
 
-  std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
-      const override;
+  std::vector<const PluginInterface*> GetLoadedPlugins() const override;
 
   void IdentifyMainMasterFile(const std::string& masterFile) override;
 
@@ -84,10 +84,10 @@ private:
   const GameType type_;
   const std::filesystem::path gamePath_;
 
-  std::shared_ptr<GameCache> cache_;
-  std::shared_ptr<LoadOrderHandler> loadOrderHandler_;
+  GameCache cache_;
+  LoadOrderHandler loadOrderHandler_;
   std::shared_ptr<ConditionEvaluator> conditionEvaluator_;
-  std::shared_ptr<DatabaseInterface> database_;
+  ApiDatabase database_;
 
   std::string masterFilename_;
 };

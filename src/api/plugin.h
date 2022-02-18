@@ -43,7 +43,7 @@ class GameCache;
 class Plugin final : public PluginInterface {
 public:
   explicit Plugin(const GameType gameType,
-                  std::shared_ptr<GameCache> gameCache,
+                  const GameCache& gameCache,
                   std::filesystem::path pluginPath,
                   const bool headerOnly);
 
@@ -62,8 +62,7 @@ public:
   bool IsEmpty() const override;
   bool LoadsArchive() const override;
   bool DoFormIDsOverlap(const PluginInterface& plugin) const override;
-  size_t GetOverlapSize(
-      const std::vector<std::shared_ptr<const Plugin>> plugins) const;
+  size_t GetOverlapSize(const std::vector<const Plugin*> plugins) const;
 
   // Load ordering functions.
   size_t NumOverrideFormIDs() const;
@@ -81,12 +80,12 @@ private:
   std::string GetDescription() const;
 
   static bool LoadsArchive(const GameType gameType,
-                           const std::shared_ptr<GameCache> gameCache,
+                           const GameCache& gameCache,
                            const std::filesystem::path& pluginPath);
   static unsigned int GetEspluginGameId(GameType gameType);
 
   const std::string name_;
-  std::shared_ptr<std::remove_pointer<::Plugin>::type> esPlugin;
+  std::unique_ptr<::Plugin, decltype(&esp_plugin_free)> esPlugin;
   bool isEmpty_;  // Does the plugin contain any records other than the TES4
                   // header?
   bool loadsArchive_;

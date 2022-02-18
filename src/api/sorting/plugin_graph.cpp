@@ -187,7 +187,7 @@ void PluginGraph::AddPluginVertices(Game& game,
   // doesn't strictly need this, there is no guarantee that this
   // unspecified behaviour will remain in future compiler updates, so
   // implement it generally.
-  auto loadedPlugins = game.GetCache()->GetPlugins();
+  auto loadedPlugins = game.GetCache().GetPlugins();
   std::sort(loadedPlugins.begin(),
             loadedPlugins.end(),
             [](const auto& lhs, const auto& rhs) {
@@ -205,10 +205,10 @@ void PluginGraph::AddPluginVertices(Game& game,
   for (const auto& plugin : loadedPlugins) {
     auto masterlistMetadata =
         game.GetDatabase()
-            ->GetPluginMetadata(plugin->GetName(), false, true)
+            .GetPluginMetadata(plugin->GetName(), false, true)
             .value_or(PluginMetadata(plugin->GetName()));
     auto userMetadata = game.GetDatabase()
-                            ->GetPluginUserMetadata(plugin->GetName(), true)
+                            .GetPluginUserMetadata(plugin->GetName(), true)
                             .value_or(PluginMetadata(plugin->GetName()));
 
     auto pluginSortingData = PluginSortingData(*plugin,
@@ -232,8 +232,8 @@ void PluginGraph::AddPluginVertices(Game& game,
 
   // Map sets of transitive group dependencies to sets of transitive plugin
   // dependencies.
-  auto groups = GetTransitiveAfterGroups(game.GetDatabase()->GetGroups(false),
-                                         game.GetDatabase()->GetUserGroups());
+  auto groups = GetTransitiveAfterGroups(game.GetDatabase().GetGroups(false),
+                                         game.GetDatabase().GetUserGroups());
   for (auto& group : groups) {
     std::unordered_set<std::string> transitivePlugins;
     for (const auto& afterGroup : group.second) {
@@ -382,7 +382,7 @@ void PluginGraph::AddHardcodedPluginEdges(Game& game) {
   using std::filesystem::u8path;
 
   auto implicitlyActivePlugins =
-      game.GetLoadOrderHandler()->GetImplicitlyActivePlugins();
+      game.GetLoadOrderHandler().GetImplicitlyActivePlugins();
 
   auto logger = getLogger();
   std::set<std::string> processedPluginPaths;

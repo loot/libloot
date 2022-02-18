@@ -101,7 +101,7 @@ TEST_P(
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));
-  EXPECT_EQ(11, game.GetCache()->GetPlugins().size());
+  EXPECT_EQ(11, game.GetCache().GetPlugins().size());
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(game.GetPlugin(masterFile));
@@ -142,7 +142,7 @@ TEST_P(GameTest,
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
-  EXPECT_EQ(11, game.GetCache()->GetPlugins().size());
+  EXPECT_EQ(11, game.GetCache().GetPlugins().size());
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(game.GetPlugin(blankEsm));
@@ -161,7 +161,7 @@ TEST_P(
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
 
   auto expected = std::set<std::filesystem::path>({dataPath / blankArchive});
-  EXPECT_EQ(expected, game.GetCache()->GetArchivePaths());
+  EXPECT_EQ(expected, game.GetCache().GetArchivePaths());
 }
 
 TEST_P(GameTest, loadPluginsShouldClearTheArchivesCacheBeforeFindingArchives) {
@@ -169,7 +169,7 @@ TEST_P(GameTest, loadPluginsShouldClearTheArchivesCacheBeforeFindingArchives) {
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
-  EXPECT_EQ(1, game.GetCache()->GetArchivePaths().size());
+  EXPECT_EQ(1, game.GetCache().GetArchivePaths().size());
 }
 
 TEST_P(

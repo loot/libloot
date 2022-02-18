@@ -72,7 +72,7 @@ LOOT_API bool IsCompatible(const unsigned int versionMajor,
     return versionMinor == loot::LootVersion::minor;
 }
 
-LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
+LOOT_API std::unique_ptr<GameInterface> CreateGameHandle(
     const GameType game,
     const std::filesystem::path& gamePath,
     const std::filesystem::path& gameLocalPath) {
@@ -96,6 +96,6 @@ LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
                                 gameLocalPath.u8string() +
                                 "\" does not resolve to a valid directory.");
 
-  return std::make_shared<Game>(game, resolvedGamePath, resolvedGameLocalPath);
+  return std::make_unique<Game>(game, resolvedGamePath, resolvedGameLocalPath);
 }
 }

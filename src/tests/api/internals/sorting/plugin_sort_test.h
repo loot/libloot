@@ -153,15 +153,15 @@ TEST_P(PluginSortTest, sortingShouldResolveGroupsAsTransitiveLoadAfterSets) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_);
+  game_.GetDatabase().LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankDifferentEsm);
   plugin.SetGroup("group1");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankEsm);
   plugin.SetGroup("group3");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
       masterFile,
@@ -190,7 +190,7 @@ TEST_P(PluginSortTest, sortingShouldThrowIfAPluginHasAGroupThatDoesNotExist) {
 
   PluginMetadata plugin(blankDifferentEsm);
   plugin.SetGroup("group1");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   EXPECT_THROW(SortPlugins(game_, game_.GetLoadOrder()), UndefinedGroupError);
 }
@@ -200,11 +200,11 @@ TEST_P(PluginSortTest,
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_);
+  game_.GetDatabase().LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankEsm);
   plugin.SetGroup("group4");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
       masterFile,
@@ -234,21 +234,21 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_);
+  game_.GetDatabase().LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankEsp);
 
   plugin = PluginMetadata(blankDifferentMasterDependentEsp);
   plugin.SetLoadAfterFiles({File(blankMasterDependentEsp)});
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankDifferentEsp);
   plugin.SetGroup("group1");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankMasterDependentEsp);
   plugin.SetGroup("group2");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
       masterFile,
@@ -278,15 +278,15 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_);
+  game_.GetDatabase().LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankMasterDependentEsm);
   plugin.SetGroup("earliest");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankDifferentEsm);
   plugin.SetGroup("earlier");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
       blankEsm,
@@ -318,19 +318,19 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_);
+  game_.GetDatabase().LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankMasterDependentEsm);
   plugin.SetGroup("earliest");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankDifferentEsm);
   plugin.SetGroup("earlier");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankEsm);
   plugin.SetGroup("group4");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   try {
     SortPlugins(game_, game_.GetLoadOrder());
@@ -353,15 +353,15 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_);
+  game_.GetDatabase().LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankMasterDependentEsp);
   plugin.SetGroup("earliest");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankDifferentEsm);
   plugin.SetGroup("earlier");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
       blankDifferentEsm,
@@ -393,15 +393,15 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   GenerateMasterlist();
-  game_.GetDatabase()->LoadLists(masterlistPath_);
+  game_.GetDatabase().LoadLists(masterlistPath_);
 
   PluginMetadata plugin(blankEsm);
   plugin.SetGroup("group4");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankDifferentMasterDependentEsm);
   plugin.SetGroup("group4");
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
       masterFile,
@@ -433,7 +433,7 @@ TEST_P(PluginSortTest,
       File(blankDifferentEsp),
       File(blankDifferentPluginDependentEsp),
   });
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
       masterFile,
@@ -465,7 +465,7 @@ TEST_P(PluginSortTest,
       File(blankDifferentEsp),
       File(blankDifferentPluginDependentEsp),
   });
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
       masterFile,
@@ -525,7 +525,7 @@ TEST_P(PluginSortTest, sortingShouldThrowIfACyclicInteractionIsEncountered) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
   PluginMetadata plugin(blankEsm);
   plugin.SetLoadAfterFiles({File(blankMasterDependentEsm)});
-  game_.GetDatabase()->SetPluginUserMetadata(plugin);
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   EXPECT_THROW(SortPlugins(game_, game_.GetLoadOrder()),
                CyclicInteractionError);

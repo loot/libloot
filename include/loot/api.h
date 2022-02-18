@@ -105,7 +105,7 @@ LOOT_API bool IsCompatible(const unsigned int major,
  *        variable (eg. Linux) can still use the API.
  * @returns The new game handle.
  */
-LOOT_API std::shared_ptr<GameInterface> CreateGameHandle(
+LOOT_API std::unique_ptr<GameInterface> CreateGameHandle(
     const GameType game,
     const std::filesystem::path& game_path,
     const std::filesystem::path& game_local_path = "");

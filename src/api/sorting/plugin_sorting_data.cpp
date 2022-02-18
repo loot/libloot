@@ -31,10 +31,10 @@
 #include "api/helpers/text.h"
 
 namespace loot {
-std::vector<std::shared_ptr<const Plugin>> GetPluginsSubset(
-    const std::vector<std::shared_ptr<const Plugin>>& plugins,
+std::vector<const Plugin*> GetPluginsSubset(
+    const std::vector<const Plugin*>& plugins,
     const std::vector<std::string>& pluginNames) {
-  std::vector<std::shared_ptr<const Plugin>> pluginsSubset;
+  std::vector<const Plugin*> pluginsSubset;
 
   for (const auto& pluginName : pluginNames) {
     auto pos = std::find_if(plugins.begin(), plugins.end(), [&](auto plugin) {
@@ -55,7 +55,7 @@ PluginSortingData::PluginSortingData(
     const PluginMetadata& userMetadata,
     const std::vector<std::string>& loadOrder,
     const GameType gameType,
-    const std::vector<std::shared_ptr<const Plugin>>& loadedPlugins) :
+    const std::vector<const Plugin*>& loadedPlugins) :
     plugin_(plugin),
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),

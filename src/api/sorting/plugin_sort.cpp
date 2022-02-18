@@ -53,7 +53,7 @@ std::vector<std::string> SortPlugins(
   graph.AddHardcodedPluginEdges(game);
 
   std::unordered_map<std::string, Group> groups;
-  for (const auto& group : game.GetDatabase()->GetGroups()) {
+  for (const auto& group : game.GetDatabase().GetGroups()) {
     groups.emplace(group.GetName(), group);
   }
   graph.AddGroupEdges(groups);

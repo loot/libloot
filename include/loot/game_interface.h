@@ -33,6 +33,8 @@ namespace loot {
 /** @brief The interface provided for accessing game-specific functionality. */
 class GameInterface {
 public:
+  virtual ~GameInterface() = default;
+
   /**
    *  @name Metadata Access
    *  @{
@@ -41,9 +43,10 @@ public:
   /**
    * @brief Get the database interface used for accessing metadata-related
    *        functionality.
-   * @returns A shared pointer to the game's DatabaseInterface
+   * @returns A reference to the game's DatabaseInterface. The reference remains
+   *          valid for the lifetime of the GameInterface instance.
    */
-  virtual std::shared_ptr<DatabaseInterface> GetDatabase() = 0;
+  virtual DatabaseInterface& GetDatabase() = 0;
 
   /**
    * @}
@@ -84,7 +87,7 @@ public:
    * @returns A shared pointer to a const PluginInterface implementation. The
    *          pointer is null if the given plugin has not been loaded.
    */
-  virtual std::shared_ptr<const PluginInterface> GetPlugin(
+  virtual const PluginInterface* GetPlugin(
       const std::string& pluginName) const = 0;
 
   /**
@@ -94,8 +97,7 @@ public:
    *          valid until the ``LoadPlugins()`` or ``SortPlugins()`` functions
    *          are next called or this GameInterface is destroyed.
    */
-  virtual std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
-      const = 0;
+  virtual std::vector<const PluginInterface*> GetLoadedPlugins() const = 0;
 
   /**
    *  @}

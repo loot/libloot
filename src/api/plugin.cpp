@@ -38,11 +38,13 @@ using std::string;
 
 namespace loot {
 Plugin::Plugin(const GameType gameType,
-               std::shared_ptr<GameCache> gameCache,
+               const GameCache& gameCache,
                std::filesystem::path pluginPath,
                const bool headerOnly) :
     name_(pluginPath.filename().u8string()),
-    esPlugin(nullptr),
+    esPlugin(
+        std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(nullptr,
+                                                              esp_plugin_free)),
     isEmpty_(true),
     loadsArchive_(false),
     numOverrideRecords_(0) {
@@ -169,7 +171,7 @@ bool Plugin::LoadsArchive() const { return loadsArchive_; }
 
 bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
   try {
-    auto otherPlugin = dynamic_cast<const Plugin&>(plugin);
+    auto& otherPlugin = dynamic_cast<const Plugin&>(plugin);
 
     bool doPluginsOverlap = false;
     const auto ret = esp_plugin_do_records_overlap(
@@ -192,8 +194,7 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
   return false;
 }
 
-size_t Plugin::GetOverlapSize(
-    const std::vector<std::shared_ptr<const Plugin>> plugins) const {
+size_t Plugin::GetOverlapSize(const std::vector<const Plugin*> plugins) const {
   if (plugins.empty()) {
     return 0;
   }
@@ -278,7 +279,7 @@ void Plugin::Load(const std::filesystem::path& path,
                           " : esplugin error code: " + std::to_string(ret));
   }
 
-  esPlugin = std::shared_ptr<std::remove_pointer<::Plugin>::type>(
+  esPlugin = std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(
       plugin, esp_plugin_free);
 
   ret = esp_plugin_parse(esPlugin.get(), headerOnly);
@@ -352,7 +353,7 @@ bool equivalent(const std::filesystem::path& path1,
 
 // Get whether the plugin loads an archive (BSA/BA2) or not.
 bool Plugin::LoadsArchive(const GameType gameType,
-                          const std::shared_ptr<GameCache> gameCache,
+                          const GameCache& gameCache,
                           const std::filesystem::path& pluginPath) {
   if (gameType == GameType::tes3) {
     return false;
@@ -386,7 +387,7 @@ bool Plugin::LoadsArchive(const GameType gameType,
     auto basenameLength = pluginPath.stem().native().length();
     auto pluginExtension = pluginPath.extension().native();
 
-    for (const auto& archivePath : gameCache->GetArchivePaths()) {
+    for (const auto& archivePath : gameCache.GetArchivePaths()) {
       // Need to check if it starts with the given plugin's basename,
       // but case insensitively. This is hard to do accurately, so
       // instead check if the plugin with the same length basename and

@@ -70,9 +70,11 @@ protected:
     std::filesystem::current_path(dataPath.parent_path().parent_path());
   }
 
-  void TearDown() override { std::filesystem::current_path(originalWorkingDirectory); }
+  void TearDown() override {
+    std::filesystem::current_path(originalWorkingDirectory);
+  }
 
-  std::shared_ptr<GameInterface> handle_;
+  std::unique_ptr<GameInterface> handle_;
 
   const std::filesystem::path gamePathSymlink;
   const std::filesystem::path localPathSymlink;

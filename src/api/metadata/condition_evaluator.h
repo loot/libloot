@@ -28,12 +28,13 @@
 #include <loot_condition_interpreter.h>
 
 #include <filesystem>
+#include <memory>
 #include <string>
 
-#include "api/game/game_cache.h"
-#include "api/game/load_order_handler.h"
+#include "loot/enum/game_type.h"
 #include "loot/metadata/plugin_cleaning_data.h"
 #include "loot/metadata/plugin_metadata.h"
+#include "loot/plugin_interface.h"
 
 namespace loot {
 class ConditionEvaluator {
@@ -45,15 +46,16 @@ public:
   PluginMetadata EvaluateAll(const PluginMetadata& pluginMetadata);
 
   void ClearConditionCache();
-  void RefreshActivePluginsState(std::vector<std::string> activePluginNames);
+  void RefreshActivePluginsState(
+      const std::vector<std::string>& activePluginNames);
   void RefreshLoadedPluginsState(
-      std::vector<std::shared_ptr<const PluginInterface>> plugins);
+      const std::vector<const PluginInterface*>& plugins);
 
 private:
   bool Evaluate(const PluginCleaningData& cleaningData,
                 const std::string& pluginName);
 
-  std::shared_ptr<lci_state> lciState_;
+  std::unique_ptr<lci_state, decltype(&lci_state_destroy)> lciState_;
 };
 
 void ParseCondition(const std::string& condition);

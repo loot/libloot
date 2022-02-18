@@ -85,40 +85,40 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   auto esp = PluginSortingData(
-      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp).get()),
+      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp)),
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder(),
       game_.Type(),
-      game_.GetCache()->GetPlugins());
+      game_.GetCache().GetPlugins());
   EXPECT_FALSE(esp.IsMaster());
 
   auto master = PluginSortingData(
-      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm).get()),
+      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm)),
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder(),
       game_.Type(),
-      game_.GetCache()->GetPlugins());
+      game_.GetCache().GetPlugins());
   EXPECT_TRUE(master.IsMaster());
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     auto lightMaster = PluginSortingData(
-        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl).get()),
+        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl)),
         PluginMetadata(),
         PluginMetadata(),
         getLoadOrder(),
         game_.Type(),
-        game_.GetCache()->GetPlugins());
+        game_.GetCache().GetPlugins());
     EXPECT_TRUE(lightMaster.IsMaster());
 
     auto lightPlugin = PluginSortingData(
-        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp).get()),
+        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp)),
         PluginMetadata(),
         PluginMetadata(),
         getLoadOrder(),
         game_.Type(),
-        game_.GetCache()->GetPlugins());
+        game_.GetCache().GetPlugins());
     EXPECT_FALSE(lightPlugin.IsMaster());
   }
 }
@@ -127,14 +127,13 @@ TEST_P(PluginSortingDataTest,
        numOverrideFormIdsShouldEqualSizeOfOverlapWithThePluginsMasters) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
-  auto plugin =
-      PluginSortingData(*dynamic_cast<const Plugin *>(
-                            game_.GetPlugin(blankMasterDependentEsm).get()),
-                        PluginMetadata(),
-                        PluginMetadata(),
-                        getLoadOrder(),
-                        game_.Type(),
-                        game_.GetCache()->GetPlugins());
+  auto plugin = PluginSortingData(
+      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
+      PluginMetadata(),
+      PluginMetadata(),
+      getLoadOrder(),
+      game_.Type(),
+      game_.GetCache().GetPlugins());
   EXPECT_EQ(4, plugin.NumOverrideFormIDs());
 }
 
@@ -148,7 +147,7 @@ TEST_P(
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   // Pretend that blankEsm isn't loaded.
-  auto loadedPlugins = game_.GetCache()->GetPlugins();
+  auto loadedPlugins = game_.GetCache().GetPlugins();
   for (auto it = loadedPlugins.begin(); it != loadedPlugins.end();) {
     if ((*it)->GetName() == blankEsm) {
       it = loadedPlugins.erase(it);
@@ -157,14 +156,13 @@ TEST_P(
     }
   }
 
-  auto plugin =
-      PluginSortingData(*dynamic_cast<const Plugin *>(
-                            game_.GetPlugin(blankMasterDependentEsm).get()),
-                        PluginMetadata(),
-                        PluginMetadata(),
-                        getLoadOrder(),
-                        game_.Type(),
-                        loadedPlugins);
+  auto plugin = PluginSortingData(
+      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
+      PluginMetadata(),
+      PluginMetadata(),
+      getLoadOrder(),
+      game_.Type(),
+      loadedPlugins);
 
   EXPECT_EQ(10, plugin.NumOverrideFormIDs());
 }
