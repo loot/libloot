@@ -50,7 +50,7 @@ public:
   LOOT_API std::string GetGroupName() { return groupName_; }
 
 private:
-  const std::string groupName_;
+  std::string groupName_;
 };
 }
 

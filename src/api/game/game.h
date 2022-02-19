@@ -81,8 +81,8 @@ public:
 private:
   void CacheArchives();
 
-  const GameType type_;
-  const std::filesystem::path gamePath_;
+  GameType type_;
+  std::filesystem::path gamePath_;
 
   GameCache cache_;
   LoadOrderHandler loadOrderHandler_;

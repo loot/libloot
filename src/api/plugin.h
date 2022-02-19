@@ -84,7 +84,7 @@ private:
                            const std::filesystem::path& pluginPath);
   static unsigned int GetEspluginGameId(GameType gameType);
 
-  const std::string name_;
+  std::string name_;
   std::unique_ptr<::Plugin, decltype(&esp_plugin_free)> esPlugin;
   bool isEmpty_;  // Does the plugin contain any records other than the TES4
                   // header?

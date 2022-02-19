@@ -54,7 +54,7 @@ public:
   LOOT_API std::vector<Vertex> GetCycle();
 
 private:
-  const std::vector<Vertex> cycle_;
+  std::vector<Vertex> cycle_;
 };
 }
 
