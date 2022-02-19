@@ -145,15 +145,6 @@ public:
   LOOT_API std::vector<Location> GetLocations() const;
 
   /**
-   * Get the plugin's messages as SimpleMessage objects for the given language.
-   * @param language
-   *        The language to create the SimpleMessage objects for.
-   * @return The plugin's messages as SimpleMessage objects.
-   */
-  LOOT_API std::vector<SimpleMessage> GetSimpleMessages(
-      const std::string& language) const;
-
-  /**
    * Set the plugin's group.
    * @param group
    *        The name of the group this plugin belongs to.

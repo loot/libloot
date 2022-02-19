@@ -145,20 +145,6 @@ std::vector<Location> PluginMetadata::GetLocations() const {
   return locations_;
 }
 
-std::vector<SimpleMessage> PluginMetadata::GetSimpleMessages(
-    const std::string& language) const {
-  std::vector<SimpleMessage> simpleMessages;
-
-  for (auto message : messages_) {
-    auto simpleMessage = message.ToSimpleMessage(language);
-    if (simpleMessage.has_value()) {
-      simpleMessages.push_back(simpleMessage.value());
-    }
-  }
-
-  return simpleMessages;
-}
-
 void PluginMetadata::SetGroup(const std::string& group) { group_ = group; }
 
 void PluginMetadata::UnsetGroup() { group_ = std::nullopt; }
