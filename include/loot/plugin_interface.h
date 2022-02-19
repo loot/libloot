@@ -39,6 +39,8 @@ namespace loot {
  */
 class PluginInterface {
 public:
+  virtual ~PluginInterface() = default;
+
   /**
    * Get the plugin's filename.
    * @return The plugin filename.

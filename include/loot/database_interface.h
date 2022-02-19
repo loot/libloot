@@ -40,6 +40,8 @@ namespace loot {
 /** @brief The interface provided by API's database handle. */
 class DatabaseInterface {
 public:
+  virtual ~DatabaseInterface() = default;
+
   /**
    * @name Data Reading & Writing
    * @{
