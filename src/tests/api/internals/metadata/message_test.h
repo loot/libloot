@@ -363,20 +363,20 @@ TEST_P(
   EXPECT_TRUE(message2 >= message1);
 }
 
-TEST_P(MessageTest, toSimpleMessageShouldSelectTextAndLanguageUsingGetContent) {
+TEST(ToSimpleMessage, shouldSelectTextAndLanguageUsingGetContent) {
   Message message(MessageType::warn,
-                  MessageContents({
-                      MessageContent("content1", german),
+                  std::vector<MessageContent>({
+                      MessageContent("content1", "de"),
                       MessageContent("content2"),
-                      MessageContent("content3", french),
+                      MessageContent("content3", "fr"),
                   }),
                   "condition1");
 
-  SimpleMessage simpleMessage = message.ToSimpleMessage(french).value();
+  SimpleMessage simpleMessage = ToSimpleMessage(message, "fr").value();
 
   EXPECT_EQ(MessageType::warn, simpleMessage.type);
   EXPECT_EQ("content3", simpleMessage.text);
-  EXPECT_EQ(french, simpleMessage.language);
+  EXPECT_EQ("fr", simpleMessage.language);
   EXPECT_EQ("condition1", simpleMessage.condition);
 }
 

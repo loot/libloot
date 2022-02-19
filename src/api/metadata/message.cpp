@@ -62,23 +62,6 @@ MessageType Message::GetType() const { return type_; }
 
 std::vector<MessageContent> Message::GetContent() const { return content_; }
 
-std::optional<SimpleMessage> Message::ToSimpleMessage(
-    const std::string& language) const {
-  auto content = SelectMessageContent(content_, language);
-  if (!content.has_value()) {
-    return std::nullopt;
-  }
-
-  SimpleMessage simpleMessage;
-
-  simpleMessage.type = GetType();
-  simpleMessage.language = content.value().GetLanguage();
-  simpleMessage.text = content.value().GetText();
-  simpleMessage.condition = GetCondition();
-
-  return simpleMessage;
-}
-
 bool operator==(const Message& lhs, const Message& rhs) {
   return lhs.GetType() == rhs.GetType() &&
          lhs.GetCondition() == rhs.GetCondition() &&
@@ -114,4 +97,21 @@ bool operator>(const Message& lhs, const Message& rhs) { return rhs < lhs; }
 bool operator<=(const Message& lhs, const Message& rhs) { return !(lhs > rhs); }
 
 bool operator>=(const Message& lhs, const Message& rhs) { return !(lhs < rhs); }
+
+std::optional<SimpleMessage> ToSimpleMessage(const Message& message,
+                                             const std::string& language) {
+  auto content = SelectMessageContent(message.GetContent(), language);
+  if (!content.has_value()) {
+    return std::nullopt;
+  }
+
+  SimpleMessage simpleMessage;
+
+  simpleMessage.type = message.GetType();
+  simpleMessage.language = content.value().GetLanguage();
+  simpleMessage.text = content.value().GetText();
+  simpleMessage.condition = message.GetCondition();
+
+  return simpleMessage;
+}
 }

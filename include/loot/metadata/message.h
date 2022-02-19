@@ -96,16 +96,6 @@ public:
    */
   LOOT_API std::vector<MessageContent> GetContent() const;
 
-  /**
-   * Get the message as a SimpleMessage given a language.
-   * @param  language
-   *         The preferred language for the message content.
-   * @return A SimpleMessage object for the preferred language, or for English
-   *         if message text is not available for the given language.
-   */
-  LOOT_API std::optional<SimpleMessage> ToSimpleMessage(
-      const std::string& language) const;
-
 private:
   MessageType type_{MessageType::say};
   std::vector<MessageContent> content_;
@@ -153,6 +143,17 @@ LOOT_API bool operator<=(const Message& lhs, const Message& rhs);
  *          Message object, false otherwise.
  */
 LOOT_API bool operator>=(const Message& lhs, const Message& rhs);
+
+/**
+ * Get the message as a SimpleMessage given a language.
+ * @param  language
+ *         The preferred language for the message content.
+ * @return A SimpleMessage object for the preferred language, or for English
+ *         if message text is not available for the given language.
+ */
+LOOT_API std::optional<SimpleMessage> ToSimpleMessage(
+    const Message& message,
+    const std::string& language);
 }
 
 #endif
