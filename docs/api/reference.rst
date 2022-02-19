@@ -18,9 +18,6 @@ Enumerations
 Public-Field Data Structures
 ============================
 
-.. doxygenstruct:: loot::FileRevision
-   :members:
-
 .. doxygenstruct:: loot::SimpleMessage
    :members:
 
