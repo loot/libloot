@@ -64,19 +64,6 @@ public:
                          const std::vector<MessageContent>& detail = {});
 
   /**
-   * A less-than operator implemented with no semantics so that File objects can
-   * be stored in sets.
-   * @returns True if this File is less than the given File, false otherwise.
-   */
-  LOOT_API bool operator<(const File& rhs) const;
-
-  /**
-   * Check if two File objects are equal by comparing their fields.
-   * @returns True if the objects' fields are equal, false otherwise.
-   */
-  LOOT_API bool operator==(const File& rhs) const;
-
-  /**
    * Get the filename of the file.
    * @return The file's filename.
    */
@@ -104,10 +91,24 @@ private:
 };
 
 /**
+ * Check if two File objects are equal by comparing their fields.
+ * @returns True if the objects' fields are equal, false otherwise.
+ */
+LOOT_API bool operator==(const File& lhs, const File& rhs);
+
+/**
  * Check if two File objects are not equal.
  * @returns True if the File objects are not equal, false otherwise.
  */
 LOOT_API bool operator!=(const File& lhs, const File& rhs);
+
+/**
+ * A less-than operator implemented with no semantics so that File objects can
+ * be stored in sets.
+ * @returns True if the first File is less than the second File, false
+ * otherwise.
+ */
+LOOT_API bool operator<(const File& lhs, const File& rhs);
 
 /**
  * Check if the first File object is greater than the second File object.

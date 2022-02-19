@@ -37,48 +37,47 @@ File::File(const std::string& name,
     display_(display),
     detail_(detail) {}
 
-bool File::operator<(const File& rhs) const {
-  if (display_ < rhs.display_) {
-    return true;
-  }
-
-  if (rhs.display_ < display_) {
-    return false;
-  }
-
-  if (this->GetCondition() < rhs.GetCondition()) {
-    return true;
-  }
-
-  if (rhs.GetCondition() < this->GetCondition()) {
-    return false;
-  }
-
-  if (name_ < rhs.name_) {
-    return true;
-  }
-
-  if (rhs.name_ < name_) {
-    return false;
-  }
-
-  return detail_ < rhs.detail_;
-}
-
-bool File::operator==(const File& rhs) const {
-  return display_ == rhs.display_ && GetCondition() == rhs.GetCondition() &&
-         name_ == rhs.name_ && detail_ == rhs.detail_;
-}
-
 Filename File::GetName() const { return name_; }
 
-std::string File::GetDisplayName() const {
-  return display_;
-}
+std::string File::GetDisplayName() const { return display_; }
 
 std::vector<MessageContent> File::GetDetail() const { return detail_; }
 
+bool operator==(const File& lhs, const File& rhs) {
+  return lhs.GetDisplayName() == rhs.GetDisplayName() &&
+         lhs.GetCondition() == rhs.GetCondition() &&
+         lhs.GetName() == rhs.GetName() && lhs.GetDetail() == rhs.GetDetail();
+}
+
 bool operator!=(const File& lhs, const File& rhs) { return !(lhs == rhs); }
+
+bool operator<(const File& lhs, const File& rhs) {
+  if (lhs.GetDisplayName() < rhs.GetDisplayName()) {
+    return true;
+  }
+
+  if (rhs.GetDisplayName() < lhs.GetDisplayName()) {
+    return false;
+  }
+
+  if (lhs.GetCondition() < rhs.GetCondition()) {
+    return true;
+  }
+
+  if (rhs.GetCondition() < lhs.GetCondition()) {
+    return false;
+  }
+
+  if (lhs.GetName() < rhs.GetName()) {
+    return true;
+  }
+
+  if (rhs.GetName() < lhs.GetName()) {
+    return false;
+  }
+
+  return lhs.GetDetail() < rhs.GetDetail();
+}
 
 bool operator>(const File& lhs, const File& rhs) { return rhs < lhs; }
 
