@@ -58,14 +58,6 @@ static constexpr const char* pseudosemVersionRegex =
    'v' or 'version:. */
 static constexpr const char* digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))";
 
-std::string EscapeMarkdownASCIIPunctuation(const std::string& text) {
-  // As defined by <https://github.github.com/gfm/#ascii-punctuation-character>.
-  static const regex asciiPunctuationCharacters(
-      "([!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`{|}~])");
-
-  return std::regex_replace(text, asciiPunctuationCharacters, "\\$1");
-}
-
 std::vector<Tag> ExtractBashTags(const std::string& description) {
   std::vector<Tag> tags;
 

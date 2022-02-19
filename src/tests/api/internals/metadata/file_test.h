@@ -342,30 +342,10 @@ TEST(
   EXPECT_TRUE(file1 >= file2);
 }
 
-TEST(File, getDisplayNameShouldReturnDisplayStringIfItIsNotEmpty) {
+TEST(File, getDisplayNameShouldReturnDisplayString) {
   File file("name", "display");
 
   EXPECT_EQ("display", file.GetDisplayName());
-}
-
-TEST(File, getDisplayNameShouldReturnNameStringIfDisplayStringIsEmpty) {
-  File file("name", "");
-
-  EXPECT_EQ("name", file.GetDisplayName());
-}
-TEST(File, getDisplayNameShouldNotEscapeASCIIPunctuationInDisplayString) {
-  auto display = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
-  File file("name", display);
-
-  EXPECT_EQ(display, file.GetDisplayName());
-}
-
-TEST(File, getDisplayNameShouldEscapeASCIIPunctuationInNameString) {
-  File file("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
-
-  EXPECT_EQ(
-      R"raw(\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~)raw",
-      file.GetDisplayName());
 }
 
 TEST(File, emittingAsYamlShouldSingleQuoteValues) {
@@ -387,16 +367,6 @@ TEST(File, emittingAsYamlShouldOutputAsAScalarIfOnlyTheNameStringIsNotEmpty) {
   emitter << file;
 
   EXPECT_EQ("'" + std::string(file.GetName()) + "'", emitter.c_str());
-}
-
-TEST(
-    File,
-    emittingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameFieldAfterEscapingASCIIPunctuation) {
-  File file("file.esp", "file\\.esp");
-  YAML::Emitter emitter;
-  emitter << file;
-
-  EXPECT_STREQ("'file.esp'", emitter.c_str());
 }
 
 TEST(File, emittingAsYamlShouldOmitAnEmptyConditionString) {
@@ -444,19 +414,6 @@ TEST(File, encodingAsYamlShouldStoreDataCorrectly) {
 
 TEST(File, encodingAsYamlShouldOmitEmptyFields) {
   File file("file.esp");
-  YAML::Node node;
-  node = file;
-
-  EXPECT_EQ(std::string(file.GetName()), node["name"].as<std::string>());
-  EXPECT_FALSE(node["display"]);
-  EXPECT_FALSE(node["condition"]);
-  EXPECT_FALSE(node["detail"]);
-}
-
-TEST(
-    File,
-    encodingAsYamlShouldOmitDisplayFieldIfItMatchesTheNameFieldAfterEscapingASCIIPunctuation) {
-  File file("file.esp", "file\\.esp");
   YAML::Node node;
   node = file;
 
@@ -528,14 +485,12 @@ TEST(
   EXPECT_THROW(node.as<File>(), YAML::RepresentationException);
 }
 
-TEST(
-    File,
-    decodingFromYamlScalarShouldUseNameValueForDisplayNameAndLeaveConditionEmpty) {
+TEST(File, decodingFromYamlScalarShouldLeaveDisplayNameAndConditionEmpty) {
   YAML::Node node = YAML::Load("name1");
   File file = node.as<File>();
 
   EXPECT_EQ(node.as<std::string>(), std::string(file.GetName()));
-  EXPECT_EQ(node.as<std::string>(), file.GetDisplayName());
+  EXPECT_TRUE(file.GetDisplayName().empty());
   EXPECT_TRUE(file.GetCondition().empty());
   EXPECT_TRUE(file.GetDetail().empty());
 }

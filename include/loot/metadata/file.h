@@ -84,12 +84,7 @@ public:
 
   /**
    * Get the display name of the file.
-   *
-   * If the File was constructed with an empty display string, the name field
-   * will be returned instead, with any `ASCII punctuation characters
-   * <https://github.github.com/gfm/#ascii-punctuation-character>`_ escaped.
-   * Escaping is not performed if returning the value of the display string.
-   * @return The file's display name or filename.
+   * @return The file's display name.
    */
   LOOT_API std::string GetDisplayName() const;
 

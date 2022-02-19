@@ -45,9 +45,7 @@ struct convert<loot::File> {
     if (rhs.IsConditional())
       node["condition"] = rhs.GetCondition();
 
-    auto escapedName =
-        loot::EscapeMarkdownASCIIPunctuation(std::string(rhs.GetName()));
-    if (rhs.GetDisplayName() != escapedName) {
+    if (!rhs.GetDisplayName().empty()) {
       node["display"] = rhs.GetDisplayName();
     }
 
@@ -118,11 +116,8 @@ struct convert<loot::File> {
 };
 
 inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
-  auto escapedName =
-      loot::EscapeMarkdownASCIIPunctuation(std::string(rhs.GetName()));
-
   if (!rhs.IsConditional() && rhs.GetDetail().empty() &&
-      (rhs.GetDisplayName().empty() || rhs.GetDisplayName() == escapedName))
+      rhs.GetDisplayName().empty())
     out << YAML::SingleQuoted << std::string(rhs.GetName());
   else {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
@@ -132,7 +127,7 @@ inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
       out << Key << "condition" << Value << YAML::SingleQuoted
           << rhs.GetCondition();
 
-    if (rhs.GetDisplayName() != escapedName)
+    if (!rhs.GetDisplayName().empty())
       out << Key << "display" << Value << YAML::SingleQuoted
           << rhs.GetDisplayName();
 

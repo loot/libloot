@@ -73,10 +73,6 @@ bool File::operator==(const File& rhs) const {
 Filename File::GetName() const { return name_; }
 
 std::string File::GetDisplayName() const {
-  if (display_.empty()) {
-    return EscapeMarkdownASCIIPunctuation(std::string(name_));
-  }
-
   return display_;
 }
 
