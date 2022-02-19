@@ -322,7 +322,7 @@ TEST_P(PluginCleaningDataTest,
   PluginCleaningData dirtyInfo(
       0xDEADBEEF, "cleaner", std::vector<MessageContent>(), 2, 10, 30);
   EXPECT_FALSE(
-      dirtyInfo.ChooseDetail(MessageContent::defaultLanguage).has_value());
+      dirtyInfo.ChooseDetail(MessageContent::DEFAULT_LANGUAGE).has_value());
 }
 
 TEST_P(PluginCleaningDataTest,
@@ -331,13 +331,13 @@ TEST_P(PluginCleaningDataTest,
 
   EXPECT_EQ(info_[0], dirtyInfo.ChooseDetail(french).value());
   EXPECT_EQ(info_[0],
-            dirtyInfo.ChooseDetail(MessageContent::defaultLanguage).value());
+            dirtyInfo.ChooseDetail(MessageContent::DEFAULT_LANGUAGE).value());
 }
 
 TEST_P(
     PluginCleaningDataTest,
     chooseDetailShouldSelectTheEnglishStringIfNoStringExistsForTheGivenLanguage) {
-  MessageContent content("content1", MessageContent::defaultLanguage);
+  MessageContent content("content1", MessageContent::DEFAULT_LANGUAGE);
   std::vector<MessageContent> info({
       content,
       MessageContent("content1", german),
@@ -352,7 +352,7 @@ TEST_P(PluginCleaningDataTest,
   MessageContent frenchContent("content3", french);
   std::vector<MessageContent> info({
       MessageContent("content1", german),
-      MessageContent("content2", MessageContent::defaultLanguage),
+      MessageContent("content2", MessageContent::DEFAULT_LANGUAGE),
       frenchContent,
   });
   PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);

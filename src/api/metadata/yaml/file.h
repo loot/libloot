@@ -91,7 +91,7 @@ struct convert<loot::File> {
       if (detail.size() > 1) {
         bool found = false;
         for (const auto& mc : detail) {
-          if (mc.GetLanguage() == loot::MessageContent::defaultLanguage)
+          if (mc.GetLanguage() == loot::MessageContent::DEFAULT_LANGUAGE)
             found = true;
         }
         if (!found)

@@ -38,7 +38,7 @@ TEST(MessageContent, defaultConstructorShouldSetEmptyEnglishLanguageString) {
   MessageContent content;
 
   EXPECT_TRUE(content.GetText().empty());
-  EXPECT_EQ(MessageContent::defaultLanguage, content.GetLanguage());
+  EXPECT_EQ(MessageContent::DEFAULT_LANGUAGE, content.GetLanguage());
 }
 
 TEST(MessageContent, contentConstructorShouldStoreGivenStringAndLanguage) {

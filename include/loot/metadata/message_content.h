@@ -40,7 +40,7 @@ public:
    * The code for the default language assumed for message content, which is
    * "en" (English).
    */
-  LOOT_API static const std::string defaultLanguage;
+  LOOT_API static constexpr const char* DEFAULT_LANGUAGE = "en";
 
   /**
    * Construct a MessageContent object with an empty English message string.
@@ -58,7 +58,7 @@ public:
    */
   LOOT_API explicit MessageContent(
       const std::string& text,
-      const std::string& language = defaultLanguage);
+      const std::string& language = DEFAULT_LANGUAGE);
 
   /**
    * Get the message text.
@@ -113,7 +113,7 @@ public:
 
 private:
   std::string text_;
-  std::string language_{defaultLanguage};
+  std::string language_{DEFAULT_LANGUAGE};
 };
 
 /**

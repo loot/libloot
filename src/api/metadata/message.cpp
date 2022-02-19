@@ -43,7 +43,7 @@ Message::Message(const MessageType type,
   if (content.size() > 1) {
     bool englishStringExists = false;
     for (const auto& mc : content) {
-      if (mc.GetLanguage() == MessageContent::defaultLanguage)
+      if (mc.GetLanguage() == MessageContent::DEFAULT_LANGUAGE)
         englishStringExists = true;
     }
     if (!englishStringExists)

@@ -28,8 +28,6 @@
 #include <optional>
 
 namespace loot {
-const std::string MessageContent::defaultLanguage = "en";
-
 MessageContent::MessageContent(const std::string& text,
                                const std::string& language) :
     text_(text), language_(language) {}
@@ -85,7 +83,7 @@ std::optional<MessageContent> MessageContent::Choose(
           }
         }
 
-        if (contentLanguage == MessageContent::defaultLanguage) {
+        if (contentLanguage == MessageContent::DEFAULT_LANGUAGE) {
           english = mc;
         }
       }

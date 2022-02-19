@@ -365,7 +365,8 @@ TEST_P(
 
 TEST_P(MessageTest, getContentShouldReturnANulloptIfNoneExists) {
   Message message;
-  EXPECT_FALSE(message.GetContent(MessageContent::defaultLanguage).has_value());
+  EXPECT_FALSE(
+      message.GetContent(MessageContent::DEFAULT_LANGUAGE).has_value());
 }
 
 TEST_P(
@@ -399,7 +400,7 @@ TEST_P(MessageTest, getContentShouldSelectTheContentStringIfOnlyOneExists) {
 
   EXPECT_EQ(
       "content1",
-      message.GetContent(MessageContent::defaultLanguage).value().GetText());
+      message.GetContent(MessageContent::DEFAULT_LANGUAGE).value().GetText());
 }
 
 TEST_P(MessageTest, toSimpleMessageShouldSelectTextAndLanguageUsingGetContent) {
