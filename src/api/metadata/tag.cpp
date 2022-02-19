@@ -32,32 +32,33 @@ Tag::Tag(const std::string& tag,
          const std::string& condition) :
     ConditionalMetadata(condition), name_(tag), addTag_(isAddition) {}
 
-bool Tag::operator<(const Tag& rhs) const {
-  if (addTag_ != rhs.addTag_) {
-    return addTag_ && !rhs.addTag_;
-  }
-
-  if (name_ < rhs.name_) {
-    return true;
-  }
-
-  if (rhs.name_ < name_) {
-    return false;
-  }
-
-  return GetCondition() < rhs.GetCondition();
-}
-
-bool Tag::operator==(const Tag& rhs) const {
-  return addTag_ == rhs.addTag_ && name_ == rhs.name_ &&
-         GetCondition() == rhs.GetCondition();
-}
-
 bool Tag::IsAddition() const { return addTag_; }
 
 std::string Tag::GetName() const { return name_; }
 
+bool operator==(const Tag& lhs, const Tag& rhs) {
+  return lhs.IsAddition() == rhs.IsAddition() &&
+         lhs.GetName() == rhs.GetName() &&
+         lhs.GetCondition() == rhs.GetCondition();
+}
+
 bool operator!=(const Tag& lhs, const Tag& rhs) { return !(lhs == rhs); }
+
+bool operator<(const Tag& lhs, const Tag& rhs) {
+  if (lhs.IsAddition() != rhs.IsAddition()) {
+    return lhs.IsAddition() && !rhs.IsAddition();
+  }
+
+  if (lhs.GetName() < rhs.GetName()) {
+    return true;
+  }
+
+  if (rhs.GetName() < lhs.GetName()) {
+    return false;
+  }
+
+  return lhs.GetCondition() < rhs.GetCondition();
+}
 
 bool operator>(const Tag& lhs, const Tag& rhs) { return rhs < lhs; }
 

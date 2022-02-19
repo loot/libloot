@@ -28,28 +28,28 @@ namespace loot {
 Location::Location(const std::string& url, const std::string& name) :
     url_(url), name_(name) {}
 
-bool Location::operator<(const Location& rhs) const {
-  if (url_ < rhs.url_) {
-    return true;
-  }
-
-  if (rhs.url_ < url_) {
-    return false;
-  }
-
-  return name_ < rhs.name_;
-}
-
-bool Location::operator==(const Location& rhs) const {
-  return url_ == rhs.url_ && name_ == rhs.name_;
-}
-
 std::string Location::GetURL() const { return url_; }
 
 std::string Location::GetName() const { return name_; }
 
+bool operator==(const Location& lhs, const Location& rhs) {
+  return lhs.GetURL() == rhs.GetURL() && lhs.GetName() == rhs.GetName();
+}
+
 bool operator!=(const Location& lhs, const Location& rhs) {
   return !(lhs == rhs);
+}
+
+bool operator<(const Location& lhs, const Location& rhs) {
+  if (lhs.GetURL() < rhs.GetURL()) {
+    return true;
+  }
+
+  if (rhs.GetURL() < lhs.GetURL()) {
+    return false;
+  }
+
+  return lhs.GetName() < rhs.GetName();
 }
 
 bool operator>(const Location& lhs, const Location& rhs) { return rhs < lhs; }

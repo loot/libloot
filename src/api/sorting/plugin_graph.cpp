@@ -115,6 +115,10 @@ std::string describeEdgeType(EdgeType edgeType) {
   }
 }
 
+bool operator==(const GraphPath& lhs, const GraphPath& rhs) {
+  return lhs.from == rhs.from && lhs.to == rhs.to;
+}
+
 size_t PluginGraph::CountVertices() const {
   return boost::num_vertices(graph_);
 }

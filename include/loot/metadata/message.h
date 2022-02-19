@@ -85,20 +85,6 @@ public:
   LOOT_API explicit Message(const SimpleMessage& message);
 
   /**
-   * A less-than operator implemented with no semantics so that Message objects
-   * can be stored in sets.
-   * @returns Returns true if this Message is less than the given Message, and
-   *          false otherwise.
-   */
-  LOOT_API bool operator<(const Message& rhs) const;
-
-  /**
-   * Check if two Message objects are equal by comparing their fields.
-   * @returns True if the objects' fields are equal, false otherwise.
-   */
-  LOOT_API bool operator==(const Message& rhs) const;
-
-  /**
    * Get the message type.
    * @return The message type.
    */
@@ -126,10 +112,24 @@ private:
 };
 
 /**
+ * Check if two Message objects are equal by comparing their fields.
+ * @returns True if the objects' fields are equal, false otherwise.
+ */
+LOOT_API bool operator==(const Message& lhs, const Message& rhs);
+
+/**
  * Check if two Message objects are not equal.
  * @returns True if the Message objects are not equal, false otherwise.
  */
 LOOT_API bool operator!=(const Message& lhs, const Message& rhs);
+
+/**
+ * A less-than operator implemented with no semantics so that Message objects
+ * can be stored in sets.
+ * @returns Returns true if the first Message is less than the second Message,
+ *          and false otherwise.
+ */
+LOOT_API bool operator<(const Message& lhs, const Message& rhs);
 
 /**
  * Check if the first Message object is greater than the second Message object.

@@ -36,24 +36,25 @@ std::string MessageContent::GetText() const { return text_; }
 
 std::string MessageContent::GetLanguage() const { return language_; }
 
-bool MessageContent::operator<(const MessageContent& rhs) const {
-  if (text_ < rhs.text_) {
-    return true;
-  }
-
-  if (rhs.text_ < text_) {
-    return false;
-  }
-
-  return language_ < rhs.language_;
-}
-
-bool MessageContent::operator==(const MessageContent& rhs) const {
-  return text_ == rhs.text_ && language_ == rhs.language_;
+bool operator==(const MessageContent& lhs, const MessageContent& rhs) {
+  return lhs.GetText() == rhs.GetText() &&
+         lhs.GetLanguage() == rhs.GetLanguage();
 }
 
 bool operator!=(const MessageContent& lhs, const MessageContent& rhs) {
   return !(lhs == rhs);
+}
+
+bool operator<(const MessageContent& lhs, const MessageContent& rhs) {
+  if (lhs.GetText() < rhs.GetText()) {
+    return true;
+  }
+
+  if (rhs.GetText() < lhs.GetText()) {
+    return false;
+  }
+
+  return lhs.GetLanguage() < rhs.GetLanguage();
 }
 
 bool operator>(const MessageContent& lhs, const MessageContent& rhs) {

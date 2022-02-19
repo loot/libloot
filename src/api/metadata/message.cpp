@@ -58,31 +58,6 @@ Message::Message(const SimpleMessage& message) :
     type_(message.type),
     content_({MessageContent(message.text, message.language)}) {}
 
-bool Message::operator<(const Message& rhs) const {
-  if (type_ < rhs.type_) {
-    return true;
-  }
-
-  if (rhs.type_ < type_) {
-    return false;
-  }
-
-  if (GetCondition() < rhs.GetCondition()) {
-    return true;
-  }
-
-  if (rhs.GetCondition() < GetCondition()) {
-    return false;
-  }
-
-  return content_ < rhs.GetContent();
-}
-
-bool Message::operator==(const Message& rhs) const {
-  return type_ == rhs.type_ && GetCondition() == rhs.GetCondition() &&
-         content_ == rhs.GetContent();
-}
-
 MessageType Message::GetType() const { return type_; }
 
 std::vector<MessageContent> Message::GetContent() const { return content_; }
@@ -104,8 +79,34 @@ std::optional<SimpleMessage> Message::ToSimpleMessage(
   return simpleMessage;
 }
 
+bool operator==(const Message& lhs, const Message& rhs) {
+  return lhs.GetType() == rhs.GetType() &&
+         lhs.GetCondition() == rhs.GetCondition() &&
+         lhs.GetContent() == rhs.GetContent();
+}
+
 bool operator!=(const Message& lhs, const Message& rhs) {
   return !(lhs == rhs);
+}
+
+bool operator<(const Message& lhs, const Message& rhs) {
+  if (lhs.GetType() < rhs.GetType()) {
+    return true;
+  }
+
+  if (rhs.GetType() < lhs.GetType()) {
+    return false;
+  }
+
+  if (lhs.GetCondition() < rhs.GetCondition()) {
+    return true;
+  }
+
+  if (rhs.GetCondition() < lhs.GetCondition()) {
+    return false;
+  }
+
+  return lhs.GetContent() < rhs.GetContent();
 }
 
 bool operator>(const Message& lhs, const Message& rhs) { return rhs < lhs; }

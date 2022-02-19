@@ -72,30 +72,30 @@ public:
    */
   LOOT_API std::string GetLanguage() const;
 
-  /**
-   * A less-than operator implemented with no semantics so that MessageContent
-   * objects can be stored in sets.
-   * @returns True if this MessageContent is less than the given
-   *          MessageContent, false otherwise.
-   */
-  LOOT_API bool operator<(const MessageContent& rhs) const;
-
-  /**
-   * Check if two MessageContent objects are equal by comparing their fields.
-   * @returns True if the objects' fields are equal, false otherwise.
-   */
-  LOOT_API bool operator==(const MessageContent& rhs) const;
-
 private:
   std::string text_;
   std::string language_{DEFAULT_LANGUAGE};
 };
 
 /**
+ * Check if two MessageContent objects are equal by comparing their fields.
+ * @returns True if the objects' fields are equal, false otherwise.
+ */
+LOOT_API bool operator==(const MessageContent& lhs, const MessageContent& rhs);
+
+/**
  * Check if two MessageContent objects are not equal.
  * @returns True if the MessageContent objects are not equal, false otherwise.
  */
 LOOT_API bool operator!=(const MessageContent& lhs, const MessageContent& rhs);
+
+/**
+ * A less-than operator implemented with no semantics so that MessageContent
+ * objects can be stored in sets.
+ * @returns True if the first MessageContent is less than the second
+ *          MessageContent, false otherwise.
+ */
+LOOT_API bool operator<(const MessageContent& lhs, const MessageContent& rhs);
 
 /**
  * Check if the first MessageContent object is greater than the second

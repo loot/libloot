@@ -32,38 +32,39 @@ Group::Group(const std::string& name,
              const std::string& description) :
     name_(name), description_(description), afterGroups_(afterGroups) {}
 
-bool Group::operator==(const Group& rhs) const {
-  return name_ == rhs.name_ && description_ == rhs.description_ &&
-         afterGroups_ == rhs.afterGroups_;
-}
-
-bool Group::operator<(const Group& rhs) const {
-  if (name_ < rhs.name_) {
-    return true;
-  }
-
-  if (rhs.name_ < name_) {
-    return false;
-  }
-
-  if (description_ < rhs.description_) {
-    return true;
-  }
-
-  if (rhs.description_ < description_) {
-    return false;
-  }
-
-  return afterGroups_ < rhs.afterGroups_;
-}
-
 std::string Group::GetName() const { return name_; }
 
 std::string Group::GetDescription() const { return description_; }
 
 std::vector<std::string> Group::GetAfterGroups() const { return afterGroups_; }
 
+bool operator==(const Group& lhs, const Group& rhs) {
+  return lhs.GetName() == rhs.GetName() &&
+         lhs.GetDescription() == rhs.GetDescription() &&
+         lhs.GetAfterGroups() == rhs.GetAfterGroups();
+}
+
 bool operator!=(const Group& lhs, const Group& rhs) { return !(lhs == rhs); }
+
+bool operator<(const Group& lhs, const Group& rhs) {
+  if (lhs.GetName() < rhs.GetName()) {
+    return true;
+  }
+
+  if (rhs.GetName() < lhs.GetName()) {
+    return false;
+  }
+
+  if (lhs.GetDescription() < rhs.GetDescription()) {
+    return true;
+  }
+
+  if (rhs.GetDescription() < lhs.GetDescription()) {
+    return false;
+  }
+
+  return lhs.GetAfterGroups() < rhs.GetAfterGroups();
+}
 
 bool operator>(const Group& lhs, const Group& rhs) { return rhs < lhs; }
 

@@ -47,56 +47,6 @@ PluginCleaningData::PluginCleaningData(
     utility_(utility),
     detail_(detail) {}
 
-bool PluginCleaningData::operator<(const PluginCleaningData& rhs) const {
-  if (crc_ < rhs.crc_) {
-    return true;
-  }
-
-  if (rhs.crc_ < crc_) {
-    return false;
-  }
-
-  if (utility_ < rhs.utility_) {
-    return true;
-  }
-
-  if (rhs.utility_ < utility_) {
-    return false;
-  }
-
-  if (itm_ < rhs.itm_) {
-    return true;
-  }
-
-  if (rhs.itm_ < itm_) {
-    return false;
-  }
-
-  if (ref_ < rhs.ref_) {
-    return true;
-  }
-
-  if (rhs.ref_ < ref_) {
-    return false;
-  }
-
-  if (nav_ < rhs.nav_) {
-    return true;
-  }
-
-  if (rhs.nav_ < nav_) {
-    return false;
-  }
-
-  return detail_ < rhs.detail_;
-}
-
-bool PluginCleaningData::operator==(const PluginCleaningData& rhs) const {
-  return crc_ == rhs.crc_ && utility_ == rhs.utility_ &&
-         detail_ == rhs.detail_ && itm_ == rhs.itm_ && ref_ == rhs.ref_ &&
-         nav_ == rhs.nav_;
-}
-
 uint32_t PluginCleaningData::GetCRC() const { return crc_; }
 
 unsigned int PluginCleaningData::GetITMCount() const { return itm_; }
@@ -113,8 +63,61 @@ std::vector<MessageContent> PluginCleaningData::GetDetail() const {
   return detail_;
 }
 
+bool operator==(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
+  return lhs.GetCRC() == rhs.GetCRC() &&
+         lhs.GetITMCount() == rhs.GetITMCount() &&
+         lhs.GetDeletedReferenceCount() == rhs.GetDeletedReferenceCount() &&
+         lhs.GetDeletedNavmeshCount() == rhs.GetDeletedNavmeshCount() &&
+         lhs.GetCleaningUtility() == rhs.GetCleaningUtility() &&
+         lhs.GetDetail() == rhs.GetDetail();
+}
+
 bool operator!=(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
   return !(lhs == rhs);
+}
+
+bool operator<(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
+  if (lhs.GetCRC() < rhs.GetCRC()) {
+    return true;
+  }
+
+  if (rhs.GetCRC() < lhs.GetCRC()) {
+    return false;
+  }
+
+  if (lhs.GetCleaningUtility() < rhs.GetCleaningUtility()) {
+    return true;
+  }
+
+  if (rhs.GetCleaningUtility() < lhs.GetCleaningUtility()) {
+    return false;
+  }
+
+  if (lhs.GetITMCount() < rhs.GetITMCount()) {
+    return true;
+  }
+
+  if (rhs.GetITMCount() < lhs.GetITMCount()) {
+    return false;
+  }
+
+  if (lhs.GetDeletedReferenceCount() < rhs.GetDeletedReferenceCount()) {
+    return true;
+  }
+
+  if (rhs.GetDeletedReferenceCount() < lhs.GetDeletedReferenceCount()) {
+    return false;
+  }
+
+  if (lhs.GetDeletedNavmeshCount() < rhs.GetDeletedNavmeshCount()) {
+    return true;
+  }
+
+  if (rhs.GetDeletedNavmeshCount() < lhs.GetDeletedNavmeshCount()) {
+    return false;
+  }
+
+  return lhs.GetDetail() < rhs.GetDetail();
 }
 
 bool operator>(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {

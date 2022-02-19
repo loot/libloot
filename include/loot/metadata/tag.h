@@ -58,19 +58,6 @@ public:
                         const std::string& condition = "");
 
   /**
-   * A less-than operator implemented with no semantics so that Tag objects
-   * can be stored in sets.
-   * @returns True if this Tag is less than the given Tag, false otherwise.
-   */
-  LOOT_API bool operator<(const Tag& rhs) const;
-
-  /**
-   * Check if two Tag objects are equal.
-   * @returns True if the objects' fields are equal, false otherwise.
-   */
-  LOOT_API bool operator==(const Tag& rhs) const;
-
-  /**
    * Check if the tag should be added.
    * @return True if the tag should be added, false if it should be removed.
    */
@@ -88,10 +75,23 @@ private:
 };
 
 /**
+ * Check if two Tag objects are equal.
+ * @returns True if the objects' fields are equal, false otherwise.
+ */
+LOOT_API bool operator==(const Tag& lhs, const Tag& rhs);
+
+/**
  * Check if two Tag objects are not equal.
  * @returns True if the Tag objects are not equal, false otherwise.
  */
 LOOT_API bool operator!=(const Tag& lhs, const Tag& rhs);
+
+/**
+ * A less-than operator implemented with no semantics so that Tag objects
+ * can be stored in sets.
+ * @returns True if the first Tag is less than the second Tag, false otherwise.
+ */
+LOOT_API bool operator<(const Tag& lhs, const Tag& rhs);
 
 /**
  * Check if the first Tag object is greater than the second Tag object.

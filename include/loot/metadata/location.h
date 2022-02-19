@@ -53,20 +53,6 @@ public:
                              const std::string& name = "");
 
   /**
-   * A less-than operator implemented with no semantics so that Location objects
-   * can be stored in sets.
-   * @returns True if this Location is less than the given Location, false
-   *          otherwise.
-   */
-  LOOT_API bool operator<(const Location& rhs) const;
-
-  /**
-   * Check if two Location objects are equal by comparing their fields.
-   * @returns True if the objects' fields are equal, false otherwise.
-   */
-  LOOT_API bool operator==(const Location& rhs) const;
-
-  /**
    * Get the object's URL.
    * @return A URL string.
    */
@@ -84,10 +70,24 @@ private:
 };
 
 /**
+ * Check if two Location objects are equal by comparing their fields.
+ * @returns True if the objects' fields are equal, false otherwise.
+ */
+LOOT_API bool operator==(const Location& lhs, const Location& rhs);
+
+/**
  * Check if two Location objects are not equal.
  * @returns True if the Location objects are not equal, false otherwise.
  */
 LOOT_API bool operator!=(const Location& lhs, const Location& rhs);
+
+/**
+ * A less-than operator implemented with no semantics so that Location objects
+ * can be stored in sets.
+ * @returns True if the first Location is less than the second Location, false
+ *          otherwise.
+ */
+LOOT_API bool operator<(const Location& lhs, const Location& rhs);
 
 /**
  * Check if the first Location object is greater than the second Location

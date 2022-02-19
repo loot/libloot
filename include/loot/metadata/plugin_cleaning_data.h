@@ -83,20 +83,6 @@ public:
       unsigned int itm,
       unsigned int ref,
       unsigned int nav);
-  /**
-   * A less-than operator implemented with no semantics so that
-   * PluginCleaningData objects can be stored in sets.
-   * @returns True if this PluginCleaningData is less than the given
-   *          PluginCleaningData, false otherwise.
-   */
-  LOOT_API bool operator<(const PluginCleaningData& rhs) const;
-
-  /**
-   * Check if two PluginCleaningData objects are equal by comparing their
-   * fields.
-   * @returns True if the objects' fields are equal, false otherwise.
-   */
-  LOOT_API bool operator==(const PluginCleaningData& rhs) const;
 
   /**
    * Get the CRC that identifies the plugin that the cleaning data is for.
@@ -148,11 +134,28 @@ private:
 };
 
 /**
+ * Check if two PluginCleaningData objects are equal by comparing their
+ * fields.
+ * @returns True if the objects' fields are equal, false otherwise.
+ */
+LOOT_API bool operator==(const PluginCleaningData& lhs,
+                         const PluginCleaningData& rhs);
+
+/**
  * Check if two MessageContent objects are not equal.
  * @returns True if the MessageContent objects are not equal, false otherwise.
  */
 LOOT_API bool operator!=(const PluginCleaningData& lhs,
                          const PluginCleaningData& rhs);
+
+/**
+ * A less-than operator implemented with no semantics so that
+ * PluginCleaningData objects can be stored in sets.
+ * @returns True if the first PluginCleaningData is less than the second
+ *          PluginCleaningData, false otherwise.
+ */
+LOOT_API bool operator<(const PluginCleaningData& lhs,
+                        const PluginCleaningData& rhs);
 
 /**
  * Check if the first PluginCleaningData object is greater than the second

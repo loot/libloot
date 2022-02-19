@@ -63,20 +63,6 @@ public:
                           const std::string& description = "");
 
   /**
-   * Check if two Group objects are equal by comparing their names.
-   * @returns True if the objects' fields are equal, false otherwise.
-   */
-  LOOT_API bool operator==(const Group& rhs) const;
-
-  /**
-   * A less-than operator implemented with no semantics so that Group objects
-   * can be stored in sets.
-   * @returns True if this Group is less than the given Group, false
-   *          otherwise.
-   */
-  LOOT_API bool operator<(const Group& rhs) const;
-
-  /**
    * Get the name of the group.
    * @return The group's name.
    */
@@ -101,10 +87,24 @@ private:
 };
 
 /**
+ * Check if two Group objects are equal by comparing their names.
+ * @returns True if the objects' fields are equal, false otherwise.
+ */
+LOOT_API bool operator==(const Group& lhs, const Group& rhs);
+
+/**
  * Check if two Group objects are not equal.
  * @returns True if the Group objects are not equal, false otherwise.
  */
 LOOT_API bool operator!=(const Group& lhs, const Group& rhs);
+
+/**
+ * A less-than operator implemented with no semantics so that Group objects
+ * can be stored in sets.
+ * @returns True if the first Group is less than the second Group, false
+ *          otherwise.
+ */
+LOOT_API bool operator<(const Group& lhs, const Group& rhs);
 
 /**
  * Check if the first Group object is greater than the second Group
