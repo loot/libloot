@@ -215,7 +215,7 @@ void PluginGraph::AddPluginVertices(Game& game,
                             .GetPluginUserMetadata(plugin->GetName(), true)
                             .value_or(PluginMetadata(plugin->GetName()));
 
-    auto pluginSortingData = PluginSortingData(*plugin,
+    auto pluginSortingData = PluginSortingData(plugin,
                                                masterlistMetadata,
                                                userMetadata,
                                                loadOrder,

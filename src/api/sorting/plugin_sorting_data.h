@@ -31,7 +31,12 @@
 namespace loot {
 class PluginSortingData {
 public:
-  explicit PluginSortingData(const Plugin& plugin,
+  /**
+   * This stores a copy of the plugin pointer that is passed to it, so
+   * PluginSortingData objects must not live longer than the Plugin objects
+   * that they are constructed from.
+   */
+  explicit PluginSortingData(const Plugin* plugin,
                              const PluginMetadata& masterlistMetadata,
                              const PluginMetadata& userMetadata,
                              const std::vector<std::string>& loadOrder,
@@ -58,7 +63,7 @@ public:
   const std::optional<size_t>& GetLoadOrderIndex() const;
 
 private:
-  const Plugin& plugin_;
+  const Plugin* plugin_;
   std::string group_;
   std::unordered_set<std::string> afterGroupPlugins_;
 

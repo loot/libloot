@@ -84,27 +84,27 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
 
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
-  auto esp = PluginSortingData(
-      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp)),
-      PluginMetadata(),
-      PluginMetadata(),
-      getLoadOrder(),
-      game_.Type(),
-      game_.GetCache().GetPlugins());
+  auto esp =
+      PluginSortingData(dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp)),
+                        PluginMetadata(),
+                        PluginMetadata(),
+                        getLoadOrder(),
+                        game_.Type(),
+                        game_.GetCache().GetPlugins());
   EXPECT_FALSE(esp.IsMaster());
 
-  auto master = PluginSortingData(
-      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm)),
-      PluginMetadata(),
-      PluginMetadata(),
-      getLoadOrder(),
-      game_.Type(),
-      game_.GetCache().GetPlugins());
+  auto master =
+      PluginSortingData(dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm)),
+                        PluginMetadata(),
+                        PluginMetadata(),
+                        getLoadOrder(),
+                        game_.Type(),
+                        game_.GetCache().GetPlugins());
   EXPECT_TRUE(master.IsMaster());
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     auto lightMaster = PluginSortingData(
-        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl)),
+        dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsl)),
         PluginMetadata(),
         PluginMetadata(),
         getLoadOrder(),
@@ -113,7 +113,7 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
     EXPECT_TRUE(lightMaster.IsMaster());
 
     auto lightPlugin = PluginSortingData(
-        *dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp)),
+        dynamic_cast<const Plugin *>(game_.GetPlugin(blankEslEsp)),
         PluginMetadata(),
         PluginMetadata(),
         getLoadOrder(),
@@ -128,7 +128,7 @@ TEST_P(PluginSortingDataTest,
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   auto plugin = PluginSortingData(
-      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
+      dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder(),
@@ -157,7 +157,7 @@ TEST_P(
   }
 
   auto plugin = PluginSortingData(
-      *dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
+      dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder(),

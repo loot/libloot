@@ -50,7 +50,7 @@ std::vector<const Plugin*> GetPluginsSubset(
 }
 
 PluginSortingData::PluginSortingData(
-    const Plugin& plugin,
+    const Plugin* plugin,
     const PluginMetadata& masterlistMetadata,
     const PluginMetadata& userMetadata,
     const std::vector<std::string>& loadOrder,
@@ -70,19 +70,19 @@ PluginSortingData::PluginSortingData(
   }
 
   for (size_t i = 0; i < loadOrder.size(); i++) {
-    if (CompareFilenames(plugin.GetName(), loadOrder.at(i)) == 0) {
+    if (CompareFilenames(plugin->GetName(), loadOrder.at(i)) == 0) {
       loadOrderIndex_ = i;
     }
   }
 
   if (gameType == GameType::tes3) {
-    auto masterNames = plugin.GetMasters();
+    auto masterNames = plugin->GetMasters();
     if (masterNames.empty()) {
       numOverrideFormIDs = 0;
     } else {
       auto masters = GetPluginsSubset(loadedPlugins, masterNames);
       if (masters.size() == masterNames.size()) {
-        numOverrideFormIDs = plugin.GetOverlapSize(masters);
+        numOverrideFormIDs = plugin->GetOverlapSize(masters);
       } else {
         // Not all masters are loaded, fall back to using the plugin's
         // total record count (Morrowind doesn't have groups). This is OK
@@ -93,25 +93,26 @@ PluginSortingData::PluginSortingData(
         // order with missing masters with potentially poorer results than
         // for it to error out, as masters may be missing for a variety of
         // development & testing reasons.
-        numOverrideFormIDs = plugin.GetRecordAndGroupCount();
+        numOverrideFormIDs = plugin->GetRecordAndGroupCount();
       }
     }
   } else {
-    numOverrideFormIDs = plugin.NumOverrideFormIDs();
+    numOverrideFormIDs = plugin->NumOverrideFormIDs();
   }
 }
 
-std::string PluginSortingData::GetName() const { return plugin_.GetName(); }
+std::string PluginSortingData::GetName() const { return plugin_->GetName(); }
 
 bool PluginSortingData::IsMaster() const {
-  return plugin_.IsMaster() || (plugin_.IsLightPlugin() &&
-                                !boost::iends_with(plugin_.GetName(), ".esp"));
+  return plugin_->IsMaster() ||
+         (plugin_->IsLightPlugin() &&
+          !boost::iends_with(plugin_->GetName(), ".esp"));
 }
 
-bool PluginSortingData::LoadsArchive() const { return plugin_.LoadsArchive(); }
+bool PluginSortingData::LoadsArchive() const { return plugin_->LoadsArchive(); }
 
 std::vector<std::string> PluginSortingData::GetMasters() const {
-  return plugin_.GetMasters();
+  return plugin_->GetMasters();
 }
 
 size_t PluginSortingData::NumOverrideFormIDs() const {
@@ -120,7 +121,7 @@ size_t PluginSortingData::NumOverrideFormIDs() const {
 
 bool PluginSortingData::DoFormIDsOverlap(
     const PluginSortingData& plugin) const {
-  return plugin_.DoFormIDsOverlap(plugin.plugin_);
+  return plugin_->DoFormIDsOverlap(*plugin.plugin_);
 }
 
 std::string PluginSortingData::GetGroup() const { return group_; }
