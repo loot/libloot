@@ -368,34 +368,6 @@ TEST(File, getDisplayNameShouldEscapeASCIIPunctuationInNameString) {
       file.GetDisplayName());
 }
 
-TEST(File, chooseDetailShouldReturnTheGivenLanguageMessageContentIfItExists) {
-  std::vector<MessageContent> content = {MessageContent("english", "en"),
-                                         MessageContent("french", "fr")};
-  File file("", "", "", content);
-
-  EXPECT_EQ(content[1], file.ChooseDetail("fr").value());
-}
-
-TEST(
-    File,
-    chooseDetailShouldReturnTheEnglishMessageContentIfTheGivenLanguageDoesNotHaveContent) {
-  std::vector<MessageContent> content = {MessageContent("english", "en"),
-                                         MessageContent("french", "fr")};
-  File file("", "", "", content);
-
-  EXPECT_EQ(content[0], file.ChooseDetail("de").value());
-}
-
-TEST(
-    File,
-    chooseDetailShouldReturnEmptyMessageContentIfTheGivenLanguageAndEnglishDoNotHaveContent) {
-  std::vector<MessageContent> content = {MessageContent("german", "de"),
-                                         MessageContent("french", "fr")};
-  File file("", "", "", content);
-
-  EXPECT_FALSE(file.ChooseDetail("es").has_value());
-}
-
 TEST(File, emittingAsYamlShouldSingleQuoteValues) {
   File file(
       "name1", "display1", "condition1", {MessageContent("english", "en")});

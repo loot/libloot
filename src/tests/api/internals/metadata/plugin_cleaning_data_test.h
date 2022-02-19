@@ -317,49 +317,6 @@ TEST_P(
   EXPECT_TRUE(info2 > info1);
 }
 
-TEST_P(PluginCleaningDataTest,
-       chooseDetailShouldCreateADefaultContentObjectIfNoneExists) {
-  PluginCleaningData dirtyInfo(
-      0xDEADBEEF, "cleaner", std::vector<MessageContent>(), 2, 10, 30);
-  EXPECT_FALSE(
-      dirtyInfo.ChooseDetail(MessageContent::DEFAULT_LANGUAGE).has_value());
-}
-
-TEST_P(PluginCleaningDataTest,
-       chooseDetailShouldLeaveTheContentUnchangedIfOnlyOneStringExists) {
-  PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info_, 2, 10, 30);
-
-  EXPECT_EQ(info_[0], dirtyInfo.ChooseDetail(french).value());
-  EXPECT_EQ(info_[0],
-            dirtyInfo.ChooseDetail(MessageContent::DEFAULT_LANGUAGE).value());
-}
-
-TEST_P(
-    PluginCleaningDataTest,
-    chooseDetailShouldSelectTheEnglishStringIfNoStringExistsForTheGivenLanguage) {
-  MessageContent content("content1", MessageContent::DEFAULT_LANGUAGE);
-  std::vector<MessageContent> info({
-      content,
-      MessageContent("content1", german),
-  });
-  PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
-
-  EXPECT_EQ(content, dirtyInfo.ChooseDetail(french).value());
-}
-
-TEST_P(PluginCleaningDataTest,
-       chooseDetailShouldSelectTheStringForTheGivenLanguageIfOneExists) {
-  MessageContent frenchContent("content3", french);
-  std::vector<MessageContent> info({
-      MessageContent("content1", german),
-      MessageContent("content2", MessageContent::DEFAULT_LANGUAGE),
-      frenchContent,
-  });
-  PluginCleaningData dirtyInfo(0xDEADBEEF, "cleaner", info, 2, 10, 30);
-
-  EXPECT_EQ(frenchContent, dirtyInfo.ChooseDetail(french).value());
-}
-
 TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {
   PluginCleaningData info(0x12345678, "cleaner", info_, 2, 10, 30);
   YAML::Emitter emitter;

@@ -52,7 +52,23 @@ bool MessageContent::operator==(const MessageContent& rhs) const {
   return text_ == rhs.text_ && language_ == rhs.language_;
 }
 
-std::optional<MessageContent> MessageContent::Choose(
+bool operator!=(const MessageContent& lhs, const MessageContent& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator>(const MessageContent& lhs, const MessageContent& rhs) {
+  return rhs < lhs;
+}
+
+bool operator<=(const MessageContent& lhs, const MessageContent& rhs) {
+  return !(lhs > rhs);
+}
+
+bool operator>=(const MessageContent& lhs, const MessageContent& rhs) {
+  return !(lhs < rhs);
+}
+
+std::optional<MessageContent> SelectMessageContent(
     const std::vector<MessageContent> content,
     const std::string& language) {
   if (content.empty())
@@ -99,21 +115,5 @@ std::optional<MessageContent> MessageContent::Choose(
 
     return std::nullopt;
   }
-}
-
-bool operator!=(const MessageContent& lhs, const MessageContent& rhs) {
-  return !(lhs == rhs);
-}
-
-bool operator>(const MessageContent& lhs, const MessageContent& rhs) {
-  return rhs < lhs;
-}
-
-bool operator<=(const MessageContent& lhs, const MessageContent& rhs) {
-  return !(lhs > rhs);
-}
-
-bool operator>=(const MessageContent& lhs, const MessageContent& rhs) {
-  return !(lhs < rhs);
 }
 }

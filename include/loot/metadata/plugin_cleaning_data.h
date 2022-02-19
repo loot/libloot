@@ -138,16 +138,6 @@ public:
    */
   LOOT_API std::vector<MessageContent> GetDetail() const;
 
-  /**
-   * Choose a detail MessageContent object given a preferred language.
-   * @param  language
-   *         The preferred language's code.
-   * @return The MessageContent object for the preferred language, or if one
-   *         does not exist, the English-language MessageContent object.
-   */
-  LOOT_API std::optional<MessageContent> ChooseDetail(
-      const std::string& language) const;
-
 private:
   uint32_t crc_{0};
   unsigned int itm_{0};

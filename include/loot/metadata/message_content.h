@@ -86,31 +86,6 @@ public:
    */
   LOOT_API bool operator==(const MessageContent& rhs) const;
 
-  /**
-   * Choose a MessageContent object from a vector given a language.
-   * @param  content
-   *         The MessageContent objects to choose between.
-   * @param  language
-   *         The locale or language code for the preferred language to select.
-   *         Locale codes are of the form `[language code]_[country code]`.
-   * @return A MessageContent object.
-   *         * If the vector only contains a single element, that element is
-   *           returned.
-   *         * If content with a language that exactly matches the given locale
-   *           or language code is present, that content is returned.
-   *         * If a locale code is given and there is no exact match but content
-   *           for that locale's language is present, that content is returned.
-   *         * If a language code is given and there is no exact match but
-   *           content for a locale in that langauge is present, that content is
-   *           returned.
-   *         * If no locale or language code matches are found and content in
-   *           the default language is present, that content is returned.
-   *         * Otherwise, an empty optional is returned.
-   */
-  LOOT_API static std::optional<MessageContent> Choose(
-      const std::vector<MessageContent> content,
-      const std::string& language);
-
 private:
   std::string text_;
   std::string language_{DEFAULT_LANGUAGE};
@@ -145,6 +120,31 @@ LOOT_API bool operator<=(const MessageContent& lhs, const MessageContent& rhs);
  *          MessageContent object, false otherwise.
  */
 LOOT_API bool operator>=(const MessageContent& lhs, const MessageContent& rhs);
+
+/**
+ * Choose a MessageContent object from a vector given a language.
+ * @param  content
+ *         The MessageContent objects to choose between.
+ * @param  language
+ *         The locale or language code for the preferred language to select.
+ *         Locale codes are of the form `[language code]_[country code]`.
+ * @return A MessageContent object.
+ *         * If the vector only contains a single element, that element is
+ *           returned.
+ *         * If content with a language that exactly matches the given locale
+ *           or language code is present, that content is returned.
+ *         * If a locale code is given and there is no exact match but content
+ *           for that locale's language is present, that content is returned.
+ *         * If a language code is given and there is no exact match but
+ *           content for a locale in that langauge is present, that content is
+ *           returned.
+ *         * If no locale or language code matches are found and content in
+ *           the default language is present, that content is returned.
+ *         * Otherwise, an empty optional is returned.
+ */
+LOOT_API std::optional<MessageContent> SelectMessageContent(
+    const std::vector<MessageContent> content,
+    const std::string& language);
 }
 
 #endif

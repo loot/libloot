@@ -113,11 +113,6 @@ std::vector<MessageContent> PluginCleaningData::GetDetail() const {
   return detail_;
 }
 
-std::optional<MessageContent> PluginCleaningData::ChooseDetail(
-    const std::string& language) const {
-  return MessageContent::Choose(detail_, language);
-}
-
 bool operator!=(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
   return !(lhs == rhs);
 }

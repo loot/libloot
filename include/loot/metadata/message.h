@@ -111,16 +111,6 @@ public:
   LOOT_API std::vector<MessageContent> GetContent() const;
 
   /**
-   * Get the message content given a language.
-   * @param  language
-   *         The preferred language for the message content.
-   * @return A MessageContent object for the preferred language, or for English
-   *         if a MessageContent object is not available for the given language.
-   */
-  LOOT_API std::optional<MessageContent> GetContent(
-      const std::string& language) const;
-
-  /**
    * Get the message as a SimpleMessage given a language.
    * @param  language
    *         The preferred language for the message content.

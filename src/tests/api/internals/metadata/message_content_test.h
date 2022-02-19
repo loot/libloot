@@ -239,37 +239,37 @@ TEST(
   EXPECT_TRUE(content1 >= content2);
 }
 
-TEST(MessageContent, chooseShouldReturnANulloptIfTheVectorIsEmpty) {
-  auto content = MessageContent::Choose(std::vector<MessageContent>(), "fr");
+TEST(SelectMessageContent, shouldReturnANulloptIfTheVectorIsEmpty) {
+  auto content = SelectMessageContent(std::vector<MessageContent>(), "fr");
 
   EXPECT_FALSE(content.has_value());
 }
 
-TEST(MessageContent, chooseShouldReturnTheOnlyElementOfASingleElementVector) {
+TEST(SelectMessageContent, shouldReturnTheOnlyElementOfASingleElementVector) {
   MessageContent content("test", "de");
-  auto chosen = MessageContent::Choose({MessageContent("test", "de")}, "fr");
+  auto chosen = SelectMessageContent({MessageContent("test", "de")}, "fr");
 
   EXPECT_EQ(content, chosen);
 }
 
 TEST(
-    MessageContent,
-    chooseShouldReturnAnEmptyEnglishMessageIfTheVectorHasNoEnglishOrMatchingLanguageContentWithTwoOrMoreElements) {
+    SelectMessageContent,
+    shouldReturnAnEmptyEnglishMessageIfTheVectorHasNoEnglishOrMatchingLanguageContentWithTwoOrMoreElements) {
   auto contents = {MessageContent("test1", "de"),
                    MessageContent("test2", "fr")};
-  auto content = MessageContent::Choose(contents, "pt");
+  auto content = SelectMessageContent(contents, "pt");
 
   EXPECT_FALSE(content.has_value());
 }
 
-TEST(MessageContent,
-     chooseShouldReturnElementWithExactlyMatchingLocaleCodeIfPresent) {
+TEST(SelectMessageContent,
+     shouldReturnElementWithExactlyMatchingLocaleCodeIfPresent) {
   auto contents = {MessageContent("test1", "en"),
                    MessageContent("test2", "de"),
                    MessageContent("test3", "pt"),
                    MessageContent("test4", "pt_PT"),
                    MessageContent("test5", "pt_BR")};
-  auto content = MessageContent::Choose(contents, "pt_BR");
+  auto content = SelectMessageContent(contents, "pt_BR");
 
   EXPECT_TRUE(content.has_value());
   EXPECT_EQ("pt_BR", content.value().GetLanguage());
@@ -277,42 +277,40 @@ TEST(MessageContent,
 }
 
 TEST(
-    MessageContent,
-    chooseShouldReturnElementWithMatchingLanguageCodeIfExactlyMatchingLocaleCodeIsNotPresent) {
+    SelectMessageContent,
+    shouldReturnElementWithMatchingLanguageCodeIfExactlyMatchingLocaleCodeIsNotPresent) {
   auto contents = {MessageContent("test1", "en"),
                    MessageContent("test2", "de"),
                    MessageContent("test3", "pt_PT"),
                    MessageContent("test4", "pt")};
-  auto content = MessageContent::Choose(contents, "pt_BR");
+  auto content = SelectMessageContent(contents, "pt_BR");
 
   EXPECT_TRUE(content.has_value());
   EXPECT_EQ("pt", content.value().GetLanguage());
   EXPECT_EQ("test4", content.value().GetText());
 }
 
-TEST(
-    MessageContent,
-    chooseShouldReturnElementWithEnLanguageCodeIfNoMatchingLanguageCodeIsPresent) {
+TEST(SelectMessageContent,
+     shouldReturnElementWithEnLanguageCodeIfNoMatchingLanguageCodeIsPresent) {
   auto contents = {MessageContent("test1", "en"),
                    MessageContent("test2", "de"),
                    MessageContent("test3", "pt_PT")};
-  auto content = MessageContent::Choose(contents, "pt_BR");
+  auto content = SelectMessageContent(contents, "pt_BR");
 
   EXPECT_TRUE(content.has_value());
   EXPECT_EQ("en", content.value().GetLanguage());
   EXPECT_EQ("test1", content.value().GetText());
 }
 
-TEST(
-    MessageContent,
-    chooseShouldReturnElementWithExactlyMatchingLanguageCodeIfLanguageCodeIsGiven) {
+TEST(SelectMessageContent,
+     shouldReturnElementWithExactlyMatchingLanguageCodeIfLanguageCodeIsGiven) {
   auto contents = {
       MessageContent("test1", "en"),
       MessageContent("test2", "de"),
       MessageContent("test3", "pt_BR"),
       MessageContent("test4", "pt"),
   };
-  auto content = MessageContent::Choose(contents, "pt");
+  auto content = SelectMessageContent(contents, "pt");
 
   EXPECT_TRUE(content.has_value());
   EXPECT_EQ("pt", content.value().GetLanguage());
@@ -320,13 +318,13 @@ TEST(
 }
 
 TEST(
-    MessageContent,
-    chooseShouldReturnFirstElementWithMatchingLanguageCodeIfLanguageCodeIsGivenAndNoExactMatchIsPresent) {
+    SelectMessageContent,
+    shouldReturnFirstElementWithMatchingLanguageCodeIfLanguageCodeIsGivenAndNoExactMatchIsPresent) {
   auto contents = {MessageContent("test1", "en"),
                    MessageContent("test2", "de"),
                    MessageContent("test3", "pt_PT"),
                    MessageContent("test4", "pt_BR")};
-  auto content = MessageContent::Choose(contents, "pt");
+  auto content = SelectMessageContent(contents, "pt");
 
   EXPECT_TRUE(content.has_value());
   EXPECT_EQ("pt_PT", content.value().GetLanguage());

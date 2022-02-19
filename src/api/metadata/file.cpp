@@ -82,11 +82,6 @@ std::string File::GetDisplayName() const {
 
 std::vector<MessageContent> File::GetDetail() const { return detail_; }
 
-std::optional<MessageContent> File::ChooseDetail(
-    const std::string& language) const {
-  return MessageContent::Choose(detail_, language);
-}
-
 bool operator!=(const File& lhs, const File& rhs) { return !(lhs == rhs); }
 
 bool operator>(const File& lhs, const File& rhs) { return rhs < lhs; }

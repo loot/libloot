@@ -87,13 +87,9 @@ MessageType Message::GetType() const { return type_; }
 
 std::vector<MessageContent> Message::GetContent() const { return content_; }
 
-std::optional<MessageContent> Message::GetContent(
-    const std::string& language) const {
-  return MessageContent::Choose(content_, language);
-}
 std::optional<SimpleMessage> Message::ToSimpleMessage(
     const std::string& language) const {
-  auto content = GetContent(language);
+  auto content = SelectMessageContent(content_, language);
   if (!content.has_value()) {
     return std::nullopt;
   }
