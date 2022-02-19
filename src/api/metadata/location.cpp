@@ -25,8 +25,6 @@
 #include "loot/metadata/location.h"
 
 namespace loot {
-Location::Location() {}
-
 Location::Location(const std::string& url, const std::string& name) :
     url_(url), name_(name) {}
 

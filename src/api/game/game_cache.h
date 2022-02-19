@@ -34,7 +34,7 @@
 namespace loot {
 class GameCache {
 public:
-  explicit GameCache();
+  GameCache() = default;
   GameCache(const GameCache& cache);
   GameCache(GameCache&& cache);
   ~GameCache() = default;

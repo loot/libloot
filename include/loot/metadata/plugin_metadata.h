@@ -49,7 +49,7 @@ public:
    * Construct a PluginMetadata object with a blank plugin name and no metadata.
    * @return A PluginMetadata object.
    */
-  LOOT_API explicit PluginMetadata();
+  LOOT_API PluginMetadata() = default;
 
   /**
    * Construct a PluginMetadata object with no metadata for a plugin with the

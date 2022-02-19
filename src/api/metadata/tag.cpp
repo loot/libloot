@@ -27,8 +27,6 @@
 #include <boost/algorithm/string.hpp>
 
 namespace loot {
-Tag::Tag() : addTag_(true) {}
-
 Tag::Tag(const std::string& tag,
          const bool isAddition,
          const std::string& condition) :

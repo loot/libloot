@@ -44,7 +44,7 @@ public:
    * and no detail.
    * @return A PluginCleaningData object.
    */
-  LOOT_API explicit PluginCleaningData();
+  LOOT_API PluginCleaningData() = default;
 
   /**
    * Construct a PluginCleaningData object with the given CRC and utility,
@@ -149,10 +149,10 @@ public:
       const std::string& language) const;
 
 private:
-  uint32_t crc_;
-  unsigned int itm_;
-  unsigned int ref_;
-  unsigned int nav_;
+  uint32_t crc_{0};
+  unsigned int itm_{0};
+  unsigned int ref_{0};
+  unsigned int nav_{0};
   std::string utility_;
   std::vector<MessageContent> detail_;
 };

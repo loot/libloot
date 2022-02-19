@@ -39,7 +39,7 @@ public:
    * Construct a ConditionalMetadata object with an empty condition string.
    * @return A ConditionalMetadata object.
    */
-  LOOT_API explicit ConditionalMetadata();
+  LOOT_API ConditionalMetadata() = default;
 
   /**
    * Construct a ConditionalMetadata object with a given condition string.

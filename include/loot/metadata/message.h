@@ -44,7 +44,7 @@ public:
    * strings.
    * @return A Message object.
    */
-  LOOT_API explicit Message();
+  LOOT_API Message() = default;
 
   /**
    * Construct a Message object with the given type, English content and
@@ -131,7 +131,7 @@ public:
       const std::string& language) const;
 
 private:
-  MessageType type_;
+  MessageType type_{MessageType::say};
   std::vector<MessageContent> content_;
 };
 

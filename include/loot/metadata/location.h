@@ -39,7 +39,7 @@ public:
    * Construct a Location with empty URL and name strings.
    * @return A Location object.
    */
-  LOOT_API explicit Location();
+  LOOT_API Location() = default;
 
   /**
    * Construct a Location with the given URL and name.

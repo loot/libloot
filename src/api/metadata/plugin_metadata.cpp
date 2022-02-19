@@ -41,8 +41,6 @@ using std::set;
 using std::vector;
 
 namespace loot {
-PluginMetadata::PluginMetadata() {}
-
 PluginMetadata::PluginMetadata(const std::string& n) : name_(n) {
   // If the name passed ends in '.ghost', that should be trimmed.
   if (boost::iends_with(name_, GHOST_FILE_EXTENSION)) {

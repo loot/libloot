@@ -41,7 +41,7 @@ public:
    * Construct a File with blank name, display and condition strings.
    * @return A File object.
    */
-  LOOT_API explicit File();
+  LOOT_API File() = default;
 
   /**
    * Construct a File with the given name, display name and condition strings.

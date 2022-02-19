@@ -29,8 +29,6 @@
 #include "api/game/game.h"
 
 namespace loot {
-Message::Message() : type_(MessageType::say) {}
-
 Message::Message(const MessageType type,
                  const std::string& content,
                  const std::string& condition) :

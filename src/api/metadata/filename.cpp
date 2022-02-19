@@ -27,8 +27,6 @@
 #include "api/helpers/text.h"
 
 namespace loot {
-Filename::Filename() {}
-
 Filename::Filename(const std::string& filename) : filename_(filename) {}
 
 Filename::operator std::string() const { return filename_; }

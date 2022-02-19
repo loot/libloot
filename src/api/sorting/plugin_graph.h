@@ -53,7 +53,6 @@ typedef boost::associative_property_map<std::map<vertex_t, size_t>>
 std::string describeEdgeType(EdgeType edgeType);
 
 struct GraphPath {
-  GraphPath(vertex_t from, vertex_t to) : from(from), to(to) {}
 
   bool operator==(const GraphPath& rhs) const {
     return this->from == rhs.from && this->to == rhs.to;

@@ -45,7 +45,7 @@ public:
    * load after.
    * @return A Group object.
    */
-  LOOT_API explicit Group();
+  LOOT_API Group() = default;
 
   /**
    * Construct a Group with the given name, description and set of groups to
@@ -95,7 +95,7 @@ public:
   LOOT_API std::vector<std::string> GetAfterGroups() const;
 
 private:
-  std::string name_;
+  std::string name_{DEFAULT_NAME};
   std::string description_;
   std::vector<std::string> afterGroups_;
 };

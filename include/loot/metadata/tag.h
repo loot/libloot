@@ -40,7 +40,7 @@ public:
    * an empty condition string.
    * @return A Tag object.
    */
-  LOOT_API explicit Tag();
+  LOOT_API explicit Tag() = default;
 
   /**
    * Construct a Tag object with the given name, for addition or removal, with
@@ -84,7 +84,7 @@ public:
 
 private:
   std::string name_;
-  bool addTag_;
+  bool addTag_{true};
 };
 
 /**

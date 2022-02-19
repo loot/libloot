@@ -30,8 +30,6 @@
 namespace loot {
 const std::string MessageContent::defaultLanguage = "en";
 
-MessageContent::MessageContent() : language_(MessageContent::defaultLanguage) {}
-
 MessageContent::MessageContent(const std::string& text,
                                const std::string& language) :
     text_(text), language_(language) {}

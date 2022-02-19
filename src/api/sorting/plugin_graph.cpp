@@ -302,7 +302,7 @@ void PluginGraph::CheckForCycles() const {
 
 bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
                                    const vertex_t& toVertex) {
-  if (pathsCache_.count(GraphPath(toVertex, fromVertex)) != 0) {
+  if (pathsCache_.count(GraphPath{toVertex, fromVertex}) != 0) {
     return true;
   }
 
@@ -329,7 +329,7 @@ bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
       for (auto adjacentV :
            boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
         if (forwardVisited.count(adjacentV) == 0) {
-          pathsCache_.insert(GraphPath(start, adjacentV));
+          pathsCache_.insert(GraphPath{start, adjacentV});
 
           forwardVisited.insert(adjacentV);
           forwardQueue.push(adjacentV);
@@ -345,7 +345,7 @@ bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
       for (auto adjacentV : boost::make_iterator_range(
                boost::inv_adjacent_vertices(v, graph_))) {
         if (reverseVisited.count(adjacentV) == 0) {
-          pathsCache_.insert(GraphPath(adjacentV, end));
+          pathsCache_.insert(GraphPath{adjacentV, end});
 
           reverseVisited.insert(adjacentV);
           reverseQueue.push(adjacentV);
@@ -360,7 +360,7 @@ bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
 void PluginGraph::AddEdge(const vertex_t& fromVertex,
                           const vertex_t& toVertex,
                           EdgeType edgeType) {
-  const auto graphPath = GraphPath(fromVertex, toVertex);
+  const auto graphPath = GraphPath{fromVertex, toVertex};
 
   if (pathsCache_.count(graphPath) != 0) {
     return;

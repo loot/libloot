@@ -28,8 +28,6 @@
 #include "api/metadata/yaml/file.h"
 
 namespace loot {
-File::File() {}
-
 File::File(const std::string& name,
            const std::string& display,
            const std::string& condition,

@@ -34,8 +34,6 @@ using std::pair;
 using std::string;
 
 namespace loot {
-GameCache::GameCache() {}
-
 GameCache::GameCache(const GameCache& cache) {
   lock_guard<mutex> lock(cache.mutex_);
 

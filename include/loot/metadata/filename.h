@@ -38,7 +38,7 @@ public:
    * Construct a Filename using an empty string.
    * @return A Filename object.
    */
-  LOOT_API explicit Filename();
+  LOOT_API Filename() = default;
 
   /**
    * Construct a Filename using the given string.

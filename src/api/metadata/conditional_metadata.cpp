@@ -31,8 +31,6 @@
 using std::string;
 
 namespace loot {
-ConditionalMetadata::ConditionalMetadata() {}
-
 ConditionalMetadata::ConditionalMetadata(const string& condition) :
     condition_(condition) {}
 
