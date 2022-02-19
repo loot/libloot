@@ -57,14 +57,6 @@ public:
   LOOT_API bool IsConditional() const;
 
   /**
-   * Check if the condition string is syntactically valid.
-   *
-   * Throws a ``ConditionSyntaxError`` if the condition string's syntax is not
-   * valid.
-   */
-  LOOT_API void ParseCondition() const;
-
-  /**
    * Get the condition string.
    * @return The object's condition string.
    */

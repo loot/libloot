@@ -69,28 +69,6 @@ TEST_P(ConditionalMetadataTest,
   conditionalMetadata_ = ConditionalMetadata("condition");
   EXPECT_TRUE(conditionalMetadata_.IsConditional());
 }
-
-TEST_P(ConditionalMetadataTest,
-       parseConditionShouldNotThrowForAnEmptyCondition) {
-  EXPECT_NO_THROW(conditionalMetadata_.ParseCondition());
-}
-
-TEST_P(ConditionalMetadataTest,
-       parseConditionShouldThrowForAnInvalidCondition) {
-  conditionalMetadata_ = ConditionalMetadata("condition");
-  EXPECT_THROW(conditionalMetadata_.ParseCondition(), ConditionSyntaxError);
-}
-
-TEST_P(ConditionalMetadataTest, parseConditionShouldNotThrowForATrueCondition) {
-  conditionalMetadata_ = ConditionalMetadata("file(\"" + blankEsm + "\")");
-  EXPECT_NO_THROW(conditionalMetadata_.ParseCondition());
-}
-
-TEST_P(ConditionalMetadataTest,
-       parseConditionShouldNotThrowForAFalseCondition) {
-  conditionalMetadata_ = ConditionalMetadata("file(\"" + missingEsp + "\")");
-  EXPECT_NO_THROW(conditionalMetadata_.ParseCondition());
-}
 }
 }
 

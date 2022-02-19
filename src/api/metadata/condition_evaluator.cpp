@@ -260,6 +260,10 @@ bool ConditionEvaluator::Evaluate(const PluginCleaningData& cleaningData,
 }
 
 void ParseCondition(const std::string& condition) {
+  if (condition.empty()) {
+    return;
+  }
+
   auto logger = getLogger();
   if (logger) {
     logger->trace("Testing condition syntax: {}", condition);

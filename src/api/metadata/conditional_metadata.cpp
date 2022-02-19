@@ -37,10 +37,4 @@ ConditionalMetadata::ConditionalMetadata(const string& condition) :
 bool ConditionalMetadata::IsConditional() const { return !condition_.empty(); }
 
 std::string ConditionalMetadata::GetCondition() const { return condition_; }
-
-void ConditionalMetadata::ParseCondition() const {
-  if (!condition_.empty()) {
-    loot::ParseCondition(condition_);
-  }
-}
 }

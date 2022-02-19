@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 
+#include "api/metadata/condition_evaluator.h"
 #include "loot/metadata/message.h"
 
 namespace YAML {
@@ -128,7 +129,7 @@ struct convert<loot::Message> {
 
     // Test condition syntax.
     try {
-      rhs.ParseCondition();
+      loot::ParseCondition(rhs.GetCondition());
     } catch (const std::exception& e) {
       throw RepresentationException(
           node.Mark(),

@@ -31,6 +31,7 @@
 #include <string>
 
 #include "api/helpers/text.h"
+#include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/message_content.h"
 #include "loot/metadata/file.h"
 
@@ -105,7 +106,7 @@ struct convert<loot::File> {
 
     // Test condition syntax.
     try {
-      rhs.ParseCondition();
+      loot::ParseCondition(rhs.GetCondition());
     } catch (const std::exception& e) {
       throw RepresentationException(
           node.Mark(),
