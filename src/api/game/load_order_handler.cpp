@@ -96,6 +96,20 @@ void LoadOrderHandler::LoadCurrentState() {
   HandleError("load the current load order state", ret);
 }
 
+bool LoadOrderHandler::IsAmbiguous() const {
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Checking if the load order is ambiguous.");
+  }
+
+  bool result = false;
+  const unsigned int ret = lo_is_ambiguous(gh_.get(), &result);
+
+  HandleError("check if the load order is ambiguous", ret);
+
+  return result;
+}
+
 bool LoadOrderHandler::IsPluginActive(const std::string& pluginName) const {
   auto logger = getLogger();
   if (logger) {

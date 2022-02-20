@@ -145,6 +145,17 @@ public:
   virtual void LoadCurrentLoadOrderState() = 0;
 
   /**
+   * @brief Check if the load order is ambiguous.
+   * @details This checks that all plugins in the current load order state have
+   *          a well-defined position in the "on disk" state, and that all data
+   *          sources are consistent. If the load order is ambiguous, different
+   *          applications may read different load orders from the same source
+   *          data.
+   * @returns True if the load order is ambiguous, false otherwise.
+   */
+  virtual bool IsLoadOrderAmbiguous() const = 0;
+
+  /**
    * @brief Check if a plugin is active.
    * @param  plugin
    *         The filename of the plugin for which to check the active state.

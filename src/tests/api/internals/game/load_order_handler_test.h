@@ -136,6 +136,13 @@ TEST_P(LoadOrderHandlerTest,
 }
 
 TEST_P(LoadOrderHandlerTest,
+       isAmbiguousShouldReturnFalseForAnUnambiguousLoadOrder) {
+  auto loadOrderHandler = createHandler();
+
+  EXPECT_FALSE(loadOrderHandler.IsAmbiguous());
+}
+
+TEST_P(LoadOrderHandlerTest,
        isPluginActiveShouldReturnFalseIfLoadOrderStateHasNotBeenLoaded) {
   auto loadOrderHandler = createHandler();
 

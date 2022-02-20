@@ -72,6 +72,8 @@ public:
 
   void LoadCurrentLoadOrderState() override;
 
+  bool IsLoadOrderAmbiguous() const override;
+
   bool IsPluginActive(const std::string& pluginName) const override;
 
   std::vector<std::string> GetLoadOrder() const override;

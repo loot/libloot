@@ -43,6 +43,8 @@ public:
 
   void LoadCurrentState();
 
+  bool IsAmbiguous() const;
+
   std::vector<std::string> GetLoadOrder() const;
 
   std::vector<std::string> GetActivePlugins() const;

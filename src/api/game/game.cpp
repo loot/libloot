@@ -216,6 +216,10 @@ void Game::LoadCurrentLoadOrderState() {
       loadOrderHandler_.GetActivePlugins());
 }
 
+bool Game::IsLoadOrderAmbiguous() const {
+  return loadOrderHandler_.IsAmbiguous();
+}
+
 bool Game::IsPluginActive(const std::string& pluginName) const {
   return loadOrderHandler_.IsPluginActive(pluginName);
 }
