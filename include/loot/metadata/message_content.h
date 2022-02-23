@@ -40,7 +40,7 @@ public:
    * The code for the default language assumed for message content, which is
    * "en" (English).
    */
-  LOOT_API static constexpr const char* DEFAULT_LANGUAGE = "en";
+  static constexpr const char* DEFAULT_LANGUAGE = "en";
 
   /**
    * Construct a MessageContent object with an empty English message string.
