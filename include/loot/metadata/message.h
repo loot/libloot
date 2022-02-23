@@ -145,7 +145,9 @@ LOOT_API bool operator<=(const Message& lhs, const Message& rhs);
 LOOT_API bool operator>=(const Message& lhs, const Message& rhs);
 
 /**
- * Get the message as a SimpleMessage given a language.
+ * Get a given Message as a SimpleMessage given a language.
+ * @param  message
+ *         The message to convert.
  * @param  language
  *         The preferred language for the message content.
  * @return A SimpleMessage object for the preferred language, or for English
@@ -156,7 +158,9 @@ LOOT_API std::optional<SimpleMessage> ToSimpleMessage(
     const std::string& language);
 
 /**
- * Get the messages as SimpleMessages given a language.
+ * Get the given messages as simple messages given a language.
+ * @param  messages
+ *         The messages to convert.
  * @param  language
  *         The preferred language for the message content.
  * @return A vector of SimpleMessage objects for the preferred language, or for
@@ -165,7 +169,7 @@ LOOT_API std::optional<SimpleMessage> ToSimpleMessage(
  *         without the preferred language or English content will be omitted.
  */
 LOOT_API std::vector<SimpleMessage> ToSimpleMessages(
-    const std::vector<Message>& message,
+    const std::vector<Message>& messages,
     const std::string& language);
 }
 

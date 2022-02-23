@@ -20,9 +20,9 @@ def replace_in_file(path, regex, replacement):
 def update_cpp_file(path, version):
     version_parts = version.split('.')
 
-    replace_in_file(path, 'LootVersion::major = \d+;', 'LootVersion::major = {};'.format(version_parts[0]))
-    replace_in_file(path, 'LootVersion::minor = \d+;', 'LootVersion::minor = {};'.format(version_parts[1]))
-    replace_in_file(path, 'LootVersion::patch = \d+;', 'LootVersion::patch = {};'.format(version_parts[2]))
+    replace_in_file(path, 'LIBLOOT_VERSION_MAJOR = \d+;', 'LIBLOOT_VERSION_MAJOR = {};'.format(version_parts[0]))
+    replace_in_file(path, 'LIBLOOT_VERSION_MINOR = \d+;', 'LIBLOOT_VERSION_MINOR = {};'.format(version_parts[1]))
+    replace_in_file(path, 'LIBLOOT_VERSION_PATCH = \d+;', 'LIBLOOT_VERSION_PATCH = {};'.format(version_parts[2]))
 
 def update_resource_file(path, version):
     comma_separated_version = version.replace('.', ', ')
@@ -42,5 +42,5 @@ if __name__ == "__main__":
     if len(arguments.version[0].split('.')) != 3:
         raise RuntimeError('The version number must be a three-part semantic version.')
 
-    update_cpp_file(os.path.join('src', 'api', 'loot_version.cpp.in'), arguments.version[0])
+    update_cpp_file(os.path.join('include', 'loot', 'loot_version.h'), arguments.version[0])
     update_resource_file(os.path.join('src', 'api', 'resource.rc'), arguments.version[0])

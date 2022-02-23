@@ -4,6 +4,15 @@ API Reference
 
 .. contents::
 
+Constants
+=========
+
+.. doxygenvariable:: loot::LIBLOOT_VERSION_MAJOR
+
+.. doxygenvariable:: loot::LIBLOOT_VERSION_MINOR
+
+.. doxygenvariable:: loot::LIBLOOT_VERSION_PATCH
+
 Enumerations
 ============
 
@@ -29,6 +38,10 @@ Functions
 .. doxygenfunction:: loot::IsCompatible
 
 .. doxygenfunction:: loot::CreateGameHandle
+
+.. doxygenfunction:: loot::GetLiblootVersion
+
+.. doxygenfunction:: loot::GetLiblootRevision
 
 Interfaces
 ==========
@@ -58,9 +71,6 @@ Classes
    :members:
 
 .. doxygenclass:: loot::Location
-   :members:
-
-.. doxygenclass:: loot::LootVersion
    :members:
 
 .. doxygenclass:: loot::MessageContent

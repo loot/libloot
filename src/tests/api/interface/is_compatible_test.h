@@ -34,13 +34,26 @@ namespace test {
 TEST(IsCompatible,
      shouldReturnTrueWithEqualMajorAndMinorVersionsAndUnequalPatchVersion) {
   EXPECT_TRUE(IsCompatible(
-      LootVersion::major, LootVersion::minor, LootVersion::patch + 1));
+      LIBLOOT_VERSION_MAJOR, LIBLOOT_VERSION_MINOR, LIBLOOT_VERSION_PATCH));
 }
 
 TEST(IsCompatible,
      shouldReturnFalseWithEqualMajorVersionAndUnequalMinorAndPatchVersions) {
-  EXPECT_FALSE(IsCompatible(
-      LootVersion::major, LootVersion::minor + 1, LootVersion::patch + 1));
+  EXPECT_FALSE(IsCompatible(LIBLOOT_VERSION_MAJOR,
+                            LIBLOOT_VERSION_MINOR + 1,
+                            LIBLOOT_VERSION_PATCH + 1));
+}
+
+TEST(GetLiblootRevision, shouldReturnANonEmptyString) {
+  EXPECT_FALSE(GetLiblootRevision().empty());
+}
+
+TEST(GetVersion, shouldConcatenateMajorMinorAndPatchVersionNumbersWithPeriods) {
+  auto expectedVersion = std::to_string(LIBLOOT_VERSION_MAJOR) + "." +
+                         std::to_string(LIBLOOT_VERSION_MINOR) + "." +
+                         std::to_string(LIBLOOT_VERSION_PATCH);
+
+  EXPECT_EQ(expectedVersion, GetLiblootVersion());
 }
 }
 }

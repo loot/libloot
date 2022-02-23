@@ -30,30 +30,26 @@ along with LOOT.  If not, see
 #include "loot/api_decorator.h"
 
 namespace loot {
+/** @brief libloot's major version number. */
+inline constexpr unsigned int LIBLOOT_VERSION_MAJOR = 0;
+
+/** @brief libloot's minor version number. */
+inline constexpr unsigned int LIBLOOT_VERSION_MINOR = 17;
+
+/** @brief libloot's patch version number. */
+inline constexpr unsigned int LIBLOOT_VERSION_PATCH = 3;
+
 /**
- * @brief A purely static class that provides information about the version of
- *        libloot that is being run.
+ * @brief Get the library version.
+ * @return A string of the form "major.minor.patch".
  */
-class LootVersion {
-public:
-  /** @brief The major version number. */
-  LOOT_API static const unsigned int major;
+LOOT_API std::string GetLiblootVersion();
 
-  /** @brief The minor version number. */
-  LOOT_API static const unsigned int minor;
-
-  /** @brief The patch version number. */
-  LOOT_API static const unsigned int patch;
-
-  /** @brief The source control revision that the API was built from. */
-  LOOT_API static const std::string revision;
-
-  /**
-   * @brief Get the API version as a string.
-   * @return A string of the form "major.minor.patch".
-   */
-  LOOT_API static std::string GetVersionString();
-};
+/**
+ * @brief Get the source control revision that libloot was built from.
+ * @return A string containing the revision ID.
+ */
+LOOT_API std::string GetLiblootRevision();
 }
 
 #endif

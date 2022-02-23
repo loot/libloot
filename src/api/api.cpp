@@ -67,9 +67,9 @@ LOOT_API bool IsCompatible(const unsigned int versionMajor,
                            const unsigned int versionMinor,
                            const unsigned int) {
   if (versionMajor > 0)
-    return versionMajor == loot::LootVersion::major;
+    return versionMajor == LIBLOOT_VERSION_MAJOR;
   else
-    return versionMinor == loot::LootVersion::minor;
+    return versionMinor == LIBLOOT_VERSION_MINOR;
 }
 
 LOOT_API std::unique_ptr<GameInterface> CreateGameHandle(
