@@ -19,6 +19,10 @@ Omitting optional parentheses (see below), their `EBNF`_ grammar is:
 Types
 =====
 
+.. describe:: filesystem_path
+
+  A double-quoted filesystem path, or ``"LOOT"``, which resolves to `LOOT.exe` in the current working directory. Bear in mind that `LOOT.exe` may not be present if the condition is being evaluated by an application other than LOOT.
+
 .. describe:: file_path
 
   A double-quoted file path, or ``"LOOT"``, which resolves to `LOOT.exe` in the current working directory. Bear in mind that `LOOT.exe` may not be present if the condition is being evaluated by an application other than LOOT.
@@ -70,13 +74,19 @@ Functions
 
 There are several conditions that can be tested for using the functions detailed below. All functions return a boolean. For functions that take a path or regex, the argument is treated as regex if it contains any of the characters ``:\*?|``.
 
-.. describe:: file(file_path path)
+.. describe:: file(filesystem_path path)
 
   Returns true if ``path`` is installed, and false otherwise.
 
 .. describe:: file(regular_expression regex)
 
   Returns true if a file matching ``regex`` is found, and false otherwise.
+
+.. describe:: readable(filesystem_path path)
+
+  Returns true if ``path`` is a readable directory or file, and false otherwise.
+
+  This is particularly useful when writing conditions for games that are available from the Microsoft Store and/or Xbox app, as games installed using them have executables that have heavily restricted permissions, and attempts to read them result in permission denied errors. You can use this function to guard against such errors by calling it before the ``checksum``, ``version`` or ``product_version`` functions.
 
 .. describe:: active(file_path path)
 
@@ -109,12 +119,16 @@ There are several conditions that can be tested for using the functions detailed
     actual_version comparator given_version
 
   (where ``actual version`` is the version read from ``path``) holds true, and
-  false otherwise. If ``path`` is a plugin, its version is read from its
-  description field. If ``path`` is not a plugin, it will be assumed to be an
-  executable (e.g. ``*.exe`` or ``*.dll``), and its version is read from its
-  File Version field. If ``path`` does not exist or does not have a version
-  number, its version is assumed to be ``0``. If ``path`` isn't a plugin or an
-  executable, an error will occur.
+  false otherwise.
+
+  * If ``path`` is a plugin, its version is read from its description field.
+  * If ``path`` is not a plugin, it will be assumed to be an executable (e.g.
+    ``*.exe`` or ``*.dll``), and its version is read from its File Version field.
+  * If ``path`` does not exist or does not have a version number, the condition
+    evaluates to true for the ``!=``, ``<`` and ``<=`` comparators, i.e. a
+    missing version is always less than the given version.
+  * If ``path`` is not readable or is not a plugin or an executable, an error
+    will occur.
 
   The supported version syntax and precedence rules are detailed in the section
   below.
@@ -127,9 +141,12 @@ There are several conditions that can be tested for using the functions detailed
 
   (where ``actual version`` is the version read from ``path``) holds true, and
   false otherwise. ``path`` must be an executable (e.g. ``*.exe`` or ``*.dll``),
-  and its version is read from its Product Version field. If ``path`` does not
-  exist or does not have a version number, its version is assumed to be ``0``.
-  If ``path`` is not an executable, an error will occur.
+  and its version is read from its Product Version field.
+
+  * If ``path`` does not exist or does not have a version number, the condition
+    evaluates to true for the ``!=``, ``<`` and ``<=`` comparators, i.e. a
+    missing version is always less than the given version.
+  * If ``path`` is not a readable executable, an error will occur.
 
   The supported version syntax and precedence rules are detailed in the section
   below.
