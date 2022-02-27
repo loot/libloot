@@ -43,6 +43,12 @@ Functions
 
 .. doxygenfunction:: loot::GetLiblootRevision
 
+.. doxygenfunction:: loot::SelectMessageContent
+
+.. doxygenfunction:: loot::ToSimpleMessage
+
+.. doxygenfunction:: loot::ToSimpleMessages
+
 Interfaces
 ==========
 
