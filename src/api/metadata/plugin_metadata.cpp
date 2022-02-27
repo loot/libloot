@@ -78,41 +78,6 @@ void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   return;
 }
 
-PluginMetadata PluginMetadata::NewMetadata(const PluginMetadata& plugin) const {
-  using std::set_difference;
-
-  PluginMetadata p(*this);
-
-  if (p.group_ == plugin.group_) {
-    p.group_ = std::nullopt;
-  }
-
-  // Compare this plugin against the given plugin.
-  p.SetLoadAfterFiles(diffVectors(loadAfter_, plugin.loadAfter_));
-  p.SetRequirements(diffVectors(requirements_, plugin.requirements_));
-  p.SetIncompatibilities(
-      diffVectors(incompatibilities_, plugin.incompatibilities_));
-
-  vector<Message> msgs1 = plugin.GetMessages();
-  vector<Message> msgs2 = messages_;
-  std::sort(begin(msgs1), end(msgs1));
-  std::sort(begin(msgs2), end(msgs2));
-  vector<Message> mDiff;
-  set_difference(begin(msgs2),
-                 end(msgs2),
-                 begin(msgs1),
-                 end(msgs1),
-                 inserter(mDiff, begin(mDiff)));
-  p.SetMessages(mDiff);
-
-  p.SetTags(diffVectors(tags_, plugin.tags_));
-  p.SetDirtyInfo(diffVectors(dirtyInfo_, plugin.dirtyInfo_));
-  p.SetCleanInfo(diffVectors(cleanInfo_, plugin.cleanInfo_));
-  p.SetLocations(diffVectors(locations_, plugin.locations_));
-
-  return p;
-}
-
 std::string PluginMetadata::GetName() const { return name_; }
 
 std::optional<std::string> PluginMetadata::GetGroup() const { return group_; }

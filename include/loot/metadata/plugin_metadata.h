@@ -72,17 +72,6 @@ public:
   LOOT_API void MergeMetadata(const PluginMetadata& plugin);
 
   /**
-   * Get metadata in this object that isn't present in the given PluginMetadata
-   * object.
-   * @param  plugin
-   *         The PluginMetadata object to compare against.
-   * @return A PluginMetadata object containing the metadata in this object that
-   *         is not in the given object. The returned object inherits this
-   *         object's group.
-   */
-  LOOT_API PluginMetadata NewMetadata(const PluginMetadata& plugin) const;
-
-  /**
    * Get the plugin name.
    * @return The plugin name.
    */
