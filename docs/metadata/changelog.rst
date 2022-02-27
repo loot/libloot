@@ -4,6 +4,30 @@ Version History
 
 The version history of the metadata syntax is given below.
 
+0.18 - 2022-02-27
+=================
+
+Added
+-----
+
+- The condition function ``readable(filesystem_path path)``, which checks if
+  the given path is a readable directory or file.
+
+Changed
+-------
+
+- The documentation for the version comparison condition functions has been
+  updated to detail the supported version syntax and semantics.
+- Mentions of GitHub Flavored Markdown have been replaced with CommonMark, as
+  LOOT now uses the latter instead of the former.
+
+Fixed
+-----
+
+- Support for ``not (<expression>)`` syntax was not properly documented.
+- The documentation for the version comparison functions stated that missing
+  versions would be treated as if they were ``0``, which was not accurate.
+
 0.17 - 2021-09-24
 =================
 

@@ -2,6 +2,98 @@
 Version History
 ***************
 
+0.18.0 - 2022-02-27
+===================
+
+Added
+-----
+
+- :cpp:any:`loot::Group::DEFAULT_NAME` gives the default group name as a
+  compile-time constant.
+- :cpp:any:`loot::ToSimpleMessages()` turns a ``std::vector<Message>`` into a
+  ``std::vector<SimpleMessage>`` for a given language.
+- :cpp:any:`loot::GameInterface::IsLoadOrderAmbiguous()` exposes libloadorder's
+  ``lo_is_ambiguous()`` function.
+
+Fixed
+-----
+
+- :cpp:any:`loot::SimpleMessage` now uses an in-class initialiser to ensure that
+  its ``type`` member variable is always initialised.
+- Added missing virtual destructors to :cpp:any:`loot::GameInterface`,
+  :cpp:any:`loot::DatabaseInterface` and :cpp:any:`loot::PluginInterface`.
+- Two versions that only differ by the presence and absence of pre-release
+  identifiers were not correctly compared according to Semantic Versioning,
+  which states that 1.0.0-alpha is less than 1.0.0. Via
+  loot-condition-interpreter.
+- Some missing API documentation and formatting issues.
+
+Changed
+-------
+
+- :cpp:any:`loot::CreateGameHandle()` now returns a
+  ``std::unique_ptr<GameInterface>`` instead of a
+  ``std::shared_ptr<GameInterface>``.
+- :cpp:any:`loot::GameInterface::GetDatabase()` now returns a
+  ``DatabaseInterface&`` instead of a ``std::shared_ptr<DatabaseInterface>``.
+- :cpp:any:`loot::GameInterface::GetPlugin()` now returns a
+  ``const PluginInterface*`` instead of a
+  ``std::shared_ptr<const PluginInterface>``.
+- :cpp:any:`loot::GameInterface::GetLoadedPlugins()` now returns a
+  ``std::vector<const PluginInterface*>`` instead of a
+  ``std::vector<std::shared_ptr<const PluginInterface>>``.
+- ``MessageContent::defaultLanguage`` has been replaced with
+  :cpp:any:`loot::MessageContent::DEFAULT_LANGUAGE`, which is a compile-time
+  constant.
+- ``File::ChooseDetail()``,
+  ``Message::GetContent(const std::string& language)``,
+  ``MessageContent::Choose()`` and ``PluginCleaningData::ChooseDetail()`` have
+  been replaced with :cpp:any:`loot::SelectMessageContent`.
+- ``Message::ToSimpleMessage()`` has been replaced with
+  :cpp:any:`loot::ToSimpleMessage()`.
+- ``LootVersion`` has been replaced with :cpp:any:`loot::LIBLOOT_VERSION_MAJOR`,
+  :cpp:any:`loot::LIBLOOT_VERSION_MINOR`,
+  :cpp:any:`loot::LIBLOOT_VERSION_PATCH`, :cpp:any:`loot::GetLiblootVersion()`
+  and :cpp:any:`loot::GetLiblootRevision()`.
+- :cpp:any:`loot::File::GetDisplayName()` is now a trivial accessor that only
+  ever returns the value of the display name member variable and performs no
+  character escaping.
+- :cpp:any:`loot::CyclicInteractionError` and
+  :cpp:any:`loot::UndefinedGroupError` have had their ``const`` member variables
+  made non-``const``.
+- :cpp:any:`loot::ConditionalMetadata`, :cpp:any:`loot::File`,
+  :cpp:any:`loot::Filename`, :cpp:any:`loot::Group`, :cpp:any:`loot::Location`,
+  :cpp:any:`loot::Message`, :cpp:any:`loot::MessageContent`,
+  :cpp:any:`loot::PluginCleaningData`, :cpp:any:`loot::PluginMetadata` and
+  :cpp:any:`loot::Tag` have had their user-defined default constructors replaced
+  by use of in-class initialisers and defaulted default constructors.
+- The ``<`` and ``==`` operator overloads for :cpp:any:`loot::File`,
+  :cpp:any:`loot::Group`, :cpp:any:`loot::Location`, :cpp:any:`loot::Message`,
+  :cpp:any:`loot::MessageContent`, :cpp:any:`loot::PluginCleaningData` and
+  :cpp:any:`loot::Tag` have become non-member functions.
+- The performance of :cpp:any:`loot::PluginMetadata::NameMatches()` has been
+  greatly improved by not constructing a new regex object every time the
+  function is called.
+- Mentions of GitHub Flavored Markdown have been replaced with CommonMark, as
+  LOOT now uses the latter instead of the former.
+- Updated loot-condition-interpreter to v2.3.0.
+
+Removed
+-------
+
+- ``ConditionalMetadata::ParseCondition()``
+- ``PluginMetadata::NewMetadata()``
+- All Git-related functionality has been removed, including the libgit2
+  dependency and the following API items:
+
+  - ``loot::UpdateFile()``
+  - ``loot::GetFileRevision()``
+  - ``loot::IsLatestFile()``
+  - ``loot::libgit2_category()``
+  - ``loot::GitStateError``
+  - ``loot::FileRevision``
+
+
 0.17.3 - 2022-01-02
 ===================
 
