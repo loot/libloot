@@ -45,24 +45,28 @@ replace part of a masterlist file before it is parsed, and metadata in the
 userlist extends or replaces metadata sourced from the masterlist.
 
 LOOT's plugin metadata can be conditional, eg. a plugin may require a patch only
-if another plugin is also present. The API's :cpp:func:`LoadLists` method parses
-metadata files into memory, but does not evaluate these conditions, so the
-loaded metadata may contain metadata that is invalid for the installed game that
-the :cpp:class:`loot::DatabaseInterface` object being operated on was created
-for.
+if another plugin is also present. The API's
+:cpp:func:`loot::DatabaseInterface::LoadLists()` method parses metadata files
+into memory, but does not evaluate these conditions, so the loaded metadata may
+contain metadata that is invalid for the installed game that the
+:cpp:class:`loot::DatabaseInterface` object being operated on was created for.
 
 Caching
 =======
 
-All unevaluated metadata is cached between calls to :cpp:func:`LoadLists`.
+All unevaluated metadata is cached between calls to :cpp:func:`loot::DatabaseInterface::LoadLists`.
 
-The results of evaluating metadata conditions are cached between calls to :cpp:func:`LoadPlugins`, :cpp:func:`SortPlugins` and
-:cpp:func:`GetGeneralMessages`.
+The results of evaluating metadata conditions are cached between calls to
+:cpp:func:`loot::GameInterface::LoadPlugins`,
+:cpp:func:`loot::GameInterface::SortPlugins` and
+:cpp:func:`loot::DatabaseInterface::GetGeneralMessages`.
 
-Plugin content is cached between calls to :cpp:func:`LoadPlugins` and
-:cpp:func:`SortPlugins`.
+Plugin content is cached between calls to
+:cpp:func:`loot::GameInterface::LoadPlugins` and
+:cpp:func:`loot::GameInterface::SortPlugins`.
 
-Load order is cached between calls to :cpp:func:`LoadCurrentLoadOrderState`.
+Load order is cached between calls to
+:cpp:func:`loot::GameInterface::LoadCurrentLoadOrderState`.
 
 Performance
 ===========
@@ -71,17 +75,17 @@ The following may involve filesystem access and reading/parsing or writing of
 data from the filesystem:
 
 - Any function that takes a ``std::filesystem::path``
-- :cpp:any:`GameInterface::IsValidPlugin()`
-- :cpp:any:`GameInterface::LoadPlugins()`
-- :cpp:any:`GameInterface::LoadCurrentLoadOrderState()`
-- :cpp:any:`GameInterface::SetLoadOrder()`
+- :cpp:any:`loot::GameInterface::IsValidPlugin()`
+- :cpp:any:`loot::GameInterface::LoadPlugins()`
+- :cpp:any:`loot::GameInterface::LoadCurrentLoadOrderState()`
+- :cpp:any:`loot::GameInterface::SetLoadOrder()`
 
 Evaluating conditions may also involve filesystem read access.
 
-:cpp:any:`GameInterface::SortPlugins()` is expensive, as it involves loading
+:cpp:any:`loot::GameInterface::SortPlugins()` is expensive, as it involves loading
 all the content of all the plugins, apart from the game's main master file, which is skipped as an optimisation (it doesn't depend on anything else and is much bigger than any other plugin, so is unnecessary and slow to load).
 
-:cpp:any:`DatabaseInterface::GetGroupsPath()` involves building a graph of all defined groups and
+:cpp:any:`loot::DatabaseInterface::GetGroupsPath()` involves building a graph of all defined groups and
 then using it to search for the shortest path between the two given groups,
 which may be relatively slow given a sufficiently large and/or complex set of
 group definitions.
