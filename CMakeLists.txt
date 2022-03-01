@@ -114,14 +114,6 @@ else()
     set(LCI_LIBRARIES ${LCI_LIBRARIES} dl)
 endif()
 
-ExternalProject_Add(testing-metadata
-    PREFIX "external"
-    GIT_REPOSITORY "https://github.com/loot/testing-metadata"
-    GIT_TAG "1.4.0"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND "")
-
 ExternalProject_Add(testing-plugins
     PREFIX "external"
     URL "https://github.com/Ortham/testing-plugins/archive/1.4.1.tar.gz"
@@ -352,7 +344,6 @@ add_dependencies(libloot_internals_tests
     spdlog
     yaml-cpp
     GTest
-    testing-metadata
     testing-plugins)
 target_link_libraries(libloot_internals_tests PRIVATE
     ${ESPLUGIN_LIBRARIES}
@@ -377,7 +368,7 @@ target_link_libraries(loot PRIVATE
 
 # Build API tests.
 add_executable(libloot_tests ${LIBLOOT_INTERFACE_TESTS_ALL_SOURCES})
-add_dependencies(libloot_tests loot GTest testing-metadata testing-plugins)
+add_dependencies(libloot_tests loot GTest testing-plugins)
 target_link_libraries(libloot_tests PRIVATE loot ${GTEST_LIBRARIES})
 
 ##############################
@@ -536,38 +527,6 @@ endif()
 ##############################
 # Post-Build Steps
 ##############################
-
-# Copy testing metadata
-ExternalProject_Get_Property(testing-metadata SOURCE_DIR)
-add_custom_command(TARGET libloot_internals_tests POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${SOURCE_DIR}
-        "$<TARGET_FILE_DIR:libloot_internals_tests>/testing-metadata")
-add_custom_command(TARGET libloot_tests POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${SOURCE_DIR}
-        "$<TARGET_FILE_DIR:libloot_tests>/testing-metadata")
-
-if(GIT_FOUND)
-	# Clone a mirror of the testing-metadata repository for faster tests.
-    # Remove the directory if it already exists before cloning, as the clone
-    # will fail if the target directory exists and is not empty.
-	# Tests will fail if this is not done.
-
-	add_custom_command(TARGET libloot_internals_tests POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E remove_directory
-            "$<TARGET_FILE_DIR:libloot_internals_tests>/testing-metadata.git")
-
-	add_custom_command(TARGET libloot_internals_tests POST_BUILD
-		COMMAND git clone --bare https://github.com/loot/testing-metadata.git "$<TARGET_FILE_DIR:libloot_internals_tests>/testing-metadata.git")
-
-	add_custom_command(TARGET libloot_tests POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E remove_directory
-            "$<TARGET_FILE_DIR:libloot_tests>/testing-metadata.git")
-
-	add_custom_command(TARGET libloot_tests POST_BUILD
-		COMMAND git clone --bare https://github.com/loot/testing-metadata.git "$<TARGET_FILE_DIR:libloot_tests>/testing-metadata.git")
-endif()
 
 # Copy testing plugins
 ExternalProject_Get_Property(testing-plugins SOURCE_DIR)

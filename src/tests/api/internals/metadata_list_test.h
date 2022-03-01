@@ -35,10 +35,7 @@ protected:
   MetadataListTest() :
       metadataPath(metadataFilesPath / "masterlist.yaml"),
       savedMetadataPath(metadataFilesPath / "saved.masterlist.yaml"),
-      missingMetadataPath(metadataFilesPath / "missing-metadata.yaml"),
-      invalidMetadataPaths(
-          {metadataFilesPath / "invalid" / "non_map_root.yaml",
-           metadataFilesPath / "invalid" / "non_unique.yaml"}) {}
+      missingMetadataPath(metadataFilesPath / "missing-metadata.yaml") {}
 
   inline void SetUp() override {
     CommonGameTestFixture::SetUp();
@@ -46,24 +43,55 @@ protected:
     using std::filesystem::copy;
     using std::filesystem::exists;
 
-    auto sourceDirectory = getSourceMetadataFilesPath();
-
-    copy(sourceDirectory / "masterlist.yaml", metadataPath);
+    writeMasterlist(metadataPath);
     ASSERT_TRUE(exists(metadataPath));
-
-    copyInvalidMetadataFile(sourceDirectory, "non_map_root.yaml");
-    copyInvalidMetadataFile(sourceDirectory, "non_unique.yaml");
 
     ASSERT_FALSE(exists(savedMetadataPath));
     ASSERT_FALSE(exists(missingMetadataPath));
   }
 
-  void copyInvalidMetadataFile(const std::filesystem::path& sourceDirectory,
-                               const std::string& file) {
-    std::filesystem::create_directories(metadataFilesPath / "invalid");
-    std::filesystem::copy(sourceDirectory / "invalid" / file,
-                          metadataFilesPath / "invalid" / file);
-    ASSERT_TRUE(std::filesystem::exists(metadataFilesPath / "invalid" / file));
+  static void writeMasterlist(const std::filesystem::path& path) {
+    std::ofstream out(path);
+    out << R"(bash_tags:
+  - 'C.Climate'
+  - 'Relev'
+  
+groups:
+  - name: group1
+    after:
+      - group2
+  - name: group2
+    after:
+      - default
+
+globals:
+  - type: say
+    content: 'A global message.'
+
+plugins:
+  - name: 'Blank.esm'
+    priority: -100
+    msg:
+      - type: warn
+        content: 'This is a warning.'
+      - type: say
+        content: 'This message should be removed when evaluating conditions.'
+        condition: 'active("Blank - Different.esm")'
+
+  - name: 'Blank.+\.esp'
+    after:
+      - 'Blank.esm'
+
+  - name: 'Blank.+(Different)?.*\.esp'
+    inc:
+      - 'Blank.esp'
+
+  - name: 'Blank.esp'
+    group: group2
+    dirty:
+      - crc: 0xDEADBEEF
+        util: utility)";
+    out.close();
   }
 
   static std::string PluginMetadataToString(const PluginMetadata& metadata) {
@@ -74,7 +102,6 @@ protected:
   const std::filesystem::path savedMetadataPath;
   const std::filesystem::path groupMetadataPath;
   const std::filesystem::path missingMetadataPath;
-  const std::vector<std::filesystem::path> invalidMetadataPaths;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -168,10 +195,46 @@ TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
 }
 
 TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
-  MetadataList ml;
-  for (const auto& path : invalidMetadataPaths) {
-    EXPECT_THROW(ml.Load(path), FileAccessError);
-  }
+  MetadataList metadataList;
+
+  std::ofstream out(metadataPath);
+  out << R"(  - 'C.Climate'
+  - 'Relev'
+
+globals:
+  - type: say
+    content: 'A global message.'
+
+plugins:
+  - name: 'Blank.+\.esp'
+    after:
+      - 'Blank.esm')";
+  out.close();
+
+  EXPECT_THROW(metadataList.Load(metadataPath), FileAccessError);
+
+  out.open(metadataPath);
+  out << R"(globals:
+  - type: say
+    content: 'A global message.'
+
+plugins:
+  - name: 'Blank.esm'
+    priority: -100
+    msg:
+      - type: warn
+        content: 'This is a warning.'
+      - type: say
+        content: 'This message should be removed when evaluating conditions.'
+        condition: 'active("Blank - Different.esm")'
+
+  - name: 'Blank.esm'
+    msg:
+      - type: error
+        content: 'This plugin entry will cause a failure, as it is not the first exact entry.')";
+  out.close();
+
+  EXPECT_THROW(metadataList.Load(metadataPath), FileAccessError);
 }
 
 TEST_P(MetadataListTest,

@@ -264,10 +264,6 @@ protected:
 
   const uint32_t blankEsmCrc;
 
-  static std::filesystem::path getSourceMetadataFilesPath() {
-    return std::filesystem::absolute("./testing-metadata");
-  }
-
 private:
   std::filesystem::path getSourcePluginsPath() const {
     using std::filesystem::absolute;

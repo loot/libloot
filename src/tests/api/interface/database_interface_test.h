@@ -35,9 +35,6 @@ protected:
   DatabaseInterfaceTest() :
       userlistPath_(localPath / "userlist.yaml"),
       minimalOutputPath_(localPath / "minimal.yml"),
-      url_("./testing-metadata.git"),
-      branch_("master"),
-      oldBranch_("old-branch"),
       generalUserlistMessage("A general userlist message.") {}
 
   void SetUp() override {
@@ -109,9 +106,6 @@ protected:
 
   const std::filesystem::path userlistPath_;
   const std::filesystem::path minimalOutputPath_;
-  const std::string url_;
-  const std::string branch_;
-  const std::string oldBranch_;
   const std::string generalUserlistMessage;
 };
 
