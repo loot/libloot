@@ -82,12 +82,6 @@ int mapGameType(GameType gameType) {
   }
 }
 
-std::string IntToHexString(const uint32_t value) {
-  std::stringstream stream;
-  stream << std::hex << value;
-  return stream.str();
-}
-
 ConditionEvaluator::ConditionEvaluator(const GameType gameType,
                                        const std::filesystem::path& dataPath) :
     lciState_(std::unique_ptr<lci_state, decltype(&lci_state_destroy)>(
@@ -256,7 +250,7 @@ bool ConditionEvaluator::Evaluate(const PluginCleaningData& cleaningData,
     return false;
 
   return Evaluate("checksum(\"" + pluginName + "\", " +
-                  IntToHexString(cleaningData.GetCRC()) + ")");
+                  CrcToString(cleaningData.GetCRC()) + ")");
 }
 
 void ParseCondition(const std::string& condition) {

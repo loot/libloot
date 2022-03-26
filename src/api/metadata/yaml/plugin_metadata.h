@@ -44,6 +44,17 @@
 #include "api/metadata/yaml/tag.h"
 #include "loot/metadata/plugin_metadata.h"
 
+namespace loot {
+template<typename T>
+inline ::YAML::EMITTER_MANIP getNodeStyle(const std::vector<T>& objects) {
+  if (objects.size() == 1 && emitAsScalar(objects.at(0))) {
+    return YAML::Flow;
+  }
+
+  return YAML::Block;
+}
+}
+
 namespace YAML {
 template<>
 struct convert<loot::PluginMetadata> {
@@ -126,33 +137,45 @@ inline Emitter& operator<<(Emitter& out, const loot::PluginMetadata& rhs) {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
         << rhs.GetName();
 
-    if (rhs.GetGroup())
+    const auto locations = rhs.GetLocations();
+    if (!locations.empty()) {
+      out << Key << "url" << Value << loot::getNodeStyle(locations)
+          << locations;
+    }
+
+    if (rhs.GetGroup()) {
       out << Key << "group" << Value << YAML::SingleQuoted
           << rhs.GetGroup().value();
+    }
 
-    if (!rhs.GetLoadAfterFiles().empty())
-      out << Key << "after" << Value << rhs.GetLoadAfterFiles();
+    const auto after = rhs.GetLoadAfterFiles();
+    if (!after.empty()) {
+      out << Key << "after" << Value << loot::getNodeStyle(after) << after;
+    }
 
-    if (!rhs.GetRequirements().empty())
-      out << Key << "req" << Value << rhs.GetRequirements();
+    const auto req = rhs.GetRequirements();
+    if (!req.empty()) {
+      out << Key << "req" << Value << loot::getNodeStyle(req) << req;
+    }
 
-    if (!rhs.GetIncompatibilities().empty())
-      out << Key << "inc" << Value << rhs.GetIncompatibilities();
+    const auto inc = rhs.GetIncompatibilities();
+    if (!inc.empty()) {
+      out << Key << "inc" << Value << loot::getNodeStyle(inc) << inc;
+    }
 
     if (!rhs.GetMessages().empty())
       out << Key << "msg" << Value << rhs.GetMessages();
 
-    if (!rhs.GetTags().empty())
-      out << Key << "tag" << Value << rhs.GetTags();
+    const auto tags = rhs.GetTags();
+    if (!tags.empty()) {
+      out << Key << "tag" << Value << loot::getNodeStyle(tags) << tags;
+    }
 
     if (!rhs.GetDirtyInfo().empty())
       out << Key << "dirty" << Value << rhs.GetDirtyInfo();
 
     if (!rhs.GetCleanInfo().empty())
       out << Key << "clean" << Value << rhs.GetCleanInfo();
-
-    if (!rhs.GetLocations().empty())
-      out << Key << "url" << Value << rhs.GetLocations();
 
     out << EndMap;
   }

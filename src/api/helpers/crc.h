@@ -30,6 +30,8 @@
 
 namespace loot {
 uint32_t GetCrc32(const std::filesystem::path& filename);
+
+std::string CrcToString(uint32_t crc);
 }
 
 #endif

@@ -32,6 +32,7 @@
 #include <cstdint>
 #include <string>
 
+#include "api/helpers/crc.h"
 #include "loot/metadata/plugin_cleaning_data.h"
 
 namespace YAML {
@@ -109,8 +110,9 @@ struct convert<loot::PluginCleaningData> {
 };
 
 inline Emitter& operator<<(Emitter& out, const loot::PluginCleaningData& rhs) {
-  out << BeginMap << Key << "crc" << Value << Hex << rhs.GetCRC() << Dec << Key
-      << "util" << Value << YAML::SingleQuoted << rhs.GetCleaningUtility();
+  out << BeginMap << Key << "crc" << Value
+      << "0x" + loot::CrcToString(rhs.GetCRC()) << Key << "util" << Value
+      << YAML::SingleQuoted << rhs.GetCleaningUtility();
 
   if (!rhs.GetDetail().empty()) {
     if (rhs.GetDetail().size() == 1)

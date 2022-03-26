@@ -50,7 +50,7 @@ protected:
     expectedContent << "plugins:" << endl
                     << "  - name: '" << blankDifferentEsm << "'" << endl
                     << "    dirty:" << endl
-                    << "      - crc: 0x7d22f9df" << endl
+                    << "      - crc: 0x7D22F9DF" << endl
                     << "        util: 'TES4Edit'" << endl
                     << "        udr: 4" << endl
                     << "  - name: '" << blankEsm << "'" << endl

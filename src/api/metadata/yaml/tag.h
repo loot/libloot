@@ -33,6 +33,10 @@
 #include "api/metadata/condition_evaluator.h"
 #include "loot/metadata/tag.h"
 
+namespace loot {
+inline bool emitAsScalar(const Tag& tag) { return !tag.IsConditional(); }
+}
+
 namespace YAML {
 template<>
 struct convert<loot::Tag> {
@@ -84,7 +88,7 @@ struct convert<loot::Tag> {
 };
 
 inline Emitter& operator<<(Emitter& out, const loot::Tag& rhs) {
-  if (!rhs.IsConditional()) {
+  if (emitAsScalar(rhs)) {
     if (rhs.IsAddition())
       out << rhs.GetName();
     else

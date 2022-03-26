@@ -33,6 +33,12 @@
 
 #include "loot/metadata/location.h"
 
+namespace loot {
+inline bool emitAsScalar(const Location& location) {
+  return location.GetName().empty();
+}
+}
+
 namespace YAML {
 template<>
 struct convert<loot::Location> {
@@ -74,9 +80,9 @@ struct convert<loot::Location> {
 };
 
 inline Emitter& operator<<(Emitter& out, const loot::Location& rhs) {
-  if (rhs.GetName().empty())
+  if (emitAsScalar(rhs)) {
     out << YAML::SingleQuoted << rhs.GetURL();
-  else {
+  } else {
     out << BeginMap << Key << "link" << Value << YAML::SingleQuoted
         << rhs.GetURL() << Key << "name" << Value << YAML::SingleQuoted
         << rhs.GetName() << EndMap;

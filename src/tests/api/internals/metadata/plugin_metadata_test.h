@@ -394,8 +394,7 @@ TEST_P(PluginMetadataTest,
 
   EXPECT_EQ(
       "name: 'Blank.esm'\n"
-      "after:\n"
-      "  - 'Blank.esm'",
+      "after: ['Blank.esm']",
       plugin.AsYaml());
 }
 
@@ -418,8 +417,7 @@ TEST_P(PluginMetadataTest,
 
   EXPECT_STREQ(
       "name: 'Blank.esm'\n"
-      "after:\n"
-      "  - 'Blank.esm'",
+      "after: ['Blank.esm']",
       emitter.c_str());
 }
 
@@ -447,8 +445,7 @@ TEST_P(PluginMetadataTest,
 
   EXPECT_STREQ(
       "name: 'Blank.esp'\n"
-      "after:\n"
-      "  - 'Blank.esm'",
+      "after: ['Blank.esm']",
       emitter.c_str());
 }
 
@@ -462,8 +459,7 @@ TEST_P(PluginMetadataTest,
 
   EXPECT_STREQ(
       "name: 'Blank.esp'\n"
-      "req:\n"
-      "  - 'Blank.esm'",
+      "req: ['Blank.esm']",
       emitter.c_str());
 }
 
@@ -477,8 +473,7 @@ TEST_P(PluginMetadataTest,
 
   EXPECT_STREQ(
       "name: 'Blank.esp'\n"
-      "inc:\n"
-      "  - 'Blank.esm'",
+      "inc: ['Blank.esm']",
       emitter.c_str());
 }
 
@@ -507,8 +502,7 @@ TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithTagsCorrectly) {
 
   EXPECT_STREQ(
       "name: 'Blank.esp'\n"
-      "tag:\n"
-      "  - Relev",
+      "tag: [Relev]",
       emitter.c_str());
 }
 
@@ -523,7 +517,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_STREQ(
       "name: 'Blank.esp'\n"
       "dirty:\n"
-      "  - crc: 0x5\n"
+      "  - crc: 0x00000005\n"
       "    util: 'utility'\n"
       "    detail: 'info'\n"
       "    udr: 1\n"
@@ -542,7 +536,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_STREQ(
       "name: 'Blank.esp'\n"
       "clean:\n"
-      "  - crc: 0x5\n"
+      "  - crc: 0x00000005\n"
       "    util: 'utility'",
       emitter.c_str());
 }
@@ -557,8 +551,7 @@ TEST_P(PluginMetadataTest,
 
   EXPECT_STREQ(
       "name: 'Blank.esp'\n"
-      "url:\n"
-      "  - 'http://www.example.com'",
+      "url: ['http://www.example.com']",
       emitter.c_str());
 }
 

@@ -35,6 +35,13 @@
 #include "api/metadata/yaml/message_content.h"
 #include "loot/metadata/file.h"
 
+namespace loot {
+inline bool emitAsScalar(const File& file) {
+  return !file.IsConditional() && file.GetDetail().empty() &&
+         file.GetDisplayName().empty();
+}
+}
+
 namespace YAML {
 template<>
 struct convert<loot::File> {
@@ -116,10 +123,9 @@ struct convert<loot::File> {
 };
 
 inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
-  if (!rhs.IsConditional() && rhs.GetDetail().empty() &&
-      rhs.GetDisplayName().empty())
+  if (loot::emitAsScalar(rhs)) {
     out << YAML::SingleQuoted << std::string(rhs.GetName());
-  else {
+  } else {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
         << std::string(rhs.GetName());
 
