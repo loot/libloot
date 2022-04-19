@@ -409,9 +409,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         UNICODE _UNICODE LOOT_STATIC)
     target_compile_definitions(loot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
     target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
+
+    set(LOOT_LIBS ws2_32 bcrypt)
+
+    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
+    target_link_libraries(loot PRIVATE ${LOOT_LIBS})
 else()
-    target_link_libraries(libloot_internals_tests PRIVATE ICU::uc)
-    target_link_libraries(loot PRIVATE ICU::uc)
+    set(LOOT_LIBS ICU::uc pthread stdc++fs)
+
+    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
+    target_link_libraries(loot PRIVATE ${LOOT_LIBS})
+    target_link_libraries(libloot_tests PRIVATE pthread)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -423,26 +431,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(libloot_internals_tests PRIVATE "-Wall" "-Wextra")
     target_compile_options(loot PRIVATE "-Wall" "-Wextra")
     target_compile_options(libloot_tests PRIVATE "-Wall" "-Wextra")
-
-    set(LOOT_LIBS ssl
-        curl
-        z
-        crypto
-        rt
-        pthread
-        icuuc
-        icui18n
-        ssh2
-        http_parser
-        stdc++fs)
-
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        list(APPEND LOOT_LIBS supc++)
-    endif()
-
-    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
-    target_link_libraries(loot PRIVATE ${LOOT_LIBS})
-    target_link_libraries(libloot_tests PRIVATE pthread)
 endif()
 
 if(MSVC)
@@ -455,18 +443,6 @@ if(MSVC)
         "/permissive-"
         "/W4"
         "$<$<OR:$<CONFIG:DEBUG>,$<CONFIG:RelWithDebInfo>>:/bigobj>")
-
-    set(LOOT_LIBS
-        version
-        ws2_32
-        shlwapi
-        winhttp
-        crypt32
-        Rpcrt4
-        bcrypt)
-
-    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
-    target_link_libraries(loot PRIVATE ${LOOT_LIBS})
 endif()
 
 ##############################

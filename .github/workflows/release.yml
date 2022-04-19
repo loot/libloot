@@ -71,16 +71,11 @@ jobs:
       - name: Install APT package dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get install -y --no-upgrade \
             doxygen \
             language-pack-el \
             language-pack-tr \
-            libbz2-dev \
-            libcurl4-gnutls-dev \
-            libhttp-parser-dev \
             libicu-dev \
-            libssh2-1-dev \
-            libssl-dev \
             g++-8
 
       - name: Run CMake
