@@ -56,7 +56,7 @@ endif()
 
 ExternalProject_Add(GTest
     PREFIX "external"
-    URL "https://github.com/google/googletest/archive/release-1.11.0.tar.gz"
+    URL "https://github.com/google/googletest/archive/release-1.12.1.tar.gz"
     CMAKE_ARGS -Dgtest_force_shared_crt=ON -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
     INSTALL_COMMAND "")
 ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
