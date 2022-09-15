@@ -123,7 +123,7 @@ ExternalProject_Add(testing-plugins
 
 ExternalProject_Add(spdlog
     PREFIX "external"
-    URL "https://github.com/gabime/spdlog/archive/v1.9.2.tar.gz"
+    URL "https://github.com/gabime/spdlog/archive/v1.10.0.tar.gz"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND "")
