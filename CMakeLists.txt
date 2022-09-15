@@ -65,7 +65,7 @@ set(GTEST_LIBRARIES "${BINARY_DIR}/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRAR
 
 ExternalProject_Add(esplugin
     PREFIX "external"
-    URL "https://github.com/Ortham/esplugin/archive/3.5.0.tar.gz"
+    URL "https://github.com/Ortham/esplugin/archive/4.0.0.tar.gz"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&

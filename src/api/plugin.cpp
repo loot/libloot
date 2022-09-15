@@ -113,7 +113,7 @@ std::optional<std::string> Plugin::GetVersion() const {
 
 std::vector<std::string> Plugin::GetMasters() const {
   char** masters = nullptr;
-  uint8_t numMasters = 0;
+  size_t numMasters = 0;
   const auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
