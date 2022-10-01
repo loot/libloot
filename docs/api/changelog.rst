@@ -2,6 +2,39 @@
 Version History
 ***************
 
+0.18.1 - 2022-10-01
+===================
+
+Fixed
+-----
+
+- libloot will now use the correct local app data path for the GOG distribution
+  of Skyrim Special Edition when no local app data path is passed to
+  :cpp:any:`loot::CreateGameHandle()`. Via libloadorder.
+- If Oblivion's ``Oblivion.ini`` could not be found or read, or if it did not
+  contain the ``bUseMyGamesDirectory`` setting, the game's install path would be
+  used as the parent directory for ``plugins.txt``. libloot now correctly
+  defaults to using the game's local app data directory, and only uses the
+  install path if ``bUseMyGamesDirectory=0`` is found. Via libloadorder.
+
+Changed
+-------
+
+- When serialising plugin metadata as YAML, LOOT now:
+
+  - Puts ``url`` before ``group``
+  - Serialises single-element lists using the flow style if the element would be
+    serialised as a scalar value
+  - Pads CRC hexadecimal values to always be 8 characters long (excluding the
+    ``0x`` prefix)
+  - Uses uppercase letters in CRC hexadecimal values.
+
+- Updated esplugin to v4.0.0.
+- Updated Google Test to v1.12.1.
+- Updated libloadorder to v13.2.0.
+- Updated loot-condition-interpreter to v2.3.1.
+- Updated spdlog to v1.10.0.
+
 0.18.0 - 2022-02-27
 ===================
 
