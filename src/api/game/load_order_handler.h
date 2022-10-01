@@ -49,6 +49,8 @@ public:
 
   std::vector<std::string> GetImplicitlyActivePlugins() const;
 
+  std::filesystem::path GetActivePluginsFilePath() const;
+
   bool IsPluginActive(const std::string& pluginName) const;
 
   void SetLoadOrder(const std::vector<std::string>& loadOrder) const;

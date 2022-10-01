@@ -218,6 +218,10 @@ bool Game::IsLoadOrderAmbiguous() const {
   return loadOrderHandler_.IsAmbiguous();
 }
 
+std::filesystem::path Game::GetActivePluginsFilePath() const {
+  return loadOrderHandler_.GetActivePluginsFilePath();
+}
+
 bool Game::IsPluginActive(const std::string& pluginName) const {
   return loadOrderHandler_.IsPluginActive(pluginName);
 }

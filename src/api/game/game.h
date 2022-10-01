@@ -79,6 +79,8 @@ public:
 
   bool IsLoadOrderAmbiguous() const override;
 
+  std::filesystem::path GetActivePluginsFilePath() const override;
+
   bool IsPluginActive(const std::string& pluginName) const override;
 
   std::vector<std::string> GetLoadOrder() const override;

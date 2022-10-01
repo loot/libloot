@@ -186,6 +186,26 @@ std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
   return loadOrder;
 }
 
+std::filesystem::path LoadOrderHandler::GetActivePluginsFilePath() const {
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Getting active plugins file path.");
+  }
+
+  char* filePathCString = nullptr;
+
+  const unsigned int ret =
+      lo_get_active_plugins_file_path(gh_.get(), &filePathCString);
+
+  HandleError("get active plugins file path", ret);
+
+  const auto filePath = std::filesystem::u8path(std::string(filePathCString));
+
+  lo_free_string(filePathCString);
+
+  return filePath;
+}
+
 void LoadOrderHandler::SetLoadOrder(
     const std::vector<std::string>& loadOrder) const {
   auto logger = getLogger();

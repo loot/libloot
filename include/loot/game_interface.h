@@ -154,6 +154,11 @@ public:
   virtual bool IsLoadOrderAmbiguous() const = 0;
 
   /**
+   *
+   */
+  virtual std::filesystem::path GetActivePluginsFilePath() const = 0;
+
+  /**
    * @brief Check if a plugin is active.
    * @param  plugin
    *         The filename of the plugin for which to check the active state.
