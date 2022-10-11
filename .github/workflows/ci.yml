@@ -40,7 +40,7 @@ jobs:
           mkdir downloaded_artifacts
 
       - name: Download all artifacts for this workflow from GitHub Actions
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: downloaded_artifacts
 
@@ -66,12 +66,12 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Cache cargo
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
@@ -116,7 +116,7 @@ jobs:
           ./libloot_internals_tests
           ./libloot_tests
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
@@ -140,7 +140,7 @@ jobs:
           echo "::set-output name=filename::libloot-${VERSION}-Linux.tar.xz"
 
       - name: Upload archive
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.build-archive.outputs.filename }}
           path: build/package/${{ steps.build-archive.outputs.filename }}
@@ -154,12 +154,12 @@ jobs:
         platform: [Win32, x64]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Cache cargo
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
@@ -196,7 +196,7 @@ jobs:
           .\libloot_internals_tests.exe
           .\libloot_tests.exe
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
@@ -227,7 +227,7 @@ jobs:
           echo "::set-output name=filename::libloot-${VERSION}-${PLATFORM}.7z"
 
       - name: Upload archive
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.build-archive.outputs.filename }}
           path: build/package/${{ steps.build-archive.outputs.filename }}
