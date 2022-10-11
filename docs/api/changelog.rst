@@ -2,6 +2,21 @@
 Version History
 ***************
 
+0.18.2 - 2022-10-11
+===================
+
+Fixed
+-----
+
+- libloot will now use the correct local app data path for the Epic Games Store
+  distribution of Skyrim Special Edition when no local app data path is passed
+  to :cpp:any:`loot::CreateGameHandle()`. Via libloadorder.
+
+Changed
+-------
+
+- Updated libloadorder to v13.3.0.
+
 0.18.1 - 2022-10-01
 ===================
 
