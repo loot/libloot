@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Get Git tag
         id: get-git-tag
-        run: echo "::set-output name=name::${GITHUB_REF#refs/*/}"
+        run: echo "name=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - id: create_release
         uses: actions/create-release@v1
@@ -61,7 +61,7 @@ jobs:
           GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
           LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
           LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
-          echo "::set-output name=version::$LIBLOOT_SAFE_DESC_REF"
+          echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
 
       - name: Download Boost
         run: |
@@ -113,7 +113,7 @@ jobs:
           cpack
 
           VERSION="${{ steps.get-libloot-version.outputs.version }}"
-          echo "::set-output name=filename::libloot-${VERSION}-Linux.tar.xz"
+          echo "filename=libloot-${VERSION}-Linux.tar.xz" >> $GITHUB_OUTPUT
 
       - name: Upload Archive
         uses: actions/upload-release-asset@v1
@@ -162,7 +162,7 @@ jobs:
           GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
           LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
           LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
-          echo "::set-output name=version::$LIBLOOT_SAFE_DESC_REF"
+          echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
 
       - name: Run CMake
         run: |
@@ -199,7 +199,7 @@ jobs:
             PLATFORM=win64
           fi
 
-          echo "::set-output name=filename::libloot-${VERSION}-${PLATFORM}.7z"
+          echo "filename=libloot-${VERSION}-${PLATFORM}.7z" >> $GITHUB_OUTPUT
 
       - name: Upload Archive
         uses: actions/upload-release-asset@v1
