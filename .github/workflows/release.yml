@@ -54,15 +54,6 @@ jobs:
             ~/.cargo/git
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Get descriptive libloot version
-        id: get-libloot-version
-        shell: bash
-        run: |
-          GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
-          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
-          LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
-          echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
-
       - name: Download Boost
         run: |
           wget https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz
@@ -83,7 +74,7 @@ jobs:
           mkdir build
           cd build
           export CXX="g++-8" CC="gcc-8"
-          cmake .. -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
           make all
 
       - name: Run tests
@@ -112,8 +103,7 @@ jobs:
           cd build
           cpack
 
-          VERSION="${{ steps.get-libloot-version.outputs.version }}"
-          echo "filename=libloot-${VERSION}-Linux.tar.xz" >> $GITHUB_OUTPUT
+          echo "filename=libloot-${{ needs.create_release.outputs.git_tag }}-Linux.tar.xz" >> $GITHUB_OUTPUT
 
       - name: Upload Archive
         uses: actions/upload-release-asset@v1
@@ -155,20 +145,11 @@ jobs:
           curl -sSfLO https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.7z
           7z x boost_1_78_0.7z
 
-      - name: Get descriptive libloot version
-        id: get-libloot-version
-        shell: bash
-        run: |
-          GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
-          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
-          LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
-          echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
-
       - name: Run CMake
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
       - uses: actions/setup-python@v4
@@ -191,7 +172,6 @@ jobs:
           cd build
           cpack -C ${{ env.MSVC_CONFIG }}
 
-          VERSION="${{ steps.get-libloot-version.outputs.version }}"
           if [[ "${{ matrix.platform }}" == "Win32" ]]
           then
             PLATFORM=win32
@@ -199,7 +179,7 @@ jobs:
             PLATFORM=win64
           fi
 
-          echo "filename=libloot-${VERSION}-${PLATFORM}.7z" >> $GITHUB_OUTPUT
+          echo "filename=libloot-${{ needs.create_release.outputs.git_tag }}-${PLATFORM}.7z" >> $GITHUB_OUTPUT
 
       - name: Upload Archive
         uses: actions/upload-release-asset@v1
