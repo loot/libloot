@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 cmake_policy(SET CMP0015 NEW)
+cmake_policy(SET CMP0135 NEW)
 project(libloot)
 include(ExternalProject)
 
