@@ -227,7 +227,7 @@ versions that do not conform to SemVer. The supported extensions are:
 Logical Operators
 =================
 
-The ``and``, ``or`` and ``not`` operators have their usual definitions, except that the ``not`` operator only ever operates on the result of the function immediately following it.
+The ``and``, ``or`` and ``not`` operators have their usual definitions.
 
 Order of Evaluation
 -------------------
@@ -247,8 +247,6 @@ but::
 is evaluated as::
 
   function and ( function or ( not function ) )
-
-Parentheses cannot be used between a ``not`` operator and the function following it.
 
 Performance
 ===========
