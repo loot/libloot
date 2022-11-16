@@ -58,6 +58,7 @@ endif()
 ExternalProject_Add(GTest
     PREFIX "external"
     URL "https://github.com/google/googletest/archive/release-1.12.1.tar.gz"
+    URL_HASH "SHA256=81964fe578e9bd7c94dfdb09c8e4d6e6759e19967e397dbea48d1c10e45d0df2"
     CMAKE_ARGS -Dgtest_force_shared_crt=ON -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
     INSTALL_COMMAND "")
 ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
@@ -67,6 +68,7 @@ set(GTEST_LIBRARIES "${BINARY_DIR}/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRAR
 ExternalProject_Add(esplugin
     PREFIX "external"
     URL "https://github.com/Ortham/esplugin/archive/4.0.0.tar.gz"
+    URL_HASH "SHA256=e3aa21ffbfd8ce55e3398fbd789adb2aa0d2cceefc99bcc789f02ff95cc98b86"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -84,6 +86,7 @@ endif()
 ExternalProject_Add(libloadorder
     PREFIX "external"
     URL "https://github.com/Ortham/libloadorder/archive/13.3.0.tar.gz"
+    URL_HASH "SHA256=fa23ce857e75216a233031e896d99522e76c15302b89f34b54e06417c736345f"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -101,6 +104,7 @@ endif()
 ExternalProject_Add(loot-condition-interpreter
     PREFIX "external"
     URL "https://github.com/loot/loot-condition-interpreter/archive/2.3.1.tar.gz"
+    URL_HASH "SHA256=e0f5533bf113c2ed48e2249b241e01c1521d9bbf615d01581870db9948b21278"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -118,6 +122,7 @@ endif()
 ExternalProject_Add(testing-plugins
     PREFIX "external"
     URL "https://github.com/Ortham/testing-plugins/archive/1.4.1.tar.gz"
+    URL_HASH "SHA256=57f82495a737013c1b828d43fbe87edcb57768f85c6416e8d17f273d692691cf"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND "")
@@ -125,6 +130,7 @@ ExternalProject_Add(testing-plugins
 ExternalProject_Add(spdlog
     PREFIX "external"
     URL "https://github.com/gabime/spdlog/archive/v1.10.0.tar.gz"
+    URL_HASH "SHA256=697f91700237dbae2326b90469be32b876b2b44888302afbc7aceb68bcfe8224"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND "")
@@ -141,6 +147,7 @@ endif()
 ExternalProject_Add(yaml-cpp
     PREFIX "external"
     URL "https://github.com/loot/yaml-cpp/archive/yaml-cpp-0.7.0+merge-key-support.1.tar.gz"
+    URL_HASH "SHA256=fb8c1f236cf01401a09d782ee847aa52f42fadee3250d6d1d73c11b35f429412"
     CMAKE_ARGS
         -DYAML_MSVC_SHARED_RT=ON
         -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
