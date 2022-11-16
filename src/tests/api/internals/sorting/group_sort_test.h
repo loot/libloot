@@ -32,34 +32,101 @@ along with LOOT.  If not, see
 #include "loot/exception/undefined_group_error.h"
 
 namespace loot {
+bool operator==(const PredecessorGroup& lhs, const PredecessorGroup& rhs) {
+  return lhs.pathInvolvesUserMetadata == rhs.pathInvolvesUserMetadata &&
+         lhs.name == rhs.name;
+}
+
 namespace test {
-TEST(GetTransitiveAfterGroups, shouldMapGroupsToTheirTransitiveAfterGroups) {
+TEST(GetPredecessorGroups, shouldMapGroupsToTheirPredecessorGroups) {
   std::vector<Group> groups({Group("a"), Group("b", {"a"}), Group("c", {"b"})});
 
-  auto mapped = GetTransitiveAfterGroups(groups, {});
+  auto predecessors = GetPredecessorGroups(groups, {});
 
-  EXPECT_TRUE(mapped["a"].empty());
-  EXPECT_EQ(std::unordered_set<std::string>({"a"}), mapped["b"]);
-  EXPECT_EQ(std::unordered_set<std::string>({"a", "b"}), mapped["c"]);
+  EXPECT_TRUE(predecessors["a"].empty());
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"a"}}), predecessors["b"]);
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a"}}), predecessors["c"]);
 }
 
-TEST(GetTransitiveAfterGroups, shouldThrowIfAnAfterGroupDoesNotExist) {
+TEST(GetPredecessorGroups,
+     shouldRecordIfADirectSuccessorIsDefinedInUserMetadata) {
+  std::vector<Group> masterlistGroups({Group("a")});
+  std::vector<Group> userlistGroups({Group("b", {"a"})});
+
+  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
+}
+
+TEST(GetPredecessorGroups,
+     shouldRecordIfADirectPredecessorIsLinkedDueToUserMetadata) {
+  std::vector<Group> masterlistGroups({Group("a"), Group("b")});
+  std::vector<Group> userlistGroups({Group("b", {"a"})});
+
+  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
+}
+
+TEST(GetPredecessorGroups,
+     shouldRecordIfAnIndirectSuccessorIsDefinedInUserMetadata) {
+  std::vector<Group> masterlistGroups({Group("a"), Group("b", {"a"})});
+  std::vector<Group> userlistGroups({Group("c", {"b"})});
+
+  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"a"}}), predecessors["b"]);
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"b", true}, {"a", true}}),
+            predecessors["c"]);
+}
+
+TEST(GetPredecessorGroups,
+     shouldRecordIfAnIndirectPredecessorIsLinkedDueToUserMetadata) {
+  std::vector<Group> masterlistGroups(
+      {Group("a"), Group("b"), Group("c", {"b"})});
+  std::vector<Group> userlistGroups({Group("b", {"a"})});
+
+  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a", true}}),
+            predecessors["c"]);
+}
+
+TEST(GetPredecessorGroups,
+     shouldNotLeakUserMetadataInvolvementToSeparatePaths) {
+  // This arrangement of groups ensures that a masterlist-sourced edge is
+  // followed after a userlist-sourced edge along a different path, to check
+  // encountering a userlist-sourced edge along one path does not poison
+  // discovery of other paths.
+  std::vector<Group> masterlistGroups(
+      {Group("a"), Group("b"), Group("c"), Group("d", {"b", "c"})});
+  std::vector<Group> userlistGroups({Group("b", {"a"})});
+
+  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a", true}, {"c"}}),
+            predecessors["d"]);
+}
+
+TEST(GetPredecessorGroups, shouldThrowIfAnAfterGroupDoesNotExist) {
   std::vector<Group> groups({Group("b", {"a"})});
 
-  EXPECT_THROW(GetTransitiveAfterGroups(groups, {}), UndefinedGroupError);
+  EXPECT_THROW(GetPredecessorGroups(groups, {}), UndefinedGroupError);
 }
 
-TEST(GetTransitiveAfterGroups, shouldThrowIfAfterGroupsAreCyclic) {
+TEST(GetPredecessorGroups, shouldThrowIfAfterGroupsAreCyclic) {
   std::vector<Group> groups({Group("a"), Group("b", {"a"})});
   std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
   try {
-    GetTransitiveAfterGroups(groups, userGroups);
+    GetPredecessorGroups(groups, userGroups);
     FAIL();
-  } catch (CyclicInteractionError &e) {
+  } catch (CyclicInteractionError& e) {
     ASSERT_EQ(3, e.GetCycle().size());
 
-    // Vertices can be added in any order, so which group is first is undefined.
+    // Vertices can be added in any order, so which group is first is
+    // undefined.
     if (e.GetCycle()[0].GetName() == "a") {
       EXPECT_EQ(EdgeType::userLoadAfter,
                 e.GetCycle()[0].GetTypeOfEdgeToNextVertex());

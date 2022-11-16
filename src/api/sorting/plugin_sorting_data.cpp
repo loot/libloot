@@ -57,18 +57,13 @@ PluginSortingData::PluginSortingData(
     const GameType gameType,
     const std::vector<const PluginInterface*>& loadedPlugins) :
     plugin_(plugin),
+    group_(userMetadata.GetGroup().value_or(
+        masterlistMetadata.GetGroup().value_or(Group::DEFAULT_NAME))),
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),
     masterlistReq_(masterlistMetadata.GetRequirements()),
-    userReq_(userMetadata.GetRequirements()) {
-  if (userMetadata.GetGroup()) {
-    group_ = userMetadata.GetGroup().value();
-  } else if (masterlistMetadata.GetGroup()) {
-    group_ = masterlistMetadata.GetGroup().value();
-  } else {
-    group_ = Group().GetName();
-  }
-
+    userReq_(userMetadata.GetRequirements()),
+    groupIsUserMetadata_(userMetadata.GetGroup().has_value()) {
   if (plugin == nullptr) {
     return;
   }
@@ -148,14 +143,18 @@ bool PluginSortingData::DoAssetsOverlap(const PluginSortingData& plugin) const {
 
 std::string PluginSortingData::GetGroup() const { return group_; }
 
-std::unordered_set<std::string> PluginSortingData::GetAfterGroupPlugins()
-    const {
-  return afterGroupPlugins_;
+bool PluginSortingData::IsGroupUserMetadata() const {
+  return groupIsUserMetadata_;
 }
 
-void PluginSortingData::SetAfterGroupPlugins(
-    std::unordered_set<std::string> plugins) {
-  afterGroupPlugins_ = plugins;
+std::vector<PredecessorGroupPlugin>
+PluginSortingData::GetPredecessorGroupPlugins() const {
+  return predecessorGroupPlugins_;
+}
+
+void PluginSortingData::SetPredecessorGroupPlugins(
+    std::vector<PredecessorGroupPlugin> plugins) {
+  predecessorGroupPlugins_ = plugins;
 }
 
 const std::vector<File>& PluginSortingData::GetMasterlistLoadAfterFiles()

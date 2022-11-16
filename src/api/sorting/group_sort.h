@@ -27,17 +27,21 @@
 
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "loot/metadata/group.h"
 #include "loot/vertex.h"
 
 namespace loot {
+struct PredecessorGroup {
+  std::string name;
+  bool pathInvolvesUserMetadata{false};
+};
+
 // Map entries are a group name and names of transitive load after groups.
-std::unordered_map<std::string, std::unordered_set<std::string>>
-GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
-                         const std::vector<Group>& userGroups);
+std::unordered_map<std::string, std::vector<PredecessorGroup>>
+GetPredecessorGroups(const std::vector<Group>& masterlistGroups,
+                     const std::vector<Group>& userGroups);
 
 std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
                                   const std::vector<Group>& userGroups,

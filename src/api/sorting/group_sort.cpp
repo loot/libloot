@@ -44,21 +44,44 @@ typedef boost::graph_traits<GroupGraph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<GroupGraph>::edge_descriptor edge_t;
 typedef boost::associative_property_map<std::map<edge_t, int>> edge_map_t;
 
-class AfterGroupsVisitor : public boost::dfs_visitor<> {
+// This visitor is responsible for recording a vertex's successor vertices,
+// and whether they are reachable without user metadata or not. However, a
+// vertex is only recorded the first time it's discovered, vertices and
+// edges are iterated over in their insertion order, and masterlist metadata
+// is inserted first, so it depends on the structure and sources of the data
+// which path is encountered first.
+// E.g. for vertices A, B and C, if C -> B and C -> A are masterlist edges
+// added in that order and B -> A is a userlist edge then C -> B -> A will
+// be visited first and A will then have been finished so C -> A won't be
+// recorded, so it'll look the relationship between C and A involves user
+// metadata when it isn't necessary.
+class PredecessorGroupsVisitor : public boost::dfs_visitor<> {
 public:
-  AfterGroupsVisitor(std::unordered_set<std::string>& visitedGroups) :
+  PredecessorGroupsVisitor(std::vector<PredecessorGroup>& visitedGroups) :
       visitedGroups_(visitedGroups) {}
-  void tree_edge(edge_t edge, const GroupGraph& graph) {
-    auto target = boost::target(edge, graph);
-    visitedGroups_.insert(graph[target]);
+
+  void discover_vertex(vertex_t vertex, const GroupGraph& graph) {
+    pathStack_.push_back(vertex);
+
+    if (pathStack_.size() > 1) {
+      bool pathInvolvesUserMetadata = false;
+      for (size_t i = 0; i < pathStack_.size() - 1; i += 1) {
+        const auto edge = boost::edge(pathStack_[i], pathStack_[i + 1], graph);
+
+        pathInvolvesUserMetadata |=
+            graph[edge.first] == EdgeType::userLoadAfter;
+      }
+
+      visitedGroups_.push_back(
+          PredecessorGroup{graph[vertex], pathInvolvesUserMetadata});
+    }
   }
 
-  std::unordered_set<std::string> get_visited_groups() const {
-    return visitedGroups_;
-  }
+  void finish_vertex(vertex_t, const GroupGraph&) { pathStack_.pop_back(); }
 
 private:
-  std::unordered_set<std::string>& visitedGroups_;
+  std::vector<PredecessorGroup>& visitedGroups_;
+  std::vector<vertex_t> pathStack_;
 };
 
 class CycleDetector : public boost::dfs_visitor<> {
@@ -102,19 +125,20 @@ private:
   std::vector<Vertex> trail;
 };
 
-std::string joinVector(const std::vector<std::string>& set) {
+std::string joinVector(const std::vector<std::string>& container) {
   std::string output;
-  for (const auto& element : set) {
+  for (const auto& element : container) {
     output += element + ", ";
   }
 
   return output.substr(0, output.length() - 2);
 }
 
-std::string joinUnorderedSet(const std::unordered_set<std::string>& set) {
+std::string joinVector(const std::vector<PredecessorGroup>& container) {
   std::string output;
-  for (const auto& element : set) {
-    output += element + ", ";
+  for (const auto& element : container) {
+    const auto via = element.pathInvolvesUserMetadata ? "user" : "masterlist";
+    output += element.name + " (via " + via + " metadata), ";
   }
 
   return output.substr(0, output.length() - 2);
@@ -180,9 +204,9 @@ GroupGraph BuildGraph(const std::vector<Group>& masterlistGroups,
   return graph;
 }
 
-std::unordered_map<std::string, std::unordered_set<std::string>>
-GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
-                         const std::vector<Group>& userGroups) {
+std::unordered_map<std::string, std::vector<PredecessorGroup>>
+GetPredecessorGroups(const std::vector<Group>& masterlistGroups,
+                     const std::vector<Group>& userGroups) {
   GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
 
   auto logger = getLogger();
@@ -196,12 +220,12 @@ GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
   }
   boost::depth_first_search(graph, boost::visitor(CycleDetector()));
 
-  std::unordered_map<std::string, std::unordered_set<std::string>>
+  std::unordered_map<std::string, std::vector<PredecessorGroup>>
       transitiveAfterGroups;
   for (const vertex_t& vertex :
        boost::make_iterator_range(boost::vertices(graph))) {
-    std::unordered_set<std::string> visitedGroups;
-    const AfterGroupsVisitor afterGroupsVisitor(visitedGroups);
+    std::vector<PredecessorGroup> visitedGroups;
+    const PredecessorGroupsVisitor afterGroupsVisitor(visitedGroups);
 
     // Create a color map.
     std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
@@ -216,7 +240,7 @@ GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
     if (logger) {
       logger->debug("Group \"{}\" transitively loads after groups \"{}\"",
                     graph[vertex],
-                    joinUnorderedSet(visitedGroups));
+                    joinVector(visitedGroups));
     }
   }
 

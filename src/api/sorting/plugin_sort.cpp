@@ -32,6 +32,39 @@
 #include "loot/exception/undefined_group_error.h"
 
 namespace loot {
+std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
+GetPredecessorGroupPlugins(
+    const std::unordered_map<std::string,
+                             std::vector<std::pair<std::string, bool>>>&
+        groupPlugins,
+    const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
+        predecessorGroupsMap) {
+  std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
+      predecessorGroupsPlugins;
+  for (const auto& group : predecessorGroupsMap) {
+    std::vector<PredecessorGroupPlugin> predecessorGroupPlugins;
+
+    for (const auto& predecessorGroup : group.second) {
+      const auto pluginsIt = groupPlugins.find(predecessorGroup.name);
+      if (pluginsIt != groupPlugins.end()) {
+        // If the path from the predecessor group to this one involves user
+        // metadata, the plugins' paths all involve user metadata, otherwise
+        // only those plugins that belong to the predecessor group due to user
+        // metadata have a path involving user metadata.
+        for (const auto& groupPlugin : pluginsIt->second) {
+          predecessorGroupPlugins.push_back(PredecessorGroupPlugin{
+              groupPlugin.first,
+              predecessorGroup.pathInvolvesUserMetadata || groupPlugin.second});
+        }
+      }
+    }
+
+    predecessorGroupsPlugins.insert({group.first, predecessorGroupPlugins});
+  }
+
+  return predecessorGroupsPlugins;
+}
+
 int ComparePlugins(const PluginSortingData& plugin1,
                    const PluginSortingData& plugin2) {
   if (plugin1.GetLoadOrderIndex().has_value() &&
@@ -131,33 +164,33 @@ std::vector<PluginSortingData> GetPluginsSortingData(
     pluginsSortingData.push_back(pluginSortingData);
   }
 
-  std::unordered_map<std::string, std::vector<std::string>> groupPlugins;
+  // Each element of the vector is a pair of a plugin name and if it's in the
+  // group due to user metadata.
+  std::unordered_map<std::string, std::vector<std::pair<std::string, bool>>>
+      groupPlugins;
   for (const auto& plugin : pluginsSortingData) {
     const auto groupName = plugin.GetGroup();
+    const auto groupPlugin =
+        std::make_pair(plugin.GetName(), plugin.IsGroupUserMetadata());
     const auto groupIt = groupPlugins.find(groupName);
+
     if (groupIt == groupPlugins.end()) {
-      groupPlugins.emplace(groupName,
-                           std::vector<std::string>({plugin.GetName()}));
+      groupPlugins.emplace(
+          groupName, std::vector<std::pair<std::string, bool>>({groupPlugin}));
     } else {
-      groupIt->second.push_back(plugin.GetName());
+      groupIt->second.push_back(groupPlugin);
     }
   }
 
   // Map sets of transitive group dependencies to sets of transitive plugin
   // dependencies.
-  auto groups = GetTransitiveAfterGroups(game.GetDatabase().GetGroups(false),
-                                         game.GetDatabase().GetUserGroups());
-  for (auto& group : groups) {
-    std::unordered_set<std::string> transitivePlugins;
-    for (const auto& afterGroup : group.second) {
-      const auto pluginsIt = groupPlugins.find(afterGroup);
-      if (pluginsIt != groupPlugins.end()) {
-        transitivePlugins.insert(pluginsIt->second.begin(),
-                                 pluginsIt->second.end());
-      }
-    }
-    group.second = transitivePlugins;
-  }
+  const auto predecessorGroupsMap = GetPredecessorGroups(
+      game.GetDatabase().GetGroups(false), game.GetDatabase().GetUserGroups());
+
+  // Replace the transitive after group names with the names of the plugins in
+  // those groups.
+  const auto predecessorGroupsPlugins =
+      GetPredecessorGroupPlugins(groupPlugins, predecessorGroupsMap);
 
   // Add all transitive plugin dependencies for a group to the plugin's load
   // after metadata.
@@ -170,11 +203,22 @@ std::vector<PluginSortingData> GetPluginsSortingData(
           plugin.GetGroup());
     }
 
-    const auto groupsIt = groups.find(plugin.GetGroup());
-    if (groupsIt == groups.end()) {
+    const auto groupsIt = predecessorGroupsPlugins.find(plugin.GetGroup());
+    if (groupsIt == predecessorGroupsPlugins.end()) {
       throw UndefinedGroupError(plugin.GetGroup());
+    }
+
+    if (plugin.IsGroupUserMetadata()) {
+      // If the current plugin is a member of its group due to user metadata,
+      // then all predecessor plugins are such due to user metadata.
+      auto predecessorGroupPlugins = groupsIt->second;
+      for (auto& predecessorGroupPlugin : predecessorGroupPlugins) {
+        predecessorGroupPlugin.pathInvolvesUserMetadata = true;
+      }
+
+      plugin.SetPredecessorGroupPlugins(predecessorGroupPlugins);
     } else {
-      plugin.SetAfterGroupPlugins(groupsIt->second);
+      plugin.SetPredecessorGroupPlugins(groupsIt->second);
     }
   }
 

@@ -31,6 +31,11 @@
 #include "loot/metadata/plugin_metadata.h"
 
 namespace loot {
+struct PredecessorGroupPlugin {
+  std::string name;
+  bool pathInvolvesUserMetadata{false};
+};
+
 class PluginSortingData {
 public:
   explicit PluginSortingData() = default;
@@ -59,9 +64,10 @@ public:
   bool DoAssetsOverlap(const PluginSortingData& plugin) const;
 
   std::string GetGroup() const;
+  bool IsGroupUserMetadata() const;
 
-  std::unordered_set<std::string> GetAfterGroupPlugins() const;
-  void SetAfterGroupPlugins(std::unordered_set<std::string> plugins);
+  std::vector<PredecessorGroupPlugin> GetPredecessorGroupPlugins() const;
+  void SetPredecessorGroupPlugins(std::vector<PredecessorGroupPlugin> plugins);
 
   const std::vector<File>& GetMasterlistLoadAfterFiles() const;
   const std::vector<File>& GetUserLoadAfterFiles() const;
@@ -73,7 +79,7 @@ public:
 private:
   const PluginSortingInterface* plugin_{nullptr};
   std::string group_;
-  std::unordered_set<std::string> afterGroupPlugins_;
+  std::vector<PredecessorGroupPlugin> predecessorGroupPlugins_;
 
   std::vector<File> masterlistLoadAfter_;
   std::vector<File> userLoadAfter_;
@@ -82,6 +88,7 @@ private:
 
   std::optional<size_t> loadOrderIndex_;
   size_t overrideRecordCount_{0};
+  bool groupIsUserMetadata_{0};
 };
 }
 

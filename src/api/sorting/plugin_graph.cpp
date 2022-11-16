@@ -211,8 +211,10 @@ std::string describeEdgeType(EdgeType edgeType) {
       return "Masterlist Load After";
     case EdgeType::userLoadAfter:
       return "User Load After";
-    case EdgeType::group:
-      return "Group";
+    case EdgeType::masterlistGroup:
+      return "Masterlist Group";
+    case EdgeType::userGroup:
+      return "User Group";
     case EdgeType::overlap:
       return "Overlap";
     case EdgeType::tieBreak:
@@ -715,16 +717,17 @@ void PluginGraph::AddGroupEdges(
     logger->trace("Adding edges based on plugin group memberships...");
   }
 
-  std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
+  // Tuple fields are from, to, and edge type.
+  std::vector<std::tuple<vertex_t, vertex_t, EdgeType>> acyclicEdges;
   std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
 
   for (const vertex_t& vertex : boost::make_iterator_range(GetVertices())) {
     const auto& toPlugin = GetPlugin(vertex);
 
-    for (const auto& pluginName : toPlugin.GetAfterGroupPlugins()) {
+    for (const auto& plugin : toPlugin.GetPredecessorGroupPlugins()) {
       // After group plugin names are taken from other PluginSortingData names,
       // so exact string comparisons can be used.
-      const auto parentVertex = GetVertexByExactName(pluginName);
+      const auto parentVertex = GetVertexByExactName(plugin.name);
       if (!parentVertex.has_value()) {
         continue;
       }
@@ -775,22 +778,31 @@ void PluginGraph::AddGroupEdges(
         continue;
       }
 
-      acyclicEdgePairs.push_back(std::make_pair(parentVertex.value(), vertex));
+      const auto edgeType = plugin.pathInvolvesUserMetadata
+                                ? EdgeType::userGroup
+                                : EdgeType::masterlistGroup;
+
+      acyclicEdges.push_back(
+          std::make_tuple(parentVertex.value(), vertex, edgeType));
     }
   }
 
-  for (const auto& edgePair : acyclicEdgePairs) {
-    const auto& fromPlugin = GetPlugin(edgePair.first);
-    const auto& toPlugin = GetPlugin(edgePair.second);
+  for (const auto& edge : acyclicEdges) {
+    const auto fromVertex = std::get<0>(edge);
+    const auto toVertex = std::get<1>(edge);
+    const auto edgeType = std::get<2>(edge);
+    const auto& fromPlugin = GetPlugin(fromVertex);
+    const auto& toPlugin = GetPlugin(toVertex);
     const bool ignore =
         ShouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
 
     if (!ignore) {
-      AddEdge(edgePair.first, edgePair.second, EdgeType::group);
+      AddEdge(fromVertex, toVertex, edgeType);
     } else if (logger) {
       logger->debug(
-          "Skipping group edge from \"{}\" to \"{}\" as it would "
+          "Skipping {} edge from \"{}\" to \"{}\" as it would "
           "create a multi-group cycle.",
+          describeEdgeType(edgeType),
           fromPlugin.GetName(),
           toPlugin.GetName());
     }
