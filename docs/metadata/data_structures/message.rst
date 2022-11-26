@@ -37,7 +37,7 @@ Messages are given as key-value maps.
 
   ``string list``
 
-  A list of CommonMark strings to be substituted into the message content string. The content string must use numbered specifiers (``%1%``, ``%2%``, etc.), where the numbers correspond to the position of the substitution string in this list to use, to denote where these strings are to be substituted.
+  A list of CommonMark strings to be substituted into the message content string. The content string must use numbered specifiers (``{0}``, ``{1}``, etc.), where the numbers correspond to the position of the substitution string in this list to use, to denote where these strings are to be substituted.
 
 .. _languages:
 
@@ -102,7 +102,7 @@ In English,
 .. code-block:: yaml
 
   type: say
-  content: 'A newer version of %1% [is available](%2%).'
+  content: 'A newer version of {0} [is available]({1}).'
   subs:
     - 'this plugin'
     - 'http://www.example.com'

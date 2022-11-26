@@ -26,9 +26,10 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
+#include <spdlog/fmt/bundled/args.h>
+#include <spdlog/fmt/fmt.h>
 #include <yaml-cpp/yaml.h>
 
-#include <boost/format.hpp>
 #include <string>
 #include <vector>
 
@@ -103,16 +104,17 @@ struct convert<loot::Message> {
     if (node["subs"]) {
       std::vector<std::string> subs =
           node["subs"].as<std::vector<std::string>>();
+
+      fmt::dynamic_format_arg_store<fmt::format_context> formatArgStore;
+      for (const auto& sub : subs) {
+        formatArgStore.push_back(sub);
+      }
+
       for (auto& mc : content) {
-        boost::format f(mc.GetText());
-
-        for (const auto& sub : subs) {
-          f = f % sub;
-        }
-
         try {
-          mc = loot::MessageContent(f.str(), mc.GetLanguage());
-        } catch (const boost::io::format_error& e) {
+          const auto text = fmt::vformat(mc.GetText(), formatArgStore);
+          mc = loot::MessageContent(text, mc.GetLanguage());
+        } catch (const fmt::format_error& e) {
           throw RepresentationException(
               node.Mark(),
               std::string("bad conversion: content substitution error: ") +

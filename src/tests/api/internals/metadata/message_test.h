@@ -615,7 +615,7 @@ TEST_P(
     decodingFromYamlShouldApplySubstitutionsWhenThereIsOnlyOneContentString) {
   YAML::Node node = YAML::Load(
       "type: say\n"
-      "content: con%1%tent1\n"
+      "content: con{0}tent1\n"
       "subs:\n"
       "  - sub1");
   Message message = node.as<Message>();
@@ -630,9 +630,9 @@ TEST_P(MessageTest,
       "type: say\n"
       "content:\n"
       "  - lang: en\n"
-      "    text: content1 %1%\n"
+      "    text: content1 {0}\n"
       "  - lang: fr\n"
-      "    text: content2 %1%\n"
+      "    text: content2 {0}\n"
       "subs:\n"
       "  - sub");
   Message message = node.as<Message>();
@@ -649,7 +649,7 @@ TEST_P(
     decodingFromYamlShouldThrowIfTheContentStringExpectsMoreSubstitutionsThanExist) {
   YAML::Node node = YAML::Load(
       "type: say\n"
-      "content: '%1% %2%'\n"
+      "content: '{0} {1}'\n"
       "subs:\n"
       "  - sub1");
 
@@ -662,10 +662,10 @@ TEST_P(MessageTest,
        decodingFromYamlShouldIgnoreSubstitutionSyntaxIfNoSubstitutionsExist) {
   YAML::Node node = YAML::Load(
       "type: say\n"
-      "content: con%1%tent1\n");
+      "content: con{0}tent1\n");
   Message message = node.as<Message>();
 
-  EXPECT_EQ(MessageContents({MessageContent("con%1%tent1")}),
+  EXPECT_EQ(MessageContents({MessageContent("con{0}tent1")}),
             message.GetContent());
 }
 

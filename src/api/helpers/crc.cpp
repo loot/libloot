@@ -24,8 +24,9 @@
 
 #include "api/helpers/crc.h"
 
+#include <spdlog/fmt/fmt.h>
+
 #include <boost/crc.hpp>
-#include <boost/format.hpp>
 #include <fstream>
 
 #include "api/helpers/logging.h"
@@ -80,7 +81,5 @@ uint32_t GetCrc32(const std::filesystem::path& filename) {
   }
 }
 
-std::string CrcToString(uint32_t crc) {
-  return (boost::format("%08X") % crc).str();
-}
+std::string CrcToString(uint32_t crc) { return fmt::format("{:08X}", crc); }
 }
