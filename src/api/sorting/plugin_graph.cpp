@@ -304,36 +304,33 @@ void PluginGraph::CheckForCycles() const {
       graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap));
 }
 
-bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
-                                   const vertex_t& toVertex) {
-  if (pathsCache_.count(GraphPath{toVertex, fromVertex}) != 0) {
+bool PluginGraph::PathExists(const vertex_t& fromVertex,
+                             const vertex_t& toVertex) {
+  if (pathsCache_.count(GraphPath{fromVertex, toVertex}) != 0) {
     return true;
   }
-
-  auto start = toVertex;
-  auto end = fromVertex;
 
   std::queue<vertex_t> forwardQueue;
   std::queue<vertex_t> reverseQueue;
   std::unordered_set<vertex_t> forwardVisited;
   std::unordered_set<vertex_t> reverseVisited;
 
-  forwardQueue.push(start);
-  forwardVisited.insert(start);
-  reverseQueue.push(end);
-  reverseVisited.insert(end);
+  forwardQueue.push(fromVertex);
+  forwardVisited.insert(fromVertex);
+  reverseQueue.push(toVertex);
+  reverseVisited.insert(toVertex);
 
   while (!forwardQueue.empty() && !reverseQueue.empty()) {
     if (!forwardQueue.empty()) {
-      auto v = forwardQueue.front();
+      const auto v = forwardQueue.front();
       forwardQueue.pop();
-      if (v == end || reverseVisited.count(v) > 0) {
+      if (v == toVertex || reverseVisited.count(v) > 0) {
         return true;
       }
-      for (auto adjacentV :
+      for (const auto adjacentV :
            boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
         if (forwardVisited.count(adjacentV) == 0) {
-          pathsCache_.insert(GraphPath{start, adjacentV});
+          pathsCache_.insert(GraphPath{fromVertex, adjacentV});
 
           forwardVisited.insert(adjacentV);
           forwardQueue.push(adjacentV);
@@ -341,15 +338,15 @@ bool PluginGraph::EdgeCreatesCycle(const vertex_t& fromVertex,
       }
     }
     if (!reverseQueue.empty()) {
-      auto v = reverseQueue.front();
+      const auto v = reverseQueue.front();
       reverseQueue.pop();
-      if (v == start || forwardVisited.count(v) > 0) {
+      if (v == fromVertex || forwardVisited.count(v) > 0) {
         return true;
       }
-      for (auto adjacentV : boost::make_iterator_range(
+      for (const auto adjacentV : boost::make_iterator_range(
                boost::inv_adjacent_vertices(v, graph_))) {
         if (reverseVisited.count(adjacentV) == 0) {
-          pathsCache_.insert(GraphPath{adjacentV, end});
+          pathsCache_.insert(GraphPath{adjacentV, toVertex});
 
           reverseVisited.insert(adjacentV);
           reverseQueue.push(adjacentV);
@@ -605,7 +602,7 @@ void PluginGraph::AddGroupEdges(
         continue;
       }
 
-      if (EdgeCreatesCycle(parentVertex.value(), vertex)) {
+      if (PathExists(vertex, parentVertex.value())) {
         auto& fromPlugin = graph_[parentVertex.value()];
         auto& toPlugin = graph_[vertex];
 
@@ -708,7 +705,7 @@ void PluginGraph::AddOverlapEdges() {
           thisPluginOverridesMoreFormIDs ? vertex : otherVertex;
       vertex_t toVertex = thisPluginOverridesMoreFormIDs ? otherVertex : vertex;
 
-      if (!EdgeCreatesCycle(fromVertex, toVertex))
+      if (!PathExists(toVertex, fromVertex))
         AddEdge(fromVertex, toVertex, EdgeType::overlap);
     }
   }
@@ -773,7 +770,7 @@ void PluginGraph::AddTieBreakEdges() {
       vertex_t fromVertex = thisPluginShouldLoadEarlier ? vertex : otherVertex;
       vertex_t toVertex = thisPluginShouldLoadEarlier ? otherVertex : vertex;
 
-      if (!EdgeCreatesCycle(fromVertex, toVertex))
+      if (!PathExists(toVertex, fromVertex))
         AddEdge(fromVertex, toVertex, EdgeType::tieBreak);
     }
   }

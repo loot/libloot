@@ -90,7 +90,7 @@ public:
 
 private:
   std::optional<vertex_t> GetVertexByName(const std::string& name) const;
-  bool EdgeCreatesCycle(const vertex_t& u, const vertex_t& v);
+  bool PathExists(const vertex_t& fromVertex, const vertex_t& toVertex);
 
   void AddEdge(const vertex_t& fromVertex,
                const vertex_t& toVertex,
