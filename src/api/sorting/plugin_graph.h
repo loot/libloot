@@ -40,7 +40,7 @@
 #include "loot/exception/cyclic_interaction_error.h"
 
 namespace loot {
-typedef boost::adjacency_list<boost::listS,
+typedef boost::adjacency_list<boost::vecS,
                               boost::listS,
                               boost::bidirectionalS,
                               PluginSortingData,
