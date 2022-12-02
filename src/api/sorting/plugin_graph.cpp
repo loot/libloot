@@ -115,8 +115,14 @@ std::string describeEdgeType(EdgeType edgeType) {
   }
 }
 
-bool operator==(const GraphPath& lhs, const GraphPath& rhs) {
-  return lhs.from == rhs.from && lhs.to == rhs.to;
+bool PathsCache::IsPathCached(const vertex_t& fromVertex,
+                              const vertex_t& toVertex) const {
+  return pathsCache_.count({fromVertex, toVertex});
+}
+
+void PathsCache::CachePath(const vertex_t& fromVertex,
+                           const vertex_t& toVertex) {
+  pathsCache_.insert({fromVertex, toVertex});
 }
 
 size_t PluginGraph::CountVertices() const {
@@ -306,7 +312,7 @@ void PluginGraph::CheckForCycles() const {
 
 bool PluginGraph::PathExists(const vertex_t& fromVertex,
                              const vertex_t& toVertex) {
-  if (pathsCache_.count(GraphPath{fromVertex, toVertex}) != 0) {
+  if (pathsCache_.IsPathCached(fromVertex, toVertex)) {
     return true;
   }
 
@@ -330,7 +336,7 @@ bool PluginGraph::PathExists(const vertex_t& fromVertex,
       for (const auto adjacentV :
            boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
         if (forwardVisited.count(adjacentV) == 0) {
-          pathsCache_.insert(GraphPath{fromVertex, adjacentV});
+          pathsCache_.CachePath(fromVertex, adjacentV);
 
           forwardVisited.insert(adjacentV);
           forwardQueue.push(adjacentV);
@@ -346,7 +352,7 @@ bool PluginGraph::PathExists(const vertex_t& fromVertex,
       for (const auto adjacentV : boost::make_iterator_range(
                boost::inv_adjacent_vertices(v, graph_))) {
         if (reverseVisited.count(adjacentV) == 0) {
-          pathsCache_.insert(GraphPath{adjacentV, toVertex});
+          pathsCache_.CachePath(adjacentV, toVertex);
 
           reverseVisited.insert(adjacentV);
           reverseQueue.push(adjacentV);
@@ -361,9 +367,7 @@ bool PluginGraph::PathExists(const vertex_t& fromVertex,
 void PluginGraph::AddEdge(const vertex_t& fromVertex,
                           const vertex_t& toVertex,
                           EdgeType edgeType) {
-  const auto graphPath = GraphPath{fromVertex, toVertex};
-
-  if (pathsCache_.count(graphPath) != 0) {
+  if (pathsCache_.IsPathCached(fromVertex, toVertex)) {
     return;
   }
 
@@ -376,7 +380,7 @@ void PluginGraph::AddEdge(const vertex_t& fromVertex,
   }
 
   boost::add_edge(fromVertex, toVertex, edgeType, graph_);
-  pathsCache_.insert(graphPath);
+  pathsCache_.CachePath(fromVertex, toVertex);
 }
 
 void PluginGraph::AddHardcodedPluginEdges(Game& game) {

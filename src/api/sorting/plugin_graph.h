@@ -39,6 +39,19 @@
 #include "api/sorting/plugin_sorting_data.h"
 #include "loot/exception/cyclic_interaction_error.h"
 
+namespace std {
+template<typename A, typename B>
+struct hash<pair<A, B>> {
+  size_t operator()(const pair<A, B>& pair) const {
+    size_t seed = 0;
+    boost::hash_combine(seed, pair.first);
+    boost::hash_combine(seed, pair.second);
+
+    return seed;
+  }
+};
+}
+
 namespace loot {
 typedef boost::adjacency_list<boost::listS,
                               boost::listS,
@@ -52,28 +65,15 @@ typedef boost::associative_property_map<std::map<vertex_t, size_t>>
 
 std::string describeEdgeType(EdgeType edgeType);
 
-struct GraphPath {
-  vertex_t from;
-  vertex_t to;
+class PathsCache {
+public:
+  bool IsPathCached(const vertex_t& fromVertex, const vertex_t& toVertex) const;
+  void CachePath(const vertex_t& fromVertex, const vertex_t& toVertex);
+
+private:
+  std::unordered_set<std::pair<vertex_t, vertex_t>> pathsCache_;
 };
 
-bool operator==(const GraphPath& lhs, const GraphPath& rhs);
-}
-
-namespace std {
-template<>
-struct hash<loot::GraphPath> {
-  size_t operator()(const loot::GraphPath& graphPath) const {
-    size_t seed = 0;
-    boost::hash_combine(seed, graphPath.from);
-    boost::hash_combine(seed, graphPath.to);
-
-    return seed;
-  }
-};
-}
-
-namespace loot {
 class PluginGraph {
 public:
   size_t CountVertices() const;
@@ -97,7 +97,7 @@ private:
                EdgeType edgeType);
 
   RawPluginGraph graph_;
-  std::unordered_set<GraphPath> pathsCache_;
+  PathsCache pathsCache_;
 };
 }
 
