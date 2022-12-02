@@ -413,8 +413,7 @@ void PluginGraph::AddHardcodedPluginEdges(Game& game) {
       continue;
     }
 
-    vertex_it vit, vitend;
-    for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
+    for (auto [vit, vitend] = boost::vertices(graph_); vit != vitend; ++vit) {
       if (*vit == pluginVertex.value()) {
         continue;
       }
@@ -429,8 +428,7 @@ void PluginGraph::AddHardcodedPluginEdges(Game& game) {
 
 void PluginGraph::AddSpecificEdges() {
   // Add edges for all relationships that aren't overlaps.
-  vertex_it vit, vitend;
-  for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
+  for (auto [vit, vitend] = boost::vertices(graph_); vit != vitend; ++vit) {
     for (vertex_it vit2 = vit; vit2 != vitend; ++vit2) {
       if (graph_[*vit].IsMaster() == graph_[*vit2].IsMaster())
         continue;
@@ -672,8 +670,7 @@ void PluginGraph::AddGroupEdges(
 
 void PluginGraph::AddOverlapEdges() {
   auto logger = getLogger();
-  vertex_it vit, vitend;
-  for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
+  for (auto [vit, vitend] = boost::vertices(graph_); vit != vitend; ++vit) {
     vertex_t vertex = *vit;
 
     if (graph_[vertex].NumOverrideFormIDs() == 0) {
@@ -758,8 +755,7 @@ void PluginGraph::AddTieBreakEdges() {
   // possible result. This can be enforced by adding edges between all vertices
   // that aren't already linked. Use existing load order to decide the direction
   // of these edges.
-  vertex_it vit, vitend;
-  for (tie(vit, vitend) = boost::vertices(graph_); vit != vitend; ++vit) {
+  for (auto [vit, vitend] = boost::vertices(graph_); vit != vitend; ++vit) {
     vertex_t vertex = *vit;
 
     for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
