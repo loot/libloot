@@ -117,12 +117,24 @@ std::string describeEdgeType(EdgeType edgeType) {
 
 bool PathsCache::IsPathCached(const vertex_t& fromVertex,
                               const vertex_t& toVertex) const {
-  return pathsCache_.count({fromVertex, toVertex});
+  const auto descendents = pathsCache_.find(fromVertex);
+
+  if (descendents == pathsCache_.end()) {
+    return false;
+  }
+
+  return descendents->second.count(toVertex);
 }
 
 void PathsCache::CachePath(const vertex_t& fromVertex,
                            const vertex_t& toVertex) {
-  pathsCache_.insert({fromVertex, toVertex});
+  auto descendents = pathsCache_.find(fromVertex);
+
+  if (descendents == pathsCache_.end()) {
+    pathsCache_.emplace(fromVertex, std::unordered_set<vertex_t>({toVertex}));
+  } else {
+    descendents->second.insert(toVertex);
+  }
 }
 
 size_t PluginGraph::CountVertices() const {

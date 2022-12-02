@@ -39,19 +39,6 @@
 #include "api/sorting/plugin_sorting_data.h"
 #include "loot/exception/cyclic_interaction_error.h"
 
-namespace std {
-template<typename A, typename B>
-struct hash<pair<A, B>> {
-  size_t operator()(const pair<A, B>& pair) const {
-    size_t seed = 0;
-    boost::hash_combine(seed, pair.first);
-    boost::hash_combine(seed, pair.second);
-
-    return seed;
-  }
-};
-}
-
 namespace loot {
 typedef boost::adjacency_list<boost::listS,
                               boost::listS,
@@ -71,7 +58,7 @@ public:
   void CachePath(const vertex_t& fromVertex, const vertex_t& toVertex);
 
 private:
-  std::unordered_set<std::pair<vertex_t, vertex_t>> pathsCache_;
+  std::unordered_map<vertex_t, std::unordered_set<vertex_t>> pathsCache_;
 };
 
 class PluginGraph {
