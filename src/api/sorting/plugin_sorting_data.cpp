@@ -60,13 +60,18 @@ PluginSortingData::PluginSortingData(
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),
     masterlistReq_(masterlistMetadata.GetRequirements()),
-    userReq_(userMetadata.GetRequirements()) {
+    userReq_(userMetadata.GetRequirements()),
+    numOverrideFormIDs(0) {
   if (userMetadata.GetGroup()) {
     group_ = userMetadata.GetGroup().value();
   } else if (masterlistMetadata.GetGroup()) {
     group_ = masterlistMetadata.GetGroup().value();
   } else {
     group_ = Group().GetName();
+  }
+
+  if (plugin == nullptr) {
+    return;
   }
 
   for (size_t i = 0; i < loadOrder.size(); i++) {
@@ -104,14 +109,20 @@ PluginSortingData::PluginSortingData(
 std::string PluginSortingData::GetName() const { return plugin_->GetName(); }
 
 bool PluginSortingData::IsMaster() const {
-  return plugin_->IsMaster() ||
+  return plugin_ != nullptr && plugin_->IsMaster() ||
          (plugin_->IsLightPlugin() &&
           !boost::iends_with(plugin_->GetName(), ".esp"));
 }
 
-bool PluginSortingData::LoadsArchive() const { return plugin_->LoadsArchive(); }
+bool PluginSortingData::LoadsArchive() const {
+  return plugin_ != nullptr && plugin_->LoadsArchive();
+}
 
 std::vector<std::string> PluginSortingData::GetMasters() const {
+  if (plugin_ == nullptr) {
+    return {};
+  }
+
   return plugin_->GetMasters();
 }
 
@@ -121,7 +132,8 @@ size_t PluginSortingData::NumOverrideFormIDs() const {
 
 bool PluginSortingData::DoFormIDsOverlap(
     const PluginSortingData& plugin) const {
-  return plugin_->DoFormIDsOverlap(*plugin.plugin_);
+  return plugin_ != nullptr && plugin.plugin_ != nullptr &&
+         plugin_->DoFormIDsOverlap(*plugin.plugin_);
 }
 
 std::string PluginSortingData::GetGroup() const { return group_; }
