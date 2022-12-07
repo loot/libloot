@@ -224,6 +224,12 @@ void PluginGraph::AddPluginVertices(Game& game,
               return lhs->GetName() < rhs->GetName();
             });
 
+  std::vector<const PluginInterface*> loadedPluginInterfaces;
+  std::transform(loadedPlugins.begin(),
+                 loadedPlugins.end(),
+                 std::back_inserter(loadedPluginInterfaces),
+                 [](const Plugin* plugin) { return plugin; });
+
   for (const auto& plugin : loadedPlugins) {
     auto masterlistMetadata =
         game.GetDatabase()
@@ -238,7 +244,7 @@ void PluginGraph::AddPluginVertices(Game& game,
                                                userMetadata,
                                                loadOrder,
                                                game.Type(),
-                                               loadedPlugins);
+                                               loadedPluginInterfaces);
 
     auto groupName = pluginSortingData.GetGroup();
     const auto groupIt = groupPlugins.find(groupName);

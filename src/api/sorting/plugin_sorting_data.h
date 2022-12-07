@@ -36,12 +36,13 @@ public:
    * PluginSortingData objects must not live longer than the Plugin objects
    * that they are constructed from.
    */
-  explicit PluginSortingData(const Plugin* plugin,
-                             const PluginMetadata& masterlistMetadata,
-                             const PluginMetadata& userMetadata,
-                             const std::vector<std::string>& loadOrder,
-                             const GameType gameType,
-                             const std::vector<const Plugin*>& loadedPlugins);
+  explicit PluginSortingData(
+      const PluginSortingInterface* plugin,
+      const PluginMetadata& masterlistMetadata,
+      const PluginMetadata& userMetadata,
+      const std::vector<std::string>& loadOrder,
+      const GameType gameType,
+      const std::vector<const PluginInterface*>& loadedPlugins);
 
   std::string GetName() const;
   bool IsMaster() const;
@@ -63,7 +64,7 @@ public:
   const std::optional<size_t>& GetLoadOrderIndex() const;
 
 private:
-  const Plugin* plugin_;
+  const PluginSortingInterface* plugin_;
   std::string group_;
   std::unordered_set<std::string> afterGroupPlugins_;
 

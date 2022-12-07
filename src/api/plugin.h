@@ -40,7 +40,17 @@
 namespace loot {
 class GameCache;
 
-class Plugin final : public PluginInterface {
+// An interface containing member functions that are used when sorting plugins.
+class PluginSortingInterface : public PluginInterface {
+public:
+  virtual size_t NumOverrideFormIDs() const = 0;
+  virtual uint32_t GetRecordAndGroupCount() const = 0;
+
+  virtual size_t GetOverlapSize(
+      const std::vector<const PluginInterface*> plugins) const = 0;
+};
+
+class Plugin final : public PluginSortingInterface {
 public:
   explicit Plugin(const GameType gameType,
                   const GameCache& gameCache,
@@ -62,11 +72,12 @@ public:
   bool IsEmpty() const override;
   bool LoadsArchive() const override;
   bool DoFormIDsOverlap(const PluginInterface& plugin) const override;
-  size_t GetOverlapSize(const std::vector<const Plugin*> plugins) const;
+  size_t GetOverlapSize(
+      const std::vector<const PluginInterface*> plugins) const override;
 
   // Load ordering functions.
-  size_t NumOverrideFormIDs() const;
-  uint32_t GetRecordAndGroupCount() const;
+  size_t NumOverrideFormIDs() const override;
+  uint32_t GetRecordAndGroupCount() const override;
 
   // Validity checks.
   static bool IsValid(const GameType gameType,
