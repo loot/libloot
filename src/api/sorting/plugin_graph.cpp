@@ -43,9 +43,10 @@ using std::string;
 using std::vector;
 
 namespace loot {
-typedef boost::graph_traits<RawPluginGraph>::vertex_iterator vertex_it;
 typedef boost::graph_traits<RawPluginGraph>::edge_descriptor edge_t;
 typedef boost::graph_traits<RawPluginGraph>::edge_iterator edge_it;
+typedef boost::associative_property_map<std::map<vertex_t, size_t>>
+    vertex_map_t;
 
 class CycleDetector : public boost::dfs_visitor<> {
 public:
@@ -169,8 +170,8 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
       logger->error(
           "The calculated load order is not unique. No edge exists between {} "
           "and {}.",
-          graph_[*it].GetName(),
-          graph_[*next(it)].GetName());
+          GetPlugin(*it).GetName(),
+          GetPlugin(*next(it)).GetName());
     }
   }
 
@@ -180,7 +181,7 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
   }
   vector<std::string> plugins;
   for (const auto& vertex : sortedVertices) {
-    plugins.push_back(graph_[vertex].GetName());
+    plugins.push_back(GetPlugin(vertex).GetName());
     if (logger) {
       logger->info("\t{}", plugins.back());
     }
@@ -189,9 +190,8 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
   return plugins;
 }
 
-void PluginGraph::AddPluginVertices(Game& game,
+void PluginGraph::AddPluginVertices(const Game& game,
                                     const std::vector<std::string>& loadOrder) {
-  std::unordered_map<std::string, std::vector<std::string>> groupPlugins;
   // The resolution of tie-breaks in the plugin graph may be dependent
   // on the order in which vertices are iterated over, as an earlier tie
   // break resolution may cause a potential later tie break to instead
@@ -230,32 +230,37 @@ void PluginGraph::AddPluginVertices(Game& game,
                  std::back_inserter(loadedPluginInterfaces),
                  [](const Plugin* plugin) { return plugin; });
 
+  std::vector<PluginSortingData> pluginsSortingData;
   for (const auto& plugin : loadedPlugins) {
-    auto masterlistMetadata =
+    const auto masterlistMetadata =
         game.GetDatabase()
             .GetPluginMetadata(plugin->GetName(), false, true)
             .value_or(PluginMetadata(plugin->GetName()));
-    auto userMetadata = game.GetDatabase()
-                            .GetPluginUserMetadata(plugin->GetName(), true)
-                            .value_or(PluginMetadata(plugin->GetName()));
+    const auto userMetadata =
+        game.GetDatabase()
+            .GetPluginUserMetadata(plugin->GetName(), true)
+            .value_or(PluginMetadata(plugin->GetName()));
 
-    auto pluginSortingData = PluginSortingData(plugin,
-                                               masterlistMetadata,
-                                               userMetadata,
-                                               loadOrder,
-                                               game.Type(),
-                                               loadedPluginInterfaces);
+    const auto pluginSortingData = PluginSortingData(plugin,
+                                                     masterlistMetadata,
+                                                     userMetadata,
+                                                     loadOrder,
+                                                     game.Type(),
+                                                     loadedPluginInterfaces);
 
-    auto groupName = pluginSortingData.GetGroup();
+    pluginsSortingData.push_back(pluginSortingData);
+  }
+
+  std::unordered_map<std::string, std::vector<std::string>> groupPlugins;
+  for (const auto& plugin : pluginsSortingData) {
+    const auto groupName = plugin.GetGroup();
     const auto groupIt = groupPlugins.find(groupName);
     if (groupIt == groupPlugins.end()) {
       groupPlugins.emplace(groupName,
-                           std::vector<std::string>({plugin->GetName()}));
+                           std::vector<std::string>({plugin.GetName()}));
     } else {
-      groupIt->second.push_back(plugin->GetName());
+      groupIt->second.push_back(plugin.GetName());
     }
-
-    boost::add_vertex(pluginSortingData, graph_);
   }
 
   // Map sets of transitive group dependencies to sets of transitive plugin
@@ -277,10 +282,7 @@ void PluginGraph::AddPluginVertices(Game& game,
   // Add all transitive plugin dependencies for a group to the plugin's load
   // after metadata.
   auto logger = getLogger();
-  for (const auto& vertex :
-       boost::make_iterator_range(boost::vertices(graph_))) {
-    PluginSortingData& plugin = graph_[vertex];
-
+  for (auto& plugin : pluginsSortingData) {
     if (logger) {
       logger->trace(
           "Plugin \"{}\" belongs to group \"{}\", setting after group plugins",
@@ -295,18 +297,29 @@ void PluginGraph::AddPluginVertices(Game& game,
       plugin.SetAfterGroupPlugins(groupsIt->second);
     }
   }
+
+  for (const auto& plugin : pluginsSortingData) {
+    AddVertex(plugin);
+  }
+}
+
+std::pair<vertex_it, vertex_it> PluginGraph::GetVertices() const {
+  return boost::vertices(graph_);
 }
 
 std::optional<vertex_t> PluginGraph::GetVertexByName(
     const std::string& name) const {
-  for (const auto& vertex :
-       boost::make_iterator_range(boost::vertices(graph_))) {
-    if (CompareFilenames(graph_[vertex].GetName(), name) == 0) {
+  for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
+    if (CompareFilenames(GetPlugin(vertex).GetName(), name) == 0) {
       return vertex;
     }
   }
 
   return std::nullopt;
+}
+
+const PluginSortingData& PluginGraph::GetPlugin(const vertex_t& vertex) const {
+  return graph_[vertex];
 }
 
 void PluginGraph::CheckForCycles() const {
@@ -326,6 +339,11 @@ void PluginGraph::CheckForCycles() const {
 
   boost::depth_first_search(
       graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap));
+}
+
+bool PluginGraph::EdgeExists(const vertex_t& fromVertex,
+                             const vertex_t& toVertex) {
+  return boost::edge(fromVertex, toVertex, graph_).second;
 }
 
 bool PluginGraph::PathExists(const vertex_t& fromVertex,
@@ -393,15 +411,19 @@ void PluginGraph::AddEdge(const vertex_t& fromVertex,
   if (logger) {
     logger->trace("Adding {} edge from \"{}\" to \"{}\".",
                   describeEdgeType(edgeType),
-                  graph_[fromVertex].GetName(),
-                  graph_[toVertex].GetName());
+                  GetPlugin(fromVertex).GetName(),
+                  GetPlugin(toVertex).GetName());
   }
 
   boost::add_edge(fromVertex, toVertex, edgeType, graph_);
   pathsCache_.CachePath(fromVertex, toVertex);
 }
 
-void PluginGraph::AddHardcodedPluginEdges(Game& game) {
+void PluginGraph::AddVertex(const PluginSortingData& plugin) {
+  boost::add_vertex(plugin, graph_);
+}
+
+void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
   using std::filesystem::u8path;
 
   auto implicitlyActivePlugins =
@@ -435,14 +457,14 @@ void PluginGraph::AddHardcodedPluginEdges(Game& game) {
       continue;
     }
 
-    for (auto [vit, vitend] = boost::vertices(graph_); vit != vitend; ++vit) {
-      if (*vit == pluginVertex.value()) {
+    for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
+      if (vertex == pluginVertex.value()) {
         continue;
       }
 
       if (processedPluginPaths.count(
-              NormalizeFilename(graph_[*vit].GetName())) == 0) {
-        AddEdge(pluginVertex.value(), *vit, EdgeType::hardcoded);
+              NormalizeFilename(GetPlugin(vertex).GetName())) == 0) {
+        AddEdge(pluginVertex.value(), vertex, EdgeType::hardcoded);
       }
     }
   }
@@ -450,48 +472,54 @@ void PluginGraph::AddHardcodedPluginEdges(Game& game) {
 
 void PluginGraph::AddSpecificEdges() {
   // Add edges for all relationships that aren't overlaps.
-  for (auto [vit, vitend] = boost::vertices(graph_); vit != vitend; ++vit) {
+  for (auto [vit, vitend] = GetVertices(); vit != vitend; ++vit) {
+    const auto& vertex = *vit;
+    const auto& plugin = GetPlugin(vertex);
+
     for (vertex_it vit2 = vit; vit2 != vitend; ++vit2) {
-      if (graph_[*vit].IsMaster() == graph_[*vit2].IsMaster())
+      const auto& otherVertex = *vit2;
+      const auto& otherPlugin = GetPlugin(otherVertex);
+
+      if (plugin.IsMaster() == otherPlugin.IsMaster())
         continue;
 
-      const auto isOtherPluginAMaster = graph_[*vit2].IsMaster();
-      vertex_t vertex = isOtherPluginAMaster ? *vit : *vit2;
-      vertex_t parentVertex = isOtherPluginAMaster ? *vit2 : *vit;
+      const auto isOtherPluginAMaster = otherPlugin.IsMaster();
+      vertex_t childVertex = isOtherPluginAMaster ? vertex : otherVertex;
+      vertex_t parentVertex = isOtherPluginAMaster ? otherVertex : vertex;
 
-      AddEdge(parentVertex, vertex, EdgeType::masterFlag);
+      AddEdge(parentVertex, childVertex, EdgeType::masterFlag);
     }
 
-    for (const auto& master : graph_[*vit].GetMasters()) {
+    for (const auto& master : plugin.GetMasters()) {
       auto parentVertex = GetVertexByName(master);
       if (parentVertex.has_value()) {
-        AddEdge(parentVertex.value(), *vit, EdgeType::master);
+        AddEdge(parentVertex.value(), vertex, EdgeType::master);
       }
     }
 
-    for (const auto& file : graph_[*vit].GetMasterlistRequirements()) {
+    for (const auto& file : plugin.GetMasterlistRequirements()) {
       auto parentVertex = GetVertexByName(std::string(file.GetName()));
       if (parentVertex.has_value()) {
-        AddEdge(parentVertex.value(), *vit, EdgeType::masterlistRequirement);
+        AddEdge(parentVertex.value(), vertex, EdgeType::masterlistRequirement);
       }
     }
-    for (const auto& file : graph_[*vit].GetUserRequirements()) {
+    for (const auto& file : plugin.GetUserRequirements()) {
       auto parentVertex = GetVertexByName(std::string(file.GetName()));
       if (parentVertex.has_value()) {
-        AddEdge(parentVertex.value(), *vit, EdgeType::userRequirement);
+        AddEdge(parentVertex.value(), vertex, EdgeType::userRequirement);
       }
     }
 
-    for (const auto& file : graph_[*vit].GetMasterlistLoadAfterFiles()) {
+    for (const auto& file : plugin.GetMasterlistLoadAfterFiles()) {
       auto parentVertex = GetVertexByName(std::string(file.GetName()));
       if (parentVertex.has_value()) {
-        AddEdge(parentVertex.value(), *vit, EdgeType::masterlistLoadAfter);
+        AddEdge(parentVertex.value(), vertex, EdgeType::masterlistLoadAfter);
       }
     }
-    for (const auto& file : graph_[*vit].GetUserLoadAfterFiles()) {
+    for (const auto& file : plugin.GetUserLoadAfterFiles()) {
       auto parentVertex = GetVertexByName(std::string(file.GetName()));
       if (parentVertex.has_value()) {
-        AddEdge(parentVertex.value(), *vit, EdgeType::userLoadAfter);
+        AddEdge(parentVertex.value(), vertex, EdgeType::userLoadAfter);
       }
     }
   }
@@ -613,18 +641,18 @@ void PluginGraph::AddGroupEdges(
   std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
   std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
 
-  auto logger = getLogger();
-  for (const vertex_t& vertex :
-       boost::make_iterator_range(boost::vertices(graph_))) {
-    for (const auto& pluginName : graph_[vertex].GetAfterGroupPlugins()) {
-      auto parentVertex = GetVertexByName(pluginName);
+  const auto logger = getLogger();
+  for (const vertex_t& vertex : boost::make_iterator_range(GetVertices())) {
+    const auto& toPlugin = GetPlugin(vertex);
+
+    for (const auto& pluginName : toPlugin.GetAfterGroupPlugins()) {
+      const auto parentVertex = GetVertexByName(pluginName);
       if (!parentVertex.has_value()) {
         continue;
       }
 
       if (PathExists(vertex, parentVertex.value())) {
-        auto& fromPlugin = graph_[parentVertex.value()];
-        auto& toPlugin = graph_[vertex];
+        const auto& fromPlugin = GetPlugin(parentVertex.value());
 
         if (logger) {
           logger->trace(
@@ -660,7 +688,7 @@ void PluginGraph::AddGroupEdges(
           continue;
         }
 
-        auto groupsInPaths = getGroupsInPaths(
+        const auto groupsInPaths = getGroupsInPaths(
             groups, fromPlugin.GetGroup(), toPlugin.GetGroup());
 
         ignorePlugin(pluginToIgnore, groupsInPaths, groupPluginsToIgnore);
@@ -673,8 +701,8 @@ void PluginGraph::AddGroupEdges(
   }
 
   for (const auto& edgePair : acyclicEdgePairs) {
-    auto& fromPlugin = graph_[edgePair.first];
-    auto& toPlugin = graph_[edgePair.second];
+    const auto& fromPlugin = GetPlugin(edgePair.first);
+    const auto& toPlugin = GetPlugin(edgePair.second);
     const bool ignore =
         shouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
 
@@ -691,35 +719,34 @@ void PluginGraph::AddGroupEdges(
 }
 
 void PluginGraph::AddOverlapEdges() {
-  auto logger = getLogger();
-  for (auto [vit, vitend] = boost::vertices(graph_); vit != vitend; ++vit) {
-    vertex_t vertex = *vit;
+  const auto logger = getLogger();
+  for (auto [vit, vitend] = GetVertices(); vit != vitend; ++vit) {
+    const vertex_t vertex = *vit;
+    const auto& plugin = GetPlugin(vertex);
 
-    if (graph_[vertex].NumOverrideFormIDs() == 0) {
+    if (plugin.NumOverrideFormIDs() == 0) {
       if (logger) {
         logger->trace(
             "Skipping vertex for \"{}\": the plugin contains no override "
             "records.",
-            graph_[vertex].GetName());
+            plugin.GetName());
       }
       continue;
     }
 
     for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
       vertex_t otherVertex = *vit2;
+      const auto& otherPlugin = GetPlugin(otherVertex);
 
-      if (vertex == otherVertex ||
-          boost::edge(vertex, otherVertex, graph_).second ||
-          boost::edge(otherVertex, vertex, graph_).second ||
-          graph_[vertex].NumOverrideFormIDs() ==
-              graph_[otherVertex].NumOverrideFormIDs() ||
-          !graph_[vertex].DoFormIDsOverlap(graph_[otherVertex])) {
+      if (vertex == otherVertex || EdgeExists(vertex, otherVertex) ||
+          EdgeExists(otherVertex, vertex) ||
+          plugin.NumOverrideFormIDs() == otherPlugin.NumOverrideFormIDs() ||
+          !plugin.DoFormIDsOverlap(otherPlugin)) {
         continue;
       }
 
       const auto thisPluginOverridesMoreFormIDs =
-          graph_[vertex].NumOverrideFormIDs() >
-          graph_[otherVertex].NumOverrideFormIDs();
+          plugin.NumOverrideFormIDs() > otherPlugin.NumOverrideFormIDs();
       vertex_t fromVertex =
           thisPluginOverridesMoreFormIDs ? vertex : otherVertex;
       vertex_t toVertex = thisPluginOverridesMoreFormIDs ? otherVertex : vertex;
@@ -777,14 +804,14 @@ void PluginGraph::AddTieBreakEdges() {
   // possible result. This can be enforced by adding edges between all vertices
   // that aren't already linked. Use existing load order to decide the direction
   // of these edges.
-  for (auto [vit, vitend] = boost::vertices(graph_); vit != vitend; ++vit) {
+  for (auto [vit, vitend] = GetVertices(); vit != vitend; ++vit) {
     vertex_t vertex = *vit;
 
     for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
       vertex_t otherVertex = *vit2;
 
       const auto thisPluginShouldLoadEarlier =
-          ComparePlugins(graph_[vertex], graph_[otherVertex]) < 0;
+          ComparePlugins(GetPlugin(vertex), GetPlugin(otherVertex)) < 0;
       vertex_t fromVertex = thisPluginShouldLoadEarlier ? vertex : otherVertex;
       vertex_t toVertex = thisPluginShouldLoadEarlier ? otherVertex : vertex;
 

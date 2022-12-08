@@ -83,7 +83,15 @@ std::filesystem::path Game::DataPath() const {
 
 GameCache& Game::GetCache() { return cache_; }
 
+const GameCache& Game::GetCache() const { return cache_; }
+
 LoadOrderHandler& Game::GetLoadOrderHandler() { return loadOrderHandler_; }
+
+const LoadOrderHandler& Game::GetLoadOrderHandler() const {
+  return loadOrderHandler_;
+}
+
+const DatabaseInterface& Game::GetDatabase() const { return database_; }
 
 DatabaseInterface& Game::GetDatabase() { return database_; }
 

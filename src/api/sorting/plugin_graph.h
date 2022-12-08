@@ -47,8 +47,7 @@ typedef boost::adjacency_list<boost::vecS,
                               EdgeType>
     RawPluginGraph;
 typedef boost::graph_traits<RawPluginGraph>::vertex_descriptor vertex_t;
-typedef boost::associative_property_map<std::map<vertex_t, size_t>>
-    vertex_map_t;
+typedef boost::graph_traits<RawPluginGraph>::vertex_iterator vertex_it;
 
 std::string describeEdgeType(EdgeType edgeType);
 
@@ -66,23 +65,30 @@ public:
   size_t CountVertices() const;
   void CheckForCycles() const;
 
-  void AddPluginVertices(Game& game, const std::vector<std::string>& loadOrder);
+  void AddPluginVertices(const Game& game,
+                         const std::vector<std::string>& loadOrder);
   void AddSpecificEdges();
-  void AddHardcodedPluginEdges(Game& game);
+  void AddHardcodedPluginEdges(const Game& game);
   void AddGroupEdges(const std::unordered_map<std::string, Group>& groups);
   void AddOverlapEdges();
   void AddTieBreakEdges();
 
   std::vector<std::string> TopologicalSort() const;
 
-private:
+  std::pair<vertex_it, vertex_it> GetVertices() const;
   std::optional<vertex_t> GetVertexByName(const std::string& name) const;
+
+  const PluginSortingData& GetPlugin(const vertex_t& vertex) const;
+
+  bool EdgeExists(const vertex_t& fromVertex, const vertex_t& toVertex);
   bool PathExists(const vertex_t& fromVertex, const vertex_t& toVertex);
 
   void AddEdge(const vertex_t& fromVertex,
                const vertex_t& toVertex,
                EdgeType edgeType);
+  void AddVertex(const PluginSortingData& plugin);
 
+private:
   RawPluginGraph graph_;
   PathsCache pathsCache_;
 };

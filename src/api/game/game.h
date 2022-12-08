@@ -48,7 +48,12 @@ public:
   std::filesystem::path DataPath() const;
 
   GameCache& GetCache();
+  const GameCache& GetCache() const;
+
   LoadOrderHandler& GetLoadOrderHandler();
+  const LoadOrderHandler& GetLoadOrderHandler() const;
+
+  const DatabaseInterface& GetDatabase() const;
 
   // Game Interface Methods //
   ////////////////////////////
