@@ -63,22 +63,13 @@ private:
 class PluginGraph {
 public:
   size_t CountVertices() const;
-  void CheckForCycles() const;
-
-  void AddPluginVertices(const Game& game,
-                         const std::vector<std::string>& loadOrder);
-  void AddSpecificEdges();
-  void AddHardcodedPluginEdges(const Game& game);
-  void AddGroupEdges(const std::unordered_map<std::string, Group>& groups);
-  void AddOverlapEdges();
-  void AddTieBreakEdges();
-
-  std::vector<std::string> TopologicalSort() const;
-
   std::pair<vertex_it, vertex_it> GetVertices() const;
   std::optional<vertex_t> GetVertexByName(const std::string& name) const;
 
   const PluginSortingData& GetPlugin(const vertex_t& vertex) const;
+
+  void CheckForCycles() const;
+  std::vector<std::string> TopologicalSort() const;
 
   bool EdgeExists(const vertex_t& fromVertex, const vertex_t& toVertex);
   bool PathExists(const vertex_t& fromVertex, const vertex_t& toVertex);
@@ -87,6 +78,14 @@ public:
                const vertex_t& toVertex,
                EdgeType edgeType);
   void AddVertex(const PluginSortingData& plugin);
+
+  void AddPluginVertices(const Game& game,
+                         const std::vector<std::string>& loadOrder);
+  void AddSpecificEdges();
+  void AddHardcodedPluginEdges(const Game& game);
+  void AddGroupEdges(const std::unordered_map<std::string, Group>& groups);
+  void AddOverlapEdges();
+  void AddTieBreakEdges();
 
 private:
   RawPluginGraph graph_;

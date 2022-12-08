@@ -89,6 +89,160 @@ private:
   std::vector<Vertex> trail;
 };
 
+bool ShouldIgnorePlugin(
+    const std::string& group,
+    const std::string& pluginName,
+    const std::map<std::string, std::unordered_set<std::string>>&
+        groupPluginsToIgnore) {
+  const auto pluginsToIgnore = groupPluginsToIgnore.find(group);
+  if (pluginsToIgnore != groupPluginsToIgnore.end()) {
+    return pluginsToIgnore->second.count(pluginName) > 0;
+  }
+
+  return false;
+}
+
+bool ShouldIgnoreGroupEdge(
+    const PluginSortingData& fromPlugin,
+    const PluginSortingData& toPlugin,
+    const std::map<std::string, std::unordered_set<std::string>>&
+        groupPluginsToIgnore) {
+  return ShouldIgnorePlugin(
+             fromPlugin.GetGroup(), toPlugin.GetName(), groupPluginsToIgnore) ||
+         ShouldIgnorePlugin(
+             toPlugin.GetGroup(), fromPlugin.GetName(), groupPluginsToIgnore);
+}
+
+void IgnorePluginGroupEdges(
+    const std::string& pluginName,
+    const std::unordered_set<std::string>& groups,
+    std::map<std::string, std::unordered_set<std::string>>&
+        groupPluginsToIgnore) {
+  for (const auto& group : groups) {
+    const auto pluginsToIgnore = groupPluginsToIgnore.find(group);
+    if (pluginsToIgnore != groupPluginsToIgnore.end()) {
+      pluginsToIgnore->second.insert(pluginName);
+    } else {
+      groupPluginsToIgnore.emplace(
+          group, std::unordered_set<std::string>({pluginName}));
+    }
+  }
+}
+
+// Look for paths to targetGroupName from group. Don't pass visitedGroups by
+// reference as each after group should be able to record paths independently.
+std::unordered_set<std::string> FindGroupsInAllPaths(
+    const Group& group,
+    const std::string& targetGroupName,
+    const std::unordered_map<std::string, Group>& groups,
+    std::unordered_set<std::string> visitedGroups) {
+  // If the current group is the target group, return the set of groups in the
+  // path leading to it.
+  if (group.GetName() == targetGroupName) {
+    return visitedGroups;
+  }
+
+  if (group.GetAfterGroups().empty()) {
+    return std::unordered_set<std::string>();
+  }
+
+  visitedGroups.insert(group.GetName());
+
+  // Recurse on each after group. We want to find all paths, so merge
+  // all return values.
+  std::unordered_set<std::string> mergedVisitedGroups;
+  for (const auto& afterGroupName : group.GetAfterGroups()) {
+    const auto groupIt = groups.find(afterGroupName);
+    if (groupIt == groups.end()) {
+      throw std::runtime_error("Cannot find group \"" + afterGroupName +
+                               "\" during sorting.");
+    }
+
+    const auto recursedVisitedGroups = FindGroupsInAllPaths(
+        groupIt->second, targetGroupName, groups, visitedGroups);
+
+    mergedVisitedGroups.insert(recursedVisitedGroups.begin(),
+                               recursedVisitedGroups.end());
+  }
+
+  // Return mergedVisitedGroups if it is empty, to indicate the current group's
+  // after groups had no path to the target group.
+  if (mergedVisitedGroups.empty()) {
+    return mergedVisitedGroups;
+  }
+
+  // If any after groups had paths to the target group, mergedVisitedGroups
+  // will be non-empty. To ensure that it contains full paths, merge it
+  // with visitedGroups and return that merged set.
+  visitedGroups.insert(mergedVisitedGroups.begin(), mergedVisitedGroups.end());
+
+  return visitedGroups;
+}
+
+std::unordered_set<std::string> FindGroupsInAllPaths(
+    const std::unordered_map<std::string, Group>& groups,
+    const std::string& firstGroupName,
+    const std::string& lastGroupName) {
+  // Groups are linked in reverse order, i.e. firstGroup can be found from
+  // lastGroup, but not the other way around.
+  const auto groupIt = groups.find(lastGroupName);
+  if (groupIt == groups.end()) {
+    throw std::runtime_error("Cannot find group \"" + lastGroupName +
+                             "\" during sorting.");
+  }
+
+  auto groupsInPaths = FindGroupsInAllPaths(groupIt->second,
+                                            firstGroupName,
+                                            groups,
+                                            std::unordered_set<std::string>());
+
+  groupsInPaths.erase(lastGroupName);
+
+  return groupsInPaths;
+}
+
+int ComparePlugins(const PluginSortingData& plugin1,
+                   const PluginSortingData& plugin2) {
+  if (plugin1.GetLoadOrderIndex().has_value() &&
+      !plugin2.GetLoadOrderIndex().has_value()) {
+    return -1;
+  }
+
+  if (!plugin1.GetLoadOrderIndex().has_value() &&
+      plugin2.GetLoadOrderIndex().has_value()) {
+    return 1;
+  }
+
+  if (plugin1.GetLoadOrderIndex().has_value() &&
+      plugin2.GetLoadOrderIndex().has_value()) {
+    if (plugin1.GetLoadOrderIndex().value() <
+        plugin2.GetLoadOrderIndex().value()) {
+      return -1;
+    } else {
+      return 1;
+    }
+  }
+
+  // Neither plugin has a load order position. Compare plugin basenames to
+  // get an ordering.
+  const auto name1 = plugin1.GetName();
+  const auto name2 = plugin2.GetName();
+  const auto basename1 = name1.substr(0, name1.length() - 4);
+  const auto basename2 = name2.substr(0, name2.length() - 4);
+
+  const int result = CompareFilenames(basename1, basename2);
+
+  if (result != 0) {
+    return result;
+  } else {
+    // Could be a .esp and .esm plugin with the same basename,
+    // compare their extensions.
+    const auto ext1 = name1.substr(name1.length() - 4);
+    const auto ext2 = name2.substr(name2.length() - 4);
+    return CompareFilenames(ext1, ext2);
+  }
+}
+
 std::string describeEdgeType(EdgeType edgeType) {
   switch (edgeType) {
     case EdgeType::hardcoded:
@@ -142,6 +296,44 @@ size_t PluginGraph::CountVertices() const {
   return boost::num_vertices(graph_);
 }
 
+std::pair<vertex_it, vertex_it> PluginGraph::GetVertices() const {
+  return boost::vertices(graph_);
+}
+
+std::optional<vertex_t> PluginGraph::GetVertexByName(
+    const std::string& name) const {
+  for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
+    if (CompareFilenames(GetPlugin(vertex).GetName(), name) == 0) {
+      return vertex;
+    }
+  }
+
+  return std::nullopt;
+}
+
+const PluginSortingData& PluginGraph::GetPlugin(const vertex_t& vertex) const {
+  return graph_[vertex];
+}
+
+void PluginGraph::CheckForCycles() const {
+  auto logger = getLogger();
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
+  if (logger) {
+    logger->trace("Checking plugin graph for cycles...");
+  }
+
+  std::map<vertex_t, size_t> indexMap;
+  const auto vertexIndexMap = vertex_map_t(indexMap);
+  size_t i = 0;
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
+  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
+    put(vertexIndexMap, v, i++);
+  }
+
+  boost::depth_first_search(
+      graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap));
+}
+
 std::vector<std::string> PluginGraph::TopologicalSort() const {
   // Build an index map, which std::list-based VertexList graphs don't have.
   std::map<vertex_t, size_t> indexMap;
@@ -188,6 +380,88 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
   }
 
   return plugins;
+}
+
+bool PluginGraph::EdgeExists(const vertex_t& fromVertex,
+                             const vertex_t& toVertex) {
+  return boost::edge(fromVertex, toVertex, graph_).second;
+}
+
+bool PluginGraph::PathExists(const vertex_t& fromVertex,
+                             const vertex_t& toVertex) {
+  if (pathsCache_.IsPathCached(fromVertex, toVertex)) {
+    return true;
+  }
+
+  std::queue<vertex_t> forwardQueue;
+  std::queue<vertex_t> reverseQueue;
+  std::unordered_set<vertex_t> forwardVisited;
+  std::unordered_set<vertex_t> reverseVisited;
+
+  forwardQueue.push(fromVertex);
+  forwardVisited.insert(fromVertex);
+  reverseQueue.push(toVertex);
+  reverseVisited.insert(toVertex);
+
+  while (!forwardQueue.empty() && !reverseQueue.empty()) {
+    if (!forwardQueue.empty()) {
+      const auto v = forwardQueue.front();
+      forwardQueue.pop();
+      if (v == toVertex || reverseVisited.count(v) > 0) {
+        return true;
+      }
+      for (const auto adjacentV :
+           boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
+        if (forwardVisited.count(adjacentV) == 0) {
+          pathsCache_.CachePath(fromVertex, adjacentV);
+
+          forwardVisited.insert(adjacentV);
+          forwardQueue.push(adjacentV);
+        }
+      }
+    }
+    if (!reverseQueue.empty()) {
+      const auto v = reverseQueue.front();
+      reverseQueue.pop();
+      if (v == fromVertex || forwardVisited.count(v) > 0) {
+        return true;
+      }
+      for (const auto adjacentV : boost::make_iterator_range(
+               boost::inv_adjacent_vertices(v, graph_))) {
+        if (reverseVisited.count(adjacentV) == 0) {
+          pathsCache_.CachePath(adjacentV, toVertex);
+
+          reverseVisited.insert(adjacentV);
+          reverseQueue.push(adjacentV);
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+void PluginGraph::AddEdge(const vertex_t& fromVertex,
+                          const vertex_t& toVertex,
+                          EdgeType edgeType) {
+  if (pathsCache_.IsPathCached(fromVertex, toVertex)) {
+    return;
+  }
+
+  auto logger = getLogger();
+  if (logger) {
+    logger->trace("Adding {} edge from \"{}\" to \"{}\".",
+                  describeEdgeType(edgeType),
+                  GetPlugin(fromVertex).GetName(),
+                  GetPlugin(toVertex).GetName());
+  }
+
+  boost::add_edge(fromVertex, toVertex, edgeType, graph_);
+  pathsCache_.CachePath(fromVertex, toVertex);
+}
+
+void PluginGraph::AddVertex(const PluginSortingData& plugin) {
+  boost::add_vertex(plugin, graph_);
 }
 
 void PluginGraph::AddPluginVertices(const Game& game,
@@ -303,173 +577,6 @@ void PluginGraph::AddPluginVertices(const Game& game,
   }
 }
 
-std::pair<vertex_it, vertex_it> PluginGraph::GetVertices() const {
-  return boost::vertices(graph_);
-}
-
-std::optional<vertex_t> PluginGraph::GetVertexByName(
-    const std::string& name) const {
-  for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
-    if (CompareFilenames(GetPlugin(vertex).GetName(), name) == 0) {
-      return vertex;
-    }
-  }
-
-  return std::nullopt;
-}
-
-const PluginSortingData& PluginGraph::GetPlugin(const vertex_t& vertex) const {
-  return graph_[vertex];
-}
-
-void PluginGraph::CheckForCycles() const {
-  auto logger = getLogger();
-  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
-  if (logger) {
-    logger->trace("Checking plugin graph for cycles...");
-  }
-
-  std::map<vertex_t, size_t> indexMap;
-  const auto vertexIndexMap = vertex_map_t(indexMap);
-  size_t i = 0;
-  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
-  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
-    put(vertexIndexMap, v, i++);
-  }
-
-  boost::depth_first_search(
-      graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap));
-}
-
-bool PluginGraph::EdgeExists(const vertex_t& fromVertex,
-                             const vertex_t& toVertex) {
-  return boost::edge(fromVertex, toVertex, graph_).second;
-}
-
-bool PluginGraph::PathExists(const vertex_t& fromVertex,
-                             const vertex_t& toVertex) {
-  if (pathsCache_.IsPathCached(fromVertex, toVertex)) {
-    return true;
-  }
-
-  std::queue<vertex_t> forwardQueue;
-  std::queue<vertex_t> reverseQueue;
-  std::unordered_set<vertex_t> forwardVisited;
-  std::unordered_set<vertex_t> reverseVisited;
-
-  forwardQueue.push(fromVertex);
-  forwardVisited.insert(fromVertex);
-  reverseQueue.push(toVertex);
-  reverseVisited.insert(toVertex);
-
-  while (!forwardQueue.empty() && !reverseQueue.empty()) {
-    if (!forwardQueue.empty()) {
-      const auto v = forwardQueue.front();
-      forwardQueue.pop();
-      if (v == toVertex || reverseVisited.count(v) > 0) {
-        return true;
-      }
-      for (const auto adjacentV :
-           boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
-        if (forwardVisited.count(adjacentV) == 0) {
-          pathsCache_.CachePath(fromVertex, adjacentV);
-
-          forwardVisited.insert(adjacentV);
-          forwardQueue.push(adjacentV);
-        }
-      }
-    }
-    if (!reverseQueue.empty()) {
-      const auto v = reverseQueue.front();
-      reverseQueue.pop();
-      if (v == fromVertex || forwardVisited.count(v) > 0) {
-        return true;
-      }
-      for (const auto adjacentV : boost::make_iterator_range(
-               boost::inv_adjacent_vertices(v, graph_))) {
-        if (reverseVisited.count(adjacentV) == 0) {
-          pathsCache_.CachePath(adjacentV, toVertex);
-
-          reverseVisited.insert(adjacentV);
-          reverseQueue.push(adjacentV);
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
-void PluginGraph::AddEdge(const vertex_t& fromVertex,
-                          const vertex_t& toVertex,
-                          EdgeType edgeType) {
-  if (pathsCache_.IsPathCached(fromVertex, toVertex)) {
-    return;
-  }
-
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Adding {} edge from \"{}\" to \"{}\".",
-                  describeEdgeType(edgeType),
-                  GetPlugin(fromVertex).GetName(),
-                  GetPlugin(toVertex).GetName());
-  }
-
-  boost::add_edge(fromVertex, toVertex, edgeType, graph_);
-  pathsCache_.CachePath(fromVertex, toVertex);
-}
-
-void PluginGraph::AddVertex(const PluginSortingData& plugin) {
-  boost::add_vertex(plugin, graph_);
-}
-
-void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
-  using std::filesystem::u8path;
-
-  auto implicitlyActivePlugins =
-      game.GetLoadOrderHandler().GetImplicitlyActivePlugins();
-
-  auto logger = getLogger();
-  std::set<std::string> processedPluginPaths;
-  for (const auto& plugin : implicitlyActivePlugins) {
-    processedPluginPaths.insert(NormalizeFilename(plugin));
-
-    if (game.Type() == GameType::tes5 &&
-        loot::equivalent(game.DataPath() / u8path(plugin),
-                         game.DataPath() / "update.esm")) {
-      if (logger) {
-        logger->trace(
-            "Skipping adding hardcoded plugin edges for Update.esm as it does "
-            "not have a hardcoded position for Skyrim.");
-        continue;
-      }
-    }
-
-    auto pluginVertex = GetVertexByName(plugin);
-
-    if (!pluginVertex.has_value()) {
-      if (logger) {
-        logger->trace(
-            "Skipping adding hardcoded plugin edges for \"{}\" as it has not "
-            "been loaded.",
-            plugin);
-      }
-      continue;
-    }
-
-    for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
-      if (vertex == pluginVertex.value()) {
-        continue;
-      }
-
-      if (processedPluginPaths.count(
-              NormalizeFilename(GetPlugin(vertex).GetName())) == 0) {
-        AddEdge(pluginVertex.value(), vertex, EdgeType::hardcoded);
-      }
-    }
-  }
-}
-
 void PluginGraph::AddSpecificEdges() {
   // Add edges for all relationships that aren't overlaps.
   for (auto [vit, vitend] = GetVertices(); vit != vitend; ++vit) {
@@ -525,115 +632,51 @@ void PluginGraph::AddSpecificEdges() {
   }
 }
 
-bool shouldIgnorePlugin(
-    const std::string& group,
-    const std::string& pluginName,
-    const std::map<std::string, std::unordered_set<std::string>>&
-        groupPluginsToIgnore) {
-  const auto pluginsToIgnore = groupPluginsToIgnore.find(group);
-  if (pluginsToIgnore != groupPluginsToIgnore.end()) {
-    return pluginsToIgnore->second.count(pluginName) > 0;
-  }
+void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
+  using std::filesystem::u8path;
 
-  return false;
-}
+  auto implicitlyActivePlugins =
+      game.GetLoadOrderHandler().GetImplicitlyActivePlugins();
 
-bool shouldIgnoreGroupEdge(
-    const PluginSortingData& fromPlugin,
-    const PluginSortingData& toPlugin,
-    const std::map<std::string, std::unordered_set<std::string>>&
-        groupPluginsToIgnore) {
-  return shouldIgnorePlugin(
-             fromPlugin.GetGroup(), toPlugin.GetName(), groupPluginsToIgnore) ||
-         shouldIgnorePlugin(
-             toPlugin.GetGroup(), fromPlugin.GetName(), groupPluginsToIgnore);
-}
+  auto logger = getLogger();
+  std::set<std::string> processedPluginPaths;
+  for (const auto& plugin : implicitlyActivePlugins) {
+    processedPluginPaths.insert(NormalizeFilename(plugin));
 
-void ignorePlugin(const std::string& pluginName,
-                  const std::unordered_set<std::string>& groups,
-                  std::map<std::string, std::unordered_set<std::string>>&
-                      groupPluginsToIgnore) {
-  for (const auto& group : groups) {
-    const auto pluginsToIgnore = groupPluginsToIgnore.find(group);
-    if (pluginsToIgnore != groupPluginsToIgnore.end()) {
-      pluginsToIgnore->second.insert(pluginName);
-    } else {
-      groupPluginsToIgnore.emplace(
-          group, std::unordered_set<std::string>({pluginName}));
-    }
-  }
-}
-
-// Look for paths to targetGroupName from group. Don't pass visitedGroups by
-// reference as each after group should be able to record paths independently.
-std::unordered_set<std::string> pathfinder(
-    const Group& group,
-    const std::string& targetGroupName,
-    const std::unordered_map<std::string, Group>& groups,
-    std::unordered_set<std::string> visitedGroups) {
-  // If the current group is the target group, return the set of groups in the
-  // path leading to it.
-  if (group.GetName() == targetGroupName) {
-    return visitedGroups;
-  }
-
-  if (group.GetAfterGroups().empty()) {
-    return std::unordered_set<std::string>();
-  }
-
-  visitedGroups.insert(group.GetName());
-
-  // Call pathfinder on each after group. We want to find all paths, so merge
-  // all return values.
-  std::unordered_set<std::string> mergedVisitedGroups;
-  for (const auto& afterGroupName : group.GetAfterGroups()) {
-    const auto groupIt = groups.find(afterGroupName);
-    if (groupIt == groups.end()) {
-      throw std::runtime_error("Cannot find group \"" + afterGroupName +
-                               "\" during sorting.");
+    if (game.Type() == GameType::tes5 &&
+        loot::equivalent(game.DataPath() / u8path(plugin),
+                         game.DataPath() / "update.esm")) {
+      if (logger) {
+        logger->trace(
+            "Skipping adding hardcoded plugin edges for Update.esm as it does "
+            "not have a hardcoded position for Skyrim.");
+        continue;
+      }
     }
 
-    auto recursedVisitedGroups =
-        pathfinder(groupIt->second, targetGroupName, groups, visitedGroups);
+    auto pluginVertex = GetVertexByName(plugin);
 
-    mergedVisitedGroups.insert(recursedVisitedGroups.begin(),
-                               recursedVisitedGroups.end());
+    if (!pluginVertex.has_value()) {
+      if (logger) {
+        logger->trace(
+            "Skipping adding hardcoded plugin edges for \"{}\" as it has not "
+            "been loaded.",
+            plugin);
+      }
+      continue;
+    }
+
+    for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
+      if (vertex == pluginVertex.value()) {
+        continue;
+      }
+
+      if (processedPluginPaths.count(
+              NormalizeFilename(GetPlugin(vertex).GetName())) == 0) {
+        AddEdge(pluginVertex.value(), vertex, EdgeType::hardcoded);
+      }
+    }
   }
-
-  // Return mergedVisitedGroups if it is empty, to indicate the current group's
-  // after groups had no path to the target group.
-  if (mergedVisitedGroups.empty()) {
-    return mergedVisitedGroups;
-  }
-
-  // If any after groups had paths to the target group, mergedVisitedGroups
-  // will be non-empty. To ensure that it contains full paths, merge it
-  // with visitedGroups and return that merged set.
-  visitedGroups.insert(mergedVisitedGroups.begin(), mergedVisitedGroups.end());
-
-  return visitedGroups;
-}
-
-std::unordered_set<std::string> getGroupsInPaths(
-    const std::unordered_map<std::string, Group>& groups,
-    const std::string& firstGroupName,
-    const std::string& lastGroupName) {
-  // Groups are linked in reverse order, i.e. firstGroup can be found from
-  // lastGroup, but not the other way around.
-  const auto groupIt = groups.find(lastGroupName);
-  if (groupIt == groups.end()) {
-    throw std::runtime_error("Cannot find group \"" + lastGroupName +
-                             "\" during sorting.");
-  }
-
-  auto groupsInPaths = pathfinder(groupIt->second,
-                                  firstGroupName,
-                                  groups,
-                                  std::unordered_set<std::string>());
-
-  groupsInPaths.erase(lastGroupName);
-
-  return groupsInPaths;
 }
 
 void PluginGraph::AddGroupEdges(
@@ -688,10 +731,11 @@ void PluginGraph::AddGroupEdges(
           continue;
         }
 
-        const auto groupsInPaths = getGroupsInPaths(
+        const auto groupsInPaths = FindGroupsInAllPaths(
             groups, fromPlugin.GetGroup(), toPlugin.GetGroup());
 
-        ignorePlugin(pluginToIgnore, groupsInPaths, groupPluginsToIgnore);
+        IgnorePluginGroupEdges(
+            pluginToIgnore, groupsInPaths, groupPluginsToIgnore);
 
         continue;
       }
@@ -704,7 +748,7 @@ void PluginGraph::AddGroupEdges(
     const auto& fromPlugin = GetPlugin(edgePair.first);
     const auto& toPlugin = GetPlugin(edgePair.second);
     const bool ignore =
-        shouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
+        ShouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
 
     if (!ignore) {
       AddEdge(edgePair.first, edgePair.second, EdgeType::group);
@@ -754,48 +798,6 @@ void PluginGraph::AddOverlapEdges() {
       if (!PathExists(toVertex, fromVertex))
         AddEdge(fromVertex, toVertex, EdgeType::overlap);
     }
-  }
-}
-
-int ComparePlugins(const PluginSortingData& plugin1,
-                   const PluginSortingData& plugin2) {
-  if (plugin1.GetLoadOrderIndex().has_value() &&
-      !plugin2.GetLoadOrderIndex().has_value()) {
-    return -1;
-  }
-
-  if (!plugin1.GetLoadOrderIndex().has_value() &&
-      plugin2.GetLoadOrderIndex().has_value()) {
-    return 1;
-  }
-
-  if (plugin1.GetLoadOrderIndex().has_value() &&
-      plugin2.GetLoadOrderIndex().has_value()) {
-    if (plugin1.GetLoadOrderIndex().value() <
-        plugin2.GetLoadOrderIndex().value()) {
-      return -1;
-    } else {
-      return 1;
-    }
-  }
-
-  // Neither plugin has a load order position. Compare plugin basenames to
-  // get an ordering.
-  auto name1 = plugin1.GetName();
-  auto name2 = plugin2.GetName();
-  auto basename1 = name1.substr(0, name1.length() - 4);
-  auto basename2 = name2.substr(0, name2.length() - 4);
-
-  const int result = CompareFilenames(basename1, basename2);
-
-  if (result != 0) {
-    return result;
-  } else {
-    // Could be a .esp and .esm plugin with the same basename,
-    // compare their extensions.
-    auto ext1 = name1.substr(name1.length() - 4);
-    auto ext2 = name2.substr(name2.length() - 4);
-    return CompareFilenames(ext1, ext2);
   }
 }
 
