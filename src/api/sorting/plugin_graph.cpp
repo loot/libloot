@@ -264,6 +264,201 @@ std::string describeEdgeType(EdgeType edgeType) {
   }
 }
 
+std::string PathToString(const RawPluginGraph& graph,
+                         const std::vector<vertex_t>& path) {
+  std::string pathString;
+  for (const auto& vertex : path) {
+    pathString += graph[vertex].GetName() + ", ";
+  }
+
+  return pathString.substr(0, pathString.length() - 2);
+}
+
+class BidirVisitor {
+public:
+  virtual ~BidirVisitor() = default;
+
+  virtual void VisitForwardVertex(const vertex_t& sourceVertex,
+                                  const vertex_t& targetVertex) = 0;
+
+  virtual void VisitReverseVertex(const vertex_t& sourceVertex,
+                                  const vertex_t& targetVertex) = 0;
+
+  virtual void VisitIntersectionVertex(const vertex_t& intersectionVertex) = 0;
+};
+
+class PathCacher : public BidirVisitor {
+public:
+  explicit PathCacher(PathsCache& pathsCache,
+                      const vertex_t& fromVertex,
+                      const vertex_t& toVertex) :
+      pathsCache_(&pathsCache), fromVertex_(fromVertex), toVertex_(toVertex) {}
+
+  void VisitForwardVertex(const vertex_t&, const vertex_t& targetVertex) {
+    pathsCache_->CachePath(fromVertex_, targetVertex);
+  }
+
+  void VisitReverseVertex(const vertex_t& sourceVertex, const vertex_t&) {
+    pathsCache_->CachePath(sourceVertex, toVertex_);
+  }
+
+  void VisitIntersectionVertex(const vertex_t&) {}
+
+protected:
+  vertex_t GetFromVertex() const { return fromVertex_; }
+
+  vertex_t GetToVertex() const { return toVertex_; }
+
+private:
+  PathsCache* pathsCache_{nullptr};
+  vertex_t fromVertex_{0};
+  vertex_t toVertex_{0};
+};
+
+class PathFinder : public PathCacher {
+public:
+  explicit PathFinder(const RawPluginGraph& graph,
+                      PathsCache& pathsCache,
+                      const vertex_t& fromVertex,
+                      const vertex_t& toVertex) :
+      PathCacher(pathsCache, fromVertex, toVertex), graph_(&graph) {}
+
+  void VisitForwardVertex(const vertex_t& sourceVertex,
+                          const vertex_t& targetVertex) {
+    PathCacher::VisitForwardVertex(sourceVertex, targetVertex);
+
+    forwardParents.insert_or_assign(targetVertex, sourceVertex);
+  }
+
+  void VisitReverseVertex(const vertex_t& sourceVertex,
+                          const vertex_t& targetVertex) {
+    PathCacher::VisitReverseVertex(sourceVertex, targetVertex);
+
+    reverseChildren.insert_or_assign(sourceVertex, targetVertex);
+  }
+
+  void VisitIntersectionVertex(const vertex_t& intersectionVertex) {
+    intersectionVertex_ = intersectionVertex;
+  }
+
+  std::optional<std::vector<vertex_t>> GetPath() {
+    if (!intersectionVertex_.has_value()) {
+      return std::nullopt;
+    }
+
+    std::vector<vertex_t> path({intersectionVertex_.value()});
+    auto currentVertex = intersectionVertex_.value();
+
+    const auto logger = getLogger();
+
+    while (currentVertex != GetFromVertex()) {
+      const auto it = forwardParents.find(currentVertex);
+      if (it == forwardParents.end()) {
+        const auto pluginName = (*graph_)[currentVertex].GetName();
+        if (logger) {
+          logger->error("Could not find parent vertex of {}. Path so far is {}",
+                        pluginName,
+                        PathToString(*graph_, path));
+        }
+        throw std::runtime_error(
+            "Unexpectedly could not find parent vertex of " + pluginName);
+      }
+
+      path.push_back(it->second);
+
+      currentVertex = it->second;
+    }
+
+    // The path current runs backwards, so reverse it.
+    std::reverse(path.begin(), path.end());
+
+    currentVertex = intersectionVertex_.value();
+
+    while (currentVertex != GetToVertex()) {
+      const auto it = reverseChildren.find(currentVertex);
+      if (it == reverseChildren.end()) {
+        const auto pluginName = (*graph_)[currentVertex].GetName();
+        if (logger) {
+          logger->error("Could not find child vertex of {}. Path so far is {}",
+                        pluginName,
+                        PathToString(*graph_, path));
+        }
+        throw std::runtime_error(
+            "Unexpectedly could not find child vertex of " + pluginName);
+      }
+
+      path.push_back(it->second);
+
+      currentVertex = it->second;
+    }
+
+    return path;
+  }
+
+private:
+  const RawPluginGraph* graph_{nullptr};
+
+  std::unordered_map<vertex_t, vertex_t> forwardParents;
+  std::unordered_map<vertex_t, vertex_t> reverseChildren;
+  std::optional<vertex_t> intersectionVertex_;
+};
+
+bool FindPath(RawPluginGraph& graph,
+              const vertex_t& fromVertex,
+              const vertex_t& toVertex,
+              BidirVisitor& visitor) {
+  std::queue<vertex_t> forwardQueue;
+  std::queue<vertex_t> reverseQueue;
+  std::unordered_set<vertex_t> forwardVisited;
+  std::unordered_set<vertex_t> reverseVisited;
+
+  forwardQueue.push(fromVertex);
+  forwardVisited.insert(fromVertex);
+  reverseQueue.push(toVertex);
+  reverseVisited.insert(toVertex);
+
+  const auto logger = getLogger();
+
+  while (!forwardQueue.empty() && !reverseQueue.empty()) {
+    if (!forwardQueue.empty()) {
+      const auto v = forwardQueue.front();
+      forwardQueue.pop();
+      if (v == toVertex || reverseVisited.count(v) > 0) {
+        visitor.VisitIntersectionVertex(v);
+        return true;
+      }
+      for (const auto adjacentV :
+           boost::make_iterator_range(boost::adjacent_vertices(v, graph))) {
+        if (forwardVisited.count(adjacentV) == 0) {
+          visitor.VisitForwardVertex(v, adjacentV);
+
+          forwardVisited.insert(adjacentV);
+          forwardQueue.push(adjacentV);
+        }
+      }
+    }
+    if (!reverseQueue.empty()) {
+      const auto v = reverseQueue.front();
+      reverseQueue.pop();
+      if (v == fromVertex || forwardVisited.count(v) > 0) {
+        visitor.VisitIntersectionVertex(v);
+        return true;
+      }
+      for (const auto adjacentV :
+           boost::make_iterator_range(boost::inv_adjacent_vertices(v, graph))) {
+        if (reverseVisited.count(adjacentV) == 0) {
+          visitor.VisitReverseVertex(adjacentV, v);
+
+          reverseVisited.insert(adjacentV);
+          reverseQueue.push(adjacentV);
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
 bool PathsCache::IsPathCached(const vertex_t& fromVertex,
                               const vertex_t& toVertex) const {
   const auto descendents = pathsCache_.find(fromVertex);
@@ -379,52 +574,19 @@ bool PluginGraph::PathExists(const vertex_t& fromVertex,
     return true;
   }
 
-  std::queue<vertex_t> forwardQueue;
-  std::queue<vertex_t> reverseQueue;
-  std::unordered_set<vertex_t> forwardVisited;
-  std::unordered_set<vertex_t> reverseVisited;
+  PathCacher visitor(pathsCache_, fromVertex, toVertex);
 
-  forwardQueue.push(fromVertex);
-  forwardVisited.insert(fromVertex);
-  reverseQueue.push(toVertex);
-  reverseVisited.insert(toVertex);
+  return loot::FindPath(graph_, fromVertex, toVertex, visitor);
+}
 
-  while (!forwardQueue.empty() && !reverseQueue.empty()) {
-    if (!forwardQueue.empty()) {
-      const auto v = forwardQueue.front();
-      forwardQueue.pop();
-      if (v == toVertex || reverseVisited.count(v) > 0) {
-        return true;
-      }
-      for (const auto adjacentV :
-           boost::make_iterator_range(boost::adjacent_vertices(v, graph_))) {
-        if (forwardVisited.count(adjacentV) == 0) {
-          pathsCache_.CachePath(fromVertex, adjacentV);
+std::optional<std::vector<vertex_t>> PluginGraph::FindPath(
+    const vertex_t& fromVertex,
+    const vertex_t& toVertex) {
+  PathFinder visitor(graph_, pathsCache_, fromVertex, toVertex);
 
-          forwardVisited.insert(adjacentV);
-          forwardQueue.push(adjacentV);
-        }
-      }
-    }
-    if (!reverseQueue.empty()) {
-      const auto v = reverseQueue.front();
-      reverseQueue.pop();
-      if (v == fromVertex || forwardVisited.count(v) > 0) {
-        return true;
-      }
-      for (const auto adjacentV : boost::make_iterator_range(
-               boost::inv_adjacent_vertices(v, graph_))) {
-        if (reverseVisited.count(adjacentV) == 0) {
-          pathsCache_.CachePath(adjacentV, toVertex);
+  loot::FindPath(graph_, fromVertex, toVertex, visitor);
 
-          reverseVisited.insert(adjacentV);
-          reverseQueue.push(adjacentV);
-        }
-      }
-    }
-  }
-
-  return false;
+  return visitor.GetPath();
 }
 
 void PluginGraph::AddEdge(const vertex_t& fromVertex,
@@ -453,24 +615,13 @@ void PluginGraph::AddVertex(const PluginSortingData& plugin) {
 
 void PluginGraph::AddPluginVertices(const Game& game,
                                     const std::vector<std::string>& loadOrder) {
-  // The resolution of tie-breaks in the plugin graph may be dependent
-  // on the order in which vertices are iterated over, as an earlier tie
-  // break resolution may cause a potential later tie break to instead
-  // cause a cycle. Vertices are stored in a std::list and added to the
-  // list using push_back().
-  // Plugins are stored in an unordered map, so simply iterating over
-  // its elements is not guarunteed to produce a consistent vertex order.
-  // MSVC 2013 and GCC 5.0 have been shown to produce consistent
-  // iteration orders that differ, and while MSVC 2013's order seems to
-  // be independent on the order in which the unordered map was filled
-  // (being lexicographical), GCC 5.0's unordered map iteration order is
-  // dependent on its insertion order.
-  // Given that, the order of vertex creation should be made consistent
-  // in order to produce consistent sorting results. While MSVC 2013
-  // doesn't strictly need this, there is no guarantee that this
-  // unspecified behaviour will remain in future compiler updates, so
-  // implement it generally.
   auto loadedPlugins = game.GetCache().GetPlugins();
+
+  // Sort plugins by their names. This is necessary to ensure that
+  // plugin precedessor group plugins are listed in a consistent
+  // order, which is important because that is the order in which
+  // group edges are added and differences could cause different
+  // sorting results.
   std::sort(loadedPlugins.begin(),
             loadedPlugins.end(),
             [](const auto& lhs, const auto& rhs) {
@@ -492,7 +643,13 @@ void PluginGraph::AddPluginVertices(const Game& game,
                  [](const Plugin* plugin) { return plugin; });
 
   std::vector<PluginSortingData> pluginsSortingData;
+  pluginsSortingData.reserve(loadedPlugins.size());
+
   for (const auto& plugin : loadedPlugins) {
+    if (!plugin) {
+      continue;
+    }
+
     const auto masterlistMetadata =
         game.GetDatabase()
             .GetPluginMetadata(plugin->GetName(), false, true)
@@ -558,6 +715,19 @@ void PluginGraph::AddPluginVertices(const Game& game,
       plugin.SetAfterGroupPlugins(groupsIt->second);
     }
   }
+
+  // Sort the plugins according to into their existing load order, or
+  // lexicographical ordering for pairs of plugins without load order positions.
+  // This ensures a consistent iteration order for vertices given the same input
+  // data. The vertex iteration order can affect what edges get added and so
+  // the final sorting result, so consistency is important.
+  // Load order is used because this simplifies the logic when adding tie-break
+  // edges.
+  std::sort(pluginsSortingData.begin(),
+            pluginsSortingData.end(),
+            [](const auto& lhs, const auto& rhs) {
+              return ComparePlugins(lhs, rhs) < 0;
+            });
 
   for (const auto& plugin : pluginsSortingData) {
     AddVertex(plugin);
@@ -857,20 +1027,238 @@ void PluginGraph::AddTieBreakEdges() {
   // In order for the sort to be performed stably, there must be only one
   // possible result. This can be enforced by adding edges between all vertices
   // that aren't already linked. Use existing load order to decide the direction
-  // of these edges.
-  for (auto [vit, vitend] = GetVertices(); vit != vitend; ++vit) {
-    const auto vertex = *vit;
+  // of these edges, and only add an edge if it won't cause a cycle.
+  //
+  // Brute-forcing this by adding an edge between every pair of vertices
+  // (unless it would cause a cycle) works but scales terribly, as before each
+  // edge is added a bidirectional search needs to be done for a path in the
+  // other direction (to detect a potential cycle). This search takes more time
+  // as the number of edges involves increases, so adding tie breaks gets slower
+  // as they get added.
+  //
+  // The point of adding these tie breaks is to ensure that there's a
+  // Hamiltonian path through the graph and therefore only one possible
+  // topological sort result.
+  //
+  // Instead of trying to brute-force this, iterate over the graph's vertices in
+  // their existing load order (each vertex represents a plugin, so the two
+  // terms are used interchangeably), and add an edge going from the earlier to
+  // the later for each consecutive pair of plugins (e.g. for [A, B, C], add
+  // edges A->B, B->C), unless adding the edge would cause a cycle. If sorting
+  // has made no changes to the load order, then it'll be possible to add all
+  // those edges and only N - 1 bidirectional searches will be needed when there
+  // are N vertices.
+  //
+  // If it's not possible to add such an edge for a pair of plugins [A, B], that
+  // means that LOOT thinks A needs to load after B, i.e. the sorted load order
+  // will be different. If the existing path between A and B is B -> C -> D -> A
+  // then walk back through the load order to find a plugin that B will load
+  // after without causing a cycle, and add an edge going from that plugin to B.
+  // Then do the same for each subsequent plugin in the path between A and B so
+  // that every plugin in the existing load order until A has a path to each of
+  // the plugins in the path from B to A, and that there is only one path that
+  // will visit all plugins until A. Keep a record of this path, because that's
+  // the load order that needs to be walked back through whenever the existing
+  // relative positions of plugins can't be used (if the existing load order was
+  // used, the process would miss out on plugins introduced in previous backward
+  // walks, and so you'd end up with multiple paths that don't necessarily touch
+  // all plugins).
 
-    for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
-      const auto otherVertex = *vit2;
+  // Storage for the load order as it evolves: a list is used because there may
+  // be a lot of inserts and it works out more efficient with large load orders
+  // and the efficiency difference doesn't matter for small load orders.
+  std::list<vertex_t> newLoadOrder;
 
-      const auto thisPluginShouldLoadEarlier =
-          ComparePlugins(GetPlugin(vertex), GetPlugin(otherVertex)) < 0;
-      const auto fromVertex = thisPluginShouldLoadEarlier ? vertex : otherVertex;
-      const auto toVertex = thisPluginShouldLoadEarlier ? otherVertex : vertex;
+  // Holds vertices that have already been put into newLoadOrder.
+  std::unordered_set<vertex_t> processedVertices;
 
-      if (!PathExists(toVertex, fromVertex))
-        AddEdge(fromVertex, toVertex, EdgeType::tieBreak);
+  const auto pinVertexPosition =
+      [&](const vertex_t& vertex,
+          const std::list<vertex_t>::const_reverse_iterator reverseEndIt)
+      -> std::list<vertex_t>::const_reverse_iterator {
+    // It's possible that this vertex has already been pinned in place,
+    // e.g. because it was visited earlier in the old load order or
+    // as part of a path that was processed. In that case just skip it.
+    if (processedVertices.count(vertex) != 0) {
+      if (logger) {
+        logger->debug(
+            "The plugin \"{}\" has already been processed, skipping it.",
+            GetPlugin(vertex).GetName());
+      }
+      return reverseEndIt;
+    }
+
+    // Otherwise, this vertex needs to be inserted into the path that includes
+    // all other vertices that have been processed so far. This can be done by
+    // searching for the last vertex in the "new load order" path for which
+    // there is not a path going from this vertex to that vertex. I.e. find the
+    // last plugin that this one can load after. We could instead find the last
+    // plugin that this one *must* load after, but it turns out that's
+    // significantly slower because it generally involves going further back
+    // along the "new load order" path.
+    const auto previousVertexPosition =
+        std::find_if(newLoadOrder.crbegin(),
+                     reverseEndIt,
+                     [&](const vertex_t& loadOrderVertex) {
+                       return !PathExists(vertex, loadOrderVertex);
+                     });
+
+    // Add an edge going from the found vertex to this one, in case it
+    // doesn't exist (we only know there's not a path going the other way).
+    if (previousVertexPosition != reverseEndIt) {
+      const auto precedingVertex = *previousVertexPosition;
+
+      AddEdge(precedingVertex, vertex, EdgeType::tieBreak);
+    }
+
+    // Insert position is just after the found vertex, and a forward iterator
+    // points to the element one after the element pointed to by the
+    // corresponding reverse iterator.
+    const auto insertPosition = previousVertexPosition.base();
+
+    // Add an edge going from this vertex to the next one in the "new load
+    // order" path, in case there isn't already one.
+    if (insertPosition != newLoadOrder.end()) {
+      const auto followingVertex = *insertPosition;
+
+      AddEdge(vertex, followingVertex, EdgeType::tieBreak);
+    }
+
+    // Now update newLoadOrder with the vertex's new position.
+    const auto newLoadOrderIt = newLoadOrder.insert(insertPosition, vertex);
+    processedVertices.insert(vertex);
+
+    if (logger) {
+      const auto nextLoadOrderIt = std::next(newLoadOrderIt);
+
+      if (nextLoadOrderIt == newLoadOrder.end()) {
+        logger->debug(
+            "The plugin \"{}\" loads at the end of the new load order so "
+            "far.",
+            GetPlugin(vertex).GetName());
+      } else {
+        logger->debug(
+            "The plugin \"{}\" loads before \"{}\" in the new load order.",
+            GetPlugin(vertex).GetName(),
+            GetPlugin(*nextLoadOrderIt).GetName());
+      }
+    }
+
+    // Return a new value for reverseEndIt, pointing to the newly
+    // inserted vertex, as if it was not the last vertex in a path
+    // being processed the next vertex in the path by definition
+    // cannot load before this one, so we can save an unnecessary
+    // check by using this new reverseEndIt value when pinning the
+    // next vertex.
+    return std::make_reverse_iterator(std::next(newLoadOrderIt));
+  };
+
+  // Vertices were already sorted into their existing load order when they
+  // were added to the graph.
+  const auto [vitstart, vitend] = GetVertices();
+  for (auto vit = vitstart; vit != vitend; ++vit) {
+    const auto currentVertex = *vit;
+    const auto nextVertexIt = std::next(vit);
+
+    if (nextVertexIt == vitend) {
+      // Don't dereference the past-the-end iterator.
+      break;
+    }
+
+    const auto nextVertex = *nextVertexIt;
+
+    auto pathFromNextVertex = FindPath(nextVertex, currentVertex);
+
+    if (!pathFromNextVertex.has_value()) {
+      // There's no path from nextVertex to currentVertex, so it's OK to add
+      // an edge going in the other direction, meaning that nextVertex can
+      // load after currentVertex.
+      AddEdge(currentVertex, nextVertex, EdgeType::tieBreak);
+
+      // nextVertex now loads after currentVertex. If currentVertex hasn't
+      // already been added to the load order, append it. It might have already
+      // been added if it was part of a path going from nextVertex and
+      // currentVertex in a previous loop (i.e. for different values of
+      // nextVertex and currentVertex).
+      if (processedVertices.count(currentVertex) == 0) {
+        newLoadOrder.push_back(currentVertex);
+        processedVertices.insert(currentVertex);
+
+        if (logger) {
+          logger->debug(
+              "The plugin \"{}\" loads at the end of the new load order so "
+              "far.",
+              GetPlugin(currentVertex).GetName());
+        }
+      } else if (currentVertex != newLoadOrder.back()) {
+        if (logger) {
+          logger->trace(
+              "Plugin \"{}\" has already been processed and is not last in the "
+              "new load order, determining where to place \"{}\".",
+              GetPlugin(currentVertex).GetName(),
+              GetPlugin(nextVertex).GetName());
+        }
+
+        // If currentVertex was already processed and not the last vertex
+        // in newLoadOrder then nextVertex also needs to be pinned in place or
+        // it may not have a defined position relative to all the
+        // vertices following currentVertex in newLoadOrder undefined, so
+        // there wouldn't be a unique path through them.
+        //
+        // We're using newLoadOrder.rend() as the last iterator position because
+        // we don't know currentVertex's position.
+        pinVertexPosition(nextVertex, newLoadOrder.rend());
+      }
+    } else {
+      // Each vertex in pathFromNextVertex (besides the last, which is
+      // currentVertex) needs to be positioned relative to a vertex that has
+      // already been iterated over (i.e. in what begins as the old load
+      // order) so that there is a single path between all vertices.
+      //
+      // If currentVertex is the first in the iteration order, then
+      // nextVertex is simply the earliest known plugin in the new load order
+      // so far.
+      if (vit == vitstart) {
+        // Record the path as the start of the new load order.
+        // Don't need to add any edges because there's nothing for nextVertex
+        // to load after at this point.
+        if (logger) {
+          logger->debug(
+              "The path ends with the first plugin checked, treating the "
+              "following path as the start of the load order: {}",
+              PathToString(graph_, pathFromNextVertex.value()));
+        }
+        for (const auto& pathVertex : pathFromNextVertex.value()) {
+          newLoadOrder.push_back(pathVertex);
+          processedVertices.insert(pathVertex);
+        }
+        continue;
+      }
+
+      // Ignore the last vertex in the path because it's currentVertex and
+      // will just be appended to the load order so doesn't need special
+      // processing.
+      pathFromNextVertex.value().pop_back();
+
+      // This is used to keep track of when to stop searching for a
+      // vertex to load after, as a minor optimisation.
+      auto reverseEndIt = newLoadOrder.crend();
+
+      // Iterate over the path going from nextVertex towards currentVertex
+      // (which got chopped off the end of the path).
+      for (const auto& currentPathVertex : pathFromNextVertex.value()) {
+        // Update reverseEndIt to reduce the scope of the search in the
+        // next loop (if there is one).
+        reverseEndIt = pinVertexPosition(currentPathVertex, reverseEndIt);
+      }
+
+      // Add currentVertex to the end of the newLoadOrder - do this after
+      // processing the other vertices in the path so that involves less
+      // work.
+      if (processedVertices.count(currentVertex) == 0) {
+        newLoadOrder.push_back(currentVertex);
+        processedVertices.insert(currentVertex);
+      }
     }
   }
 }

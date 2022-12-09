@@ -336,14 +336,26 @@ TEST_P(
     SortPlugins(game_, game_.GetLoadOrder());
     FAIL();
   } catch (CyclicInteractionError &e) {
-    ASSERT_EQ(3, e.GetCycle().size());
-    EXPECT_EQ("Blank - Different Master Dependent.esm",
-              e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::group, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ("Blank.esm", e.GetCycle()[1].GetName());
-    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[2].GetName());
-    EXPECT_EQ(EdgeType::group, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+    if (GetParam() == GameType::fo4) {
+      ASSERT_EQ(4, e.GetCycle().size());
+      EXPECT_EQ("Blank.esm", e.GetCycle()[0].GetName());
+      EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+      EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[1].GetName());
+      EXPECT_EQ(EdgeType::group, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+      EXPECT_EQ("Blank - Different.esm", e.GetCycle()[2].GetName());
+      EXPECT_EQ(EdgeType::master, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+      EXPECT_EQ("Blank - Different Master Dependent.esm",
+                e.GetCycle()[3].GetName());
+      EXPECT_EQ(EdgeType::group, e.GetCycle()[3].GetTypeOfEdgeToNextVertex());
+    } else {
+      ASSERT_EQ(3, e.GetCycle().size());
+      EXPECT_EQ(masterFile, e.GetCycle()[0].GetName());
+      EXPECT_EQ(EdgeType::group, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+      EXPECT_EQ("Blank.esm", e.GetCycle()[1].GetName());
+      EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+      EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[2].GetName());
+      EXPECT_EQ(EdgeType::group, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+    }
   }
 }
 
@@ -442,10 +454,10 @@ TEST_P(PluginSortTest,
       blankMasterDependentEsm,
       blankDifferentMasterDependentEsm,
       blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
       blankDifferentPluginDependentEsp,
       blankEsp,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
       blankPluginDependentEsp,
   });
 
@@ -474,10 +486,10 @@ TEST_P(PluginSortTest,
       blankMasterDependentEsm,
       blankDifferentMasterDependentEsm,
       blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
       blankDifferentPluginDependentEsp,
       blankEsp,
+      blankMasterDependentEsp,
+      blankDifferentMasterDependentEsp,
       blankPluginDependentEsp,
   });
 

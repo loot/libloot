@@ -24,10 +24,24 @@ the subrecords of the ``TES4`` header record.
 Create plugin graph vertices
 =================================
 
-Once loaded, a directed graph is created and the plugins are added to it in
-lexicographical order as vertices. Any metadata a plugin has in the masterlist
-and userlist are then merged into its vertex's data store. Plugin group
-dependencies are also resolved and added as group-derived plugins.
+Once the plugins have been loaded, they are sorted into their current load
+order:
+
+* If both plugins have positions in the current load order, the function
+  preserves their existing relative order.
+* If one plugin has a position and the other does not, the plugin with a
+  position goes before the plugin without a position.
+* If neither plugin has a load order position, a case-insensitive
+  lexicographical comparison of their filenames without file extensions is used
+  to decide their order. If they are equal, a case-insensitive lexicographical
+  comparison of their file extensions is used.
+
+After that, a directed graph is created and the plugins are added to it as
+vertices in their sorted order.
+
+Any metadata a plugin has in the masterlist and userlist are then merged into
+its vertex's data store. Plugin group dependencies are also resolved and added
+as group-derived plugins.
 
 Create plugin graph edges
 ==============================
@@ -47,6 +61,9 @@ For each plugin:
 4. Add edges coming from all the plugin's load after files that are installed
    plugins.
 
+Group edges
+-----------
+
 Group-derived interdependencies are then evaluated. Each plugin's group-derived
 plugins are iterated over and individually checked to see if adding an edge from
 the group-derived plugin to the plugin would cause a cycle, and if not the edge
@@ -56,6 +73,9 @@ added to the graph.
 At this point the plugin graph is checked for cycles, and an error is thrown if
 any are encountered, so that metadata (or indeed plugin data) that cause them
 can be corrected.
+
+Overlap edges
+-------------
 
 Plugin overlap edges are then added. Two plugins overlap if they contain the
 same record, i.e. if they both edit the same record or if one edits a record the
@@ -79,21 +99,60 @@ plugin's masters to be installed, so if a plugin has missing masters, its total
 record count is used in place of its override record count. Morrowind plugins
 also can't load BSAs, so they can't have overlapping assets.
 
-Finally, tie-break edges are added to ensure that sorting is consistent. For
-each plugin, iterate over all other plugins and add an edge between each pair of
-plugins in the direction given by the tie-break comparison function, unless that
-edge would cause a cycle.
+Tie-break edges
+---------------
 
-The tie-break comparison function compares current plugin load order positions,
-falling back to plugin names.
+Finally, tie-break edges are added to ensure that sorting is consistent. The
+graph's vertices are iterated over in their insertion order (i.e. the current
+load order). Each loop looks at the current vertex and the next one following it
+(e.g. the first iteration is for vertices 0 and 1, the second is for 1 and 2,
+etc.).
 
-* If both plugins have positions in the current load order, the function
-  preserves their existing relative order.
-* If one plugin has a position and the other does not, the edge added goes from
-  the plugin with a position to the plugin without a position.
-* If neither plugin has a load order position, a case-insensitive
-  lexicographical comparison of their filenames without file extensions is used
-  to decide their order.
+For each (``current``, ``next``) pair of vertices, try to find a path from
+``next`` to ``current``.
+
+If sorting makes no changes, then there won't be any paths found and it'll
+therefore be possible to add an edge from ``current`` to ``next`` without
+causing a cycle, producing the old load order.
+
+If no path is found then that means the old load order can be used for those two
+plugins. If the ``current`` vertex has not already been processed (which will be
+the case unless it appeared in a path found earlier and had its position pinned,
+see below), append it to a list representing the new load order and record the
+vertex as having been processed.
+
+If no path is found but the ``current`` vertex has been processed and is not the
+last vertex in the new load order list, pin the position of the ``next`` vertex
+(see below).
+
+If a path is found then that means the old load order for those two plugins
+(which is ``current`` before ``next``) can't be used. If ``current`` is the
+first vertex in the iteration order, then ``next`` is simply treated as the
+start of the new load order. If ``current`` is not the first vertex,
+iterate over the vertices in the path found, going from ``next`` to ``current``,
+and pin each vertex's position.
+
+Pinning vertex positions
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+A vertex's position needs to be pinned when it must go somewhere before the last
+plugin in the new load order list, because although it has a fixed position
+relative to that last plugin, it doesn't necessarily have a fixed position
+relative to the plugins that come before the last plugin. I.e. it needs to load
+earlier, but how much earlier?
+
+To pin a vertex's position, iterate over the new load order list in reverse
+order, going from the last vertex towards the first, and stop at the first
+load order vertex for which there is no path going from the unpinned vertex to
+the load order vertex. This is equivalent to finding the last plugin that the
+unpinned vertex's plugin can load after (which is not necessarily the same as
+the last plugin it *must* load after).
+
+If such a load order vertex is found, add an edge going from it to the unpinned
+vertex. If the found vertex is not the last vertex in the load order list, also
+add an edge going from the unpinned vertex to the vertex after the found vertex.
+Then record the unpinned vertex's new position in the new load order list: the
+vertex is now pinned.
 
 Topologically sort the plugin graph
 ===================================

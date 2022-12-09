@@ -381,6 +381,129 @@ TEST_F(PluginGraphTest,
   EXPECT_TRUE(graph.EdgeExists(v1, v2));
   EXPECT_FALSE(graph.EdgeExists(v2, v1));
 }
+
+TEST_F(PluginGraphTest, addTieBreakEdgesShouldNotErrorOnAGraphWithOneVertex) {
+  const auto plugin = CreatePluginSortingData("A.esp");
+
+  PluginGraph graph;
+  graph.AddVertex(plugin);
+
+  graph.AddTieBreakEdges();
+}
+
+TEST_F(
+    PluginGraphTest,
+    addTieBreakEdgesShouldResultInASortOrderEqualToVertexCreationOrderIfThereAreNoOtherEdges) {
+  PluginGraph graph;
+
+  for (size_t i = 0; i < 10; ++i) {
+    const auto plugin = CreatePluginSortingData(std::to_string(i) + ".esp");
+    graph.AddVertex(plugin);
+  }
+
+  graph.AddTieBreakEdges();
+  const auto sorted = graph.TopologicalSort();
+  const auto names = graph.ToPluginNames(sorted);
+
+  std::vector<std::string> expected({"0.esp",
+                                     "1.esp",
+                                     "2.esp",
+                                     "3.esp",
+                                     "4.esp",
+                                     "5.esp",
+                                     "6.esp",
+                                     "7.esp",
+                                     "8.esp",
+                                     "9.esp"});
+
+  EXPECT_FALSE(graph.IsHamiltonianPath(sorted).has_value());
+  EXPECT_EQ(expected, names);
+}
+
+TEST_F(
+    PluginGraphTest,
+    addTieBreakEdgesShouldPinPathsThatPreventTheVertexCreationOrderBeingUsed) {
+  PluginGraph graph;
+
+  for (size_t i = 0; i < 10; ++i) {
+    const auto plugin = CreatePluginSortingData(std::to_string(i) + ".esp");
+    graph.AddVertex(plugin);
+  }
+
+  // Add a path 6 -> 7 -> 8 -> 5.
+  vertex_t five = graph.GetVertexByName("5.esp").value();
+  vertex_t six = graph.GetVertexByName("6.esp").value();
+  vertex_t seven = graph.GetVertexByName("7.esp").value();
+  vertex_t eight = graph.GetVertexByName("8.esp").value();
+
+  graph.AddEdge(six, seven, EdgeType::overlap);
+  graph.AddEdge(seven, eight, EdgeType::overlap);
+  graph.AddEdge(eight, five, EdgeType::overlap);
+
+  // Also add a path going from 6 to 3 and another from 8 to 4.
+  vertex_t three = graph.GetVertexByName("3.esp").value();
+  vertex_t four = graph.GetVertexByName("4.esp").value();
+
+  graph.AddEdge(six, three, EdgeType::overlap);
+  graph.AddEdge(eight, four, EdgeType::overlap);
+
+  graph.AddTieBreakEdges();
+  const auto sorted = graph.TopologicalSort();
+  const auto names = graph.ToPluginNames(sorted);
+
+  std::vector<std::string> expected({"0.esp",
+                                     "1.esp",
+                                     "2.esp",
+                                     "6.esp",
+                                     "3.esp",
+                                     "7.esp",
+                                     "8.esp",
+                                     "4.esp",
+                                     "5.esp",
+                                     "9.esp"});
+
+  EXPECT_FALSE(graph.IsHamiltonianPath(sorted).has_value());
+  EXPECT_EQ(expected, names);
+}
+
+TEST_F(
+    PluginGraphTest,
+    addTieBreakEdgesShouldPrefixPathToNewLoadOrderIfTheFirstPairOfVerticesCannotBeUsedInCreationOrder) {
+  PluginGraph graph;
+
+  for (size_t i = 0; i < 10; ++i) {
+    const auto plugin = CreatePluginSortingData(std::to_string(i) + ".esp");
+    graph.AddVertex(plugin);
+  }
+
+  // Add a path 1 -> 2 -> 3 -> 0.
+  vertex_t zero = graph.GetVertexByName("0.esp").value();
+  vertex_t one = graph.GetVertexByName("1.esp").value();
+  vertex_t two = graph.GetVertexByName("2.esp").value();
+  vertex_t three = graph.GetVertexByName("3.esp").value();
+
+  graph.AddEdge(one, two, EdgeType::overlap);
+  graph.AddEdge(two, three, EdgeType::overlap);
+  graph.AddEdge(three, zero, EdgeType::overlap);
+
+  graph.AddTieBreakEdges();
+  const auto sorted = graph.TopologicalSort();
+  const auto names = graph.ToPluginNames(sorted);
+
+  std::vector<std::string> expected({"1.esp",
+                                     "2.esp",
+                                     "3.esp",
+                                     "0.esp",
+                                     "4.esp",
+                                     "5.esp",
+                                     "6.esp",
+                                     "7.esp",
+                                     "8.esp",
+                                     "9.esp"});
+
+  EXPECT_FALSE(graph.IsHamiltonianPath(sorted).has_value());
+  EXPECT_EQ(expected, names);
+}
 }
 }
 
