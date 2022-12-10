@@ -31,6 +31,8 @@
 namespace loot {
 class PluginSortingData {
 public:
+  explicit PluginSortingData();
+
   /**
    * This stores a copy of the plugin pointer that is passed to it, so
    * PluginSortingData objects must not live longer than the Plugin objects

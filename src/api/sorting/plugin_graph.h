@@ -41,7 +41,7 @@
 
 namespace loot {
 typedef boost::adjacency_list<boost::vecS,
-                              boost::listS,
+                              boost::vecS,
                               boost::bidirectionalS,
                               PluginSortingData,
                               EdgeType>

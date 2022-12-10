@@ -49,6 +49,9 @@ std::vector<const PluginInterface*> GetPluginsSubset(
   return pluginsSubset;
 }
 
+PluginSortingData::PluginSortingData() :
+    plugin_(nullptr), numOverrideFormIDs(0) {}
+
 PluginSortingData::PluginSortingData(
     const PluginSortingInterface* plugin,
     const PluginMetadata& masterlistMetadata,

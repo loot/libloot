@@ -45,8 +45,6 @@ using std::vector;
 namespace loot {
 typedef boost::graph_traits<RawPluginGraph>::edge_descriptor edge_t;
 typedef boost::graph_traits<RawPluginGraph>::edge_iterator edge_it;
-typedef boost::associative_property_map<std::map<vertex_t, size_t>>
-    vertex_map_t;
 
 class CycleDetector : public boost::dfs_visitor<> {
 public:
@@ -322,35 +320,16 @@ void PluginGraph::CheckForCycles() const {
     logger->trace("Checking plugin graph for cycles...");
   }
 
-  std::map<vertex_t, size_t> indexMap;
-  const auto vertexIndexMap = vertex_map_t(indexMap);
-  size_t i = 0;
-  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
-  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
-    put(vertexIndexMap, v, i++);
-  }
-
-  boost::depth_first_search(
-      graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap));
+  boost::depth_first_search(graph_, visitor(CycleDetector()));
 }
 
 std::vector<vertex_t> PluginGraph::TopologicalSort() const {
-  // Build an index map, which std::list-based VertexList graphs don't have.
-  std::map<vertex_t, size_t> indexMap;
-  const auto vertexIndexMap = vertex_map_t(indexMap);
-  size_t i = 0;
-  BGL_FORALL_VERTICES(v, graph_, RawPluginGraph) {
-    put(vertexIndexMap, v, i++);
-  }
-
   std::vector<vertex_t> sortedVertices;
   auto logger = getLogger();
   if (logger) {
     logger->trace("Performing topological sort on plugin graph...");
   }
-  boost::topological_sort(graph_,
-                          std::back_inserter(sortedVertices),
-                          boost::vertex_index_map(vertexIndexMap));
+  boost::topological_sort(graph_, std::back_inserter(sortedVertices));
 
   std::reverse(sortedVertices.begin(), sortedVertices.end());
 
