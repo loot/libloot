@@ -47,7 +47,7 @@ public:
   virtual uint32_t GetRecordAndGroupCount() const = 0;
 
   virtual size_t GetOverlapSize(
-      const std::vector<const PluginInterface*> plugins) const = 0;
+      const std::vector<const PluginInterface*>& plugins) const = 0;
 };
 
 class Plugin final : public PluginSortingInterface {
@@ -73,7 +73,7 @@ public:
   bool LoadsArchive() const override;
   bool DoFormIDsOverlap(const PluginInterface& plugin) const override;
   size_t GetOverlapSize(
-      const std::vector<const PluginInterface*> plugins) const override;
+      const std::vector<const PluginInterface*>& plugins) const override;
 
   // Load ordering functions.
   size_t NumOverrideFormIDs() const override;

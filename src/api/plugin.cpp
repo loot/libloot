@@ -195,7 +195,7 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
 }
 
 size_t Plugin::GetOverlapSize(
-    const std::vector<const PluginInterface*> plugins) const {
+    const std::vector<const PluginInterface*>& plugins) const {
   if (plugins.empty()) {
     return 0;
   }
