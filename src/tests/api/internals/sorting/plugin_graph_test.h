@@ -33,7 +33,7 @@ namespace loot {
 namespace test {
 TEST(PluginGraph, topologicalSortWithNoLoadedPluginsShouldReturnAnEmptyList) {
   PluginGraph graph;
-  std::vector<std::string> sorted = graph.TopologicalSort();
+  std::vector<vertex_t> sorted = graph.TopologicalSort();
 
   EXPECT_TRUE(sorted.empty());
 }

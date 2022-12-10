@@ -334,7 +334,7 @@ void PluginGraph::CheckForCycles() const {
       graph_, visitor(CycleDetector()).vertex_index_map(vertexIndexMap));
 }
 
-std::vector<std::string> PluginGraph::TopologicalSort() const {
+std::vector<vertex_t> PluginGraph::TopologicalSort() const {
   // Build an index map, which std::list-based VertexList graphs don't have.
   std::map<vertex_t, size_t> indexMap;
   const auto vertexIndexMap = vertex_map_t(indexMap);
@@ -343,43 +343,44 @@ std::vector<std::string> PluginGraph::TopologicalSort() const {
     put(vertexIndexMap, v, i++);
   }
 
-  std::list<vertex_t> sortedVertices;
+  std::vector<vertex_t> sortedVertices;
   auto logger = getLogger();
   if (logger) {
     logger->trace("Performing topological sort on plugin graph...");
   }
   boost::topological_sort(graph_,
-                          std::front_inserter(sortedVertices),
+                          std::back_inserter(sortedVertices),
                           boost::vertex_index_map(vertexIndexMap));
 
-  // Check that the sorted path is Hamiltonian (ie. unique).
+  std::reverse(sortedVertices.begin(), sortedVertices.end());
+
+  return sortedVertices;
+}
+
+std::optional<std::pair<vertex_t, vertex_t>> PluginGraph::IsHamiltonianPath(
+    const std::vector<vertex_t>& path) const {
+  auto logger = getLogger();
   if (logger) {
-    logger->trace("Checking uniqueness of calculated load order...");
+    logger->trace("Checking uniqueness of path through plugin graph...");
   }
-  for (auto it = sortedVertices.begin(); it != sortedVertices.end(); ++it) {
-    if (next(it) != sortedVertices.end() &&
-        !boost::edge(*it, *next(it), graph_).second && logger) {
-      logger->error(
-          "The calculated load order is not unique. No edge exists between {} "
-          "and {}.",
-          GetPlugin(*it).GetName(),
-          GetPlugin(*next(it)).GetName());
+
+  for (auto it = path.begin(); it != path.end(); ++it) {
+    if (next(it) != path.end() && !boost::edge(*it, *next(it), graph_).second) {
+      return std::make_pair(*it, *next(it));
     }
   }
 
-  // Output a plugin list using the sorted vertices.
-  if (logger) {
-    logger->info("Calculated order: ");
-  }
-  vector<std::string> plugins;
-  for (const auto& vertex : sortedVertices) {
-    plugins.push_back(GetPlugin(vertex).GetName());
-    if (logger) {
-      logger->info("\t{}", plugins.back());
-    }
+  return std::nullopt;
+}
+
+std::vector<std::string> PluginGraph::ToPluginNames(
+    const std::vector<vertex_t>& path) const {
+  std::vector<std::string> names;
+  for (const auto& vertex : path) {
+    names.push_back(GetPlugin(vertex).GetName());
   }
 
-  return plugins;
+  return names;
 }
 
 bool PluginGraph::EdgeExists(const vertex_t& fromVertex,

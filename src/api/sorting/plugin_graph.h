@@ -69,7 +69,14 @@ public:
   const PluginSortingData& GetPlugin(const vertex_t& vertex) const;
 
   void CheckForCycles() const;
-  std::vector<std::string> TopologicalSort() const;
+  std::vector<vertex_t> TopologicalSort() const;
+
+  // If the path is not Hamiltonian, returns the first pair of vertices
+  // in the path that do not have an edge between them.
+  std::optional<std::pair<vertex_t, vertex_t>> IsHamiltonianPath(
+      const std::vector<vertex_t>& path) const;
+  std::vector<std::string> ToPluginNames(
+      const std::vector<vertex_t>& path) const;
 
   bool EdgeExists(const vertex_t& fromVertex, const vertex_t& toVertex);
   bool PathExists(const vertex_t& fromVertex, const vertex_t& toVertex);

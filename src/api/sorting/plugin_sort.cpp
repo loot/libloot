@@ -71,6 +71,25 @@ std::vector<std::string> SortPlugins(
   // The check doesn't take a significant amount of time.
   graph.CheckForCycles();
 
-  return graph.TopologicalSort();
+  const auto path = graph.TopologicalSort();
+
+  const auto result = graph.IsHamiltonianPath(path);
+  if (result.has_value() && logger) {
+    logger->error("The path is not unique. No edge exists between {} and {}.",
+                  graph.GetPlugin(result.value().first).GetName(),
+                  graph.GetPlugin(result.value().second).GetName());
+  }
+
+  // Output a plugin list using the sorted vertices.
+  const auto newLoadOrder = graph.ToPluginNames(path);
+
+  if (logger) {
+    logger->info("Calculated order: ");
+    for (const auto& name : newLoadOrder) {
+      logger->info("\t{}", name);
+    }
+  }
+
+  return newLoadOrder;
 }
 }
