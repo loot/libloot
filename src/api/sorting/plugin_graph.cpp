@@ -309,6 +309,16 @@ std::optional<vertex_t> PluginGraph::GetVertexByName(
   return std::nullopt;
 }
 
+std::optional<vertex_t> PluginGraph::GetVertexByExactName(
+    const std::string& name) const {
+  const auto it = pluginNameVertexMap.find(name);
+  if (it != pluginNameVertexMap.end()) {
+    return it->second;
+  }
+
+  return std::nullopt;
+}
+
 const PluginSortingData& PluginGraph::GetPlugin(const vertex_t& vertex) const {
   return graph_[vertex];
 }
@@ -441,7 +451,8 @@ void PluginGraph::AddEdge(const vertex_t& fromVertex,
 }
 
 void PluginGraph::AddVertex(const PluginSortingData& plugin) {
-  boost::add_vertex(plugin, graph_);
+  const auto vertex = boost::add_vertex(plugin, graph_);
+  pluginNameVertexMap.emplace(plugin.GetName(), vertex);
 }
 
 void PluginGraph::AddPluginVertices(const Game& game,
@@ -669,7 +680,9 @@ void PluginGraph::AddGroupEdges(
     const auto& toPlugin = GetPlugin(vertex);
 
     for (const auto& pluginName : toPlugin.GetAfterGroupPlugins()) {
-      const auto parentVertex = GetVertexByName(pluginName);
+      // After group plugin names are taken from other PluginSortingData names,
+      // so exact string comparisons can be used.
+      const auto parentVertex = GetVertexByExactName(pluginName);
       if (!parentVertex.has_value()) {
         continue;
       }
