@@ -569,6 +569,12 @@ void PluginGraph::AddPluginVertices(const Game& game,
 }
 
 void PluginGraph::AddSpecificEdges() {
+  const auto logger = getLogger();
+  if (logger) {
+    logger->trace(
+        "Adding edges based on plugin data and non-group metadata...");
+  }
+
   // Add edges for all relationships that aren't overlaps.
   for (auto [vit, vitend] = GetVertices(); vit != vitend; ++vit) {
     const auto& vertex = *vit;
@@ -626,10 +632,16 @@ void PluginGraph::AddSpecificEdges() {
 void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
   using std::filesystem::u8path;
 
+  const auto logger = getLogger();
+  if (logger) {
+    logger->trace(
+        "Adding edges for implicitly active plugins and plugins with hardcoded "
+        "positions...");
+  }
+
   auto implicitlyActivePlugins =
       game.GetLoadOrderHandler().GetImplicitlyActivePlugins();
 
-  auto logger = getLogger();
   std::set<std::string> processedPluginPaths;
   for (const auto& plugin : implicitlyActivePlugins) {
     processedPluginPaths.insert(NormalizeFilename(plugin));
@@ -672,10 +684,14 @@ void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
 
 void PluginGraph::AddGroupEdges(
     const std::unordered_map<std::string, Group>& groups) {
+  const auto logger = getLogger();
+  if (logger) {
+    logger->trace("Adding edges based on plugin group memberships...");
+  }
+
   std::vector<std::pair<vertex_t, vertex_t>> acyclicEdgePairs;
   std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
 
-  const auto logger = getLogger();
   for (const vertex_t& vertex : boost::make_iterator_range(GetVertices())) {
     const auto& toPlugin = GetPlugin(vertex);
 
@@ -757,6 +773,10 @@ void PluginGraph::AddGroupEdges(
 
 void PluginGraph::AddOverlapEdges() {
   const auto logger = getLogger();
+  if (logger) {
+    logger->trace("Adding edges for overlapping plugins...");
+  }
+
   for (auto [vit, vitend] = GetVertices(); vit != vitend; ++vit) {
     const vertex_t vertex = *vit;
     const auto& plugin = GetPlugin(vertex);
@@ -795,6 +815,11 @@ void PluginGraph::AddOverlapEdges() {
 }
 
 void PluginGraph::AddTieBreakEdges() {
+  const auto logger = getLogger();
+  if (logger) {
+    logger->trace("Adding edges to break ties between plugins...");
+  }
+
   // In order for the sort to be performed stably, there must be only one
   // possible result. This can be enforced by adding edges between all vertices
   // that aren't already linked. Use existing load order to decide the direction
