@@ -49,9 +49,6 @@ std::vector<const PluginInterface*> GetPluginsSubset(
   return pluginsSubset;
 }
 
-PluginSortingData::PluginSortingData() :
-    plugin_(nullptr), numOverrideFormIDs(0) {}
-
 PluginSortingData::PluginSortingData(
     const PluginSortingInterface* plugin,
     const PluginMetadata& masterlistMetadata,
@@ -63,8 +60,7 @@ PluginSortingData::PluginSortingData(
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),
     masterlistReq_(masterlistMetadata.GetRequirements()),
-    userReq_(userMetadata.GetRequirements()),
-    numOverrideFormIDs(0) {
+    userReq_(userMetadata.GetRequirements()) {
   if (userMetadata.GetGroup()) {
     group_ = userMetadata.GetGroup().value();
   } else if (masterlistMetadata.GetGroup()) {

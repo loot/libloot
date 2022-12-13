@@ -31,7 +31,7 @@
 namespace loot {
 class PluginSortingData {
 public:
-  explicit PluginSortingData();
+  explicit PluginSortingData() = default;
 
   /**
    * This stores a copy of the plugin pointer that is passed to it, so
@@ -66,7 +66,7 @@ public:
   const std::optional<size_t>& GetLoadOrderIndex() const;
 
 private:
-  const PluginSortingInterface* plugin_;
+  const PluginSortingInterface* plugin_{nullptr};
   std::string group_;
   std::unordered_set<std::string> afterGroupPlugins_;
 
@@ -76,7 +76,7 @@ private:
   std::vector<File> userReq_;
 
   std::optional<size_t> loadOrderIndex_;
-  size_t numOverrideFormIDs;
+  size_t numOverrideFormIDs{0};
 };
 }
 
