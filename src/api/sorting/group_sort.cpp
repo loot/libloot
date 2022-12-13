@@ -187,7 +187,7 @@ GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
 
   auto logger = getLogger();
   if (logger) {
-    logger->info("Sorting groups according to their load after data");
+    logger->trace("Sorting groups according to their load after data");
   }
 
   // Check for cycles.
@@ -214,7 +214,7 @@ GetTransitiveAfterGroups(const std::vector<Group>& masterlistGroups,
     transitiveAfterGroups[graph[vertex]] = visitedGroups;
 
     if (logger) {
-      logger->trace("Group \"{}\" transitively loads after groups \"{}\"",
+      logger->debug("Group \"{}\" transitively loads after groups \"{}\"",
                     graph[vertex],
                     joinUnorderedSet(visitedGroups));
     }

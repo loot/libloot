@@ -42,9 +42,9 @@ std::vector<std::string> SortPlugins(
 
   auto logger = getLogger();
   if (logger) {
-    logger->info("Current load order: ");
+    logger->debug("Current load order:");
     for (const auto& plugin : loadOrder) {
-      logger->info("\t\t{}", plugin);
+      logger->debug("\t{}", plugin);
     }
   }
 
@@ -84,9 +84,9 @@ std::vector<std::string> SortPlugins(
   const auto newLoadOrder = graph.ToPluginNames(path);
 
   if (logger) {
-    logger->info("Calculated order: ");
+    logger->debug("Calculated order:");
     for (const auto& name : newLoadOrder) {
-      logger->info("\t{}", name);
+      logger->debug("\t{}", name);
     }
   }
 

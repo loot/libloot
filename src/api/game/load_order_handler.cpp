@@ -88,7 +88,7 @@ LoadOrderHandler::LoadOrderHandler(
 void LoadOrderHandler::LoadCurrentState() {
   auto logger = getLogger();
   if (logger) {
-    logger->info("Loading the current load order state.");
+    logger->trace("Loading the current load order state.");
   }
 
   const unsigned int ret = lo_load_current_state(gh_.get());
@@ -192,16 +192,15 @@ void LoadOrderHandler::SetLoadOrder(
     const std::vector<std::string>& loadOrder) const {
   auto logger = getLogger();
   if (logger) {
-    logger->info("Setting load order.");
+    logger->debug("Setting load order:");
+    for (const auto& plugin : loadOrder) {
+      logger->debug("\t{}", plugin);
+    }
   }
 
   std::vector<const char*> plugins;
   plugins.reserve(loadOrder.size());
   for (const auto& plugin : loadOrder) {
-    if (logger) {
-      logger->info("\t\t{}", plugin);
-    }
-
     plugins.push_back(plugin.c_str());
   }
 
@@ -211,7 +210,7 @@ void LoadOrderHandler::SetLoadOrder(
   HandleError("set the load order", ret);
 
   if (logger) {
-    logger->info("Load order set successfully.");
+    logger->debug("Load order set successfully.");
   }
 }
 

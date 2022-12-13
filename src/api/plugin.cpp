@@ -269,8 +269,8 @@ bool Plugin::IsValid(const GameType gameType,
 
   auto logger = getLogger();
   if (logger) {
-    logger->info("The file \"{}\" is not a valid plugin.",
-                 pluginPath.filename().u8string());
+    logger->debug("The file \"{}\" is not a valid plugin.",
+                  pluginPath.filename().u8string());
   }
 
   return false;

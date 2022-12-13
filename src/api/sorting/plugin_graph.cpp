@@ -440,7 +440,7 @@ void PluginGraph::AddEdge(const vertex_t& fromVertex,
 
   auto logger = getLogger();
   if (logger) {
-    logger->trace("Adding {} edge from \"{}\" to \"{}\".",
+    logger->debug("Adding {} edge from \"{}\" to \"{}\".",
                   describeEdgeType(edgeType),
                   GetPlugin(fromVertex).GetName(),
                   GetPlugin(toVertex).GetName());
@@ -650,7 +650,7 @@ void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
         loot::equivalent(game.DataPath() / u8path(plugin),
                          game.DataPath() / "update.esm")) {
       if (logger) {
-        logger->trace(
+        logger->debug(
             "Skipping adding hardcoded plugin edges for Update.esm as it does "
             "not have a hardcoded position for Skyrim.");
         continue;
@@ -661,7 +661,7 @@ void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
 
     if (!pluginVertex.has_value()) {
       if (logger) {
-        logger->trace(
+        logger->debug(
             "Skipping adding hardcoded plugin edges for \"{}\" as it has not "
             "been loaded.",
             plugin);
@@ -707,7 +707,7 @@ void PluginGraph::AddGroupEdges(
         const auto& fromPlugin = GetPlugin(parentVertex.value());
 
         if (logger) {
-          logger->trace(
+          logger->debug(
               "Skipping group edge from \"{}\" to \"{}\" as it would "
               "create a cycle.",
               fromPlugin.GetName(),
@@ -762,7 +762,7 @@ void PluginGraph::AddGroupEdges(
     if (!ignore) {
       AddEdge(edgePair.first, edgePair.second, EdgeType::group);
     } else if (logger) {
-      logger->trace(
+      logger->debug(
           "Skipping group edge from \"{}\" to \"{}\" as it would "
           "create a multi-group cycle.",
           fromPlugin.GetName(),
@@ -783,7 +783,7 @@ void PluginGraph::AddOverlapEdges() {
 
     if (plugin.NumOverrideFormIDs() == 0) {
       if (logger) {
-        logger->trace(
+        logger->debug(
             "Skipping vertex for \"{}\": the plugin contains no override "
             "records.",
             plugin.GetName());

@@ -143,7 +143,7 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
 
   auto logger = getLogger();
   if (logger) {
-    logger->debug("Loading file: {}", filepath.u8string());
+    logger->trace("Loading file: {}", filepath.u8string());
   }
 
   std::ifstream in(filepath);
@@ -227,7 +227,8 @@ void MetadataList::Load(std::istream& istream,
 
   auto logger = getLogger();
   if (logger) {
-    logger->debug("File loaded successfully.");
+    logger->trace("Successfully loaded metadata from file at \"{}\".",
+                  source_path.u8string());
   }
 }
 
