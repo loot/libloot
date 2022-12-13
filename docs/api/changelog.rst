@@ -2,6 +2,32 @@
 Version History
 ***************
 
+0.18.3 - 2022-12-13
+===================
+
+Fixed
+-----
+
+- Resolved a CMake warning relating to policy CMP0135 when building libloot.
+- Some of the documentation on ``not`` operators in the metadata syntax was
+  outdated.
+- The libloot Windows DLL did not include some file info fields that are
+  required according to Microsoft's documentation. The ``CompanyName``,
+  ``FileDescription``, ``InternalName``, ``OriginalFilename`` and
+  ``ProductName`` fields have been added.
+- The libloot Windows DLL advertised its ``FILETYPE`` as ``VFT_APP``, which has
+  been changed to ``VFT_DLL``.
+
+Changed
+-------
+
+- Sorting optimisations mean that sorting is now significantly faster (over 5
+  times faster in testing).
+- Log message severities have been adjusted to reduce the verbosity at the
+  "info" level and to move some messages between "debug" and "trace".
+- Release build archive names no longer include the output of ``git describe``.
+- Updated spdlog to v1.11.0.
+
 0.18.2 - 2022-10-11
 ===================
 
