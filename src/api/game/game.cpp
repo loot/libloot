@@ -62,14 +62,7 @@ Game::Game(const GameType gameType,
     loadOrderHandler_(type_, gamePath_, localDataPath),
     conditionEvaluator_(
         std::make_shared<ConditionEvaluator>(Type(), DataPath())),
-    database_(ApiDatabase(conditionEvaluator_)) {
-  auto logger = getLogger();
-  if (logger) {
-    logger->info("Initialising load order data for game of type {} at: {}",
-                 (int)type_,
-                 gamePath_.u8string());
-  }
-}
+    database_(ApiDatabase(conditionEvaluator_)) {}
 
 GameType Game::Type() const { return type_; }
 

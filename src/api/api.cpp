@@ -32,6 +32,31 @@
 namespace fs = std::filesystem;
 
 namespace loot {
+const char* DescribeGameType(GameType gameType) {
+  switch (gameType) {
+    case GameType::tes4:
+      return "The Elder Scrolls IV: Oblivion";
+    case GameType::tes5:
+      return "The Elder Scrolls V: Skyrim";
+    case GameType::fo3:
+      return "Fallout 3";
+    case GameType::fonv:
+      return "Fallout: New Vegas";
+    case GameType::fo4:
+      return "Fallout 4";
+    case GameType::tes5se:
+      return "The Elder Scrolls V: Skyrim Special Edition";
+    case GameType::fo4vr:
+      return "Fallout 4 VR";
+    case GameType::tes5vr:
+      return "The Elder Scrolls V: Skyrim VR";
+    case GameType::tes3:
+      return "The Elder Scrolls III: Morrowind";
+    default:
+      return "Unknown";
+  }
+}
+
 std::filesystem::path ResolvePath(const std::filesystem::path& path) {
   // is_symlink can throw on MSVC with the message
   // "symlink_status: The parameter is incorrect."
@@ -79,8 +104,9 @@ LOOT_API std::unique_ptr<GameInterface> CreateGameHandle(
   auto logger = getLogger();
   if (logger) {
     logger->info(
-        "Attempting to create a game handle with game path \"{}\" "
-        "and local path \"{}\"",
+        "Attempting to create a game handle for game type \"{}\" with game "
+        "path \"{}\" and game local path \"{}\"",
+        DescribeGameType(game),
         gamePath.u8string(),
         gameLocalPath.u8string());
   }
