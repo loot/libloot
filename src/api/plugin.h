@@ -42,7 +42,7 @@ class GameCache;
 // An interface containing member functions that are used when sorting plugins.
 class PluginSortingInterface : public PluginInterface {
 public:
-  virtual size_t NumOverrideFormIDs() const = 0;
+  virtual size_t GetOverrideRecordCount() const = 0;
   virtual uint32_t GetRecordAndGroupCount() const = 0;
 
   virtual size_t GetOverlapSize(
@@ -75,7 +75,7 @@ public:
       const std::vector<const PluginInterface*>& plugins) const override;
 
   // Load ordering functions.
-  size_t NumOverrideFormIDs() const override;
+  size_t GetOverrideRecordCount() const override;
   uint32_t GetRecordAndGroupCount() const override;
 
   // Validity checks.
@@ -99,7 +99,7 @@ private:
   bool isEmpty_;  // Does the plugin contain any records other than the TES4
                   // header?
   bool loadsArchive_;
-  size_t numOverrideRecords_;
+  size_t overrideRecordCount_;
   std::optional<std::string> version_;  // Obtained from description field.
   std::optional<uint32_t> crc_;
   std::vector<Tag> tags_;

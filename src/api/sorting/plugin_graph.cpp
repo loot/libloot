@@ -778,7 +778,7 @@ void PluginGraph::AddOverlapEdges() {
     const auto vertex = *vit;
     const auto& plugin = GetPlugin(vertex);
 
-    if (plugin.NumOverrideFormIDs() == 0) {
+    if (plugin.GetOverrideRecordCount() == 0) {
       if (logger) {
         logger->debug(
             "Skipping vertex for \"{}\": the plugin contains no override "
@@ -794,16 +794,16 @@ void PluginGraph::AddOverlapEdges() {
 
       if (vertex == otherVertex || EdgeExists(vertex, otherVertex) ||
           EdgeExists(otherVertex, vertex) ||
-          plugin.NumOverrideFormIDs() == otherPlugin.NumOverrideFormIDs() ||
-          !plugin.DoFormIDsOverlap(otherPlugin)) {
+          plugin.GetOverrideRecordCount() == otherPlugin.GetOverrideRecordCount() ||
+          !plugin.DoRecordsOverlap(otherPlugin)) {
         continue;
       }
 
-      const auto thisPluginOverridesMoreFormIDs =
-          plugin.NumOverrideFormIDs() > otherPlugin.NumOverrideFormIDs();
+      const auto thisPluginOverridesMoreRecords =
+          plugin.GetOverrideRecordCount() > otherPlugin.GetOverrideRecordCount();
       const auto fromVertex =
-          thisPluginOverridesMoreFormIDs ? vertex : otherVertex;
-      const auto toVertex = thisPluginOverridesMoreFormIDs ? otherVertex : vertex;
+          thisPluginOverridesMoreRecords ? vertex : otherVertex;
+      const auto toVertex = thisPluginOverridesMoreRecords ? otherVertex : vertex;
 
       if (!PathExists(toVertex, fromVertex))
         AddEdge(fromVertex, toVertex, EdgeType::overlap);

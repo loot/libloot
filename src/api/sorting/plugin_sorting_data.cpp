@@ -83,11 +83,11 @@ PluginSortingData::PluginSortingData(
   if (gameType == GameType::tes3) {
     auto masterNames = plugin->GetMasters();
     if (masterNames.empty()) {
-      numOverrideFormIDs = 0;
+      overrideRecordCount_ = 0;
     } else {
       auto masters = GetPluginsSubset(loadedPlugins, masterNames);
       if (masters.size() == masterNames.size()) {
-        numOverrideFormIDs = plugin->GetOverlapSize(masters);
+        overrideRecordCount_ = plugin->GetOverlapSize(masters);
       } else {
         // Not all masters are loaded, fall back to using the plugin's
         // total record count (Morrowind doesn't have groups). This is OK
@@ -98,11 +98,11 @@ PluginSortingData::PluginSortingData(
         // order with missing masters with potentially poorer results than
         // for it to error out, as masters may be missing for a variety of
         // development & testing reasons.
-        numOverrideFormIDs = plugin->GetRecordAndGroupCount();
+        overrideRecordCount_ = plugin->GetRecordAndGroupCount();
       }
     }
   } else {
-    numOverrideFormIDs = plugin->NumOverrideFormIDs();
+    overrideRecordCount_ = plugin->GetOverrideRecordCount();
   }
 }
 
@@ -127,11 +127,11 @@ std::vector<std::string> PluginSortingData::GetMasters() const {
   return plugin_->GetMasters();
 }
 
-size_t PluginSortingData::NumOverrideFormIDs() const {
-  return numOverrideFormIDs;
+size_t PluginSortingData::GetOverrideRecordCount() const {
+  return overrideRecordCount_;
 }
 
-bool PluginSortingData::DoFormIDsOverlap(
+bool PluginSortingData::DoRecordsOverlap(
     const PluginSortingData& plugin) const {
   return plugin_ != nullptr && plugin.plugin_ != nullptr &&
          plugin_->DoFormIDsOverlap(*plugin.plugin_);

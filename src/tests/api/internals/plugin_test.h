@@ -156,7 +156,7 @@ public:
   bool LoadsArchive() const override { return false; }
   bool DoFormIDsOverlap(const PluginInterface&) const override { return true; }
 
-  size_t NumOverrideFormIDs() const override { return 0; };
+  size_t GetOverrideRecordCount() const override { return 0; };
   uint32_t GetRecordAndGroupCount() const override { return 0; };
 
   size_t GetOverlapSize(
@@ -239,9 +239,9 @@ TEST_P(PluginTest, loadingWholePluginShouldReadFields) {
                 false);
 
   if (GetParam() == GameType::tes3) {
-    EXPECT_EQ(0, plugin.NumOverrideFormIDs());
+    EXPECT_EQ(0, plugin.GetOverrideRecordCount());
   } else {
-    EXPECT_EQ(4, plugin.NumOverrideFormIDs());
+    EXPECT_EQ(4, plugin.GetOverrideRecordCount());
   }
 }
 
@@ -447,7 +447,7 @@ TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAGhostedPlugin) {
 }
 
 TEST_P(PluginTest,
-       doFormIDsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
+       DoFormIDsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   OtherPluginType plugin2;
@@ -457,7 +457,7 @@ TEST_P(PluginTest,
 }
 
 TEST_P(PluginTest,
-       doFormIDsOverlapShouldReturnFalseForTwoPluginsWithOnlyHeadersLoaded) {
+       DoFormIDsOverlapShouldReturnFalseForTwoPluginsWithOnlyHeadersLoaded) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, true);
   Plugin plugin2(game_.Type(),
@@ -470,7 +470,7 @@ TEST_P(PluginTest,
 }
 
 TEST_P(PluginTest,
-       doFormIDsOverlapShouldReturnFalseIfThePluginsHaveUnrelatedRecords) {
+       DoFormIDsOverlapShouldReturnFalseIfThePluginsHaveUnrelatedRecords) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   Plugin plugin2(
@@ -481,7 +481,7 @@ TEST_P(PluginTest,
 }
 
 TEST_P(PluginTest,
-       doFormIDsOverlapShouldReturnTrueIfOnePluginOverridesTheOthersRecords) {
+       DoFormIDsOverlapShouldReturnTrueIfOnePluginOverridesTheOthersRecords) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   Plugin plugin2(game_.Type(),

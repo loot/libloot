@@ -44,7 +44,7 @@ Plugin::Plugin(const GameType gameType,
                                                               esp_plugin_free)),
     isEmpty_(true),
     loadsArchive_(false),
-    numOverrideRecords_(0) {
+    overrideRecordCount_(0) {
   auto logger = getLogger();
 
   try {
@@ -66,7 +66,7 @@ Plugin::Plugin(const GameType gameType,
       crc_ = GetCrc32(pluginPath);
 
       ret = esp_plugin_count_override_records(esPlugin.get(),
-                                              &numOverrideRecords_);
+                                              &overrideRecordCount_);
       if (ret != ESP_OK) {
         throw FileAccessError(
             "Error counting override records in \"" + name_ +
@@ -183,7 +183,7 @@ bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
     auto logger = getLogger();
     if (logger) {
       logger->error(
-          "Tried to check if FormIDs overlapped with a non-Plugin "
+          "Tried to check if records overlapped with a non-Plugin "
           "implementation of PluginInterface.");
     }
   }
@@ -205,11 +205,11 @@ size_t Plugin::GetOverlapSize(
       const auto logger = getLogger();
       if (logger) {
         logger->error(
-            "Tried to check how many FormIDs overlapped with a non-Plugin "
+            "Tried to check how many records overlapped with a non-Plugin "
             "implementation of PluginSortingInterface.");
       }
       throw std::invalid_argument(
-          "Tried to check how many FormIDs overlapped with a non-Plugin "
+          "Tried to check how many records overlapped with a non-Plugin "
           "implementation of PluginSortingInterface.");
     }
 
@@ -227,7 +227,7 @@ size_t Plugin::GetOverlapSize(
   return overlapSize;
 }
 
-size_t Plugin::NumOverrideFormIDs() const { return numOverrideRecords_; }
+size_t Plugin::GetOverrideRecordCount() const { return overrideRecordCount_; }
 
 uint32_t Plugin::GetRecordAndGroupCount() const {
   uint32_t recordAndGroupCount = 0;

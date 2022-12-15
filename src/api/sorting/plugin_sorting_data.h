@@ -52,8 +52,8 @@ public:
   bool IsMaster() const;
   bool LoadsArchive() const;
   std::vector<std::string> GetMasters() const;
-  size_t NumOverrideFormIDs() const;
-  bool DoFormIDsOverlap(const PluginSortingData& plugin) const;
+  size_t GetOverrideRecordCount() const;
+  bool DoRecordsOverlap(const PluginSortingData& plugin) const;
 
   std::string GetGroup() const;
 
@@ -78,7 +78,7 @@ private:
   std::vector<File> userReq_;
 
   std::optional<size_t> loadOrderIndex_;
-  size_t numOverrideFormIDs{0};
+  size_t overrideRecordCount_{0};
 };
 }
 

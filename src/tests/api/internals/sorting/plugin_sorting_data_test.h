@@ -137,7 +137,7 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
 }
 
 TEST_P(PluginSortingDataTest,
-       numOverrideFormIdsShouldEqualSizeOfOverlapWithThePluginsMasters) {
+       overrideRecordCountShouldEqualSizeOfOverlapWithThePluginsMasters) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   auto plugin = PluginSortingData(
@@ -147,12 +147,12 @@ TEST_P(PluginSortingDataTest,
       getLoadOrder(),
       game_.Type(),
       getLoadedPlugins());
-  EXPECT_EQ(4, plugin.NumOverrideFormIDs());
+  EXPECT_EQ(4, plugin.GetOverrideRecordCount());
 }
 
 TEST_P(
     PluginSortingDataTest,
-    constructorShouldUseTotalRecordCountAsOverrideFormIdCountForTes3PluginWithAMasterThatIsNotLoaded) {
+    constructorShouldUseTotalRecordCountAsOverrideRecordCountForTes3PluginWithAMasterThatIsNotLoaded) {
   if (GetParam() != GameType::tes3) {
     return;
   }
@@ -177,7 +177,7 @@ TEST_P(
       game_.Type(),
       loadedPlugins);
 
-  EXPECT_EQ(10, plugin.NumOverrideFormIDs());
+  EXPECT_EQ(10, plugin.GetOverrideRecordCount());
 }
 }
 }
