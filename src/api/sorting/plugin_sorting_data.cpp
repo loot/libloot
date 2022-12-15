@@ -137,6 +137,15 @@ bool PluginSortingData::DoRecordsOverlap(
          plugin_->DoFormIDsOverlap(*plugin.plugin_);
 }
 
+size_t PluginSortingData::GetAssetCount() const {
+  return plugin_ == nullptr ? 0 : plugin_->GetAssetCount();
+}
+
+bool PluginSortingData::DoAssetsOverlap(const PluginSortingData& plugin) const {
+  return plugin_ != nullptr && plugin.plugin_ != nullptr &&
+         plugin_->DoAssetsOverlap(*plugin.plugin_);
+}
+
 std::string PluginSortingData::GetGroup() const { return group_; }
 
 std::unordered_set<std::string> PluginSortingData::GetAfterGroupPlugins()

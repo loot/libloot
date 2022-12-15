@@ -55,6 +55,9 @@ public:
   size_t GetOverrideRecordCount() const;
   bool DoRecordsOverlap(const PluginSortingData& plugin) const;
 
+  size_t GetAssetCount() const;
+  bool DoAssetsOverlap(const PluginSortingData& plugin) const;
+
   std::string GetGroup() const;
 
   std::unordered_set<std::string> GetAfterGroupPlugins() const;

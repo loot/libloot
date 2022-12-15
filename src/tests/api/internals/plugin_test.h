@@ -70,9 +70,23 @@ protected:
           std::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
     }
 
+    // Copy across archive files.
+    const auto blankMasterDependentArchive =
+        "Blank - Master Dependent" + GetArchiveFileExtension(GetParam());
+    if (GetParam() == GameType::tes3 || GetParam() == GameType::fo4) {
+      out.open(dataPath / blankArchive);
+      out.close();
+    } else {
+      copyPlugin(getSourcePluginsPath(), blankArchive);
+
+      // Also create a copy for Blank - Master Dependent.esp to test overlap.
+      std::filesystem::copy_file(getSourcePluginsPath() / blankArchive,
+                                 dataPath / blankMasterDependentArchive);
+      ASSERT_TRUE(
+          std::filesystem::exists(dataPath / blankMasterDependentArchive));
+    }
+
     // Create dummy archive files.
-    out.open(dataPath / blankArchive);
-    out.close();
     out.open(dataPath / blankSuffixArchive);
     out.close();
 
@@ -91,6 +105,7 @@ protected:
     out.close();
 
     game_.GetCache().CacheArchivePaths({dataPath / blankArchive,
+                                        dataPath / blankMasterDependentArchive,
                                         dataPath / blankSuffixArchive,
                                         dataPath / nonAsciiArchivePath,
                                         dataPath / nonAsciiPrefixArchivePath});
@@ -163,6 +178,11 @@ public:
       const std::vector<const PluginInterface*>&) const override {
     return 0;
   };
+
+  size_t GetAssetCount() const override { return 0; };
+  bool DoAssetsOverlap(const PluginSortingInterface&) const override {
+    return true;
+  }
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -395,7 +415,7 @@ TEST_P(PluginTest,
        loadsArchiveShouldReturnFalseForAPluginThatDoesNotLoadAnArchive) {
   EXPECT_FALSE(Plugin(game_.Type(),
                       game_.GetCache(),
-                      game_.DataPath() / blankMasterDependentEsp,
+                      game_.DataPath() / blankDifferentMasterDependentEsp,
                       true)
                    .LoadsArchive());
 }
@@ -559,6 +579,87 @@ TEST_P(PluginTest, getRecordAndGroupCountShouldReturnTheHeaderFieldValue) {
     EXPECT_EQ(14u, plugin.GetRecordAndGroupCount());
   } else {
     EXPECT_EQ(15u, plugin.GetRecordAndGroupCount());
+  }
+}
+
+TEST_P(PluginTest,
+       getAssetCountShouldReturnNumberOfFilesInArchivesLoadedByPlugin) {
+  const auto assetCount =
+      Plugin(game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false)
+          .GetAssetCount();
+
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::fo4) {
+    EXPECT_EQ(0, assetCount);
+  } else {
+    EXPECT_EQ(1, assetCount);
+  }
+}
+
+TEST_P(PluginTest, getAssetCountShouldReturnZeroIfOnlyPluginHeaderWasLoaded) {
+  const auto assetCount =
+      Plugin(game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, true)
+          .GetAssetCount();
+
+  EXPECT_EQ(0, assetCount);
+}
+
+TEST_P(PluginTest,
+       doAssetsOverlapShouldReturnFalseOrThrowIfTheArgumentIsNotAPluginObject) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false);
+  OtherPluginType plugin2;
+
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::fo4) {
+    EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
+  } else {
+    EXPECT_THROW(plugin1.DoAssetsOverlap(plugin2), std::invalid_argument);
+  }
+  EXPECT_TRUE(plugin2.DoAssetsOverlap(plugin1));
+}
+
+TEST_P(PluginTest,
+       doAssetsOverlapShouldReturnFalseForTwoPluginsWithOnlyHeadersLoaded) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, true);
+  Plugin plugin2(game_.Type(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankMasterDependentEsp,
+                 true);
+
+  EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
+  EXPECT_FALSE(plugin2.DoAssetsOverlap(plugin1));
+}
+
+TEST_P(PluginTest,
+       doAssetsOverlapShouldReturnFalseIfThePluginsDoNotLoadTheSameAssetPath) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false);
+  // Blank - Different.esp does not load any assets.
+  Plugin plugin2(game_.Type(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankDifferentEsp,
+                 false);
+
+  EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
+  EXPECT_FALSE(plugin2.DoAssetsOverlap(plugin1));
+}
+
+TEST_P(PluginTest,
+       doAssetsOverlapShouldReturnTrueIfThePluginsLoadTheSameAssetPath) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false);
+  Plugin plugin2(game_.Type(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankMasterDependentEsp,
+                 false);
+
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::fo4) {
+    // Morrowind plugins can't load assets.
+    EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
+    EXPECT_FALSE(plugin2.DoAssetsOverlap(plugin1));
+  } else {
+    EXPECT_TRUE(plugin1.DoAssetsOverlap(plugin2));
+    EXPECT_TRUE(plugin2.DoAssetsOverlap(plugin1));
   }
 }
 

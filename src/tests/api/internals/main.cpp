@@ -22,6 +22,7 @@
     <https://www.gnu.org/licenses/>.
     */
 
+#include "tests/api/internals/bsa_test.h"
 #include "tests/api/internals/game/game_cache_test.h"
 #include "tests/api/internals/game/game_test.h"
 #include "tests/api/internals/game/load_order_handler_test.h"

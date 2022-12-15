@@ -777,12 +777,14 @@ void PluginGraph::AddOverlapEdges() {
   for (auto [vit, vitend] = GetVertices(); vit != vitend; ++vit) {
     const auto vertex = *vit;
     const auto& plugin = GetPlugin(vertex);
+    const auto pluginRecordCount = plugin.GetOverrideRecordCount();
+    const auto pluginAssetCount = plugin.GetAssetCount();
 
-    if (plugin.GetOverrideRecordCount() == 0) {
+    if (pluginRecordCount == 0 && pluginAssetCount == 0) {
       if (logger) {
         logger->debug(
             "Skipping vertex for \"{}\": the plugin contains no override "
-            "records.",
+            "records and loads no assets.",
             plugin.GetName());
       }
       continue;
@@ -792,21 +794,56 @@ void PluginGraph::AddOverlapEdges() {
       const auto otherVertex = *vit2;
       const auto& otherPlugin = GetPlugin(otherVertex);
 
-      if (vertex == otherVertex || EdgeExists(vertex, otherVertex) ||
-          EdgeExists(otherVertex, vertex) ||
-          plugin.GetOverrideRecordCount() == otherPlugin.GetOverrideRecordCount() ||
-          !plugin.DoRecordsOverlap(otherPlugin)) {
+      // Don't add an edge between these two plugins if one already
+      // exists (only check direct edges and not paths for efficiency).
+      if (EdgeExists(vertex, otherVertex) || EdgeExists(otherVertex, vertex)) {
         continue;
       }
 
-      const auto thisPluginOverridesMoreRecords =
-          plugin.GetOverrideRecordCount() > otherPlugin.GetOverrideRecordCount();
-      const auto fromVertex =
-          thisPluginOverridesMoreRecords ? vertex : otherVertex;
-      const auto toVertex = thisPluginOverridesMoreRecords ? otherVertex : vertex;
+      // Two plugins can overlap due to overriding the same records,
+      // or by loading assets from BSAs/BA2s that have the same path.
+      // If records overlap, the plugin that overrides more records
+      // should load earlier.
+      // If assets overlap, the plugin that loads more assets should
+      // load earlier.
+      // If two plugins have overlapping records and assets and one
+      // overrides more records but loads fewer assets than the other,
+      // the fact it overrides more records should take precedence
+      // (records are more significant than assets).
+      // I.e. if two plugins don't have overlapping records, check their
+      // assets, otherwise only check their assets if their override
+      // record counts are equal.
 
-      if (!PathExists(toVertex, fromVertex))
+      auto thisPluginLoadsFirst = false;
+
+      const auto otherPluginRecordCount = otherPlugin.GetOverrideRecordCount();
+
+      if (pluginRecordCount == otherPluginRecordCount ||
+          !plugin.DoRecordsOverlap(otherPlugin)) {
+        // Records don't overlap, or override the same number of records,
+        // check assets.
+        // No records overlap, check assets.
+        const auto otherPluginAssetCount = otherPlugin.GetAssetCount();
+        if (pluginAssetCount == otherPluginAssetCount ||
+            !plugin.DoAssetsOverlap(otherPlugin)) {
+          // Assets don't overlap or both plugins load the same number of
+          // assets, don't add an edge.
+          continue;
+        } else {
+          thisPluginLoadsFirst = pluginAssetCount > otherPluginAssetCount;
+        }
+      } else {
+        // Records overlap and override different numbers of records.
+        // Load this plugin first if it overrides more records.
+        thisPluginLoadsFirst = pluginRecordCount > otherPluginRecordCount;
+      }
+
+      const auto fromVertex = thisPluginLoadsFirst ? vertex : otherVertex;
+      const auto toVertex = thisPluginLoadsFirst ? otherVertex : vertex;
+
+      if (!PathExists(toVertex, fromVertex)) {
         AddEdge(fromVertex, toVertex, EdgeType::overlap);
+      }
     }
   }
 }

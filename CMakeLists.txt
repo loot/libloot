@@ -170,6 +170,7 @@ set(YAML_CPP_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY
 set(LIBLOOT_SRC_API_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/api/api.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/api_database.cpp"
+    "${CMAKE_SOURCE_DIR}/src/api/bsa.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/error_categories.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/condition_evaluator.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/conditional_metadata.cpp"
@@ -227,6 +228,8 @@ set(LIBLOOT_INCLUDE_H_FILES
 
 set(LIBLOOT_SRC_API_H_FILES
     "${CMAKE_SOURCE_DIR}/src/api/api_database.h"
+    "${CMAKE_SOURCE_DIR}/src/api/bsa.h"
+    "${CMAKE_SOURCE_DIR}/src/api/bsa_detail.h"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/condition_evaluator.h"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/yaml/file.h"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/yaml/group.h"

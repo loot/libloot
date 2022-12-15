@@ -233,6 +233,18 @@ protected:
     return loadOrder;
   }
 
+  std::filesystem::path getSourcePluginsPath() const {
+    using std::filesystem::absolute;
+    if (GetParam() == GameType::tes3)
+      return absolute("./Morrowind/Data Files");
+    else if (GetParam() == GameType::tes4)
+      return absolute("./Oblivion/Data");
+    else if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
+      return absolute("./SkyrimSE/Data");
+    else
+      return absolute("./Skyrim/Data");
+  }
+
 private:
   const std::filesystem::path rootTestPath;
 
@@ -264,18 +276,6 @@ protected:
   const uint32_t blankEsmCrc;
 
 private:
-  std::filesystem::path getSourcePluginsPath() const {
-    using std::filesystem::absolute;
-    if (GetParam() == GameType::tes3)
-      return absolute("./Morrowind/Data Files");
-    else if (GetParam() == GameType::tes4)
-      return absolute("./Oblivion/Data");
-    else if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
-      return absolute("./SkyrimSE/Data");
-    else
-      return absolute("./Skyrim/Data");
-  }
-
   inline std::string getMasterFile() const {
     if (GetParam() == GameType::tes3)
       return "Morrowind.esm";

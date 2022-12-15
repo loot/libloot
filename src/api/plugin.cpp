@@ -26,7 +26,9 @@
 
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
+#include <numeric>
 
+#include "api/bsa.h"
 #include "api/game/game.h"
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"
@@ -34,6 +36,107 @@
 #include "loot/exception/file_access_error.h"
 
 namespace loot {
+std::filesystem::path ReplaceExtension(std::filesystem::path path,
+                                       const std::string& newExtension) {
+  return path.replace_extension(std::filesystem::u8path(newExtension));
+}
+
+std::filesystem::path GetTexturesArchivePath(std::filesystem::path pluginPath,
+                                             const std::string& newExtension) {
+  // replace_extension() with no argument just removes the existing extension.
+  pluginPath.replace_extension();
+  pluginPath += " - Textures" + newExtension;
+  return pluginPath;
+}
+
+bool equivalent(const std::filesystem::path& path1,
+                const std::filesystem::path& path2) {
+  // If the paths are identical, they've got to be equivalent,
+  // it doesn't matter if the paths exist or not.
+  if (path1 == path2) {
+    return true;
+  }
+  // If the paths are not identical, the filesystem might be case-insensitive
+  // so check with the filesystem.
+  try {
+    return std::filesystem::equivalent(path1, path2);
+  } catch (const std::filesystem::filesystem_error&) {
+    // One of the paths checked for equivalence doesn't exist,
+    // so they can't be equivalent.
+    return false;
+  } catch (const std::system_error&) {
+    // This can be thrown if one or both of the paths contains a character
+    // that can't be represented in Windows' multi-byte code page (e.g.
+    // Windows-1252), even though Unicode paths shouldn't be a problem,
+    // and throwing system_error is undocumented. Seems like a bug in MSVC's
+    // implementation.
+    return false;
+  }
+}
+
+std::vector<std::filesystem::path> FindAssociatedArchives(
+    const GameType gameType,
+    const GameCache& gameCache,
+    const std::filesystem::path& pluginPath) {
+  std::vector<std::filesystem::path> paths;
+
+  if (gameType == GameType::tes3) {
+    return paths;
+  }
+
+  const auto archiveExtension = GetArchiveFileExtension(gameType);
+
+  if (gameType == GameType::tes5) {
+    // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
+    // basename, ignoring file extensions.
+    const auto archiveFilename = ReplaceExtension(pluginPath, archiveExtension);
+
+    if (std::filesystem::exists(archiveFilename)) {
+      paths.push_back(archiveFilename);
+    }
+  } else if (gameType == GameType::tes5se || gameType == GameType::tes5vr) {
+    // Skyrim SE can load BSAs that have exactly the same
+    // basename, ignoring file extensions, and also BSAs with filenames of
+    // the form "<basename> - Textures.bsa" (case-insensitively).
+    // This assumes that Skyrim VR works the same way as Skyrim SE.
+    const auto archiveFilename = ReplaceExtension(pluginPath, archiveExtension);
+    const auto texturesArchiveFilename =
+        GetTexturesArchivePath(pluginPath, archiveExtension);
+
+    if (std::filesystem::exists(archiveFilename)) {
+      paths.push_back(archiveFilename);
+    }
+
+    if (std::filesystem::exists(texturesArchiveFilename)) {
+      paths.push_back(texturesArchiveFilename);
+    }
+  } else if (gameType != GameType::tes4 ||
+             boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
+    // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
+    // begin with the plugin basename.
+    // This assumes that FO4 VR works the same way as FO4.
+
+    const auto basenameLength = pluginPath.stem().native().length();
+    const auto pluginExtension = pluginPath.extension().native();
+
+    for (const auto& archivePath : gameCache.GetArchivePaths()) {
+      // Need to check if it starts with the given plugin's basename,
+      // but case insensitively. This is hard to do accurately, so
+      // instead check if the plugin with the same length basename and
+      // and the given plugin's file extension is equivalent.
+      const auto bsaPluginFilename =
+          archivePath.filename().native().substr(0, basenameLength) +
+          pluginExtension;
+      const auto bsaPluginPath = pluginPath.parent_path() / bsaPluginFilename;
+      if (loot::equivalent(pluginPath, bsaPluginPath)) {
+        paths.push_back(archivePath);
+      }
+    }
+  }
+
+  return paths;
+}
+
 Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
                std::filesystem::path pluginPath,
@@ -43,7 +146,6 @@ Plugin::Plugin(const GameType gameType,
         std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(nullptr,
                                                               esp_plugin_free)),
     isEmpty_(true),
-    loadsArchive_(false),
     overrideRecordCount_(0) {
   auto logger = getLogger();
 
@@ -62,6 +164,8 @@ Plugin::Plugin(const GameType gameType,
           "\" is empty. esplugin error code: " + std::to_string(ret));
     }
 
+    archivePaths_ = FindAssociatedArchives(gameType, gameCache, pluginPath);
+
     if (!headerOnly) {
       crc_ = GetCrc32(pluginPath);
 
@@ -72,10 +176,20 @@ Plugin::Plugin(const GameType gameType,
             "Error counting override records in \"" + name_ +
             "\". esplugin error code: " + std::to_string(ret));
       }
+
+      // Get the assets in the BSAs that this plugin loads.
+      auto assets = GetAssetsInBethesdaArchives(archivePaths_);
+      std::swap(archiveAssets_, assets);
+
+      if (logger) {
+        logger->debug(
+            "Plugin file \"{}\" loads {} assets from Bethesda archives",
+            name_,
+            GetAssetCount());
+      }
     }
 
     tags_ = ExtractBashTags(GetDescription());
-    loadsArchive_ = LoadsArchive(gameType, gameCache, pluginPath);
   } catch (const std::exception& e) {
     if (logger) {
       logger->error(
@@ -164,7 +278,7 @@ bool Plugin::IsValidAsLightPlugin() const {
 
 bool Plugin::IsEmpty() const { return isEmpty_; }
 
-bool Plugin::LoadsArchive() const { return loadsArchive_; }
+bool Plugin::LoadsArchive() const { return !archivePaths_.empty(); }
 
 bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
   try {
@@ -240,6 +354,36 @@ uint32_t Plugin::GetRecordAndGroupCount() const {
   }
 
   return recordAndGroupCount;
+}
+
+size_t Plugin::GetAssetCount() const {
+  return std::accumulate(
+      archiveAssets_.begin(),
+      archiveAssets_.end(),
+      size_t{0},
+      [](const size_t& a, const auto& b) { return a + b.second.size(); });
+}
+
+bool Plugin::DoAssetsOverlap(const PluginSortingInterface& plugin) const {
+  if (archiveAssets_.empty()) {
+    return false;
+  }
+
+  try {
+    const auto& otherPlugin = dynamic_cast<const Plugin&>(plugin);
+
+    return DoAssetsIntersect(archiveAssets_, otherPlugin.archiveAssets_);
+  } catch (std::bad_cast&) {
+    auto logger = getLogger();
+    if (logger) {
+      logger->error(
+          "Tried to check how many FormIDs overlapped with a non-Plugin "
+          "implementation of PluginSortingInterface.");
+    }
+    throw std::invalid_argument(
+        "Tried to check how many FormIDs overlapped with a non-Plugin "
+        "implementation of PluginSortingInterface.");
+  }
 }
 
 bool Plugin::IsValid(const GameType gameType,
@@ -323,98 +467,6 @@ std::string GetArchiveFileExtension(const GameType gameType) {
     return ".ba2";
   else
     return ".bsa";
-}
-
-std::filesystem::path replaceExtension(std::filesystem::path path,
-                                       const std::string& newExtension) {
-  return path.replace_extension(std::filesystem::u8path(newExtension));
-}
-
-std::filesystem::path getTexturesArchivePath(std::filesystem::path pluginPath,
-                                             const std::string& newExtension) {
-  // replace_extension() with no argument just removes the existing extension.
-  pluginPath.replace_extension();
-  pluginPath += " - Textures" + newExtension;
-  return pluginPath;
-}
-
-bool equivalent(const std::filesystem::path& path1,
-                const std::filesystem::path& path2) {
-  // If the paths are identical, they've got to be equivalent,
-  // it doesn't matter if the paths exist or not.
-  if (path1 == path2) {
-    return true;
-  }
-  // If the paths are not identical, the filesystem might be case-insensitive
-  // so check with the filesystem.
-  try {
-    return std::filesystem::equivalent(path1, path2);
-  } catch (const std::filesystem::filesystem_error&) {
-    // One of the paths checked for equivalence doesn't exist,
-    // so they can't be equivalent.
-    return false;
-  } catch (const std::system_error&) {
-    // This can be thrown if one or both of the paths contains a character
-    // that can't be represented in Windows' multi-byte code page (e.g.
-    // Windows-1252), even though Unicode paths shouldn't be a problem,
-    // and throwing system_error is undocumented. Seems like a bug in MSVC's
-    // implementation.
-    return false;
-  }
-}
-
-// Get whether the plugin loads an archive (BSA/BA2) or not.
-bool Plugin::LoadsArchive(const GameType gameType,
-                          const GameCache& gameCache,
-                          const std::filesystem::path& pluginPath) {
-  if (gameType == GameType::tes3) {
-    return false;
-  }
-
-  const auto archiveExtension = GetArchiveFileExtension(gameType);
-
-  if (gameType == GameType::tes5) {
-    // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
-    // basename, ignoring file extensions.
-    auto archiveFilename = replaceExtension(pluginPath, archiveExtension);
-
-    return std::filesystem::exists(archiveFilename);
-  } else if (gameType == GameType::tes5se || gameType == GameType::tes5vr) {
-    // Skyrim SE can load BSAs that have exactly the same
-    // basename, ignoring file extensions, and also BSAs with filenames of
-    // the form "<basename> - Textures.bsa" (case-insensitively).
-    // I'm assuming Skyrim VR works the same way as Skyrim SE.
-    auto archiveFilename = replaceExtension(pluginPath, archiveExtension);
-    auto texturesArchiveFilename =
-        getTexturesArchivePath(pluginPath, archiveExtension);
-
-    return std::filesystem::exists(archiveFilename) ||
-           std::filesystem::exists(texturesArchiveFilename);
-  } else if (gameType != GameType::tes4 ||
-             boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
-    // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
-    // begin with the plugin basename.
-    // I'm assuming that FO4 VR works the same way as FO4.
-
-    auto basenameLength = pluginPath.stem().native().length();
-    auto pluginExtension = pluginPath.extension().native();
-
-    for (const auto& archivePath : gameCache.GetArchivePaths()) {
-      // Need to check if it starts with the given plugin's basename,
-      // but case insensitively. This is hard to do accurately, so
-      // instead check if the plugin with the same length basename and
-      // and the given plugin's file extension is equivalent.
-      auto bsaPluginFilename =
-          archivePath.filename().native().substr(0, basenameLength) +
-          pluginExtension;
-      auto bsaPluginPath = pluginPath.parent_path() / bsaPluginFilename;
-      if (loot::equivalent(pluginPath, bsaPluginPath)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
 }
 
 unsigned int Plugin::GetEspluginGameId(GameType gameType) {

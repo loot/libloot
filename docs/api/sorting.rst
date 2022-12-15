@@ -59,19 +59,25 @@ can be corrected.
 
 Plugin overlap edges are then added. Two plugins overlap if they contain the
 same record, i.e. if they both edit the same record or if one edits a record the
-other plugin adds.
+other plugin adds. Plugins also overlap if they both load one or more BSAs and
+the BSAs loaded by one plugin contain data for a file path that is also included
+in the BSAs loaded by the other plugin.
 
 For each plugin, skip it if it overrides no records, otherwise iterate over all
 other plugins.
 
-* If the plugin and other plugin override the same number of records, or do not
-  overlap, skip the other plugin.
+* If the plugin and other plugin override the same number of records and the
+  same number of assets, or do not overlap, skip the other plugin.
 * Otherwise, add an edge from the plugin which overrides more records to the
-  plugin that overrides fewer records, unless that edge would cause a cycle.
+  plugin that overrides fewer records, unless that edge would cause a cycle. If
+  the plugins don't have overlapping records or override the same number of
+  records, the edge is added from the plugin that loads more assets via its
+  BSAs to the plugin that loads fewer assets.
 
 For Morrowind, identifying which records override others requires all of a
 plugin's masters to be installed, so if a plugin has missing masters, its total
-record count is used in place of its override record count.
+record count is used in place of its override record count. Morrowind plugins
+also can't load BSAs, so they can't have overlapping assets.
 
 Finally, tie-break edges are added to ensure that sorting is consistent. For
 each plugin, iterate over all other plugins and add an edge between each pair of

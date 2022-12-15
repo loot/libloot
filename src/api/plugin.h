@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <esplugin.hpp>
 #include <list>
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -47,6 +48,9 @@ public:
 
   virtual size_t GetOverlapSize(
       const std::vector<const PluginInterface*>& plugins) const = 0;
+
+  virtual size_t GetAssetCount() const = 0;
+  virtual bool DoAssetsOverlap(const PluginSortingInterface& plugin) const = 0;
 };
 
 class Plugin final : public PluginSortingInterface {
@@ -78,6 +82,9 @@ public:
   size_t GetOverrideRecordCount() const override;
   uint32_t GetRecordAndGroupCount() const override;
 
+  size_t GetAssetCount() const;
+  bool DoAssetsOverlap(const PluginSortingInterface& plugin) const;
+
   // Validity checks.
   static bool IsValid(const GameType gameType,
                       const std::filesystem::path& pluginPath);
@@ -89,20 +96,18 @@ private:
             bool headerOnly);
   std::string GetDescription() const;
 
-  static bool LoadsArchive(const GameType gameType,
-                           const GameCache& gameCache,
-                           const std::filesystem::path& pluginPath);
   static unsigned int GetEspluginGameId(GameType gameType);
 
   std::string name_;
   std::unique_ptr<::Plugin, decltype(&esp_plugin_free)> esPlugin;
   bool isEmpty_;  // Does the plugin contain any records other than the TES4
                   // header?
-  bool loadsArchive_;
   size_t overrideRecordCount_;
   std::optional<std::string> version_;  // Obtained from description field.
   std::optional<uint32_t> crc_;
   std::vector<Tag> tags_;
+  std::vector<std::filesystem::path> archivePaths_;
+  std::map<uint64_t, std::set<uint64_t>> archiveAssets_;
 };
 
 std::string GetArchiveFileExtension(const GameType gameType);
