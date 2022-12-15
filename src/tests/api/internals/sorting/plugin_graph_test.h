@@ -66,7 +66,7 @@ public:
 
   bool LoadsArchive() const override { return false; }
 
-  bool DoFormIDsOverlap(const PluginInterface& plugin) const override {
+  bool DoRecordsOverlap(const PluginInterface& plugin) const override {
     const auto otherPlugin = dynamic_cast<const TestPlugin*>(&plugin);
     return recordsOverlapWith.count(&plugin) != 0 ||
            otherPlugin->recordsOverlapWith.count(this) != 0;

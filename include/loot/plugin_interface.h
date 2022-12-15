@@ -126,7 +126,7 @@ public:
    *         Morrowind, which doesn't have FormIDs and so has other identifying
    *         data compared.
    */
-  virtual bool DoFormIDsOverlap(const PluginInterface& plugin) const = 0;
+  virtual bool DoRecordsOverlap(const PluginInterface& plugin) const = 0;
 };
 }
 

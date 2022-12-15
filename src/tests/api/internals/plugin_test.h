@@ -179,7 +179,7 @@ public:
   bool IsValidAsLightPlugin() const override { return false; }
   bool IsEmpty() const override { return false; }
   bool LoadsArchive() const override { return false; }
-  bool DoFormIDsOverlap(const PluginInterface&) const override { return true; }
+  bool DoRecordsOverlap(const PluginInterface&) const override { return true; }
 
   size_t GetOverrideRecordCount() const override { return 0; };
   uint32_t GetRecordAndGroupCount() const override { return 0; };
@@ -477,17 +477,17 @@ TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAGhostedPlugin) {
 }
 
 TEST_P(PluginTest,
-       DoFormIDsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
+       doRecordsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   OtherPluginType plugin2;
 
-  EXPECT_FALSE(plugin1.DoFormIDsOverlap(plugin2));
-  EXPECT_TRUE(plugin2.DoFormIDsOverlap(plugin1));
+  EXPECT_FALSE(plugin1.DoRecordsOverlap(plugin2));
+  EXPECT_TRUE(plugin2.DoRecordsOverlap(plugin1));
 }
 
 TEST_P(PluginTest,
-       DoFormIDsOverlapShouldReturnFalseForTwoPluginsWithOnlyHeadersLoaded) {
+       doRecordsOverlapShouldReturnFalseForTwoPluginsWithOnlyHeadersLoaded) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, true);
   Plugin plugin2(game_.Type(),
@@ -495,23 +495,23 @@ TEST_P(PluginTest,
                  game_.DataPath() / blankMasterDependentEsm,
                  true);
 
-  EXPECT_FALSE(plugin1.DoFormIDsOverlap(plugin2));
-  EXPECT_FALSE(plugin2.DoFormIDsOverlap(plugin1));
+  EXPECT_FALSE(plugin1.DoRecordsOverlap(plugin2));
+  EXPECT_FALSE(plugin2.DoRecordsOverlap(plugin1));
 }
 
 TEST_P(PluginTest,
-       DoFormIDsOverlapShouldReturnFalseIfThePluginsHaveUnrelatedRecords) {
+       doRecordsOverlapShouldReturnFalseIfThePluginsHaveUnrelatedRecords) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   Plugin plugin2(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false);
 
-  EXPECT_FALSE(plugin1.DoFormIDsOverlap(plugin2));
-  EXPECT_FALSE(plugin2.DoFormIDsOverlap(plugin1));
+  EXPECT_FALSE(plugin1.DoRecordsOverlap(plugin2));
+  EXPECT_FALSE(plugin2.DoRecordsOverlap(plugin1));
 }
 
 TEST_P(PluginTest,
-       DoFormIDsOverlapShouldReturnTrueIfOnePluginOverridesTheOthersRecords) {
+       doRecordsOverlapShouldReturnTrueIfOnePluginOverridesTheOthersRecords) {
   Plugin plugin1(
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   Plugin plugin2(game_.Type(),
@@ -519,8 +519,8 @@ TEST_P(PluginTest,
                  game_.DataPath() / blankMasterDependentEsm,
                  false);
 
-  EXPECT_TRUE(plugin1.DoFormIDsOverlap(plugin2));
-  EXPECT_TRUE(plugin2.DoFormIDsOverlap(plugin1));
+  EXPECT_TRUE(plugin1.DoRecordsOverlap(plugin2));
+  EXPECT_TRUE(plugin2.DoRecordsOverlap(plugin1));
 }
 
 TEST_P(PluginTest,

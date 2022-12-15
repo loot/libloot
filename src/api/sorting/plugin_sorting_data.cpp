@@ -134,7 +134,7 @@ size_t PluginSortingData::GetOverrideRecordCount() const {
 bool PluginSortingData::DoRecordsOverlap(
     const PluginSortingData& plugin) const {
   return plugin_ != nullptr && plugin.plugin_ != nullptr &&
-         plugin_->DoFormIDsOverlap(*plugin.plugin_);
+         plugin_->DoRecordsOverlap(*plugin.plugin_);
 }
 
 size_t PluginSortingData::GetAssetCount() const {

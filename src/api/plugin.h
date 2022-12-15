@@ -74,7 +74,7 @@ public:
   bool IsValidAsLightPlugin() const override;
   bool IsEmpty() const override;
   bool LoadsArchive() const override;
-  bool DoFormIDsOverlap(const PluginInterface& plugin) const override;
+  bool DoRecordsOverlap(const PluginInterface& plugin) const override;
   size_t GetOverlapSize(
       const std::vector<const PluginInterface*>& plugins) const override;
 

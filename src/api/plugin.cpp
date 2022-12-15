@@ -280,7 +280,7 @@ bool Plugin::IsEmpty() const { return isEmpty_; }
 
 bool Plugin::LoadsArchive() const { return !archivePaths_.empty(); }
 
-bool Plugin::DoFormIDsOverlap(const PluginInterface& plugin) const {
+bool Plugin::DoRecordsOverlap(const PluginInterface& plugin) const {
   try {
     auto& otherPlugin = dynamic_cast<const Plugin&>(plugin);
 
