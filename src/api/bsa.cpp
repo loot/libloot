@@ -24,6 +24,7 @@
 
 #include "api/bsa.h"
 
+#include <boost/algorithm/string.hpp>
 #include <fstream>
 
 #include "api/bsa_detail.h"
@@ -120,159 +121,97 @@ struct Header {
   uint64_t filePathsOffset{0};
 };
 
-struct GeneralFileRecord {
-  uint32_t fileHash{
-      0};  // Seems to be a hash of the file basename (without extension)
-  uint32_t extension{0};   // First 4 bytes of file extension.
-  uint32_t folderHash{0};  // Same value for files in the same directory.
-  uint32_t unknown1{0};    // Always 00 01 10 00?
-  uint32_t dataOffset{0};  // Offset from start of file.
-  uint32_t unknown2{0};    // Always null?
-  uint32_t unknown3{
-      0};  // Length of the compressed data block (or null if uncompressed).
-  uint32_t dataLength{0};  // Length of the uncompressed data block.
-  uint32_t unknown4{0};    // Always 0D F0 AD BA?
-};
-
-struct TextureFileRecord {
-  uint32_t fileHash{0};
-  uint32_t extension{0};
-  uint32_t folderHash{0};
-  uint8_t unknown1{0};  // Always null?
-  uint8_t subrecordCount{0};
-  uint16_t subrecordLength{0};  // Length of a single subrecord, always 24?
-  uint64_t unknown2{0};
-};
-
 void StoreHashes(std::map<uint64_t, std::set<uint64_t>>& folderFileHashes,
-                 const uint32_t fileHash,
-                 const uint32_t extension,
-                 const uint32_t folderHash) {
-  // The file hash can't be used on its own as it's common for two files
-  // in the same directory to have the same basename but different
-  // extension, so treat the extension as the high bytes of a 64-bit hash.
-  const uint64_t fileAndExtensionHash =
-      uint64_t{fileHash} | (uint64_t{extension} << 32);
-
-  const auto folderResult = folderFileHashes.emplace(
-      folderHash, std::set<uint64_t>({fileAndExtensionHash}));
+                 const uint64_t fileHash,
+                 const uint64_t folderHash) {
+  const auto folderResult =
+      folderFileHashes.emplace(folderHash, std::set<uint64_t>({fileHash}));
 
   if (!folderResult.second) {
     // Folder hash already stored, add file hash to existing set.
-    const auto fileResult =
-        folderResult.first->second.insert(fileAndExtensionHash);
+    const auto fileResult = folderResult.first->second.insert(fileHash);
 
     if (!fileResult.second) {
       const auto message = fmt::format(
           "Unexpected collision for file name hash {:x} in set for folder name "
           "hash {:x}",
-          fileAndExtensionHash,
+          fileHash,
           folderHash);
       throw std::runtime_error(message);
     }
   }
 }
 
-std::map<uint64_t, std::set<uint64_t>> GetAssetsInGeneralBA2(
+// Normalise the path the same way that BA2 hashes do (it's thet same as for
+// BSAs).
+void NormalisePath(std::string& filePath) {
+  for (size_t i = 0; i < filePath.size(); ++i) {
+    // Ignore any non-ASCII characters.
+    if (filePath[i] > 127) {
+      continue;
+    }
+
+    // Replace any forwardslashes with backslashes and
+    // lowercase any other characters.
+    filePath[i] = filePath[i] == '/'
+                      ? '\\'
+                      : static_cast<char>(std::tolower(
+                            static_cast<unsigned char>(filePath[i])));
+  }
+}
+
+std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2FromFilePaths(
     std::istream& in,
-    const Header& header,
-    const std::filesystem::path& archivePath) {
+    const Header& header) {
+  // BA2s use 32-bit hashes and I've observed collisions between different
+  // official Fallout 4 BA2s, so calculate new 64-bit hashes instead of
+  // using the hashes in the BA2.
   const auto logger = getLogger();
 
   std::map<uint64_t, std::set<uint64_t>> folderFileHashes;
 
+  // Skip to list of file paths at the end of the BA2.
+  in.seekg(header.filePathsOffset, std::ios_base::beg);
+
+  // The file paths are prefixed by a two-byte length, and not null-terminated.
   for (size_t i = 0; i < header.fileCount; ++i) {
-    GeneralFileRecord fileRecord;
-    in.read(reinterpret_cast<char*>(&fileRecord), sizeof(GeneralFileRecord));
+    uint16_t pathLength;
+    in.read(reinterpret_cast<char*>(&pathLength), sizeof(pathLength));
 
-    // Validate assumptions (don't error if invalid, because they don't
-    // actually matter for LOOT).
-    if (fileRecord.unknown1 != 0x100100) {
-      logger->warn(
-          "Unexpected value for unknown1 field in file record with hash {:x} "
-          "in BA2 file at \"{}\": {}",
-          fileRecord.fileHash,
-          archivePath.u8string(),
-          fileRecord.unknown1);
+    std::string filePath(pathLength, '\0');
+    in.read(filePath.data(), pathLength);
+
+    // Normalise the path the same as is done for BSA/BA2 hash calculation,
+    // so that equivalent but not equal paths (e.g. due to upper/lowercase
+    // differences) are hashed to the same value.
+    NormalisePath(filePath);
+
+    // Trim trailing and leading slashes.
+    boost::trim_if(filePath, [](const char c) { return c == '\\'; });
+
+    // Now split the path so that its folder and file hashes can be calculated.
+    const auto index = filePath.rfind("\\");
+    if (index == std::string::npos) {
+      // No slash, no directory, use a hash of zero.
+      const uint64_t fileHash = std::hash<std::string>{}(filePath);
+      const uint64_t folderHash = 0;
+      StoreHashes(folderFileHashes, fileHash, folderHash);
+    } else {
+      // Split the string in two.
+      const auto folderPath = filePath.substr(0, index);
+      filePath = filePath.substr(index + 1);
+
+      const uint64_t fileHash = std::hash<std::string>{}(filePath);
+      const uint64_t folderHash = std::hash<std::string>{}(folderPath);
+      StoreHashes(folderFileHashes, fileHash, folderHash);
     }
-
-    if (fileRecord.unknown2 != 0) {
-      logger->warn(
-          "Unexpected value for unknown2 field in file record with hash {:x} "
-          "in BA2 file at \"{}\": {}",
-          fileRecord.fileHash,
-          archivePath.u8string(),
-          fileRecord.unknown2);
-    }
-
-    if (fileRecord.unknown4 != 0xBAADF00D) {
-      logger->warn(
-          "Unexpected value for unknown4 field in file record with hash {:x} "
-          "in BA2 file at \"{}\": {}",
-          fileRecord.fileHash,
-          archivePath.u8string(),
-          fileRecord.unknown4);
-    }
-
-    // Now store the hashes.
-    StoreHashes(folderFileHashes,
-                fileRecord.fileHash,
-                fileRecord.extension,
-                fileRecord.folderHash);
   }
 
   return folderFileHashes;
 }
 
-std::map<uint64_t, std::set<uint64_t>> GetAssetsInTextureBA2(
-    std::istream& in,
-    const Header& header,
-    const std::filesystem::path& archivePath) {
-  const auto logger = getLogger();
-
-  std::map<uint64_t, std::set<uint64_t>> folderFileHashes;
-
-  for (size_t i = 0; i < header.fileCount; ++i) {
-    TextureFileRecord fileRecord;
-    in.read(reinterpret_cast<char*>(&fileRecord), sizeof(TextureFileRecord));
-
-    // Skip over this file record's subrecords.
-    in.ignore(fileRecord.subrecordCount * fileRecord.subrecordLength);
-
-    // Validate assumptions (don't error if invalid, because they don't
-    // actually matter for LOOT).
-    if (fileRecord.unknown1 != 0) {
-      logger->warn(
-          "Unexpected value for unknown1 field in file record with hash {:x} "
-          "in BA2 file at \"{}\": {}",
-          fileRecord.fileHash,
-          archivePath.u8string(),
-          fileRecord.unknown1);
-    }
-
-    if (fileRecord.subrecordLength != 24) {
-      logger->warn(
-          "Unexpected value for subrecordLength field in file record with hash "
-          "{:x} in BA2 file at \"{}\": {}",
-          fileRecord.fileHash,
-          archivePath.u8string(),
-          fileRecord.subrecordLength);
-    }
-
-    // Now store the hashes.
-    StoreHashes(folderFileHashes,
-                fileRecord.fileHash,
-                fileRecord.extension,
-                fileRecord.folderHash);
-  }
-
-  return folderFileHashes;
-}
-
-std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2(
-    std::istream& in,
-    const Header& header,
-    const std::filesystem::path& archivePath) {
+std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2(std::istream& in,
+                                                      const Header& header) {
   // Validate the header.
   if (header.typeId != BA2_TYPE_ID) {
     throw std::runtime_error("BA2 file header type ID is invalid");
@@ -287,17 +226,7 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2(
     throw std::runtime_error("BA2 file header archive type is invalid");
   }
 
-  // BA2s don't have the same structure as BSAs, for general BA2s everything is
-  // stored in a flatter structure, and for texture BA2s a more specialised
-  // structure is used. While there are still directory and file hashes, they're
-  // 32-bit, not 64-bit, which makes collisions more likely. Still, try to use
-  // them for simplicity.
-
-  if (header.archiveType == BA2_GENERAL_TYPE) {
-    return GetAssetsInGeneralBA2(in, header, archivePath);
-  }
-
-  return GetAssetsInTextureBA2(in, header, archivePath);
+  return GetAssetsInBA2FromFilePaths(in, header);
 }
 }
 
@@ -360,7 +289,7 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBethesdaArchive(
     in.read(reinterpret_cast<char*>(&header) + typeId.size(),
             sizeof(ba2::Header) - typeId.size());
 
-    return ba2::GetAssetsInBA2(in, header, archivePath);
+    return ba2::GetAssetsInBA2(in, header);
   }
 
   throw std::runtime_error("Bethesda archive has unrecognised typeId");

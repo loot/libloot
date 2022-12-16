@@ -90,6 +90,9 @@ TEST(GetAssetsInBethesdaArchive, shouldThrowIfFileCannotBeOpened) {
 TEST(GetAssetsInBethesdaArchive, shouldSupportGeneralBA2s) {
   const auto path =
       std::filesystem::u8path("./Fallout 4/Data/Blank - Main.ba2");
+  const uint64_t folderHash =
+      std::hash<std::string>{}("dev\\git\\testing-plugins");
+  const uint64_t fileHash = std::hash<std::string>{}("license.txt");
 
   const auto assets = GetAssetsInBethesdaArchive(path);
 
@@ -101,15 +104,18 @@ TEST(GetAssetsInBethesdaArchive, shouldSupportGeneralBA2s) {
   EXPECT_EQ(1, assets.size());
   EXPECT_EQ(1, filesCount);
 
-  ASSERT_EQ(1, assets.count(0xFB6D522F));
+  ASSERT_EQ(1, assets.count(folderHash));
 
-  EXPECT_EQ(1, assets.find(0xFB6D522F)->second.size());
-  EXPECT_EQ(1, assets.find(0xFB6D522F)->second.count(0x747874CA042B67));
+  EXPECT_EQ(1, assets.find(folderHash)->second.size());
+  EXPECT_EQ(1, assets.find(folderHash)->second.count(fileHash));
 }
 
 TEST(GetAssetsInBethesdaArchive, shouldSupportTextureBA2s) {
   const auto path =
       std::filesystem::u8path("./Fallout 4/Data/Blank - Textures.ba2");
+  const uint64_t folderHash =
+      std::hash<std::string>{}("dev\\git\\testing-plugins");
+  const uint64_t fileHash = std::hash<std::string>{}("blank.dds");
 
   const auto assets = GetAssetsInBethesdaArchive(path);
 
@@ -121,10 +127,10 @@ TEST(GetAssetsInBethesdaArchive, shouldSupportTextureBA2s) {
   EXPECT_EQ(1, assets.size());
   EXPECT_EQ(1, filesCount);
 
-  ASSERT_EQ(1, assets.count(0xFB6D522F));
+  ASSERT_EQ(1, assets.count(folderHash));
 
-  EXPECT_EQ(1, assets.find(0xFB6D522F)->second.size());
-  EXPECT_EQ(1, assets.find(0xFB6D522F)->second.count(0x736464FA093378));
+  EXPECT_EQ(1, assets.find(folderHash)->second.size());
+  EXPECT_EQ(1, assets.find(folderHash)->second.count(fileHash));
 }
 
 TEST(GetAssetsInBethesdaArchives, shouldSkipFilesThatCannotBeRead) {
