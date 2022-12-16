@@ -230,6 +230,18 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2(std::istream& in,
 }
 }
 
+// Fallout4.esm and DLCUltraHighResolution.esm from Fallout 4 have the
+// same file path appearing in multiple BA2 files, so ignore hash
+// collision warnings for those files as otherwise they cause a lot of
+// noise in the logs.
+bool ShouldWarnAboutHashCollisions(const std::filesystem::path& archivePath) {
+  const auto filename = archivePath.filename().u8string();
+
+  return !boost::iends_with(filename, ".ba2") ||
+         (!boost::istarts_with(filename, "Fallout4 - ") &&
+          !boost::istarts_with(filename, "DLCUltraHighResolution - "));
+}
+
 bool DoFileNameHashSetsIntersect(const std::set<uint64_t>& left,
                                  const std::set<uint64_t>& right) {
   auto leftIt = left.begin();
@@ -309,6 +321,9 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBethesdaArchives(
             archivePath.u8string());
       }
 
+      const auto warnAboutHashCollisions =
+          ShouldWarnAboutHashCollisions(archivePath);
+
       const auto assets = GetAssetsInBethesdaArchive(archivePath);
       for (const auto& asset : assets) {
         const auto folderResult = archiveAssets.insert(asset);
@@ -323,7 +338,7 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBethesdaArchives(
           for (const auto& fileNameHash : asset.second) {
             const auto fileResult =
                 folderResult.first->second.insert(fileNameHash);
-            if (!fileResult.second && logger) {
+            if (!fileResult.second && warnAboutHashCollisions && logger) {
               logger->warn(
                   "The folder and file with hashes {:x} and {:x} in \"{}\" are "
                   "present in another BSA.",
