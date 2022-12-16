@@ -56,9 +56,8 @@ struct FileRecord {
 
 namespace loot::bsa::detail {
 template<typename FolderRecord>
-std::map<uint64_t, std::set<uint64_t>> GetAssetsInBethesdaArchive(
-    std::istream& in,
-    const Header& header) {
+std::map<uint64_t, std::set<uint64_t>> GetAssetsInBSA(std::istream& in,
+                                                      const Header& header) {
   const auto logger = getLogger();
 
   std::vector<FolderRecord> folderRecords(header.folderCount);
@@ -93,10 +92,8 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBethesdaArchive(
         folderFileHashes.emplace(folderHash, std::set<uint64_t>());
 
     if (!folderResult.second) {
-      if (logger) {
-        logger->warn("Folder name hash {} is already in map", folderHash);
-      }
-      throw std::runtime_error("Unexpected folder name hash collision");
+      throw std::runtime_error("Unexpected collision for folder name hash " +
+                               std::to_string(folderHash));
     }
 
     size_t fileRecordsOffset = 0;
@@ -126,13 +123,10 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBethesdaArchive(
           folderResult.first->second.insert(fileRecord->nameHash);
 
       if (!result.second) {
-        if (logger) {
-          logger->warn(
-              "File name hash {} is already in the set for folder name hash {}",
-              fileRecord->nameHash,
-              folderHash);
-        }
-        throw std::runtime_error("Unexpected file name hash collision");
+        throw std::runtime_error("Unexpected collision for file name hash " +
+                                 std::to_string(fileRecord->nameHash) +
+                                 " in set for folder name hash " +
+                                 std::to_string(folderHash));
       }
     }
   }

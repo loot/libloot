@@ -87,6 +87,46 @@ TEST(GetAssetsInBethesdaArchive, shouldThrowIfFileCannotBeOpened) {
   EXPECT_THROW(GetAssetsInBethesdaArchive(path), std::runtime_error);
 }
 
+TEST(GetAssetsInBethesdaArchive, shouldSupportGeneralBA2s) {
+  const auto path =
+      std::filesystem::u8path("./Fallout 4/Data/Blank - Main.ba2");
+
+  const auto assets = GetAssetsInBethesdaArchive(path);
+
+  size_t filesCount = 0;
+  for (const auto& folder : assets) {
+    filesCount += folder.second.size();
+  }
+
+  EXPECT_EQ(1, assets.size());
+  EXPECT_EQ(1, filesCount);
+
+  ASSERT_EQ(1, assets.count(0xFB6D522F));
+
+  EXPECT_EQ(1, assets.find(0xFB6D522F)->second.size());
+  EXPECT_EQ(1, assets.find(0xFB6D522F)->second.count(0x747874CA042B67));
+}
+
+TEST(GetAssetsInBethesdaArchive, shouldSupportTextureBA2s) {
+  const auto path =
+      std::filesystem::u8path("./Fallout 4/Data/Blank - Textures.ba2");
+
+  const auto assets = GetAssetsInBethesdaArchive(path);
+
+  size_t filesCount = 0;
+  for (const auto& folder : assets) {
+    filesCount += folder.second.size();
+  }
+
+  EXPECT_EQ(1, assets.size());
+  EXPECT_EQ(1, filesCount);
+
+  ASSERT_EQ(1, assets.count(0xFB6D522F));
+
+  EXPECT_EQ(1, assets.find(0xFB6D522F)->second.size());
+  EXPECT_EQ(1, assets.find(0xFB6D522F)->second.count(0x736464FA093378));
+}
+
 TEST(GetAssetsInBethesdaArchives, shouldSkipFilesThatCannotBeRead) {
   std::vector<std::filesystem::path> paths(
       {std::filesystem::u8path("invalid.bsa"),

@@ -59,9 +59,9 @@ can be corrected.
 
 Plugin overlap edges are then added. Two plugins overlap if they contain the
 same record, i.e. if they both edit the same record or if one edits a record the
-other plugin adds. Plugins also overlap if they both load one or more BSAs and
-the BSAs loaded by one plugin contain data for a file path that is also included
-in the BSAs loaded by the other plugin.
+other plugin adds. Plugins also overlap if they both load one or more BSAs (BA2s
+for Fallout 4) and the BSAs loaded by one plugin contain data for a file path
+that is also included in the BSAs loaded by the other plugin.
 
 For each plugin, skip it if it overrides no records, otherwise iterate over all
 other plugins.

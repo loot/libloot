@@ -73,7 +73,15 @@ protected:
     // Copy across archive files.
     const auto blankMasterDependentArchive =
         "Blank - Master Dependent" + GetArchiveFileExtension(GetParam());
-    if (GetParam() == GameType::tes3 || GetParam() == GameType::fo4) {
+    if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr) {
+      copyPlugin("./Fallout 4/Data", "Blank - Main.ba2");
+      copyPlugin("./Fallout 4/Data", "Blank - Textures.ba2");
+
+      std::filesystem::copy_file("./Fallout 4/Data/Blank - Main.ba2",
+                                 dataPath / blankMasterDependentArchive);
+      ASSERT_TRUE(
+          std::filesystem::exists(dataPath / blankMasterDependentArchive));
+    } else if (GetParam() == GameType::tes3) {
       out.open(dataPath / blankArchive);
       out.close();
     } else {
@@ -104,7 +112,9 @@ protected:
     out.open(nonAsciiPrefixArchivePath);
     out.close();
 
-    game_.GetCache().CacheArchivePaths({dataPath / blankArchive,
+    game_.GetCache().CacheArchivePaths({dataPath / "Blank - Main.ba2",
+                                        dataPath / "Blank - Textures.ba2",
+                                        dataPath / blankArchive,
                                         dataPath / blankMasterDependentArchive,
                                         dataPath / blankSuffixArchive,
                                         dataPath / nonAsciiArchivePath,
@@ -588,8 +598,10 @@ TEST_P(PluginTest,
       Plugin(game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false)
           .GetAssetCount();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::fo4) {
+  if (GetParam() == GameType::tes3) {
     EXPECT_EQ(0, assetCount);
+  } else if (GetParam() == GameType::fo4) {
+    EXPECT_EQ(2, assetCount);
   } else {
     EXPECT_EQ(1, assetCount);
   }
@@ -609,7 +621,7 @@ TEST_P(PluginTest,
       game_.Type(), game_.GetCache(), game_.DataPath() / blankEsp, false);
   OtherPluginType plugin2;
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::fo4) {
+  if (GetParam() == GameType::tes3) {
     EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
   } else {
     EXPECT_THROW(plugin1.DoAssetsOverlap(plugin2), std::invalid_argument);
@@ -653,7 +665,7 @@ TEST_P(PluginTest,
                  game_.DataPath() / blankMasterDependentEsp,
                  false);
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::fo4) {
+  if (GetParam() == GameType::tes3) {
     // Morrowind plugins can't load assets.
     EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
     EXPECT_FALSE(plugin2.DoAssetsOverlap(plugin1));

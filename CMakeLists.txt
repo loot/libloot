@@ -122,8 +122,8 @@ endif()
 
 ExternalProject_Add(testing-plugins
     PREFIX "external"
-    URL "https://github.com/Ortham/testing-plugins/archive/1.4.1.tar.gz"
-    URL_HASH "SHA256=57f82495a737013c1b828d43fbe87edcb57768f85c6416e8d17f273d692691cf"
+    URL "https://github.com/Ortham/testing-plugins/archive/1.5.0.tar.gz"
+    URL_HASH "SHA256=98c9094fb0f0152b1af7a6206950207f7ddc6602cd44ed67ebf70603ef490791"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND "")
