@@ -43,7 +43,8 @@ enum struct EdgeType : unsigned int {
   userLoadAfter,
   masterlistGroup,
   userGroup,
-  overlap,
+  recordOverlap,
+  assetOverlap,
   tieBreak,
 };
 }

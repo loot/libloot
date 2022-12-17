@@ -84,6 +84,8 @@ public:
 
   std::optional<std::vector<vertex_t>> FindPath(const vertex_t& fromVertex,
                                                 const vertex_t& toVertex);
+  std::optional<EdgeType> GetEdgeType(const vertex_t& fromVertex,
+                                      const vertex_t& toVertex);
 
   void AddEdge(const vertex_t& fromVertex,
                const vertex_t& toVertex,

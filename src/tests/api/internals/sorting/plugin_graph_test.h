@@ -207,7 +207,7 @@ TEST_F(
 
   graph.AddOverlapEdges();
 
-  EXPECT_TRUE(graph.EdgeExists(v1, v2));
+  EXPECT_EQ(EdgeType::recordOverlap, graph.GetEdgeType(v1, v2).value());
   EXPECT_FALSE(graph.EdgeExists(v2, v1));
 }
 
@@ -301,7 +301,7 @@ TEST_F(
 
   graph.AddOverlapEdges();
 
-  EXPECT_TRUE(graph.EdgeExists(v1, v2));
+  EXPECT_EQ(EdgeType::assetOverlap, graph.GetEdgeType(v1, v2).value());
   EXPECT_FALSE(graph.EdgeExists(v2, v1));
 }
 
@@ -326,7 +326,7 @@ TEST_F(
 
   graph.AddOverlapEdges();
 
-  EXPECT_TRUE(graph.EdgeExists(v1, v2));
+  EXPECT_EQ(EdgeType::assetOverlap, graph.GetEdgeType(v1, v2).value());
   EXPECT_FALSE(graph.EdgeExists(v2, v1));
 }
 
@@ -352,7 +352,7 @@ TEST_F(
 
   graph.AddOverlapEdges();
 
-  EXPECT_TRUE(graph.EdgeExists(v1, v2));
+  EXPECT_EQ(EdgeType::assetOverlap, graph.GetEdgeType(v1, v2).value());
   EXPECT_FALSE(graph.EdgeExists(v2, v1));
 }
 
@@ -378,7 +378,7 @@ TEST_F(PluginGraphTest,
 
   graph.AddOverlapEdges();
 
-  EXPECT_TRUE(graph.EdgeExists(v1, v2));
+  EXPECT_EQ(EdgeType::recordOverlap, graph.GetEdgeType(v1, v2).value());
   EXPECT_FALSE(graph.EdgeExists(v2, v1));
 }
 
@@ -436,16 +436,16 @@ TEST_F(
   vertex_t seven = graph.GetVertexByName("7.esp").value();
   vertex_t eight = graph.GetVertexByName("8.esp").value();
 
-  graph.AddEdge(six, seven, EdgeType::overlap);
-  graph.AddEdge(seven, eight, EdgeType::overlap);
-  graph.AddEdge(eight, five, EdgeType::overlap);
+  graph.AddEdge(six, seven, EdgeType::recordOverlap);
+  graph.AddEdge(seven, eight, EdgeType::recordOverlap);
+  graph.AddEdge(eight, five, EdgeType::recordOverlap);
 
   // Also add a path going from 6 to 3 and another from 8 to 4.
   vertex_t three = graph.GetVertexByName("3.esp").value();
   vertex_t four = graph.GetVertexByName("4.esp").value();
 
-  graph.AddEdge(six, three, EdgeType::overlap);
-  graph.AddEdge(eight, four, EdgeType::overlap);
+  graph.AddEdge(six, three, EdgeType::recordOverlap);
+  graph.AddEdge(eight, four, EdgeType::recordOverlap);
 
   graph.AddTieBreakEdges();
   const auto sorted = graph.TopologicalSort();
@@ -482,9 +482,9 @@ TEST_F(
   vertex_t two = graph.GetVertexByName("2.esp").value();
   vertex_t three = graph.GetVertexByName("3.esp").value();
 
-  graph.AddEdge(one, two, EdgeType::overlap);
-  graph.AddEdge(two, three, EdgeType::overlap);
-  graph.AddEdge(three, zero, EdgeType::overlap);
+  graph.AddEdge(one, two, EdgeType::recordOverlap);
+  graph.AddEdge(two, three, EdgeType::recordOverlap);
+  graph.AddEdge(three, zero, EdgeType::recordOverlap);
 
   graph.AddTieBreakEdges();
   const auto sorted = graph.TopologicalSort();

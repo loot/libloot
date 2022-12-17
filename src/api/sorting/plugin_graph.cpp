@@ -215,8 +215,10 @@ std::string describeEdgeType(EdgeType edgeType) {
       return "Masterlist Group";
     case EdgeType::userGroup:
       return "User Group";
-    case EdgeType::overlap:
-      return "Overlap";
+    case EdgeType::recordOverlap:
+      return "Record Overlap";
+    case EdgeType::assetOverlap:
+      return "Asset Overlap";
     case EdgeType::tieBreak:
       return "Tie Break";
     default:
@@ -549,6 +551,16 @@ std::optional<std::vector<vertex_t>> PluginGraph::FindPath(
   return visitor.GetPath();
 }
 
+std::optional<EdgeType> PluginGraph::GetEdgeType(const vertex_t& fromVertex,
+                                                 const vertex_t& toVertex) {
+  const auto edge = boost::edge(fromVertex, toVertex, graph_);
+  if (!edge.second) {
+    return std::nullopt;
+  }
+
+  return graph_[edge.first];
+}
+
 void PluginGraph::AddEdge(const vertex_t& fromVertex,
                           const vertex_t& toVertex,
                           EdgeType edgeType) {
@@ -856,6 +868,7 @@ void PluginGraph::AddOverlapEdges() {
       // record counts are equal.
 
       auto thisPluginLoadsFirst = false;
+      EdgeType edgeType = EdgeType::recordOverlap;
 
       const auto otherPluginRecordCount = otherPlugin.GetOverrideRecordCount();
 
@@ -872,6 +885,7 @@ void PluginGraph::AddOverlapEdges() {
           continue;
         } else {
           thisPluginLoadsFirst = pluginAssetCount > otherPluginAssetCount;
+          edgeType = EdgeType::assetOverlap;
         }
       } else {
         // Records overlap and override different numbers of records.
@@ -883,7 +897,14 @@ void PluginGraph::AddOverlapEdges() {
       const auto toVertex = thisPluginLoadsFirst ? otherVertex : vertex;
 
       if (!PathExists(toVertex, fromVertex)) {
-        AddEdge(fromVertex, toVertex, EdgeType::overlap);
+        AddEdge(fromVertex, toVertex, edgeType);
+      } else if (logger) {
+        logger->debug(
+            "Skipping {} edge from \"{}\" to \"{}\" as it would "
+            "create a cycle.",
+            describeEdgeType(edgeType),
+            GetPlugin(fromVertex).GetName(),
+            GetPlugin(toVertex).GetName());
       }
     }
   }
