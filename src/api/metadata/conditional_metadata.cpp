@@ -28,10 +28,8 @@
 #include "api/helpers/logging.h"
 #include "api/metadata/condition_evaluator.h"
 
-using std::string;
-
 namespace loot {
-ConditionalMetadata::ConditionalMetadata(const string& condition) :
+ConditionalMetadata::ConditionalMetadata(const std::string& condition) :
     condition_(condition) {}
 
 bool ConditionalMetadata::IsConditional() const { return !condition_.empty(); }

@@ -27,8 +27,6 @@
 #include "api/helpers/logging.h"
 #include "loot/exception/error_categories.h"
 
-using std::string;
-
 namespace loot {
 unsigned int mapGameId(GameType gameType) {
   switch (gameType) {
@@ -67,7 +65,7 @@ LoadOrderHandler::LoadOrderHandler(
   }
 
   const char* gameLocalDataPath = nullptr;
-  string tempPathString = gameLocalAppData.u8string();
+  std::string tempPathString = gameLocalAppData.u8string();
   if (!tempPathString.empty())
     gameLocalDataPath = tempPathString.c_str();
 
@@ -140,7 +138,7 @@ std::vector<std::string> LoadOrderHandler::GetLoadOrder() const {
   HandleError("get the load order", ret);
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-  std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
+  std::vector<std::string> loadOrder(pluginArr, pluginArr + pluginArrSize);
   lo_free_string_array(pluginArr, pluginArrSize);
 
   return loadOrder;
@@ -161,7 +159,7 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
   HandleError("get active plugins", ret);
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-  std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
+  std::vector<std::string> loadOrder(pluginArr, pluginArr + pluginArrSize);
   lo_free_string_array(pluginArr, pluginArrSize);
 
   return loadOrder;
@@ -182,7 +180,7 @@ std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
   HandleError("get implicitly active plugins", ret);
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-  std::vector<string> loadOrder(pluginArr, pluginArr + pluginArrSize);
+  std::vector<std::string> loadOrder(pluginArr, pluginArr + pluginArrSize);
   lo_free_string_array(pluginArr, pluginArrSize);
 
   return loadOrder;
@@ -221,7 +219,7 @@ void LoadOrderHandler::HandleError(const std::string& operation,
   }
 
   const char* e = nullptr;
-  string err;
+  std::string err;
   lo_get_error_message(&e);
   if (e == nullptr) {
     err = "libloadorder failed to " + operation +

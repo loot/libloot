@@ -31,10 +31,7 @@
 #else
 #include <unicode/uchar.h>
 #include <unicode/unistr.h>
-using icu::UnicodeString;
 #endif
-
-using std::regex;
 
 namespace loot {
 /* The string below matches timestamps that use forwardslashes for date
@@ -91,6 +88,8 @@ std::vector<Tag> ExtractBashTags(const std::string& description) {
 }
 
 std::optional<std::string> ExtractVersion(const std::string& text) {
+  using std::regex;
+
   /* There are a few different version formats that can appear in strings
    together, and in order to extract the correct one, they must be searched
    for in order of priority. */
@@ -200,8 +199,8 @@ int CompareFilenames(const std::string& lhs, const std::string& rhs) {
           "One of the filenames to compare was invalid.");
   }
 #else
-  auto unicodeLhs = UnicodeString::fromUTF8(lhs);
-  auto unicodeRhs = UnicodeString::fromUTF8(rhs);
+  auto unicodeLhs = icu::UnicodeString::fromUTF8(lhs);
+  auto unicodeRhs = icu::UnicodeString::fromUTF8(rhs);
   return unicodeLhs.caseCompare(unicodeRhs, U_FOLD_CASE_DEFAULT);
 #endif
 }
@@ -218,7 +217,7 @@ std::string NormalizeFilename(const std::string& filename) {
   return FromWinWide(wideString);
 #else
   std::string normalizedFilename;
-  UnicodeString::fromUTF8(filename)
+  icu::UnicodeString::fromUTF8(filename)
       .foldCase(U_FOLD_CASE_DEFAULT)
       .toUTF8String(normalizedFilename);
   return normalizedFilename;

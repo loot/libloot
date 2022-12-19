@@ -33,9 +33,6 @@
 #include "api/helpers/text.h"
 #include "loot/exception/file_access_error.h"
 
-using std::set;
-using std::string;
-
 namespace loot {
 Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
@@ -315,7 +312,7 @@ std::string Plugin::GetDescription() const {
     return "";
   }
 
-  string descriptionStr = description;
+  std::string descriptionStr = description;
   esp_string_free(description);
 
   return descriptionStr;
@@ -374,7 +371,7 @@ bool Plugin::LoadsArchive(const GameType gameType,
     return false;
   }
 
-  const string archiveExtension = GetArchiveFileExtension(gameType);
+  const auto archiveExtension = GetArchiveFileExtension(gameType);
 
   if (gameType == GameType::tes5) {
     // Skyrim (non-SE) plugins can only load BSAs that have exactly the same

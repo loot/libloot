@@ -31,9 +31,6 @@
 #include "api/helpers/logging.h"
 #include "loot/exception/file_access_error.h"
 
-using std::string;
-using std::wstring;
-
 namespace loot {
 size_t GetStreamSize(std::istream& stream) {
   const std::streampos startingPosition = stream.tellg();

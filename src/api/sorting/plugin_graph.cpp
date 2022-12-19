@@ -38,9 +38,6 @@
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/undefined_group_error.h"
 
-using std::string;
-using std::vector;
-
 namespace loot {
 typedef boost::graph_traits<RawPluginGraph>::edge_descriptor edge_t;
 typedef boost::graph_traits<RawPluginGraph>::edge_iterator edge_it;

@@ -30,8 +30,6 @@
 
 using std::lock_guard;
 using std::mutex;
-using std::pair;
-using std::string;
 
 namespace loot {
 GameCache::GameCache(const GameCache& cache) {

@@ -30,8 +30,6 @@
 #include "api/helpers/logging.h"
 #include "loot/exception/condition_syntax_error.h"
 
-using std::filesystem::u8path;
-
 namespace loot {
 void HandleError(const std::string operation, int returnCode) {
   if (returnCode == LCI_OK) {

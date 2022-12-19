@@ -48,9 +48,6 @@
 #include "windows.h"
 #endif
 
-using std::string;
-using std::thread;
-using std::vector;
 using std::filesystem::u8path;
 
 namespace loot {
@@ -95,7 +92,7 @@ bool Game::IsValidPlugin(const std::string& plugin) const {
 void Game::LoadPlugins(const std::vector<std::string>& plugins,
                        bool loadHeadersOnly) {
   auto logger = getLogger();
-  std::multimap<uintmax_t, string> sizeMap;
+  std::multimap<uintmax_t, std::string> sizeMap;
 
   // First get the plugin sizes.
   for (const auto& plugin : plugins) {
@@ -116,11 +113,11 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   // Get the number of threads to use.
   // hardware_concurrency() may be zero, if so then use only one thread.
   size_t threadsToUse =
-      ::std::min((size_t)thread::hardware_concurrency(), sizeMap.size());
+      ::std::min((size_t)std::thread::hardware_concurrency(), sizeMap.size());
   threadsToUse = ::std::max(threadsToUse, (size_t)1);
 
   // Divide the plugins up by thread.
-  vector<vector<string>> pluginGroups(threadsToUse);
+  std::vector<std::vector<std::string>> pluginGroups(threadsToUse);
   if (logger) {
     auto pluginsPerThread = sizeMap.size() / threadsToUse;
     logger->info(
@@ -154,10 +151,10 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
     logger->trace("Starting plugin loading.");
   }
   auto masterPath = DataPath() / u8path(masterFilename_);
-  vector<thread> threads;
+  std::vector<std::thread> threads;
   while (threads.size() < threadsToUse) {
-    vector<string>& pluginGroup = pluginGroups.at(threads.size());
-    threads.push_back(thread([&]() {
+    const auto& pluginGroup = pluginGroups.at(threads.size());
+    threads.push_back(std::thread([&]() {
       for (auto pluginName : pluginGroup) {
         try {
           auto pluginPath = DataPath() / u8path(pluginName);
