@@ -25,7 +25,6 @@
 #ifndef LOOT_API_HELPERS_COLLECTIONS
 #define LOOT_API_HELPERS_COLLECTIONS
 
-#include <algorithm>
 #include <vector>
 
 namespace loot {

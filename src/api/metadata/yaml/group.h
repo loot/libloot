@@ -28,10 +28,8 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <set>
 #include <string>
 
-#include "api/metadata/yaml/set.h"
 #include "loot/metadata/group.h"
 
 namespace YAML {

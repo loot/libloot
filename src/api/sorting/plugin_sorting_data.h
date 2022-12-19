@@ -25,6 +25,8 @@
 #ifndef LOOT_API_SORTING_PLUGIN_SORTING_DATA
 #define LOOT_API_SORTING_PLUGIN_SORTING_DATA
 
+#include <unordered_set>
+
 #include "api/plugin.h"
 #include "loot/metadata/plugin_metadata.h"
 

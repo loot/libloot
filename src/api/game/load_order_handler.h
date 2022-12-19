@@ -27,9 +27,7 @@
 
 #include <filesystem>
 #include <libloadorder.hpp>
-#include <list>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 #include "loot/enum/game_type.h"

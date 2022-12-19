@@ -25,7 +25,6 @@
 #include "loot/metadata/plugin_metadata.h"
 
 #include <boost/algorithm/string.hpp>
-#include <filesystem>
 #include <regex>
 
 #include "api/game/game.h"

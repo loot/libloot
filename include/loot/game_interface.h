@@ -24,8 +24,6 @@
 #ifndef LOOT_GAME_INTERFACE
 #define LOOT_GAME_INTERFACE
 
-#include <optional>
-
 #include "loot/database_interface.h"
 #include "loot/plugin_interface.h"
 

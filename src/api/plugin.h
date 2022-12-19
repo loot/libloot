@@ -29,7 +29,6 @@
 #include <list>
 #include <set>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "api/game/load_order_handler.h"
