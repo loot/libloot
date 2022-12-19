@@ -100,6 +100,7 @@ jobs:
             language-pack-el \
             language-pack-tr \
             libicu-dev \
+            libtbb-dev \
             g++-10
 
       - name: Run CMake

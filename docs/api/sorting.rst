@@ -11,15 +11,9 @@ Load plugin data
 ================
 
 In this first stage, the plugins to be sorted are parsed and their record IDs
-(which are FormIDs for all games apart from Morrowind) are stored. Parsing is
-multithreaded by dividing the plugins into buckets with roughly equal total file
-sizes, and loading each bucket's plugins in a separate thread. The number of
-buckets created is equal to the number of concurrent threads that are
-hardware-supported (e.g. a dual-core CPU without hyperthreading may report that
-it supports two threads).
-
-When parsing plugins, all subrecords are skipped over for efficiency, apart from
-the subrecords of the ``TES4`` header record.
+(which are FormIDs for all games apart from Morrowind) are stored. When parsing
+plugins, all subrecords are skipped over for efficiency, apart from the
+subrecords of the ``TES4`` header record.
 
 Loading plugin data also involves loading any metadata that the plugin may have
 in the masterlist and userlist.

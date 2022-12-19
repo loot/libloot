@@ -106,6 +106,16 @@ TEST_P(
   EXPECT_FALSE(plugin->GetCRC());
 }
 
+TEST_P(GameInterfaceTest, loadPluginsShouldTrimDotGhostFileExtensions) {
+  handle_->LoadPlugins({blankMasterDependentEsm + ".ghost"}, true);
+  EXPECT_EQ(1, handle_->GetLoadedPlugins().size());
+
+  ASSERT_NO_THROW(handle_->GetPlugin(blankMasterDependentEsm));
+  const auto plugin = handle_->GetPlugin(blankMasterDependentEsm);
+  ASSERT_NE(nullptr, plugin);
+  EXPECT_EQ(blankMasterDependentEsm, plugin->GetName());
+}
+
 TEST_P(GameInterfaceTest,
        loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
   handle_->LoadPlugins(pluginsToLoad, false);

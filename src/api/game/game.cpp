@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <cmath>
-#include <map>
+#include <execution>
 #include <thread>
 
 #include "api/api_database.h"
@@ -91,53 +91,11 @@ bool Game::IsValidPlugin(const std::string& plugin) const {
 
 void Game::LoadPlugins(const std::vector<std::string>& plugins,
                        bool loadHeadersOnly) {
-  auto logger = getLogger();
-  std::multimap<uintmax_t, std::string> sizeMap;
+  const auto logger = getLogger();
 
-  // First get the plugin sizes.
   for (const auto& plugin : plugins) {
     if (!IsValidPlugin(plugin))
       throw std::invalid_argument("\"" + plugin + "\" is not a valid plugin");
-
-    uintmax_t fileSize = Plugin::GetFileSize(DataPath() / u8path(plugin));
-
-    // Trim .ghost extension if present.
-    if (boost::iends_with(plugin, GHOST_FILE_EXTENSION))
-      sizeMap.emplace(
-          fileSize,
-          plugin.substr(0, plugin.length() - GHOST_FILE_EXTENSION_LENGTH));
-    else
-      sizeMap.emplace(fileSize, plugin);
-  }
-
-  // Get the number of threads to use.
-  // hardware_concurrency() may be zero, if so then use only one thread.
-  size_t threadsToUse =
-      ::std::min((size_t)std::thread::hardware_concurrency(), sizeMap.size());
-  threadsToUse = ::std::max(threadsToUse, (size_t)1);
-
-  // Divide the plugins up by thread.
-  std::vector<std::vector<std::string>> pluginGroups(threadsToUse);
-  if (logger) {
-    auto pluginsPerThread = sizeMap.size() / threadsToUse;
-    logger->info(
-        "Loading {} plugins using {} threads, with up to {} plugins per "
-        "thread.",
-        sizeMap.size(),
-        threadsToUse,
-        pluginsPerThread);
-  }
-
-  // The plugins should be split between the threads so that the data
-  // load is as evenly spread as possible.
-  size_t currentGroup = 0;
-  for (const auto& plugin : sizeMap) {
-    if (currentGroup == threadsToUse) {
-      currentGroup = 0;
-    }
-
-    pluginGroups.at(currentGroup).push_back(plugin.second);
-    ++currentGroup;
   }
 
   // Clear the existing plugin and archive caches.
@@ -150,14 +108,20 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   if (logger) {
     logger->trace("Starting plugin loading.");
   }
-  auto masterPath = DataPath() / u8path(masterFilename_);
-  std::vector<std::thread> threads;
-  while (threads.size() < threadsToUse) {
-    const auto& pluginGroup = pluginGroups.at(threads.size());
-    threads.push_back(std::thread([&]() {
-      for (auto pluginName : pluginGroup) {
+
+  const auto masterPath = DataPath() / u8path(masterFilename_);
+  std::for_each(
+      std::execution::par_unseq,
+      plugins.begin(),
+      plugins.end(),
+      [&](const std::string& pluginName) {
         try {
-          auto pluginPath = DataPath() / u8path(pluginName);
+          const auto endIt =
+              boost::iends_with(pluginName, GHOST_FILE_EXTENSION)
+                  ? pluginName.end() - GHOST_FILE_EXTENSION_LENGTH
+                  : pluginName.end();
+
+          auto pluginPath = DataPath() / u8path(pluginName.begin(), endIt);
           const bool loadHeader =
               loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
 
@@ -170,15 +134,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
                 e.what());
           }
         }
-      }
-    }));
-  }
-
-  // Join all threads.
-  for (auto& thread : threads) {
-    if (thread.joinable())
-      thread.join();
-  }
+      });
 
   conditionEvaluator_->RefreshLoadedPluginsState(GetLoadedPlugins());
 }

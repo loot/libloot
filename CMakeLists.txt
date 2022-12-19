@@ -54,6 +54,7 @@ find_package(Boost REQUIRED)
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
     find_package(ICU REQUIRED COMPONENTS uc)
+    find_package(TBB REQUIRED)
 endif()
 
 ExternalProject_Add(GTest
@@ -428,7 +429,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
 else()
-    set(LOOT_LIBS ICU::uc pthread stdc++fs)
+    set(LOOT_LIBS ICU::uc pthread stdc++fs TBB::tbb)
 
     target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
