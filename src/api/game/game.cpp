@@ -93,9 +93,23 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
                        bool loadHeadersOnly) {
   const auto logger = getLogger();
 
-  for (const auto& plugin : plugins) {
-    if (!IsValidPlugin(plugin))
-      throw std::invalid_argument("\"" + plugin + "\" is not a valid plugin");
+  // First validate the plugins (the validity check is done in parallel because
+  // it's relatively slow).
+  const auto invalidPluginIt =
+      std::find_if(std::execution::par_unseq,
+                   plugins.cbegin(),
+                   plugins.cend(),
+                   [this](const std::string& pluginName) {
+                     try {
+                       return !IsValidPlugin(pluginName);
+                     } catch (...) {
+                       return true;
+                     }
+                   });
+
+  if (invalidPluginIt != plugins.end()) {
+    throw std::invalid_argument("\"" + *invalidPluginIt +
+                                "\" is not a valid plugin");
   }
 
   // Clear the existing plugin and archive caches.
