@@ -197,34 +197,34 @@ size_t Plugin::GetOverlapSize(
     return 0;
   }
 
-  try {
-    std::vector<::Plugin*> esPlugins;
-    for (const auto& plugin : plugins) {
-      const auto otherPlugin = dynamic_cast<const Plugin* const>(plugin);
+  std::vector<::Plugin*> esPlugins;
+  for (const auto& plugin : plugins) {
+    const auto otherPlugin = dynamic_cast<const Plugin* const>(plugin);
 
-      esPlugins.push_back(otherPlugin->esPlugin.get());
-    }
-
-    size_t overlapSize = 0;
-    const auto ret = esp_plugin_records_overlap_size(
-        esPlugin.get(), esPlugins.data(), esPlugins.size(), &overlapSize);
-    if (ret != ESP_OK) {
-      throw FileAccessError("Error getting overlap size for \"" + name_ +
-                            "\". esplugin error code: " + std::to_string(ret));
-    }
-
-    return overlapSize;
-  } catch (std::bad_cast&) {
-    auto logger = getLogger();
-    if (logger) {
-      logger->error(
+    if (otherPlugin == nullptr) {
+      const auto logger = getLogger();
+      if (logger) {
+        logger->error(
+            "Tried to check how many FormIDs overlapped with a non-Plugin "
+            "implementation of PluginSortingInterface.");
+      }
+      throw std::invalid_argument(
           "Tried to check how many FormIDs overlapped with a non-Plugin "
           "implementation of PluginSortingInterface.");
     }
-    throw std::invalid_argument(
-        "Tried to check how many FormIDs overlapped with a non-Plugin "
-        "implementation of PluginSortingInterface.");
+
+    esPlugins.push_back(otherPlugin->esPlugin.get());
   }
+
+  size_t overlapSize = 0;
+  const auto ret = esp_plugin_records_overlap_size(
+      esPlugin.get(), esPlugins.data(), esPlugins.size(), &overlapSize);
+  if (ret != ESP_OK) {
+    throw FileAccessError("Error getting overlap size for \"" + name_ +
+                          "\". esplugin error code: " + std::to_string(ret));
+  }
+
+  return overlapSize;
 }
 
 size_t Plugin::NumOverrideFormIDs() const { return numOverrideRecords_; }

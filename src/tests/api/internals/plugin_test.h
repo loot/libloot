@@ -136,7 +136,7 @@ private:
   }
 };
 
-class OtherPluginType final : public PluginInterface {
+class OtherPluginType final : public PluginSortingInterface {
 public:
   std::string GetName() const override { return ""; }
   std::optional<float> GetHeaderVersion() const override { return 0.0f; }
@@ -155,6 +155,14 @@ public:
   bool IsEmpty() const override { return false; }
   bool LoadsArchive() const override { return false; }
   bool DoFormIDsOverlap(const PluginInterface&) const override { return true; }
+
+  size_t NumOverrideFormIDs() const override { return 0; };
+  uint32_t GetRecordAndGroupCount() const override { return 0; };
+
+  size_t GetOverlapSize(
+      const std::vector<const PluginInterface*>&) const override {
+    return 0;
+  };
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -483,6 +491,17 @@ TEST_P(PluginTest,
 
   EXPECT_TRUE(plugin1.DoFormIDsOverlap(plugin2));
   EXPECT_TRUE(plugin2.DoFormIDsOverlap(plugin1));
+}
+
+TEST_P(PluginTest,
+       getOverlapSizeShouldThrowIfGivenAVectorContainingANonPluginObject) {
+  Plugin plugin1(
+      game_.Type(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+  OtherPluginType plugin2;
+
+  EXPECT_THROW(plugin1.GetOverlapSize({&plugin2, &plugin2}),
+               std::invalid_argument);
+  EXPECT_EQ(0, plugin2.GetOverlapSize({&plugin1}));
 }
 
 TEST_P(PluginTest, getOverlapSizeShouldCountEachRecordOnce) {
