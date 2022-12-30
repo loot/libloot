@@ -31,7 +31,7 @@
 #include "api/game/game.h"
 
 namespace loot {
-std::vector<std::string> SortPlugins(Game& game,
+std::vector<std::string> SortPlugins(const Game& game,
                                      const std::vector<std::string>& loadOrder);
 }
 

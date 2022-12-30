@@ -29,7 +29,7 @@
 
 namespace loot {
 std::vector<std::string> SortPlugins(
-    Game& game,
+    const Game& game,
     const std::vector<std::string>& loadOrder) {
   PluginGraph graph;
 
