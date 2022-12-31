@@ -576,12 +576,13 @@ void PluginGraph::AddSpecificEdges() {
     const auto& vertex = *vit;
     const auto& plugin = GetPlugin(vertex);
 
-    for (vertex_it vit2 = vit; vit2 != vitend; ++vit2) {
+    for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
       const auto& otherVertex = *vit2;
       const auto& otherPlugin = GetPlugin(otherVertex);
 
-      if (plugin.IsMaster() == otherPlugin.IsMaster())
+      if (plugin.IsMaster() == otherPlugin.IsMaster()) {
         continue;
+      }
 
       const auto isOtherPluginAMaster = otherPlugin.IsMaster();
       vertex_t childVertex = isOtherPluginAMaster ? vertex : otherVertex;
