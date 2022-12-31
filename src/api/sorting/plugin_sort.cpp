@@ -192,31 +192,7 @@ std::vector<PluginSortingData> GetPluginsSortingData(
   return pluginsSortingData;
 }
 
-std::vector<std::string> SortPlugins(
-    const Game& game,
-    const std::vector<std::string>& loadOrder) {
-  const auto pluginsSortingData = GetPluginsSortingData(game, loadOrder);
-
-  // If there aren't any plugins, exit early, because sorting assumes
-  // there is at least one plugin.
-  if (pluginsSortingData.empty()) {
-    return {};
-  }
-
-  const auto logger = getLogger();
-  if (logger) {
-    logger->debug("Current load order:");
-    for (const auto& plugin : loadOrder) {
-      logger->debug("\t{}", plugin);
-    }
-  }
-
-  PluginGraph graph;
-
-  for (const auto& plugin : pluginsSortingData) {
-    graph.AddVertex(plugin);
-  }
-
+std::vector<std::string> SortPluginGraph(PluginGraph& graph, const Game& game) {
   // Now add the interactions between plugins to the graph as edges.
   graph.AddSpecificEdges();
   graph.AddHardcodedPluginEdges(game);
@@ -243,6 +219,7 @@ std::vector<std::string> SortPlugins(
   const auto path = graph.TopologicalSort();
 
   const auto result = graph.IsHamiltonianPath(path);
+  const auto logger = getLogger();
   if (result.has_value() && logger) {
     logger->error("The path is not unique. No edge exists between {} and {}.",
                   graph.GetPlugin(result.value().first).GetName(),
@@ -250,7 +227,60 @@ std::vector<std::string> SortPlugins(
   }
 
   // Output a plugin list using the sorted vertices.
-  const auto newLoadOrder = graph.ToPluginNames(path);
+  return graph.ToPluginNames(path);
+}
+
+std::vector<std::string> SortPlugins(
+    const Game& game,
+    const std::vector<std::string>& loadOrder) {
+  auto pluginsSortingData = GetPluginsSortingData(game, loadOrder);
+
+  // If there aren't any plugins, exit early, because sorting assumes
+  // there is at least one plugin.
+  if (pluginsSortingData.empty()) {
+    return {};
+  }
+
+  const auto logger = getLogger();
+  if (logger) {
+    logger->debug("Current load order:");
+    for (const auto& plugin : loadOrder) {
+      logger->debug("\t{}", plugin);
+    }
+  }
+
+  const auto firstNonMasterIt = std::stable_partition(
+      pluginsSortingData.begin(),
+      pluginsSortingData.end(),
+      [](const PluginSortingData& plugin) { return plugin.IsMaster(); });
+
+  // Some parts of sorting are O(N^2) for N plugins, and master flags cause
+  // O(M*N) edges to be added for M masters and N non-masters, which can be
+  // two thirds of all edges added. The cost of each bidirectional search
+  // scales with the number of edges, so reducing edges makes searches
+  // faster.
+  // As such, sort plugins using two separate graphs for masters and
+  // non-masters. This means that any edges that go from a non-master to a
+  // master are effectively ignored, so won't cause cyclic interaction errors.
+  // Edges going the other way will also effectively be ignored, but that
+  // shouldn't have a noticeable impact.
+  PluginGraph mastersGraph;
+  PluginGraph nonMastersGraph;
+
+  for (auto it = pluginsSortingData.begin(); it != firstNonMasterIt; ++it) {
+    mastersGraph.AddVertex(*it);
+  }
+
+  for (auto it = firstNonMasterIt; it != pluginsSortingData.end(); ++it) {
+    nonMastersGraph.AddVertex(*it);
+  }
+
+  auto newLoadOrder = SortPluginGraph(mastersGraph, game);
+  const auto newNonMastersLoadOrder = SortPluginGraph(nonMastersGraph, game);
+
+  newLoadOrder.insert(newLoadOrder.end(),
+                      newNonMastersLoadOrder.begin(),
+                      newNonMastersLoadOrder.end());
 
   if (logger) {
     logger->debug("Calculated order:");

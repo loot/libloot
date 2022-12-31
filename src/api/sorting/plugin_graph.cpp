@@ -583,6 +583,9 @@ void PluginGraph::AddSpecificEdges() {
     const auto& vertex = *vit;
     const auto& plugin = GetPlugin(vertex);
 
+    // This loop should have no effect now that master-flagged and
+    // non-master-flagged plugins are sorted separately, but is kept
+    // as a safety net.
     for (vertex_it vit2 = std::next(vit); vit2 != vitend; ++vit2) {
       const auto& otherVertex = *vit2;
       const auto& otherPlugin = GetPlugin(otherVertex);

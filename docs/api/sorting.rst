@@ -2,7 +2,7 @@
 LOOT's Sorting Algorithm
 ************************
 
-LOOT's sorting algorithm consists of four stages:
+LOOT's sorting algorithm consists of the following stages:
 
 .. contents::
   :local:
@@ -21,8 +21,11 @@ it supports two threads).
 When parsing plugins, all subrecords are skipped over for efficiency, apart from
 the subrecords of the ``TES4`` header record.
 
+Loading plugin data also involves loading any metadata that the plugin may have
+in the masterlist and userlist.
+
 Create plugin graph vertices
-=================================
+============================
 
 Once the plugins have been loaded, they are sorted into their current load
 order:
@@ -36,15 +39,25 @@ order:
   to decide their order. If they are equal, a case-insensitive lexicographical
   comparison of their file extensions is used.
 
-After that, a directed graph is created and the plugins are added to it as
-vertices in their sorted order.
+After that, two graphs are created, and the plugins are added to them as
+vertices in their sorted order. Plugins that have their master flag set go in
+one graph, and plugins that do not have the flag set go in the other.
 
-Any metadata a plugin has in the masterlist and userlist are then merged into
-its vertex's data store. Plugin group dependencies are also resolved and added
-as group-derived plugins.
+Two graphs are used because master-flagged plugins must always load before non-master-flagged plugins, and it's much more efficient to sort them separately
+and then combine their load orders than to enforce those relationships within a
+single graph.
+
+A consequence of using two separate graphs is that any plugin data or metadata
+that involves a pair of plugins with and without their master flag set will be
+silently ignored. For example: if plugin A is master-flagged and plugin B is
+not, and plugin A has metadata saying it must load after plugin B, then that
+metadata will be ignored because the two plugins are sorted independently, as if
+the other plugin is not installed.
 
 Create plugin graph edges
-==============================
+=========================
+
+The steps described in this section are run on both graphs independently.
 
 In this section, the terms *vertex* and *plugin* are used interchangeably, and
 the iteration order 'for each plugin' is the order in which the vertices were
@@ -53,7 +66,9 @@ added to the graph.
 For each plugin:
 
 1. If the plugin is a master file, add edges going to all non-master files. If
-   the plugin is a non-master file, add edges coming from all master files.
+   the plugin is a non-master file, add edges coming from all master files. This
+   shouldn't result in any edges being added, since masters and non-masters are
+   sorted in separate graphs, but is done for completeness.
 2. Add edges coming from all the plugin's masters. Missing masters have no edges
    added.
 3. Add edges coming from all the plugin's requirements. Missing requirements
@@ -154,8 +169,10 @@ add an edge going from the unpinned vertex to the vertex after the found vertex.
 Then record the unpinned vertex's new position in the new load order list: the
 vertex is now pinned.
 
-Topologically sort the plugin graph
-===================================
+Topologically sort the plugin graphs
+====================================
+
+This is done for both graphs independently.
 
 Note that edges for explicit interdependencies are the only edges allowed to
 create cycles. However, the graph is again checked for cycles to guard against
@@ -163,3 +180,10 @@ potential logic bugs, and if a cycle is encountered an error is thrown.
 
 Once the graph is confirmed to be cycle-free, a topological sort is performed on
 the graph, outputting a list of plugins in their newly-sorted load order.
+
+Combine the two load orders
+===========================
+
+Finally, the sorted load order for non-master-flagged plugins is appended to the
+sorted load order for master-flagged plugins to give the complete sorted load
+order.
