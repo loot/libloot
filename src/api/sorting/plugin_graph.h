@@ -90,8 +90,6 @@ public:
                EdgeType edgeType);
   void AddVertex(const PluginSortingData& plugin);
 
-  void AddPluginVertices(const Game& game,
-                         const std::vector<std::string>& loadOrder);
   void AddSpecificEdges();
   void AddHardcodedPluginEdges(const Game& game);
   void AddGroupEdges(const std::unordered_map<std::string, Group>& groups);
