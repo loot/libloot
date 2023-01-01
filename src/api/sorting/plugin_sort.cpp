@@ -24,6 +24,8 @@
 
 #include "plugin_sort.h"
 
+#include <boost/algorithm/string.hpp>
+
 #include "api/helpers/logging.h"
 #include "api/sorting/group_sort.h"
 #include "api/sorting/plugin_graph.h"
@@ -192,16 +194,30 @@ std::vector<PluginSortingData> GetPluginsSortingData(
   return pluginsSortingData;
 }
 
-std::vector<std::string> SortPluginGraph(PluginGraph& graph, const Game& game) {
+std::vector<std::string> GetPluginsWithHardcodedPositions(const Game& game) {
+  auto plugins = game.GetLoadOrderHandler().GetImplicitlyActivePlugins();
+
+  if (game.Type() == GameType::tes5) {
+    auto newEndIt = std::remove_if(
+        plugins.begin(), plugins.end(), [](const std::string& plugin) {
+          return boost::iequals(plugin, "update.esm");
+        });
+
+    plugins.erase(newEndIt, plugins.end());
+  }
+
+  return plugins;
+}
+
+std::vector<std::string> SortPluginGraph(
+    PluginGraph& graph,
+    const std::vector<std::string>& hardcodedPlugins,
+    const std::unordered_map<std::string, Group>& groupsMap) {
   // Now add the interactions between plugins to the graph as edges.
   graph.AddSpecificEdges();
-  graph.AddHardcodedPluginEdges(game);
+  graph.AddHardcodedPluginEdges(hardcodedPlugins);
 
-  std::unordered_map<std::string, Group> groups;
-  for (const auto& group : game.GetDatabase().GetGroups()) {
-    groups.emplace(group.GetName(), group);
-  }
-  graph.AddGroupEdges(groups);
+  graph.AddGroupEdges(groupsMap);
 
   // Check for cycles now because from this point on edges are only added if
   // they don't cause cycles, and adding tie-break edges is by far the slowest
@@ -275,8 +291,17 @@ std::vector<std::string> SortPlugins(
     nonMastersGraph.AddVertex(*it);
   }
 
-  auto newLoadOrder = SortPluginGraph(mastersGraph, game);
-  const auto newNonMastersLoadOrder = SortPluginGraph(nonMastersGraph, game);
+  const auto hardcodedPlugins = GetPluginsWithHardcodedPositions(game);
+
+  std::unordered_map<std::string, Group> groupsMap;
+  for (const auto& group : game.GetDatabase().GetGroups()) {
+    groupsMap.emplace(group.GetName(), group);
+  }
+
+  auto newLoadOrder =
+      SortPluginGraph(mastersGraph, hardcodedPlugins, groupsMap);
+  const auto newNonMastersLoadOrder =
+      SortPluginGraph(nonMastersGraph, hardcodedPlugins, groupsMap);
 
   newLoadOrder.insert(newLoadOrder.end(),
                       newNonMastersLoadOrder.begin(),

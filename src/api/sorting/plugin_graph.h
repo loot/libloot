@@ -91,7 +91,8 @@ public:
   void AddVertex(const PluginSortingData& plugin);
 
   void AddSpecificEdges();
-  void AddHardcodedPluginEdges(const Game& game);
+  void AddHardcodedPluginEdges(
+      const std::vector<std::string>& hardcodedPlugins);
   void AddGroupEdges(const std::unordered_map<std::string, Group>& groups);
   void AddOverlapEdges();
   void AddTieBreakEdges();

@@ -636,9 +636,8 @@ void PluginGraph::AddSpecificEdges() {
   }
 }
 
-void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
-  using std::filesystem::u8path;
-
+void PluginGraph::AddHardcodedPluginEdges(
+    const std::vector<std::string>& hardcodedPlugins) {
   const auto logger = getLogger();
   if (logger) {
     logger->trace(
@@ -646,45 +645,65 @@ void PluginGraph::AddHardcodedPluginEdges(const Game& game) {
         "positions...");
   }
 
-  const auto implicitlyActivePlugins =
-      game.GetLoadOrderHandler().GetImplicitlyActivePlugins();
+  if (hardcodedPlugins.empty()) {
+    return;
+  }
 
-  std::set<std::string> processedPluginPaths;
-  for (const auto& plugin : implicitlyActivePlugins) {
-    processedPluginPaths.insert(NormalizeFilename(plugin));
+  std::map<std::vector<std::string>::const_iterator, vertex_t>
+      implicitlyActivePluginVertices;
+  std::vector<vertex_t> otherPluginVertices;
 
-    if (game.Type() == GameType::tes5 &&
-        loot::equivalent(game.DataPath() / u8path(plugin),
-                         game.DataPath() / "update.esm")) {
-      if (logger) {
-        logger->debug(
-            "Skipping adding hardcoded plugin edges for Update.esm as it does "
-            "not have a hardcoded position for Skyrim.");
-        continue;
+  // Build the vertex map for implicitly active plugins and record the vertices
+  // for other plugins.
+  for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
+    const auto pluginName = GetPlugin(vertex).GetName();
+    const auto it =
+        std::find_if(hardcodedPlugins.begin(),
+                     hardcodedPlugins.end(),
+                     [&](const std::string& name) {
+                       return CompareFilenames(name, pluginName) == 0;
+                     });
+
+    if (it != hardcodedPlugins.end()) {
+      implicitlyActivePluginVertices.emplace(it, vertex);
+    } else {
+      otherPluginVertices.push_back(vertex);
+    }
+  }
+
+  if (implicitlyActivePluginVertices.empty()) {
+    return;
+  }
+
+  // Now add edges between consecutive implicitly active plugins.
+  auto lastImplicitlyActiveVertexIt = implicitlyActivePluginVertices.end();
+  for (auto it = hardcodedPlugins.begin(); it != hardcodedPlugins.end();) {
+    const auto fromVertexIt = implicitlyActivePluginVertices.find(it);
+
+    // Find the next valid implicitly active plugin and its vertex.
+    auto toVertexIt = implicitlyActivePluginVertices.end();
+    for (it = std::next(it); it != hardcodedPlugins.end(); ++it) {
+      toVertexIt = implicitlyActivePluginVertices.find(it);
+      if (toVertexIt != implicitlyActivePluginVertices.end()) {
+        break;
       }
     }
 
-    const auto pluginVertex = GetVertexByName(plugin);
+    if (fromVertexIt != implicitlyActivePluginVertices.end()) {
+      lastImplicitlyActiveVertexIt = fromVertexIt;
 
-    if (!pluginVertex.has_value()) {
-      if (logger) {
-        logger->debug(
-            "Skipping adding hardcoded plugin edges for \"{}\" as it has not "
-            "been loaded.",
-            plugin);
+      if (toVertexIt != implicitlyActivePluginVertices.end()) {
+        AddEdge(fromVertexIt->second, toVertexIt->second, EdgeType::hardcoded);
       }
-      continue;
     }
+  }
 
-    for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
-      if (vertex == pluginVertex.value()) {
-        continue;
-      }
-
-      if (processedPluginPaths.count(
-              NormalizeFilename(GetPlugin(vertex).GetName())) == 0) {
-        AddEdge(pluginVertex.value(), vertex, EdgeType::hardcoded);
-      }
+  // Finally, add edges from the last implicitly active plugin to the other
+  // plugins.
+  if (lastImplicitlyActiveVertexIt != implicitlyActivePluginVertices.end()) {
+    for (const auto& vertex : otherPluginVertices) {
+      AddEdge(
+          lastImplicitlyActiveVertexIt->second, vertex, EdgeType::hardcoded);
     }
   }
 }

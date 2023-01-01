@@ -76,6 +76,13 @@ For each plugin:
 4. Add edges coming from all the plugin's load after files that are installed
    plugins.
 
+Hardcoded edges
+---------------
+
+Some games hardcode certain plugins to load in certain positions, and this
+section adds edges in the correct order between those plugins, and between those
+plugins and the rest of the plugins in the graph.
+
 Group edges
 -----------
 
