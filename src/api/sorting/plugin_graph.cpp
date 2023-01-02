@@ -30,13 +30,10 @@
 #include <boost/graph/topological_sort.hpp>
 #include <queue>
 
-#include "api/game/game.h"
 #include "api/helpers/logging.h"
 #include "api/helpers/text.h"
-#include "api/metadata/condition_evaluator.h"
 #include "api/sorting/group_sort.h"
 #include "loot/exception/cyclic_interaction_error.h"
-#include "loot/exception/undefined_group_error.h"
 
 namespace loot {
 typedef boost::graph_traits<RawPluginGraph>::edge_descriptor edge_t;

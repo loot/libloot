@@ -29,15 +29,13 @@
 
 #include <spdlog/spdlog.h>
 
-#include <boost/container_hash/hash.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <map>
 
-#include "api/game/game.h"
-#include "api/plugin.h"
 #include "api/sorting/plugin_sorting_data.h"
-#include "loot/exception/cyclic_interaction_error.h"
+#include "loot/enum/edge_type.h"
+#include "loot/metadata/group.h"
 
 namespace loot {
 typedef boost::adjacency_list<boost::vecS,
