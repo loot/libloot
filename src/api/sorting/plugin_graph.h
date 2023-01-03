@@ -33,6 +33,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <map>
 
+#include "api/sorting/group_sort.h"
 #include "api/sorting/plugin_sorting_data.h"
 #include "loot/enum/edge_type.h"
 #include "loot/metadata/group.h"
@@ -63,7 +64,6 @@ public:
   size_t CountVertices() const;
   std::pair<vertex_it, vertex_it> GetVertices() const;
   std::optional<vertex_t> GetVertexByName(const std::string& name) const;
-  std::optional<vertex_t> GetVertexByExactName(const std::string& name) const;
 
   const PluginSortingData& GetPlugin(const vertex_t& vertex) const;
 
@@ -93,14 +93,16 @@ public:
   void AddSpecificEdges();
   void AddHardcodedPluginEdges(
       const std::vector<std::string>& hardcodedPlugins);
-  void AddGroupEdges(const std::unordered_map<std::string, Group>& groups);
+  void AddGroupEdges(
+      const std::unordered_map<std::string, Group>& groups,
+      const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
+          predecessorGroupsMap);
   void AddOverlapEdges();
   void AddTieBreakEdges();
 
 private:
   RawPluginGraph graph_;
   PathsCache pathsCache_;
-  std::map<std::string, vertex_t> pluginNameVertexMap;
 };
 }
 

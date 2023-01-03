@@ -31,11 +31,6 @@
 #include "loot/metadata/plugin_metadata.h"
 
 namespace loot {
-struct PredecessorGroupPlugin {
-  std::string name;
-  bool pathInvolvesUserMetadata{false};
-};
-
 class PluginSortingData {
 public:
   explicit PluginSortingData() = default;
@@ -66,9 +61,6 @@ public:
   std::string GetGroup() const;
   bool IsGroupUserMetadata() const;
 
-  std::vector<PredecessorGroupPlugin> GetPredecessorGroupPlugins() const;
-  void SetPredecessorGroupPlugins(std::vector<PredecessorGroupPlugin> plugins);
-
   const std::vector<File>& GetMasterlistLoadAfterFiles() const;
   const std::vector<File>& GetUserLoadAfterFiles() const;
   const std::vector<File>& GetMasterlistRequirements() const;
@@ -79,7 +71,6 @@ public:
 private:
   const PluginSortingInterface* plugin_{nullptr};
   std::string group_;
-  std::vector<PredecessorGroupPlugin> predecessorGroupPlugins_;
 
   std::vector<File> masterlistLoadAfter_;
   std::vector<File> userLoadAfter_;

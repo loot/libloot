@@ -80,11 +80,18 @@ plugins and the rest of the plugins in the graph.
 Group edges
 -----------
 
-Group-derived interdependencies are then evaluated. Each plugin's group-derived
-plugins are iterated over and individually checked to see if adding an edge from
-the group-derived plugin to the plugin would cause a cycle, and if not the edge
-is recorded. Once all potential edges have been checked, the recorded edges are
-added to the graph.
+For each plugin, the plugins that are members of groups that the current
+plugin's group loads after are iterated over and individually checked to see if
+adding an edge from the other group's plugin to the current plugin would cause a
+cycle. If not, the edge is queued for addition. If it would cause a cycle and
+one of the plugins is in the default group and the other group's plugin is
+master-flagged or the current plugin is not master flagged, then the plugin in
+the default group is recorded as one to skip adding edges to or from when the
+prospective edge involves any of the groups in the path from the other plugin
+to the current plugin.
+
+Once all the plugins have been iterated over, all the queued edges are added,
+skipping those edges identified in the earlier loop.
 
 At this point the plugin graph is checked for cycles, and an error is thrown if
 any are encountered, so that metadata (or indeed plugin data) that cause them

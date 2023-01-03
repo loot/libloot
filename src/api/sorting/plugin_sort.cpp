@@ -29,42 +29,8 @@
 #include "api/helpers/logging.h"
 #include "api/sorting/group_sort.h"
 #include "api/sorting/plugin_graph.h"
-#include "loot/exception/undefined_group_error.h"
 
 namespace loot {
-std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
-GetPredecessorGroupPlugins(
-    const std::unordered_map<std::string,
-                             std::vector<std::pair<std::string, bool>>>&
-        groupPlugins,
-    const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
-        predecessorGroupsMap) {
-  std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
-      predecessorGroupsPlugins;
-  for (const auto& group : predecessorGroupsMap) {
-    std::vector<PredecessorGroupPlugin> predecessorGroupPlugins;
-
-    for (const auto& predecessorGroup : group.second) {
-      const auto pluginsIt = groupPlugins.find(predecessorGroup.name);
-      if (pluginsIt != groupPlugins.end()) {
-        // If the path from the predecessor group to this one involves user
-        // metadata, the plugins' paths all involve user metadata, otherwise
-        // only those plugins that belong to the predecessor group due to user
-        // metadata have a path involving user metadata.
-        for (const auto& groupPlugin : pluginsIt->second) {
-          predecessorGroupPlugins.push_back(PredecessorGroupPlugin{
-              groupPlugin.first,
-              predecessorGroup.pathInvolvesUserMetadata || groupPlugin.second});
-        }
-      }
-    }
-
-    predecessorGroupsPlugins.insert({group.first, predecessorGroupPlugins});
-  }
-
-  return predecessorGroupsPlugins;
-}
-
 int ComparePlugins(const PluginSortingData& plugin1,
                    const PluginSortingData& plugin2) {
   if (plugin1.GetLoadOrderIndex().has_value() &&
@@ -110,26 +76,7 @@ int ComparePlugins(const PluginSortingData& plugin1,
 std::vector<PluginSortingData> GetPluginsSortingData(
     const Game& game,
     const std::vector<std::string>& loadOrder) {
-  auto loadedPlugins = game.GetCache().GetPlugins();
-
-  // Sort plugins by their names. This is necessary to ensure that
-  // plugin precedessor group plugins are listed in a consistent
-  // order, which is important because that is the order in which
-  // group edges are added and differences could cause different
-  // sorting results.
-  std::sort(loadedPlugins.begin(),
-            loadedPlugins.end(),
-            [](const auto& lhs, const auto& rhs) {
-              if (!lhs) {
-                return false;
-              }
-
-              if (!rhs) {
-                return true;
-              }
-
-              return lhs->GetName() < rhs->GetName();
-            });
+  const auto loadedPlugins = game.GetCache().GetPlugins();
 
   std::vector<const PluginInterface*> loadedPluginInterfaces;
   std::transform(loadedPlugins.begin(),
@@ -162,64 +109,6 @@ std::vector<PluginSortingData> GetPluginsSortingData(
                                                      loadedPluginInterfaces);
 
     pluginsSortingData.push_back(pluginSortingData);
-  }
-
-  // Each element of the vector is a pair of a plugin name and if it's in the
-  // group due to user metadata.
-  std::unordered_map<std::string, std::vector<std::pair<std::string, bool>>>
-      groupPlugins;
-  for (const auto& plugin : pluginsSortingData) {
-    const auto groupName = plugin.GetGroup();
-    const auto groupPlugin =
-        std::make_pair(plugin.GetName(), plugin.IsGroupUserMetadata());
-    const auto groupIt = groupPlugins.find(groupName);
-
-    if (groupIt == groupPlugins.end()) {
-      groupPlugins.emplace(
-          groupName, std::vector<std::pair<std::string, bool>>({groupPlugin}));
-    } else {
-      groupIt->second.push_back(groupPlugin);
-    }
-  }
-
-  // Map sets of transitive group dependencies to sets of transitive plugin
-  // dependencies.
-  const auto predecessorGroupsMap = GetPredecessorGroups(
-      game.GetDatabase().GetGroups(false), game.GetDatabase().GetUserGroups());
-
-  // Replace the transitive after group names with the names of the plugins in
-  // those groups.
-  const auto predecessorGroupsPlugins =
-      GetPredecessorGroupPlugins(groupPlugins, predecessorGroupsMap);
-
-  // Add all transitive plugin dependencies for a group to the plugin's load
-  // after metadata.
-  const auto logger = getLogger();
-  for (auto& plugin : pluginsSortingData) {
-    if (logger) {
-      logger->trace(
-          "Plugin \"{}\" belongs to group \"{}\", setting after group plugins",
-          plugin.GetName(),
-          plugin.GetGroup());
-    }
-
-    const auto groupsIt = predecessorGroupsPlugins.find(plugin.GetGroup());
-    if (groupsIt == predecessorGroupsPlugins.end()) {
-      throw UndefinedGroupError(plugin.GetGroup());
-    }
-
-    if (plugin.IsGroupUserMetadata()) {
-      // If the current plugin is a member of its group due to user metadata,
-      // then all predecessor plugins are such due to user metadata.
-      auto predecessorGroupPlugins = groupsIt->second;
-      for (auto& predecessorGroupPlugin : predecessorGroupPlugins) {
-        predecessorGroupPlugin.pathInvolvesUserMetadata = true;
-      }
-
-      plugin.SetPredecessorGroupPlugins(predecessorGroupPlugins);
-    } else {
-      plugin.SetPredecessorGroupPlugins(groupsIt->second);
-    }
   }
 
   // Sort the plugins according to into their existing load order, or
@@ -256,12 +145,14 @@ std::vector<std::string> GetPluginsWithHardcodedPositions(const Game& game) {
 std::vector<std::string> SortPluginGraph(
     PluginGraph& graph,
     const std::vector<std::string>& hardcodedPlugins,
-    const std::unordered_map<std::string, Group>& groupsMap) {
+    const std::unordered_map<std::string, Group>& groupsMap,
+    const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
+        predecessorGroupsMap) {
   // Now add the interactions between plugins to the graph as edges.
   graph.AddSpecificEdges();
   graph.AddHardcodedPluginEdges(hardcodedPlugins);
 
-  graph.AddGroupEdges(groupsMap);
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
 
   // Check for cycles now because from this point on edges are only added if
   // they don't cause cycles, and adding tie-break edges is by far the slowest
@@ -342,10 +233,13 @@ std::vector<std::string> SortPlugins(
     groupsMap.emplace(group.GetName(), group);
   }
 
-  auto newLoadOrder =
-      SortPluginGraph(mastersGraph, hardcodedPlugins, groupsMap);
-  const auto newNonMastersLoadOrder =
-      SortPluginGraph(nonMastersGraph, hardcodedPlugins, groupsMap);
+  const auto predecessorGroupsMap = GetPredecessorGroups(
+      game.GetDatabase().GetGroups(false), game.GetDatabase().GetUserGroups());
+
+  auto newLoadOrder = SortPluginGraph(
+      mastersGraph, hardcodedPlugins, groupsMap, predecessorGroupsMap);
+  const auto newNonMastersLoadOrder = SortPluginGraph(
+      nonMastersGraph, hardcodedPlugins, groupsMap, predecessorGroupsMap);
 
   newLoadOrder.insert(newLoadOrder.end(),
                       newNonMastersLoadOrder.begin(),

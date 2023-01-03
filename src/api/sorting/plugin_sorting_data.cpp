@@ -147,16 +147,6 @@ bool PluginSortingData::IsGroupUserMetadata() const {
   return groupIsUserMetadata_;
 }
 
-std::vector<PredecessorGroupPlugin>
-PluginSortingData::GetPredecessorGroupPlugins() const {
-  return predecessorGroupPlugins_;
-}
-
-void PluginSortingData::SetPredecessorGroupPlugins(
-    std::vector<PredecessorGroupPlugin> plugins) {
-  predecessorGroupPlugins_ = plugins;
-}
-
 const std::vector<File>& PluginSortingData::GetMasterlistLoadAfterFiles()
     const {
   return masterlistLoadAfter_;

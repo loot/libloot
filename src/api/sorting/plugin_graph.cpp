@@ -34,6 +34,7 @@
 #include "api/helpers/text.h"
 #include "api/sorting/group_sort.h"
 #include "loot/exception/cyclic_interaction_error.h"
+#include "loot/exception/undefined_group_error.h"
 
 namespace loot {
 typedef boost::graph_traits<RawPluginGraph>::edge_descriptor edge_t;
@@ -79,6 +80,115 @@ public:
 private:
   std::vector<Vertex> trail;
 };
+
+struct GroupPlugin {
+  vertex_t vertex{0};
+  bool groupIsUserMetadata{false};
+};
+
+struct PredecessorGroupPlugin {
+  vertex_t vertex{0};
+  bool pathInvolvesUserMetadata{false};
+};
+
+std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
+GetPredecessorGroupsPlugins(
+    const std::unordered_map<std::string, std::vector<GroupPlugin>>&
+        groupsPlugins,
+    const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
+        predecessorGroupsMap) {
+  std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
+      predecessorGroupsPlugins;
+  for (const auto& group : predecessorGroupsMap) {
+    std::vector<PredecessorGroupPlugin> predecessorGroupPlugins;
+
+    for (const auto& predecessorGroup : group.second) {
+      const auto pluginsIt = groupsPlugins.find(predecessorGroup.name);
+      if (pluginsIt != groupsPlugins.end()) {
+        // If the path from the predecessor group to this one involves user
+        // metadata, the plugins' paths all involve user metadata, otherwise
+        // only those plugins that belong to the predecessor group due to user
+        // metadata have a path involving user metadata.
+        for (const auto& groupPlugin : pluginsIt->second) {
+          predecessorGroupPlugins.push_back(PredecessorGroupPlugin{
+              groupPlugin.vertex,
+              predecessorGroup.pathInvolvesUserMetadata ||
+                  groupPlugin.groupIsUserMetadata});
+        }
+      }
+    }
+
+    predecessorGroupsPlugins.insert({group.first, predecessorGroupPlugins});
+  }
+
+  return predecessorGroupsPlugins;
+}
+
+std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
+GetPredecessorGroupsPlugins(
+    const PluginGraph& graph,
+    const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
+        predecessorGroupsMap) {
+  // Each element of the vector is a pair of a plugin name and if it's in the
+  // group due to user metadata.
+  std::unordered_map<std::string, std::vector<GroupPlugin>> groupsPlugins;
+
+  for (const vertex_t& vertex :
+       boost::make_iterator_range(graph.GetVertices())) {
+    const auto& plugin = graph.GetPlugin(vertex);
+    const auto groupName = plugin.GetGroup();
+    const auto groupPlugin = GroupPlugin{vertex, plugin.IsGroupUserMetadata()};
+
+    const auto groupIt = groupsPlugins.find(groupName);
+
+    if (groupIt == groupsPlugins.end()) {
+      groupsPlugins.emplace(groupName, std::vector<GroupPlugin>({groupPlugin}));
+    } else {
+      groupIt->second.push_back(groupPlugin);
+    }
+  }
+
+  // Sort plugins by their names. This is necessary to ensure that
+  // plugin precedessor group plugins are listed in a consistent
+  // order, which is important because that is the order in which
+  // group edges are added and differences could cause different
+  // sorting results.
+  for (auto& groupPlugins : groupsPlugins) {
+    std::sort(groupPlugins.second.begin(),
+              groupPlugins.second.end(),
+              [&](const GroupPlugin& lhs, const GroupPlugin& rhs) {
+                return graph.GetPlugin(lhs.vertex).GetName() <
+                       graph.GetPlugin(rhs.vertex).GetName();
+              });
+  }
+
+  // Map sets of transitive group dependencies to sets of transitive plugin
+  // dependencies.
+  return GetPredecessorGroupsPlugins(groupsPlugins, predecessorGroupsMap);
+}
+
+std::vector<PredecessorGroupPlugin> GetPredecessorGroupPlugins(
+    const PluginSortingData& plugin,
+    const std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>&
+        predecessorGroupsPlugins) {
+  const auto groupsIt = predecessorGroupsPlugins.find(plugin.GetGroup());
+  if (groupsIt == predecessorGroupsPlugins.end()) {
+    throw UndefinedGroupError(plugin.GetGroup());
+  }
+
+  if (plugin.IsGroupUserMetadata()) {
+    // If the current plugin is a member of its group due to user metadata,
+    // then all predecessor plugins are such due to user metadata.
+    auto predecessorGroupPlugins = groupsIt->second;
+    for (auto& predecessorGroupPlugin : predecessorGroupPlugins) {
+      predecessorGroupPlugin.pathInvolvesUserMetadata = true;
+    }
+
+    return predecessorGroupPlugins;
+  }
+
+  return groupsIt->second;
+}
 
 bool ShouldIgnorePlugin(
     const std::string& group,
@@ -459,16 +569,6 @@ std::optional<vertex_t> PluginGraph::GetVertexByName(
   return std::nullopt;
 }
 
-std::optional<vertex_t> PluginGraph::GetVertexByExactName(
-    const std::string& name) const {
-  const auto it = pluginNameVertexMap.find(name);
-  if (it != pluginNameVertexMap.end()) {
-    return it->second;
-  }
-
-  return std::nullopt;
-}
-
 const PluginSortingData& PluginGraph::GetPlugin(const vertex_t& vertex) const {
   return graph_[vertex];
 }
@@ -578,10 +678,7 @@ void PluginGraph::AddEdge(const vertex_t& fromVertex,
 }
 
 vertex_t PluginGraph::AddVertex(const PluginSortingData& plugin) {
-  const auto vertex = boost::add_vertex(plugin, graph_);
-  pluginNameVertexMap.emplace(plugin.GetName(), vertex);
-
-  return vertex;
+  return boost::add_vertex(plugin, graph_);
 }
 
 void PluginGraph::AddSpecificEdges() {
@@ -722,11 +819,16 @@ void PluginGraph::AddHardcodedPluginEdges(
 }
 
 void PluginGraph::AddGroupEdges(
-    const std::unordered_map<std::string, Group>& groups) {
+    const std::unordered_map<std::string, Group>& groups,
+    const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
+        predecessorGroupsMap) {
   const auto logger = getLogger();
   if (logger) {
     logger->trace("Adding edges based on plugin group memberships...");
   }
+
+  const auto predecessorGroupsPlugins =
+      GetPredecessorGroupsPlugins(*this, predecessorGroupsMap);
 
   // Tuple fields are from, to, and edge type.
   std::vector<std::tuple<vertex_t, vertex_t, EdgeType>> acyclicEdges;
@@ -735,16 +837,16 @@ void PluginGraph::AddGroupEdges(
   for (const vertex_t& vertex : boost::make_iterator_range(GetVertices())) {
     const auto& toPlugin = GetPlugin(vertex);
 
-    for (const auto& plugin : toPlugin.GetPredecessorGroupPlugins()) {
+    const auto predecessorGroupPlugins =
+        GetPredecessorGroupPlugins(toPlugin, predecessorGroupsPlugins);
+
+    for (const auto& plugin : predecessorGroupPlugins) {
       // After group plugin names are taken from other PluginSortingData names,
       // so exact string comparisons can be used.
-      const auto parentVertex = GetVertexByExactName(plugin.name);
-      if (!parentVertex.has_value()) {
-        continue;
-      }
+      const auto parentVertex = plugin.vertex;
 
-      if (PathExists(vertex, parentVertex.value())) {
-        const auto& fromPlugin = GetPlugin(parentVertex.value());
+      if (PathExists(vertex, parentVertex)) {
+        const auto& fromPlugin = GetPlugin(parentVertex);
 
         if (logger) {
           logger->debug(
@@ -793,8 +895,7 @@ void PluginGraph::AddGroupEdges(
                                 ? EdgeType::userGroup
                                 : EdgeType::masterlistGroup;
 
-      acyclicEdges.push_back(
-          std::make_tuple(parentVertex.value(), vertex, edgeType));
+      acyclicEdges.push_back(std::make_tuple(parentVertex, vertex, edgeType));
     }
   }
 
