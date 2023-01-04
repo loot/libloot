@@ -38,46 +38,6 @@ typedef boost::graph_traits<GroupGraph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<GroupGraph>::edge_descriptor edge_t;
 typedef boost::associative_property_map<std::map<edge_t, int>> edge_map_t;
 
-// This visitor is responsible for recording a vertex's successor vertices,
-// and whether they are reachable without user metadata or not. However, a
-// vertex is only recorded the first time it's discovered, vertices and
-// edges are iterated over in their insertion order, and masterlist metadata
-// is inserted first, so it depends on the structure and sources of the data
-// which path is encountered first.
-// E.g. for vertices A, B and C, if C -> B and C -> A are masterlist edges
-// added in that order and B -> A is a userlist edge then C -> B -> A will
-// be visited first and A will then have been finished so C -> A won't be
-// recorded, so it'll look the relationship between C and A involves user
-// metadata when it isn't necessary.
-class PredecessorGroupsVisitor : public boost::dfs_visitor<> {
-public:
-  PredecessorGroupsVisitor(std::vector<PredecessorGroup>& visitedGroups) :
-      visitedGroups_(visitedGroups) {}
-
-  void discover_vertex(vertex_t vertex, const GroupGraph& graph) {
-    pathStack_.push_back(vertex);
-
-    if (pathStack_.size() > 1) {
-      bool pathInvolvesUserMetadata = false;
-      for (size_t i = 0; i < pathStack_.size() - 1; i += 1) {
-        const auto edge = boost::edge(pathStack_[i], pathStack_[i + 1], graph);
-
-        pathInvolvesUserMetadata |=
-            graph[edge.first] == EdgeType::userLoadAfter;
-      }
-
-      visitedGroups_.push_back(
-          PredecessorGroup{graph[vertex], pathInvolvesUserMetadata});
-    }
-  }
-
-  void finish_vertex(vertex_t, const GroupGraph&) { pathStack_.pop_back(); }
-
-private:
-  std::vector<PredecessorGroup>& visitedGroups_;
-  std::vector<vertex_t> pathStack_;
-};
-
 class CycleDetector : public boost::dfs_visitor<> {
 public:
   void tree_edge(edge_t edge, const GroupGraph& graph) {
@@ -119,16 +79,6 @@ public:
 private:
   std::vector<Vertex> trail;
 };
-
-std::string joinVector(const std::vector<PredecessorGroup>& container) {
-  std::string output;
-  for (const auto& element : container) {
-    const auto via = element.pathInvolvesUserMetadata ? "user" : "masterlist";
-    output += element.name + " (via " + via + " metadata), ";
-  }
-
-  return output.substr(0, output.length() - 2);
-}
 
 std::vector<Group> SortByName(const std::vector<Group>& groups) {
   auto copy = groups;
@@ -184,7 +134,7 @@ GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
           throw UndefinedGroupError(otherGroupName);
         }
 
-        boost::add_edge(vertex, otherVertex->second, edgeType, graph);
+        boost::add_edge(otherVertex->second, vertex, edgeType, graph);
       }
     }
   };
@@ -221,40 +171,6 @@ GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
   return graph;
 }
 
-std::unordered_map<std::string, std::vector<PredecessorGroup>>
-GetPredecessorGroups(const GroupGraph& graph) {
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Sorting groups according to their load after data");
-  }
-
-  std::unordered_map<std::string, std::vector<PredecessorGroup>>
-      transitiveAfterGroups;
-  for (const vertex_t& vertex :
-       boost::make_iterator_range(boost::vertices(graph))) {
-    std::vector<PredecessorGroup> visitedGroups;
-    const PredecessorGroupsVisitor afterGroupsVisitor(visitedGroups);
-
-    // Create a color map.
-    std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
-    const auto colorMap = boost::make_iterator_property_map(
-        colorVec.begin(),
-        boost::get(boost::vertex_index, graph),
-        colorVec.at(0));
-
-    boost::depth_first_visit(graph, vertex, afterGroupsVisitor, colorMap);
-    transitiveAfterGroups[graph[vertex]] = visitedGroups;
-
-    if (logger) {
-      logger->debug("Group \"{}\" transitively loads after groups \"{}\"",
-                    graph[vertex],
-                    joinVector(visitedGroups));
-    }
-  }
-
-  return transitiveAfterGroups;
-}
-
 vertex_t GetVertexByName(const GroupGraph& graph, const std::string& name) {
   for (const auto& vertex :
        boost::make_iterator_range(boost::vertices(graph))) {
@@ -263,7 +179,7 @@ vertex_t GetVertexByName(const GroupGraph& graph, const std::string& name) {
     }
   }
 
-  auto logger = getLogger();
+  const auto logger = getLogger();
   if (logger) {
     logger->error("Can't find group with name \"{}\"", name);
   }
@@ -293,7 +209,7 @@ std::vector<Vertex> GetGroupsPath(const GroupGraph& graph,
   std::vector<vertex_t> predecessors(boost::num_vertices(graph));
   std::vector<int> distance(predecessors.size(),
                             (std::numeric_limits<int>::max)());
-  distance.at(toVertex) = 0;
+  distance.at(fromVertex) = 0;
 
   bellman_ford_shortest_paths(
       graph,
@@ -301,13 +217,13 @@ std::vector<Vertex> GetGroupsPath(const GroupGraph& graph,
           .predecessor_map(boost::make_iterator_property_map(
               predecessors.begin(), get(boost::vertex_index, graph)))
           .distance_map(distance.data())
-          .root_vertex(toVertex));
+          .root_vertex(fromVertex));
 
-  std::vector<Vertex> path;
-  vertex_t currentVertex = fromVertex;
-  while (currentVertex != toVertex) {
-    auto nextVertex = predecessors.at(currentVertex);
-    if (nextVertex == currentVertex) {
+  std::vector<Vertex> path{Vertex(graph[toVertex])};
+  vertex_t currentVertex = toVertex;
+  while (currentVertex != fromVertex) {
+    const auto precedingVertex = predecessors.at(currentVertex);
+    if (precedingVertex == currentVertex) {
       if (logger) {
         logger->error(
             "Unreachable vertex {} encountered while looking for vertex {}",
@@ -317,18 +233,19 @@ std::vector<Vertex> GetGroupsPath(const GroupGraph& graph,
       return std::vector<Vertex>();
     }
 
-    const auto pair = boost::edge(nextVertex, currentVertex, graph);
+    const auto pair = boost::edge(precedingVertex, currentVertex, graph);
     if (!pair.second) {
       throw std::runtime_error("Unexpectedly couldn't find edge between \"" +
-                               graph[currentVertex] + "\" and \"" +
-                               graph[nextVertex] + "\"");
+                               graph[precedingVertex] + "\" and \"" +
+                               graph[currentVertex] + "\"");
     }
-    auto vertex = Vertex(graph[currentVertex], graph[pair.first]);
+    const auto vertex = Vertex(graph[precedingVertex], graph[pair.first]);
     path.push_back(vertex);
 
-    currentVertex = nextVertex;
+    currentVertex = precedingVertex;
   }
-  path.push_back(Vertex(graph[currentVertex]));
+
+  std::reverse(path.begin(), path.end());
 
   return path;
 }

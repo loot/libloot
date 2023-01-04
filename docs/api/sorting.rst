@@ -90,18 +90,31 @@ plugins and the rest of the plugins in the graph.
 Group edges
 -----------
 
-For each plugin, the plugins that are members of groups that the current
-plugin's group loads after are iterated over and individually checked to see if
-adding an edge from the other group's plugin to the current plugin would cause a
-cycle. If not, the edge is queued for addition. If it would cause a cycle and
-one of the plugins is in the default group and the other group's plugin is
-master-flagged or the current plugin is not master flagged, then the plugin in
-the default group is recorded as one to skip adding edges to or from when the
-prospective edge involves any of the groups in the path from the other plugin
-to the current plugin.
+First a graph of groups is created to represent which groups must load after
+which other groups, with groups being added in lexicographical order and
+masterlist groups before userlist groups. Once all the groups have been added,
+a depth-first search is performed starting from each group in the order they
+were added.
 
-Once all the plugins have been iterated over, all the queued edges are added,
-skipping those edges identified in the earlier loop.
+At the start of each search, the starting group is used as the first element in
+a stack that will represent the current path through the graph. On each new edge
+encountered, the target group is appended to the stack and edges are
+added going from the plugins in the edge's source group to the plugins in the
+edge's target group, unless the edge to be added would cause a cycle, or unless
+the source group is the ``default`` group, in which case its plugins are
+ignored. The same is done for all the groups currently recorded in the stack.
+Once all a group's out-edges (going to groups that load directly after it) have
+been processed, the group is removed from the stack.
+
+Once all the groups have been iterated over, one final depth-first search is
+performed, this time starting from the ``default`` group and *not* skipping
+edges from its plugins.
+
+In this way all plugins have edges added from them to all the plugins in the
+groups that load after their group, unless the edge would cause a cycle. The
+order in which groups are defined can affect which edges are skipped, but the
+order of groups' "load after" metadata does not, and neither does the order in
+which plugins in each group are looped over.
 
 At this point the plugin graph is checked for cycles, and an error is thrown if
 any are encountered, so that metadata (or indeed plugin data) that cause them

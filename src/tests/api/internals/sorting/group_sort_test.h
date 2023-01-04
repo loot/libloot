@@ -32,11 +32,6 @@ along with LOOT.  If not, see
 #include "loot/exception/undefined_group_error.h"
 
 namespace loot {
-bool operator==(const PredecessorGroup& lhs, const PredecessorGroup& rhs) {
-  return lhs.pathInvolvesUserMetadata == rhs.pathInvolvesUserMetadata &&
-         lhs.name == rhs.name;
-}
-
 namespace test {
 TEST(BuildGroupGraph, shouldThrowIfAnAfterGroupDoesNotExist) {
   std::vector<Group> groups({Group("b", {"a"})});
@@ -65,15 +60,15 @@ TEST(BuildGroupGraph, shouldThrowIfAfterGroupsAreCyclic) {
     ASSERT_EQ(3, e.GetCycle().size());
 
     EXPECT_EQ("a", e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::userLoadAfter,
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
               e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
 
-    EXPECT_EQ("c", e.GetCycle()[1].GetName());
+    EXPECT_EQ("b", e.GetCycle()[1].GetName());
     EXPECT_EQ(EdgeType::userLoadAfter,
               e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
 
-    EXPECT_EQ("b", e.GetCycle()[2].GetName());
-    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+    EXPECT_EQ("c", e.GetCycle()[2].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter,
               e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
   }
 }
@@ -118,83 +113,6 @@ TEST(BuildGroupGraph,
     EXPECT_EQ(EdgeType::masterlistLoadAfter,
               e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
   }
-}
-
-TEST(GetPredecessorGroups, shouldMapGroupsToTheirPredecessorGroups) {
-  std::vector<Group> groups({Group("a"), Group("b", {"a"}), Group("c", {"b"})});
-
-  const auto groupGraph = BuildGroupGraph(groups, {});
-  auto predecessors = GetPredecessorGroups(groupGraph);
-
-  EXPECT_TRUE(predecessors["a"].empty());
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"a"}}), predecessors["b"]);
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a"}}), predecessors["c"]);
-}
-
-TEST(GetPredecessorGroups,
-     shouldRecordIfADirectSuccessorIsDefinedInUserMetadata) {
-  std::vector<Group> masterlistGroups({Group("a")});
-  std::vector<Group> userlistGroups({Group("b", {"a"})});
-
-  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
-  auto predecessors = GetPredecessorGroups(groupGraph);
-
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
-}
-
-TEST(GetPredecessorGroups,
-     shouldRecordIfADirectPredecessorIsLinkedDueToUserMetadata) {
-  std::vector<Group> masterlistGroups({Group("a"), Group("b")});
-  std::vector<Group> userlistGroups({Group("b", {"a"})});
-
-  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
-  auto predecessors = GetPredecessorGroups(groupGraph);
-
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
-}
-
-TEST(GetPredecessorGroups,
-     shouldRecordIfAnIndirectSuccessorIsDefinedInUserMetadata) {
-  std::vector<Group> masterlistGroups({Group("a"), Group("b", {"a"})});
-  std::vector<Group> userlistGroups({Group("c", {"b"})});
-
-  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
-  auto predecessors = GetPredecessorGroups(groupGraph);
-
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"a"}}), predecessors["b"]);
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"b", true}, {"a", true}}),
-            predecessors["c"]);
-}
-
-TEST(GetPredecessorGroups,
-     shouldRecordIfAnIndirectPredecessorIsLinkedDueToUserMetadata) {
-  std::vector<Group> masterlistGroups(
-      {Group("a"), Group("b"), Group("c", {"b"})});
-  std::vector<Group> userlistGroups({Group("b", {"a"})});
-
-  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
-  auto predecessors = GetPredecessorGroups(groupGraph);
-
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a", true}}),
-            predecessors["c"]);
-}
-
-TEST(GetPredecessorGroups,
-     shouldNotLeakUserMetadataInvolvementToSeparatePaths) {
-  // This arrangement of groups ensures that a masterlist-sourced edge is
-  // followed after a userlist-sourced edge along a different path, to check
-  // encountering a userlist-sourced edge along one path does not poison
-  // discovery of other paths.
-  std::vector<Group> masterlistGroups(
-      {Group("a"), Group("b"), Group("c"), Group("d", {"b", "c"})});
-  std::vector<Group> userlistGroups({Group("b", {"a"})});
-
-  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
-  auto predecessors = GetPredecessorGroups(groupGraph);
-
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a", true}, {"c"}}),
-            predecessors["d"]);
 }
 
 TEST(GetGroupsPath, shouldThrowIfTheFromGroupDoesNotExist) {

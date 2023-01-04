@@ -29,6 +29,7 @@
 #include "api/helpers/logging.h"
 #include "api/sorting/group_sort.h"
 #include "api/sorting/plugin_graph.h"
+#include "loot/exception/undefined_group_error.h"
 
 namespace loot {
 std::vector<PluginSortingData> GetPluginsSortingData(
@@ -75,6 +76,23 @@ std::vector<PluginSortingData> GetPluginsSortingData(
   }
 
   return pluginsSortingData;
+}
+
+void ValidatePluginGroups(const std::vector<PluginSortingData>& plugins,
+                          const GroupGraph& graph) {
+  std::unordered_set<std::string> groupNames;
+
+  for (const vertex_t& vertex :
+       boost::make_iterator_range(boost::vertices(graph))) {
+    groupNames.insert(graph[vertex]);
+  }
+
+  for (const auto& plugin : plugins) {
+    const auto pluginGroup = plugin.GetGroup();
+    if (groupNames.count(pluginGroup) == 0) {
+      throw UndefinedGroupError(pluginGroup);
+    }
+  }
 }
 
 bool IsInRange(const std::vector<PluginSortingData>::const_iterator& begin,
@@ -263,14 +281,13 @@ std::vector<std::string> SortPlugins(
   graph.AddSpecificEdges();
   graph.AddHardcodedPluginEdges(hardcodedPlugins);
 
-  graph.AddGroupEdges(groupGraph);
-
   // Check for cycles now because from this point on edges are only added if
-  // they don't cause cycles, and adding tie-break edges is by far the slowest
-  // part of the process, so if there is a cycle checking now will provide
-  // quicker feedback than checking later.
+  // they don't cause cycles, and adding overlap and tie-break edges is
+  // relatively slow, so checking now provides quicker feedback if there is an
+  // issue.
   graph.CheckForCycles();
 
+  graph.AddGroupEdges(groupGraph);
   graph.AddOverlapEdges();
   graph.AddTieBreakEdges();
 
@@ -318,6 +335,7 @@ std::vector<std::string> SortPlugins(
             });
 
   const auto groupGraph = BuildGroupGraph(masterlistGroups, userGroups);
+  ValidatePluginGroups(pluginsSortingData, groupGraph);
 
   // Some parts of sorting are O(N^2) for N plugins, and master flags cause
   // O(M*N) edges to be added for M masters and N non-masters, which can be
