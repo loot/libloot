@@ -26,6 +26,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/breadth_first_search.hpp>
+#include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/topological_sort.hpp>
 #include <queue>
@@ -81,41 +82,6 @@ private:
   std::vector<Vertex> trail;
 };
 
-struct PredecessorGroupPlugin {
-  vertex_t vertex{0};
-  bool groupPathInvolvesUserMetadata{false};
-};
-
-std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
-GetPredecessorGroupsPlugins(
-    const std::unordered_map<std::string, std::vector<vertex_t>>& groupsPlugins,
-    const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
-        predecessorGroupsMap) {
-  std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>
-      predecessorGroupsPlugins;
-  for (const auto& group : predecessorGroupsMap) {
-    std::vector<PredecessorGroupPlugin> predecessorGroupPlugins;
-
-    for (const auto& predecessorGroup : group.second) {
-      const auto pluginsIt = groupsPlugins.find(predecessorGroup.name);
-      if (pluginsIt != groupsPlugins.end()) {
-        // If the path from the predecessor group to this one involves user
-        // metadata, the plugins' paths all involve user metadata, otherwise
-        // only those plugins that belong to the predecessor group due to user
-        // metadata have a path involving user metadata.
-        for (const auto& groupPlugin : pluginsIt->second) {
-          predecessorGroupPlugins.push_back(PredecessorGroupPlugin{
-              groupPlugin, predecessorGroup.pathInvolvesUserMetadata});
-        }
-      }
-    }
-
-    predecessorGroupsPlugins.insert({group.first, predecessorGroupPlugins});
-  }
-
-  return predecessorGroupsPlugins;
-}
-
 std::unordered_map<std::string, std::vector<vertex_t>> GetGroupsPlugins(
     const PluginGraph& graph) {
   std::unordered_map<std::string, std::vector<vertex_t>> groupsPlugins;
@@ -133,157 +99,221 @@ std::unordered_map<std::string, std::vector<vertex_t>> GetGroupsPlugins(
     }
   }
 
-  // Sort plugins by their names. This is necessary to ensure that
-  // plugin precedessor group plugins are listed in a consistent
-  // order, which is important because that is the order in which
-  // group edges are added and differences could cause different
-  // sorting results.
-  for (auto& groupPlugins : groupsPlugins) {
-    std::sort(groupPlugins.second.begin(),
-              groupPlugins.second.end(),
-              [&](const vertex_t& lhs, const vertex_t& rhs) {
-                return graph.GetPlugin(lhs).GetName() <
-                       graph.GetPlugin(rhs).GetName();
-              });
-  }
-
   return groupsPlugins;
 }
 
-std::vector<PredecessorGroupPlugin> GetPredecessorGroupPlugins(
-    const std::string& groupName,
-    const std::unordered_map<std::string, std::vector<PredecessorGroupPlugin>>&
-        predecessorGroupsPlugins) {
-  const auto groupsIt = predecessorGroupsPlugins.find(groupName);
-  if (groupsIt == predecessorGroupsPlugins.end()) {
-    throw UndefinedGroupError(groupName);
-  }
-
-  return groupsIt->second;
-}
-
-bool ShouldIgnorePlugin(
-    const std::string& group,
-    const std::string& pluginName,
-    const std::map<std::string, std::unordered_set<std::string>>&
-        groupPluginsToIgnore) {
-  const auto pluginsToIgnore = groupPluginsToIgnore.find(group);
-  if (pluginsToIgnore != groupPluginsToIgnore.end()) {
-    return pluginsToIgnore->second.count(pluginName) > 0;
-  }
-
-  return false;
-}
-
-bool ShouldIgnoreGroupEdge(
-    const PluginSortingData& fromPlugin,
-    const PluginSortingData& toPlugin,
-    const std::map<std::string, std::unordered_set<std::string>>&
-        groupPluginsToIgnore) {
-  return ShouldIgnorePlugin(
-             fromPlugin.GetGroup(), toPlugin.GetName(), groupPluginsToIgnore) ||
-         ShouldIgnorePlugin(
-             toPlugin.GetGroup(), fromPlugin.GetName(), groupPluginsToIgnore);
-}
-
-void IgnorePluginGroupEdges(
-    const std::string& pluginName,
-    const std::unordered_set<std::string>& groups,
-    std::map<std::string, std::unordered_set<std::string>>&
-        groupPluginsToIgnore) {
-  for (const auto& group : groups) {
-    const auto pluginsToIgnore = groupPluginsToIgnore.find(group);
-    if (pluginsToIgnore != groupPluginsToIgnore.end()) {
-      pluginsToIgnore->second.insert(pluginName);
-    } else {
-      groupPluginsToIgnore.emplace(
-          group, std::unordered_set<std::string>({pluginName}));
+boost::graph_traits<GroupGraph>::vertex_descriptor GetDefaultVertex(
+    const GroupGraph& graph) {
+  for (const auto& vertex :
+       boost::make_iterator_range(boost::vertices(graph))) {
+    if (graph[vertex] == Group::DEFAULT_NAME) {
+      return vertex;
     }
   }
+
+  throw std::logic_error("Could not find default group in group graph");
 }
 
-class IntermediateGroupsFinder : public boost::dfs_visitor<> {
+class GroupsVisitor : public boost::dfs_visitor<> {
 public:
   typedef boost::graph_traits<GroupGraph>::edge_descriptor GroupGraphEdge;
   typedef boost::graph_traits<GroupGraph>::vertex_descriptor GroupGraphVertex;
 
-  explicit IntermediateGroupsFinder(
-      const GroupGraphVertex& targetGroup,
-      std::unordered_set<std::string>& groupNamesInPath) :
-      targetGroup_(targetGroup), groupNamesInPath_(&groupNamesInPath) {}
+  explicit GroupsVisitor(
+      PluginGraph& pluginGraph,
+      const std::unordered_map<std::string, std::vector<vertex_t>>&
+          groupsPlugins) :
+      pluginGraph_(&pluginGraph),
+      groupsPlugins_(&groupsPlugins),
+      logger_(getLogger()) {}
+
+  explicit GroupsVisitor(
+      PluginGraph& pluginGraph,
+      const std::unordered_map<std::string, std::vector<vertex_t>>&
+          groupsPlugins,
+      const GroupGraphVertex vertexToIgnoreAsSource) :
+      pluginGraph_(&pluginGraph),
+      groupsPlugins_(&groupsPlugins),
+      vertexToIgnoreAsSource_(vertexToIgnoreAsSource),
+      logger_(getLogger()) {}
+
+  void start_vertex(GroupGraphVertex vertex, const GroupGraph&) {
+    pathStack_.push_back(vertex);
+  }
 
   void tree_edge(GroupGraphEdge edge, const GroupGraph& graph) {
-    // If this target vertex is the visitor's target group, add all the names of
-    // the groups in the current path stack to the names set. Also add the names
-    // if the target vertex name appears in the set of names in the path, as
-    // that indicates that the current path merges with an already-walked path
-    // so also ends up at the target vertex.
+    const auto source = boost::source(edge, graph);
     const auto target = boost::target(edge, graph);
-    if (target == targetGroup_ ||
-        groupNamesInPath_->count(graph[target]) != 0) {
-      for (const auto& vertex : pathStack_) {
-        if (vertex != startVertex_) {
-          groupNamesInPath_->insert(graph[vertex]);
-        }
+
+    // Add the target group to the path stack so that edges can
+    // take into account whether its edge to the source group
+    // involves user metadata.
+    pathStack_.push_back(target);
+
+    // Find the plugins in the target group.
+    const auto targetPlugins = FindPluginsInGroup(target, graph);
+
+    // Create a new buffer to hold plugins that have one or more of their edges
+    // to target group plugins skipped.
+    std::vector<vertex_t> newBuffer;
+
+    // Function to add edges from all the given plugins to all the target group
+    // plugins, and record any plugins that have edges added or at least one
+    // edge skipped.
+    const auto addEdges = [&](const std::vector<vertex_t>& fromPlugins) {
+      for (const auto& plugin : fromPlugins) {
+        AddEdges(plugin, targetPlugins, graph);
       }
+    };
+
+    // Add edges for plugins buffered when adding edges from the previous
+    // groups in the path being walked.
+    for (const auto& fromPlugins : pluginsBuffers_) {
+      addEdges(fromPlugins);
     }
+
+    // For each source plugin, add an edge to each target plugin, unless the
+    // source group should be ignored (i.e. because the visitor has been
+    // configured to ignore the default group's plugins as sources).
+    if (source != vertexToIgnoreAsSource_) {
+      newBuffer = FindPluginsInGroup(source, graph);
+      addEdges(newBuffer);
+    }
+
+    // Add the new buffer to the stack.
+    pluginsBuffers_.push_back(newBuffer);
   }
 
   void forward_or_cross_edge(GroupGraphEdge edge, const GroupGraph& graph) {
     tree_edge(edge, graph);
+
+    // A forward or cross edge doesn't visit its target vertex, so pop it and
+    // its buffer back off the stacks.
+    PopStacks();
   }
 
-  void start_vertex(GroupGraphVertex vertex, const GroupGraph&) {
-    startVertex_ = vertex;
-  }
-
-  void discover_vertex(GroupGraphVertex vertex, const GroupGraph&) {
-    pathStack_.push_back(vertex);
-  }
-
-  void finish_vertex(GroupGraphVertex, const GroupGraph&) {
-    pathStack_.pop_back();
-  }
+  void finish_vertex(GroupGraphVertex, const GroupGraph&) { PopStacks(); }
 
 private:
-  GroupGraphVertex targetGroup_{0};
-  std::unordered_set<std::string>* groupNamesInPath_{nullptr};
+  bool PathToGroupInvolvesUserMetadata(const std::string& fromGroupName,
+                                       const GroupGraph& graph) const {
+    // The path involves user metadata if any edge between two groups in the
+    // path came from user metadata.
 
-  GroupGraphVertex startVertex_{0};
-  std::vector<vertex_t> pathStack_;
-};
+    const auto fromGroupIt =
+        std::find_if(pathStack_.begin(),
+                     pathStack_.end(),
+                     [&](const GroupGraphVertex& vertex) {
+                       return graph[vertex] == fromGroupName;
+                     });
 
-std::unordered_map<std::string, GroupGraphVertex> GetGroupVertexMap(
-    const GroupGraph& graph) {
-  std::unordered_map<std::string, GroupGraphVertex> map;
-  for (const vertex_t& vertex :
-       boost::make_iterator_range(boost::vertices(graph))) {
-    map.emplace(graph[vertex], vertex);
+    if (fromGroupIt == pathStack_.end()) {
+      // Can't find group, this should be impossible.
+      throw std::logic_error("Cannot find group \"" + fromGroupName +
+                             "\" in path stack");
+    }
+
+    // The target group is always the most recent group in the stack, so we
+    // don't need to look for it.
+
+    if (pathStack_.size() < 2) {
+      return false;
+    }
+
+    bool pathInvolvesUserMetadata = false;
+
+    for (auto it = fromGroupIt; it != std::prev(pathStack_.end()); ++it) {
+      const auto edge = boost::edge(*it, *std::next(it), graph);
+
+      pathInvolvesUserMetadata |= graph[edge.first] == EdgeType::userLoadAfter;
+    }
+
+    return pathInvolvesUserMetadata;
   }
 
-  return map;
-}
+  std::vector<vertex_t> FindPluginsInGroup(const GroupGraphVertex vertex,
+                                           const GroupGraph& graph) {
+    const auto targetPluginsIt = groupsPlugins_->find(graph[vertex]);
+    return targetPluginsIt == groupsPlugins_->end() ? std::vector<vertex_t>()
+                                                    : targetPluginsIt->second;
+  }
 
-std::unordered_set<std::string> FindGroupsInAllPaths(
-    const GroupGraph& groupGraph,
-    const GroupGraphVertex& fromGroup,
-    const GroupGraphVertex& toGroup) {
-  std::vector<boost::default_color_type> colorVec(
-      boost::num_vertices(groupGraph));
+  // Returns true if all target plugin edges were added, false if any were
+  // skipped.
+  bool AddEdges(const vertex_t& fromVertex,
+                const std::vector<vertex_t>& toPlugins,
+                const GroupGraph& graph) {
+    if (toPlugins.empty()) {
+      return true;
+    }
+
+    const auto& fromPlugin = pluginGraph_->GetPlugin(fromVertex);
+    const auto groupPathInvolvesUserMetadata =
+        PathToGroupInvolvesUserMetadata(fromPlugin.GetGroup(), graph);
+
+    bool anyEdgeSkipped = false;
+
+    for (const auto& toVertex : toPlugins) {
+      const auto& toPlugin = pluginGraph_->GetPlugin(toVertex);
+
+      if (!pluginGraph_->PathExists(toVertex, fromVertex)) {
+        const auto involvesUserMetadata = groupPathInvolvesUserMetadata ||
+                                          fromPlugin.IsGroupUserMetadata() ||
+                                          toPlugin.IsGroupUserMetadata();
+
+        const auto edgeType = involvesUserMetadata ? EdgeType::userGroup
+                                                   : EdgeType::masterlistGroup;
+
+        pluginGraph_->AddEdge(fromVertex, toVertex, edgeType);
+      } else {
+        if (logger_) {
+          logger_->debug(
+              "Skipping group edge from \"{}\" to \"{}\" as it would "
+              "create a cycle.",
+              fromPlugin.GetName(),
+              toPlugin.GetName());
+        }
+
+        anyEdgeSkipped = true;
+      }
+    }
+
+    return !anyEdgeSkipped;
+  }
+
+  void PopStacks() {
+    if (!pathStack_.empty()) {
+      pathStack_.pop_back();
+    }
+
+    if (!pluginsBuffers_.empty()) {
+      pluginsBuffers_.pop_back();
+    }
+  }
+
+  PluginGraph* pluginGraph_{nullptr};
+  const std::unordered_map<std::string, std::vector<vertex_t>>* groupsPlugins_{
+      nullptr};
+  std::optional<GroupGraphVertex> vertexToIgnoreAsSource_;
+  std::shared_ptr<spdlog::logger> logger_;
+
+  // This represents the path to the current target vertex in the group graph.
+  std::vector<GroupGraphVertex> pathStack_;
+
+  // This represents the plugins carried forward from each vertex in the path
+  // to the current target vertex in the group path.
+  std::vector<std::vector<vertex_t>> pluginsBuffers_;
+};
+
+void DepthFirstVisit(
+    const GroupGraph& graph,
+    const boost::graph_traits<GroupGraph>::vertex_descriptor& startingVertex,
+    GroupsVisitor& visitor) {
+  std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
   const auto colorMap = boost::make_iterator_property_map(
-      colorVec.begin(),
-      boost::get(boost::vertex_index, groupGraph),
-      colorVec.at(0));
+      colorVec.begin(), boost::get(boost::vertex_index, graph), colorVec.at(0));
 
-  std::unordered_set<std::string> foundGroups;
-
-  // The starting vertex is the last group in the path, since the group graph's
-  // edges point from the group that loads after to the group it loads after.
-  IntermediateGroupsFinder visitor(fromGroup, foundGroups);
-
-  boost::depth_first_visit(groupGraph, toGroup, visitor, colorMap);
-
-  return foundGroups;
+  boost::depth_first_visit(graph, startingVertex, visitor, colorMap);
 }
 
 std::string describeEdgeType(EdgeType edgeType) {
@@ -601,7 +631,6 @@ const PluginSortingData& PluginGraph::GetPlugin(const vertex_t& vertex) const {
 
 void PluginGraph::CheckForCycles() const {
   const auto logger = getLogger();
-  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
   if (logger) {
     logger->trace("Checking plugin graph for cycles...");
   }
@@ -845,6 +874,8 @@ void PluginGraph::AddHardcodedPluginEdges(
 }
 
 void PluginGraph::AddGroupEdges(const GroupGraph& groupGraph) {
+  typedef boost::graph_traits<GroupGraph>::vertex_descriptor GroupGraphVertex;
+
   const auto logger = getLogger();
   if (logger) {
     logger->trace("Adding edges based on plugin group memberships...");
@@ -852,105 +883,47 @@ void PluginGraph::AddGroupEdges(const GroupGraph& groupGraph) {
 
   // First build a map from groups to the plugins in those groups.
   const auto groupsPlugins = GetGroupsPlugins(*this);
-  const auto groupVertexMap = GetGroupVertexMap(groupGraph);
-  const auto predecessorGroupsMap = GetPredecessorGroups(groupGraph);
-  const auto predecessorGroupsPlugins =
-      GetPredecessorGroupsPlugins(groupsPlugins, predecessorGroupsMap);
 
-  // Tuple fields are from, to, and edge type.
-  std::vector<std::tuple<vertex_t, vertex_t, EdgeType>> acyclicEdges;
-  std::map<std::string, std::unordered_set<std::string>> groupPluginsToIgnore;
+  // Get the default group's vertex because it's needed for the DFSes.
+  const auto defaultVertex = GetDefaultVertex(groupGraph);
 
-  for (const vertex_t& vertex : boost::make_iterator_range(GetVertices())) {
-    const auto& toPlugin = GetPlugin(vertex);
+  // Sort the group graph vertices so that the root vertices are first
+  // and the existing order is otherwise preserved. This makes the sorting
+  // result less dependent on the order in which groups are defined, as it
+  // means the order only matters for multiple root vertices and for when
+  // a vertex has multiple direct successors.
+  const auto [gvit, gvitend] = boost::vertices(groupGraph);
+  std::vector<GroupGraphVertex> groupVertices{gvit, gvitend};
 
-    const auto predecessorGroupPlugins = GetPredecessorGroupPlugins(
-        toPlugin.GetGroup(), predecessorGroupsPlugins);
+  std::stable_sort(
+      groupVertices.begin(),
+      groupVertices.end(),
+      [&groupGraph](const GroupGraphVertex& lhs, const GroupGraphVertex& rhs) {
+        const auto lhsIsRoot = boost::in_degree(lhs, groupGraph) == 0;
+        const auto rhsIsRoot = boost::in_degree(rhs, groupGraph) == 0;
 
-    for (const auto& plugin : predecessorGroupPlugins) {
-      // After group plugin names are taken from other PluginSortingData names,
-      // so exact string comparisons can be used.
-      const auto parentVertex = plugin.vertex;
-      const auto& fromPlugin = GetPlugin(parentVertex);
+        return lhsIsRoot && !rhsIsRoot;
+      });
 
-      if (PathExists(vertex, parentVertex)) {
-        if (logger) {
-          logger->debug(
-              "Skipping group edge from \"{}\" to \"{}\" as it would "
-              "create a cycle.",
-              fromPlugin.GetName(),
-              toPlugin.GetName());
-        }
+  // Now loop over the vertices in the groups graph.
 
-        // If the earlier plugin is not a master and the later plugin is,
-        // don't ignore the plugin with the default group for all
-        // intermediate plugins, as some of those plugins may be masters
-        // that wouldn't be involved in the cycle, and any of those
-        // plugins that are not masters would have their own cycles
-        // detected anyway.
-        if (!fromPlugin.IsMaster() && toPlugin.IsMaster()) {
-          continue;
-        }
+  for (const auto& groupVertex : groupVertices) {
+    // Run a DFS from each vertex in the group graph, adding edges except from
+    // plugins in the default group. This could be run only on the root
+    // vertices, except that the DFS only visits each vertex once, so a branch
+    // and merge inside a given root's DAG would result in plugins from one of
+    // the branches not being carried forwards past the point at which the
+    // branches merge.
+    GroupsVisitor visitor(*this, groupsPlugins, defaultVertex);
 
-        // The default group is a special case, as it's given to plugins
-        // with no metadata. If a plugin in the default group causes
-        // a cycle due to its group, ignore that plugin's group for all
-        // groups in the group graph paths between default and the other
-        // plugin's group.
-        std::string pluginToIgnore;
-        if (toPlugin.GetGroup() == Group().GetName()) {
-          pluginToIgnore = toPlugin.GetName();
-        } else if (fromPlugin.GetGroup() == Group().GetName()) {
-          pluginToIgnore = fromPlugin.GetName();
-        } else {
-          // If neither plugin is in the default group, it's impossible
-          // to decide which group to ignore, so ignore neither of them.
-          continue;
-        }
-
-        const auto fromGroup = groupVertexMap.at(fromPlugin.GetGroup());
-        const auto toGroup = groupVertexMap.at(toPlugin.GetGroup());
-
-        const auto groupsInPaths =
-            FindGroupsInAllPaths(groupGraph, fromGroup, toGroup);
-
-        IgnorePluginGroupEdges(
-            pluginToIgnore, groupsInPaths, groupPluginsToIgnore);
-
-        continue;
-      }
-
-      const auto edgeInvolvesUserMetadata =
-          plugin.groupPathInvolvesUserMetadata ||
-          fromPlugin.IsGroupUserMetadata() || toPlugin.IsGroupUserMetadata();
-      const auto edgeType = edgeInvolvesUserMetadata
-                                ? EdgeType::userGroup
-                                : EdgeType::masterlistGroup;
-
-      acyclicEdges.push_back(std::make_tuple(parentVertex, vertex, edgeType));
-    }
+    DepthFirstVisit(groupGraph, groupVertex, visitor);
   }
 
-  for (const auto& edge : acyclicEdges) {
-    const auto fromVertex = std::get<0>(edge);
-    const auto toVertex = std::get<1>(edge);
-    const auto edgeType = std::get<2>(edge);
-    const auto& fromPlugin = GetPlugin(fromVertex);
-    const auto& toPlugin = GetPlugin(toVertex);
-    const bool ignore =
-        ShouldIgnoreGroupEdge(fromPlugin, toPlugin, groupPluginsToIgnore);
+  // Now do one last DFS starting from the default group and not ignoring its
+  // plugins.
+  GroupsVisitor visitor(*this, groupsPlugins);
 
-    if (!ignore) {
-      AddEdge(fromVertex, toVertex, edgeType);
-    } else if (logger) {
-      logger->debug(
-          "Skipping {} edge from \"{}\" to \"{}\" as it would "
-          "create a multi-group cycle.",
-          describeEdgeType(edgeType),
-          fromPlugin.GetName(),
-          toPlugin.GetName());
-    }
-  }
+  DepthFirstVisit(groupGraph, defaultVertex, visitor);
 }
 
 void PluginGraph::AddOverlapEdges() {

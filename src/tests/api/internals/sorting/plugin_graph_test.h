@@ -583,7 +583,7 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldSkipAnEdgeThatWouldCauseACycle) {
 
 TEST_F(
     PluginGraphTest,
-    addGroupEdgesDoesNotSkipAnEdgeThatCausesACycleInvolvingOtherNonDefaultGroups) {
+    addGroupEdgesShouldSkipAnEdgeThatWouldCauseACycleInvolvingOtherNonDefaultGroups) {
   PluginGraph graph;
 
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
@@ -598,20 +598,7 @@ TEST_F(
   EXPECT_TRUE(graph.EdgeExists(c, a));
   EXPECT_TRUE(graph.EdgeExists(a, b));
 
-  // FIXME: This should not cause a cycle.
-  try {
-    graph.CheckForCycles();
-    FAIL();
-  } catch (CyclicInteractionError& e) {
-    ASSERT_EQ(3, e.GetCycle().size());
-    EXPECT_EQ(graph.GetPlugin(a).GetName(), e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::masterlistGroup,
-              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ(graph.GetPlugin(b).GetName(), e.GetCycle()[1].GetName());
-    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ(graph.GetPlugin(c).GetName(), e.GetCycle()[2].GetName());
-    EXPECT_EQ(EdgeType::master, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-  }
+  EXPECT_NO_THROW(graph.CheckForCycles());
 }
 
 TEST_F(
@@ -664,10 +651,7 @@ TEST_F(
   EXPECT_TRUE(graph.EdgeExists(c, d3));
 
   EXPECT_TRUE(graph.EdgeExists(b, d3));
-
-  // FIXME: This edge should be added but isn't, it's a limitation of the
-  // current implementation.
-  EXPECT_FALSE(graph.EdgeExists(c, d1));
+  EXPECT_TRUE(graph.EdgeExists(c, d1));
 
   EXPECT_NO_THROW(graph.CheckForCycles());
 }
@@ -732,10 +716,7 @@ TEST_F(
   EXPECT_TRUE(graph.EdgeExists(b2, c2));
   EXPECT_TRUE(graph.EdgeExists(a2, c1));
 
-  // FIXME: This edge is unwanted and causes a cycle.
-  EXPECT_TRUE(graph.EdgeExists(b2, c1));
-
-  EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+  EXPECT_NO_THROW(graph.CheckForCycles());
 }
 
 TEST_F(
@@ -805,10 +786,7 @@ TEST_F(
   EXPECT_FALSE(graph.EdgeExists(d1, d2));
   EXPECT_FALSE(graph.EdgeExists(d2, d1));
 
-  // FIXME: This edge is unwanted and causes a cycle.
-  EXPECT_TRUE(graph.EdgeExists(b2, c1));
-
-  EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+  EXPECT_NO_THROW(graph.CheckForCycles());
 }
 
 TEST_F(
@@ -827,6 +805,7 @@ TEST_F(
   // Should be D.esp -> B.esp -> C.esp
   EXPECT_TRUE(graph.EdgeExists(b, c));
   EXPECT_TRUE(graph.EdgeExists(d, b));
+  EXPECT_FALSE(graph.EdgeExists(c, d));
 
   EXPECT_NO_THROW(graph.CheckForCycles());
 }
@@ -917,11 +896,9 @@ TEST_F(
   EXPECT_TRUE(graph.EdgeExists(d, b));
   EXPECT_TRUE(graph.EdgeExists(b, c));
   EXPECT_TRUE(graph.EdgeExists(c, e));
+  EXPECT_FALSE(graph.EdgeExists(e, f));
 
-  // FIXME: This edge is unwanted and causes a cycle.
-  EXPECT_TRUE(graph.EdgeExists(e, f));
-
-  EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+  EXPECT_NO_THROW(graph.CheckForCycles());
 }
 
 TEST_F(
@@ -1358,10 +1335,7 @@ TEST_F(PluginGraphTest,
     EXPECT_FALSE(graph.EdgeExists(a, b));
     EXPECT_FALSE(graph.EdgeExists(b, a));
 
-    // FIXME: This edge is unwanted and causes a cycle.
-    EXPECT_TRUE(graph.EdgeExists(c, d));
-
-    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+    EXPECT_NO_THROW(graph.CheckForCycles());
   }
 
   // Now do the same again, but with a different group order for A and B.
@@ -1391,11 +1365,9 @@ TEST_F(PluginGraphTest,
     EXPECT_TRUE(graph.EdgeExists(c, d));
     EXPECT_FALSE(graph.EdgeExists(a, b));
     EXPECT_FALSE(graph.EdgeExists(b, a));
+    EXPECT_FALSE(graph.EdgeExists(a, c));
 
-    // FIXME: This edge is unwanted and causes a cycle.
-    EXPECT_TRUE(graph.EdgeExists(a, c));
-
-    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+    EXPECT_NO_THROW(graph.CheckForCycles());
   }
 }
 
@@ -1432,10 +1404,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
     EXPECT_FALSE(graph.EdgeExists(b, c));
     EXPECT_FALSE(graph.EdgeExists(c, b));
 
-    // FIXME: This edge is unwanted and causes a cycle.
-    EXPECT_TRUE(graph.EdgeExists(c, d));
-
-    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+    EXPECT_NO_THROW(graph.CheckForCycles());
   }
 
   // Now do the same again, but with a different group order for B and C.
@@ -1472,10 +1441,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
     EXPECT_FALSE(graph.EdgeExists(b, c));
     EXPECT_FALSE(graph.EdgeExists(c, b));
 
-    // FIXME: This edge is unwanted and causes a cycle.
-    EXPECT_TRUE(graph.EdgeExists(d, e));
-
-    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+    EXPECT_NO_THROW(graph.CheckForCycles());
   }
 }
 
@@ -1533,10 +1499,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDoesNotDependOnPluginGraphVertexOrder) {
     ASSERT_FALSE(graph.EdgeExists(a1, a2));
     ASSERT_FALSE(graph.EdgeExists(a2, a1));
 
-    // FIXME: This edge is unwanted and causes a cycle.
-    ASSERT_TRUE(graph.EdgeExists(b, c));
-
-    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+    ASSERT_NO_THROW(graph.CheckForCycles());
   }
 }
 
