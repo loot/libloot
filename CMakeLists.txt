@@ -193,6 +193,7 @@ set(LIBLOOT_SRC_API_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sort.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_graph.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sorting_data.cpp"
+    "${CMAKE_SOURCE_DIR}/src/api/sorting/undefined_group_error.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/helpers/text.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/vertex.cpp")

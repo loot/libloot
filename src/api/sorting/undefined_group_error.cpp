@@ -3,7 +3,7 @@
     A load order optimisation tool for Oblivion, Skyrim, Fallout 3 and
     Fallout: New Vegas.
 
-    Copyright (C) 2012-2016    WrinklyNinja
+    Copyright (C) 2018    WrinklyNinja
 
     This file is part of LOOT.
 
@@ -21,35 +21,14 @@
     along with LOOT.  If not, see
     <https://www.gnu.org/licenses/>.
     */
+#include "loot/exception/undefined_group_error.h"
 
-#ifndef LOOT_EXCEPTION_UNDEFINED_GROUP_ERROR
-#define LOOT_EXCEPTION_UNDEFINED_GROUP_ERROR
-
-#include <stdexcept>
-
-#include "loot/api_decorator.h"
+#include "api/sorting/plugin_graph.h"
 
 namespace loot {
-/**
- * @brief An exception class thrown if group is referenced but is undefined.
- */
-class UndefinedGroupError : public std::runtime_error {
-public:
-  /**
-   * @brief Construct an exception for an undefined group.
-   * @param groupName The name of the group that is undefined.
-   */
-  LOOT_API UndefinedGroupError(const std::string& groupName);
+UndefinedGroupError::UndefinedGroupError(const std::string& groupName) :
+      std::runtime_error("The group \"" + groupName + "\" does not exist"),
+      groupName_(groupName) {}
 
-  /**
-   * Get the name of the undefined group.
-   * @return A group name.
-   */
-  LOOT_API std::string GetGroupName() const;
-
-private:
-  std::string groupName_;
-};
+std::string UndefinedGroupError::GetGroupName() const { return groupName_; }
 }
-
-#endif
