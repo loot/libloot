@@ -48,5 +48,5 @@ CyclicInteractionError::CyclicInteractionError(std::vector<Vertex> cycle) :
     std::runtime_error("Cyclic interaction detected: " + describeCycle(cycle)),
     cycle_(cycle) {}
 
-std::vector<Vertex> CyclicInteractionError::GetCycle() { return cycle_; }
+std::vector<Vertex> CyclicInteractionError::GetCycle() const { return cycle_; }
 }

@@ -51,7 +51,7 @@ public:
    *          has an edge going to the first Vertex.
    * @return A vector of Vertex elements representing the cyclic path.
    */
-  LOOT_API std::vector<Vertex> GetCycle();
+  LOOT_API std::vector<Vertex> GetCycle() const;
 
 private:
   std::vector<Vertex> cycle_;
