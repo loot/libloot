@@ -151,11 +151,8 @@ TEST_F(PluginGraphTest,
        addOverlapEdgesShouldNotAddEdgesBetweenNonOverlappingPlugins) {
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -175,11 +172,8 @@ TEST_F(
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -199,11 +193,8 @@ TEST_F(
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -222,11 +213,8 @@ TEST_F(
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -246,11 +234,8 @@ TEST_F(
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -269,11 +254,8 @@ TEST_F(
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -293,11 +275,8 @@ TEST_F(
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -318,11 +297,8 @@ TEST_F(
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -344,11 +320,8 @@ TEST_F(
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 
@@ -370,11 +343,8 @@ TEST_F(PluginGraphTest,
 
   PluginGraph graph;
 
-  graph.AddVertex(CreatePluginSortingData("1.esp"));
-  graph.AddVertex(CreatePluginSortingData("2.esp"));
-
-  const auto v1 = graph.GetVertexByName("1.esp").value();
-  const auto v2 = graph.GetVertexByName("2.esp").value();
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
 
   graph.AddOverlapEdges();
 

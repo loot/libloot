@@ -88,7 +88,7 @@ public:
   void AddEdge(const vertex_t& fromVertex,
                const vertex_t& toVertex,
                EdgeType edgeType);
-  void AddVertex(const PluginSortingData& plugin);
+  vertex_t AddVertex(const PluginSortingData& plugin);
 
   void AddSpecificEdges();
   void AddHardcodedPluginEdges(

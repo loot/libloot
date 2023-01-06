@@ -577,9 +577,11 @@ void PluginGraph::AddEdge(const vertex_t& fromVertex,
   pathsCache_.CachePath(fromVertex, toVertex);
 }
 
-void PluginGraph::AddVertex(const PluginSortingData& plugin) {
+vertex_t PluginGraph::AddVertex(const PluginSortingData& plugin) {
   const auto vertex = boost::add_vertex(plugin, graph_);
   pluginNameVertexMap.emplace(plugin.GetName(), vertex);
+
+  return vertex;
 }
 
 void PluginGraph::AddSpecificEdges() {
