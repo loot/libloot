@@ -37,7 +37,8 @@ After that, two graphs are created, and the plugins are added to them as
 vertices in their sorted order. Plugins that have their master flag set go in
 one graph, and plugins that do not have the flag set go in the other.
 
-Two graphs are used because master-flagged plugins must always load before non-master-flagged plugins, and it's much more efficient to sort them separately
+Two graphs are used because master-flagged plugins must always load before
+non-master-flagged plugins, and it's much more efficient to sort them separately
 and then combine their load orders than to enforce those relationships within a
 single graph.
 

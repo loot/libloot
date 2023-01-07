@@ -2,6 +2,61 @@
 Version History
 ***************
 
+0.19.0 - 2023-01-07
+===================
+
+Added
+-----
+
+- Sorting now takes into account overlapping assets in BSAs/BA2s that are loaded
+  by plugins. If two plugins don't make changes to the same record but load BSAs
+  (or BA2s for Fallout 4) that contain data for the same asset path, the plugin
+  that loads more assets will load first (unless that's contradicted by
+  higher-priority data and metadata).
+- :cpp:any:`loot::GameInterface::GetActivePluginsFilePath()`, which returns the
+  path of the file libloot reads to determine which plugins are active.
+- :cpp:any:`loot::EdgeType::masterlistGroup`,
+  :cpp:any:`loot::EdgeType::userGroup`,
+  :cpp:any:`loot::EdgeType::recordOverlap` and
+  :cpp:any:`loot::EdgeType::assetOverlap`.
+
+Fixed
+-----
+
+- Building libloot using CMake versions older than 3.24.
+- A few potential null pointer dereferences.
+
+Changed
+-------
+
+- Sorting has been heavily optimised, leading to sorting being about 58 times
+  faster than libloot 0.18.3 with large load orders:
+
+  - The plugin graph used during sorting has been split in two. As a result,
+    any plugin data or metadata that would previously caused a cyclic
+    interaction error due to contradicting a plugin's master flag being set is
+    now silently ignored instead.
+  - The tie-breaking stage has been completely overhauled. As a result, some
+    ties may now be broken differently to how they were broken in previous
+    versions of libloot.
+  - :cpp:any:`loot::GameInterface::LoadPlugins()` now checks plugin validity in
+    parallel.
+
+- Cyclic interaction errors now distinguish between group edges that involve
+  user metadata and those that don't.
+- ``PluginInterface::DoFormIDsOverlap()`` has been renamed to
+  :cpp:any:`loot::PluginInterface::DoRecordsOverlap()`.
+- :cpp:any:`loot::CyclicInteractionError::GetCycle()` is now ``const``.
+- :cpp:any:`loot::UndefinedGroupError::GetGroupName()` is now ``const``.
+- Linux builds are now built using GCC 10 and now link against the ``tbb``
+  library.
+
+Removed
+-------
+
+- ``EdgeType::group``
+- ``EdgeType::overlap``
+
 0.18.3 - 2022-12-13
 ===================
 
