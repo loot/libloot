@@ -154,7 +154,12 @@ public:
   virtual bool IsLoadOrderAmbiguous() const = 0;
 
   /**
-   *
+   * @brief Gets the path to the file that holds the list of active plugins.
+   * @details The active plugins file path is often within the game's local
+              path, but its name and location varies by game and game
+              configuration, so this function exposes the path that libloot
+              uses.
+   * @returns The file path.
    */
   virtual std::filesystem::path GetActivePluginsFilePath() const = 0;
 
