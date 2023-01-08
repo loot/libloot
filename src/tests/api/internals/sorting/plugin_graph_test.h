@@ -46,9 +46,7 @@ public:
     return std::optional<std::string>();
   }
 
-  std::vector<std::string> GetMasters() const override {
-    return std::vector<std::string>();
-  }
+  std::vector<std::string> GetMasters() const override { return masters_; }
 
   std::vector<Tag> GetBashTags() const override { return std::vector<Tag>(); }
 
@@ -91,6 +89,8 @@ public:
            otherPlugin->assetsOverlapWith.count(this) != 0;
   }
 
+  void AddMaster(const std::string& master) { masters_.push_back(master); }
+
   void AddOverlappingRecords(const PluginInterface& plugin) {
     recordsOverlapWith.insert(&plugin);
   }
@@ -107,6 +107,7 @@ public:
 
 private:
   std::string name_;
+  std::vector<std::string> masters_;
   std::set<const PluginInterface*> recordsOverlapWith;
   std::set<const PluginSortingInterface*> assetsOverlapWith;
   size_t overrideRecordCount_{0};

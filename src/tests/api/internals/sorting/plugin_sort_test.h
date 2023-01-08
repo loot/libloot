@@ -28,6 +28,7 @@ along with LOOT.  If not, see
 #include "api/sorting/plugin_sort.h"
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/undefined_group_error.h"
+#include "tests/api/internals/sorting/plugin_graph_test.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -40,7 +41,7 @@ protected:
       masterlistPath_(metadataFilesPath / "userlist.yaml"),
       cccPath_(dataPath.parent_path() / getCCCFilename()) {}
 
-  void loadInstalledPlugins(Game &game, bool headersOnly) {
+  void loadInstalledPlugins(Game& game, bool headersOnly) {
     std::vector<std::string> plugins({
         masterFile,
         blankEsm,
@@ -116,10 +117,38 @@ protected:
     }
   }
 
+  PluginSortingData CreatePluginSortingData(
+      const std::string& name,
+      const std::vector<std::string>& loadOrder) {
+    const auto plugin = GetPlugin(name);
+
+    return PluginSortingData(plugin,
+                             PluginMetadata(),
+                             PluginMetadata(),
+                             loadOrder,
+                             GameType::tes4,
+                             {});
+  }
+
+  plugingraph::TestPlugin* GetPlugin(const std::string& name) {
+    auto it = testPlugins_.find(name);
+
+    if (it != testPlugins_.end()) {
+      return it->second.get();
+    }
+
+    const auto plugin = std::make_shared<plugingraph::TestPlugin>(name);
+
+    return testPlugins_.insert_or_assign(name, plugin).first->second.get();
+  }
+
   Game game_;
   const std::string blankEslEsp;
   const std::filesystem::path masterlistPath_;
   const std::filesystem::path cccPath_;
+
+private:
+  std::map<std::string, std::shared_ptr<plugingraph::TestPlugin>> testPlugins_;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -146,6 +175,58 @@ TEST_P(PluginSortTest,
   for (int i = 0; i < 100; i++) {
     std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
     ASSERT_EQ(expectedSortedOrder, sorted) << " for sort " << i;
+  }
+}
+
+TEST_P(PluginSortTest,
+       sortingShouldNotChangeTheResultIfGivenItsOwnOutputLoadOrder) {
+  // Can't test with the test plugin files, so use the other SortPlugins()
+  // overload to provide stubs.
+  const auto p1 = GetPlugin("1.esp");
+  const auto p2 = GetPlugin("2.esp");
+  const auto p3 = GetPlugin("3.esp");
+
+  p1->AddMaster(p3->GetName());
+
+  p1->AddOverlappingRecords(*p2);
+  p1->AddOverlappingRecords(*p3);
+  p2->AddOverlappingRecords(*p3);
+  p1->SetOverrideRecordCount(3);
+  p2->SetOverrideRecordCount(2);
+  p3->SetOverrideRecordCount(1);
+
+  // Define the initial load order.
+  std::vector<std::string> loadOrder{
+      p1->GetName(), p2->GetName(), p3->GetName()};
+
+  const std::vector<std::string> expectedSortedOrder{
+      p3->GetName(), p1->GetName(), p2->GetName()};
+
+  // Now sort the plugins.
+  {
+    std::vector<PluginSortingData> pluginsSortingData{
+        CreatePluginSortingData(p1->GetName(), loadOrder),
+        CreatePluginSortingData(p2->GetName(), loadOrder),
+        CreatePluginSortingData(p3->GetName(), loadOrder)};
+
+    auto sorted = SortPlugins(
+        std::move(pluginsSortingData), GetParam(), {Group()}, {}, {});
+    ASSERT_EQ(expectedSortedOrder, sorted);
+
+    loadOrder = sorted;
+  }
+
+  // Now do it again but supplying the sorted load order as the current load
+  // order.
+  {
+    std::vector<PluginSortingData> pluginsSortingData{
+        CreatePluginSortingData(p1->GetName(), loadOrder),
+        CreatePluginSortingData(p2->GetName(), loadOrder),
+        CreatePluginSortingData(p3->GetName(), loadOrder)};
+
+    auto sorted = SortPlugins(
+        std::move(pluginsSortingData), GetParam(), {Group()}, {}, {});
+    ASSERT_EQ(expectedSortedOrder, sorted);
   }
 }
 
@@ -336,26 +417,14 @@ TEST_P(
     SortPlugins(game_, game_.GetLoadOrder());
     FAIL();
   } catch (CyclicInteractionError &e) {
-    if (GetParam() == GameType::fo4) {
-      ASSERT_EQ(4, e.GetCycle().size());
-      EXPECT_EQ("Blank.esm", e.GetCycle()[0].GetName());
-      EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-      EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-      EXPECT_EQ("Blank - Different.esm", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::master, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-      EXPECT_EQ("Blank - Different Master Dependent.esm",
-                e.GetCycle()[3].GetName());
-      EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[3].GetTypeOfEdgeToNextVertex());
-    } else {
-      ASSERT_EQ(3, e.GetCycle().size());
-      EXPECT_EQ(masterFile, e.GetCycle()[0].GetName());
-      EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-      EXPECT_EQ("Blank.esm", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-      EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-    }
+    ASSERT_EQ(3, e.GetCycle().size());
+    EXPECT_EQ("Blank - Different Master Dependent.esm",
+              e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("Blank.esm", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[2].GetName());
+    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
   }
 }
 

@@ -21,17 +21,7 @@ in the masterlist and userlist.
 Create plugin graph vertices
 ============================
 
-Once the plugins have been loaded, they are sorted into their current load
-order:
-
-* If both plugins have positions in the current load order, the function
-  preserves their existing relative order.
-* If one plugin has a position and the other does not, the plugin with a
-  position goes before the plugin without a position.
-* If neither plugin has a load order position, a case-insensitive
-  lexicographical comparison of their filenames without file extensions is used
-  to decide their order. If they are equal, a case-insensitive lexicographical
-  comparison of their file extensions is used.
+Once the plugins have been loaded, they are sorted into lexicographical order.
 
 After that, two graphs are created, and the plugins are added to them as
 vertices in their sorted order. Plugins that have their master flag set go in
@@ -127,10 +117,20 @@ Tie-break edges
 ---------------
 
 Finally, tie-break edges are added to ensure that sorting is consistent. The
-graph's vertices are iterated over in their insertion order (i.e. the current
-load order). Each loop looks at the current vertex and the next one following it
-(e.g. the first iteration is for vertices 0 and 1, the second is for 1 and 2,
-etc.).
+graph's vertices are sorted into their current load order:
+
+* If both plugins have positions in the current load order, the function
+  preserves their existing relative order.
+* If one plugin has a position and the other does not, the plugin with a
+  position goes before the plugin without a position.
+* If neither plugin has a load order position, a case-insensitive
+  lexicographical comparison of their filenames without file extensions is used
+  to decide their order. If they are equal, a case-insensitive lexicographical
+  comparison of their file extensions is used.
+
+Once sorted, they are iterated over. Each loop looks at the current vertex and
+the next one following it (e.g. the first iteration is for vertices 0 and 1, the
+second is for 1 and 2, etc.).
 
 For each (``current``, ``next``) pair of vertices, try to find a path from
 ``next`` to ``current``.

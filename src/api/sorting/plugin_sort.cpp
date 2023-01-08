@@ -31,48 +31,6 @@
 #include "api/sorting/plugin_graph.h"
 
 namespace loot {
-int ComparePlugins(const PluginSortingData& plugin1,
-                   const PluginSortingData& plugin2) {
-  if (plugin1.GetLoadOrderIndex().has_value() &&
-      !plugin2.GetLoadOrderIndex().has_value()) {
-    return -1;
-  }
-
-  if (!plugin1.GetLoadOrderIndex().has_value() &&
-      plugin2.GetLoadOrderIndex().has_value()) {
-    return 1;
-  }
-
-  if (plugin1.GetLoadOrderIndex().has_value() &&
-      plugin2.GetLoadOrderIndex().has_value()) {
-    if (plugin1.GetLoadOrderIndex().value() <
-        plugin2.GetLoadOrderIndex().value()) {
-      return -1;
-    } else {
-      return 1;
-    }
-  }
-
-  // Neither plugin has a load order position. Compare plugin basenames to
-  // get an ordering.
-  const auto name1 = plugin1.GetName();
-  const auto name2 = plugin2.GetName();
-  const auto basename1 = name1.substr(0, name1.length() - 4);
-  const auto basename2 = name2.substr(0, name2.length() - 4);
-
-  const int result = CompareFilenames(basename1, basename2);
-
-  if (result != 0) {
-    return result;
-  } else {
-    // Could be a .esp and .esm plugin with the same basename,
-    // compare their extensions.
-    const auto ext1 = name1.substr(name1.length() - 4);
-    const auto ext2 = name2.substr(name2.length() - 4);
-    return CompareFilenames(ext1, ext2);
-  }
-}
-
 std::vector<PluginSortingData> GetPluginsSortingData(
     const GameType gameType,
     const DatabaseInterface& db,
@@ -206,12 +164,13 @@ std::vector<std::string> SortPlugins(
   // This ensures a consistent iteration order for vertices given the same input
   // data. The vertex iteration order can affect what edges get added and so
   // the final sorting result, so consistency is important.
-  // Load order is used because this simplifies the logic when adding tie-break
-  // edges.
+  // This order needs to be independent of any state (e.g. the current load
+  // order) so that sorting and applying the result doesn't then produce a
+  // different result if you then sort again.
   std::sort(pluginsSortingData.begin(),
             pluginsSortingData.end(),
             [](const auto& lhs, const auto& rhs) {
-              return ComparePlugins(lhs, rhs) < 0;
+              return lhs.GetName() < rhs.GetName();
             });
 
   // Create some shared data structures.

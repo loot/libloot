@@ -2,6 +2,17 @@
 Version History
 ***************
 
+0.19.1 - Unreleased
+===================
+
+Fixed
+-----
+
+- Sorting and applying and then sorting again will no longer give a different
+  result for the second sort. libloot v0.19.0 changed the order in which group
+  and overlap edges were processed to be the current load order: it has now
+  reverted back to the lexicographical order of plugin filenames.
+
 0.19.0 - 2023-01-07
 ===================
 

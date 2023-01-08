@@ -528,6 +528,48 @@ bool FindPath(RawPluginGraph& graph,
   return false;
 }
 
+int ComparePlugins(const PluginSortingData& plugin1,
+                   const PluginSortingData& plugin2) {
+  if (plugin1.GetLoadOrderIndex().has_value() &&
+      !plugin2.GetLoadOrderIndex().has_value()) {
+    return -1;
+  }
+
+  if (!plugin1.GetLoadOrderIndex().has_value() &&
+      plugin2.GetLoadOrderIndex().has_value()) {
+    return 1;
+  }
+
+  if (plugin1.GetLoadOrderIndex().has_value() &&
+      plugin2.GetLoadOrderIndex().has_value()) {
+    if (plugin1.GetLoadOrderIndex().value() <
+        plugin2.GetLoadOrderIndex().value()) {
+      return -1;
+    } else {
+      return 1;
+    }
+  }
+
+  // Neither plugin has a load order position. Compare plugin basenames to
+  // get an ordering.
+  const auto name1 = plugin1.GetName();
+  const auto name2 = plugin2.GetName();
+  const auto basename1 = name1.substr(0, name1.length() - 4);
+  const auto basename2 = name2.substr(0, name2.length() - 4);
+
+  const int result = CompareFilenames(basename1, basename2);
+
+  if (result != 0) {
+    return result;
+  } else {
+    // Could be a .esp and .esm plugin with the same basename,
+    // compare their extensions.
+    const auto ext1 = name1.substr(name1.length() - 4);
+    const auto ext2 = name2.substr(name2.length() - 4);
+    return CompareFilenames(ext1, ext2);
+  }
+}
+
 bool PathsCache::IsPathCached(const vertex_t& fromVertex,
                               const vertex_t& toVertex) const {
   const auto descendents = pathsCache_.find(fromVertex);
@@ -1145,9 +1187,19 @@ void PluginGraph::AddTieBreakEdges() {
     return std::make_reverse_iterator(std::next(newLoadOrderIt));
   };
 
-  // Vertices were already sorted into their existing load order when they
-  // were added to the graph.
-  const auto [vitstart, vitend] = GetVertices();
+  // First get the graph vertices and sort them into the current load order.
+  const auto [it, itend] = GetVertices();
+  std::vector<vertex_t> vertices(it, itend);
+
+  std::sort(vertices.begin(),
+            vertices.end(),
+            [this](const vertex_t& lhs, const vertex_t& rhs) {
+              return ComparePlugins(GetPlugin(lhs), GetPlugin(rhs)) < 0;
+            });
+
+  // Now iterate over the vertices in their sorted order.
+  const auto vitstart = vertices.begin();
+  const auto vitend = vertices.end();
   for (auto vit = vitstart; vit != vitend; ++vit) {
     const auto currentVertex = *vit;
     const auto nextVertexIt = std::next(vit);
