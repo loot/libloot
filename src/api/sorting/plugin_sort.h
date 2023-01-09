@@ -29,9 +29,17 @@
 #include <vector>
 
 #include "api/game/game.h"
+#include "api/sorting/plugin_sorting_data.h"
 
 namespace loot {
-std::vector<std::string> SortPlugins(const Game& game,
+std::vector<std::string> SortPlugins(
+    std::vector<PluginSortingData>&& pluginsSortingData,
+    const GameType gameType,
+    const std::vector<Group> masterlistGroups,
+    const std::vector<Group> userGroups,
+    const std::vector<std::string>& implicitlyActivePlugins);
+
+std::vector<std::string> SortPlugins(Game& game,
                                      const std::vector<std::string>& loadOrder);
 }
 

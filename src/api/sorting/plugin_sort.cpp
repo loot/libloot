@@ -74,80 +74,88 @@ int ComparePlugins(const PluginSortingData& plugin1,
 }
 
 std::vector<PluginSortingData> GetPluginsSortingData(
-    const Game& game,
+    const GameType gameType,
+    const DatabaseInterface& db,
+    const std::vector<const PluginInterface*> loadedPluginInterfaces,
     const std::vector<std::string>& loadOrder) {
-  const auto loadedPlugins = game.GetCache().GetPlugins();
-
-  std::vector<const PluginInterface*> loadedPluginInterfaces;
-  std::transform(loadedPlugins.begin(),
-                 loadedPlugins.end(),
-                 std::back_inserter(loadedPluginInterfaces),
-                 [](const Plugin* plugin) { return plugin; });
-
   std::vector<PluginSortingData> pluginsSortingData;
-  pluginsSortingData.reserve(loadedPlugins.size());
+  pluginsSortingData.reserve(loadedPluginInterfaces.size());
 
-  for (const auto& plugin : loadedPlugins) {
-    if (!plugin) {
+  for (const auto& pluginInterface : loadedPluginInterfaces) {
+    if (!pluginInterface) {
       continue;
     }
 
+    const auto plugin = dynamic_cast<const Plugin* const>(pluginInterface);
+
+    if (!plugin) {
+      throw std::logic_error(
+          "Tried to case a PluginInterface pointer to a Plugin pointer.");
+    }
+
     const auto masterlistMetadata =
-        game.GetDatabase()
-            .GetPluginMetadata(plugin->GetName(), false, true)
+        db.GetPluginMetadata(plugin->GetName(), false, true)
             .value_or(PluginMetadata(plugin->GetName()));
-    const auto userMetadata =
-        game.GetDatabase()
-            .GetPluginUserMetadata(plugin->GetName(), true)
-            .value_or(PluginMetadata(plugin->GetName()));
+    const auto userMetadata = db.GetPluginUserMetadata(plugin->GetName(), true)
+                                  .value_or(PluginMetadata(plugin->GetName()));
 
     const auto pluginSortingData = PluginSortingData(plugin,
                                                      masterlistMetadata,
                                                      userMetadata,
                                                      loadOrder,
-                                                     game.Type(),
+                                                     gameType,
                                                      loadedPluginInterfaces);
 
     pluginsSortingData.push_back(pluginSortingData);
   }
 
-  // Sort the plugins according to into their existing load order, or
-  // lexicographical ordering for pairs of plugins without load order positions.
-  // This ensures a consistent iteration order for vertices given the same input
-  // data. The vertex iteration order can affect what edges get added and so
-  // the final sorting result, so consistency is important.
-  // Load order is used because this simplifies the logic when adding tie-break
-  // edges.
-  std::sort(pluginsSortingData.begin(),
-            pluginsSortingData.end(),
-            [](const auto& lhs, const auto& rhs) {
-              return ComparePlugins(lhs, rhs) < 0;
-            });
-
   return pluginsSortingData;
 }
 
-std::vector<std::string> GetPluginsWithHardcodedPositions(const Game& game) {
-  auto plugins = game.GetLoadOrderHandler().GetImplicitlyActivePlugins();
+std::vector<std::string> GetPluginsWithHardcodedPositions(
+    const GameType gameType,
+    std::vector<std::string> implicitlyActivePlugins) {
+  if (gameType == GameType::tes5) {
+    auto newEndIt =
+        std::remove_if(implicitlyActivePlugins.begin(),
+                       implicitlyActivePlugins.end(),
+                       [](const std::string& plugin) {
+                         return boost::iequals(plugin, "update.esm");
+                       });
 
-  if (game.Type() == GameType::tes5) {
-    auto newEndIt = std::remove_if(
-        plugins.begin(), plugins.end(), [](const std::string& plugin) {
-          return boost::iequals(plugin, "update.esm");
-        });
-
-    plugins.erase(newEndIt, plugins.end());
+    implicitlyActivePlugins.erase(newEndIt, implicitlyActivePlugins.end());
   }
 
-  return plugins;
+  return implicitlyActivePlugins;
 }
 
-std::vector<std::string> SortPluginGraph(
-    PluginGraph& graph,
+std::unordered_map<std::string, Group> GetGroupsMap(
+    const std::vector<Group> masterlistGroups,
+    const std::vector<Group> userGroups) {
+  std::unordered_map<std::string, Group> groupsMap;
+  for (const auto& group : masterlistGroups) {
+    groupsMap.emplace(group.GetName(), group);
+  }
+  for (const auto& group : userGroups) {
+    groupsMap.emplace(group.GetName(), group);
+  }
+
+  return groupsMap;
+}
+
+std::vector<std::string> SortPlugins(
+    const std::vector<PluginSortingData>::const_iterator& begin,
+    const std::vector<PluginSortingData>::const_iterator& end,
     const std::vector<std::string>& hardcodedPlugins,
     const std::unordered_map<std::string, Group>& groupsMap,
     const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
         predecessorGroupsMap) {
+  PluginGraph graph;
+
+  for (auto it = begin; it != end; ++it) {
+    graph.AddVertex(*it);
+  }
+
   // Now add the interactions between plugins to the graph as edges.
   graph.AddSpecificEdges();
   graph.AddHardcodedPluginEdges(hardcodedPlugins);
@@ -182,28 +190,37 @@ std::vector<std::string> SortPluginGraph(
 }
 
 std::vector<std::string> SortPlugins(
-    const Game& game,
-    const std::vector<std::string>& loadOrder) {
-  auto pluginsSortingData = GetPluginsSortingData(game, loadOrder);
-
+    std::vector<PluginSortingData>&& pluginsSortingData,
+    const GameType gameType,
+    const std::vector<Group> masterlistGroups,
+    const std::vector<Group> userGroups,
+    const std::vector<std::string>& implicitlyActivePlugins) {
   // If there aren't any plugins, exit early, because sorting assumes
   // there is at least one plugin.
   if (pluginsSortingData.empty()) {
     return {};
   }
 
-  const auto logger = getLogger();
-  if (logger) {
-    logger->debug("Current load order:");
-    for (const auto& plugin : loadOrder) {
-      logger->debug("\t{}", plugin);
-    }
-  }
+  // Sort the plugins according to into their existing load order, or
+  // lexicographical ordering for pairs of plugins without load order positions.
+  // This ensures a consistent iteration order for vertices given the same input
+  // data. The vertex iteration order can affect what edges get added and so
+  // the final sorting result, so consistency is important.
+  // Load order is used because this simplifies the logic when adding tie-break
+  // edges.
+  std::sort(pluginsSortingData.begin(),
+            pluginsSortingData.end(),
+            [](const auto& lhs, const auto& rhs) {
+              return ComparePlugins(lhs, rhs) < 0;
+            });
 
-  const auto firstNonMasterIt = std::stable_partition(
-      pluginsSortingData.begin(),
-      pluginsSortingData.end(),
-      [](const PluginSortingData& plugin) { return plugin.IsMaster(); });
+  // Create some shared data structures.
+  const auto hardcodedPlugins =
+      GetPluginsWithHardcodedPositions(gameType, implicitlyActivePlugins);
+
+  const auto groupsMap = GetGroupsMap(masterlistGroups, userGroups);
+  const auto predecessorGroupsMap =
+      GetPredecessorGroups(masterlistGroups, userGroups);
 
   // Some parts of sorting are O(N^2) for N plugins, and master flags cause
   // O(M*N) edges to be added for M masters and N non-masters, which can be
@@ -215,35 +232,50 @@ std::vector<std::string> SortPlugins(
   // master are effectively ignored, so won't cause cyclic interaction errors.
   // Edges going the other way will also effectively be ignored, but that
   // shouldn't have a noticeable impact.
-  PluginGraph mastersGraph;
-  PluginGraph nonMastersGraph;
+  const auto firstNonMasterIt = std::stable_partition(
+      pluginsSortingData.begin(),
+      pluginsSortingData.end(),
+      [](const PluginSortingData& plugin) { return plugin.IsMaster(); });
 
-  for (auto it = pluginsSortingData.begin(); it != firstNonMasterIt; ++it) {
-    mastersGraph.AddVertex(*it);
-  }
+  auto newLoadOrder = SortPlugins(pluginsSortingData.begin(),
+                                  firstNonMasterIt,
+                                  hardcodedPlugins,
+                                  groupsMap,
+                                  predecessorGroupsMap);
 
-  for (auto it = firstNonMasterIt; it != pluginsSortingData.end(); ++it) {
-    nonMastersGraph.AddVertex(*it);
-  }
-
-  const auto hardcodedPlugins = GetPluginsWithHardcodedPositions(game);
-
-  std::unordered_map<std::string, Group> groupsMap;
-  for (const auto& group : game.GetDatabase().GetGroups()) {
-    groupsMap.emplace(group.GetName(), group);
-  }
-
-  const auto predecessorGroupsMap = GetPredecessorGroups(
-      game.GetDatabase().GetGroups(false), game.GetDatabase().GetUserGroups());
-
-  auto newLoadOrder = SortPluginGraph(
-      mastersGraph, hardcodedPlugins, groupsMap, predecessorGroupsMap);
-  const auto newNonMastersLoadOrder = SortPluginGraph(
-      nonMastersGraph, hardcodedPlugins, groupsMap, predecessorGroupsMap);
+  const auto newNonMastersLoadOrder = SortPlugins(firstNonMasterIt,
+                                                  pluginsSortingData.end(),
+                                                  hardcodedPlugins,
+                                                  groupsMap,
+                                                  predecessorGroupsMap);
 
   newLoadOrder.insert(newLoadOrder.end(),
                       newNonMastersLoadOrder.begin(),
                       newNonMastersLoadOrder.end());
+
+  return newLoadOrder;
+}
+
+std::vector<std::string> SortPlugins(
+    Game& game,
+    const std::vector<std::string>& loadOrder) {
+  auto pluginsSortingData = GetPluginsSortingData(
+      game.Type(), game.GetDatabase(), game.GetLoadedPlugins(), loadOrder);
+
+  const auto logger = getLogger();
+  if (logger) {
+    logger->debug("Current load order:");
+    for (const auto& plugin : loadOrder) {
+      logger->debug("\t{}", plugin);
+    }
+  }
+
+  const auto newLoadOrder =
+      SortPlugins(std::move(pluginsSortingData),
+                  game.Type(),
+                  game.GetDatabase().GetGroups(false),
+                  game.GetDatabase().GetUserGroups(),
+                  game.GetLoadOrderHandler().GetImplicitlyActivePlugins());
 
   if (logger) {
     logger->debug("Calculated order:");
