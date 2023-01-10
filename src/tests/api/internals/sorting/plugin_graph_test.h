@@ -27,7 +27,9 @@ along with LOOT.  If not, see
 
 #include <gtest/gtest.h>
 
+#include "api/sorting/group_sort.h"
 #include "api/sorting/plugin_graph.h"
+#include "loot/exception/cyclic_interaction_error.h"
 
 namespace loot {
 namespace test {
@@ -116,12 +118,57 @@ private:
 }
 
 class PluginGraphTest : public ::testing::Test {
-public:
+protected:
+  PluginGraphTest() {
+    std::vector<Group> masterlistGroups{Group("A"),
+                                        Group("B", {"A"}),
+                                        Group("C"),
+                                        Group("default", {"C"}),
+                                        Group("E", {"default"}),
+                                        Group("F", {"E"})};
+    std::vector<Group> userlistGroups{Group("C", {"B"})};
+
+    groupsMap = GetGroupsMap(masterlistGroups, userlistGroups);
+    predecessorGroupsMap =
+        GetPredecessorGroups(masterlistGroups, userlistGroups);
+  }
+
+  static std::unordered_map<std::string, Group> GetGroupsMap(
+      const std::vector<Group> masterlistGroups,
+      const std::vector<Group> userGroups) {
+    const auto mergedGroups = MergeGroups(masterlistGroups, userGroups);
+
+    std::unordered_map<std::string, Group> groupsMap;
+    for (const auto& group : mergedGroups) {
+      groupsMap.emplace(group.GetName(), group);
+    }
+
+    return groupsMap;
+  }
+
   PluginSortingData CreatePluginSortingData(const std::string& name) {
     const auto plugin = GetPlugin(name);
 
     return PluginSortingData(
         plugin, PluginMetadata(), PluginMetadata(), {}, GameType::tes4, {});
+  }
+
+  PluginSortingData CreatePluginSortingData(const std::string& name,
+                                            const std::string& group,
+                                            bool isGroupUserMetadata = false) {
+    const auto plugin = GetPlugin(name);
+
+    PluginMetadata masterlistMetadata;
+    PluginMetadata userMetadata;
+
+    if (isGroupUserMetadata) {
+      userMetadata.SetGroup(group);
+    } else {
+      masterlistMetadata.SetGroup(group);
+    }
+
+    return PluginSortingData(
+        plugin, masterlistMetadata, userMetadata, {}, GameType::tes4, {});
   }
 
   plugingraph::TestPlugin* GetPlugin(const std::string& name) {
@@ -136,6 +183,10 @@ public:
     return plugins.insert_or_assign(name, plugin).first->second.get();
   }
 
+  std::unordered_map<std::string, Group> groupsMap;
+  std::unordered_map<std::string, std::vector<PredecessorGroup>>
+      predecessorGroupsMap;
+
 private:
   std::map<std::string, std::shared_ptr<plugingraph::TestPlugin>> plugins;
 };
@@ -146,6 +197,1174 @@ TEST_F(PluginGraphTest,
   std::vector<vertex_t> sorted = graph.TopologicalSort();
 
   EXPECT_TRUE(sorted.empty());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldAddUserGroupEdgeIfSourcePluginIsInGroupDueToUserMetadata) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A", true));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Cause a cycle to see the edge types.
+  graph.AddEdge(b, a, EdgeType::master);
+
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("A.esp", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("B.esp", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldAddUserGroupEdgeIfTargetPluginIsInGroupDueToUserMetadata) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B", true));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Cause a cycle to see the edge types.
+  graph.AddEdge(b, a, EdgeType::master);
+
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("A.esp", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("B.esp", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldAddUserGroupEdgeIfGroupPathStartsWithUserMetadata) {
+  PluginGraph graph;
+
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Cause a cycle to see the edge types.
+  graph.AddEdge(d, b, EdgeType::master);
+
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("B.esp", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("D.esp", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldAddUserGroupEdgeIfGroupPathEndsWithUserMetadata) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Cause a cycle to see the edge types.
+  graph.AddEdge(c, a, EdgeType::master);
+
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("A.esp", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("C.esp", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldAddUserGroupEdgeIfGroupPathInvolvesUserMetadata) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Cause a cycle to see the edge types.
+  graph.AddEdge(d, a, EdgeType::master);
+
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("A.esp", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("D.esp", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldAddMasterlistGroupEdgeIfNoUserMetadataIsInvolved) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Cause a cycle to see the edge types.
+  graph.AddEdge(b, a, EdgeType::master);
+
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("A.esp", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistGroup,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("B.esp", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldAddEdgesBetweenPluginsInIndirectlyConnectedGroups_whenAnIntermediatePluginEdgeIsSkipped) {
+  PluginGraph graph;
+
+  const auto a1 = graph.AddVertex(CreatePluginSortingData("A1.esp", "A"));
+  const auto a2 = graph.AddVertex(CreatePluginSortingData("A2.esp", "A"));
+  const auto b1 = graph.AddVertex(CreatePluginSortingData("B1.esp", "B"));
+  const auto b2 = graph.AddVertex(CreatePluginSortingData("B2.esp", "B"));
+  const auto c1 = graph.AddVertex(CreatePluginSortingData("C1.esp", "C"));
+  const auto c2 = graph.AddVertex(CreatePluginSortingData("C2.esp", "C"));
+
+  graph.AddEdge(b1, a1, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A2.esp -> B1.esp -> A1.esp -> B2.esp -> C1.esp
+  //                                                -> C2.esp
+  EXPECT_TRUE(graph.EdgeExists(b1, a1));
+  EXPECT_TRUE(graph.EdgeExists(a1, b2));
+  EXPECT_TRUE(graph.EdgeExists(a2, b1));
+  EXPECT_TRUE(graph.EdgeExists(a2, b2));
+  EXPECT_TRUE(graph.EdgeExists(b1, c1));
+  EXPECT_TRUE(graph.EdgeExists(b1, c2));
+  EXPECT_TRUE(graph.EdgeExists(b2, c1));
+  EXPECT_TRUE(graph.EdgeExists(b2, c2));
+  EXPECT_TRUE(graph.EdgeExists(a1, c1));
+  EXPECT_TRUE(graph.EdgeExists(a1, c2));
+  EXPECT_FALSE(graph.EdgeExists(c1, c2));
+  EXPECT_FALSE(graph.EdgeExists(c2, c1));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest, addGroupEdgesShouldAddEdgesAcrossEmptyGroups) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> C.esp
+  EXPECT_TRUE(graph.EdgeExists(a, c));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldAddEdgesAcrossTheNonEmptyDefaultGroup) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> D.esp -> E.esp
+  //                 ---------->
+  EXPECT_TRUE(graph.EdgeExists(a, d));
+  EXPECT_TRUE(graph.EdgeExists(d, e));
+  EXPECT_TRUE(graph.EdgeExists(a, e));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest, addGroupEdgesShouldSkipAnEdgeThatWouldCauseACycle) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+
+  graph.AddEdge(c, a, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be C.esp -> A.esp
+  EXPECT_TRUE(graph.EdgeExists(c, a));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesDoesNotSkipAnEdgeThatCausesACycleInvolvingOtherNonDefaultGroups) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+
+  graph.AddEdge(c, a, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be C.esp -> A.esp -> B.esp
+  EXPECT_TRUE(graph.EdgeExists(c, a));
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+
+  // FIXME: This should not cause a cycle.
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (CyclicInteractionError& e) {
+    ASSERT_EQ(3, e.GetCycle().size());
+    EXPECT_EQ(graph.GetPlugin(a).GetName(), e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistGroup,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(graph.GetPlugin(b).GetName(), e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(graph.GetPlugin(c).GetName(), e.GetCycle()[2].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldSkipOnlyEdgesToTheTargetGroupPluginsThatWouldCauseACycle) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto c1 = graph.AddVertex(CreatePluginSortingData("C1.esp", "C"));
+  const auto c2 = graph.AddVertex(CreatePluginSortingData("C2.esp", "C"));
+
+  graph.AddEdge(c1, a, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be C1.esp -> A.esp -> C2.esp
+  EXPECT_TRUE(graph.EdgeExists(c1, a));
+  EXPECT_TRUE(graph.EdgeExists(a, c2));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldSkipOnlyEdgesFromAncestorsToTheTargetGroupPluginsThatWouldCauseACycle) {
+  PluginGraph graph;
+
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d1 = graph.AddVertex(CreatePluginSortingData("D1.esp"));
+  const auto d2 = graph.AddVertex(CreatePluginSortingData("D2.esp"));
+  const auto d3 = graph.AddVertex(CreatePluginSortingData("D3.esp"));
+
+  graph.AddEdge(d1, b, EdgeType::masterFlag);
+  graph.AddEdge(d2, b, EdgeType::masterFlag);
+  graph.AddEdge(c, b, EdgeType::masterFlag);
+  graph.AddEdge(c, d2, EdgeType::master);
+  graph.AddEdge(c, d3, EdgeType::masterFlag);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be: C.esp -> D2.esp -> B.esp -> D3.esp
+  //                  -> D1.esp ->
+  //                  -------------------->
+  //                  ----------->
+  EXPECT_TRUE(graph.EdgeExists(d1, b));
+  EXPECT_TRUE(graph.EdgeExists(d2, b));
+  EXPECT_TRUE(graph.EdgeExists(c, b));
+  EXPECT_TRUE(graph.EdgeExists(c, d2));
+  EXPECT_TRUE(graph.EdgeExists(c, d3));
+
+  EXPECT_TRUE(graph.EdgeExists(b, d3));
+
+  // FIXME: This edge should be added but isn't, it's a limitation of the
+  // current implementation.
+  EXPECT_FALSE(graph.EdgeExists(c, d1));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldAddAPluginsEdgesAcrossASuccessorIfAtLeastOneEdgeToTheSuccessorGroupWasSkipped_successiveDepths) {
+  PluginGraph graph;
+
+  const auto a1 = graph.AddVertex(CreatePluginSortingData("A1.esp", "A"));
+  const auto a2 = graph.AddVertex(CreatePluginSortingData("A2.esp", "A"));
+  const auto b1 = graph.AddVertex(CreatePluginSortingData("B1.esp", "B"));
+  const auto b2 = graph.AddVertex(CreatePluginSortingData("B2.esp", "B"));
+  const auto c1 = graph.AddVertex(CreatePluginSortingData("C1.esp", "C"));
+  const auto c2 = graph.AddVertex(CreatePluginSortingData("C2.esp", "C"));
+
+  graph.AddEdge(b1, a1, EdgeType::master);
+  graph.AddEdge(c1, b2, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A2.esp -> B1.esp -> A1.esp -> C1.esp -> B2.esp -> C2.esp
+  EXPECT_TRUE(graph.EdgeExists(b1, a1));
+  EXPECT_TRUE(graph.EdgeExists(c1, b2));
+  EXPECT_TRUE(graph.EdgeExists(a1, b2));
+  EXPECT_TRUE(graph.EdgeExists(a1, c1));
+  EXPECT_TRUE(graph.EdgeExists(a1, c2));
+  EXPECT_TRUE(graph.EdgeExists(a2, b1));
+  EXPECT_TRUE(graph.EdgeExists(a2, b2));
+  EXPECT_TRUE(graph.EdgeExists(b1, c1));
+  EXPECT_TRUE(graph.EdgeExists(b1, c2));
+  EXPECT_TRUE(graph.EdgeExists(b2, c2));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldAddAPluginsEdgesAcrossASuccessorIfAtLeastOneEdgeToTheSuccessorGroupWasSkipped_successiveDepthsDifferentOrder) {
+  PluginGraph graph;
+
+  const auto a1 = graph.AddVertex(CreatePluginSortingData("A1.esp", "A"));
+  const auto a2 = graph.AddVertex(CreatePluginSortingData("A2.esp", "A"));
+  const auto b1 = graph.AddVertex(CreatePluginSortingData("B1.esp", "B"));
+  const auto b2 = graph.AddVertex(CreatePluginSortingData("B2.esp", "B"));
+  const auto c1 = graph.AddVertex(CreatePluginSortingData("C1.esp", "C"));
+  const auto c2 = graph.AddVertex(CreatePluginSortingData("C2.esp", "C"));
+
+  graph.AddEdge(b1, a1, EdgeType::master);
+  graph.AddEdge(c1, b1, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A2.esp -> C1.esp -> B1.esp -> A1.esp -> B2.esp -> C2.esp
+  EXPECT_TRUE(graph.EdgeExists(b1, a1));
+  EXPECT_TRUE(graph.EdgeExists(c1, b1));
+  EXPECT_TRUE(graph.EdgeExists(a1, b2));
+  EXPECT_TRUE(graph.EdgeExists(a2, b1));
+  EXPECT_TRUE(graph.EdgeExists(a2, b2));
+  EXPECT_TRUE(graph.EdgeExists(a1, c2));
+  EXPECT_TRUE(graph.EdgeExists(b1, c2));
+  EXPECT_TRUE(graph.EdgeExists(b2, c2));
+  EXPECT_TRUE(graph.EdgeExists(a2, c1));
+
+  // FIXME: This edge is unwanted and causes a cycle.
+  EXPECT_TRUE(graph.EdgeExists(b2, c1));
+
+  EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldAddEdgeFromAncestorToSuccessorIfNoneOfAGroupsPluginsCan_simple) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b1 = graph.AddVertex(CreatePluginSortingData("B1.esp", "B"));
+  const auto b2 = graph.AddVertex(CreatePluginSortingData("B2.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+
+  graph.AddEdge(c, b1, EdgeType::master);
+  graph.AddEdge(c, b2, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> C1.esp -> B1.esp
+  //                           -> B2.esp
+  EXPECT_TRUE(graph.EdgeExists(a, b1));
+  EXPECT_TRUE(graph.EdgeExists(a, b2));
+  EXPECT_TRUE(graph.EdgeExists(c, b1));
+  EXPECT_TRUE(graph.EdgeExists(c, b2));
+  EXPECT_TRUE(graph.EdgeExists(a, c));
+  EXPECT_FALSE(graph.EdgeExists(b1, b2));
+  EXPECT_FALSE(graph.EdgeExists(b2, b1));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldAddEdgeFromAncestorToSuccessorIfNoneOfAGroupsPluginsCan_withEdgesAcrossedTheSkippedGroup) {
+  PluginGraph graph;
+
+  const auto a1 = graph.AddVertex(CreatePluginSortingData("A1.esp", "A"));
+  const auto a2 = graph.AddVertex(CreatePluginSortingData("A2.esp", "A"));
+  const auto b1 = graph.AddVertex(CreatePluginSortingData("B1.esp", "B"));
+  const auto b2 = graph.AddVertex(CreatePluginSortingData("B2.esp", "B"));
+  const auto c1 = graph.AddVertex(CreatePluginSortingData("C1.esp", "C"));
+  const auto c2 = graph.AddVertex(CreatePluginSortingData("C2.esp", "C"));
+  const auto d1 = graph.AddVertex(CreatePluginSortingData("D1.esp"));
+  const auto d2 = graph.AddVertex(CreatePluginSortingData("D2.esp"));
+
+  graph.AddEdge(b1, a1, EdgeType::master);
+  graph.AddEdge(c1, b1, EdgeType::master);
+  graph.AddEdge(d1, c1, EdgeType::master);
+  graph.AddEdge(d2, c1, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be:
+  // A2.esp -> D1.esp -> C1.esp -> B1.esp -> A1.esp -> B2.esp -> C2.esp
+  //        -> D2.esp ->
+  EXPECT_TRUE(graph.EdgeExists(b1, a1));
+  EXPECT_TRUE(graph.EdgeExists(c1, b1));
+  EXPECT_TRUE(graph.EdgeExists(d1, c1));
+  EXPECT_TRUE(graph.EdgeExists(d2, c1));
+  EXPECT_TRUE(graph.EdgeExists(a1, b2));
+  EXPECT_TRUE(graph.EdgeExists(a2, b1));
+  EXPECT_TRUE(graph.EdgeExists(a2, b2));
+  EXPECT_TRUE(graph.EdgeExists(a1, c2));
+  EXPECT_TRUE(graph.EdgeExists(b1, c2));
+  EXPECT_TRUE(graph.EdgeExists(a2, c1));
+  EXPECT_TRUE(graph.EdgeExists(a2, d1));
+  EXPECT_TRUE(graph.EdgeExists(a2, d2));
+  EXPECT_FALSE(graph.EdgeExists(d1, d2));
+  EXPECT_FALSE(graph.EdgeExists(d2, d1));
+
+  // FIXME: This edge is unwanted and causes a cycle.
+  EXPECT_TRUE(graph.EdgeExists(b2, c1));
+
+  EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldDeprioritiseEdgesFromDefaultGroupPlugins_defaultLast) {
+  PluginGraph graph;
+
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
+
+  graph.AddEdge(d, b, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be D.esp -> B.esp -> C.esp
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(d, b));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldDeprioritiseEdgesFromDefaultGroupPlugins_defaultFirst) {
+  PluginGraph graph;
+
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+  const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
+
+  graph.AddEdge(f, d, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be E.esp -> F.esp -> D.esp
+  EXPECT_TRUE(graph.EdgeExists(e, f));
+  EXPECT_TRUE(graph.EdgeExists(f, d));
+  EXPECT_FALSE(graph.EdgeExists(d, e));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldDeprioritiseEdgesFromDefaultGroupPlugins_acrossSkippedIntermediateGroups) {
+  PluginGraph graph;
+
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+  const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
+
+  graph.AddEdge(e, d, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be E.esp -> D.esp -> F.esp
+  EXPECT_TRUE(graph.EdgeExists(e, d));
+  EXPECT_TRUE(graph.EdgeExists(d, f));
+  EXPECT_FALSE(graph.EdgeExists(f, e));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldDeprioritiseEdgesFromDefaultGroupPlugins_d1Firstd2Last) {
+  PluginGraph graph;
+
+  const auto d1 = graph.AddVertex(CreatePluginSortingData("D1.esp"));
+  const auto d2 = graph.AddVertex(CreatePluginSortingData("D2.esp"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+  const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
+
+  graph.AddEdge(f, d2, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be D1.esp -> E.esp -> F.esp -> D2.esp
+  EXPECT_TRUE(graph.EdgeExists(e, f));
+  EXPECT_TRUE(graph.EdgeExists(f, d2));
+  EXPECT_TRUE(graph.EdgeExists(d1, e));
+  EXPECT_FALSE(graph.EdgeExists(d2, d1));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldDeprioritiseEdgesFromDefaultGroupPlugins_noIdealResult) {
+  PluginGraph graph;
+
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+  const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
+
+  graph.AddEdge(d, b, EdgeType::master);
+  graph.AddEdge(f, d, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // No ideal result, expected is F.esp -> D.esp -> B.esp -> C.esp -> E.esp
+  EXPECT_TRUE(graph.EdgeExists(f, d));
+  EXPECT_TRUE(graph.EdgeExists(d, b));
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(c, e));
+
+  // FIXME: This edge is unwanted and causes a cycle.
+  EXPECT_TRUE(graph.EdgeExists(e, f));
+
+  EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldDeprioritiseEdgesFromDefaultGroupPlugins_defaultInMiddleDBookends) {
+  PluginGraph graph;
+
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d1 = graph.AddVertex(CreatePluginSortingData("D1.esp"));
+  const auto d2 = graph.AddVertex(CreatePluginSortingData("D2.esp"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+  const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
+
+  graph.AddEdge(d2, b, EdgeType::master);
+  graph.AddEdge(f, d1, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be D2.esp -> B.esp -> C.esp -> E.esp -> F.esp -> D1.esp
+  EXPECT_TRUE(graph.EdgeExists(d2, b));
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(c, e));
+  EXPECT_TRUE(graph.EdgeExists(e, f));
+  EXPECT_TRUE(graph.EdgeExists(f, d1));
+  EXPECT_FALSE(graph.EdgeExists(d1, d2));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldDeprioritiseEdgesFromDefaultGroupPlugins_defaultInMiddleDThroughout) {
+  PluginGraph graph;
+
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d1 = graph.AddVertex(CreatePluginSortingData("D1.esp"));
+  const auto d2 = graph.AddVertex(CreatePluginSortingData("D2.esp"));
+  const auto d3 = graph.AddVertex(CreatePluginSortingData("D3.esp"));
+  const auto d4 = graph.AddVertex(CreatePluginSortingData("D4.esp"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+  const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
+
+  graph.AddEdge(d2, b, EdgeType::master);
+  graph.AddEdge(d4, c, EdgeType::master);
+  graph.AddEdge(f, d1, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be:
+  // D2.esp -> B.esp -> D4.esp -> C.esp -> D3.esp -> E.esp -> F.esp -> D1.esp
+  EXPECT_TRUE(graph.EdgeExists(d2, b));
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(c, d3));
+  EXPECT_TRUE(graph.EdgeExists(c, e));
+  EXPECT_TRUE(graph.EdgeExists(d3, e));
+  EXPECT_TRUE(graph.EdgeExists(e, f));
+  EXPECT_TRUE(graph.EdgeExists(f, d1));
+  EXPECT_TRUE(graph.EdgeExists(d4, c));
+  EXPECT_TRUE(graph.EdgeExists(b, d4));
+  EXPECT_FALSE(graph.EdgeExists(d1, d2));
+  EXPECT_FALSE(graph.EdgeExists(d1, d3));
+  EXPECT_FALSE(graph.EdgeExists(d1, d4));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldHandleAsymmetricBranchesInTheGroupsGraph) {
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B", {"A"}),
+                                      Group("C", {"B"}),
+                                      Group("D", {"A"}),
+                                      Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> B.esp -> C.esp
+  //                 -> D.esp
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(a, d));
+  EXPECT_FALSE(graph.EdgeExists(d, b));
+  EXPECT_FALSE(graph.EdgeExists(d, c));
+  EXPECT_FALSE(graph.EdgeExists(b, d));
+  EXPECT_FALSE(graph.EdgeExists(c, d));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldHandleAsymmetricBranchesInTheGroupsGraphThatMerge) {
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B", {"A"}),
+                                      Group("C", {"B"}),
+                                      Group("D", {"A"}),
+                                      Group("E", {"C", "D"}),
+                                      Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> B.esp -> C.esp -> E.esp
+  //                 -> D.esp ---------->
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(c, e));
+  EXPECT_TRUE(graph.EdgeExists(a, d));
+  EXPECT_TRUE(graph.EdgeExists(d, e));
+  EXPECT_FALSE(graph.EdgeExists(d, b));
+  EXPECT_FALSE(graph.EdgeExists(d, c));
+  EXPECT_FALSE(graph.EdgeExists(b, d));
+  EXPECT_FALSE(graph.EdgeExists(c, d));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldHandleBranchesInTheGroupsGraphThatFormADiamondPattern) {
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B", {"A"}),
+                                      Group("C", {"A"}),
+                                      Group("D", {"B", "C"}),
+                                      Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> B.esp -> D.esp
+  //                 -> C.esp ->
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(b, d));
+  EXPECT_TRUE(graph.EdgeExists(a, c));
+  EXPECT_TRUE(graph.EdgeExists(c, d));
+  EXPECT_FALSE(graph.EdgeExists(b, c));
+  EXPECT_FALSE(graph.EdgeExists(c, b));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldAddEdgesAcrossTheMergePointOfBranchesInTheGroupsGraph) {
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B", {"A"}),
+                                      Group("C", {"A"}),
+                                      Group("D", {"B", "C"}),
+                                      Group("E", {"D"}),
+                                      Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+
+  graph.AddEdge(d, c, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> B.esp -> D.esp -> C.esp -> E.esp
+  EXPECT_TRUE(graph.EdgeExists(d, c));
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(b, d));
+  EXPECT_TRUE(graph.EdgeExists(d, e));
+  EXPECT_TRUE(graph.EdgeExists(a, c));
+  EXPECT_TRUE(graph.EdgeExists(c, e));
+  EXPECT_FALSE(graph.EdgeExists(b, c));
+  EXPECT_FALSE(graph.EdgeExists(c, b));
+  EXPECT_FALSE(graph.EdgeExists(c, d));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldHandleAGroupGraphWithMultipleSuccessiveBranches) {
+  PluginGraph graph;
+
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B", {"A"}),
+                                      Group("C", {"A"}),
+                                      Group("D", {"B", "C"}),
+                                      Group("E", {"D"}),
+                                      Group("F", {"D"}),
+                                      Group("G", {"E", "F"}),
+                                      Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+  const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
+  const auto g = graph.AddVertex(CreatePluginSortingData("G.esp", "G"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be:
+  // A.esp -> B.esp -> D.esp -> E.esp -> G.esp
+  //       -> C.esp ->       -> F.esp ->
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(a, c));
+  EXPECT_TRUE(graph.EdgeExists(b, d));
+  EXPECT_TRUE(graph.EdgeExists(c, d));
+  EXPECT_TRUE(graph.EdgeExists(d, e));
+  EXPECT_TRUE(graph.EdgeExists(d, f));
+  EXPECT_TRUE(graph.EdgeExists(e, g));
+  EXPECT_TRUE(graph.EdgeExists(f, g));
+
+  EXPECT_FALSE(graph.EdgeExists(b, c));
+  EXPECT_FALSE(graph.EdgeExists(c, b));
+  EXPECT_FALSE(graph.EdgeExists(e, f));
+  EXPECT_FALSE(graph.EdgeExists(f, e));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest, addGroupEdgesShouldHandleIsolatedGroups) {
+  std::vector<Group> masterlistGroups{
+      Group("A"), Group("B", {"A"}), Group("C"), Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> B.esp
+  //           C.esp
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_FALSE(graph.EdgeExists(a, c));
+  EXPECT_FALSE(graph.EdgeExists(c, a));
+  EXPECT_FALSE(graph.EdgeExists(b, c));
+  EXPECT_FALSE(graph.EdgeExists(c, b));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest, addGroupEdgesShouldHandleDisconnectedGroupGraphs) {
+  std::vector<Group> masterlistGroups{
+      Group("A"), Group("B", {"A"}), Group("C"), Group("D", {"C"}), Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> B.esp
+  //           C.esp -> D.esp
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(c, d));
+  EXPECT_FALSE(graph.EdgeExists(a, c));
+  EXPECT_FALSE(graph.EdgeExists(a, d));
+  EXPECT_FALSE(graph.EdgeExists(b, c));
+  EXPECT_FALSE(graph.EdgeExists(b, d));
+  EXPECT_FALSE(graph.EdgeExists(c, a));
+  EXPECT_FALSE(graph.EdgeExists(c, b));
+  EXPECT_FALSE(graph.EdgeExists(d, a));
+  EXPECT_FALSE(graph.EdgeExists(d, b));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldAddEdgesAcrossTheMergePointOfTwoRootVertexPaths) {
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B"),
+                                      Group("C", {"A", "B"}),
+                                      Group("D", {"C"}),
+                                      Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+
+  graph.AddEdge(c, b, EdgeType::master);
+
+  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+  // Should be A.esp -> C.esp -> D.esp
+  //           B.esp ---------->
+  EXPECT_TRUE(graph.EdgeExists(c, b));
+  EXPECT_TRUE(graph.EdgeExists(a, c));
+  EXPECT_TRUE(graph.EdgeExists(c, d));
+  EXPECT_TRUE(graph.EdgeExists(b, d));
+  EXPECT_FALSE(graph.EdgeExists(a, b));
+  EXPECT_FALSE(graph.EdgeExists(b, a));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesDoesNotDependOnGroupDefinitionOrderIfThereIsASingleLinearPath) {
+  std::vector<std::vector<Group>> masterlistsGroups{
+      {Group("B"), Group("C", {"B"}), Group("default", {"C"})},
+      {Group("C", {"B"}), Group("B"), Group("default", {"C"})}};
+
+  for (const auto& masterlistGroups : masterlistsGroups) {
+    groupsMap = GetGroupsMap(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+    PluginGraph graph;
+
+    const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+    const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+    const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
+
+    graph.AddEdge(d, b, EdgeType::master);
+
+    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+    // Should be D.esp -> B.esp -> C.esp
+    EXPECT_TRUE(graph.EdgeExists(b, c));
+    EXPECT_TRUE(graph.EdgeExists(d, b));
+    EXPECT_FALSE(graph.EdgeExists(c, d));
+
+    EXPECT_NO_THROW(graph.CheckForCycles());
+  }
+}
+
+TEST_F(PluginGraphTest,
+       addGroupEdgesDependsOnGroupDefinitionOrderIfThereAreMultipleRoots) {
+  // Create a graph with groups in one order.
+  {
+    std::vector<Group> masterlistGroups{Group("A"),
+                                        Group("B"),
+                                        Group("C", {"A", "B"}),
+                                        Group("D", {"C"}),
+                                        Group()};
+
+    groupsMap = GetGroupsMap(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+    PluginGraph graph;
+
+    const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+    const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+    const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+    const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+
+    graph.AddEdge(d, a, EdgeType::master);
+
+    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+    // Should be B.esp -> D.esp -> A.esp -> C.esp
+    //           B.esp ------------------->
+    EXPECT_TRUE(graph.EdgeExists(d, a));
+    EXPECT_TRUE(graph.EdgeExists(a, c));
+    EXPECT_TRUE(graph.EdgeExists(b, c));
+    EXPECT_TRUE(graph.EdgeExists(b, d));
+    EXPECT_FALSE(graph.EdgeExists(a, b));
+    EXPECT_FALSE(graph.EdgeExists(b, a));
+
+    // FIXME: This edge is unwanted and causes a cycle.
+    EXPECT_TRUE(graph.EdgeExists(c, d));
+
+    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+  }
+
+  // Now do the same again, but with a different group order for A and B.
+  {
+    std::vector<Group> masterlistGroups{Group("B"),
+                                        Group("A"),
+                                        Group("C", {"A", "B"}),
+                                        Group("D", {"C"}),
+                                        Group()};
+
+    groupsMap = GetGroupsMap(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+    PluginGraph graph;
+
+    const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+    const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+    const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+    const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+
+    graph.AddEdge(d, a, EdgeType::master);
+
+    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+    // Should be B.esp -> C.esp -> D.esp -> A.esp
+    EXPECT_TRUE(graph.EdgeExists(d, a));
+    EXPECT_TRUE(graph.EdgeExists(b, c));
+    EXPECT_TRUE(graph.EdgeExists(c, d));
+    EXPECT_FALSE(graph.EdgeExists(a, b));
+    EXPECT_FALSE(graph.EdgeExists(b, a));
+
+    // FIXME: This edge is unwanted and causes a cycle.
+    EXPECT_TRUE(graph.EdgeExists(a, c));
+
+    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+  }
+}
+
+TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
+  // Create a graph with groups in one order.
+  {
+    std::vector<Group> masterlistGroups{Group("A"),
+                                        Group("B", {"A"}),
+                                        Group("C", {"A"}),
+                                        Group("D", {"B", "C"}),
+                                        Group("E", {"D"}),
+                                        Group()};
+
+    groupsMap = GetGroupsMap(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+    PluginGraph graph;
+
+    const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+    const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+    const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+    const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+    const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+
+    graph.AddEdge(e, c, EdgeType::master);
+
+    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+    // Should be A.esp -> B.esp -> D.esp -> E.esp -> C.esp
+    EXPECT_TRUE(graph.EdgeExists(e, c));
+    EXPECT_TRUE(graph.EdgeExists(a, b));
+    EXPECT_TRUE(graph.EdgeExists(b, d));
+    EXPECT_TRUE(graph.EdgeExists(d, e));
+    EXPECT_TRUE(graph.EdgeExists(a, c));
+    EXPECT_FALSE(graph.EdgeExists(b, c));
+    EXPECT_FALSE(graph.EdgeExists(c, b));
+
+    // FIXME: This edge is unwanted and causes a cycle.
+    EXPECT_TRUE(graph.EdgeExists(c, d));
+
+    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+  }
+
+  // Now do the same again, but with a different group order for B and C.
+  {
+    std::vector<Group> masterlistGroups{Group("A"),
+                                        Group("C", {"A"}),
+                                        Group("B", {"A"}),
+                                        Group("D", {"B", "C"}),
+                                        Group("E", {"D"}),
+                                        Group()};
+
+    groupsMap = GetGroupsMap(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+    PluginGraph graph;
+
+    const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+    const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+    const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+    const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+    const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+
+    graph.AddEdge(e, c, EdgeType::master);
+
+    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+    // Should be A.esp -> B.esp -> E.esp -> C.esp -> D.esp
+    EXPECT_TRUE(graph.EdgeExists(e, c));
+    EXPECT_TRUE(graph.EdgeExists(a, b));
+    EXPECT_TRUE(graph.EdgeExists(b, d));
+    EXPECT_TRUE(graph.EdgeExists(b, e));
+    EXPECT_TRUE(graph.EdgeExists(a, e));
+    EXPECT_TRUE(graph.EdgeExists(a, c));
+    EXPECT_TRUE(graph.EdgeExists(c, d));
+    EXPECT_FALSE(graph.EdgeExists(b, c));
+    EXPECT_FALSE(graph.EdgeExists(c, b));
+
+    // FIXME: This edge is unwanted and causes a cycle.
+    EXPECT_TRUE(graph.EdgeExists(d, e));
+
+    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+  }
+}
+
+TEST_F(PluginGraphTest, addGroupEdgesDoesNotDependOnPluginGraphVertexOrder) {
+  std::vector<Group> masterlistGroups{
+      Group("A"), Group("B", {"A"}), Group("C", {"B"}), Group()};
+
+  groupsMap = GetGroupsMap(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+
+  const auto a1Data = CreatePluginSortingData("A1.esp", "A");
+  const auto a2Data = CreatePluginSortingData("A2.esp", "A");
+  const auto bData = CreatePluginSortingData("B.esp", "B");
+  const auto cData = CreatePluginSortingData("C.esp", "C");
+
+  const std::vector<std::vector<PluginSortingData>> variations{
+      {a1Data, a2Data, bData, cData}, {a1Data, a2Data, cData, bData},
+      {a1Data, bData, cData, a2Data}, {a1Data, bData, a2Data, cData},
+      {a1Data, cData, a2Data, bData}, {a1Data, cData, bData, a2Data},
+
+      {a2Data, a1Data, bData, cData}, {a2Data, a1Data, cData, bData},
+      {a2Data, bData, cData, a1Data}, {a2Data, bData, a1Data, cData},
+      {a2Data, cData, a1Data, bData}, {a2Data, cData, bData, a1Data},
+
+      {bData, a2Data, a1Data, cData}, {bData, a2Data, cData, a1Data},
+      {bData, a1Data, cData, a2Data}, {bData, a1Data, a2Data, cData},
+      {bData, cData, a2Data, a1Data}, {bData, cData, a1Data, a2Data},
+
+      {cData, a2Data, bData, a1Data}, {cData, a2Data, a1Data, bData},
+      {cData, bData, a1Data, a2Data}, {cData, bData, a2Data, a1Data},
+      {cData, a1Data, a2Data, bData}, {cData, a1Data, bData, a2Data},
+  };
+
+  for (const auto& pluginsSortingData : variations) {
+    PluginGraph graph;
+
+    for (const auto& plugin : pluginsSortingData) {
+      graph.AddVertex(plugin);
+    }
+
+    const auto a1 = graph.GetVertexByName("A1.esp").value();
+    const auto a2 = graph.GetVertexByName("A2.esp").value();
+    const auto b = graph.GetVertexByName("B.esp").value();
+    const auto c = graph.GetVertexByName("C.esp").value();
+
+    graph.AddEdge(c, a1, EdgeType::master);
+
+    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+
+    // Should be A2.esp -> C.esp -> A1.esp -> B.esp
+    //           A2.esp -------------------->
+    ASSERT_TRUE(graph.EdgeExists(c, a1));
+    ASSERT_TRUE(graph.EdgeExists(a1, b));
+    ASSERT_TRUE(graph.EdgeExists(a2, b));
+    ASSERT_TRUE(graph.EdgeExists(a2, c));
+    ASSERT_FALSE(graph.EdgeExists(a1, a2));
+    ASSERT_FALSE(graph.EdgeExists(a2, a1));
+
+    // FIXME: This edge is unwanted and causes a cycle.
+    ASSERT_TRUE(graph.EdgeExists(b, c));
+
+    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
+  }
 }
 
 TEST_F(PluginGraphTest,

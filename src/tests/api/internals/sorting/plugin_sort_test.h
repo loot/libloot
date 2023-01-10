@@ -38,7 +38,6 @@ protected:
   PluginSortTest() :
       game_(GetParam(), dataPath.parent_path(), localPath),
       blankEslEsp("Blank.esl.esp"),
-      masterlistPath_(metadataFilesPath / "userlist.yaml"),
       cccPath_(dataPath.parent_path() / getCCCFilename()) {}
 
   void loadInstalledPlugins(Game& game, bool headersOnly) {
@@ -67,32 +66,6 @@ protected:
     game.IdentifyMainMasterFile(masterFile);
     game.LoadCurrentLoadOrderState();
     game.LoadPlugins(plugins, headersOnly);
-  }
-
-  void GenerateMasterlist() {
-    using std::endl;
-
-    std::ofstream masterlist(masterlistPath_);
-    masterlist << "groups:" << endl
-               << "  - name: earliest" << endl
-               << "  - name: earlier" << endl
-               << "    after:" << endl
-               << "      - earliest" << endl
-               << "  - name: default" << endl
-               << "    after:" << endl
-               << "      - earlier" << endl
-               << "  - name: group1" << endl
-               << "  - name: group2" << endl
-               << "    after:" << endl
-               << "      - group1" << endl
-               << "  - name: group3" << endl
-               << "    after:" << endl
-               << "      - group2" << endl
-               << "  - name: group4" << endl
-               << "    after:" << endl
-               << "      - default" << endl;
-
-    masterlist.close();
   }
 
   std::string getCCCFilename() {
@@ -144,7 +117,6 @@ protected:
 
   Game game_;
   const std::string blankEslEsp;
-  const std::filesystem::path masterlistPath_;
   const std::filesystem::path cccPath_;
 
 private:
@@ -230,18 +202,18 @@ TEST_P(PluginSortTest,
   }
 }
 
-TEST_P(PluginSortTest, sortingShouldResolveGroupsAsTransitiveLoadAfterSets) {
+TEST_P(PluginSortTest,
+       sortingShouldUseGroupMetadataWhenDecidingRelativePluginPositions) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
-  GenerateMasterlist();
-  game_.GetDatabase().LoadLists(masterlistPath_);
+  game_.GetDatabase().SetUserGroups({Group("A"), Group("B", {"A"})});
 
   PluginMetadata plugin(blankDifferentEsm);
-  plugin.SetGroup("group1");
+  plugin.SetGroup("A");
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   plugin = PluginMetadata(blankEsm);
-  plugin.SetGroup("group3");
+  plugin.SetGroup("B");
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   std::vector<std::string> expectedSortedOrder({
@@ -328,236 +300,6 @@ TEST_P(PluginSortTest, sortingShouldThrowIfAPluginHasAGroupThatDoesNotExist) {
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
   EXPECT_THROW(SortPlugins(game_, game_.GetLoadOrder()), UndefinedGroupError);
-}
-
-TEST_P(PluginSortTest,
-       sortingShouldIgnoreAGroupEdgeIfItWouldCauseACycleInIsolation) {
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-
-  GenerateMasterlist();
-  game_.GetDatabase().LoadLists(masterlistPath_);
-
-  PluginMetadata plugin(blankEsm);
-  plugin.SetGroup("group4");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  std::vector<std::string> expectedSortedOrder({
-      masterFile,
-      blankDifferentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
-  });
-
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    expectedSortedOrder.insert(expectedSortedOrder.begin() + 3, blankEsl);
-  }
-
-  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
-  EXPECT_EQ(expectedSortedOrder, sorted);
-}
-
-TEST_P(
-    PluginSortTest,
-    sortingShouldIgnoreGroupEdgesInvolvedInABackCycleOfAGroupEdgeFromADefaultGroupPlugin) {
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-
-  GenerateMasterlist();
-  game_.GetDatabase().LoadLists(masterlistPath_);
-
-  PluginMetadata plugin(blankEsp);
-
-  plugin = PluginMetadata(blankDifferentMasterDependentEsp);
-  plugin.SetLoadAfterFiles({File(blankMasterDependentEsp)});
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  plugin = PluginMetadata(blankDifferentEsp);
-  plugin.SetGroup("group1");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  plugin = PluginMetadata(blankMasterDependentEsp);
-  plugin.SetGroup("group2");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  std::vector<std::string> expectedSortedOrder({
-      masterFile,
-      blankEsm,
-      blankDifferentEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
-  });
-
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
-  }
-
-  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
-  EXPECT_EQ(expectedSortedOrder, sorted);
-}
-
-TEST_P(
-    PluginSortTest,
-    sortingShouldIgnoreGroupEdgesInvolvedInABackCycleOfAGroupEdgeToADefaultGroupPlugin) {
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-
-  GenerateMasterlist();
-  game_.GetDatabase().LoadLists(masterlistPath_);
-
-  PluginMetadata plugin(blankMasterDependentEsm);
-  plugin.SetGroup("earliest");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  plugin = PluginMetadata(blankDifferentEsm);
-  plugin.SetGroup("earlier");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  std::vector<std::string> expectedSortedOrder({
-      blankEsm,
-      blankMasterDependentEsm,
-      blankDifferentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
-  });
-
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    expectedSortedOrder.insert(expectedSortedOrder.begin(), masterFile);
-    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
-  } else {
-    expectedSortedOrder.insert(expectedSortedOrder.begin() + 3, masterFile);
-  }
-
-  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
-  EXPECT_EQ(expectedSortedOrder, sorted);
-}
-
-TEST_P(
-    PluginSortTest,
-    sortingShouldThrowForAGroupEdgeThatCausesAMultiGroupCycleBetweenTwoNonDefaultGroups) {
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-
-  GenerateMasterlist();
-  game_.GetDatabase().LoadLists(masterlistPath_);
-
-  PluginMetadata plugin(blankMasterDependentEsm);
-  plugin.SetGroup("earliest");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  plugin = PluginMetadata(blankDifferentEsm);
-  plugin.SetGroup("earlier");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  plugin = PluginMetadata(blankEsm);
-  plugin.SetGroup("group4");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  try {
-    SortPlugins(game_, game_.GetLoadOrder());
-    FAIL();
-  } catch (CyclicInteractionError &e) {
-    ASSERT_EQ(3, e.GetCycle().size());
-    EXPECT_EQ("Blank - Different Master Dependent.esm",
-              e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ("Blank.esm", e.GetCycle()[1].GetName());
-    EXPECT_EQ(EdgeType::master, e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ("Blank - Master Dependent.esm", e.GetCycle()[2].GetName());
-    EXPECT_EQ(EdgeType::userGroup, e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-  }
-}
-
-TEST_P(
-    PluginSortTest,
-    sortingShouldNotIgnoreIntermediatePluginsInAMultiGroupCycleIfTheEarlierPluginIsNotAMasterAndTheLaterIs) {
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-
-  GenerateMasterlist();
-  game_.GetDatabase().LoadLists(masterlistPath_);
-
-  PluginMetadata plugin(blankMasterDependentEsp);
-  plugin.SetGroup("earliest");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  plugin = PluginMetadata(blankDifferentEsm);
-  plugin.SetGroup("earlier");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  std::vector<std::string> expectedSortedOrder({
-      blankDifferentEsm,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankMasterDependentEsp,
-      blankEsp,
-      blankDifferentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
-  });
-
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    expectedSortedOrder.insert(expectedSortedOrder.begin(), masterFile);
-    expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
-  } else {
-    expectedSortedOrder.insert(expectedSortedOrder.begin() + 1, masterFile);
-  }
-
-  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
-  EXPECT_EQ(expectedSortedOrder, sorted);
-}
-
-TEST_P(
-    PluginSortTest,
-    sortingShouldNotIgnorePluginsInTheSameGroupAsTheTargetPluginOfAGroupEdgeThatCausesACycleInIsolation) {
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-
-  GenerateMasterlist();
-  game_.GetDatabase().LoadLists(masterlistPath_);
-
-  PluginMetadata plugin(blankEsm);
-  plugin.SetGroup("group4");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  plugin = PluginMetadata(blankDifferentMasterDependentEsm);
-  plugin.SetGroup("group4");
-  game_.GetDatabase().SetPluginUserMetadata(plugin);
-
-  std::vector<std::string> expectedSortedOrder({
-      masterFile,
-      blankDifferentEsm,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
-  });
-
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    expectedSortedOrder.insert(expectedSortedOrder.begin() + 2, blankEsl);
-  }
-
-  std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
-  EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
 TEST_P(PluginSortTest,
