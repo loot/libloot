@@ -56,7 +56,7 @@ public:
     return std::optional<uint32_t>();
   }
 
-  bool IsMaster() const override { return false; }
+  bool IsMaster() const override { return isMaster_; }
 
   bool IsLightPlugin() const override { return false; }
 
@@ -93,6 +93,8 @@ public:
 
   void AddMaster(const std::string& master) { masters_.push_back(master); }
 
+  void SetIsMaster(bool isMaster) { isMaster_ = isMaster; }
+
   void AddOverlappingRecords(const PluginInterface& plugin) {
     recordsOverlapWith.insert(&plugin);
   }
@@ -114,6 +116,7 @@ private:
   std::set<const PluginSortingInterface*> assetsOverlapWith;
   size_t overrideRecordCount_{0};
   size_t assetCount_{0};
+  bool isMaster_{false};
 };
 }
 

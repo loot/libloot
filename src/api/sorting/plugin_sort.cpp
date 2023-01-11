@@ -100,6 +100,78 @@ std::unordered_map<std::string, Group> GetGroupsMap(
   return groupsMap;
 }
 
+void ValidateSpecificAndHardcodedEdges(
+    const std::vector<PluginSortingData>::const_iterator& begin,
+    const std::vector<PluginSortingData>::const_iterator& firstNonMaster,
+    const std::vector<PluginSortingData>::const_iterator& end,
+    const std::vector<std::string>& hardcodedPlugins) {
+  const auto isNonMaster = [&](const std::string& name) {
+    return std::any_of(
+        firstNonMaster, end, [&](const PluginSortingData& plugin) {
+          return CompareFilenames(plugin.GetName(), name) == 0;
+        });
+  };
+
+  for (auto it = begin; it != firstNonMaster; ++it) {
+    for (const auto& master : it->GetMasters()) {
+      if (isNonMaster(master)) {
+        throw CyclicInteractionError(
+            std::vector<Vertex>{Vertex(master, EdgeType::master),
+                                Vertex(it->GetName(), EdgeType::masterFlag)});
+      }
+    }
+
+    for (const auto& file : it->GetMasterlistRequirements()) {
+      const auto name = std::string(file.GetName());
+      if (isNonMaster(name)) {
+        throw CyclicInteractionError(
+            std::vector<Vertex>{Vertex(name, EdgeType::masterlistRequirement),
+                                Vertex(it->GetName(), EdgeType::masterFlag)});
+      }
+    }
+
+    for (const auto& file : it->GetUserRequirements()) {
+      const auto name = std::string(file.GetName());
+      if (isNonMaster(name)) {
+        throw CyclicInteractionError(
+            std::vector<Vertex>{Vertex(name, EdgeType::userRequirement),
+                                Vertex(it->GetName(), EdgeType::masterFlag)});
+      }
+    }
+
+    for (const auto& file : it->GetMasterlistLoadAfterFiles()) {
+      const auto name = std::string(file.GetName());
+      if (isNonMaster(name)) {
+        throw CyclicInteractionError(
+            std::vector<Vertex>{Vertex(name, EdgeType::masterlistLoadAfter),
+                                Vertex(it->GetName(), EdgeType::masterFlag)});
+      }
+    }
+
+    for (const auto& file : it->GetUserLoadAfterFiles()) {
+      const auto name = std::string(file.GetName());
+      if (isNonMaster(name)) {
+        throw CyclicInteractionError(
+            std::vector<Vertex>{Vertex(name, EdgeType::userLoadAfter),
+                                Vertex(it->GetName(), EdgeType::masterFlag)});
+      }
+    }
+  }
+
+  if (begin != firstNonMaster) {
+    // There's at least one master, check that there are no hardcoded
+    // non-masters.
+    for (const auto& plugin : hardcodedPlugins) {
+      if (isNonMaster(plugin)) {
+        // Just report the cycle to the first master.
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(plugin, EdgeType::hardcoded),
+            Vertex(begin->GetName(), EdgeType::masterFlag)});
+      }
+    }
+  }
+}
+
 std::vector<std::string> SortPlugins(
     const std::vector<PluginSortingData>::const_iterator& begin,
     const std::vector<PluginSortingData>::const_iterator& end,
@@ -194,6 +266,11 @@ std::vector<std::string> SortPlugins(
       pluginsSortingData.begin(),
       pluginsSortingData.end(),
       [](const PluginSortingData& plugin) { return plugin.IsMaster(); });
+
+  ValidateSpecificAndHardcodedEdges(pluginsSortingData.begin(),
+                                    firstNonMasterIt,
+                                    pluginsSortingData.end(),
+                                    hardcodedPlugins);
 
   auto newLoadOrder = SortPlugins(pluginsSortingData.begin(),
                                   firstNonMasterIt,

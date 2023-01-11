@@ -92,7 +92,7 @@ protected:
 
   PluginSortingData CreatePluginSortingData(
       const std::string& name,
-      const std::vector<std::string>& loadOrder) {
+      const std::vector<std::string>& loadOrder = {}) {
     const auto plugin = GetPlugin(name);
 
     return PluginSortingData(plugin,
@@ -406,6 +406,177 @@ TEST_P(PluginSortTest, sortingShouldThrowIfACyclicInteractionIsEncountered) {
 
   EXPECT_THROW(SortPlugins(game_, game_.GetLoadOrder()),
                CyclicInteractionError);
+}
+
+TEST_P(PluginSortTest,
+       sortingShouldThrowIfMasterEdgeWouldContradictMasterFlags) {
+  // Can't test with the test plugin files, so use the other SortPlugins()
+  // overload to provide stubs.
+  const auto esm = GetPlugin(blankEsm);
+  const auto esp = GetPlugin(blankEsp);
+
+  esm->SetIsMaster(true);
+  esm->AddMaster(esp->GetName());
+
+  std::vector<PluginSortingData> pluginsSortingData{
+      CreatePluginSortingData(esm->GetName()),
+      CreatePluginSortingData(esp->GetName())};
+
+  try {
+    SortPlugins(std::move(pluginsSortingData), GetParam(), {Group()}, {}, {});
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(esp->GetName(), e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(esm->GetName(), e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterFlag,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfMasterlistRequirementEdgeWouldContradictMasterFlags) {
+  using std::endl;
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  const auto masterlistPath = metadataFilesPath / "masterlist.yaml";
+  std::ofstream masterlist(masterlistPath);
+  masterlist << "plugins:" << endl
+             << "  - name: " << blankEsm << endl
+             << "    req:" << endl
+             << "      - " << blankEsp << endl;
+  masterlist.close();
+
+  game_.GetDatabase().LoadLists(masterlistPath);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankEsp, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistRequirement,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterFlag,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(PluginSortTest,
+       sortingShouldThrowIfUserRequirementEdgeWouldContradictMasterFlags) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  PluginMetadata plugin(blankEsm);
+  plugin.SetRequirements({File(blankEsp)});
+
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankEsp, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userRequirement,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterFlag,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(PluginSortTest,
+       sortingShouldThrowIfMasterlistLoadAfterEdgeWouldContradictMasterFlags) {
+  using std::endl;
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  const auto masterlistPath = metadataFilesPath / "masterlist.yaml";
+  std::ofstream masterlist(masterlistPath);
+  masterlist << "plugins:" << endl
+             << "  - name: " << blankEsm << endl
+             << "    after:" << endl
+             << "      - " << blankEsp << endl;
+  masterlist.close();
+
+  game_.GetDatabase().LoadLists(masterlistPath);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankEsp, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterFlag,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(PluginSortTest,
+       sortingShouldThrowIfUserLoadAfterEdgeWouldContradictMasterFlags) {
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  PluginMetadata plugin(blankEsm);
+  plugin.SetLoadAfterFiles({File(blankEsp)});
+
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankEsp, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterFlag,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(PluginSortTest,
+       sortingShouldThrowIfHardcodedEdgeWouldContradictMasterFlags) {
+  // Can't test with the test plugin files, so use the other SortPlugins()
+  // overload to provide stubs.
+  const auto esm = GetPlugin(blankEsm);
+  const auto esp = GetPlugin(blankEsp);
+
+  esm->SetIsMaster(true);
+
+  std::vector<PluginSortingData> pluginsSortingData{
+      CreatePluginSortingData(esm->GetName()),
+      CreatePluginSortingData(esp->GetName())};
+
+  EXPECT_THROW(SortPlugins(std::move(pluginsSortingData),
+                           GetParam(),
+                           {Group()},
+                           {},
+                           {esp->GetName()}),
+               CyclicInteractionError);
+
+  try {
+    SortPlugins(std::move(pluginsSortingData),
+                GetParam(),
+                {Group()},
+                {},
+                {esp->GetName()});
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankEsp, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::hardcoded, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterFlag,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
 }
 }
 }
