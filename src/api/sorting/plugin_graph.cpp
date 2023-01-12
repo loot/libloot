@@ -122,19 +122,23 @@ public:
 
   explicit GroupsVisitor(
       PluginGraph& pluginGraph,
+      std::unordered_set<GroupGraphVertex>& finishedVertices,
       const std::unordered_map<std::string, std::vector<vertex_t>>&
           groupsPlugins) :
       pluginGraph_(&pluginGraph),
       groupsPlugins_(&groupsPlugins),
+      finishedVertices_(&finishedVertices),
       logger_(getLogger()) {}
 
   explicit GroupsVisitor(
       PluginGraph& pluginGraph,
+      std::unordered_set<GroupGraphVertex>& finishedVertices,
       const std::unordered_map<std::string, std::vector<vertex_t>>&
           groupsPlugins,
       const GroupGraphVertex vertexToIgnoreAsSource) :
       pluginGraph_(&pluginGraph),
       groupsPlugins_(&groupsPlugins),
+      finishedVertices_(&finishedVertices),
       vertexToIgnoreAsSource_(vertexToIgnoreAsSource),
       logger_(getLogger()) {}
 
@@ -176,7 +180,7 @@ public:
     // For each source plugin, add an edge to each target plugin, unless the
     // source group should be ignored (i.e. because the visitor has been
     // configured to ignore the default group's plugins as sources).
-    if (source != vertexToIgnoreAsSource_) {
+    if (!ShouldIgnoreSourceVertex(source)) {
       newBuffer = FindPluginsInGroup(source, graph);
       // Current edge is the last one in the stack.
       addEdges(newBuffer, edgeStack_.size() - 1);
@@ -192,9 +196,25 @@ public:
     // A forward or cross edge doesn't visit its target vertex, so pop it and
     // its buffer back off the stacks.
     PopStacks();
+
+    // Mark the source vertex as unfinishable, because none of the plugins in
+    // in the path so far can have edges added to plugins past the target
+    // vertex.
+    unfinishableVertices_.insert(boost::source(edge, graph));
   }
 
-  void finish_vertex(GroupGraphVertex, const GroupGraph&) { PopStacks(); }
+  void finish_vertex(GroupGraphVertex vertex, const GroupGraph&) {
+    // Now that the source vertex's plugins have had edges added and been
+    // added to the buffer, mark the source vertex as finished so that it
+    // won't have edges added from its plugins again in a different DFS
+    // that uses the same finished vertices set.
+    if (vertex != vertexToIgnoreAsSource_ &&
+        unfinishableVertices_.count(vertex) == 0) {
+      finishedVertices_->insert(vertex);
+    }
+
+    PopStacks();
+  }
 
 private:
   bool PathToGroupInvolvesUserMetadata(const size_t sourceGroupEdgeStackIndex,
@@ -260,6 +280,11 @@ private:
     }
   }
 
+  bool ShouldIgnoreSourceVertex(const GroupGraphVertex& vertex) {
+    return vertex == vertexToIgnoreAsSource_ ||
+           finishedVertices_->count(vertex) == 1;
+  }
+
   void PopStacks() {
     if (!edgeStack_.empty()) {
       edgeStack_.pop_back();
@@ -271,6 +296,7 @@ private:
   }
 
   PluginGraph* pluginGraph_{nullptr};
+  std::unordered_set<GroupGraphVertex>* finishedVertices_;
   const std::unordered_map<std::string, std::vector<vertex_t>>* groupsPlugins_{
       nullptr};
   std::optional<GroupGraphVertex> vertexToIgnoreAsSource_;
@@ -282,6 +308,8 @@ private:
   // This represents the plugins carried forward from each vertex in the path
   // to the current target vertex in the group path.
   std::vector<std::vector<vertex_t>> pluginsBuffers_;
+
+  std::unordered_set<GroupGraphVertex> unfinishableVertices_;
 };
 
 void DepthFirstVisit(
@@ -905,6 +933,9 @@ void PluginGraph::AddGroupEdges(const GroupGraph& groupGraph) {
   const auto defaultVertex = GetDefaultVertex(groupGraph);
 
   // Now loop over the vertices in the groups graph.
+  // Keep a record of which vertices have already been fully explored to avoid
+  // adding edges from their plugins more than once.
+  std::unordered_set<GroupGraphVertex> finishedVertices;
   for (const auto& groupVertex :
        boost::make_iterator_range(boost::vertices(groupGraph))) {
     // Run a DFS from each vertex in the group graph, adding edges except from
@@ -913,14 +944,15 @@ void PluginGraph::AddGroupEdges(const GroupGraph& groupGraph) {
     // and merge inside a given root's DAG would result in plugins from one of
     // the branches not being carried forwards past the point at which the
     // branches merge.
-    GroupsVisitor visitor(*this, groupsPlugins, defaultVertex);
+    GroupsVisitor visitor(
+        *this, finishedVertices, groupsPlugins, defaultVertex);
 
     DepthFirstVisit(groupGraph, groupVertex, visitor);
   }
 
   // Now do one last DFS starting from the default group and not ignoring its
   // plugins.
-  GroupsVisitor visitor(*this, groupsPlugins);
+  GroupsVisitor visitor(*this, finishedVertices, groupsPlugins);
 
   DepthFirstVisit(groupGraph, defaultVertex, visitor);
 }
