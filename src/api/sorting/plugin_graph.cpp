@@ -137,18 +137,13 @@ public:
       vertexToIgnoreAsSource_(vertexToIgnoreAsSource),
       logger_(getLogger()) {}
 
-  void start_vertex(GroupGraphVertex vertex, const GroupGraph&) {
-    pathStack_.push_back(vertex);
-  }
-
   void tree_edge(GroupGraphEdge edge, const GroupGraph& graph) {
     const auto source = boost::source(edge, graph);
     const auto target = boost::target(edge, graph);
 
-    // Add the target group to the path stack so that edges can
-    // take into account whether its edge to the source group
-    // involves user metadata.
-    pathStack_.push_back(target);
+    // Add the edge to the stack so that adding edges can take into account
+    // whether its edge to the source group involves user metadata.
+    edgeStack_.push_back(edge);
 
     // Find the plugins in the target group.
     const auto targetPlugins = FindPluginsInGroup(target, graph);
@@ -160,16 +155,21 @@ public:
     // Function to add edges from all the given plugins to all the target group
     // plugins, and record any plugins that have edges added or at least one
     // edge skipped.
-    const auto addEdges = [&](const std::vector<vertex_t>& fromPlugins) {
+    const auto addEdges = [&](const std::vector<vertex_t>& fromPlugins,
+                              const size_t sourceGroupEdgeStackIndex) {
+      const auto groupPathInvolvesUserMetadata =
+          PathToGroupInvolvesUserMetadata(sourceGroupEdgeStackIndex, graph);
       for (const auto& plugin : fromPlugins) {
-        AddEdges(plugin, targetPlugins, graph);
+        AddEdges(plugin, targetPlugins, groupPathInvolvesUserMetadata);
       }
     };
 
     // Add edges for plugins buffered when adding edges from the previous
     // groups in the path being walked.
-    for (const auto& fromPlugins : pluginsBuffers_) {
-      addEdges(fromPlugins);
+    for (size_t i = 0; i < pluginsBuffers_.size(); i += 1) {
+      // Each plugins buffer holds the plugins in the source group for the edge
+      // at the same index.
+      addEdges(pluginsBuffers_[i], i);
     }
 
     // For each source plugin, add an edge to each target plugin, unless the
@@ -177,7 +177,8 @@ public:
     // configured to ignore the default group's plugins as sources).
     if (source != vertexToIgnoreAsSource_) {
       newBuffer = FindPluginsInGroup(source, graph);
-      addEdges(newBuffer);
+      // Current edge is the last one in the stack.
+      addEdges(newBuffer, edgeStack_.size() - 1);
     }
 
     // Add the new buffer to the stack.
@@ -195,37 +196,24 @@ public:
   void finish_vertex(GroupGraphVertex, const GroupGraph&) { PopStacks(); }
 
 private:
-  bool PathToGroupInvolvesUserMetadata(const std::string& fromGroupName,
+  bool PathToGroupInvolvesUserMetadata(const size_t sourceGroupEdgeStackIndex,
                                        const GroupGraph& graph) const {
-    // The path involves user metadata if any edge between two groups in the
-    // path came from user metadata.
-
-    const auto fromGroupIt =
-        std::find_if(pathStack_.begin(),
-                     pathStack_.end(),
-                     [&](const GroupGraphVertex& vertex) {
-                       return graph[vertex] == fromGroupName;
-                     });
-
-    if (fromGroupIt == pathStack_.end()) {
+    if (sourceGroupEdgeStackIndex >= edgeStack_.size()) {
       // Can't find group, this should be impossible.
-      throw std::logic_error("Cannot find group \"" + fromGroupName +
-                             "\" in path stack");
+      throw std::logic_error("Given index is past the end of the path stack");
     }
 
     // The target group is always the most recent group in the stack, so we
     // don't need to look for it.
 
-    if (pathStack_.size() < 2) {
-      return false;
-    }
-
     bool pathInvolvesUserMetadata = false;
 
-    for (auto it = fromGroupIt; it != std::prev(pathStack_.end()); ++it) {
-      const auto edge = boost::edge(*it, *std::next(it), graph);
+    const auto begin = std::next(edgeStack_.begin(), sourceGroupEdgeStackIndex);
 
-      pathInvolvesUserMetadata |= graph[edge.first] == EdgeType::userLoadAfter;
+    // The path involves user metadata if any edge between two groups in the
+    // path came from user metadata.
+    for (auto it = begin; it != edgeStack_.end(); ++it) {
+      pathInvolvesUserMetadata |= graph[*it] == EdgeType::userLoadAfter;
     }
 
     return pathInvolvesUserMetadata;
@@ -242,14 +230,12 @@ private:
   // skipped.
   bool AddEdges(const vertex_t& fromVertex,
                 const std::vector<vertex_t>& toPlugins,
-                const GroupGraph& graph) {
+                const bool groupPathInvolvesUserMetadata) {
     if (toPlugins.empty()) {
       return true;
     }
 
     const auto& fromPlugin = pluginGraph_->GetPlugin(fromVertex);
-    const auto groupPathInvolvesUserMetadata =
-        PathToGroupInvolvesUserMetadata(fromPlugin.GetGroup(), graph);
 
     bool anyEdgeSkipped = false;
 
@@ -282,8 +268,8 @@ private:
   }
 
   void PopStacks() {
-    if (!pathStack_.empty()) {
-      pathStack_.pop_back();
+    if (!edgeStack_.empty()) {
+      edgeStack_.pop_back();
     }
 
     if (!pluginsBuffers_.empty()) {
@@ -298,7 +284,7 @@ private:
   std::shared_ptr<spdlog::logger> logger_;
 
   // This represents the path to the current target vertex in the group graph.
-  std::vector<GroupGraphVertex> pathStack_;
+  std::vector<GroupGraphEdge> edgeStack_;
 
   // This represents the plugins carried forward from each vertex in the path
   // to the current target vertex in the group path.
