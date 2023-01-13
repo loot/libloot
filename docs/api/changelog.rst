@@ -2,6 +2,23 @@
 Version History
 ***************
 
+0.19.2 - 2023-01-13
+===================
+
+Fixed
+-----
+
+- libloot v0.19.1 did not take user groups into account when avoiding cycles
+  during sorting, causing unnecessary cyclic interaction errors.
+
+Changed
+-------
+
+- Sorting will once more throw a cyclic interaction error if there is any plugin
+  data or metadata that would try to load a master-flagged plugin after a
+  non-master-flagged plugin. This behaviour was removed as a side-effect of
+  sorting changes made in libloot v0.19.0.
+
 0.19.1 - 2023-01-09
 ===================
 
