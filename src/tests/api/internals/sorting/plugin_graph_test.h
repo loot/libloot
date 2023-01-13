@@ -131,22 +131,7 @@ protected:
                                         Group("F", {"E"})};
     std::vector<Group> userlistGroups{Group("C", {"B"})};
 
-    groupsMap = GetGroupsMap(masterlistGroups, userlistGroups);
-    predecessorGroupsMap =
-        GetPredecessorGroups(masterlistGroups, userlistGroups);
-  }
-
-  static std::unordered_map<std::string, Group> GetGroupsMap(
-      const std::vector<Group> masterlistGroups,
-      const std::vector<Group> userGroups) {
-    const auto mergedGroups = MergeGroups(masterlistGroups, userGroups);
-
-    std::unordered_map<std::string, Group> groupsMap;
-    for (const auto& group : mergedGroups) {
-      groupsMap.emplace(group.GetName(), group);
-    }
-
-    return groupsMap;
+    groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
   }
 
   PluginSortingData CreatePluginSortingData(const std::string& name) {
@@ -186,9 +171,7 @@ protected:
     return plugins.insert_or_assign(name, plugin).first->second.get();
   }
 
-  std::unordered_map<std::string, Group> groupsMap;
-  std::unordered_map<std::string, std::vector<PredecessorGroup>>
-      predecessorGroupsMap;
+  GroupGraph groupGraph;
 
 private:
   std::map<std::string, std::shared_ptr<plugingraph::TestPlugin>> plugins;
@@ -308,7 +291,7 @@ TEST_F(
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A", true));
   const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Cause a cycle to see the edge types.
   graph.AddEdge(b, a, EdgeType::master);
@@ -333,7 +316,7 @@ TEST_F(
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
   const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B", true));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Cause a cycle to see the edge types.
   graph.AddEdge(b, a, EdgeType::master);
@@ -357,7 +340,7 @@ TEST_F(PluginGraphTest,
   const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
   const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Cause a cycle to see the edge types.
   graph.AddEdge(d, b, EdgeType::master);
@@ -381,7 +364,7 @@ TEST_F(PluginGraphTest,
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
   const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Cause a cycle to see the edge types.
   graph.AddEdge(c, a, EdgeType::master);
@@ -405,7 +388,7 @@ TEST_F(PluginGraphTest,
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
   const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Cause a cycle to see the edge types.
   graph.AddEdge(d, a, EdgeType::master);
@@ -429,7 +412,7 @@ TEST_F(PluginGraphTest,
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
   const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Cause a cycle to see the edge types.
   graph.AddEdge(b, a, EdgeType::master);
@@ -461,7 +444,7 @@ TEST_F(
 
   graph.AddEdge(b1, a1, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A2.esp -> B1.esp -> A1.esp -> B2.esp -> C1.esp
   //                                                -> C2.esp
@@ -487,7 +470,7 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldAddEdgesAcrossEmptyGroups) {
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
   const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> C.esp
   EXPECT_TRUE(graph.EdgeExists(a, c));
@@ -503,7 +486,7 @@ TEST_F(PluginGraphTest,
   const auto d = graph.AddVertex(CreatePluginSortingData("D.esp"));
   const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> D.esp -> E.esp
   //                 ---------->
@@ -522,7 +505,7 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldSkipAnEdgeThatWouldCauseACycle) {
 
   graph.AddEdge(c, a, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be C.esp -> A.esp
   EXPECT_TRUE(graph.EdgeExists(c, a));
@@ -541,7 +524,7 @@ TEST_F(
 
   graph.AddEdge(c, a, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be C.esp -> A.esp -> B.esp
   EXPECT_TRUE(graph.EdgeExists(c, a));
@@ -574,7 +557,7 @@ TEST_F(
 
   graph.AddEdge(c1, a, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be C1.esp -> A.esp -> C2.esp
   EXPECT_TRUE(graph.EdgeExists(c1, a));
@@ -600,7 +583,7 @@ TEST_F(
   graph.AddEdge(c, d2, EdgeType::master);
   graph.AddEdge(c, d3, EdgeType::masterFlag);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be: C.esp -> D2.esp -> B.esp -> D3.esp
   //                  -> D1.esp ->
@@ -636,7 +619,7 @@ TEST_F(
   graph.AddEdge(b1, a1, EdgeType::master);
   graph.AddEdge(c1, b2, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A2.esp -> B1.esp -> A1.esp -> C1.esp -> B2.esp -> C2.esp
   EXPECT_TRUE(graph.EdgeExists(b1, a1));
@@ -668,7 +651,7 @@ TEST_F(
   graph.AddEdge(b1, a1, EdgeType::master);
   graph.AddEdge(c1, b1, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A2.esp -> C1.esp -> B1.esp -> A1.esp -> B2.esp -> C2.esp
   EXPECT_TRUE(graph.EdgeExists(b1, a1));
@@ -700,7 +683,7 @@ TEST_F(
   graph.AddEdge(c, b1, EdgeType::master);
   graph.AddEdge(c, b2, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> C1.esp -> B1.esp
   //                           -> B2.esp
@@ -734,7 +717,7 @@ TEST_F(
   graph.AddEdge(d1, c1, EdgeType::master);
   graph.AddEdge(d2, c1, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be:
   // A2.esp -> D1.esp -> C1.esp -> B1.esp -> A1.esp -> B2.esp -> C2.esp
@@ -771,7 +754,7 @@ TEST_F(
 
   graph.AddEdge(d, b, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be D.esp -> B.esp -> C.esp
   EXPECT_TRUE(graph.EdgeExists(b, c));
@@ -791,7 +774,7 @@ TEST_F(
 
   graph.AddEdge(f, d, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be E.esp -> F.esp -> D.esp
   EXPECT_TRUE(graph.EdgeExists(e, f));
@@ -812,7 +795,7 @@ TEST_F(
 
   graph.AddEdge(e, d, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be E.esp -> D.esp -> F.esp
   EXPECT_TRUE(graph.EdgeExists(e, d));
@@ -834,7 +817,7 @@ TEST_F(
 
   graph.AddEdge(f, d2, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be D1.esp -> E.esp -> F.esp -> D2.esp
   EXPECT_TRUE(graph.EdgeExists(e, f));
@@ -859,7 +842,7 @@ TEST_F(
   graph.AddEdge(d, b, EdgeType::master);
   graph.AddEdge(f, d, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // No ideal result, expected is F.esp -> D.esp -> B.esp -> C.esp -> E.esp
   EXPECT_TRUE(graph.EdgeExists(f, d));
@@ -888,7 +871,7 @@ TEST_F(
   graph.AddEdge(d2, b, EdgeType::master);
   graph.AddEdge(f, d1, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be D2.esp -> B.esp -> C.esp -> E.esp -> F.esp -> D1.esp
   EXPECT_TRUE(graph.EdgeExists(d2, b));
@@ -919,7 +902,7 @@ TEST_F(
   graph.AddEdge(d4, c, EdgeType::master);
   graph.AddEdge(f, d1, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be:
   // D2.esp -> B.esp -> D4.esp -> C.esp -> D3.esp -> E.esp -> F.esp -> D1.esp
@@ -947,8 +930,7 @@ TEST_F(PluginGraphTest,
                                       Group("D", {"A"}),
                                       Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   PluginGraph graph;
 
@@ -957,7 +939,7 @@ TEST_F(PluginGraphTest,
   const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
   const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> B.esp -> C.esp
   //                 -> D.esp
@@ -981,8 +963,7 @@ TEST_F(PluginGraphTest,
                                       Group("E", {"C", "D"}),
                                       Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   PluginGraph graph;
 
@@ -992,7 +973,7 @@ TEST_F(PluginGraphTest,
   const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
   const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> B.esp -> C.esp -> E.esp
   //                 -> D.esp ---------->
@@ -1018,8 +999,7 @@ TEST_F(
                                       Group("D", {"B", "C"}),
                                       Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   PluginGraph graph;
 
@@ -1028,7 +1008,7 @@ TEST_F(
   const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
   const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> B.esp -> D.esp
   //                 -> C.esp ->
@@ -1052,8 +1032,7 @@ TEST_F(
                                       Group("E", {"D"}),
                                       Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   PluginGraph graph;
 
@@ -1065,7 +1044,7 @@ TEST_F(
 
   graph.AddEdge(d, c, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> B.esp -> D.esp -> C.esp -> E.esp
   EXPECT_TRUE(graph.EdgeExists(d, c));
@@ -1094,8 +1073,7 @@ TEST_F(PluginGraphTest,
                                       Group("G", {"E", "F"}),
                                       Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
   const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
@@ -1105,7 +1083,7 @@ TEST_F(PluginGraphTest,
   const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
   const auto g = graph.AddVertex(CreatePluginSortingData("G.esp", "G"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be:
   // A.esp -> B.esp -> D.esp -> E.esp -> G.esp
@@ -1127,12 +1105,46 @@ TEST_F(PluginGraphTest,
   EXPECT_NO_THROW(graph.CheckForCycles());
 }
 
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldFindAllGroupsInAllPathsBetweenTwoGroupsWhenIgnoringAPlugin) {
+  PluginGraph graph;
+
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B", {"A"}),
+                                      Group("C", {"B"}),
+                                      Group("D", {"C"}),
+                                      Group("default", {"B", "D"})};
+
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp"));
+
+  graph.AddEdge(e, a, EdgeType::master);
+
+  graph.AddGroupEdges(groupGraph);
+
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(c, d));
+
+  EXPECT_FALSE(graph.EdgeExists(a, e));
+  EXPECT_FALSE(graph.EdgeExists(b, e));
+  EXPECT_FALSE(graph.EdgeExists(c, e));
+  EXPECT_FALSE(graph.EdgeExists(d, e));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
 TEST_F(PluginGraphTest, addGroupEdgesShouldHandleIsolatedGroups) {
   std::vector<Group> masterlistGroups{
       Group("A"), Group("B", {"A"}), Group("C"), Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   PluginGraph graph;
 
@@ -1140,7 +1152,7 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldHandleIsolatedGroups) {
   const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
   const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> B.esp
   //           C.esp
@@ -1157,8 +1169,7 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldHandleDisconnectedGroupGraphs) {
   std::vector<Group> masterlistGroups{
       Group("A"), Group("B", {"A"}), Group("C"), Group("D", {"C"}), Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   PluginGraph graph;
 
@@ -1167,7 +1178,7 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldHandleDisconnectedGroupGraphs) {
   const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
   const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> B.esp
   //           C.esp -> D.esp
@@ -1193,8 +1204,7 @@ TEST_F(PluginGraphTest,
                                       Group("D", {"C"}),
                                       Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   PluginGraph graph;
 
@@ -1205,7 +1215,7 @@ TEST_F(PluginGraphTest,
 
   graph.AddEdge(c, b, EdgeType::master);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Should be A.esp -> C.esp -> D.esp
   //           B.esp ---------->
@@ -1227,8 +1237,7 @@ TEST_F(
       {Group("C", {"B"}), Group("B"), Group("default", {"C"})}};
 
   for (const auto& masterlistGroups : masterlistsGroups) {
-    groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    groupGraph = BuildGroupGraph(masterlistGroups, {});
 
     PluginGraph graph;
 
@@ -1238,7 +1247,7 @@ TEST_F(
 
     graph.AddEdge(d, b, EdgeType::master);
 
-    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+    graph.AddGroupEdges(groupGraph);
 
     // Should be D.esp -> B.esp -> C.esp
     EXPECT_TRUE(graph.EdgeExists(b, c));
@@ -1259,8 +1268,7 @@ TEST_F(PluginGraphTest,
                                         Group("D", {"C"}),
                                         Group()};
 
-    groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    groupGraph = BuildGroupGraph(masterlistGroups, {});
 
     PluginGraph graph;
 
@@ -1271,7 +1279,7 @@ TEST_F(PluginGraphTest,
 
     graph.AddEdge(d, a, EdgeType::master);
 
-    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+    graph.AddGroupEdges(groupGraph);
 
     // Should be B.esp -> D.esp -> A.esp -> C.esp
     //           B.esp ------------------->
@@ -1296,8 +1304,7 @@ TEST_F(PluginGraphTest,
                                         Group("D", {"C"}),
                                         Group()};
 
-    groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    groupGraph = BuildGroupGraph(masterlistGroups, {});
 
     PluginGraph graph;
 
@@ -1308,7 +1315,7 @@ TEST_F(PluginGraphTest,
 
     graph.AddEdge(d, a, EdgeType::master);
 
-    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+    graph.AddGroupEdges(groupGraph);
 
     // Should be B.esp -> C.esp -> D.esp -> A.esp
     EXPECT_TRUE(graph.EdgeExists(d, a));
@@ -1334,8 +1341,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
                                         Group("E", {"D"}),
                                         Group()};
 
-    groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    groupGraph = BuildGroupGraph(masterlistGroups, {});
 
     PluginGraph graph;
 
@@ -1347,7 +1353,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
 
     graph.AddEdge(e, c, EdgeType::master);
 
-    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+    graph.AddGroupEdges(groupGraph);
 
     // Should be A.esp -> B.esp -> D.esp -> E.esp -> C.esp
     EXPECT_TRUE(graph.EdgeExists(e, c));
@@ -1373,8 +1379,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
                                         Group("E", {"D"}),
                                         Group()};
 
-    groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    groupGraph = BuildGroupGraph(masterlistGroups, {});
 
     PluginGraph graph;
 
@@ -1386,7 +1391,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
 
     graph.AddEdge(e, c, EdgeType::master);
 
-    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+    graph.AddGroupEdges(groupGraph);
 
     // Should be A.esp -> B.esp -> E.esp -> C.esp -> D.esp
     EXPECT_TRUE(graph.EdgeExists(e, c));
@@ -1410,8 +1415,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDoesNotDependOnPluginGraphVertexOrder) {
   std::vector<Group> masterlistGroups{
       Group("A"), Group("B", {"A"}), Group("C", {"B"}), Group()};
 
-  groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
 
   const auto a1Data = CreatePluginSortingData("A1.esp", "A");
   const auto a2Data = CreatePluginSortingData("A2.esp", "A");
@@ -1450,7 +1454,7 @@ TEST_F(PluginGraphTest, addGroupEdgesDoesNotDependOnPluginGraphVertexOrder) {
 
     graph.AddEdge(c, a1, EdgeType::master);
 
-    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+    graph.AddGroupEdges(groupGraph);
 
     // Should be A2.esp -> C.esp -> A1.esp -> B.esp
     //           A2.esp -------------------->

@@ -25,6 +25,7 @@
 #ifndef LOOT_API_SORTING_GROUP_SORT
 #define LOOT_API_SORTING_GROUP_SORT
 
+#include <boost/graph/adjacency_list.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -33,15 +34,26 @@
 #include "loot/vertex.h"
 
 namespace loot {
+typedef boost::adjacency_list<boost::vecS,
+                              boost::vecS,
+                              boost::directedS,
+                              std::string,
+                              EdgeType>
+    GroupGraph;
+
 struct PredecessorGroup {
   std::string name;
   bool pathInvolvesUserMetadata{false};
 };
 
+GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
+                           const std::vector<Group>& userGroups);
+
+void CheckForCycles(const GroupGraph& graph);
+
 // Map entries are a group name and names of transitive load after groups.
 std::unordered_map<std::string, std::vector<PredecessorGroup>>
-GetPredecessorGroups(const std::vector<Group>& masterlistGroups,
-                     const std::vector<Group>& userGroups);
+GetPredecessorGroups(const GroupGraph& graph);
 
 std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
                                   const std::vector<Group>& userGroups,

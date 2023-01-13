@@ -176,9 +176,7 @@ std::vector<std::string> SortPlugins(
     const std::vector<PluginSortingData>::const_iterator& begin,
     const std::vector<PluginSortingData>::const_iterator& end,
     const std::vector<std::string>& hardcodedPlugins,
-    const std::unordered_map<std::string, Group>& groupsMap,
-    const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
-        predecessorGroupsMap) {
+    const GroupGraph& groupGraph) {
   PluginGraph graph;
 
   for (auto it = begin; it != end; ++it) {
@@ -189,7 +187,7 @@ std::vector<std::string> SortPlugins(
   graph.AddSpecificEdges();
   graph.AddHardcodedPluginEdges(hardcodedPlugins);
 
-  graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
+  graph.AddGroupEdges(groupGraph);
 
   // Check for cycles now because from this point on edges are only added if
   // they don't cause cycles, and adding tie-break edges is by far the slowest
@@ -248,9 +246,9 @@ std::vector<std::string> SortPlugins(
   const auto hardcodedPlugins =
       GetPluginsWithHardcodedPositions(gameType, implicitlyActivePlugins);
 
-  const auto groupsMap = GetGroupsMap(masterlistGroups, userGroups);
-  const auto predecessorGroupsMap =
-      GetPredecessorGroups(masterlistGroups, userGroups);
+
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, userGroups);
+  CheckForCycles(groupGraph);
 
   // Some parts of sorting are O(N^2) for N plugins, and master flags cause
   // O(M*N) edges to be added for M masters and N non-masters, which can be
@@ -275,14 +273,10 @@ std::vector<std::string> SortPlugins(
   auto newLoadOrder = SortPlugins(pluginsSortingData.begin(),
                                   firstNonMasterIt,
                                   hardcodedPlugins,
-                                  groupsMap,
-                                  predecessorGroupsMap);
+                                  groupGraph);
 
-  const auto newNonMastersLoadOrder = SortPlugins(firstNonMasterIt,
-                                                  pluginsSortingData.end(),
-                                                  hardcodedPlugins,
-                                                  groupsMap,
-                                                  predecessorGroupsMap);
+  const auto newNonMastersLoadOrder = SortPlugins(
+      firstNonMasterIt, pluginsSortingData.end(), hardcodedPlugins, groupGraph);
 
   newLoadOrder.insert(newLoadOrder.end(),
                       newNonMastersLoadOrder.begin(),
