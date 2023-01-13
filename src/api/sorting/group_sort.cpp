@@ -327,4 +327,40 @@ std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
 
   return path;
 }
+
+std::vector<Group> MergeGroups(const std::vector<Group>& masterlistGroups,
+                               const std::vector<Group>& userGroups) {
+  auto mergedGroups = masterlistGroups;
+
+  std::vector<Group> newGroups;
+  for (const auto& userGroup : userGroups) {
+    auto groupIt =
+        std::find_if(mergedGroups.begin(),
+                     mergedGroups.end(),
+                     [&](const Group& existingGroup) {
+                       return existingGroup.GetName() == userGroup.GetName();
+                     });
+
+    if (groupIt == mergedGroups.end()) {
+      newGroups.push_back(userGroup);
+    } else {
+      // Replace the masterlist group description with the userlist group
+      // description if the latter is not empty.
+      auto description = userGroup.GetDescription().empty()
+                             ? groupIt->GetDescription()
+                             : userGroup.GetDescription();
+
+      auto afterGroups = groupIt->GetAfterGroups();
+      auto userAfterGroups = userGroup.GetAfterGroups();
+      afterGroups.insert(
+          afterGroups.end(), userAfterGroups.begin(), userAfterGroups.end());
+
+      *groupIt = Group(userGroup.GetName(), afterGroups, description);
+    }
+  }
+
+  mergedGroups.insert(mergedGroups.end(), newGroups.cbegin(), newGroups.cend());
+
+  return mergedGroups;
+}
 }

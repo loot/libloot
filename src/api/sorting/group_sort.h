@@ -47,5 +47,8 @@ std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
                                   const std::vector<Group>& userGroups,
                                   const std::string& fromGroupName,
                                   const std::string& toGroupName);
+
+std::vector<Group> MergeGroups(const std::vector<Group>& masterlistGroups,
+                               const std::vector<Group>& userGroups);
 }
 #endif

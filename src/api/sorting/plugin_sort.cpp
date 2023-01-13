@@ -90,11 +90,10 @@ std::vector<std::string> GetPluginsWithHardcodedPositions(
 std::unordered_map<std::string, Group> GetGroupsMap(
     const std::vector<Group> masterlistGroups,
     const std::vector<Group> userGroups) {
+  const auto mergedGroups = MergeGroups(masterlistGroups, userGroups);
+
   std::unordered_map<std::string, Group> groupsMap;
-  for (const auto& group : masterlistGroups) {
-    groupsMap.emplace(group.GetName(), group);
-  }
-  for (const auto& group : userGroups) {
+  for (const auto& group : mergedGroups) {
     groupsMap.emplace(group.GetName(), group);
   }
 

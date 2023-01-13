@@ -139,38 +139,11 @@ std::vector<Message> ApiDatabase::GetGeneralMessages(
 }
 
 std::vector<Group> ApiDatabase::GetGroups(bool includeUserMetadata) const {
-  auto groups = masterlist_.Groups();
-
   if (includeUserMetadata) {
-    std::vector<Group> newGroups;
-    for (const auto& userlistGroup : userlist_.Groups()) {
-      auto groupIt = std::find_if(
-          groups.begin(), groups.end(), [&](const Group& existingGroup) {
-            return existingGroup.GetName() == userlistGroup.GetName();
-          });
-
-      if (groupIt == groups.end()) {
-        newGroups.push_back(userlistGroup);
-      } else {
-        // Replace the masterlist group description with the userlist group
-        // description if the latter is not empty.
-        auto description = userlistGroup.GetDescription().empty()
-                               ? groupIt->GetDescription()
-                               : userlistGroup.GetDescription();
-
-        auto afterGroups = groupIt->GetAfterGroups();
-        auto userAfterGroups = userlistGroup.GetAfterGroups();
-        afterGroups.insert(
-            afterGroups.end(), userAfterGroups.begin(), userAfterGroups.end());
-
-        *groupIt = Group(userlistGroup.GetName(), afterGroups, description);
-      }
-    }
-
-    groups.insert(groups.end(), newGroups.cbegin(), newGroups.cend());
+    return MergeGroups(masterlist_.Groups(), userlist_.Groups());
   }
 
-  return groups;
+  return masterlist_.Groups();
 }
 
 std::vector<Group> ApiDatabase::GetUserGroups() const {
