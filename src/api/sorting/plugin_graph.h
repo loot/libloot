@@ -104,10 +104,7 @@ public:
   void AddSpecificEdges();
   void AddHardcodedPluginEdges(
       const std::vector<std::string>& hardcodedPlugins);
-  void AddGroupEdges(
-      const std::unordered_map<std::string, Group>& groups,
-      const std::unordered_map<std::string, std::vector<PredecessorGroup>>&
-          predecessorGroupsMap);
+  void AddGroupEdges(const GroupGraph& groupGraph);
   void AddOverlapEdges();
   void AddTieBreakEdges();
 
