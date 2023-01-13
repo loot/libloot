@@ -204,6 +204,104 @@ TEST_F(PluginGraphTest,
 
 TEST_F(
     PluginGraphTest,
+    addHardcodedPluginEdgesShouldNotThrowIfThereAreNoVerticesOrHardcodedPlugins) {
+  PluginGraph graph;
+
+  EXPECT_NO_THROW(graph.AddHardcodedPluginEdges({}));
+}
+
+TEST_F(PluginGraphTest,
+       addHardcodedPluginEdgesShouldNotThrowIfThereAreNoVertices) {
+  PluginGraph graph;
+
+  const std::vector<std::string> hardcodedPlugins{
+      "1.esp", "2.esp", "3.esp", "4.esp"};
+
+  EXPECT_NO_THROW(graph.AddHardcodedPluginEdges(hardcodedPlugins));
+}
+
+TEST_F(PluginGraphTest,
+       addHardcodedPluginEdgesShouldAddNoEdgesIfThereAreNoHardcodedPlugins) {
+  PluginGraph graph;
+
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v3 = graph.AddVertex(CreatePluginSortingData("3.esp"));
+  const auto v4 = graph.AddVertex(CreatePluginSortingData("4.esp"));
+
+  graph.AddHardcodedPluginEdges({});
+
+  EXPECT_FALSE(graph.EdgeExists(v1, v3));
+  EXPECT_FALSE(graph.EdgeExists(v1, v4));
+  EXPECT_FALSE(graph.EdgeExists(v3, v1));
+  EXPECT_FALSE(graph.EdgeExists(v3, v4));
+  EXPECT_FALSE(graph.EdgeExists(v4, v1));
+  EXPECT_FALSE(graph.EdgeExists(v4, v3));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest,
+       addHardcodedPluginsShouldNotThrowIfTheOnlyVertexIsAHardcodedPlugin) {
+  PluginGraph graph;
+
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+
+  const std::vector<std::string> hardcodedPlugins{
+      graph.GetPlugin(v1).GetName()};
+
+  EXPECT_NO_THROW(graph.AddHardcodedPluginEdges(hardcodedPlugins));
+}
+
+TEST_F(
+    PluginGraphTest,
+    addHardcodedPluginEdgesShouldAddEdgesBetweenConsecutiveHardcodedPluginsSkippingMissingPlugins) {
+  PluginGraph graph;
+
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v3 = graph.AddVertex(CreatePluginSortingData("3.esp"));
+  const auto v4 = graph.AddVertex(CreatePluginSortingData("4.esp"));
+
+  const std::vector<std::string> hardcodedPlugins{
+      graph.GetPlugin(v1).GetName(),
+      "2.esp",
+      graph.GetPlugin(v3).GetName(),
+      graph.GetPlugin(v4).GetName()};
+
+  graph.AddHardcodedPluginEdges(hardcodedPlugins);
+
+  EXPECT_TRUE(graph.EdgeExists(v1, v3));
+  EXPECT_TRUE(graph.EdgeExists(v3, v4));
+  EXPECT_FALSE(graph.EdgeExists(v1, v4));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
+    addHardcodedPluginEdgesShouldAddEdgesFromOnlyTheLastInstalledHardcodedPluginToAllNonHardcodedPlugins) {
+  PluginGraph graph;
+
+  const auto v1 = graph.AddVertex(CreatePluginSortingData("1.esp"));
+  const auto v2 = graph.AddVertex(CreatePluginSortingData("2.esp"));
+  const auto v4 = graph.AddVertex(CreatePluginSortingData("4.esp"));
+  const auto v5 = graph.AddVertex(CreatePluginSortingData("5.esp"));
+
+  const std::vector<std::string> hardcodedPlugins{
+      graph.GetPlugin(v1).GetName(), graph.GetPlugin(v2).GetName(), "3.esp"};
+
+  graph.AddHardcodedPluginEdges(hardcodedPlugins);
+
+  EXPECT_TRUE(graph.EdgeExists(v1, v2));
+  EXPECT_TRUE(graph.EdgeExists(v2, v4));
+  EXPECT_TRUE(graph.EdgeExists(v2, v5));
+  EXPECT_FALSE(graph.EdgeExists(v1, v4));
+  EXPECT_FALSE(graph.EdgeExists(v1, v5));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(
+    PluginGraphTest,
     addGroupEdgesShouldAddUserGroupEdgeIfSourcePluginIsInGroupDueToUserMetadata) {
   PluginGraph graph;
 
