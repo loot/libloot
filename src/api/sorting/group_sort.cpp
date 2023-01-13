@@ -34,12 +34,6 @@
 #include "loot/exception/undefined_group_error.h"
 
 namespace loot {
-typedef boost::adjacency_list<boost::vecS,
-                              boost::vecS,
-                              boost::directedS,
-                              std::string,
-                              EdgeType>
-    GroupGraph;
 typedef boost::graph_traits<GroupGraph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<GroupGraph>::edge_descriptor edge_t;
 typedef boost::associative_property_map<std::map<edge_t, int>> edge_map_t;
@@ -145,8 +139,8 @@ std::string joinVector(const std::vector<PredecessorGroup>& container) {
   return output.substr(0, output.length() - 2);
 }
 
-GroupGraph BuildGraph(const std::vector<Group>& masterlistGroups,
-                      const std::vector<Group>& userGroups) {
+GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
+                           const std::vector<Group>& userGroups) {
   GroupGraph graph;
 
   std::unordered_map<std::string, vertex_t> groupVertices;
@@ -205,21 +199,20 @@ GroupGraph BuildGraph(const std::vector<Group>& masterlistGroups,
   return graph;
 }
 
-std::unordered_map<std::string, std::vector<PredecessorGroup>>
-GetPredecessorGroups(const std::vector<Group>& masterlistGroups,
-                     const std::vector<Group>& userGroups) {
-  GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
-
-  auto logger = getLogger();
-  if (logger) {
-    logger->trace("Sorting groups according to their load after data");
-  }
-
-  // Check for cycles.
+void CheckForCycles(const GroupGraph& graph) {
+  const auto logger = getLogger();
   if (logger) {
     logger->trace("Checking for cycles in the group graph");
   }
+
   boost::depth_first_search(graph, boost::visitor(CycleDetector()));
+}
+
+std::unordered_map<std::string, std::vector<PredecessorGroup>>
+GetPredecessorGroups(const GroupGraph& graph) {
+  const auto logger = getLogger();
+
+  CheckForCycles(graph);
 
   std::unordered_map<std::string, std::vector<PredecessorGroup>>
       transitiveAfterGroups;
@@ -268,7 +261,7 @@ std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
                                   const std::vector<Group>& userGroups,
                                   const std::string& fromGroupName,
                                   const std::string& toGroupName) {
-  GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
+  GroupGraph graph = BuildGroupGraph(masterlistGroups, userGroups);
 
   auto logger = getLogger();
 
