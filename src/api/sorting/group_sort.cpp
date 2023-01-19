@@ -24,6 +24,7 @@
 
 #include "group_sort.h"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/bellman_ford_shortest_paths.hpp>
 #include <boost/graph/depth_first_search.hpp>
@@ -119,15 +120,6 @@ private:
   std::vector<Vertex> trail;
 };
 
-std::string joinVector(const std::vector<std::string>& container) {
-  std::string output;
-  for (const auto& element : container) {
-    output += element + ", ";
-  }
-
-  return output.substr(0, output.length() - 2);
-}
-
 std::string joinVector(const std::vector<PredecessorGroup>& container) {
   std::string output;
   for (const auto& element : container) {
@@ -140,60 +132,50 @@ std::string joinVector(const std::vector<PredecessorGroup>& container) {
 
 GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
                            const std::vector<Group>& userGroups) {
+  const auto logger = getLogger();
+
   GroupGraph graph;
-
   std::unordered_map<std::string, vertex_t> groupVertices;
-  for (const auto& group : masterlistGroups) {
-    auto vertex = boost::add_vertex(group.GetName(), graph);
-    groupVertices.emplace(group.GetName(), vertex);
-  }
 
-  auto logger = getLogger();
-  for (const auto& group : masterlistGroups) {
-    if (logger) {
-      logger->trace(
-          "Masterlist group \"{}\" directly loads after groups \"{}\"",
-          group.GetName(),
-          joinVector(group.GetAfterGroups()));
+  const auto addGroups = [&](const std::vector<Group>& groups,
+                             const EdgeType edgeType) {
+    for (const auto& group : groups) {
+      const auto groupName = group.GetName();
+      if (groupVertices.find(groupName) == groupVertices.end()) {
+        const auto vertex = boost::add_vertex(groupName, graph);
+        groupVertices.emplace(groupName, vertex);
+      }
     }
 
-    auto vertex = groupVertices.at(group.GetName());
-    for (const auto& otherGroupName : group.GetAfterGroups()) {
-      const auto otherVertex = groupVertices.find(otherGroupName);
-      if (otherVertex == groupVertices.end()) {
-        throw UndefinedGroupError(otherGroupName);
+    for (const auto& group : groups) {
+      const auto groupName = group.GetName();
+      if (logger) {
+        logger->trace("Group \"{}\" directly loads after groups \"{}\"",
+                      groupName,
+                      boost::join(group.GetAfterGroups(), ", "));
       }
 
-      boost::add_edge(
-          vertex, otherVertex->second, EdgeType::masterlistLoadAfter, graph);
-    }
-  }
+      const auto vertex = groupVertices.at(groupName);
+      for (const auto& otherGroupName : group.GetAfterGroups()) {
+        const auto otherVertex = groupVertices.find(otherGroupName);
+        if (otherVertex == groupVertices.end()) {
+          throw UndefinedGroupError(otherGroupName);
+        }
 
-  for (const auto& group : userGroups) {
-    if (groupVertices.find(group.GetName()) == groupVertices.end()) {
-      auto vertex = boost::add_vertex(group.GetName(), graph);
-      groupVertices.emplace(group.GetName(), vertex);
-    }
-  }
-
-  for (const auto& group : userGroups) {
-    if (logger) {
-      logger->trace("Userlist group \"{}\" directly loads after groups \"{}\"",
-                    group.GetName(),
-                    joinVector(group.GetAfterGroups()));
-    }
-
-    auto vertex = groupVertices.at(group.GetName());
-    for (const auto& otherGroupName : group.GetAfterGroups()) {
-      const auto otherVertex = groupVertices.find(otherGroupName);
-      if (otherVertex == groupVertices.end()) {
-        throw UndefinedGroupError(otherGroupName);
+        boost::add_edge(vertex, otherVertex->second, edgeType, graph);
       }
-
-      boost::add_edge(
-          vertex, otherVertex->second, EdgeType::userLoadAfter, graph);
     }
+  };
+
+  if (logger) {
+    logger->trace("Adding masterlist groups to groups graph...");
   }
+  addGroups(masterlistGroups, EdgeType::masterlistLoadAfter);
+
+  if (logger) {
+    logger->trace("Adding user groups to groups graph...");
+  }
+  addGroups(userGroups, EdgeType::userLoadAfter);
 
   return graph;
 }
