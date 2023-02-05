@@ -47,17 +47,6 @@ public:
 
     const auto vertex = Vertex(graph[source].GetName(), graph[edge]);
 
-    // Check if the vertex already exists in the recorded trail.
-    const auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
-      return v.GetName() == graph[source].GetName();
-    });
-
-    if (it != end(trail)) {
-      // Erase everything from this position onwards, as it doesn't
-      // contribute to a forward-cycle.
-      trail.erase(it, end(trail));
-    }
-
     trail.push_back(vertex);
   }
 
@@ -72,8 +61,17 @@ public:
       return v.GetName() == graph[target].GetName();
     });
 
-    if (it != trail.end()) {
-      throw CyclicInteractionError(std::vector<Vertex>(it, trail.end()));
+    if (it == trail.end()) {
+      throw std::logic_error(
+          "The target of a back edge cannot be found in the current edge path");
+    }
+
+    throw CyclicInteractionError(std::vector<Vertex>(it, trail.end()));
+  }
+
+  void finish_vertex(vertex_t, const RawPluginGraph&) {
+    if (!trail.empty()) {
+      trail.pop_back();
     }
   }
 

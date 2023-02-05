@@ -91,23 +91,13 @@ public:
 
     auto vertex = Vertex(graph[source], graph[edge]);
 
-    // Check if the vertex already exists in the recorded trail.
-    auto it = find_if(begin(trail), end(trail), [&](const Vertex& v) {
-      return v.GetName() == graph[source];
-    });
-
-    if (it != end(trail)) {
-      // Erase everything from this position onwards, as it doesn't
-      // contribute to a forward-cycle.
-      trail.erase(it, end(trail));
-    }
-
     trail.push_back(vertex);
   }
 
   void back_edge(edge_t edge, const GroupGraph& graph) {
     auto source = boost::source(edge, graph);
-    auto target = boost::target(edge, graph);
+    const auto target = boost::target(edge, graph);
+    const auto targetGroupName = graph[target];
 
     auto vertex = Vertex(graph[source], graph[edge]);
     trail.push_back(vertex);
@@ -116,8 +106,19 @@ public:
       return v.GetName() == graph[target];
     });
 
-    if (it != trail.end()) {
-      throw CyclicInteractionError(std::vector<Vertex>(it, trail.end()));
+    if (it == trail.end()) {
+      throw std::logic_error(
+          "The target of a back edge cannot be found in the current edge path. "
+          "The target group is \"" +
+          targetGroupName + "\"");
+    }
+
+    throw CyclicInteractionError(std::vector<Vertex>(it, trail.end()));
+  }
+
+  void finish_vertex(vertex_t, const GroupGraph&) {
+    if (!trail.empty()) {
+      trail.pop_back();
     }
   }
 

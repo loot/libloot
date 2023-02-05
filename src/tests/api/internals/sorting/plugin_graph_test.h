@@ -194,6 +194,64 @@ private:
   std::map<std::string, std::shared_ptr<plugingraph::TestPlugin>> plugins;
 };
 
+TEST_F(PluginGraphTest, checkForCyclesShouldNotThrowIfThereIsNoCycle) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp"));
+
+  graph.AddEdge(a, b, EdgeType::master);
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest, checkForCyclesShouldThrowIfThereIsACycle) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp"));
+
+  graph.AddEdge(a, b, EdgeType::master);
+  graph.AddEdge(b, a, EdgeType::masterFlag);
+
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("A.esp", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("B.esp", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterFlag,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_F(PluginGraphTest,
+       checkForCyclesShouldOnlyRecordPluginsThatArePartOfTheCycle) {
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp"));
+
+  graph.AddEdge(a, b, EdgeType::master);
+  graph.AddEdge(b, c, EdgeType::master);
+  graph.AddEdge(b, a, EdgeType::masterFlag);
+
+  try {
+    graph.CheckForCycles();
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("A.esp", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("B.esp", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterFlag,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
 TEST_F(PluginGraphTest,
        topologicalSortWithNoLoadedPluginsShouldReturnAnEmptyList) {
   PluginGraph graph;
