@@ -56,8 +56,8 @@ jobs:
 
       - name: Download Boost
         run: |
-          wget https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz
-          tar -xf boost_1_78_0.tar.gz
+          wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
+          tar -xf boost_1_81_0.tar.gz
 
       - name: Install APT package dependencies
         run: |
@@ -75,7 +75,7 @@ jobs:
           mkdir build
           cd build
           export CXX="g++-10" CC="gcc-10"
-          cmake .. -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
+          cmake .. -DBOOST_ROOT="boost_1_81_0" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
           make all
 
       - name: Run tests
@@ -143,14 +143,14 @@ jobs:
 
       - name: Download Boost
         run: |
-          curl -sSfLO https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.7z
-          7z x boost_1_78_0.7z
+          curl -sSfLO https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.7z
+          7z x boost_1_81_0.7z
 
       - name: Run CMake
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_78_0" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
+          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_81_0" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
       - uses: actions/setup-python@v4
