@@ -2,6 +2,35 @@
 Version History
 ***************
 
+0.19.3 - 2023-03-18
+===================
+
+Added
+-----
+
+- Support for the Steam and GOG distributions of Enderal: Forgotten Stories and
+  Enderal: Forgotten Stories (Special Edition), which are total conversion mods
+  for Skyrim and Skyrim Special Edition respectively. This support means that
+  the game local path does not need to be specified when creating a game handle:
+  when libloot is given the path to a Skyrim or Skyrim SE installation that is
+  actually an Enderal installation, it is now able to look up the correct
+  game local path. Via libloadorder.
+
+Fixed
+-----
+
+- libloot would deactivate plugins when setting the load order if too many
+  plugins were active. This could cause unexpected behaviour if later-loading
+  active plugins were sorted to load earlier.
+- The path returned by :cpp:any:`loot::CyclicInteractionError::GetCycle()`
+  could include too many vertices, including repeated vertices.
+
+Changed
+-------
+
+- Updated Boost to v1.81.0.
+- Updated libloadorder to v14.0.0.
+
 0.19.2 - 2023-01-13
 ===================
 
