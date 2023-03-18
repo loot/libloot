@@ -87,8 +87,8 @@ endif()
 
 ExternalProject_Add(libloadorder
     PREFIX "external"
-    URL "https://github.com/Ortham/libloadorder/archive/13.3.0.tar.gz"
-    URL_HASH "SHA256=fa23ce857e75216a233031e896d99522e76c15302b89f34b54e06417c736345f"
+    URL "https://github.com/Ortham/libloadorder/archive/14.0.0.tar.gz"
+    URL_HASH "SHA256=ee235eeb6bbef6f73050a35190c6c10f7a1fbdb3fd32a7ed7ff7b7727844b30f"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
