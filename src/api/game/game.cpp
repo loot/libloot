@@ -50,6 +50,85 @@
 
 using std::filesystem::u8path;
 
+namespace {
+using loot::GameType;
+
+// The Microsoft Store installs Fallout 4 DLCs to directories outside of the
+// game's install path. These directories have fixed paths relative to the
+// game install path (renaming them causes the game launch to fail, or not
+// find the DLC files).
+constexpr const char* MS_FO4_AUTOMATRON_DATA_PATH =
+    "../../Fallout 4- Automatron (PC)/Content/Data";
+constexpr const char* MS_FO4_CONTRAPTIONS_DATA_PATH =
+    "../../Fallout 4- Contraptions Workshop (PC)/Content/Data";
+constexpr const char* MS_FO4_FAR_HARBOR_DATA_PATH =
+    "../../Fallout 4- Far Harbor (PC)/Content/Data";
+constexpr const char* MS_FO4_TEXTURE_PACK_DATA_PATH =
+    "../../Fallout 4- High Resolution Texture Pack/Content/Data";
+constexpr const char* MS_FO4_NUKA_WORLD_DATA_PATH =
+    "../../Fallout 4- Nuka-World (PC)/Content/Data";
+constexpr const char* MS_FO4_VAULT_TEC_DATA_PATH =
+    "../../Fallout 4- Vault-Tec Workshop (PC)/Content/Data";
+constexpr const char* MS_FO4_WASTELAND_DATA_PATH =
+    "../../Fallout 4- Wasteland Workshop (PC)/Content/Data";
+
+bool IsMicrosoftStoreGame(const std::filesystem::path& gamePath) {
+  return std::filesystem::exists(gamePath / "appxmanifest.xml");
+}
+
+std::vector<std::filesystem::path> GetAdditionalDataPaths(
+    const GameType gameType,
+    const std::filesystem::path& dataPath) {
+  const auto gamePath = dataPath.parent_path();
+
+  if (gameType == GameType::fo4 && IsMicrosoftStoreGame(gamePath)) {
+    // All DLC directories are listed before the main data path because DLC
+    // plugins in those directories override any in the main data path.
+    return {gamePath / MS_FO4_AUTOMATRON_DATA_PATH,
+            gamePath / MS_FO4_NUKA_WORLD_DATA_PATH,
+            gamePath / MS_FO4_WASTELAND_DATA_PATH,
+            gamePath / MS_FO4_TEXTURE_PACK_DATA_PATH,
+            gamePath / MS_FO4_VAULT_TEC_DATA_PATH,
+            gamePath / MS_FO4_FAR_HARBOR_DATA_PATH,
+            gamePath / MS_FO4_CONTRAPTIONS_DATA_PATH,
+            dataPath};
+  }
+
+  return {};
+}
+
+std::filesystem::path ResolvePluginPath(
+    const std::filesystem::path& dataPath,
+    const std::filesystem::path& pluginPath) {
+  return pluginPath.is_absolute() ? pluginPath : dataPath / pluginPath;
+}
+
+std::vector<std::filesystem::path> FindArchives(
+    const std::filesystem::path& parentPath,
+    const std::string& archiveFileExtension) {
+  if (!std::filesystem::is_directory(parentPath)) {
+    return {};
+  }
+
+  std::vector<std::filesystem::path> archivePaths;
+
+  for (std::filesystem::directory_iterator it(parentPath);
+       it != std::filesystem::directory_iterator();
+       ++it) {
+    // This is only correct for ASCII strings, but that's all that
+    // GetArchiveFileExtension() can return. It's a lot faster than the more
+    // generally-correct approach of testing file path equivalence when
+    // there are a lot of entries in DataPath().
+    if (it->is_regular_file() &&
+        boost::iends_with(it->path().u8string(), archiveFileExtension)) {
+      archivePaths.push_back(it->path());
+    }
+  }
+
+  return archivePaths;
+}
+}
+
 namespace loot {
 Game::Game(const GameType gameType,
            const std::filesystem::path& gamePath,
@@ -59,7 +138,10 @@ Game::Game(const GameType gameType,
     loadOrderHandler_(type_, gamePath_, localDataPath),
     conditionEvaluator_(
         std::make_shared<ConditionEvaluator>(Type(), DataPath())),
-    database_(ApiDatabase(conditionEvaluator_)) {}
+    database_(ApiDatabase(conditionEvaluator_)),
+    additionalDataPaths_(GetAdditionalDataPaths(Type(), DataPath())) {
+  conditionEvaluator_->SetAdditionalDataPaths(additionalDataPaths_);
+}
 
 GameType Game::Type() const { return type_; }
 
@@ -85,29 +167,51 @@ const DatabaseInterface& Game::GetDatabase() const { return database_; }
 
 DatabaseInterface& Game::GetDatabase() { return database_; }
 
-bool Game::IsValidPlugin(const std::string& plugin) const {
-  return Plugin::IsValid(Type(), DataPath() / u8path(plugin));
+void Game::SetAdditionalDataPaths(
+    const std::vector<std::filesystem::path>& additionalDataPaths) {
+  additionalDataPaths_ = additionalDataPaths;
+
+  conditionEvaluator_->SetAdditionalDataPaths(additionalDataPaths_);
+  conditionEvaluator_->ClearConditionCache();
+  loadOrderHandler_.SetAdditionalDataPaths(additionalDataPaths_);
 }
 
-void Game::LoadPlugins(const std::vector<std::string>& plugins,
+bool Game::IsValidPlugin(const std::string& pluginPath) const {
+  return Plugin::IsValid(Type(),
+                         ResolvePluginPath(DataPath(), u8path(pluginPath)));
+}
+
+void Game::LoadPlugins(const std::vector<std::string>& pluginPaths,
                        bool loadHeadersOnly) {
   const auto logger = getLogger();
 
-  // First validate the plugins (the validity check is done in parallel because
+  // Check that all plugin filenames are unique.
+  std::unordered_set<std::string> filenames;
+  for (const auto& pluginPath : pluginPaths) {
+    const auto filename =
+        NormalizeFilename(u8path(pluginPath).filename().u8string());
+    const auto inserted = filenames.insert(filename).second;
+    if (!inserted) {
+      throw std::invalid_argument("The filename \"" + filename +
+                                  "\" is not unique.");
+    }
+  }
+
+  // Validate the plugins (the validity check is done in parallel because
   // it's relatively slow).
   const auto invalidPluginIt =
       std::find_if(std::execution::par_unseq,
-                   plugins.cbegin(),
-                   plugins.cend(),
-                   [this](const std::string& pluginName) {
+                   pluginPaths.cbegin(),
+                   pluginPaths.cend(),
+                   [this](const std::string& pluginPath) {
                      try {
-                       return !IsValidPlugin(pluginName);
+                       return !IsValidPlugin(pluginPath);
                      } catch (...) {
                        return true;
                      }
                    });
 
-  if (invalidPluginIt != plugins.end()) {
+  if (invalidPluginIt != pluginPaths.end()) {
     throw std::invalid_argument("\"" + *invalidPluginIt +
                                 "\" is not a valid plugin");
   }
@@ -126,16 +230,17 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
   const auto masterPath = DataPath() / u8path(masterFilename_);
   std::for_each(
       std::execution::par_unseq,
-      plugins.begin(),
-      plugins.end(),
-      [&](const std::string& pluginName) {
+      pluginPaths.begin(),
+      pluginPaths.end(),
+      [&](const std::string& pluginPathString) {
         try {
           const auto endIt =
-              boost::iends_with(pluginName, GHOST_FILE_EXTENSION)
-                  ? pluginName.end() - GHOST_FILE_EXTENSION_LENGTH
-                  : pluginName.end();
+              boost::iends_with(pluginPathString, GHOST_FILE_EXTENSION)
+                  ? pluginPathString.end() - GHOST_FILE_EXTENSION_LENGTH
+                  : pluginPathString.end();
 
-          auto pluginPath = DataPath() / u8path(pluginName.begin(), endIt);
+          const auto pluginPath = ResolvePluginPath(
+              DataPath(), u8path(pluginPathString.begin(), endIt));
           const bool loadHeader =
               loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
 
@@ -144,7 +249,7 @@ void Game::LoadPlugins(const std::vector<std::string>& plugins,
           if (logger) {
             logger->error(
                 "Caught exception while trying to add {} to the cache: {}",
-                pluginName,
+                pluginPathString,
                 e.what());
           }
         }
@@ -171,11 +276,17 @@ void Game::IdentifyMainMasterFile(const std::string& masterFile) {
 }
 
 std::vector<std::string> Game::SortPlugins(
-    const std::vector<std::string>& plugins) {
-  LoadPlugins(plugins, false);
+    const std::vector<std::string>& pluginPaths) {
+  LoadPlugins(pluginPaths, false);
+
+  std::vector<std::string> loadOrder;
+  for (const auto& pluginPath : pluginPaths) {
+    const auto filename = u8path(pluginPath).filename().u8string();
+    loadOrder.push_back(filename);
+  }
 
   // Sort plugins into their load order.
-  return loot::SortPlugins(*this, plugins);
+  return loot::SortPlugins(*this, loadOrder);
 }
 
 void Game::LoadCurrentLoadOrderState() {
@@ -208,18 +319,13 @@ void Game::CacheArchives() {
   const auto archiveFileExtension = GetArchiveFileExtension(Type());
 
   std::set<std::filesystem::path> archivePaths;
-  for (std::filesystem::directory_iterator it(DataPath());
-       it != std::filesystem::directory_iterator();
-       ++it) {
-    // This is only correct for ASCII strings, but that's all that
-    // GetArchiveFileExtension() can return. It's a lot faster than the more
-    // generally-correct approach of testing file path equivalence when
-    // there are a lot of entries in DataPath().
-    if (it->is_regular_file() &&
-        boost::iends_with(it->path().u8string(), archiveFileExtension)) {
-      archivePaths.insert(it->path());
-    }
+  for (const auto& parentPath : additionalDataPaths_) {
+    const auto archives = FindArchives(parentPath, archiveFileExtension);
+    archivePaths.insert(archives.begin(), archives.end());
   }
+
+  const auto archives = FindArchives(DataPath(), archiveFileExtension);
+  archivePaths.insert(archives.begin(), archives.end());
 
   cache_.CacheArchivePaths(std::move(archivePaths));
 }

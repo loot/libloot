@@ -57,7 +57,7 @@ protected:
       french("fr"),
       german("de"),
       missingPath(rootTestPath / "missing"),
-      dataPath(rootTestPath / "game" / getPluginsFolder()),
+      dataPath(rootTestPath / "games" / "game" / getPluginsFolder()),
       localPath(rootTestPath / "local" / "game"),
       metadataFilesPath(rootTestPath / "metadata"),
       masterFile(getMasterFile()),

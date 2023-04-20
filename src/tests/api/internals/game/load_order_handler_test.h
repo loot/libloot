@@ -214,6 +214,18 @@ TEST_P(LoadOrderHandlerTest, setLoadOrderShouldSetTheLoadOrder) {
 
   EXPECT_EQ(loadOrderToSet_, getLoadOrder());
 }
+
+TEST_P(LoadOrderHandlerTest, setExternalPluginPathsShouldAcceptAnEmptyVector) {
+  auto loadOrderHandler = createHandler();
+  EXPECT_NO_THROW(loadOrderHandler.SetAdditionalDataPaths({}));
+}
+
+TEST_P(LoadOrderHandlerTest,
+       setExternalPluginPathsShouldAcceptANonEmptyVector) {
+  auto loadOrderHandler = createHandler();
+  EXPECT_NO_THROW(loadOrderHandler.SetAdditionalDataPaths(
+      {std::filesystem::u8path("a"), std::filesystem::u8path("b")}));
+}
 }
 }
 

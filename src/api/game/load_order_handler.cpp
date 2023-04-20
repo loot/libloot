@@ -232,6 +232,33 @@ void LoadOrderHandler::SetLoadOrder(
   }
 }
 
+void LoadOrderHandler::SetAdditionalDataPaths(
+    const std::vector<std::filesystem::path>& dataPaths) const {
+  auto logger = getLogger();
+  if (logger) {
+    logger->debug("Setting additional data paths:");
+    for (const auto& dataPath : dataPaths) {
+      logger->debug("\t{}", dataPath.u8string());
+    }
+  }
+
+  std::vector<std::string> dataPathStrings;
+  std::vector<const char*> dataPathCStrings;
+  for (const auto& dataPath : dataPaths) {
+    dataPathStrings.push_back(dataPath.u8string());
+    dataPathCStrings.push_back(dataPathStrings.back().c_str());
+  }
+
+  const unsigned int ret = lo_set_additional_plugins_directories(
+      gh_.get(), dataPathCStrings.data(), dataPathCStrings.size());
+
+  HandleError("set additional data paths", ret);
+
+  if (logger) {
+    logger->debug("Additional data paths set successfully.");
+  }
+}
+
 void LoadOrderHandler::HandleError(const std::string& operation,
                                    unsigned int returnCode) const {
   if (returnCode == LIBLO_OK || returnCode == LIBLO_WARN_LO_MISMATCH) {

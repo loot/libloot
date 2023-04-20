@@ -97,6 +97,72 @@ TEST_P(GameTest, constructingShouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
 
 TEST_P(
     GameTest,
+    constructingForAMicrosoftStoreFallout4InstallShouldSetExternalPathsForTheDlcs) {
+  if (GetParam() != GameType::fo4) {
+    return;
+  }
+
+  const auto touch = [](const std::filesystem::path& path) {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream out(path);
+    out.close();
+  };
+
+  // Create the file that indicates it's a Microsoft Store install.
+  touch(dataPath.parent_path() / "appxmanifest.xml");
+
+  // Create a few external files.
+  const auto pluginPath =
+      dataPath.parent_path() /
+      "../../Fallout 4- Automatron (PC)/Content/Data/DLCRobot.esm";
+  const auto ba2Path1 =
+      dataPath.parent_path() /
+      "../../Fallout 4- Far Harbor (PC)/Content/Data/DLCCoast - Main.ba2";
+  const auto ba2Path2 =
+      dataPath.parent_path() /
+      "../../Fallout 4- Nuka-World (PC)/Content/Data/DLCNukaWorld "
+      "- Voices_it.ba2";
+  touch(pluginPath);
+  touch(ba2Path1);
+  touch(ba2Path2);
+
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  EXPECT_NO_THROW(loadInstalledPlugins(game, true));
+
+  const auto archivePaths = game.GetCache().GetArchivePaths();
+
+  EXPECT_EQ(std::set<std::filesystem::path>(
+                {ba2Path1, ba2Path2, dataPath / blankArchive}),
+            archivePaths);
+
+  PluginMetadata metadata(blankEsm);
+  metadata.SetLoadAfterFiles(
+      {File("DLCRobot.esm", "", "file(\"DLCRobot.esm\")")});
+  game.GetDatabase().SetPluginUserMetadata(metadata);
+
+  const auto evaluatedMetadata =
+      game.GetDatabase().GetPluginUserMetadata(blankEsm, true).value();
+  EXPECT_FALSE(evaluatedMetadata.GetLoadAfterFiles().empty());
+}
+
+TEST_P(GameTest, isValidPluginShouldResolveRelativePathsRelativeToDataPath) {
+  const Game game(GetParam(), dataPath.parent_path(), localPath);
+
+  game.IsValidPlugin("../" + dataPath.filename().u8string() + "/" + blankEsm);
+}
+
+TEST_P(GameTest, isValidPluginShouldUseAbsolutePathsAsGiven) {
+  const Game game(GetParam(), dataPath.parent_path(), localPath);
+
+  ASSERT_TRUE(dataPath.is_absolute());
+
+  const auto path = dataPath / std::filesystem::u8path(blankEsm);
+  game.IsValidPlugin(path.u8string());
+}
+
+TEST_P(
+    GameTest,
     loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
@@ -164,6 +230,43 @@ TEST_P(
   EXPECT_EQ(expected, game.GetCache().GetArchivePaths());
 }
 
+TEST_P(GameTest, loadPluginsShouldFindArchivesInExternalDataPaths) {
+  const auto touch = [](const std::filesystem::path& path) {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream out(path);
+    out.close();
+  };
+
+  // Create a couple of external archive files.
+  const std::string archiveFileExtension =
+      GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ? ".ba2"
+                                                                   : ".bsa";
+
+  const auto ba2Path1 =
+      dataPath.parent_path() /
+      ("../../Fallout 4- Far Harbor (PC)/Content/Data/DLCCoast - Main" +
+       archiveFileExtension);
+  const auto ba2Path2 =
+      dataPath.parent_path() /
+      ("../../Fallout 4- Nuka-World (PC)/Content/Data/DLCNukaWorld "
+       "- Voices_it" +
+       archiveFileExtension);
+  touch(ba2Path1);
+  touch(ba2Path2);
+
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  game.SetAdditionalDataPaths({ba2Path1.parent_path(), ba2Path2.parent_path()});
+
+  EXPECT_NO_THROW(loadInstalledPlugins(game, true));
+
+  const auto archivePaths = game.GetCache().GetArchivePaths();
+
+  EXPECT_EQ(std::set<std::filesystem::path>(
+                {ba2Path1, ba2Path2, dataPath / blankArchive}),
+            archivePaths);
+}
+
 TEST_P(GameTest, loadPluginsShouldClearTheArchivesCacheBeforeFindingArchives) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
@@ -184,6 +287,51 @@ TEST_P(
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
+}
+
+TEST_P(GameTest,
+       loadPluginsShouldThrowIfGivenVectorElementsWithTheSameFilename) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  const auto dataPluginPath = dataPath / std::filesystem::u8path(blankEsm);
+  const auto sourcePluginPath =
+      getSourcePluginsPath() / std::filesystem::u8path(blankEsm);
+
+  EXPECT_THROW(
+      game.LoadPlugins({dataPluginPath.u8string(), sourcePluginPath.u8string()},
+                       true),
+      std::invalid_argument);
+}
+
+TEST_P(GameTest, loadPluginsShouldResolveRelativePathsRelativeToDataPath) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  const auto relativePath =
+      "../" + dataPath.filename().u8string() + "/" + blankEsm;
+
+  game.LoadPlugins({relativePath}, true);
+
+  EXPECT_NE(nullptr, game.GetPlugin(blankEsm));
+}
+
+TEST_P(GameTest, loadPluginsShouldUseAbsolutePathsAsGiven) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
+
+  game.LoadPlugins({absolutePath.u8string()}, true);
+
+  EXPECT_NE(nullptr, game.GetPlugin(blankEsm));
+}
+
+TEST_P(GameTest, sortPluginsShouldHandlePluginPathsThatAreNotJustFilenames) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
+
+  const auto newLoadOrder = game.SortPlugins({absolutePath.u8string()});
+
+  EXPECT_EQ(std::vector<std::string>{blankEsm}, newLoadOrder);
 }
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasNotBeenLoaded) {

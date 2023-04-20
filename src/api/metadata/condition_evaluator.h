@@ -51,6 +51,9 @@ public:
   void RefreshLoadedPluginsState(
       const std::vector<const PluginInterface*>& plugins);
 
+  void SetAdditionalDataPaths(
+      const std::vector<std::filesystem::path>& dataPaths);
+
 private:
   bool Evaluate(const PluginCleaningData& cleaningData,
                 const std::string& pluginName);

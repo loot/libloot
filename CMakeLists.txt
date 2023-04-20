@@ -87,8 +87,8 @@ endif()
 
 ExternalProject_Add(libloadorder
     PREFIX "external"
-    URL "https://github.com/Ortham/libloadorder/archive/14.0.0.tar.gz"
-    URL_HASH "SHA256=ee235eeb6bbef6f73050a35190c6c10f7a1fbdb3fd32a7ed7ff7b7727844b30f"
+    URL "https://github.com/Ortham/libloadorder/archive/14.1.0.tar.gz"
+    URL_HASH "SHA256=9ff9c73612bc9e375759e122bfd56a4a45d8a4ca36837f610c05ab52fef9d67b"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -105,8 +105,8 @@ endif()
 
 ExternalProject_Add(loot-condition-interpreter
     PREFIX "external"
-    URL "https://github.com/loot/loot-condition-interpreter/archive/2.3.1.tar.gz"
-    URL_HASH "SHA256=e0f5533bf113c2ed48e2249b241e01c1521d9bbf615d01581870db9948b21278"
+    URL "https://github.com/loot/loot-condition-interpreter/archive/2.4.0.tar.gz"
+    URL_HASH "SHA256=7c1d42636d8b10ae2b4dc3fced4a0b25112caf5e489a8f8ef0c915b9dd1189e1"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&

@@ -55,14 +55,17 @@ public:
 
   const DatabaseInterface& GetDatabase() const;
 
+  void SetAdditionalDataPaths(
+      const std::vector<std::filesystem::path>& additionalDataPaths);
+
   // Game Interface Methods //
   ////////////////////////////
 
   DatabaseInterface& GetDatabase() override;
 
-  bool IsValidPlugin(const std::string& plugin) const override;
+  bool IsValidPlugin(const std::string& pluginPath) const override;
 
-  void LoadPlugins(const std::vector<std::string>& plugins,
+  void LoadPlugins(const std::vector<std::string>& pluginPaths,
                    bool loadHeadersOnly) override;
 
   const PluginInterface* GetPlugin(
@@ -73,7 +76,7 @@ public:
   void IdentifyMainMasterFile(const std::string& masterFile) override;
 
   std::vector<std::string> SortPlugins(
-      const std::vector<std::string>& plugins) override;
+      const std::vector<std::string>& pluginPaths) override;
 
   void LoadCurrentLoadOrderState() override;
 
@@ -99,6 +102,8 @@ private:
   ApiDatabase database_;
 
   std::string masterFilename_;
+
+  std::vector<std::filesystem::path> additionalDataPaths_;
 };
 }
 #endif

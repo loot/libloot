@@ -57,25 +57,29 @@ public:
    * @details The validity check is not exhaustive: it checks that the file
    *          extension is ``.esm`` or ``.esp`` (after trimming any ``.ghost``
    *          extension), and that the ``TES4`` header can be parsed.
-   * @param  plugin
-   *         The filename of the file to check.
+   * @param  pluginPath
+   *         The path to the file to check. Relative paths are resolved relative
+   *         to the game's plugins directory, while absolute paths are used
+   *         as given.
    * @returns True if the file is a valid plugin, false otherwise.
    */
-  virtual bool IsValidPlugin(const std::string& plugin) const = 0;
+  virtual bool IsValidPlugin(const std::string& pluginPath) const = 0;
 
   /**
    * @brief Parses plugins and loads their data.
    * @details Any previously-loaded plugin data is discarded when this function
    *          is called.
-   * @param plugins
-   *        The filenames of the plugins to load.
+   * @param pluginPaths
+   *        The plugin paths to load. Relative paths are resolved relative to
+   *        the game's plugins directory, while absolute paths are used as
+   *        given. Each plugin filename must be unique within the vector.
    * @param loadHeadersOnly
    *        If true, only the plugins' ``TES4`` headers are loaded. If false,
    *        all records in the plugins are parsed, apart from the main master
    *        file if it has been identified by a previous call to
    *        ``IdentifyMainMasterFile()``.
    */
-  virtual void LoadPlugins(const std::vector<std::string>& plugins,
+  virtual void LoadPlugins(const std::vector<std::string>& pluginPaths,
                            bool loadHeadersOnly) = 0;
 
   /**
@@ -118,13 +122,15 @@ public:
    *           applied to the load order used by the game. This function does
    *           not load or evaluate the masterlist or userlist.
    *  @param plugins
-   *         A vector of filenames of the plugins to sort, in their current
-   *         load order.
+   *         The plugin paths to sort, in their current load order. Relative
+   *         paths are resolved relative to the game's plugins directory, while
+   *         absolute paths are used as given. Each plugin filename must be
+   *         unique within the vector.
    *  @returns A vector of the given plugin filenames in their sorted load
    *           order.
    */
   virtual std::vector<std::string> SortPlugins(
-      const std::vector<std::string>& plugins) = 0;
+      const std::vector<std::string>& pluginPaths) = 0;
 
   /**
    *  @}

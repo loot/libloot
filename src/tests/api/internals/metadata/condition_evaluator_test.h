@@ -122,6 +122,17 @@ TEST_P(ConditionEvaluatorTest,
   EXPECT_TRUE(evaluator_.Evaluate("file(\"" + blankEsm + "\")"));
 }
 
+TEST_P(ConditionEvaluatorTest, evaluateShouldUseAllGivenDataPaths) {
+  ASSERT_FALSE(
+      evaluator_.Evaluate("file(\"" + localPath.filename().u8string() + "\")"));
+
+  evaluator_.ClearConditionCache();
+  evaluator_.SetAdditionalDataPaths({localPath.parent_path()});
+
+  EXPECT_TRUE(
+      evaluator_.Evaluate("file(\"" + localPath.filename().u8string() + "\")"));
+}
+
 TEST_P(ConditionEvaluatorTest,
        evaluateFileConditionShouldReturnTrueForANonAsciiFileThatExists) {
   EXPECT_TRUE(evaluator_.Evaluate("file(\"" + nonAsciiEsm + "\")"));
@@ -255,6 +266,17 @@ TEST_P(
   evaluator_.RefreshLoadedPluginsState({});
 
   EXPECT_FALSE(evaluator_.Evaluate(condition));
+}
+
+TEST_P(ConditionEvaluatorTest,
+       setAdditionalDataPathsShouldAcceptAnEmptyVector) {
+  EXPECT_NO_THROW(evaluator_.SetAdditionalDataPaths({}));
+}
+
+TEST_P(ConditionEvaluatorTest,
+       setAdditionalDataPathsShouldAcceptANonEmptyVector) {
+  EXPECT_NO_THROW(evaluator_.SetAdditionalDataPaths(
+      {std::filesystem::u8path("a"), std::filesystem::u8path("b")}));
 }
 }
 }

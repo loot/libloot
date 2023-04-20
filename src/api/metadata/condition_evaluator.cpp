@@ -90,7 +90,8 @@ ConditionEvaluator::ConditionEvaluator(const GameType gameType,
   // This probably isn't correct for API users other than LOOT.
   // But that probably doesn't matter, as the only things conditional
   // on LOOT's version are LOOT-specific messages.
-  auto lootPath = std::filesystem::absolute("LOOT.exe");
+  const auto lootPath = std::filesystem::absolute("LOOT.exe");
+
   int result = lci_state_create(&state,
                                 mapGameType(gameType),
                                 dataPath.u8string().c_str(),
@@ -240,6 +241,20 @@ void ConditionEvaluator::RefreshLoadedPluginsState(
   result = lci_state_set_crc_cache(
       lciState_.get(), pluginCrcs.data(), pluginCrcs.size());
   HandleError("fill CRC cache for condition evaluation", result);
+}
+
+void ConditionEvaluator::SetAdditionalDataPaths(
+    const std::vector<std::filesystem::path>& dataPaths) {
+  std::vector<std::string> dataPathStrings;
+  std::vector<const char*> dataPathCStrings;
+  for (const auto& dataPath : dataPaths) {
+    dataPathStrings.push_back(dataPath.u8string());
+    dataPathCStrings.push_back(dataPathStrings.back().c_str());
+  }
+
+  int result = lci_state_set_additional_data_paths(
+      lciState_.get(), dataPathCStrings.data(), dataPathCStrings.size());
+  HandleError("create state object for condition evaluation", result);
 }
 
 bool ConditionEvaluator::Evaluate(const PluginCleaningData& cleaningData,

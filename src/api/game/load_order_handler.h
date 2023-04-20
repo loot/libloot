@@ -55,6 +55,9 @@ public:
 
   void SetLoadOrder(const std::vector<std::string>& loadOrder) const;
 
+  void SetAdditionalDataPaths(
+      const std::vector<std::filesystem::path>& dataPaths) const;
+
 private:
   void HandleError(const std::string& operation, unsigned int returnCode) const;
 
