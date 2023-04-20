@@ -451,42 +451,6 @@ TEST_P(MetadataListTest,
   EXPECT_FALSE(metadataList.FindPlugin(plugin.GetName()));
 }
 
-TEST_P(
-    MetadataListTest,
-    evalAllConditionsShouldEvaluateTheConditionsForThePluginsStoredInTheMetadataList) {
-  Game game(GetParam(), dataPath.parent_path(), localPath);
-  ConditionEvaluator evaluator(game.Type(), game.DataPath());
-
-  MetadataList metadataList;
-  ASSERT_NO_THROW(metadataList.Load(metadataPath));
-
-  PluginMetadata plugin = metadataList.FindPlugin(blankEsm).value();
-  ASSERT_EQ(
-      std::vector<Message>({
-          Message(MessageType::warn, "This is a warning."),
-          Message(MessageType::say,
-                  "This message should be removed when evaluating conditions.",
-                  "active(\"Blank - Different.esm\")"),
-      }),
-      plugin.GetMessages());
-
-  plugin = metadataList.FindPlugin(blankEsp).value();
-  ASSERT_EQ(blankEsp, plugin.GetName());
-  ASSERT_FALSE(plugin.HasNameOnly());
-
-  EXPECT_NO_THROW(metadataList.EvalAllConditions(evaluator));
-
-  plugin = metadataList.FindPlugin(blankEsm).value();
-  EXPECT_EQ(std::vector<Message>({
-                Message(MessageType::warn, "This is a warning."),
-            }),
-            plugin.GetMessages());
-
-  plugin = metadataList.FindPlugin(blankEsp).value();
-  EXPECT_EQ(blankEsp, plugin.GetName());
-  EXPECT_TRUE(plugin.GetDirtyInfo().empty());
-}
-
 TEST(ReplaceMetadataListPrelude, shouldReturnAnEmptyStringIfGivenEmptyStrings) {
   std::string prelude = "";
   std::string masterlist = "";

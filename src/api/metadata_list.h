@@ -78,19 +78,12 @@ public:
 
   void AppendMessage(const Message& message);
 
-  // Eval plugin conditions.
-  void EvalAllConditions(ConditionEvaluator& conditionEvaluator);
-
 private:
   std::vector<Group> groups_;
   std::vector<std::string> bashTags_;
   std::unordered_map<Filename, PluginMetadata> plugins_;
   std::vector<PluginMetadata> regexPlugins_;
   std::vector<Message> messages_;
-
-  std::unordered_map<Filename, PluginMetadata> unevaluatedPlugins_;
-  std::vector<PluginMetadata> unevaluatedRegexPlugins_;
-  std::vector<Message> unevaluatedMessages_;
 
   void Load(std::istream& istream, const std::filesystem::path& source_path);
 };

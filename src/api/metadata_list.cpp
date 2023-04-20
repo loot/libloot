@@ -277,10 +277,6 @@ void MetadataList::Clear() {
   plugins_.clear();
   regexPlugins_.clear();
   messages_.clear();
-
-  unevaluatedPlugins_.clear();
-  unevaluatedRegexPlugins_.clear();
-  unevaluatedMessages_.clear();
 }
 
 std::vector<PluginMetadata> MetadataList::Plugins() const {
@@ -375,36 +371,5 @@ void MetadataList::ErasePlugin(const std::string& pluginName) {
 
 void MetadataList::AppendMessage(const Message& message) {
   messages_.push_back(message);
-}
-
-void MetadataList::EvalAllConditions(ConditionEvaluator& conditionEvaluator) {
-  if (unevaluatedPlugins_.empty())
-    unevaluatedPlugins_.swap(plugins_);
-  else
-    plugins_.clear();
-
-  for (const auto& plugin : unevaluatedPlugins_) {
-    plugins_.emplace(plugin.first,
-                     conditionEvaluator.EvaluateAll(plugin.second));
-  }
-
-  if (unevaluatedRegexPlugins_.empty())
-    unevaluatedRegexPlugins_ = regexPlugins_;
-  else
-    regexPlugins_ = unevaluatedRegexPlugins_;
-
-  for (auto& plugin : regexPlugins_) {
-    plugin = conditionEvaluator.EvaluateAll(plugin);
-  }
-
-  if (unevaluatedMessages_.empty())
-    unevaluatedMessages_.swap(messages_);
-  else
-    messages_.clear();
-
-  for (const auto& message : unevaluatedMessages_) {
-    if (conditionEvaluator.Evaluate(message.GetCondition()))
-      messages_.push_back(message);
-  }
 }
 }
