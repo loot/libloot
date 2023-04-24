@@ -58,6 +58,14 @@ public:
   void SetAdditionalDataPaths(
       const std::vector<std::filesystem::path>& additionalDataPaths);
 
+  bool IsValidPlugin(const std::filesystem::path& pluginPath) const;
+
+  void LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
+                   bool loadHeadersOnly);
+
+  std::vector<std::string> SortPlugins(
+      const std::vector<std::filesystem::path>& pluginPaths);
+
   // Game Interface Methods //
   ////////////////////////////
 

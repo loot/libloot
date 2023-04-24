@@ -127,6 +127,16 @@ std::vector<std::filesystem::path> FindArchives(
 
   return archivePaths;
 }
+
+std::vector<std::filesystem::path> StringsToPaths(
+    const std::vector<std::string>& pluginPathStrings) {
+  std::vector<std::filesystem::path> pluginPaths;
+  for (const auto& pluginPathString : pluginPathStrings) {
+    pluginPaths.push_back(u8path(pluginPathString));
+  }
+
+  return pluginPaths;
+}
 }
 
 namespace loot {
@@ -177,19 +187,26 @@ void Game::SetAdditionalDataPaths(
 }
 
 bool Game::IsValidPlugin(const std::string& pluginPath) const {
-  return Plugin::IsValid(Type(),
-                         ResolvePluginPath(DataPath(), u8path(pluginPath)));
+  return IsValidPlugin(u8path(pluginPath));
 }
 
-void Game::LoadPlugins(const std::vector<std::string>& pluginPaths,
+bool Game::IsValidPlugin(const std::filesystem::path& pluginPath) const {
+  return Plugin::IsValid(Type(), ResolvePluginPath(DataPath(), pluginPath));
+}
+
+void Game::LoadPlugins(const std::vector<std::string>& pluginPathStrings,
+                       bool loadHeadersOnly) {
+  return LoadPlugins(StringsToPaths(pluginPathStrings), loadHeadersOnly);
+}
+
+void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
                        bool loadHeadersOnly) {
   const auto logger = getLogger();
 
   // Check that all plugin filenames are unique.
   std::unordered_set<std::string> filenames;
   for (const auto& pluginPath : pluginPaths) {
-    const auto filename =
-        NormalizeFilename(u8path(pluginPath).filename().u8string());
+    const auto filename = NormalizeFilename(pluginPath.filename().u8string());
     const auto inserted = filenames.insert(filename).second;
     if (!inserted) {
       throw std::invalid_argument("The filename \"" + filename +
@@ -203,7 +220,7 @@ void Game::LoadPlugins(const std::vector<std::string>& pluginPaths,
       std::find_if(std::execution::par_unseq,
                    pluginPaths.cbegin(),
                    pluginPaths.cend(),
-                   [this](const std::string& pluginPath) {
+                   [this](const std::filesystem::path& pluginPath) {
                      try {
                        return !IsValidPlugin(pluginPath);
                      } catch (...) {
@@ -212,7 +229,7 @@ void Game::LoadPlugins(const std::vector<std::string>& pluginPaths,
                    });
 
   if (invalidPluginIt != pluginPaths.end()) {
-    throw std::invalid_argument("\"" + *invalidPluginIt +
+    throw std::invalid_argument("\"" + invalidPluginIt->u8string() +
                                 "\" is not a valid plugin");
   }
 
@@ -232,24 +249,27 @@ void Game::LoadPlugins(const std::vector<std::string>& pluginPaths,
       std::execution::par_unseq,
       pluginPaths.begin(),
       pluginPaths.end(),
-      [&](const std::string& pluginPathString) {
+      [&](const std::filesystem::path& pluginPath) {
         try {
-          const auto endIt =
-              boost::iends_with(pluginPathString, GHOST_FILE_EXTENSION)
-                  ? pluginPathString.end() - GHOST_FILE_EXTENSION_LENGTH
-                  : pluginPathString.end();
+          const auto resolvedPluginPath =
+              boost::iequals(pluginPath.extension().u8string(),
+                             GHOST_FILE_EXTENSION)
+                  ? ResolvePluginPath(
+                        DataPath(),
+                        std::filesystem::path(pluginPath).replace_extension())
+                  : ResolvePluginPath(DataPath(), pluginPath);
 
-          const auto pluginPath = ResolvePluginPath(
-              DataPath(), u8path(pluginPathString.begin(), endIt));
           const bool loadHeader =
-              loadHeadersOnly || loot::equivalent(pluginPath, masterPath);
+              loadHeadersOnly ||
+              loot::equivalent(resolvedPluginPath, masterPath);
 
-          cache_.AddPlugin(Plugin(Type(), cache_, pluginPath, loadHeader));
+          cache_.AddPlugin(
+              Plugin(Type(), cache_, resolvedPluginPath, loadHeader));
         } catch (const std::exception& e) {
           if (logger) {
             logger->error(
                 "Caught exception while trying to add {} to the cache: {}",
-                pluginPathString,
+                pluginPath.u8string(),
                 e.what());
           }
         }
@@ -276,13 +296,17 @@ void Game::IdentifyMainMasterFile(const std::string& masterFile) {
 }
 
 std::vector<std::string> Game::SortPlugins(
-    const std::vector<std::string>& pluginPaths) {
+    const std::vector<std::string>& pluginPathStrings) {
+  return SortPlugins(StringsToPaths(pluginPathStrings));
+}
+
+std::vector<std::string> Game::SortPlugins(
+    const std::vector<std::filesystem::path>& pluginPaths) {
   LoadPlugins(pluginPaths, false);
 
   std::vector<std::string> loadOrder;
   for (const auto& pluginPath : pluginPaths) {
-    const auto filename = u8path(pluginPath).filename().u8string();
-    loadOrder.push_back(filename);
+    loadOrder.push_back(pluginPath.filename().u8string());
   }
 
   // Sort plugins into their load order.

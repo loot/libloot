@@ -181,7 +181,9 @@ TEST_P(
 TEST_P(GameTest, loadPluginsWithANonPluginShouldNotAddItToTheLoadedPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  ASSERT_THROW(game.LoadPlugins({nonPluginFile}, false), std::invalid_argument);
+  ASSERT_THROW(
+      game.LoadPlugins(std::vector<std::string>({nonPluginFile}), false),
+      std::invalid_argument);
 
   ASSERT_TRUE(game.GetLoadedPlugins().empty());
 }
@@ -198,7 +200,8 @@ TEST_P(GameTest,
 
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  ASSERT_NO_THROW(game.LoadPlugins({invalidPlugin}, false));
+  ASSERT_NO_THROW(
+      game.LoadPlugins(std::vector<std::string>({invalidPlugin}), false));
 
   ASSERT_TRUE(game.GetLoadedPlugins().empty());
 }
@@ -298,7 +301,8 @@ TEST_P(GameTest,
       getSourcePluginsPath() / std::filesystem::u8path(blankEsm);
 
   EXPECT_THROW(
-      game.LoadPlugins({dataPluginPath.u8string(), sourcePluginPath.u8string()},
+      game.LoadPlugins(std::vector<std::string>({dataPluginPath.u8string(),
+                                                 sourcePluginPath.u8string()}),
                        true),
       std::invalid_argument);
 }
@@ -309,7 +313,7 @@ TEST_P(GameTest, loadPluginsShouldResolveRelativePathsRelativeToDataPath) {
   const auto relativePath =
       "../" + dataPath.filename().u8string() + "/" + blankEsm;
 
-  game.LoadPlugins({relativePath}, true);
+  game.LoadPlugins(std::vector<std::string>({relativePath}), true);
 
   EXPECT_NE(nullptr, game.GetPlugin(blankEsm));
 }
@@ -319,7 +323,7 @@ TEST_P(GameTest, loadPluginsShouldUseAbsolutePathsAsGiven) {
 
   const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
 
-  game.LoadPlugins({absolutePath.u8string()}, true);
+  game.LoadPlugins(std::vector<std::string>({absolutePath.u8string()}), true);
 
   EXPECT_NE(nullptr, game.GetPlugin(blankEsm));
 }
@@ -329,7 +333,8 @@ TEST_P(GameTest, sortPluginsShouldHandlePluginPathsThatAreNotJustFilenames) {
 
   const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
 
-  const auto newLoadOrder = game.SortPlugins({absolutePath.u8string()});
+  const auto newLoadOrder =
+      game.SortPlugins(std::vector<std::string>({absolutePath.u8string()}));
 
   EXPECT_EQ(std::vector<std::string>{blankEsm}, newLoadOrder);
 }
