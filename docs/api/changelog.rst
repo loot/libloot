@@ -2,6 +2,45 @@
 Version History
 ***************
 
+0.19.4 - 2023-05-06
+===================
+
+Added
+-----
+
+- Support for the Microsoft Store's Fallout 4 DLC. The Microsoft Store installs
+  Fallout 4's DLC to separate directories outside of the Fallout 4 install path,
+  and the Microsoft Store's version of Fallout 4 knows to look for plugins and
+  resources to load in those other directories.
+
+  - libloot detects if a copy of Fallout 4 is from the Microsoft Store by
+    checking for the existence of an ``appxmanifest.xml`` file in the given
+    install path, and if found will look for Fallout 4 DLC directories at their
+    install paths. The DLC install paths used are relative to the game install
+    path because those relative paths are assumed by the game.
+  - If a DLC data path exists, load order operations will include plugins in
+    that directory, i.e. DLC plugins will appear as part of the load order
+    that libloot reads and writes.
+  - Metadata conditions will check for files in DLC data paths as well as the
+    game's data path, with DLC paths checked before the game's data path to
+    match the order in which the game checks paths.
+
+Changed
+-------
+
+- :cpp:any:`loot::GameInterface::IsValidPlugin()`,
+  :cpp:any:`loot::GameInterface::LoadPlugins()` and
+  :cpp:any:`loot::GameInterface::SortPlugins()` now take plugin paths instead of
+  plugin filenames. Relative paths are interpreted as relative to the game's
+  data path, so this change is backwards-compatible. Absolute paths are used as
+  given. The functions take plugin paths as strings to avoid breaking libloot's
+  binary interface, but they will be changed to take ``std::filesystem::path``s
+  in a future release.
+- :cpp:any:`loot::GameInterface::LoadPlugins()` and
+  :cpp:any:`loot::GameInterface::SortPlugins()` now check that all filenames in
+  the given paths are unique. This was previously implicitly required for
+  correct behaviour but not explicitly enforced.
+
 0.19.3 - 2023-03-18
 ===================
 
