@@ -140,11 +140,19 @@ jobs:
           VERSION="${{ steps.get-libloot-version.outputs.version }}"
           echo "filename=libloot-${VERSION}-Linux.tar.xz" >> $GITHUB_OUTPUT
 
+      - name: Import GPG key
+        run: echo -n "${{ secrets.GPG_SIGNING_KEY }}" | gpg --import
+
+      - name: Sign archive
+        run: gpg --output "build/package/${{ steps.build-archive.outputs.filename }}.sig" --detach-sig "build/package/${{ steps.build-archive.outputs.filename }}"
+
       - name: Upload archive
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.build-archive.outputs.filename }}
-          path: build/package/${{ steps.build-archive.outputs.filename }}
+          path: |
+            build/package/${{ steps.build-archive.outputs.filename }}
+            build/package/${{ steps.build-archive.outputs.filename }}.sig
         if: github.event_name == 'push'
 
   windows:
@@ -227,9 +235,17 @@ jobs:
 
           echo "filename=libloot-${VERSION}-${PLATFORM}.7z" >> $GITHUB_OUTPUT
 
+      - name: Import GPG key
+        run: echo -n "${{ secrets.GPG_SIGNING_KEY }}" | gpg --import
+
+      - name: Sign archive
+        run: gpg --output "build/package/${{ steps.build-archive.outputs.filename }}.sig" --detach-sig "build/package/${{ steps.build-archive.outputs.filename }}"
+
       - name: Upload archive
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.build-archive.outputs.filename }}
-          path: build/package/${{ steps.build-archive.outputs.filename }}
+          path: |
+            build/package/${{ steps.build-archive.outputs.filename }}
+            build/package/${{ steps.build-archive.outputs.filename }}.sig
         if: github.event_name == 'push'
