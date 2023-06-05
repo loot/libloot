@@ -13,10 +13,15 @@ libloot provides access to LOOT's metadata and sorting functionality, and the LO
 
 ## Downloads
 
-Releases are hosted on [GitHub](https://github.com/loot/libloot/releases), and snapshot builds are available on [Artifactory](https://loot.jfrog.io/ui/repos/tree/General/libloot). The snapshot build archives are named like so:
+Releases are hosted on [GitHub](https://github.com/loot/libloot/releases).
+
+
+Snapshot builds are available as artifacts from [GitHub Actions runs](https://github.com/loot/libloot/actions), though they are only kept for 90 days and can only be downloaded when logged into a GitHub account. To mitigate these restrictions, snapshot build artifacts include a GPG signature that can be verified using the public key hosted [here](https://loot.github.io/.well-known/openpgpkey/hu/mj86by43a9hz8y8rbddtx54n3bwuuucg), which means it's possible to re-upload the artifacts elsewhere and still prove their authenticity.
+
+The snapshot build artifacts are named like so:
 
 ```
-libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.7z
+libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.<file extension>
 ```
 
 ## Building libloot
