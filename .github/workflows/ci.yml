@@ -92,9 +92,11 @@ jobs:
 
       - name: Import GPG key
         run: echo -n "${{ secrets.GPG_SIGNING_KEY }}" | gpg --import
+        if: github.event_name == 'push'
 
       - name: Sign archive
         run: gpg --output "build/package/${{ steps.build-archive.outputs.filename }}.sig" --detach-sig "build/package/${{ steps.build-archive.outputs.filename }}"
+        if: github.event_name == 'push'
 
       - name: Upload archive
         uses: actions/upload-artifact@v3
@@ -187,9 +189,11 @@ jobs:
 
       - name: Import GPG key
         run: echo -n "${{ secrets.GPG_SIGNING_KEY }}" | gpg --import
+        if: github.event_name == 'push'
 
       - name: Sign archive
         run: gpg --output "build/package/${{ steps.build-archive.outputs.filename }}.sig" --detach-sig "build/package/${{ steps.build-archive.outputs.filename }}"
+        if: github.event_name == 'push'
 
       - name: Upload archive
         uses: actions/upload-artifact@v3
