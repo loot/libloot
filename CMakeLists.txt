@@ -41,10 +41,18 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    if(CMAKE_GENERATOR_PLATFORM STREQUAL  "Win32")
-        set(RUST_TARGET i686-pc-windows-msvc)
+    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+        if(CMAKE_GENERATOR_PLATFORM STREQUAL  "Win32")
+            set(RUST_TARGET i686-pc-windows-msvc)
+        else()
+            set(RUST_TARGET x86_64-pc-windows-msvc)
+        endif()
     else()
-        set(RUST_TARGET x86_64-pc-windows-msvc)
+        if(CMAKE_GENERATOR_PLATFORM STREQUAL  "Win32")
+            set(RUST_TARGET i686-pc-windows-gnu)
+        else()
+            set(RUST_TARGET x86_64-pc-windows-gnu)
+        endif()
     endif()
 else()
     set(RUST_TARGET x86_64-unknown-linux-gnu)
@@ -61,7 +69,10 @@ ExternalProject_Add(GTest
     PREFIX "external"
     URL "https://github.com/google/googletest/archive/release-1.12.1.tar.gz"
     URL_HASH "SHA256=81964fe578e9bd7c94dfdb09c8e4d6e6759e19967e397dbea48d1c10e45d0df2"
-    CMAKE_ARGS -Dgtest_force_shared_crt=ON -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+    CMAKE_ARGS
+        -Dgtest_force_shared_crt=ON
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
     INSTALL_COMMAND "")
 ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
 set(GTEST_INCLUDE_DIRS "${SOURCE_DIR}/googletest/include")
@@ -80,7 +91,7 @@ ExternalProject_Get_Property(esplugin SOURCE_DIR)
 set(ESPLUGIN_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
 set(ESPLUGIN_LIBRARIES "${SOURCE_DIR}/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}esplugin_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(ESPLUGIN_LIBRARIES ${ESPLUGIN_LIBRARIES} Userenv)
+    set(ESPLUGIN_LIBRARIES ${ESPLUGIN_LIBRARIES} userenv ntdll)
 else()
     set(ESPLUGIN_LIBRARIES ${ESPLUGIN_LIBRARIES} dl)
 endif()
@@ -98,7 +109,7 @@ ExternalProject_Get_Property(libloadorder SOURCE_DIR)
 set(LIBLOADORDER_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
 set(LIBLOADORDER_LIBRARIES "${SOURCE_DIR}/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}loadorder_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(LIBLOADORDER_LIBRARIES ${LIBLOADORDER_LIBRARIES} Userenv)
+    set(LIBLOADORDER_LIBRARIES ${LIBLOADORDER_LIBRARIES} userenv)
 else()
     set(LIBLOADORDER_LIBRARIES ${LIBLOADORDER_LIBRARIES} dl)
 endif()
@@ -116,7 +127,7 @@ ExternalProject_Get_Property(loot-condition-interpreter SOURCE_DIR)
 set(LCI_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
 set(LCI_LIBRARIES "${SOURCE_DIR}/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}loot_condition_interpreter_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(LCI_LIBRARIES ${LCI_LIBRARIES} Userenv)
+    set(LCI_LIBRARIES ${LCI_LIBRARIES} userenv)
 else()
     set(LCI_LIBRARIES ${LCI_LIBRARIES} dl)
 endif()
@@ -140,7 +151,7 @@ ExternalProject_Get_Property(spdlog SOURCE_DIR)
 set(SPDLOG_INCLUDE_DIRS "${SOURCE_DIR}/include")
 
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(YAMLCPP_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target yaml-cpp --config $(CONFIGURATION))
 else()
     set(YAMLCPP_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target yaml-cpp)
@@ -155,6 +166,7 @@ ExternalProject_Add(yaml-cpp
         -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
         -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
         -DYAML_BUILD_SHARED_LIBS=OFF
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
     BUILD_COMMAND ${YAMLCPP_BUILD_COMMAND}
     INSTALL_COMMAND "")
 ExternalProject_Get_Property(yaml-cpp SOURCE_DIR BINARY_DIR)
@@ -426,8 +438,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
     set(LOOT_LIBS ws2_32 bcrypt)
 
+    if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+        target_compile_definitions(libloot_tests PRIVATE LOOT_STATIC)
+        set(LOOT_LIBS ${LOOT_LIBS} tbb_static)
+    endif()
+
     target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
+    target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 else()
     set(LOOT_LIBS ICU::uc pthread stdc++fs TBB::tbb)
 
