@@ -42,7 +42,6 @@
 #ifndef _UNICODE
 #define _UNICODE
 #endif
-#define NOMINMAX
 #include "shlobj.h"
 #include "shlwapi.h"
 #include "windows.h"

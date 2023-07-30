@@ -26,10 +26,6 @@
 
 #define FMT_USE_STD_STRING_VIEW
 
-#ifdef _WIN32
-#define NOMINMAX
-#endif
-
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/spdlog.h>
 
