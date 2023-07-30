@@ -71,8 +71,23 @@ constexpr const char* MS_FO4_VAULT_TEC_DATA_PATH =
 constexpr const char* MS_FO4_WASTELAND_DATA_PATH =
     "../../Fallout 4- Wasteland Workshop (PC)/Content/Data";
 
-bool IsMicrosoftStoreGame(const std::filesystem::path& gamePath) {
-  return std::filesystem::exists(gamePath / "appxmanifest.xml");
+bool IsMicrosoftStoreInstall(const GameType gameType,
+                             const std::filesystem::path& gamePath) {
+  switch (gameType) {
+    case GameType::tes3:
+    case GameType::tes4:
+    case GameType::fo3:
+    case GameType::fonv:
+      // tes3, tes4, fo3 and fonv install paths are localised, with the
+      // appxmanifest.xml file sitting in the parent directory.
+      return std::filesystem::exists(gamePath.parent_path() /
+                                     "appxmanifest.xml");
+    case GameType::tes5se:
+    case GameType::fo4:
+      return std::filesystem::exists(gamePath / "appxmanifest.xml");
+    default:
+      return false;
+  }
 }
 
 std::vector<std::filesystem::path> GetAdditionalDataPaths(
@@ -80,7 +95,8 @@ std::vector<std::filesystem::path> GetAdditionalDataPaths(
     const std::filesystem::path& dataPath) {
   const auto gamePath = dataPath.parent_path();
 
-  if (gameType == GameType::fo4 && IsMicrosoftStoreGame(gamePath)) {
+  if (gameType == GameType::fo4 &&
+      IsMicrosoftStoreInstall(gameType, gamePath)) {
     // All DLC directories are listed before the main data path because DLC
     // plugins in those directories override any in the main data path.
     return {gamePath / MS_FO4_AUTOMATRON_DATA_PATH,
