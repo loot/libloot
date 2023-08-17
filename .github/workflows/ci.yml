@@ -42,6 +42,14 @@ jobs:
           wget https://boostorg.jfrog.io/artifactory/main/release//1.81.0/source/boost_1_81_0.tar.gz
           tar -xf boost_1_81_0.tar.gz
 
+      - name: Get ICU
+        id: get-icu
+        run: |
+          wget https://github.com/unicode-org/icu/releases/download/release-71-1/icu4c-71_1-Ubuntu20.04-x64.tgz
+          tar -xf icu4c-71_1-Ubuntu20.04-x64.tgz
+
+          echo "root=${{ github.workspace }}/icu/usr/local" >> $GITHUB_OUTPUT
+
       - name: Install APT package dependencies
         run: |
           sudo apt-get update
@@ -58,12 +66,13 @@ jobs:
           mkdir build
           cd build
           export CXX="g++-10" CC="gcc-10"
-          cmake .. -DBOOST_ROOT="boost_1_81_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -DBOOST_ROOT="boost_1_81_0" -DICU_ROOT="${{ steps.get-icu.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           make all
 
       - name: Run tests
         run: |
           cd build
+          export LD_LIBRARY_PATH="${{ steps.get-icu.outputs.root }}/lib"
           ./libloot_internals_tests
           ./libloot_tests
 

@@ -61,7 +61,7 @@ endif()
 find_package(Boost REQUIRED)
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    find_package(ICU REQUIRED COMPONENTS uc)
+    find_package(ICU 71.1 EXACT REQUIRED COMPONENTS data uc)
     find_package(TBB REQUIRED)
 endif()
 
@@ -447,11 +447,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
     target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 else()
-    set(LOOT_LIBS ICU::uc pthread stdc++fs TBB::tbb)
+    set(LOOT_LIBS ICU::data ICU::uc pthread stdc++fs TBB::tbb)
 
     target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
-    target_link_libraries(libloot_tests PRIVATE pthread)
+    target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
