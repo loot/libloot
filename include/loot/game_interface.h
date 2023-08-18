@@ -135,7 +135,7 @@ public:
    *           loaded, and reads the contents of each plugin. No changes are
    *           applied to the load order used by the game. This function does
    *           not load or evaluate the masterlist or userlist.
-   *  @param plugins
+   *  @param pluginPaths
    *         The plugin paths to sort, in their current load order. Relative
    *         paths are resolved relative to the game's plugins directory, while
    *         absolute paths are used as given. Each plugin filename must be
