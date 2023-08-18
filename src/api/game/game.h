@@ -44,7 +44,6 @@ public:
   // Internal Methods //
   //////////////////////
 
-  GameType Type() const;
   std::filesystem::path DataPath() const;
 
   GameCache& GetCache();
@@ -52,8 +51,6 @@ public:
 
   LoadOrderHandler& GetLoadOrderHandler();
   const LoadOrderHandler& GetLoadOrderHandler() const;
-
-  const DatabaseInterface& GetDatabase() const;
 
   void SetAdditionalDataPaths(
       const std::vector<std::filesystem::path>& additionalDataPaths);
@@ -69,7 +66,10 @@ public:
   // Game Interface Methods //
   ////////////////////////////
 
+  GameType GetType() const override;
+
   DatabaseInterface& GetDatabase() override;
+  const DatabaseInterface& GetDatabase() const override;
 
   bool IsValidPlugin(const std::string& pluginPath) const override;
 

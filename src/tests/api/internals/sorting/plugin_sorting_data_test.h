@@ -101,7 +101,7 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder(),
-      game_.Type(),
+      game_.GetType(),
       loadedPlugins);
   EXPECT_FALSE(esp.IsMaster());
 
@@ -110,7 +110,7 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder(),
-      game_.Type(),
+      game_.GetType(),
       loadedPlugins);
   EXPECT_TRUE(master.IsMaster());
 
@@ -120,7 +120,7 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
         PluginMetadata(),
         PluginMetadata(),
         getLoadOrder(),
-        game_.Type(),
+        game_.GetType(),
         loadedPlugins);
     EXPECT_TRUE(lightMaster.IsMaster());
 
@@ -130,7 +130,7 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
                           PluginMetadata(),
                           PluginMetadata(),
                           getLoadOrder(),
-                          game_.Type(),
+                          game_.GetType(),
                           loadedPlugins);
     EXPECT_FALSE(lightPlugin.IsMaster());
   }
@@ -145,7 +145,7 @@ TEST_P(PluginSortingDataTest,
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder(),
-      game_.Type(),
+      game_.GetType(),
       getLoadedPlugins());
   EXPECT_EQ(4, plugin.GetOverrideRecordCount());
 }
@@ -174,7 +174,7 @@ TEST_P(
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder(),
-      game_.Type(),
+      game_.GetType(),
       loadedPlugins);
 
   EXPECT_EQ(10, plugin.GetOverrideRecordCount());

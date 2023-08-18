@@ -34,6 +34,12 @@ public:
   virtual ~GameInterface() = default;
 
   /**
+   * @brief Get the game's type.
+   * @returns The game's type.
+   */
+  virtual GameType GetType() const = 0;
+
+  /**
    *  @name Metadata Access
    *  @{
    */
@@ -45,6 +51,14 @@ public:
    *          valid for the lifetime of the GameInterface instance.
    */
   virtual DatabaseInterface& GetDatabase() = 0;
+
+  /**
+   * @brief Get the database interface used for accessing metadata-related
+   *        functionality.
+   * @returns A reference to the game's DatabaseInterface. The reference remains
+   *          valid for the lifetime of the GameInterface instance.
+   */
+  virtual const DatabaseInterface& GetDatabase() const = 0;
 
   /**
    * @}

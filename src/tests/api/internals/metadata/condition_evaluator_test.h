@@ -40,7 +40,7 @@ protected:
       nonAsciiEsm(u8"non\u00C1scii.esm"),
       nonAsciiNestedFile(u8"non\u00C1scii/test.txt"),
       game_(GetParam(), dataPath.parent_path(), localPath),
-      evaluator_(game_.Type(), game_.DataPath()) {
+      evaluator_(game_.GetType(), game_.DataPath()) {
     // Make sure the plugin with a non-ASCII filename exists.
     std::filesystem::copy_file(dataPath / blankEsm,
                                dataPath / std::filesystem::u8path(nonAsciiEsm));

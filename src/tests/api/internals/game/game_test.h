@@ -71,7 +71,7 @@ INSTANTIATE_TEST_SUITE_P(,
 TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  EXPECT_EQ(GetParam(), game.Type());
+  EXPECT_EQ(GetParam(), game.GetType());
   EXPECT_EQ(dataPath, game.DataPath());
 }
 

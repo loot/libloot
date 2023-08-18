@@ -295,7 +295,7 @@ std::vector<std::string> SortPlugins(
     Game& game,
     const std::vector<std::string>& loadOrder) {
   auto pluginsSortingData = GetPluginsSortingData(
-      game.Type(), game.GetDatabase(), game.GetLoadedPlugins(), loadOrder);
+      game.GetType(), game.GetDatabase(), game.GetLoadedPlugins(), loadOrder);
 
   const auto logger = getLogger();
   if (logger) {
@@ -307,7 +307,7 @@ std::vector<std::string> SortPlugins(
 
   const auto newLoadOrder =
       SortPlugins(std::move(pluginsSortingData),
-                  game.Type(),
+                  game.GetType(),
                   game.GetDatabase().GetGroups(false),
                   game.GetDatabase().GetUserGroups(),
                   game.GetLoadOrderHandler().GetImplicitlyActivePlugins());

@@ -162,13 +162,13 @@ Game::Game(const GameType gameType,
     gamePath_(gamePath),
     loadOrderHandler_(type_, gamePath_, localDataPath),
     conditionEvaluator_(
-        std::make_shared<ConditionEvaluator>(Type(), DataPath())),
+        std::make_shared<ConditionEvaluator>(GetType(), DataPath())),
     database_(ApiDatabase(conditionEvaluator_)),
-    additionalDataPaths_(GetAdditionalDataPaths(Type(), DataPath())) {
+    additionalDataPaths_(GetAdditionalDataPaths(GetType(), DataPath())) {
   conditionEvaluator_->SetAdditionalDataPaths(additionalDataPaths_);
 }
 
-GameType Game::Type() const { return type_; }
+GameType Game::GetType() const { return type_; }
 
 std::filesystem::path Game::DataPath() const {
   if (type_ == GameType::tes3) {
@@ -206,7 +206,7 @@ bool Game::IsValidPlugin(const std::string& pluginPath) const {
 }
 
 bool Game::IsValidPlugin(const std::filesystem::path& pluginPath) const {
-  return Plugin::IsValid(Type(), ResolvePluginPath(DataPath(), pluginPath));
+  return Plugin::IsValid(GetType(), ResolvePluginPath(DataPath(), pluginPath));
 }
 
 void Game::LoadPlugins(const std::vector<std::string>& pluginPathStrings,
@@ -279,7 +279,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
               loot::equivalent(resolvedPluginPath, masterPath);
 
           cache_.AddPlugin(
-              Plugin(Type(), cache_, resolvedPluginPath, loadHeader));
+              Plugin(GetType(), cache_, resolvedPluginPath, loadHeader));
         } catch (const std::exception& e) {
           if (logger) {
             logger->error(
@@ -355,7 +355,7 @@ void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
 }
 
 void Game::CacheArchives() {
-  const auto archiveFileExtension = GetArchiveFileExtension(Type());
+  const auto archiveFileExtension = GetArchiveFileExtension(GetType());
 
   std::set<std::filesystem::path> archivePaths;
   for (const auto& parentPath : additionalDataPaths_) {

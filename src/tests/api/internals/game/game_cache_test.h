@@ -53,18 +53,18 @@ INSTANTIATE_TEST_SUITE_P(, GameCacheTest, ::testing::Values(GameType::tes5));
 
 TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
   cache_.AddPlugin(
-      Plugin(game_.Type(), GameCache(), game_.DataPath() / blankEsm, true));
+      Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
   EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm)->GetName());
 }
 
 TEST_P(GameCacheTest,
        addingAPluginThatIsAlreadyCachedShouldOverwriteExistingEntry) {
   cache_.AddPlugin(
-      Plugin(game_.Type(), GameCache(), game_.DataPath() / blankEsm, true));
+      Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
   EXPECT_FALSE(cache_.GetPlugin(blankEsm)->GetCRC());
 
   cache_.AddPlugin(
-      Plugin(game_.Type(), GameCache(), game_.DataPath() / blankEsm, false));
+      Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, false));
   EXPECT_EQ(blankEsmCrc, cache_.GetPlugin(blankEsm)->GetCRC().value());
 }
 
@@ -74,7 +74,7 @@ TEST_P(GameCacheTest, gettingAPluginThatIsNotCachedShouldReturnANullPointer) {
 
 TEST_P(GameCacheTest, gettingAPluginShouldBeCaseInsensitive) {
   cache_.AddPlugin(
-      Plugin(game_.Type(), GameCache(), game_.DataPath() / blankEsm, true));
+      Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
   EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm)->GetName());
 }
 
@@ -86,8 +86,8 @@ TEST_P(GameCacheTest,
 TEST_P(GameCacheTest,
        gettingPluginsShouldReturnASetOfCachedPluginsIfPluginsHaveBeenCached) {
   cache_.AddPlugin(
-      Plugin(game_.Type(), GameCache(), game_.DataPath() / blankEsm, true));
-  cache_.AddPlugin(Plugin(game_.Type(),
+      Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
+  cache_.AddPlugin(Plugin(game_.GetType(),
                           GameCache(),
                           game_.DataPath() / blankMasterDependentEsm,
                           true));
@@ -119,7 +119,7 @@ TEST_P(GameCacheTest, clearingCachedPluginsShouldNotThrowIfNoPluginsAreCached) {
 
 TEST_P(GameCacheTest, clearingCachedPluginsShouldClearAnyCachedPlugins) {
   cache_.AddPlugin(
-      Plugin(game_.Type(), GameCache(), game_.DataPath() / blankEsm, true));
+      Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
   cache_.ClearCachedPlugins();
 
   EXPECT_TRUE(cache_.GetPlugins().empty());
