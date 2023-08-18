@@ -116,8 +116,8 @@ endif()
 
 ExternalProject_Add(loot-condition-interpreter
     PREFIX "external"
-    URL "https://github.com/loot/loot-condition-interpreter/archive/2.4.0.tar.gz"
-    URL_HASH "SHA256=7c1d42636d8b10ae2b4dc3fced4a0b25112caf5e489a8f8ef0c915b9dd1189e1"
+    URL "https://github.com/loot/loot-condition-interpreter/archive/3.0.0.tar.gz"
+    URL_HASH "SHA256=6492c19848f01f297537da6a561e8d0c0a79e7c15e3ddf958910dec7cdfe0abf"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&

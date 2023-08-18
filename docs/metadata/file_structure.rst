@@ -45,7 +45,6 @@ Example
     - &thanksForUsing
       type: say
       content: 'Thanks for using LOOT!'
-      condition: 'file("LOOT")'
 
   bash_tags:
     - 'C.Climate'

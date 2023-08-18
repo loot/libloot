@@ -87,15 +87,9 @@ ConditionEvaluator::ConditionEvaluator(const GameType gameType,
         lci_state_destroy)) {
   lci_state* state = nullptr;
 
-  // This probably isn't correct for API users other than LOOT.
-  // But that probably doesn't matter, as the only things conditional
-  // on LOOT's version are LOOT-specific messages.
-  const auto lootPath = std::filesystem::absolute("LOOT.exe");
-
   int result = lci_state_create(&state,
                                 mapGameType(gameType),
-                                dataPath.u8string().c_str(),
-                                lootPath.u8string().c_str());
+                                dataPath.u8string().c_str());
   HandleError("create state object for condition evaluation", result);
 
   lciState_ = std::unique_ptr<lci_state, decltype(&lci_state_destroy)>(

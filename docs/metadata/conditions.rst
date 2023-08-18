@@ -21,11 +21,11 @@ Types
 
 .. describe:: filesystem_path
 
-  A double-quoted filesystem path, or ``"LOOT"``, which resolves to `LOOT.exe` in the current working directory. Bear in mind that `LOOT.exe` may not be present if the condition is being evaluated by an application other than LOOT.
+  A double-quoted filesystem path.
 
 .. describe:: file_path
 
-  A double-quoted file path, or ``"LOOT"``, which resolves to `LOOT.exe` in the current working directory. Bear in mind that `LOOT.exe` may not be present if the condition is being evaluated by an application other than LOOT.
+  A double-quoted file path.
 
 .. describe:: regular_expression
 
