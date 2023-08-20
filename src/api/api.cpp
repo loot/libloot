@@ -112,15 +112,18 @@ LOOT_API std::unique_ptr<GameInterface> CreateGameHandle(
   }
 
   auto resolvedGamePath = ResolvePath(gamePath);
-  if (!fs::is_directory(resolvedGamePath))
+  if (!fs::is_directory(resolvedGamePath)) {
     throw std::invalid_argument("Given game path \"" + gamePath.u8string() +
                                 "\" does not resolve to a valid directory.");
+  }
 
   auto resolvedGameLocalPath = ResolvePath(gameLocalPath);
-  if (!gameLocalPath.empty() && !fs::is_directory(resolvedGameLocalPath))
-    throw std::invalid_argument("Given game local path \"" +
-                                gameLocalPath.u8string() +
-                                "\" does not resolve to a valid directory.");
+  if (!gameLocalPath.empty() && fs::exists(resolvedGameLocalPath) &&
+      !fs::is_directory(resolvedGameLocalPath)) {
+    throw std::invalid_argument(
+        "Given game local path \"" + gameLocalPath.u8string() +
+        "\" resolves to a path that exists but is not a valid directory.");
+  }
 
   return std::make_unique<Game>(game, resolvedGamePath, resolvedGameLocalPath);
 }

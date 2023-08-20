@@ -122,10 +122,19 @@ TEST_P(LoadOrderHandlerTest, constructorShouldThrowIfNoGamePathIsSet) {
                std::invalid_argument);
 }
 
-#ifndef _WIN32
-TEST_P(LoadOrderHandlerTest, constructorShouldThrowOnLinuxIfNoLocalPathIsSet) {
-  EXPECT_THROW(LoadOrderHandler(GetParam(), dataPath.parent_path()),
-               std::system_error);
+#ifdef _WIN32
+TEST_P(LoadOrderHandlerTest, constructorShouldNotThrowIfNoLocalPathIsSet) {
+  EXPECT_NO_THROW(LoadOrderHandler(GetParam(), dataPath.parent_path()));
+}
+#else
+TEST_P(LoadOrderHandlerTest,
+       constructorShouldNotThrowIfNoLocalPathIsSetAndGameTypeIsMorrowind) {
+  if (GetParam() == GameType::tes3) {
+    EXPECT_NO_THROW(LoadOrderHandler(GetParam(), dataPath.parent_path()));
+  } else {
+    EXPECT_THROW(LoadOrderHandler(GetParam(), dataPath.parent_path()),
+                 std::system_error);
+  }
 }
 #endif
 

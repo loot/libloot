@@ -115,9 +115,15 @@ TEST_P(CreateGameHandleTest, shouldThrowIfPassedAGamePathThatDoesNotExist) {
                std::invalid_argument);
 }
 
-TEST_P(CreateGameHandleTest, shouldThrowIfPassedALocalPathThatDoesNotExist) {
+TEST_P(CreateGameHandleTest, shouldSucceedIfPassedALocalPathThatDoesNotExist) {
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(
+                      GetParam(), dataPath.parent_path(), missingPath));
+  EXPECT_TRUE(handle_);
+}
+
+TEST_P(CreateGameHandleTest, shouldThrowIfPassedALocalPathThatIsNotADirectory) {
   EXPECT_THROW(
-      CreateGameHandle(GetParam(), dataPath.parent_path(), missingPath),
+      CreateGameHandle(GetParam(), dataPath.parent_path(), dataPath / blankEsm),
       std::invalid_argument);
 }
 
