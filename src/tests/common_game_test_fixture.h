@@ -201,7 +201,7 @@ protected:
           actual.push_back(line);
       }
     } else {
-      actual = readFileLines(localPath / "plugins.txt");
+      actual = readFileLines(localPath / pluginsTxtName(GetParam()));
       for (auto& line : actual) {
         if (line[0] == '*')
           line = line.substr(1);
@@ -320,7 +320,7 @@ private:
         }
       }
     } else {
-      std::ofstream out(localPath / "plugins.txt");
+      std::ofstream out(localPath / pluginsTxtName(GetParam()));
       for (const auto& plugin : loadOrder) {
         if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
           if (plugin.second)
@@ -356,6 +356,10 @@ private:
   inline static bool isLoadOrderTimestampBased(GameType gameType) {
     return gameType == GameType::tes3 || gameType == GameType::tes4 ||
            gameType == GameType::fo3 || gameType == GameType::fonv;
+  }
+
+  static std::string pluginsTxtName(GameType gameType) {
+    return gameType == GameType::tes4 ? "Plugins.txt" : "plugins.txt";
   }
 };
 }
