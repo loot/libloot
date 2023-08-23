@@ -64,7 +64,8 @@ protected:
   }
 
   void loadInstalledPlugins() {
-    std::vector<std::string> plugins({
+    std::vector<std::filesystem::path> plugins({
+        // These are mostly ASCII filenames.
         masterFile,
         blankEsm,
         blankDifferentEsm,
@@ -76,7 +77,7 @@ protected:
         blankDifferentMasterDependentEsp,
         blankPluginDependentEsp,
         blankDifferentPluginDependentEsp,
-        nonAsciiEsm,
+        std::filesystem::u8path(nonAsciiEsm),
     });
 
     if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {

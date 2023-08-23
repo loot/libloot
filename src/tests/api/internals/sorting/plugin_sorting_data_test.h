@@ -37,7 +37,8 @@ protected:
       blankEslEsp("Blank.esl.esp") {}
 
   void loadInstalledPlugins(Game &game, bool headersOnly) {
-    std::vector<std::string> plugins({
+    std::vector<std::filesystem::path> plugins({
+        // These are all ASCII filenames.
         masterFile,
         blankEsm,
         blankDifferentEsm,

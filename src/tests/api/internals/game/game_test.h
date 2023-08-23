@@ -38,7 +38,8 @@ protected:
   }
 
   void loadInstalledPlugins(Game& game, bool headersOnly) {
-    const std::vector<std::string> plugins({
+    const std::vector<std::filesystem::path> plugins({
+        // These are all ASCII filenames.
         masterFile,
         blankEsm,
         blankDifferentEsm,
@@ -149,7 +150,9 @@ TEST_P(
 TEST_P(GameTest, isValidPluginShouldResolveRelativePathsRelativeToDataPath) {
   const Game game(GetParam(), dataPath.parent_path(), localPath);
 
-  game.IsValidPlugin("../" + dataPath.filename().u8string() + "/" + blankEsm);
+  const auto path = ".." / dataPath.filename() / blankEsm;
+
+  EXPECT_TRUE(game.IsValidPlugin(path));
 }
 
 TEST_P(GameTest, isValidPluginShouldUseAbsolutePathsAsGiven) {
@@ -158,7 +161,8 @@ TEST_P(GameTest, isValidPluginShouldUseAbsolutePathsAsGiven) {
   ASSERT_TRUE(dataPath.is_absolute());
 
   const auto path = dataPath / std::filesystem::u8path(blankEsm);
-  game.IsValidPlugin(path.u8string());
+
+  EXPECT_TRUE(game.IsValidPlugin(path));
 }
 
 TEST_P(
@@ -181,9 +185,9 @@ TEST_P(
 TEST_P(GameTest, loadPluginsWithANonPluginShouldNotAddItToTheLoadedPlugins) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  ASSERT_THROW(
-      game.LoadPlugins(std::vector<std::string>({nonPluginFile}), false),
-      std::invalid_argument);
+  ASSERT_THROW(game.LoadPlugins(
+                   std::vector<std::filesystem::path>({nonPluginFile}), false),
+               std::invalid_argument);
 
   ASSERT_TRUE(game.GetLoadedPlugins().empty());
 }
@@ -200,8 +204,8 @@ TEST_P(GameTest,
 
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  ASSERT_NO_THROW(
-      game.LoadPlugins(std::vector<std::string>({invalidPlugin}), false));
+  ASSERT_NO_THROW(game.LoadPlugins(
+      std::vector<std::filesystem::path>({invalidPlugin}), false));
 
   ASSERT_TRUE(game.GetLoadedPlugins().empty());
 }
@@ -300,20 +304,18 @@ TEST_P(GameTest,
   const auto sourcePluginPath =
       getSourcePluginsPath() / std::filesystem::u8path(blankEsm);
 
-  EXPECT_THROW(
-      game.LoadPlugins(std::vector<std::string>({dataPluginPath.u8string(),
-                                                 sourcePluginPath.u8string()}),
-                       true),
-      std::invalid_argument);
+  EXPECT_THROW(game.LoadPlugins(std::vector<std::filesystem::path>(
+                                    {dataPluginPath, sourcePluginPath}),
+                                true),
+               std::invalid_argument);
 }
 
 TEST_P(GameTest, loadPluginsShouldResolveRelativePathsRelativeToDataPath) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  const auto relativePath =
-      "../" + dataPath.filename().u8string() + "/" + blankEsm;
+  const auto relativePath = ".." / dataPath.filename() / blankEsm;
 
-  game.LoadPlugins(std::vector<std::string>({relativePath}), true);
+  game.LoadPlugins(std::vector<std::filesystem::path>({relativePath}), true);
 
   EXPECT_NE(nullptr, game.GetPlugin(blankEsm));
 }
@@ -323,7 +325,7 @@ TEST_P(GameTest, loadPluginsShouldUseAbsolutePathsAsGiven) {
 
   const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
 
-  game.LoadPlugins(std::vector<std::string>({absolutePath.u8string()}), true);
+  game.LoadPlugins(std::vector<std::filesystem::path>({absolutePath}), true);
 
   EXPECT_NE(nullptr, game.GetPlugin(blankEsm));
 }
@@ -334,7 +336,7 @@ TEST_P(GameTest, sortPluginsShouldHandlePluginPathsThatAreNotJustFilenames) {
   const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
 
   const auto newLoadOrder =
-      game.SortPlugins(std::vector<std::string>({absolutePath.u8string()}));
+      game.SortPlugins(std::vector<std::filesystem::path>({absolutePath}));
 
   EXPECT_EQ(std::vector<std::string>{blankEsm}, newLoadOrder);
 }

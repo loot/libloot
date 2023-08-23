@@ -55,14 +55,6 @@ public:
   void SetAdditionalDataPaths(
       const std::vector<std::filesystem::path>& additionalDataPaths);
 
-  bool IsValidPlugin(const std::filesystem::path& pluginPath) const;
-
-  void LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
-                   bool loadHeadersOnly);
-
-  std::vector<std::string> SortPlugins(
-      const std::vector<std::filesystem::path>& pluginPaths);
-
   // Game Interface Methods //
   ////////////////////////////
 
@@ -71,9 +63,9 @@ public:
   DatabaseInterface& GetDatabase() override;
   const DatabaseInterface& GetDatabase() const override;
 
-  bool IsValidPlugin(const std::string& pluginPath) const override;
+  bool IsValidPlugin(const std::filesystem::path& pluginPath) const override;
 
-  void LoadPlugins(const std::vector<std::string>& pluginPaths,
+  void LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
                    bool loadHeadersOnly) override;
 
   const PluginInterface* GetPlugin(
@@ -84,7 +76,7 @@ public:
   void IdentifyMainMasterFile(const std::string& masterFile) override;
 
   std::vector<std::string> SortPlugins(
-      const std::vector<std::string>& pluginPaths) override;
+      const std::vector<std::filesystem::path>& pluginPaths) override;
 
   void LoadCurrentLoadOrderState() override;
 

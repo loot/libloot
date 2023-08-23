@@ -142,16 +142,6 @@ std::vector<std::filesystem::path> FindArchives(
 
   return archivePaths;
 }
-
-std::vector<std::filesystem::path> StringsToPaths(
-    const std::vector<std::string>& pluginPathStrings) {
-  std::vector<std::filesystem::path> pluginPaths;
-  for (const auto& pluginPathString : pluginPathStrings) {
-    pluginPaths.push_back(u8path(pluginPathString));
-  }
-
-  return pluginPaths;
-}
 }
 
 namespace loot {
@@ -201,17 +191,8 @@ void Game::SetAdditionalDataPaths(
   loadOrderHandler_.SetAdditionalDataPaths(additionalDataPaths_);
 }
 
-bool Game::IsValidPlugin(const std::string& pluginPath) const {
-  return IsValidPlugin(u8path(pluginPath));
-}
-
 bool Game::IsValidPlugin(const std::filesystem::path& pluginPath) const {
   return Plugin::IsValid(GetType(), ResolvePluginPath(DataPath(), pluginPath));
-}
-
-void Game::LoadPlugins(const std::vector<std::string>& pluginPathStrings,
-                       bool loadHeadersOnly) {
-  return LoadPlugins(StringsToPaths(pluginPathStrings), loadHeadersOnly);
 }
 
 void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
@@ -308,11 +289,6 @@ std::vector<const PluginInterface*> Game::GetLoadedPlugins() const {
 
 void Game::IdentifyMainMasterFile(const std::string& masterFile) {
   masterFilename_ = masterFile;
-}
-
-std::vector<std::string> Game::SortPlugins(
-    const std::vector<std::string>& pluginPathStrings) {
-  return SortPlugins(StringsToPaths(pluginPathStrings));
 }
 
 std::vector<std::string> Game::SortPlugins(

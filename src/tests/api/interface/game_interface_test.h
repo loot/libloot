@@ -36,6 +36,7 @@ protected:
       emptyFile("EmptyFile.esm"),
       nonAsciiEsm(u8"non\u00C1scii.esm"),
       pluginsToLoad({
+          // These are all ASCII filenames.
           masterFile,
           blankEsm,
           blankDifferentEsm,
@@ -55,7 +56,7 @@ protected:
 
   const std::string emptyFile;
   const std::string nonAsciiEsm;
-  const std::vector<std::string> pluginsToLoad;
+  const std::vector<std::filesystem::path> pluginsToLoad;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -75,7 +76,7 @@ TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidPlugin) {
 
 TEST_P(GameInterfaceTest,
        isValidPluginShouldReturnTrueForAValidNonAsciiPlugin) {
-  EXPECT_TRUE(handle_->IsValidPlugin(nonAsciiEsm));
+  EXPECT_TRUE(handle_->IsValidPlugin(std::filesystem::u8path(nonAsciiEsm)));
 }
 
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForANonPluginFile) {
@@ -131,7 +132,7 @@ TEST_P(GameInterfaceTest,
 }
 
 TEST_P(GameInterfaceTest, loadPluginsWithANonAsciiPluginShouldLoadIt) {
-  handle_->LoadPlugins({nonAsciiEsm}, false);
+  handle_->LoadPlugins({std::filesystem::u8path(nonAsciiEsm)}, false);
   EXPECT_EQ(1, handle_->GetLoadedPlugins().size());
 
   // Check that one plugin's header has been read.
@@ -173,7 +174,8 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""));
 
-  std::vector<std::string> pluginsToSort({
+  std::vector<std::filesystem::path> pluginsToSort({
+      // These are all ASCII filenames.
       blankEsp,
       blankPluginDependentEsp,
       blankDifferentMasterDependentEsm,
