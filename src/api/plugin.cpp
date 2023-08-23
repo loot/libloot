@@ -35,20 +35,127 @@
 #include "api/helpers/text.h"
 #include "loot/exception/file_access_error.h"
 
+namespace {
+using loot::GameType;
+
+std::filesystem::path ReplaceExtension(
+    std::filesystem::path path,
+    const std::filesystem::path& newExtension) {
+  return path.replace_extension(newExtension);
+}
+
+std::filesystem::path MapTes5BsaToPlugin(
+    const std::filesystem::path& archivePath,
+    const std::filesystem::path& targetPluginPath) {
+  // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
+  // basename, ignoring file extensions.
+  return ReplaceExtension(archivePath, targetPluginPath.extension()).filename();
+}
+
+std::filesystem::path MapTes5SeBsaToPlugin(
+    const std::filesystem::path& archivePath,
+    const std::filesystem::path& targetPluginPath) {
+  // Skyrim SE can load BSAs that have exactly the same
+  // basename, ignoring file extensions, and also BSAs with filenames of
+  // the form "<basename> - Textures.bsa" (case-insensitively).
+  // This assumes that Skyrim VR works the same way as Skyrim SE.
+  const auto archiveFilename = archivePath.filename().u8string();
+
+  static constexpr const char* TEXTURES_BSA_FILENAME_SUFFIX = " - Textures.bsa";
+  static constexpr std::size_t TEXTURES_BSA_FILENAME_SUFFIX_LENGTH =
+      std::char_traits<char>::length(TEXTURES_BSA_FILENAME_SUFFIX);
+
+  // The textures suffix is ASCII-only, so this case-insensitive match is fine.
+  if (boost::iends_with(archiveFilename, TEXTURES_BSA_FILENAME_SUFFIX)) {
+    // Cut off the suffix and then add the target plugin's file extension.
+    const auto filenameString = archiveFilename.substr(
+        0, archiveFilename.size() - TEXTURES_BSA_FILENAME_SUFFIX_LENGTH);
+
+    auto pluginFilename = std::filesystem::u8path(filenameString);
+    pluginFilename += targetPluginPath.extension();
+    return pluginFilename;
+  } else {
+    // Replace the file extension.
+    return ReplaceExtension(archivePath, targetPluginPath.extension())
+        .filename();
+  }
+}
+
+std::function<std::filesystem::path(const std::filesystem::path&,
+                                    const std::filesystem::path&)>
+GetArchivePluginFilenameMapper(const GameType gameType) {
+  if (gameType == GameType::tes5) {
+    return MapTes5BsaToPlugin;
+  } else if (gameType == GameType::tes5se || gameType == GameType::tes5vr) {
+    return MapTes5SeBsaToPlugin;
+  } else {
+    return [=](const std::filesystem::path& archivePath,
+               const std::filesystem::path& targetPluginPath) {
+      if (gameType == GameType::tes4 &&
+          !boost::iends_with(targetPluginPath.filename().u8string(), ".esp")) {
+        return std::filesystem::path();
+      }
+
+      // A plugin can load any archive that starts with the same basename.
+      // Cut the archive filename down to the length of the target plugin
+      // filename and then append the plugin's file extension.
+      const auto pluginFilenameString =
+          archivePath.filename().u8string().substr(
+              0, targetPluginPath.stem().u8string().size());
+      auto pluginFilename = std::filesystem::u8path(pluginFilenameString);
+      pluginFilename += targetPluginPath.extension();
+
+      return pluginFilename;
+    };
+  }
+}
+
+std::vector<std::filesystem::path> FindAssociatedArchives(
+    const GameType gameType,
+    const loot::GameCache& gameCache,
+    const std::filesystem::path& pluginPath) {
+  std::vector<std::filesystem::path> paths;
+
+  if (gameType == GameType::tes3) {
+    return paths;
+  }
+
+  // If we try to create archive filenames to look for then we run the risk
+  // of creating filenames that don't match installed archives due to
+  // case-sensitivity, e.g. because the real filename has .BSA instead of
+  // .bsa. To avoid this, go the other way and loop over cached archive
+  // filenames that have been found installed, and derive plugin names from
+  // them, using the given plugin path. If the derived plugin path is
+  // equivalent to the given plugin path then the plugin loads that archive.
+
+  const auto filenameMapper = GetArchivePluginFilenameMapper(gameType);
+
+  for (const auto& archivePath : gameCache.GetArchivePaths()) {
+    if (gameType == GameType::tes5 && !paths.empty()) {
+      // Each plugin can only load up to one archive.
+      break;
+    } else if ((gameType == GameType::tes5se || gameType == GameType::tes5vr) &&
+               paths.size() == 2) {
+      // Each plugin can only load up to two archives.
+      break;
+    }
+
+    const auto archivePluginFilename = filenameMapper(archivePath, pluginPath);
+
+    // Make sure to ignore archives that are in a different directory than the
+    // plugin.
+    if (!archivePluginFilename.empty() &&
+        loot::equivalent(pluginPath,
+                         archivePath.parent_path() / archivePluginFilename)) {
+      paths.push_back(archivePath);
+    }
+  }
+
+  return paths;
+}
+}
+
 namespace loot {
-std::filesystem::path ReplaceExtension(std::filesystem::path path,
-                                       const std::string& newExtension) {
-  return path.replace_extension(std::filesystem::u8path(newExtension));
-}
-
-std::filesystem::path GetTexturesArchivePath(std::filesystem::path pluginPath,
-                                             const std::string& newExtension) {
-  // replace_extension() with no argument just removes the existing extension.
-  pluginPath.replace_extension();
-  pluginPath += " - Textures" + newExtension;
-  return pluginPath;
-}
-
 bool equivalent(const std::filesystem::path& path1,
                 const std::filesystem::path& path2) {
   // If the paths are identical, they've got to be equivalent,
@@ -72,69 +179,6 @@ bool equivalent(const std::filesystem::path& path1,
     // implementation.
     return false;
   }
-}
-
-std::vector<std::filesystem::path> FindAssociatedArchives(
-    const GameType gameType,
-    const GameCache& gameCache,
-    const std::filesystem::path& pluginPath) {
-  std::vector<std::filesystem::path> paths;
-
-  if (gameType == GameType::tes3) {
-    return paths;
-  }
-
-  const auto archiveExtension = GetArchiveFileExtension(gameType);
-
-  if (gameType == GameType::tes5) {
-    // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
-    // basename, ignoring file extensions.
-    const auto archiveFilename = ReplaceExtension(pluginPath, archiveExtension);
-
-    if (std::filesystem::exists(archiveFilename)) {
-      paths.push_back(archiveFilename);
-    }
-  } else if (gameType == GameType::tes5se || gameType == GameType::tes5vr) {
-    // Skyrim SE can load BSAs that have exactly the same
-    // basename, ignoring file extensions, and also BSAs with filenames of
-    // the form "<basename> - Textures.bsa" (case-insensitively).
-    // This assumes that Skyrim VR works the same way as Skyrim SE.
-    const auto archiveFilename = ReplaceExtension(pluginPath, archiveExtension);
-    const auto texturesArchiveFilename =
-        GetTexturesArchivePath(pluginPath, archiveExtension);
-
-    if (std::filesystem::exists(archiveFilename)) {
-      paths.push_back(archiveFilename);
-    }
-
-    if (std::filesystem::exists(texturesArchiveFilename)) {
-      paths.push_back(texturesArchiveFilename);
-    }
-  } else if (gameType != GameType::tes4 ||
-             boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
-    // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
-    // begin with the plugin basename.
-    // This assumes that FO4 VR works the same way as FO4.
-
-    const auto basenameLength = pluginPath.stem().native().length();
-    const auto pluginExtension = pluginPath.extension().native();
-
-    for (const auto& archivePath : gameCache.GetArchivePaths()) {
-      // Need to check if it starts with the given plugin's basename,
-      // but case insensitively. This is hard to do accurately, so
-      // instead check if the plugin with the same length basename and
-      // and the given plugin's file extension is equivalent.
-      const auto bsaPluginFilename =
-          archivePath.filename().native().substr(0, basenameLength) +
-          pluginExtension;
-      const auto bsaPluginPath = pluginPath.parent_path() / bsaPluginFilename;
-      if (loot::equivalent(pluginPath, bsaPluginPath)) {
-        paths.push_back(archivePath);
-      }
-    }
-  }
-
-  return paths;
 }
 
 Plugin::Plugin(const GameType gameType,

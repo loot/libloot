@@ -118,11 +118,34 @@ std::filesystem::path ResolvePluginPath(
   auto absolutePath =
       pluginPath.is_absolute() ? pluginPath : dataPath / pluginPath;
 
-  // In case the plugin is ghosted.
-  if (!std::filesystem::exists(absolutePath)) {
-    absolutePath += loot::GHOST_FILE_EXTENSION;
+  if (std::filesystem::exists(absolutePath)) {
+    return absolutePath;
   }
 
+  // If the ghosted plugin exists we can't assume that it has a lowercase file
+  // extension, and we can't assume it's in a case-insensitive filesystem.
+  // Scan the plugin's parent directory for a plugin that matches the expected
+  // ghosted plugin filename.
+  const auto targetFilename =
+      absolutePath.filename().u8string() + loot::GHOST_FILE_EXTENSION;
+
+  for (const auto& entry :
+       std::filesystem::directory_iterator(absolutePath.parent_path())) {
+    if (entry.is_regular_file()) {
+      const auto filename = entry.path().filename().u8string();
+      // Check the file extension first because the expected extension is
+      // ASCII-only so it can be compared relatively quickly.
+      if (boost::iends_with(filename, loot::GHOST_FILE_EXTENSION) &&
+          loot::CompareFilenames(filename, targetFilename) == 0) {
+        // The filenames are case-insensitively equal, use this filename.
+        absolutePath += entry.path().extension();
+        return absolutePath;
+      }
+    }
+  }
+
+  // No ghosted path found, just return the absolute path and let whatever uses
+  // it fail.
   return absolutePath;
 }
 
