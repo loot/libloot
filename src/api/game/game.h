@@ -52,13 +52,15 @@ public:
   LoadOrderHandler& GetLoadOrderHandler();
   const LoadOrderHandler& GetLoadOrderHandler() const;
 
-  void SetAdditionalDataPaths(
-      const std::vector<std::filesystem::path>& additionalDataPaths);
-
   // Game Interface Methods //
   ////////////////////////////
 
   GameType GetType() const override;
+
+  std::vector<std::filesystem::path> GetAdditionalDataPaths() const;
+
+  void SetAdditionalDataPaths(
+      const std::vector<std::filesystem::path>& additionalDataPaths) override;
 
   DatabaseInterface& GetDatabase() override;
   const DatabaseInterface& GetDatabase() const override;

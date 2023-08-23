@@ -40,6 +40,25 @@ public:
   virtual GameType GetType() const = 0;
 
   /**
+   * @brief   Gets the currently-set additional data paths.
+   * @details Only Fallout 4 installed from the Microsoft Store is configured
+   *          with any additional data paths by default, as its DLC directories
+   *          are installed outside of the Fallout 4 install path.
+   */
+  virtual std::vector<std::filesystem::path> GetAdditionalDataPaths() const = 0;
+
+  /**
+   * @brief   Set additional data paths.
+   * @details The additional data paths are used when interacting with the load
+   *          order, evaluating conditions and scanning for archives (BSA/BA2
+   *          depending on the game). Additional data paths are used in the
+   *          order they are given, and take precedence over the game's main
+   *          data path.
+   */
+  virtual void SetAdditionalDataPaths(
+      const std::vector<std::filesystem::path>& additionalDataPaths) = 0;
+
+  /**
    *  @name Metadata Access
    *  @{
    */

@@ -154,7 +154,7 @@ Game::Game(const GameType gameType,
     conditionEvaluator_(
         std::make_shared<ConditionEvaluator>(GetType(), DataPath())),
     database_(ApiDatabase(conditionEvaluator_)),
-    additionalDataPaths_(GetAdditionalDataPaths(GetType(), DataPath())) {
+    additionalDataPaths_(::GetAdditionalDataPaths(GetType(), DataPath())) {
   conditionEvaluator_->SetAdditionalDataPaths(additionalDataPaths_);
 }
 
@@ -181,6 +181,10 @@ const LoadOrderHandler& Game::GetLoadOrderHandler() const {
 const DatabaseInterface& Game::GetDatabase() const { return database_; }
 
 DatabaseInterface& Game::GetDatabase() { return database_; }
+
+std::vector<std::filesystem::path> Game::GetAdditionalDataPaths() const {
+  return additionalDataPaths_;
+}
 
 void Game::SetAdditionalDataPaths(
     const std::vector<std::filesystem::path>& additionalDataPaths) {

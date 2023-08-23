@@ -70,6 +70,15 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo4,
                                            GameType::tes5se));
 
+TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldDoThat) {
+  const auto paths = std::vector<std::filesystem::path>{
+      localPath, localPath.parent_path() / "other"};
+
+  handle_->SetAdditionalDataPaths(paths);
+
+  EXPECT_EQ(paths, handle_->GetAdditionalDataPaths());
+}
+
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidPlugin) {
   EXPECT_TRUE(handle_->IsValidPlugin(blankEsm));
 }
