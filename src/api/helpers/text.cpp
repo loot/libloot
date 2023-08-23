@@ -223,4 +223,13 @@ std::string NormalizeFilename(const std::string& filename) {
   return normalizedFilename;
 #endif
 }
+
+std::string TrimDotGhostExtension(const std::string& filename) {
+  // If the name passed ends in '.ghost', that should be trimmed.
+  if (boost::iends_with(filename, GHOST_FILE_EXTENSION)) {
+    return filename.substr(0, filename.length() - GHOST_FILE_EXTENSION_LENGTH);
+  }
+
+  return filename;
+}
 }

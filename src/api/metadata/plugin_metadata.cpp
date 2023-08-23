@@ -36,9 +36,7 @@
 namespace loot {
 PluginMetadata::PluginMetadata(const std::string& n) : name_(n) {
   // If the name passed ends in '.ghost', that should be trimmed.
-  if (boost::iends_with(name_, GHOST_FILE_EXTENSION)) {
-    name_ = name_.substr(0, name_.length() - GHOST_FILE_EXTENSION_LENGTH);
-  }
+  name_ = TrimDotGhostExtension(n);
 
   if (IsRegexPlugin()) {
     nameRegex_ = std::regex(name_, std::regex::ECMAScript | std::regex::icase);

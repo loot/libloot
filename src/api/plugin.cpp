@@ -141,7 +141,7 @@ Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
                std::filesystem::path pluginPath,
                const bool headerOnly) :
-    name_(pluginPath.filename().u8string()),
+    name_(TrimDotGhostExtension(pluginPath.filename().u8string())),
     esPlugin(
         std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(nullptr,
                                                               esp_plugin_free)),
@@ -150,17 +150,12 @@ Plugin::Plugin(const GameType gameType,
   auto logger = getLogger();
 
   try {
-    // In case the plugin is ghosted.
-    if (!std::filesystem::exists(pluginPath)) {
-      pluginPath += GHOST_FILE_EXTENSION;
-    }
-
     Load(pluginPath, gameType, headerOnly);
 
     auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
     if (ret != ESP_OK) {
       throw FileAccessError(
-          "Error checking if \"" + name_ +
+          "Error checking if \"" + pluginPath.u8string() +
           "\" is empty. esplugin error code: " + std::to_string(ret));
     }
 
@@ -173,7 +168,7 @@ Plugin::Plugin(const GameType gameType,
                                               &overrideRecordCount_);
       if (ret != ESP_OK) {
         throw FileAccessError(
-            "Error counting override records in \"" + name_ +
+            "Error counting override records in \"" + pluginPath.u8string() +
             "\". esplugin error code: " + std::to_string(ret));
       }
 
@@ -184,7 +179,7 @@ Plugin::Plugin(const GameType gameType,
       if (logger) {
         logger->debug(
             "Plugin file \"{}\" loads {} assets from Bethesda archives",
-            name_,
+            pluginPath.u8string(),
             GetAssetCount());
       }
     }
@@ -192,10 +187,11 @@ Plugin::Plugin(const GameType gameType,
     tags_ = ExtractBashTags(GetDescription());
   } catch (const std::exception& e) {
     if (logger) {
-      logger->error(
-          "Cannot read plugin file \"{}\". Details: {}", name_, e.what());
+      logger->error("Cannot read plugin file \"{}\". Details: {}",
+                    pluginPath.u8string(),
+                    e.what());
     }
-    throw FileAccessError("Cannot read \"" + name_ +
+    throw FileAccessError("Cannot read \"" + pluginPath.u8string() +
                           "\". Details: " + e.what());
   }
 }
@@ -396,13 +392,6 @@ bool Plugin::IsValid(const GameType gameType,
                                           true,
                                           &isValid);
 
-    if (returnCode != ESP_OK || !isValid) {
-      // Try adding .ghost extension.
-      auto ghostedFilename = pluginPath.u8string() + GHOST_FILE_EXTENSION;
-      returnCode = esp_plugin_is_valid(
-          GetEspluginGameId(gameType), ghostedFilename.c_str(), true, &isValid);
-    }
-
     if (returnCode == ESP_OK && isValid) {
       return true;
     }
@@ -411,7 +400,7 @@ bool Plugin::IsValid(const GameType gameType,
   auto logger = getLogger();
   if (logger) {
     logger->debug("The file \"{}\" is not a valid plugin.",
-                  pluginPath.filename().u8string());
+                  pluginPath.u8string());
   }
 
   return false;

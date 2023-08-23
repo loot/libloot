@@ -87,10 +87,11 @@ TEST_P(GameCacheTest,
        gettingPluginsShouldReturnASetOfCachedPluginsIfPluginsHaveBeenCached) {
   cache_.AddPlugin(
       Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
-  cache_.AddPlugin(Plugin(game_.GetType(),
-                          GameCache(),
-                          game_.DataPath() / blankMasterDependentEsm,
-                          true));
+  cache_.AddPlugin(
+      Plugin(game_.GetType(),
+             GameCache(),
+             game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
+             true));
 
   EXPECT_FALSE(cache_.GetPlugins().empty());
 }

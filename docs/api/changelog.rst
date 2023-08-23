@@ -451,7 +451,7 @@ Changed
 Fixed
 -----
 
-- ``.ghost`` file extensionms are no longer recursively trimmed when checking if
+- ``.ghost`` file extensions are no longer recursively trimmed when checking if
   a file has a valid plugin file extension during metadata condition evaluation.
   Via loot-condition-interpreter.
 - When looking for a plugin file matching a path during metadata condition

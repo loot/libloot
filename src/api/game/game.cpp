@@ -115,7 +115,15 @@ std::vector<std::filesystem::path> GetAdditionalDataPaths(
 std::filesystem::path ResolvePluginPath(
     const std::filesystem::path& dataPath,
     const std::filesystem::path& pluginPath) {
-  return pluginPath.is_absolute() ? pluginPath : dataPath / pluginPath;
+  auto absolutePath =
+      pluginPath.is_absolute() ? pluginPath : dataPath / pluginPath;
+
+  // In case the plugin is ghosted.
+  if (!std::filesystem::exists(absolutePath)) {
+    absolutePath += loot::GHOST_FILE_EXTENSION;
+  }
+
+  return absolutePath;
 }
 
 std::vector<std::filesystem::path> FindArchives(
@@ -252,12 +260,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
       [&](const std::filesystem::path& pluginPath) {
         try {
           const auto resolvedPluginPath =
-              boost::iequals(pluginPath.extension().u8string(),
-                             GHOST_FILE_EXTENSION)
-                  ? ResolvePluginPath(
-                        DataPath(),
-                        std::filesystem::path(pluginPath).replace_extension())
-                  : ResolvePluginPath(DataPath(), pluginPath);
+              ResolvePluginPath(DataPath(), pluginPath);
 
           const bool loadHeader =
               loadHeadersOnly ||

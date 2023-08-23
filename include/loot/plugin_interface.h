@@ -43,7 +43,8 @@ public:
 
   /**
    * Get the plugin's filename.
-   * @return The plugin filename.
+   * @return The plugin filename. If the plugin was ghosted when it was loaded,
+   *         this filename will be without the .ghost suffix.
    */
   virtual std::string GetName() const = 0;
 

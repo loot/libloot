@@ -265,7 +265,7 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
 TEST_P(PluginTest, loadingWholePluginShouldReadFields) {
   Plugin plugin(game_.GetType(),
                 game_.GetCache(),
-                game_.DataPath() / blankMasterDependentEsm,
+                game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                 false);
 
   if (GetParam() == GameType::tes3) {
@@ -481,7 +481,7 @@ TEST_P(PluginTest,
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, true);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
-                 game_.DataPath() / blankMasterDependentEsm,
+                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                  true);
 
   EXPECT_FALSE(plugin1.DoRecordsOverlap(plugin2));
@@ -505,7 +505,7 @@ TEST_P(PluginTest,
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
-                 game_.DataPath() / blankMasterDependentEsm,
+                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                  false);
 
   EXPECT_TRUE(plugin1.DoRecordsOverlap(plugin2));
@@ -528,7 +528,7 @@ TEST_P(PluginTest, getOverlapSizeShouldCountEachRecordOnce) {
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
-                 game_.DataPath() / blankMasterDependentEsm,
+                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                  false);
 
   EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin2}));
@@ -541,7 +541,7 @@ TEST_P(PluginTest, getOverlapSizeShouldCheckAgainstAllGivenPlugins) {
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
   Plugin plugin3(game_.GetType(),
                  game_.GetCache(),
-                 game_.DataPath() / blankMasterDependentEsm,
+                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                  false);
 
   EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin3}));
@@ -553,7 +553,7 @@ TEST_P(PluginTest,
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, true);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
-                 game_.DataPath() / blankMasterDependentEsm,
+                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                  true);
 
   EXPECT_EQ(0, plugin1.GetOverlapSize({&plugin2}));

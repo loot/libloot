@@ -53,6 +53,8 @@ int CompareFilenames(const std::string& lhs, const std::string& rhs);
 // that the normalized filenames distinguish characters in a similar way to the
 // Windows filesystem.
 std::string NormalizeFilename(const std::string& filename);
+
+std::string TrimDotGhostExtension(const std::string& filename);
 }
 
 #endif
