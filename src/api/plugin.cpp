@@ -417,13 +417,6 @@ bool Plugin::IsValid(const GameType gameType,
   return false;
 }
 
-uintmax_t Plugin::GetFileSize(std::filesystem::path pluginPath) {
-  if (!std::filesystem::exists(pluginPath))
-    pluginPath += GHOST_FILE_EXTENSION;
-
-  return std::filesystem::file_size(pluginPath);
-}
-
 void Plugin::Load(const std::filesystem::path& path,
                   GameType gameType,
                   bool headerOnly) {

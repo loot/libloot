@@ -88,7 +88,6 @@ public:
   // Validity checks.
   static bool IsValid(const GameType gameType,
                       const std::filesystem::path& pluginPath);
-  static uintmax_t GetFileSize(std::filesystem::path pluginPath);
 
 private:
   void Load(const std::filesystem::path& path,

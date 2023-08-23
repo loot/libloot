@@ -465,22 +465,6 @@ TEST_P(
   }
 }
 
-TEST_P(PluginTest, getFileSizeShouldThrowForAMissingPlugin) {
-  EXPECT_THROW(Plugin::GetFileSize(game_.DataPath() / missingEsp),
-               std::filesystem::filesystem_error);
-}
-
-TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAPlugin) {
-  EXPECT_EQ(getNonAsciiEspFileSize(),
-            Plugin::GetFileSize(game_.DataPath() /
-                                std::filesystem::u8path(nonAsciiEsp)));
-}
-
-TEST_P(PluginTest, getFileSizeShouldReturnCorrectValueForAGhostedPlugin) {
-  EXPECT_EQ(getGhostedPluginFileSize(),
-            Plugin::GetFileSize(game_.DataPath() / blankMasterDependentEsm));
-}
-
 TEST_P(PluginTest,
        doRecordsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
   Plugin plugin1(
