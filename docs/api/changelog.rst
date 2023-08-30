@@ -2,6 +2,45 @@
 Version History
 ***************
 
+0.21.0 - 2023-08-30
+===================
+
+Added
+-----
+
+- :cpp:any:`loot::GameInterface::GetType()`
+- A ``const`` overload of :cpp:any:`loot::GameInterface::GetDatabase()`
+- :cpp:any:`loot::GameInterface::GetAdditionalDataPaths()`
+- :cpp:any:`loot::GameInterface::SetAdditionalDataPaths()`
+
+Changed
+-------
+
+- libloot now supports v0.21 of the metadata syntax.
+- :cpp:any:`loot::GameInterface::IsValidPlugin()`,
+  :cpp:any:`loot::GameInterface::LoadPlugins()` and
+  :cpp:any:`loot::GameInterface::SortPlugins()` now take plugin paths as
+  ``std::filesystem::path`` instead of ``std::string``.
+- It is now possible to create a game handle with a ``game_local_path`` that
+  does not exist.
+- It is now possible to create a game handle with an empty ``game_local_path``
+  on Linux if the ``game`` is Morrowind.
+- Updated ICU (used by Linux builds) to v71.1.
+- Updated libloadorder to v14.2.1.
+- Updated loot-condition-interpreter to v3.0.0.
+
+Fixed
+-----
+
+- Condition evaluation would only recognise plugin files as plugins if they had
+  lowercase file extensions.
+- When reading the list of active plugins for Oblivion, libloot would look for a
+  file named ``plugins.txt``, which caused inaccurate results on case-sensitive
+  filesystems, as Oblivion writes the file as ``Plugins.txt``.
+- The doc comment for :cpp:any:`loot::GameInterface::SortPlugins()` used the
+  wrong parameter name.
+- Cross-compiling from Linux to Windows using MinGW-w64.
+
 0.19.4 - 2023-05-06
 ===================
 
@@ -34,7 +73,7 @@ Changed
   plugin filenames. Relative paths are interpreted as relative to the game's
   data path, so this change is backwards-compatible. Absolute paths are used as
   given. The functions take plugin paths as strings to avoid breaking libloot's
-  binary interface, but they will be changed to take ``std::filesystem::path``s
+  binary interface, but they will be changed to take ``std::filesystem::path``
   in a future release.
 - :cpp:any:`loot::GameInterface::LoadPlugins()` and
   :cpp:any:`loot::GameInterface::SortPlugins()` now check that all filenames in

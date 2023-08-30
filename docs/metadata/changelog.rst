@@ -4,6 +4,22 @@ Version History
 
 The version history of the metadata syntax is given below.
 
+0.21 - 2023-08-30
+=================
+
+Changed
+-------
+
+- The syntax for substitution placeholders is now zero-indexed and uses curly
+  braces instead of percentage signs. For example, ``%1% %2%`` is now
+  ``{0} {1}``.
+
+Removed
+-------
+
+- Support for the ``LOOT`` file path alias. It will now be interpreted as a
+  normal path, i.e. a file or folder named ``LOOT`` in the game's data path.
+
 0.18 - 2022-02-27
 =================
 
