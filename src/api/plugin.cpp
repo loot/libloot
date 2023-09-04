@@ -41,11 +41,12 @@ std::filesystem::path ReplaceExtension(std::filesystem::path path,
   return path.replace_extension(std::filesystem::u8path(newExtension));
 }
 
-std::filesystem::path GetTexturesArchivePath(std::filesystem::path pluginPath,
+std::filesystem::path GetSuffixedArchivePath(std::filesystem::path pluginPath,
+                                             const std::string& suffix,
                                              const std::string& newExtension) {
   // replace_extension() with no argument just removes the existing extension.
   pluginPath.replace_extension();
-  pluginPath += " - Textures" + newExtension;
+  pluginPath += suffix + newExtension;
   return pluginPath;
 }
 
@@ -74,67 +75,108 @@ bool equivalent(const std::filesystem::path& path1,
   }
 }
 
-std::vector<std::filesystem::path> FindAssociatedArchives(
-    const GameType gameType,
-    const GameCache& gameCache,
+std::vector<std::filesystem::path> FindAssociatedArchive(
     const std::filesystem::path& pluginPath) {
-  std::vector<std::filesystem::path> paths;
+  const auto archiveFilename = ReplaceExtension(pluginPath, BSA_FILE_EXTENSION);
 
-  if (gameType == GameType::tes3) {
-    return paths;
+  if (std::filesystem::exists(archiveFilename)) {
+    return {archiveFilename};
   }
 
-  const auto archiveExtension = GetArchiveFileExtension(gameType);
+  return {};
+}
 
-  if (gameType == GameType::tes5) {
-    // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
-    // basename, ignoring file extensions.
-    const auto archiveFilename = ReplaceExtension(pluginPath, archiveExtension);
+std::vector<std::filesystem::path> FindAssociatedArchivesWithSuffixes(
+    const std::filesystem::path& pluginPath,
+    const std::string& archiveExtension,
+    const std::vector<std::string>& supportedSuffixes) {
+  std::vector<std::filesystem::path> paths;
 
-    if (std::filesystem::exists(archiveFilename)) {
-      paths.push_back(archiveFilename);
-    }
-  } else if (gameType == GameType::tes5se || gameType == GameType::tes5vr) {
-    // Skyrim SE can load BSAs that have exactly the same
-    // basename, ignoring file extensions, and also BSAs with filenames of
-    // the form "<basename> - Textures.bsa" (case-insensitively).
-    // This assumes that Skyrim VR works the same way as Skyrim SE.
-    const auto archiveFilename = ReplaceExtension(pluginPath, archiveExtension);
-    const auto texturesArchiveFilename =
-        GetTexturesArchivePath(pluginPath, archiveExtension);
+  for (const auto& suffix : supportedSuffixes) {
+    const auto archivePath =
+        GetSuffixedArchivePath(pluginPath, suffix, archiveExtension);
 
-    if (std::filesystem::exists(archiveFilename)) {
-      paths.push_back(archiveFilename);
-    }
-
-    if (std::filesystem::exists(texturesArchiveFilename)) {
-      paths.push_back(texturesArchiveFilename);
-    }
-  } else if (gameType != GameType::tes4 ||
-             boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
-    // Oblivion .esp files and FO3, FNV, FO4 plugins can load archives which
-    // begin with the plugin basename.
-    // This assumes that FO4 VR works the same way as FO4.
-
-    const auto basenameLength = pluginPath.stem().native().length();
-    const auto pluginExtension = pluginPath.extension().native();
-
-    for (const auto& archivePath : gameCache.GetArchivePaths()) {
-      // Need to check if it starts with the given plugin's basename,
-      // but case insensitively. This is hard to do accurately, so
-      // instead check if the plugin with the same length basename and
-      // and the given plugin's file extension is equivalent.
-      const auto bsaPluginFilename =
-          archivePath.filename().native().substr(0, basenameLength) +
-          pluginExtension;
-      const auto bsaPluginPath = pluginPath.parent_path() / bsaPluginFilename;
-      if (loot::equivalent(pluginPath, bsaPluginPath)) {
-        paths.push_back(archivePath);
-      }
+    if (std::filesystem::exists(archivePath)) {
+      paths.push_back(archivePath);
     }
   }
 
   return paths;
+}
+
+std::vector<std::filesystem::path> FindAssociatedArchivesWithArbitrarySuffixes(
+    const GameCache& gameCache,
+    const std::filesystem::path& pluginPath) {
+  const auto basenameLength = pluginPath.stem().native().length();
+  const auto pluginExtension = pluginPath.extension().native();
+
+  std::vector<std::filesystem::path> paths;
+  for (const auto& archivePath : gameCache.GetArchivePaths()) {
+    // Need to check if it starts with the given plugin's basename,
+    // but case insensitively. This is hard to do accurately, so
+    // instead check if the plugin with the same length basename and
+    // and the given plugin's file extension is equivalent.
+    const auto bsaPluginFilename =
+        archivePath.filename().native().substr(0, basenameLength) +
+        pluginExtension;
+    const auto bsaPluginPath = pluginPath.parent_path() / bsaPluginFilename;
+    if (loot::equivalent(pluginPath, bsaPluginPath)) {
+      paths.push_back(archivePath);
+    }
+  }
+
+  return paths;
+}
+
+std::vector<std::filesystem::path> FindAssociatedArchives(
+    const GameType gameType,
+    const GameCache& gameCache,
+    const std::filesystem::path& pluginPath) {
+  switch (gameType) {
+    case GameType::tes3:
+      return {};
+    case GameType::tes5:
+      // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
+      // basename, ignoring file extensions.
+      return FindAssociatedArchive(pluginPath);
+    case GameType::tes5se:
+    case GameType::tes5vr:
+      // Skyrim SE can load BSAs that have exactly the same
+      // basename, ignoring file extensions, and also BSAs with filenames of
+      // the form "<basename> - Textures.bsa" (case-insensitively).
+      // This assumes that Skyrim VR works the same way as Skyrim SE.
+      return FindAssociatedArchivesWithSuffixes(
+          pluginPath, BSA_FILE_EXTENSION, {"", " - Textures"});
+    case GameType::tes4: {
+      // Oblivion .esp files can load archives which begin with the plugin
+      // basename.
+      if (!boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
+        return {};
+      }
+
+      return FindAssociatedArchivesWithArbitrarySuffixes(gameCache, pluginPath);
+    }
+    case GameType::fo3:
+    case GameType::fonv:
+    case GameType::fo4:
+    case GameType::fo4vr: {
+      // FO3, FNV, FO4 plugins can load archives which begin with the plugin
+      // basename. This assumes that FO4 VR works the same way as FO4.
+      return FindAssociatedArchivesWithArbitrarySuffixes(gameCache, pluginPath);
+    }
+    case GameType::starfield:
+      // The game will load a BA2 that's suffixed with " - Voices_<language>"
+      // where <language> is whatever language Starfield is configured to use
+      // (sLanguage in the ini), so this isn't exactly correct but will work
+      // so long as a plugin with voices has voices for English, which seems
+      // likely.
+      return FindAssociatedArchivesWithSuffixes(
+          pluginPath,
+          BA2_FILE_EXTENSION,
+          {" - Main", " - Textures", " - Localization", " - Voices_en"});
+    default:
+      throw std::logic_error("Unrecognised game type");
+  }
 }
 
 Plugin::Plugin(const GameType gameType,
@@ -260,10 +302,34 @@ bool Plugin::IsLightPlugin() const {
   return isLightPlugin;
 }
 
+bool Plugin::IsOverridePlugin() const {
+  bool isOverridePlugin = false;
+  const auto ret =
+      esp_plugin_is_override_plugin(esPlugin.get(), &isOverridePlugin);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ +
+                          " : esplugin error code: " + std::to_string(ret));
+  }
+
+  return isOverridePlugin;
+}
+
 bool Plugin::IsValidAsLightPlugin() const {
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ +
+                          " : esplugin error code: " + std::to_string(ret));
+  }
+
+  return isValid;
+}
+
+bool Plugin::IsValidAsOverridePlugin() const {
+  bool isValid = false;
+  const auto ret =
+      esp_plugin_is_valid_as_override_plugin(esPlugin.get(), &isValid);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -445,10 +511,11 @@ std::string Plugin::GetDescription() const {
 }
 
 std::string GetArchiveFileExtension(const GameType gameType) {
-  if (gameType == GameType::fo4 || gameType == GameType::fo4vr)
-    return ".ba2";
+  if (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
+      gameType == GameType::starfield)
+    return BA2_FILE_EXTENSION;
   else
-    return ".bsa";
+    return BSA_FILE_EXTENSION;
 }
 
 unsigned int Plugin::GetEspluginGameId(GameType gameType) {
@@ -460,13 +527,19 @@ unsigned int Plugin::GetEspluginGameId(GameType gameType) {
     case GameType::tes5:
       return ESP_GAME_SKYRIM;
     case GameType::tes5se:
+    case GameType::tes5vr:
       return ESP_GAME_SKYRIMSE;
     case GameType::fo3:
       return ESP_GAME_FALLOUT3;
     case GameType::fonv:
       return ESP_GAME_FALLOUTNV;
-    default:
+    case GameType::fo4:
+    case GameType::fo4vr:
       return ESP_GAME_FALLOUT4;
+    case GameType::starfield:
+      return ESP_GAME_STARFIELD;
+    default:
+      throw std::logic_error("Unrecognised game type");
   }
 }
 
@@ -479,7 +552,8 @@ bool hasPluginFileExtension(std::string filename, GameType gameType) {
   bool isEspOrEsm = boost::iends_with(filename, ".esp") ||
                     boost::iends_with(filename, ".esm");
   bool isEsl = (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
-                gameType == GameType::tes5se || gameType == GameType::tes5vr) &&
+                gameType == GameType::tes5se || gameType == GameType::tes5vr ||
+                gameType == GameType::starfield) &&
                boost::iends_with(filename, ".esl");
 
   return isEspOrEsm || isEsl;

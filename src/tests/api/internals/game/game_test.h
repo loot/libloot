@@ -67,7 +67,11 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo3,
                                            GameType::fonv,
                                            GameType::fo4,
-                                           GameType::tes5se));
+                                           GameType::tes5se,
+                                           GameType::fo4vr,
+                                           GameType::tes5vr,
+                                           GameType::tes3,
+                                           GameType::starfield));
 
 TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
@@ -77,18 +81,17 @@ TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
 }
 
 #ifndef _WIN32
-// Testing on Windows will find real game installs in the Registry, so cannot
-// test autodetection fully unless on Linux.
-TEST_P(GameTest, constructingShouldThrowOnLinuxIfGamePathIsNotGiven) {
-  EXPECT_THROW(Game(GetParam(), "", localPath), std::invalid_argument);
-}
-
-TEST_P(GameTest, constructingShouldThrowOnLinuxIfLocalPathIsNotGiven) {
-  EXPECT_THROW(Game(GetParam(), dataPath.parent_path()), std::system_error);
+TEST_P(GameTest,
+       constructingShouldThrowOnLinuxIfLocalPathIsNotGivenExceptForMorrowind) {
+  if (GetParam() == GameType::tes3) {
+    EXPECT_NO_THROW(Game(GetParam(), dataPath.parent_path()));
+  } else {
+    EXPECT_THROW(Game(GetParam(), dataPath.parent_path()), std::system_error);
+  }
 }
 #else
 TEST_P(GameTest, constructingShouldNotThrowOnWindowsIfLocalPathIsNotGiven) {
-  EXPECT_NO_THROW(Game(GetParam(), dataPath.parent_path(), localPath));
+  EXPECT_NO_THROW(Game(GetParam(), dataPath.parent_path()));
 }
 #endif
 
@@ -246,8 +249,10 @@ TEST_P(GameTest, loadPluginsShouldFindArchivesInExternalDataPaths) {
 
   // Create a couple of external archive files.
   const std::string archiveFileExtension =
-      GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ? ".ba2"
-                                                                   : ".bsa";
+      GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
+              GetParam() == GameType::starfield
+          ? ".ba2"
+          : ".bsa";
 
   const auto ba2Path1 =
       dataPath.parent_path() /

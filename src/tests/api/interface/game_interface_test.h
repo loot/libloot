@@ -68,7 +68,11 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo3,
                                            GameType::fonv,
                                            GameType::fo4,
-                                           GameType::tes5se));
+                                           GameType::tes5se,
+                                           GameType::fo4vr,
+                                           GameType::tes5vr,
+                                           GameType::tes3,
+                                           GameType::starfield));
 
 TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldDoThat) {
   const auto paths = std::vector<std::filesystem::path>{
@@ -211,6 +215,7 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
 TEST_P(GameInterfaceTest,
        isPluginActiveShouldReturnFalseIfTheGivenPluginIsNotActive) {
   handle_->LoadCurrentLoadOrderState();
+
   EXPECT_TRUE(handle_->IsPluginActive(blankEsm));
 }
 
@@ -224,6 +229,10 @@ TEST_P(GameInterfaceTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
   // Remove the non-ASCII duplicate plugin.
   std::filesystem::remove(dataPath / std::filesystem::u8path(nonAsciiEsm));
 
+  // Set no additional data paths to avoid picking up non-test plugins on PCs
+  // which have Starfield or Fallout 4 installed.
+  handle_->SetAdditionalDataPaths({});
+
   handle_->LoadCurrentLoadOrderState();
   ASSERT_EQ(getLoadOrder(), handle_->GetLoadOrder());
 }
@@ -231,6 +240,10 @@ TEST_P(GameInterfaceTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
 TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
   // Remove the non-ASCII duplicate plugin.
   std::filesystem::remove(dataPath / std::filesystem::u8path(nonAsciiEsm));
+
+  // Set no additional data paths to avoid picking up non-test plugins on PCs
+  // which have Starfield or Fallout 4 installed.
+  handle_->SetAdditionalDataPaths({});
 
   handle_->LoadCurrentLoadOrderState();
   std::vector<std::string> loadOrder({
@@ -247,7 +260,12 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
       blankPluginDependentEsp,
   });
 
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+  const auto gameSupportsEsl =
+      GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
+      GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
+      GetParam() == GameType::starfield;
+
+  if (gameSupportsEsl) {
     loadOrder.insert(loadOrder.begin() + 5, blankEsl);
   }
 
@@ -255,8 +273,9 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
 
   EXPECT_EQ(loadOrder, handle_->GetLoadOrder());
 
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
+  if (gameSupportsEsl) {
     loadOrder.erase(std::begin(loadOrder));
+  }
 
   EXPECT_EQ(loadOrder, getLoadOrder());
 }

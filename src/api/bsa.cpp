@@ -142,7 +142,7 @@ void StoreHashes(std::map<uint64_t, std::set<uint64_t>>& folderFileHashes,
   }
 }
 
-// Normalise the path the same way that BA2 hashes do (it's thet same as for
+// Normalise the path the same way that BA2 hashes do (it's the same as for
 // BSAs).
 void NormalisePath(std::string& filePath) {
   for (size_t i = 0; i < filePath.size(); ++i) {
@@ -217,7 +217,8 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2(std::istream& in,
     throw std::runtime_error("BA2 file header type ID is invalid");
   }
 
-  if (header.version != 1) {
+  // The header version is 1 for Fallout 4 and 2 or 3 for Starfield.
+  if (header.version != 1 && header.version != 2 && header.version != 3) {
     throw std::runtime_error("BA2 file header version is invalid");
   }
 
@@ -237,7 +238,7 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2(std::istream& in,
 bool ShouldWarnAboutHashCollisions(const std::filesystem::path& archivePath) {
   const auto filename = archivePath.filename().u8string();
 
-  return !boost::iends_with(filename, ".ba2") ||
+  return !boost::iends_with(filename, BA2_FILE_EXTENSION) ||
          (!boost::istarts_with(filename, "Fallout4 - ") &&
           !boost::istarts_with(filename, "DLCUltraHighResolution - "));
 }

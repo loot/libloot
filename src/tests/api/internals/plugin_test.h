@@ -65,18 +65,29 @@ protected:
         dataPath / blankEsp,
         dataPath / std::filesystem::u8path(otherNonAsciiEsp)));
 
-    if (GetParam() != GameType::fo4 && GetParam() != GameType::tes5se) {
+    if (GetParam() != GameType::fo4 && GetParam() != GameType::fo4vr &&
+        GetParam() != GameType::tes5se && GetParam() != GameType::tes5vr &&
+        GetParam() != GameType::starfield) {
       ASSERT_NO_THROW(
           std::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
     }
 
+    if (GetParam() == GameType::starfield) {
+      // The ESL flag is not the same as in Skyrim SE, so modify the file
+      // accordingly.
+      auto bytes = ReadFile(dataPath / blankEsl);
+      bytes[9] = 0x1;
+      WriteFile(dataPath / blankEsl, bytes);
+    }
+
     // Copy across archive files.
-    const auto blankMasterDependentArchive =
-        "Blank - Master Dependent" + GetArchiveFileExtension(GetParam());
-    if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr) {
+    std::filesystem::path blankMasterDependentArchive;
+    if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
+        GetParam() == GameType::starfield) {
       copyPlugin("./Fallout 4/Data", "Blank - Main.ba2");
       copyPlugin("./Fallout 4/Data", "Blank - Textures.ba2");
 
+      blankMasterDependentArchive = "Blank - Master Dependent - Main.ba2";
       std::filesystem::copy_file("./Fallout 4/Data/Blank - Main.ba2",
                                  dataPath / blankMasterDependentArchive);
       ASSERT_TRUE(
@@ -84,10 +95,15 @@ protected:
     } else if (GetParam() == GameType::tes3) {
       out.open(dataPath / blankArchive);
       out.close();
+
+      blankMasterDependentArchive = "Blank - Master Dependent.bsa";
+      out.open(dataPath / blankMasterDependentArchive);
+      out.close();
     } else {
       copyPlugin(getSourcePluginsPath(), blankArchive);
 
       // Also create a copy for Blank - Master Dependent.esp to test overlap.
+      blankMasterDependentArchive = "Blank - Master Dependent.bsa";
       std::filesystem::copy_file(getSourcePluginsPath() / blankArchive,
                                  dataPath / blankMasterDependentArchive);
       ASSERT_TRUE(
@@ -143,6 +159,24 @@ protected:
     }
   }
 
+  std::vector<char> ReadFile(const std::filesystem::path& path) {
+    std::vector<char> bytes;
+    std::ifstream in(path, std::ios::binary);
+
+    std::copy(std::istreambuf_iterator<char>(in),
+              std::istreambuf_iterator<char>(),
+              std::back_inserter(bytes));
+
+    return bytes;
+  }
+
+  void WriteFile(const std::filesystem::path& path,
+                 const std::vector<char>& content) {
+    std::ofstream out(path, std::ios::binary);
+
+    out.write(content.data(), content.size());
+  }
+
   const std::string emptyFile;
   const std::string lowercaseBlankEsp;
   const std::string nonAsciiEsp;
@@ -154,7 +188,8 @@ protected:
 
 private:
   static std::string GetArchiveFileExtension(const GameType gameType) {
-    if (gameType == GameType::fo4)
+    if (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
+        gameType == GameType::starfield)
       return ".ba2";
     else
       return ".bsa";
@@ -176,7 +211,9 @@ public:
 
   bool IsMaster() const override { return false; }
   bool IsLightPlugin() const override { return false; }
+  bool IsOverridePlugin() const override { return false; }
   bool IsValidAsLightPlugin() const override { return false; }
+  bool IsValidAsOverridePlugin() const override { return false; }
   bool IsEmpty() const override { return false; }
   bool LoadsArchive() const override { return false; }
   bool DoRecordsOverlap(const PluginInterface&) const override { return true; }
@@ -199,13 +236,16 @@ public:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
                          PluginTest,
-                         ::testing::Values(GameType::tes3,
-                                           GameType::tes4,
+                         ::testing::Values(GameType::tes4,
                                            GameType::tes5,
                                            GameType::fo3,
                                            GameType::fonv,
                                            GameType::fo4,
-                                           GameType::tes5se));
+                                           GameType::tes5se,
+                                           GameType::fo4vr,
+                                           GameType::tes5vr,
+                                           GameType::tes3,
+                                           GameType::starfield));
 
 TEST_P(PluginTest, loadingShouldHandleNonAsciiFilenamesCorrectly) {
   Plugin plugin(game_.GetType(),
@@ -305,8 +345,28 @@ TEST_P(
 
   EXPECT_FALSE(plugin1.IsLightPlugin());
   EXPECT_FALSE(plugin2.IsLightPlugin());
-  EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::tes5se,
+  EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
+                GetParam() == GameType::tes5se ||
+                GetParam() == GameType::tes5vr ||
+                GetParam() == GameType::starfield,
             plugin3.IsLightPlugin());
+}
+
+TEST_P(PluginTest,
+       isOverridePluginShouldOnlyBeTrueForAStarfieldOverridePlugin) {
+  auto bytes = ReadFile(dataPath / blankDifferentPluginDependentEsp);
+  bytes[9] = 0x2;
+  WriteFile(dataPath / blankDifferentPluginDependentEsp, bytes);
+
+  Plugin plugin1(
+      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, true);
+  Plugin plugin2(game_.GetType(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankDifferentPluginDependentEsp,
+                 true);
+
+  EXPECT_FALSE(plugin1.IsOverridePlugin());
+  EXPECT_EQ(GetParam() == GameType::starfield, plugin2.IsOverridePlugin());
 }
 
 TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
@@ -343,7 +403,7 @@ TEST_P(
 #ifdef _WIN32
 TEST_P(
     PluginTest,
-    loadsArchiveForAnArchiveThatExactlyMatchesANonAsciiEspFileBasenameShouldReturnTrueForAllGamesExceptMorrowind) {
+    loadsArchiveForAnArchiveThatExactlyMatchesANonAsciiEspFileBasenameShouldReturnTrueForAllGamesExceptMorrowindAndStarfield) {
   bool loadsArchive =
       Plugin(game_.GetType(),
              game_.GetCache(),
@@ -351,7 +411,7 @@ TEST_P(
              true)
           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3)
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::starfield)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
@@ -374,40 +434,43 @@ TEST_P(
 
 TEST_P(
     PluginTest,
-    loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEsmFileBasenameShouldReturnTrueForAllGamesExceptMorrowindOblivionAndSkyrim) {
+    loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEsmFileBasenameShouldReturnTrueForOnlyTheFalloutGames) {
   bool loadsArchive = Plugin(game_.GetType(),
                              game_.GetCache(),
                              game_.DataPath() / blankDifferentEsm,
                              true)
                           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes4 ||
-      GetParam() == GameType::tes5 || GetParam() == GameType::tes5se)
-    EXPECT_FALSE(loadsArchive);
-  else
+  if (GetParam() == GameType::fo3 || GetParam() == GameType::fonv ||
+      GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr) {
     EXPECT_TRUE(loadsArchive);
+  } else {
+    EXPECT_FALSE(loadsArchive);
+  }
 }
 
 TEST_P(
     PluginTest,
-    loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEspFileBasenameShouldReturnTrueForAllGamesExceptMorrowindAndSkyrim) {
+    loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEspFileBasenameShouldReturnTrueForOnlyOblivionAndTheFalloutGames) {
   bool loadsArchive = Plugin(game_.GetType(),
                              game_.GetCache(),
                              game_.DataPath() / blankDifferentEsp,
                              true)
                           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes5 ||
-      GetParam() == GameType::tes5se)
-    EXPECT_FALSE(loadsArchive);
-  else
+  if (GetParam() == GameType::tes4 || GetParam() == GameType::fo3 ||
+      GetParam() == GameType::fonv || GetParam() == GameType::fo4 ||
+      GetParam() == GameType::fo4vr) {
     EXPECT_TRUE(loadsArchive);
+  } else {
+    EXPECT_FALSE(loadsArchive);
+  }
 }
 
 #ifdef _WIN32
 TEST_P(
     PluginTest,
-    loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheNonAsciiEspFileBasenameShouldReturnTrueForAllGamesExceptMorrowindAndSkyrim) {
+    loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheNonAsciiEspFileBasenameShouldReturnTrueForOnlyOblivionAndTheFalloutGames) {
   bool loadsArchive =
       Plugin(game_.GetType(),
              game_.GetCache(),
@@ -415,11 +478,13 @@ TEST_P(
              true)
           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes5 ||
-      GetParam() == GameType::tes5se)
-    EXPECT_FALSE(loadsArchive);
-  else
+  if (GetParam() == GameType::tes4 || GetParam() == GameType::fo3 ||
+      GetParam() == GameType::fonv || GetParam() == GameType::fo4 ||
+      GetParam() == GameType::fo4vr) {
     EXPECT_TRUE(loadsArchive);
+  } else {
+    EXPECT_FALSE(loadsArchive);
+  }
 }
 #endif
 
@@ -458,11 +523,28 @@ TEST_P(
       Plugin(
           game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, true)
           .IsValidAsLightPlugin();
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
+      GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
+      GetParam() == GameType::starfield) {
     EXPECT_TRUE(valid);
   } else {
     EXPECT_FALSE(valid);
   }
+}
+
+TEST_P(
+    PluginTest,
+    IsValidAsOverridePluginShouldOnlyReturnTrueForAStarfieldPluginWithNoNewRecords) {
+  Plugin plugin1(
+      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
+  Plugin plugin2(game_.GetType(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankDifferentPluginDependentEsp,
+                 false);
+
+  EXPECT_FALSE(plugin1.IsValidAsOverridePlugin());
+  EXPECT_EQ(GetParam() == GameType::starfield,
+            plugin2.IsValidAsOverridePlugin());
 }
 
 TEST_P(PluginTest,
@@ -590,7 +672,8 @@ TEST_P(PluginTest,
 
   if (GetParam() == GameType::tes3) {
     EXPECT_EQ(0, assetCount);
-  } else if (GetParam() == GameType::fo4) {
+  } else if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
+             GetParam() == GameType::starfield) {
     EXPECT_EQ(2, assetCount);
   } else {
     EXPECT_EQ(1, assetCount);
@@ -675,10 +758,13 @@ TEST_P(PluginTest,
 
 TEST_P(
     PluginTest,
-    hasPluginFileExtensionShouldBeTrueIfFileEndsInDotEslOnlyForFallout4AndSkyrimSE) {
+    hasPluginFileExtensionShouldBeTrueIfFileEndsInDotEslOnlyForFallout4AndLater) {
   bool result = hasPluginFileExtension("file.esl", GetParam());
 
-  EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::tes5se,
+  EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
+                GetParam() == GameType::tes5se ||
+                GetParam() == GameType::tes5vr ||
+                GetParam() == GameType::starfield,
             result);
 }
 

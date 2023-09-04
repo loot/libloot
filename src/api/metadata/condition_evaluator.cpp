@@ -73,6 +73,8 @@ int mapGameType(GameType gameType) {
       return LCI_GAME_FALLOUT_4;
     case GameType::fo4vr:
       return LCI_GAME_FALLOUT_4_VR;
+    case GameType::starfield:
+      return LCI_GAME_STARFIELD;
     default:
       throw std::runtime_error(
           "Unrecognised game type encountered while mapping for condition "

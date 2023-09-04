@@ -55,10 +55,10 @@ protected:
     return LoadOrderHandler(GetParam(), dataPath.parent_path(), localPath);
   }
 
-  std::vector<std::string> getImplicitlyActivePlugins() {
+  std::vector<std::string> getEarlyLoadingPlugins() {
     switch (GetParam()) {
       case GameType::tes5:
-        return {"Skyrim.esm", "Update.esm"};
+        return {"Skyrim.esm"};
       case GameType::tes5se:
         return {"Skyrim.esm",
                 "Update.esm",
@@ -198,18 +198,17 @@ TEST_P(LoadOrderHandlerTest, getActivePluginsShouldReturnOnlyActivePlugins) {
   ASSERT_EQ(getActivePlugins(), loadOrderHandler.GetActivePlugins());
 }
 
-TEST_P(
-    LoadOrderHandlerTest,
-    getImplicitlyActivePluginsShouldReturnValidDataEvenIfStateHasNotBeenLoaded) {
+TEST_P(LoadOrderHandlerTest,
+       getEarlyLoadingPluginsShouldReturnValidDataEvenIfStateHasNotBeenLoaded) {
   auto loadOrderHandler = createHandler();
 
-  ASSERT_EQ(getImplicitlyActivePlugins(),
-            loadOrderHandler.GetImplicitlyActivePlugins());
+  ASSERT_EQ(getEarlyLoadingPlugins(),
+            loadOrderHandler.GetEarlyLoadingPlugins());
 
   loadOrderHandler.LoadCurrentState();
 
-  ASSERT_EQ(getImplicitlyActivePlugins(),
-            loadOrderHandler.GetImplicitlyActivePlugins());
+  ASSERT_EQ(getEarlyLoadingPlugins(),
+            loadOrderHandler.GetEarlyLoadingPlugins());
 }
 
 TEST_P(LoadOrderHandlerTest, setLoadOrderShouldSetTheLoadOrder) {

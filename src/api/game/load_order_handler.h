@@ -47,7 +47,7 @@ public:
 
   std::vector<std::string> GetActivePlugins() const;
 
-  std::vector<std::string> GetImplicitlyActivePlugins() const;
+  std::vector<std::string> GetEarlyLoadingPlugins() const;
 
   std::filesystem::path GetActivePluginsFilePath() const;
 

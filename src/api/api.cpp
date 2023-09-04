@@ -52,6 +52,8 @@ const char* DescribeGameType(GameType gameType) {
       return "The Elder Scrolls V: Skyrim VR";
     case GameType::tes3:
       return "The Elder Scrolls III: Morrowind";
+    case GameType::starfield:
+      return "Starfield";
     default:
       return "Unknown";
   }

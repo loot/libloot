@@ -80,8 +80,8 @@ set(GTEST_LIBRARIES "${BINARY_DIR}/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRAR
 
 ExternalProject_Add(esplugin
     PREFIX "external"
-    URL "https://github.com/Ortham/esplugin/archive/4.0.0.tar.gz"
-    URL_HASH "SHA256=e3aa21ffbfd8ce55e3398fbd789adb2aa0d2cceefc99bcc789f02ff95cc98b86"
+    URL "https://github.com/Ortham/esplugin/archive/4.1.0.tar.gz"
+    URL_HASH "SHA256=c0958051f99b1a3a1ea2db1d68f2521567563238b9d624dde1c5c075baddfa41"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -98,8 +98,8 @@ endif()
 
 ExternalProject_Add(libloadorder
     PREFIX "external"
-    URL "https://github.com/Ortham/libloadorder/archive/14.2.1.tar.gz"
-    URL_HASH "SHA256=4341844407f55ce9d96826a933ac35dfb22bbad14906e5dff742f910182eca93"
+    URL "https://github.com/Ortham/libloadorder/archive/15.0.0.tar.gz"
+    URL_HASH "SHA256=3196e497a285f069acdb0ba68c03df88361fcc9928646c88267c052111f31a90"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -116,8 +116,8 @@ endif()
 
 ExternalProject_Add(loot-condition-interpreter
     PREFIX "external"
-    URL "https://github.com/loot/loot-condition-interpreter/archive/3.0.0.tar.gz"
-    URL_HASH "SHA256=6492c19848f01f297537da6a561e8d0c0a79e7c15e3ddf958910dec7cdfe0abf"
+    URL "https://github.com/loot/loot-condition-interpreter/archive/3.1.0.tar.gz"
+    URL_HASH "SHA256=a2dcadff0e6f9fd4fdc12785d296bf5ee24cc556f4b20a357233e2a2e79d025c"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&

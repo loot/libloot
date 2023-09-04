@@ -70,23 +70,6 @@ std::vector<PluginSortingData> GetPluginsSortingData(
   return pluginsSortingData;
 }
 
-std::vector<std::string> GetPluginsWithHardcodedPositions(
-    const GameType gameType,
-    std::vector<std::string> implicitlyActivePlugins) {
-  if (gameType == GameType::tes5) {
-    auto newEndIt =
-        std::remove_if(implicitlyActivePlugins.begin(),
-                       implicitlyActivePlugins.end(),
-                       [](const std::string& plugin) {
-                         return boost::iequals(plugin, "update.esm");
-                       });
-
-    implicitlyActivePlugins.erase(newEndIt, implicitlyActivePlugins.end());
-  }
-
-  return implicitlyActivePlugins;
-}
-
 std::unordered_map<std::string, Group> GetGroupsMap(
     const std::vector<Group> masterlistGroups,
     const std::vector<Group> userGroups) {
@@ -223,7 +206,7 @@ std::vector<std::string> SortPlugins(
     const GameType gameType,
     const std::vector<Group> masterlistGroups,
     const std::vector<Group> userGroups,
-    const std::vector<std::string>& implicitlyActivePlugins) {
+    const std::vector<std::string>& earlyLoadingPlugins) {
   // If there aren't any plugins, exit early, because sorting assumes
   // there is at least one plugin.
   if (pluginsSortingData.empty()) {
@@ -245,9 +228,6 @@ std::vector<std::string> SortPlugins(
             });
 
   // Create some shared data structures.
-  const auto hardcodedPlugins =
-      GetPluginsWithHardcodedPositions(gameType, implicitlyActivePlugins);
-
   const auto groupsMap = GetGroupsMap(masterlistGroups, userGroups);
   const auto predecessorGroupsMap =
       GetPredecessorGroups(masterlistGroups, userGroups);
@@ -270,17 +250,17 @@ std::vector<std::string> SortPlugins(
   ValidateSpecificAndHardcodedEdges(pluginsSortingData.begin(),
                                     firstNonMasterIt,
                                     pluginsSortingData.end(),
-                                    hardcodedPlugins);
+                                    earlyLoadingPlugins);
 
   auto newLoadOrder = SortPlugins(pluginsSortingData.begin(),
                                   firstNonMasterIt,
-                                  hardcodedPlugins,
+                                  earlyLoadingPlugins,
                                   groupsMap,
                                   predecessorGroupsMap);
 
   const auto newNonMastersLoadOrder = SortPlugins(firstNonMasterIt,
                                                   pluginsSortingData.end(),
-                                                  hardcodedPlugins,
+                                                  earlyLoadingPlugins,
                                                   groupsMap,
                                                   predecessorGroupsMap);
 
@@ -310,7 +290,7 @@ std::vector<std::string> SortPlugins(
                   game.GetType(),
                   game.GetDatabase().GetGroups(false),
                   game.GetDatabase().GetUserGroups(),
-                  game.GetLoadOrderHandler().GetImplicitlyActivePlugins());
+                  game.GetLoadOrderHandler().GetEarlyLoadingPlugins());
 
   if (logger) {
     logger->debug("Calculated order:");

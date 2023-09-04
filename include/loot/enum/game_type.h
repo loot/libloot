@@ -49,6 +49,8 @@ enum struct GameType : unsigned int {
   tes5vr,
   /** The Elder Scrolls III: Morrowind */
   tes3,
+  /** Starfield */
+  starfield
 };
 }
 

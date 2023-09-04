@@ -92,7 +92,11 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo3,
                                            GameType::fonv,
                                            GameType::fo4,
-                                           GameType::tes5se));
+                                           GameType::tes5se,
+                                           GameType::fo4vr,
+                                           GameType::tes5vr,
+                                           GameType::tes3,
+                                           GameType::starfield));
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {

@@ -84,9 +84,14 @@ bool IsMicrosoftStoreInstall(const GameType gameType,
                                      "appxmanifest.xml");
     case GameType::tes5se:
     case GameType::fo4:
+    case GameType::starfield:
       return std::filesystem::exists(gamePath / "appxmanifest.xml");
-    default:
+    case GameType::tes5:
+    case GameType::tes5vr:
+    case GameType::fo4vr:
       return false;
+    default:
+      throw std::logic_error("Unrecognised game type");
   }
 }
 

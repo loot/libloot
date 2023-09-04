@@ -108,8 +108,7 @@ protected:
     copyPlugin(sourcePluginsPath, blankPluginDependentEsp);
     copyPlugin(sourcePluginsPath, blankDifferentPluginDependentEsp);
 
-    if (GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
-        GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr) {
+    if (supportsLightPlugins(GetParam())) {
       copyPlugin(sourcePluginsPath, blankEsl);
     }
 
@@ -201,7 +200,7 @@ protected:
           actual.push_back(line);
       }
     } else {
-      actual = readFileLines(localPath / pluginsTxtName(GetParam()));
+      actual = readFileLines(localPath / "Plugins.txt");
       for (auto& line : actual) {
         if (line[0] == '*')
           line = line.substr(1);
@@ -226,7 +225,7 @@ protected:
         {blankDifferentPluginDependentEsp, false},
     });
 
-    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+    if (supportsLightPlugins(GetParam())) {
       loadOrder.insert(loadOrder.begin() + 5, std::make_pair(blankEsl, false));
     }
 
@@ -239,7 +238,7 @@ protected:
       return absolute("./Morrowind/Data Files");
     else if (GetParam() == GameType::tes4)
       return absolute("./Oblivion/Data");
-    else if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
+    else if (supportsLightPlugins(GetParam()))
       return absolute("./SkyrimSE/Data");
     else
       return absolute("./Skyrim/Data");
@@ -281,14 +280,19 @@ private:
       return "Morrowind.esm";
     else if (GetParam() == GameType::tes4)
       return "Oblivion.esm";
-    else if (GetParam() == GameType::tes5 || GetParam() == GameType::tes5se)
+    else if (GetParam() == GameType::tes5 || GetParam() == GameType::tes5se ||
+             GetParam() == GameType::tes5vr)
       return "Skyrim.esm";
     else if (GetParam() == GameType::fo3)
       return "Fallout3.esm";
     else if (GetParam() == GameType::fonv)
       return "FalloutNV.esm";
-    else
+    else if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr)
       return "Fallout4.esm";
+    else if (GetParam() == GameType::starfield)
+      return "Starfield.esm";
+    else
+      throw std::logic_error("Unrecognised game type");
   }
 
   std::string getPluginsFolder() const {
@@ -320,9 +324,9 @@ private:
         }
       }
     } else {
-      std::ofstream out(localPath / pluginsTxtName(GetParam()));
+      std::ofstream out(localPath / "Plugins.txt");
       for (const auto& plugin : loadOrder) {
-        if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
+        if (supportsLightPlugins(GetParam())) {
           if (plugin.second)
             out << '*';
         } else if (!plugin.second)
@@ -358,8 +362,10 @@ private:
            gameType == GameType::fo3 || gameType == GameType::fonv;
   }
 
-  static std::string pluginsTxtName(GameType gameType) {
-    return gameType == GameType::tes4 ? "Plugins.txt" : "plugins.txt";
+  static bool supportsLightPlugins(GameType gameType) {
+    return gameType == GameType::tes5se || gameType == GameType::tes5vr ||
+           gameType == GameType::fo4 || gameType == GameType::fo4vr ||
+           gameType == GameType::starfield;
   }
 };
 }

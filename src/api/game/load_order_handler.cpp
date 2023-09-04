@@ -48,6 +48,8 @@ unsigned int mapGameId(GameType gameType) {
       return LIBLO_GAME_FO4;
     case GameType::fo4vr:
       return LIBLO_GAME_FO4VR;
+    case GameType::starfield:
+      return LIBLO_GAME_STARFIELD;
     default:
       throw std::logic_error("Unexpected game type");
   }
@@ -165,7 +167,7 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
   return loadOrder;
 }
 
-std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
+std::vector<std::string> LoadOrderHandler::GetEarlyLoadingPlugins() const {
   auto logger = getLogger();
   if (logger) {
     logger->trace("Getting implicitly active plugins.");
@@ -175,7 +177,7 @@ std::vector<std::string> LoadOrderHandler::GetImplicitlyActivePlugins() const {
   size_t pluginArrSize = 0;
 
   const unsigned int ret =
-      lo_get_implicitly_active_plugins(gh_.get(), &pluginArr, &pluginArrSize);
+      lo_get_early_loading_plugins(gh_.get(), &pluginArr, &pluginArrSize);
 
   HandleError("get implicitly active plugins", ret);
 
