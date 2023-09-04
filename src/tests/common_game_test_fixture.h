@@ -244,6 +244,12 @@ protected:
       return absolute("./Skyrim/Data");
   }
 
+  void touch(const std::filesystem::path& path) {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream out(path);
+    out.close();
+  }
+
 private:
   const std::filesystem::path rootTestPath;
 

@@ -45,11 +45,7 @@ protected:
     std::filesystem::copy_file(dataPath / blankEsm,
                                dataPath / std::filesystem::u8path(nonAsciiEsm));
 
-    auto nonAsciiPath = dataPath / std::filesystem::u8path(nonAsciiNestedFile);
-    std::filesystem::create_directory(nonAsciiPath.parent_path());
-
-    std::ofstream out(nonAsciiPath);
-    out.close();
+    touch(dataPath / std::filesystem::u8path(nonAsciiNestedFile));
 
     loadInstalledPlugins();
     evaluator_.RefreshLoadedPluginsState(game_.GetLoadedPlugins());

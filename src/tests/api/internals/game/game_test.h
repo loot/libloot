@@ -33,8 +33,7 @@ namespace test {
 class GameTest : public CommonGameTestFixture {
 protected:
   GameTest() : blankArchive("Blank" + GetArchiveFileExtension(GetParam())) {
-    std::ofstream out(dataPath / blankArchive);
-    out.close();
+    touch(dataPath / blankArchive);
   }
 
   void loadInstalledPlugins(Game& game, bool headersOnly) {
@@ -101,53 +100,88 @@ TEST_P(GameTest, constructingShouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
 
 TEST_P(
     GameTest,
-    constructingForAMicrosoftStoreFallout4InstallShouldSetExternalPathsForTheDlcs) {
-  if (GetParam() != GameType::fo4) {
-    return;
+    constructingForFallout4FromMicrosoftStoreOrStarfieldShouldSetAdditionalDataPaths) {
+  if (GetParam() == GameType::fo4) {
+    // Create the file that indicates it's a Microsoft Store install.
+    touch(dataPath.parent_path() / "appxmanifest.xml");
   }
-
-  const auto touch = [](const std::filesystem::path& path) {
-    std::filesystem::create_directories(path.parent_path());
-    std::ofstream out(path);
-    out.close();
-  };
-
-  // Create the file that indicates it's a Microsoft Store install.
-  touch(dataPath.parent_path() / "appxmanifest.xml");
-
-  // Create a few external files.
-  const auto pluginPath =
-      dataPath.parent_path() /
-      "../../Fallout 4- Automatron (PC)/Content/Data/DLCRobot.esm";
-  const auto ba2Path1 =
-      dataPath.parent_path() /
-      "../../Fallout 4- Far Harbor (PC)/Content/Data/DLCCoast - Main.ba2";
-  const auto ba2Path2 =
-      dataPath.parent_path() /
-      "../../Fallout 4- Nuka-World (PC)/Content/Data/DLCNukaWorld "
-      "- Voices_it.ba2";
-  touch(pluginPath);
-  touch(ba2Path1);
-  touch(ba2Path2);
 
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
-  EXPECT_NO_THROW(loadInstalledPlugins(game, true));
+  if (GetParam() == GameType::fo4) {
+    const auto basePath = dataPath.parent_path() / ".." / "..";
+    EXPECT_EQ(std::vector<std::filesystem::path>(
+                  {basePath / "Fallout 4- Automatron (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Nuka-World (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Wasteland Workshop (PC)" / "Content" /
+                       "Data",
+                   basePath / "Fallout 4- High Resolution Texture Pack" /
+                       "Content" / "Data",
+                   basePath / "Fallout 4- Vault-Tec Workshop (PC)" / "Content" /
+                       "Data",
+                   basePath / "Fallout 4- Far Harbor (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Contraptions Workshop (PC)" /
+                       "Content" / "Data"}),
+              game.GetAdditionalDataPaths());
+  } else if (GetParam() == GameType::starfield) {
+    ASSERT_EQ(1, game.GetAdditionalDataPaths().size());
 
-  const auto archivePaths = game.GetCache().GetArchivePaths();
+    const auto expectedSuffix = std::filesystem::u8path("Documents") /
+                                "My Games" / "Starfield" / "Data";
+    EXPECT_TRUE(boost::ends_with(game.GetAdditionalDataPaths()[0].u8string(),
+                                 expectedSuffix.u8string()));
+  } else {
+    EXPECT_TRUE(game.GetAdditionalDataPaths().empty());
+  }
+}
 
-  EXPECT_EQ(std::set<std::filesystem::path>(
-                {ba2Path1, ba2Path2, dataPath / blankArchive}),
-            archivePaths);
+TEST_P(GameTest, setAdditionalDataPathsShouldClearTheConditionCache) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   PluginMetadata metadata(blankEsm);
-  metadata.SetLoadAfterFiles(
-      {File("DLCRobot.esm", "", "file(\"DLCRobot.esm\")")});
+  metadata.SetLoadAfterFiles({File("plugin.esp", "", "file(\"plugin.esp\")")});
   game.GetDatabase().SetPluginUserMetadata(metadata);
 
-  const auto evaluatedMetadata =
+  auto evaluatedMetadata =
+      game.GetDatabase().GetPluginUserMetadata(blankEsm, true).value();
+  EXPECT_TRUE(evaluatedMetadata.GetLoadAfterFiles().empty());
+
+  const auto dataFilePath =
+      dataPath.parent_path().parent_path() / "Data" / "plugin.esp";
+  touch(dataFilePath);
+  game.SetAdditionalDataPaths({dataFilePath.parent_path()});
+
+  evaluatedMetadata =
       game.GetDatabase().GetPluginUserMetadata(blankEsm, true).value();
   EXPECT_FALSE(evaluatedMetadata.GetLoadAfterFiles().empty());
+}
+
+TEST_P(GameTest,
+       setAdditionalDataPathsShouldUpdateWhereLoadOrderPluginsAreFound) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  // Set no additional data paths to avoid picking up non-test plugins on PCs
+  // which have Starfield or Fallout 4 installed.
+  game.SetAdditionalDataPaths({});
+  game.LoadCurrentLoadOrderState();
+  auto loadOrder = game.GetLoadOrder();
+
+  const auto dataFilePath =
+      dataPath.parent_path().parent_path() / "Data" / "plugin.esp";
+  std::filesystem::create_directories(dataFilePath.parent_path());
+  std::filesystem::copy_file(getSourcePluginsPath() / blankEsp, dataFilePath);
+  ASSERT_TRUE(std::filesystem::exists(dataFilePath));
+
+  std::filesystem::last_write_time(
+      dataFilePath,
+      std::filesystem::file_time_type::clock().now() + std::chrono::hours(1));
+
+  game.SetAdditionalDataPaths({dataFilePath.parent_path()});
+  game.LoadCurrentLoadOrderState();
+
+  loadOrder.push_back("plugin.esp");
+
+  EXPECT_EQ(loadOrder, game.GetLoadOrder());
 }
 
 TEST_P(GameTest, isValidPluginShouldResolveRelativePathsRelativeToDataPath) {
@@ -240,13 +274,7 @@ TEST_P(
   EXPECT_EQ(expected, game.GetCache().GetArchivePaths());
 }
 
-TEST_P(GameTest, loadPluginsShouldFindArchivesInExternalDataPaths) {
-  const auto touch = [](const std::filesystem::path& path) {
-    std::filesystem::create_directories(path.parent_path());
-    std::ofstream out(path);
-    out.close();
-  };
-
+TEST_P(GameTest, loadPluginsShouldFindArchivesInAdditionalDataPaths) {
   // Create a couple of external archive files.
   const std::string archiveFileExtension =
       GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
@@ -290,11 +318,9 @@ TEST_P(GameTest, loadPluginsShouldClearTheArchivesCacheBeforeFindingArchives) {
 TEST_P(
     GameTest,
     loadPluginsShouldNotThrowIfAFilenameHasNonWindows1252EncodableCharacters) {
-  auto path =
-      dataPath / std::filesystem::u8path(
-                     u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt");
-  std::ofstream out(path);
-  out.close();
+  touch(dataPath /
+        std::filesystem::u8path(
+            u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt"));
 
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 

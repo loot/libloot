@@ -98,8 +98,7 @@ TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForANonPluginFile) {
 
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForAnEmptyFile) {
   // Write out an empty file.
-  std::ofstream out(dataPath / emptyFile);
-  out.close();
+  touch(dataPath / emptyFile);
   ASSERT_TRUE(std::filesystem::exists(dataPath / emptyFile));
 
   EXPECT_FALSE(handle_->IsValidPlugin(emptyFile));

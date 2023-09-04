@@ -95,23 +95,46 @@ bool IsMicrosoftStoreInstall(const GameType gameType,
   }
 }
 
+std::filesystem::path GetUserDocumentsPath(
+    const std::filesystem::path& gameLocalPath) {
+#ifdef _WIN32
+  PWSTR path;
+
+  if (SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &path) != S_OK)
+    throw std::system_error(GetLastError(),
+                            std::system_category(),
+                            "Failed to get user Documents path.");
+
+  std::filesystem::path documentsPath(path);
+  CoTaskMemFree(path);
+
+  return documentsPath;
+#else
+  // Get the documents path relative to the game's local path.
+  return gameLocalPath.parent_path().parent_path().parent_path() / "Documents";
+#endif
+}
+
 std::vector<std::filesystem::path> GetAdditionalDataPaths(
     const GameType gameType,
-    const std::filesystem::path& dataPath) {
+    const std::filesystem::path& dataPath,
+    const std::filesystem::path& gameLocalPath) {
   const auto gamePath = dataPath.parent_path();
 
   if (gameType == GameType::fo4 &&
       IsMicrosoftStoreInstall(gameType, gamePath)) {
-    // All DLC directories are listed before the main data path because DLC
-    // plugins in those directories override any in the main data path.
     return {gamePath / MS_FO4_AUTOMATRON_DATA_PATH,
             gamePath / MS_FO4_NUKA_WORLD_DATA_PATH,
             gamePath / MS_FO4_WASTELAND_DATA_PATH,
             gamePath / MS_FO4_TEXTURE_PACK_DATA_PATH,
             gamePath / MS_FO4_VAULT_TEC_DATA_PATH,
             gamePath / MS_FO4_FAR_HARBOR_DATA_PATH,
-            gamePath / MS_FO4_CONTRAPTIONS_DATA_PATH,
-            dataPath};
+            gamePath / MS_FO4_CONTRAPTIONS_DATA_PATH};
+  }
+
+  if (gameType == GameType::starfield) {
+    return {GetUserDocumentsPath(gameLocalPath) / "My Games" / "Starfield" /
+            "Data"};
   }
 
   return {};
@@ -167,7 +190,8 @@ Game::Game(const GameType gameType,
     conditionEvaluator_(
         std::make_shared<ConditionEvaluator>(GetType(), DataPath())),
     database_(ApiDatabase(conditionEvaluator_)),
-    additionalDataPaths_(::GetAdditionalDataPaths(GetType(), DataPath())) {
+    additionalDataPaths_(
+        ::GetAdditionalDataPaths(GetType(), DataPath(), localDataPath)) {
   conditionEvaluator_->SetAdditionalDataPaths(additionalDataPaths_);
 }
 

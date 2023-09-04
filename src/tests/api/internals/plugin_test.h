@@ -49,8 +49,7 @@ protected:
     game_.LoadCurrentLoadOrderState();
 
     // Write out an empty file.
-    std::ofstream out(dataPath / emptyFile);
-    out.close();
+    touch(dataPath / emptyFile);
     ASSERT_TRUE(std::filesystem::exists(dataPath / emptyFile));
 
 #ifndef _WIN32
@@ -93,12 +92,10 @@ protected:
       ASSERT_TRUE(
           std::filesystem::exists(dataPath / blankMasterDependentArchive));
     } else if (GetParam() == GameType::tes3) {
-      out.open(dataPath / blankArchive);
-      out.close();
+      touch(dataPath / blankArchive);
 
       blankMasterDependentArchive = "Blank - Master Dependent.bsa";
-      out.open(dataPath / blankMasterDependentArchive);
-      out.close();
+      touch(dataPath / blankMasterDependentArchive);
     } else {
       copyPlugin(getSourcePluginsPath(), blankArchive);
 
@@ -111,22 +108,19 @@ protected:
     }
 
     // Create dummy archive files.
-    out.open(dataPath / blankSuffixArchive);
-    out.close();
+    touch(dataPath / blankSuffixArchive);
 
     auto nonAsciiArchivePath =
         dataPath /
         std::filesystem::u8path(u8"non\u00E1scii" +
                                 GetArchiveFileExtension(game_.GetType()));
-    out.open(nonAsciiArchivePath);
-    out.close();
+    touch(dataPath / nonAsciiArchivePath);
 
     auto nonAsciiPrefixArchivePath =
         dataPath /
         std::filesystem::u8path(u8"other non\u00E1scii2 - suffix" +
                                 GetArchiveFileExtension(game_.GetType()));
-    out.open(nonAsciiPrefixArchivePath);
-    out.close();
+    touch(dataPath / nonAsciiPrefixArchivePath);
 
     game_.GetCache().CacheArchivePaths({dataPath / "Blank - Main.ba2",
                                         dataPath / "Blank - Textures.ba2",
