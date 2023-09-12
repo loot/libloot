@@ -211,7 +211,7 @@ protected:
     return actual;
   }
 
-  inline std::vector<std::pair<std::string, bool>> getInitialLoadOrder() const {
+  std::vector<std::pair<std::string, bool>> getInitialLoadOrder() const {
     auto loadOrder = std::vector<std::pair<std::string, bool>>({
         {masterFile, true},
         {blankEsm, true},
@@ -276,7 +276,7 @@ protected:
   const uint32_t blankEsmCrc;
 
 private:
-  inline std::string getMasterFile() const {
+  std::string getMasterFile() const {
     if (GetParam() == GameType::tes3)
       return "Morrowind.esm";
     else if (GetParam() == GameType::tes4)
@@ -299,7 +299,7 @@ private:
     }
   }
 
-  inline uint32_t getBlankEsmCrc() const {
+  uint32_t getBlankEsmCrc() const {
     switch (GetParam()) {
       case GameType::tes3:
         return 0x790DC6FB;
@@ -353,7 +353,7 @@ private:
     }
   }
 
-  inline static bool isLoadOrderTimestampBased(GameType gameType) {
+  static bool isLoadOrderTimestampBased(GameType gameType) {
     return gameType == GameType::tes3 || gameType == GameType::tes4 ||
            gameType == GameType::fo3 || gameType == GameType::fonv;
   }

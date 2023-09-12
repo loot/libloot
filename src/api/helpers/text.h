@@ -32,8 +32,8 @@
 #include "loot/metadata/tag.h"
 
 namespace loot {
-static constexpr const char* GHOST_FILE_EXTENSION = ".ghost";
-static constexpr std::size_t GHOST_FILE_EXTENSION_LENGTH =
+inline constexpr const char* GHOST_FILE_EXTENSION = ".ghost";
+inline constexpr std::size_t GHOST_FILE_EXTENSION_LENGTH =
     std::char_traits<char>::length(GHOST_FILE_EXTENSION);
 
 std::vector<Tag> ExtractBashTags(const std::string& description);

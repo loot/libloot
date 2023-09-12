@@ -37,7 +37,7 @@ protected:
       savedMetadataPath(metadataFilesPath / "saved.masterlist.yaml"),
       missingMetadataPath(metadataFilesPath / "missing-metadata.yaml") {}
 
-  inline void SetUp() override {
+  void SetUp() override {
     CommonGameTestFixture::SetUp();
 
     using std::filesystem::copy;
@@ -55,7 +55,7 @@ protected:
     out << R"(bash_tags:
   - 'C.Climate'
   - 'Relev'
-  
+
 groups:
   - name: group1
     after:

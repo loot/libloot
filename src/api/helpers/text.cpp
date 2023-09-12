@@ -37,14 +37,14 @@ namespace loot {
 /* The string below matches timestamps that use forwardslashes for date
    separators. However, Pseudosem v1.0.1 will only compare the first
    two digits as it does not recognise forwardslashes as separators. */
-static constexpr const char* dateRegex =
+constexpr const char* dateRegex =
     R"((\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2}))";
 
 /* The string below matches the range of version strings supported by
    Pseudosem v1.0.1, excluding space separators, as they make version
    extraction from inside sentences very tricky and have not been
    seen "in the wild". */
-static constexpr const char* pseudosemVersionRegex =
+constexpr const char* pseudosemVersionRegex =
     R"((\d+(?:\.\d+)+(?:[-._:]?[A-Za-z0-9]+)*))"
     // The string below prevents version numbers followed by a comma from
     // matching.
@@ -53,7 +53,7 @@ static constexpr const char* pseudosemVersionRegex =
 /* The string below matches a number containing one or more
    digits found at the start of the search string or preceded by
    'v' or 'version:. */
-static constexpr const char* digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))";
+constexpr const char* digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))";
 
 std::vector<Tag> ExtractBashTags(const std::string& description) {
   std::vector<Tag> tags;
