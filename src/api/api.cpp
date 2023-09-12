@@ -80,11 +80,9 @@ std::filesystem::path ResolvePath(const std::filesystem::path& path) {
 
 LOOT_API void SetLoggingCallback(
     std::function<void(LogLevel, const char*)> callback) {
-  auto sink = std::make_shared<SpdLoggingSink>(callback);
-  auto logger = std::make_shared<spdlog::logger>(LOGGER_NAME, sink);
-  logger->set_level(spdlog::level::level_enum::trace);
+  const auto logger = createLogger(callback);
 
-  spdlog::drop(LOGGER_NAME);
+  spdlog::drop(logger->name());
   spdlog::register_logger(logger);
 }
 

@@ -24,59 +24,15 @@
 #ifndef LOOT_API_HELPERS_LOGGING
 #define LOOT_API_HELPERS_LOGGING
 
-#define FMT_USE_STD_STRING_VIEW
-
-#include <spdlog/sinks/base_sink.h>
 #include <spdlog/spdlog.h>
 
 #include "loot/enum/log_level.h"
 
 namespace loot {
-static constexpr const char* LOGGER_NAME = "loot_api_logger";
+std::shared_ptr<spdlog::logger> getLogger();
 
-inline std::shared_ptr<spdlog::logger> getLogger() {
-  return spdlog::get(LOGGER_NAME);
-}
-
-class SpdLoggingSink : public spdlog::sinks::base_sink<std::mutex> {
-public:
-  explicit SpdLoggingSink(std::function<void(LogLevel, const char*)> callback) {
-    this->callback = callback;
-  }
-
-protected:
-  void sink_it_(const spdlog::details::log_msg& msg) override {
-    // string_view isn't necessarily null-terminated, so using
-    // msg.payload.data() directly isn't a good idea.
-    std::string payload = std::string(msg.payload.data(), msg.payload.size());
-    callback(mapFromSpdlog(msg.level), payload.c_str());
-  }
-
-  void flush_() override {}
-
-private:
-  std::function<void(LogLevel, const char*)> callback;
-
-  static LogLevel mapFromSpdlog(spdlog::level::level_enum severity) {
-    using spdlog::level::level_enum;
-    switch (severity) {
-      case level_enum::trace:
-        return LogLevel::trace;
-      case level_enum::debug:
-        return LogLevel::debug;
-      case level_enum::info:
-        return LogLevel::info;
-      case level_enum::warn:
-        return LogLevel::warning;
-      case level_enum::err:
-        return LogLevel::error;
-      case level_enum::critical:
-        return LogLevel::fatal;
-      default:
-        return LogLevel::trace;
-    }
-  }
-};
+std::shared_ptr<spdlog::logger> createLogger(
+    std::function<void(LogLevel, const char*)> callback);
 }
 
 #endif
