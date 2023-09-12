@@ -33,7 +33,6 @@
 #include "loot/metadata/group.h"
 #include "loot/metadata/message.h"
 #include "loot/metadata/plugin_metadata.h"
-#include "loot/struct/simple_message.h"
 
 namespace loot {
 /** @brief The interface provided by API's database handle. */

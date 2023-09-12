@@ -238,7 +238,6 @@ set(LIBLOOT_INCLUDE_H_FILES
     "${CMAKE_SOURCE_DIR}/include/loot/metadata/plugin_metadata.h"
     "${CMAKE_SOURCE_DIR}/include/loot/metadata/tag.h"
     "${CMAKE_SOURCE_DIR}/include/loot/plugin_interface.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/struct/simple_message.h"
     "${CMAKE_SOURCE_DIR}/include/loot/vertex.h")
 
 set(LIBLOOT_SRC_API_H_FILES

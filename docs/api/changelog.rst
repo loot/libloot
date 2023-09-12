@@ -41,6 +41,13 @@ Fixed
   wrong parameter name.
 - Cross-compiling from Linux to Windows using MinGW-w64.
 
+Removed
+-------
+
+- The ``loot::SimpleMessage`` struct.
+- The ``loot::ToSimpleMessage()`` function.
+- The ``loot::ToSimpleMessages()`` function.
+
 0.19.4 - 2023-05-06
 ===================
 

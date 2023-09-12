@@ -81,22 +81,6 @@ TEST_P(
                std::invalid_argument);
 }
 
-TEST_P(MessageTest,
-       simpleMessageConstructorShouldCreateAMessageWithASingleContentString) {
-  SimpleMessage simple;
-  simple.type = MessageType::error;
-  simple.text = "ERROR";
-  simple.language = "fr";
-  simple.condition = "condition";
-
-  Message message(simple);
-
-  EXPECT_EQ(MessageType::error, message.GetType());
-  EXPECT_EQ(MessageContents({MessageContent(simple.text, simple.language)}),
-            message.GetContent());
-  EXPECT_EQ("condition", message.GetCondition());
-}
-
 TEST_P(MessageTest, equalityShouldRequireEqualMessageTypes) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
@@ -361,23 +345,6 @@ TEST_P(
 
   EXPECT_FALSE(message1 >= message2);
   EXPECT_TRUE(message2 >= message1);
-}
-
-TEST(ToSimpleMessage, shouldSelectTextAndLanguageUsingGetContent) {
-  Message message(MessageType::warn,
-                  std::vector<MessageContent>({
-                      MessageContent("content1", "de"),
-                      MessageContent("content2"),
-                      MessageContent("content3", "fr"),
-                  }),
-                  "condition1");
-
-  SimpleMessage simpleMessage = ToSimpleMessage(message, "fr").value();
-
-  EXPECT_EQ(MessageType::warn, simpleMessage.type);
-  EXPECT_EQ("content3", simpleMessage.text);
-  EXPECT_EQ("fr", simpleMessage.language);
-  EXPECT_EQ("condition1", simpleMessage.condition);
 }
 
 TEST_P(MessageTest, emittingAsYamlShouldOutputNoteMessageTypeCorrectly) {

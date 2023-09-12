@@ -24,12 +24,6 @@ Enumerations
 
 .. doxygenenum:: loot::MessageType
 
-Public-Field Data Structures
-============================
-
-.. doxygenstruct:: loot::SimpleMessage
-   :members:
-
 Functions
 =========
 
@@ -44,10 +38,6 @@ Functions
 .. doxygenfunction:: loot::GetLiblootRevision
 
 .. doxygenfunction:: loot::SelectMessageContent
-
-.. doxygenfunction:: loot::ToSimpleMessage
-
-.. doxygenfunction:: loot::ToSimpleMessages
 
 Interfaces
 ==========
