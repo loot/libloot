@@ -2,6 +2,44 @@
 Version History
 ***************
 
+0.22.0 - 2023-09-29
+===================
+
+Added
+-----
+
+- Support for Starfield. A game handle can be obtained for Starfield using
+  :cpp:any:`loot::GameType::starfield`.
+- :cpp:any:`loot::PluginInterface::IsOverridePlugin()` and
+  :cpp:any:`loot::PluginInterface::IsValidAsOverridePlugin()` to support
+  Starfield's new override plugin type, which does not use up a mod index when
+  active. Override plugins cannot contain any new records, they can only
+  override records added by their masters.
+- libloot can now detect the correct game local path for Microsoft Store
+  installs of Skyrim Special Edition and Fallout 4, and Epic Games Store
+  installs of Fallout: New Vegas. Via libloadorder.
+
+Fixed
+-----
+
+- Only lowercase plugin file extensions were recognised as plugin file
+  extensions when evaluating conditions. Via loot-condition-interpreter.
+- Fallout: New Vegas plugins with corresponding ``.nam`` files are now
+  identified as being active. Via libloadorder.
+- Plugins activated using the ``sTestFile1`` through ``sTestFile10`` ini file
+  properties are now recognised as being active for all games other than
+  Morrowind, which does not support those properties. The properties are used by
+  default in Fallout 3, Fallout: New Vegas and Skyrim Special Edition. Via
+  libloadorder.
+- Fallout 4's ``Fallout4.ccc`` and ``plugins.txt`` and Fallout 4 VR's
+  ``plugins.txt`` are now ignored when the game has plugins activated using
+  the ``sTestFile1`` through ``sTestFile10`` ini file properties, to match the
+  games' behaviour. Via libloadorder.
+- When deciding where to look for Oblivion's ``plugins.txt``, the
+  ``bUseMyGamesDirectory`` ini property is now correctly expected in the
+  ``[General]`` section of ``Oblivion.ini``, instead of anywhere in the file.
+  Via libloadorder.
+
 0.21.0 - 2023-09-13
 ===================
 
