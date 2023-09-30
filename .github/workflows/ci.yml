@@ -8,6 +8,7 @@ on:
   pull_request:
 
 env:
+  BOOST_VERSION: 1.83.0
   CARGO_TERM_COLOR: always
   MSVC_CONFIG: RelWithDebInfo
 
@@ -38,9 +39,13 @@ jobs:
           echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
 
       - name: Download Boost
+        id: get-boost
         run: |
-          wget https://boostorg.jfrog.io/artifactory/main/release//1.81.0/source/boost_1_81_0.tar.gz
-          tar -xf boost_1_81_0.tar.gz
+          BOOST_BASENAME=boost_${BOOST_VERSION//./_}
+          wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_BASENAME}.tar.gz
+          tar -xf ${BOOST_BASENAME}.tar.gz
+
+          echo "root=${BOOST_BASENAME}" >> $GITHUB_OUTPUT
 
       - name: Get ICU
         id: get-icu
@@ -57,7 +62,6 @@ jobs:
             doxygen \
             language-pack-el \
             language-pack-tr \
-            libicu-dev \
             libtbb-dev \
             g++-10
 
@@ -66,7 +70,7 @@ jobs:
           mkdir build
           cd build
           export CXX="g++-10" CC="gcc-10"
-          cmake .. -DBOOST_ROOT="boost_1_81_0" -DICU_ROOT="${{ steps.get-icu.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" -DICU_ROOT="${{ steps.get-icu.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           make all
 
       - name: Run tests
@@ -140,9 +144,13 @@ jobs:
         run: rustup target add i686-pc-windows-msvc
 
       - name: Download Boost
+        id: get-boost
         run: |
-          curl -sSfLO https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.7z
-          7z x boost_1_81_0.7z
+          $BOOST_BASENAME="boost_" + $env:BOOST_VERSION -replace "\.", "_"
+          curl -sSfLO "https://boostorg.jfrog.io/artifactory/main/release/${env:BOOST_VERSION}/source/${BOOST_BASENAME}.7z"
+          7z x "${BOOST_BASENAME}.7z"
+
+          echo "root=$BOOST_BASENAME" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Get descriptive libloot version
         id: get-libloot-version
@@ -157,7 +165,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="boost_1_81_0" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
+          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
       - name: Run tests
