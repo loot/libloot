@@ -150,30 +150,27 @@ ExternalProject_Add(spdlog
 ExternalProject_Get_Property(spdlog SOURCE_DIR)
 set(SPDLOG_INCLUDE_DIRS "${SOURCE_DIR}/include")
 
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    set(YAMLCPP_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target yaml-cpp --config $(CONFIGURATION))
-else()
-    set(YAMLCPP_BUILD_COMMAND ${CMAKE_COMMAND} --build . --target yaml-cpp)
-endif()
-
 ExternalProject_Add(yaml-cpp
     PREFIX "external"
-    URL "https://github.com/loot/yaml-cpp/archive/yaml-cpp-0.7.0+merge-key-support.1.tar.gz"
-    URL_HASH "SHA256=fb8c1f236cf01401a09d782ee847aa52f42fadee3250d6d1d73c11b35f429412"
+    URL "https://github.com/loot/yaml-cpp/archive/0.8.0+merge-key-support.1.tar.gz"
+    URL_HASH "SHA256=07ebe9352aec55f1b2d855c8751befcb981b42d4602336527edcfd1bfae9a1fc"
     CMAKE_ARGS
         -DYAML_MSVC_SHARED_RT=ON
+        -DYAML_CPP_BUILD_CONTRIB=OFF
+        -DYAML_CPP_BUILD_TOOLS=OFF
+        -DYAML_CPP_BUILD_TESTS=OFF
+        -DYAML_CPP_INSTALL=OFF
+        -DYAML_CPP_FORMAT_SOURCE=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
         -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-        -DYAML_BUILD_SHARED_LIBS=OFF
         -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-    BUILD_COMMAND ${YAMLCPP_BUILD_COMMAND}
+        -DBUILD_SHARED_LIBS=OFF
     INSTALL_COMMAND "")
 ExternalProject_Get_Property(yaml-cpp SOURCE_DIR BINARY_DIR)
 
 set(YAML_CPP_LIBRARY_SUFFIX "$<$<CONFIG:Debug>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(YAML_CPP_INCLUDE_DIRS "${SOURCE_DIR}/include")
-set(YAML_CPP_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${YAML_CPP_LIBRARY_SUFFIX}")
+set(YAML_CPP_LIBRARIES "${BINARY_DIR}/$<CONFIG>/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${YAML_CPP_LIBRARY_SUFFIX}")
 
 
 ##############################
@@ -432,8 +429,9 @@ target_include_directories(libloot_tests SYSTEM PRIVATE
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(libloot_internals_tests PRIVATE
-        UNICODE _UNICODE LOOT_STATIC)
-    target_compile_definitions(loot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
+        UNICODE _UNICODE LOOT_STATIC YAML_CPP_STATIC_DEFINE)
+    target_compile_definitions(loot PRIVATE
+        UNICODE _UNICODE LOOT_EXPORT YAML_CPP_STATIC_DEFINE)
     target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
 
     set(LOOT_LIBS ws2_32 bcrypt)
