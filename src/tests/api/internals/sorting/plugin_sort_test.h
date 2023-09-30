@@ -182,8 +182,7 @@ TEST_P(PluginSortTest,
         CreatePluginSortingData(p2->GetName(), loadOrder),
         CreatePluginSortingData(p3->GetName(), loadOrder)};
 
-    auto sorted = SortPlugins(
-        std::move(pluginsSortingData), GetParam(), {Group()}, {}, {});
+    auto sorted = SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
     ASSERT_EQ(expectedSortedOrder, sorted);
 
     loadOrder = sorted;
@@ -197,8 +196,7 @@ TEST_P(PluginSortTest,
         CreatePluginSortingData(p2->GetName(), loadOrder),
         CreatePluginSortingData(p3->GetName(), loadOrder)};
 
-    auto sorted = SortPlugins(
-        std::move(pluginsSortingData), GetParam(), {Group()}, {}, {});
+    auto sorted = SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
     ASSERT_EQ(expectedSortedOrder, sorted);
   }
 }
@@ -424,7 +422,7 @@ TEST_P(PluginSortTest,
       CreatePluginSortingData(esp->GetName())};
 
   try {
-    SortPlugins(std::move(pluginsSortingData), GetParam(), {Group()}, {}, {});
+    SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
     FAIL();
   } catch (const CyclicInteractionError& e) {
     ASSERT_EQ(2, e.GetCycle().size());
@@ -556,19 +554,13 @@ TEST_P(PluginSortTest,
       CreatePluginSortingData(esm->GetName()),
       CreatePluginSortingData(esp->GetName())};
 
-  EXPECT_THROW(SortPlugins(std::move(pluginsSortingData),
-                           GetParam(),
-                           {Group()},
-                           {},
-                           {esp->GetName()}),
-               CyclicInteractionError);
+  EXPECT_THROW(
+      SortPlugins(
+          std::move(pluginsSortingData), {Group()}, {}, {esp->GetName()}),
+      CyclicInteractionError);
 
   try {
-    SortPlugins(std::move(pluginsSortingData),
-                GetParam(),
-                {Group()},
-                {},
-                {esp->GetName()});
+    SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {esp->GetName()});
     FAIL();
   } catch (const CyclicInteractionError& e) {
     ASSERT_EQ(2, e.GetCycle().size());

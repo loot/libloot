@@ -34,7 +34,6 @@
 namespace loot {
 std::vector<std::string> SortPlugins(
     std::vector<PluginSortingData>&& pluginsSortingData,
-    const GameType gameType,
     const std::vector<Group> masterlistGroups,
     const std::vector<Group> userGroups,
     const std::vector<std::string>& implicitlyActivePlugins);

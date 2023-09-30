@@ -203,7 +203,6 @@ std::vector<std::string> SortPlugins(
 
 std::vector<std::string> SortPlugins(
     std::vector<PluginSortingData>&& pluginsSortingData,
-    const GameType gameType,
     const std::vector<Group> masterlistGroups,
     const std::vector<Group> userGroups,
     const std::vector<std::string>& earlyLoadingPlugins) {
@@ -287,7 +286,6 @@ std::vector<std::string> SortPlugins(
 
   const auto newLoadOrder =
       SortPlugins(std::move(pluginsSortingData),
-                  game.GetType(),
                   game.GetDatabase().GetGroups(false),
                   game.GetDatabase().GetUserGroups(),
                   game.GetLoadOrderHandler().GetEarlyLoadingPlugins());
