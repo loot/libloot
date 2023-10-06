@@ -2,6 +2,39 @@
 Version History
 ***************
 
+0.22.1 - 2023-10-06
+===================
+
+Changed
+-------
+
+- Updated Boost to v1.83.0.
+- Updated libloadorder to v15.0.1.
+- Updated spdlog to v1.12.0.
+- Updated yaml-cpp to v0.8.0+merge-key-support.1.
+
+Fixed
+-----
+
+- :cpp:any:`GameInterface::LoadCurrentLoadOrderState()` now correctly handles
+  the case where plugin timestamps matter for load order and two plugins have
+  the same timestamp. The plugins are sorted in ascending filename order for
+  Starfield and descending filename order for all other games. Via libloadorder.
+- :cpp:any:`GameInterface::LoadCurrentLoadOrderState()` now sorts installed
+  plugins by timestamp instead of filename before they are added to the load
+  order. This ensures that plugins that do not have an explicit load order
+  position are given a position that matches the game's behaviour and the
+  behaviour of xEdit and Wrye Bash. Via libloadorder.
+- :cpp:any:`GameInterface::IsLoadOrderAmbiguous()` now always returns false for
+  Morrowind, Oblivion, Fallout 3 and Fallout New Vegas. Via libloadorder.
+- :cpp:any:`GameInterface::IsLoadOrderAmbiguous()` no longer requires implicitly
+  active plugins to be listed in ``plugins.txt`` for the load order to be
+  unambiguous for Skyrim Special Edition, Skyrim VR, Fallout 4, Fallout 4 VR and
+  Starfield. Via libloadorder.
+- :cpp:any:`GameInterface::SetLoadOrder()` now modifies plugin file modification
+  timestamps to match the given load order if the game is Fallout 4, Fallout 4
+  VR or Starfield, and if ``plugins.txt`` is being ignored. Via libloadorder.
+
 0.22.0 - 2023-09-29
 ===================
 
