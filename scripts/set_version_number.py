@@ -20,15 +20,15 @@ def replace_in_file(path, regex, replacement):
 def update_cpp_file(path, version):
     version_parts = version.split('.')
 
-    replace_in_file(path, 'LIBLOOT_VERSION_MAJOR = \d+;', 'LIBLOOT_VERSION_MAJOR = {};'.format(version_parts[0]))
-    replace_in_file(path, 'LIBLOOT_VERSION_MINOR = \d+;', 'LIBLOOT_VERSION_MINOR = {};'.format(version_parts[1]))
-    replace_in_file(path, 'LIBLOOT_VERSION_PATCH = \d+;', 'LIBLOOT_VERSION_PATCH = {};'.format(version_parts[2]))
+    replace_in_file(path, 'LIBLOOT_VERSION_MAJOR = \\d+;', 'LIBLOOT_VERSION_MAJOR = {};'.format(version_parts[0]))
+    replace_in_file(path, 'LIBLOOT_VERSION_MINOR = \\d+;', 'LIBLOOT_VERSION_MINOR = {};'.format(version_parts[1]))
+    replace_in_file(path, 'LIBLOOT_VERSION_PATCH = \\d+;', 'LIBLOOT_VERSION_PATCH = {};'.format(version_parts[2]))
 
 def update_resource_file(path, version):
     comma_separated_version = version.replace('.', ', ')
 
-    replace_in_file(path, 'VERSION \d+, \d+, \d+', 'VERSION {}'.format(comma_separated_version))
-    replace_in_file(path, 'Version", "\d+\.\d+\.\d+"', 'Version", "{}"'.format(version))
+    replace_in_file(path, 'VERSION \\d+, \\d+, \\d+', 'VERSION {}'.format(comma_separated_version))
+    replace_in_file(path, 'Version", "\\d+\\.\\d+\\.\\d+"', 'Version", "{}"'.format(version))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Set the libloot version number')
