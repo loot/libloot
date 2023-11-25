@@ -2,6 +2,21 @@
 Version History
 ***************
 
+0.22.2 - 2023-11-25
+===================
+
+Fixed
+-----
+
+- libloot could error when reading the load order if it encountered a game ini
+  file containing single or double quote or backslash characters, as it
+  attempted to treat them as special characters. Via libloadorder.
+
+Changed
+-------
+
+- Updated libloadorder to v15.0.2.
+
 0.22.1 - 2023-10-06
 ===================
 
