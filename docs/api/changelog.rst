@@ -2,6 +2,29 @@
 Version History
 ***************
 
+0.22.3 - 2023-12-06
+===================
+
+Added
+-----
+
+- :cpp:any:`PluginInterface::IsValidAsLightPlugin()` now supports the extended
+  FormID range introduced in Skyrim SE v1.6.1130.0 for light plugins with a
+  header version of 1.71. Via esplugin.
+
+Fixed
+-----
+
+- :cpp:any:`PluginInterface::IsValidAsLightPlugin()` used Fallout 4's extended
+  range when validating FormIDs, even when the plugin's header version was less
+  than 1.0. Plugins with header versions less than 1.0 are now validated using
+  the appropriate range (0x800 to 0xFFF). Via esplugin.
+
+Changed
+-------
+
+- Updated esplugin to v4.1.1.
+
 0.22.2 - 2023-11-25
 ===================
 
