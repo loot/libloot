@@ -86,6 +86,7 @@ ExternalProject_Add(esplugin
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
         cbindgen ffi/ -o ffi/include/esplugin.hpp
+    COMMAND ${CMAKE_COMMAND} -E rm -r "target/${RUST_TARGET}/release/deps" "target/release"
     INSTALL_COMMAND "")
 ExternalProject_Get_Property(esplugin SOURCE_DIR)
 set(ESPLUGIN_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
@@ -104,6 +105,7 @@ ExternalProject_Add(libloadorder
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
         cbindgen ffi/ -l c++ -o ffi/include/libloadorder.hpp
+    COMMAND ${CMAKE_COMMAND} -E rm -r "target/${RUST_TARGET}/release/deps" "target/release"
     INSTALL_COMMAND "")
 ExternalProject_Get_Property(libloadorder SOURCE_DIR)
 set(LIBLOADORDER_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
@@ -122,6 +124,7 @@ ExternalProject_Add(loot-condition-interpreter
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
         cbindgen ffi/ -o ffi/include/loot_condition_interpreter.h
+    COMMAND ${CMAKE_COMMAND} -E rm -r "target/${RUST_TARGET}/release/deps" "target/release"
     INSTALL_COMMAND "")
 ExternalProject_Get_Property(loot-condition-interpreter SOURCE_DIR)
 set(LCI_INCLUDE_DIRS "${SOURCE_DIR}/ffi/include")
