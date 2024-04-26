@@ -111,6 +111,7 @@ add_dependencies(libloot_internals_tests
     libloadorder
     loot-condition-interpreter)
 target_link_libraries(libloot_internals_tests PRIVATE
+    Boost::headers
     ${ESPLUGIN_LIBRARIES}
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
@@ -121,7 +122,7 @@ target_link_libraries(libloot_internals_tests PRIVATE
 # Build API tests.
 add_executable(libloot_tests ${LIBLOOT_INTERFACE_TESTS_ALL_SOURCES})
 add_dependencies(libloot_tests loot)
-target_link_libraries(libloot_tests PRIVATE loot GTest::gtest_main)
+target_link_libraries(libloot_tests PRIVATE loot Boost::headers GTest::gtest_main)
 
 
 ##############################
@@ -136,7 +137,6 @@ set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
 ${LIBLOADORDER_INCLUDE_DIRS}
 ${ESPLUGIN_INCLUDE_DIRS}
 ${LCI_INCLUDE_DIRS}
-${Boost_INCLUDE_DIRS}
 ${ICU_INCLUDE_DIRS})
 
 target_include_directories(libloot_internals_tests PRIVATE

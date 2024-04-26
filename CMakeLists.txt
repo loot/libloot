@@ -270,6 +270,7 @@ add_dependencies(loot
     libloadorder
     loot-condition-interpreter)
 target_link_libraries(loot PRIVATE
+    Boost::headers
     ${ESPLUGIN_LIBRARIES}
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
@@ -288,7 +289,6 @@ set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${LIBLOADORDER_INCLUDE_DIRS}
     ${ESPLUGIN_INCLUDE_DIRS}
     ${LCI_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
     ${ICU_INCLUDE_DIRS})
 
 target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
