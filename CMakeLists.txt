@@ -130,29 +130,23 @@ FetchContent_Declare(
     URL_HASH "SHA256=4dccf2d10f410c1e2feaff89966bfc49a1abb29ef6f08246335b110e001e09a9"
     FIND_PACKAGE_ARGS)
 
-ExternalProject_Add(yaml-cpp
-    PREFIX "external"
+set(YAML_MSVC_SHARED_RT ON)
+set(YAML_CPP_BUILD_CONTRIB OFF)
+set(YAML_CPP_BUILD_TOOLS OFF)
+set(YAML_BUILD_SHARED_LIBS OFF)
+set(YAML_CPP_BUILD_TESTS OFF)
+# Suppress additional targets added by CTest, which is pulled in by yaml-cpp.
+set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
+# Suppress uninstall target
+# TODO: Cherry-pick https://github.com/jbeder/yaml-cpp/commit/ac144ed46cbc7e93a953ed08c6fbb5edad4f79b1 into loot/yaml-cpp.
+add_library(uninstall INTERFACE)
+FetchContent_Declare(
+    yaml-cpp
     URL "https://github.com/loot/yaml-cpp/archive/0.8.0+merge-key-support.1.tar.gz"
     URL_HASH "SHA256=07ebe9352aec55f1b2d855c8751befcb981b42d4602336527edcfd1bfae9a1fc"
-    CMAKE_ARGS
-        -DYAML_MSVC_SHARED_RT=ON
-        -DYAML_CPP_BUILD_CONTRIB=OFF
-        -DYAML_CPP_BUILD_TOOLS=OFF
-        -DYAML_CPP_BUILD_TESTS=OFF
-        -DYAML_CPP_INSTALL=OFF
-        -DYAML_CPP_FORMAT_SOURCE=OFF
-        -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
-        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-        -DBUILD_SHARED_LIBS=OFF
-    INSTALL_COMMAND "")
-ExternalProject_Get_Property(yaml-cpp SOURCE_DIR BINARY_DIR)
+    FIND_PACKAGE_ARGS)
 
-set(YAML_CPP_LIBRARY_SUFFIX "$<$<CONFIG:Debug>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}")
-set(YAML_CPP_INCLUDE_DIRS "${SOURCE_DIR}/include")
-set(YAML_CPP_LIBRARIES "${BINARY_DIR}/$<CONFIG>/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${YAML_CPP_LIBRARY_SUFFIX}")
-
-FetchContent_MakeAvailable(spdlog)
+FetchContent_MakeAvailable(spdlog yaml-cpp)
 
 ##############################
 # General Settings
@@ -274,14 +268,13 @@ add_library(loot ${LIBLOOT_ALL_SOURCES})
 add_dependencies(loot
     esplugin
     libloadorder
-    loot-condition-interpreter
-    yaml-cpp)
+    loot-condition-interpreter)
 target_link_libraries(loot PRIVATE
     ${ESPLUGIN_LIBRARIES}
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
     spdlog::spdlog_header_only
-    ${YAML_CPP_LIBRARIES})
+    yaml-cpp::yaml-cpp)
 
 ##############################
 # Set Target-Specific Flags
@@ -296,8 +289,7 @@ set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${ESPLUGIN_INCLUDE_DIRS}
     ${LCI_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
-    ${ICU_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS})
+    ${ICU_INCLUDE_DIRS})
 
 target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(loot SYSTEM PRIVATE

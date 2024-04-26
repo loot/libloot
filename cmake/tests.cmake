@@ -109,14 +109,13 @@ add_executable(libloot_internals_tests ${LIBLOOT_INTERNALS_TESTS_ALL_SOURCES})
 add_dependencies(libloot_internals_tests
     esplugin
     libloadorder
-    loot-condition-interpreter
-    yaml-cpp)
+    loot-condition-interpreter)
 target_link_libraries(libloot_internals_tests PRIVATE
     ${ESPLUGIN_LIBRARIES}
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
     spdlog::spdlog_header_only
-    ${YAML_CPP_LIBRARIES}
+    yaml-cpp::yaml-cpp
     GTest::gtest_main)
 
 # Build API tests.
@@ -138,8 +137,7 @@ ${LIBLOADORDER_INCLUDE_DIRS}
 ${ESPLUGIN_INCLUDE_DIRS}
 ${LCI_INCLUDE_DIRS}
 ${Boost_INCLUDE_DIRS}
-${ICU_INCLUDE_DIRS}
-${YAML_CPP_INCLUDE_DIRS})
+${ICU_INCLUDE_DIRS})
 
 target_include_directories(libloot_internals_tests PRIVATE
 ${LIBLOOT_INCLUDE_DIRS})
