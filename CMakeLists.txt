@@ -7,6 +7,7 @@ include(ExternalProject)
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
 option(RUN_CLANG_TIDY "Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator." OFF)
+option(LIBLOOT_BUILD_TESTS "Whether or not to build libloot's tests." ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -65,19 +66,6 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
     find_package(TBB REQUIRED)
 endif()
 
-ExternalProject_Add(GTest
-    PREFIX "external"
-    URL "https://github.com/google/googletest/archive/v1.14.0.tar.gz"
-    URL_HASH "SHA256=8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7"
-    CMAKE_ARGS
-        -Dgtest_force_shared_crt=ON
-        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-    INSTALL_COMMAND "")
-ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
-set(GTEST_INCLUDE_DIRS "${SOURCE_DIR}/googletest/include")
-set(GTEST_LIBRARIES "${BINARY_DIR}/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
 ExternalProject_Add(esplugin
     PREFIX "external"
     URL "https://github.com/Ortham/esplugin/archive/4.1.1.tar.gz"
@@ -134,14 +122,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 else()
     set(LCI_LIBRARIES ${LCI_LIBRARIES} dl)
 endif()
-
-ExternalProject_Add(testing-plugins
-    PREFIX "external"
-    URL "https://github.com/Ortham/testing-plugins/archive/1.5.0.tar.gz"
-    URL_HASH "SHA256=98c9094fb0f0152b1af7a6206950207f7ddc6602cd44ed67ebf70603ef490791"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND "")
 
 ExternalProject_Add(spdlog
     PREFIX "external"
@@ -268,45 +248,6 @@ set(LIBLOOT_SRC_API_H_FILES
     "${CMAKE_SOURCE_DIR}/src/api/helpers/logging.h"
     "${CMAKE_SOURCE_DIR}/src/api/helpers/text.h")
 
-set(LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/main.cpp")
-
-set(LIBLOOT_SRC_TESTS_INTERNALS_H_FILES
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_cache_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/load_order_handler_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/crc_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/text_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/yaml_set_helpers_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/condition_evaluator_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/conditional_metadata_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/file_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/group_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/location_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/message_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/message_content_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/plugin_cleaning_data_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/plugin_metadata_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/tag_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/plugin_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/sorting/group_sort_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/sorting/plugin_sort_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/sorting/plugin_graph_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/sorting/plugin_sorting_data_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata_list_test.h"
-)
-
-set(LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES
-"${CMAKE_SOURCE_DIR}/src/tests/api/interface/main.cpp"
-)
-
-set(LIBLOOT_SRC_TESTS_INTERFACE_H_FILES
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/api_game_operations_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/create_game_handle_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/database_interface_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/game_interface_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/is_compatible_test.h")
-
 source_group(TREE "${CMAKE_SOURCE_DIR}/src/api"
     PREFIX "Source Files"
     FILES ${LIBLOOT_SRC_API_CPP_FILES})
@@ -319,22 +260,6 @@ source_group(TREE "${CMAKE_SOURCE_DIR}/src/api"
     PREFIX "Header Files"
     FILES ${LIBLOOT_SRC_API_H_FILES})
 
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/internals"
-    PREFIX "Source Files"
-    FILES ${LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES})
-
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/internals"
-    PREFIX "Header Files"
-    FILES ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES})
-
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
-    PREFIX "Source Files"
-    FILES ${LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES})
-
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
-    PREFIX "Header Files"
-    FILES ${LIBLOOT_SRC_TESTS_INTERFACE_H_FILES})
-
 set(LIBLOOT_ALL_SOURCES
     ${LIBLOOT_SRC_API_CPP_FILES}
     ${LIBLOOT_INCLUDE_H_FILES}
@@ -342,41 +267,9 @@ set(LIBLOOT_ALL_SOURCES
     "${CMAKE_BINARY_DIR}/generated/loot_version.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/resource.rc")
 
-set(LIBLOOT_INTERNALS_TESTS_ALL_SOURCES
-    ${LIBLOOT_ALL_SOURCES}
-    ${LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES}
-    ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES}
-    "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/printers.h"
-)
-
-set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
-    ${LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES}
-    ${LIBLOOT_SRC_TESTS_INTERFACE_H_FILES}
-    "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/printers.h"
-)
-
 ##############################
 # Define Targets
 ##############################
-
-# Build tests.
-add_executable(libloot_internals_tests ${LIBLOOT_INTERNALS_TESTS_ALL_SOURCES})
-add_dependencies(libloot_internals_tests
-    esplugin
-    libloadorder
-    loot-condition-interpreter
-    spdlog
-    yaml-cpp
-    GTest
-    testing-plugins)
-target_link_libraries(libloot_internals_tests PRIVATE
-    ${ESPLUGIN_LIBRARIES}
-    ${LIBLOADORDER_LIBRARIES}
-    ${LCI_LIBRARIES}
-    ${YAML_CPP_LIBRARIES}
-    ${GTEST_LIBRARIES})
 
 # Build API.
 add_library(loot ${LIBLOOT_ALL_SOURCES})
@@ -391,11 +284,6 @@ target_link_libraries(loot PRIVATE
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
     ${YAML_CPP_LIBRARIES})
-
-# Build API tests.
-add_executable(libloot_tests ${LIBLOOT_INTERFACE_TESTS_ALL_SOURCES})
-add_dependencies(libloot_tests loot GTest testing-plugins)
-target_link_libraries(libloot_tests PRIVATE loot ${GTEST_LIBRARIES})
 
 ##############################
 # Set Target-Specific Flags
@@ -414,68 +302,39 @@ set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${SPDLOG_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIRS})
 
-target_include_directories(libloot_internals_tests PRIVATE
-    ${LIBLOOT_INCLUDE_DIRS})
-
-target_include_directories(libloot_internals_tests SYSTEM PRIVATE
-    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS}
-    ${GTEST_INCLUDE_DIRS})
-
 target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(loot SYSTEM PRIVATE
     ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
-target_include_directories(libloot_tests PRIVATE ${LIBLOOT_INCLUDE_DIRS})
-target_include_directories(libloot_tests SYSTEM PRIVATE
-    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS}
-    ${GTEST_INCLUDE_DIRS})
-
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_compile_definitions(libloot_internals_tests PRIVATE
-        UNICODE _UNICODE LOOT_STATIC YAML_CPP_STATIC_DEFINE)
     target_compile_definitions(loot PRIVATE
         UNICODE _UNICODE LOOT_EXPORT YAML_CPP_STATIC_DEFINE)
-    target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
 
     set(LOOT_LIBS ws2_32 bcrypt)
 
     if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-        target_compile_definitions(libloot_tests PRIVATE LOOT_STATIC)
         set(LOOT_LIBS ${LOOT_LIBS} tbb_static)
     endif()
 
-    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
-    target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 else()
     set(LOOT_LIBS ICU::data ICU::uc pthread stdc++fs TBB::tbb)
 
-    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
-    target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set_target_properties(libloot_internals_tests loot libloot_tests
+    set_target_properties(loot
         PROPERTIES
             INSTALL_RPATH "${CMAKE_INSTALL_RPATH};."
             BUILD_WITH_INSTALL_RPATH ON)
 
-    target_compile_options(libloot_internals_tests PRIVATE "-Wall" "-Wextra")
     target_compile_options(loot PRIVATE "-Wall" "-Wextra")
-    target_compile_options(libloot_tests PRIVATE "-Wall" "-Wextra")
 endif()
 
 if(MSVC)
     # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
     target_compile_options(loot PRIVATE "/permissive-" "/W4")
-    target_compile_options(libloot_tests PRIVATE "/permissive-" "/W4")
-
-    # Set /bigobj to allow building Debug and RelWithDebInfo tests
-    target_compile_options(libloot_internals_tests PRIVATE
-        "/permissive-"
-        "/W4"
-        "$<$<OR:$<CONFIG:DEBUG>,$<CONFIG:RelWithDebInfo>>:/bigobj>")
 endif()
 
 ##############################
@@ -511,42 +370,23 @@ if(RUN_CLANG_TIDY)
         "cppcoreguidelines-non-private-member-variables-in-classes"
         "cppcoreguidelines-special-member-functions")
 
-    # Skip some checks for tests because they're not worth the noise (e.g. GTest
-    # happens to use goto).
-    set(CLANG_TIDY_TEST_CHECKS ${CLANG_TIDY_COMMON_CHECKS})
-
     list(JOIN CLANG_TIDY_LIB_CHECKS "," CLANG_TIDY_LIB_CHECKS_JOINED)
-    list(JOIN CLANG_TIDY_TEST_CHECKS "," CLANG_TIDY_TEST_CHECKS_JOINED)
 
     set(CLANG_TIDY_LIB
         clang-tidy "-header-filter=.*" "-checks=${CLANG_TIDY_LIB_CHECKS_JOINED}")
 
-    set(CLANG_TIDY_TEST
-        clang-tidy "-header-filter=.*" "-checks=${CLANG_TIDY_TEST_CHECKS_JOINED}")
-
     set_target_properties(loot
         PROPERTIES
             CXX_CLANG_TIDY "${CLANG_TIDY_LIB}")
-
-    set_target_properties(libloot_internals_tests libloot_tests
-        PROPERTIES
-            CXX_CLANG_TIDY "${CLANG_TIDY_TEST}")
 endif()
 
 ##############################
-# Post-Build Steps
+# Tests
 ##############################
 
-# Copy testing plugins
-ExternalProject_Get_Property(testing-plugins SOURCE_DIR)
-add_custom_command(TARGET libloot_internals_tests POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${SOURCE_DIR}
-        $<TARGET_FILE_DIR:libloot_internals_tests>)
-add_custom_command(TARGET libloot_tests POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${SOURCE_DIR}
-      $<TARGET_FILE_DIR:libloot_tests>)
+if(LIBLOOT_BUILD_TESTS)
+    include("cmake/tests.cmake")
+endif()
 
 ########################################
 # Install
