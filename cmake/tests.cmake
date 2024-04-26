@@ -110,12 +110,12 @@ add_dependencies(libloot_internals_tests
     esplugin
     libloadorder
     loot-condition-interpreter
-    spdlog
     yaml-cpp)
 target_link_libraries(libloot_internals_tests PRIVATE
     ${ESPLUGIN_LIBRARIES}
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
+    spdlog::spdlog_header_only
     ${YAML_CPP_LIBRARIES}
     GTest::gtest_main)
 
@@ -139,7 +139,6 @@ ${ESPLUGIN_INCLUDE_DIRS}
 ${LCI_INCLUDE_DIRS}
 ${Boost_INCLUDE_DIRS}
 ${ICU_INCLUDE_DIRS}
-${SPDLOG_INCLUDE_DIRS}
 ${YAML_CPP_INCLUDE_DIRS})
 
 target_include_directories(libloot_internals_tests PRIVATE

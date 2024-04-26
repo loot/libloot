@@ -4,6 +4,7 @@ if(POLICY CMP0135)
 endif()
 project(libloot)
 include(ExternalProject)
+include(FetchContent)
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
 option(RUN_CLANG_TIDY "Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator." OFF)
@@ -123,15 +124,11 @@ else()
     set(LCI_LIBRARIES ${LCI_LIBRARIES} dl)
 endif()
 
-ExternalProject_Add(spdlog
-    PREFIX "external"
+FetchContent_Declare(
+    spdlog
     URL "https://github.com/gabime/spdlog/archive/v1.12.0.tar.gz"
     URL_HASH "SHA256=4dccf2d10f410c1e2feaff89966bfc49a1abb29ef6f08246335b110e001e09a9"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND "")
-ExternalProject_Get_Property(spdlog SOURCE_DIR)
-set(SPDLOG_INCLUDE_DIRS "${SOURCE_DIR}/include")
+    FIND_PACKAGE_ARGS)
 
 ExternalProject_Add(yaml-cpp
     PREFIX "external"
@@ -155,6 +152,7 @@ set(YAML_CPP_LIBRARY_SUFFIX "$<$<CONFIG:Debug>:d>${CMAKE_STATIC_LIBRARY_SUFFIX}"
 set(YAML_CPP_INCLUDE_DIRS "${SOURCE_DIR}/include")
 set(YAML_CPP_LIBRARIES "${BINARY_DIR}/$<CONFIG>/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${YAML_CPP_LIBRARY_SUFFIX}")
 
+FetchContent_MakeAvailable(spdlog)
 
 ##############################
 # General Settings
@@ -277,12 +275,12 @@ add_dependencies(loot
     esplugin
     libloadorder
     loot-condition-interpreter
-    spdlog
     yaml-cpp)
 target_link_libraries(loot PRIVATE
     ${ESPLUGIN_LIBRARIES}
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
+    spdlog::spdlog_header_only
     ${YAML_CPP_LIBRARIES})
 
 ##############################
@@ -299,7 +297,6 @@ set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${LCI_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ICU_INCLUDE_DIRS}
-    ${SPDLOG_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIRS})
 
 target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
