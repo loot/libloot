@@ -319,7 +319,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
 else()
-    set(LOOT_LIBS ICU::data ICU::uc pthread stdc++fs TBB::tbb)
+    set(LOOT_LIBS ICU::data ICU::uc pthread TBB::tbb)
 
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
 endif()

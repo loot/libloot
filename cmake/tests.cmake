@@ -166,7 +166,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 else()
-    set(LOOT_LIBS ICU::data ICU::uc pthread stdc++fs TBB::tbb)
+    set(LOOT_LIBS ICU::data ICU::uc pthread TBB::tbb)
 
     target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
