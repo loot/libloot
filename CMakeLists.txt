@@ -5,6 +5,8 @@ endif()
 project(libloot)
 include(ExternalProject)
 include(FetchContent)
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
 option(RUN_CLANG_TIDY "Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator." OFF)
@@ -304,6 +306,9 @@ set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${LCI_INCLUDE_DIRS}
     ${ICU_INCLUDE_DIRS})
 
+target_include_directories(loot PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(loot SYSTEM PRIVATE
     ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
@@ -322,7 +327,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 else()
     set(LOOT_LIBS ICU::data ICU::uc pthread TBB::tbb)
 
-    target_link_libraries(loot PRIVATE ${LOOT_LIBS})
+    target_link_libraries(loot PUBLIC ${LOOT_LIBS})
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -394,23 +399,56 @@ endif()
 # Install
 ########################################
 
+set(LIBLOOT_VERSION "0.22.3")
+
+set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
+set_property(TARGET loot PROPERTY SOVERSION 0)
+set_property(TARGET loot PROPERTY INTERFACE_libloot_MAJOR_VERSION 0)
+set_property(TARGET loot APPEND PROPERTY COMPATIBLE_INTERFACE_STRING libloot_MAJOR_VERSION)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/liblootConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/liblootConfigVersion.cmake"
+    VERSION "${LIBLOOT_VERSION}"
+    COMPATIBILITY AnyNewerVersion
+)
+
 install(TARGETS loot
-    DESTINATION ".")
+    EXPORT liblootTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(MSVC)
     install(FILES $<TARGET_PDB_FILE:loot>
-        DESTINATION .
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
         OPTIONAL
         CONFIGURATIONS RelWithDebInfo)
 endif()
 
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/include"
-    DESTINATION ".")
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(LIBLOOT_INSTALL_DOCS)
     install(DIRECTORY "${CMAKE_BINARY_DIR}/docs/html/"
-        DESTINATION "docs")
+        DESTINATION ${CMAKE_INSTALL_DOCDIR})
 endif()
+
+install(EXPORT liblootTargets
+    FILE liblootTargets.cmake
+    NAMESPACE libloot::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/liblootConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/liblootConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
 
 ########################################
 # CPack
