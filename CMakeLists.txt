@@ -67,9 +67,13 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
     find_package(TBB REQUIRED)
 endif()
 
+if(NOT DEFINED ESPLUGIN_URL)
+    set(ESPLUGIN_URL "https://github.com/Ortham/esplugin/archive/4.1.1.tar.gz")
+endif()
+
 ExternalProject_Add(esplugin
     PREFIX "external"
-    URL "https://github.com/Ortham/esplugin/archive/4.1.1.tar.gz"
+    URL ${ESPLUGIN_URL}
     URL_HASH "SHA256=4c61199fc85ae7ebd8a3954c95e99598b4052ee923567d24f95d7a334c2c6525"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
@@ -86,9 +90,13 @@ else()
     set(ESPLUGIN_LIBRARIES ${ESPLUGIN_LIBRARIES} dl)
 endif()
 
+if(NOT DEFINED LIBLOADORDER_URL)
+    set(LIBLOADORDER_URL "https://github.com/Ortham/libloadorder/archive/15.0.2.tar.gz")
+endif()
+
 ExternalProject_Add(libloadorder
     PREFIX "external"
-    URL "https://github.com/Ortham/libloadorder/archive/15.0.2.tar.gz"
+    URL ${LIBLOADORDER_URL}
     URL_HASH "SHA256=7048984da19f6e1e6a271b0b396fc5a47ae3c25ff715995c885dc8a7a9bbc5d6"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
@@ -105,9 +113,13 @@ else()
     set(LIBLOADORDER_LIBRARIES ${LIBLOADORDER_LIBRARIES} dl)
 endif()
 
+if(NOT DEFINED LOOT_CONDITION_INTERPRETER_URL)
+    set(LOOT_CONDITION_INTERPRETER_URL "https://github.com/loot/loot-condition-interpreter/archive/3.1.0.tar.gz")
+endif()
+
 ExternalProject_Add(loot-condition-interpreter
     PREFIX "external"
-    URL "https://github.com/loot/loot-condition-interpreter/archive/3.1.0.tar.gz"
+    URL ${LOOT_CONDITION_INTERPRETER_URL}
     URL_HASH "SHA256=a2dcadff0e6f9fd4fdc12785d296bf5ee24cc556f4b20a357233e2a2e79d025c"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
