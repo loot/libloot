@@ -9,6 +9,7 @@ include(FetchContent)
 option(BUILD_SHARED_LIBS "Build a shared library" ON)
 option(RUN_CLANG_TIDY "Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator." OFF)
 option(LIBLOOT_BUILD_TESTS "Whether or not to build libloot's tests." ON)
+option(LIBLOOT_INSTALL_DOCS "Whether or not to install libloot's docs (which need to be built separately)." ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -406,8 +407,10 @@ endif()
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include"
     DESTINATION ".")
 
-install(DIRECTORY "${CMAKE_BINARY_DIR}/docs/html/"
-    DESTINATION "docs")
+if(LIBLOOT_INSTALL_DOCS)
+    install(DIRECTORY "${CMAKE_BINARY_DIR}/docs/html/"
+        DESTINATION "docs")
+endif()
 
 ########################################
 # CPack

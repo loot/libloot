@@ -52,6 +52,7 @@ Parameter | Values | Default |Description
 ----------|--------|---------|-----------
 `BUILD_SHARED_LIBS` | `ON`, `OFF` | `ON` | Whether or not to build a shared libloot binary.
 `LIBLOOT_BUILD_TESTS` | `ON`, `OFF` | `ON` | Whether or not to build libloot's tests.
+`LIBLOOT_INSTALL_DOCS` | `ON`, `OFF` | `ON` | Whether or not to install libloot's docs (which need to be built separately).
 `RUN_CLANG_TIDY` | `ON`, `OFF` | `OFF` | Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator.
 `ESPLUGIN_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
 `LIBLOADORDER_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
