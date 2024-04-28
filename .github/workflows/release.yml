@@ -43,12 +43,12 @@ jobs:
     needs: create_release
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Cache cargo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -97,7 +97,7 @@ jobs:
           ./libloot_internals_tests
           ./libloot_tests
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -138,12 +138,12 @@ jobs:
         platform: [Win32, x64]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Cache cargo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -170,7 +170,7 @@ jobs:
           cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
