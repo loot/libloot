@@ -129,48 +129,28 @@ target_link_libraries(libloot_tests PRIVATE loot Boost::headers GTest::gtest_mai
 # Set Target-Specific Flags
 ##############################
 
-set(LIBLOOT_INCLUDE_DIRS
-"${CMAKE_SOURCE_DIR}/src"
-"${CMAKE_SOURCE_DIR}/include")
-
-set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
-${LIBLOADORDER_INCLUDE_DIRS}
-${ESPLUGIN_INCLUDE_DIRS}
-${LCI_INCLUDE_DIRS}
-${ICU_INCLUDE_DIRS})
-
 target_include_directories(libloot_internals_tests PRIVATE
-${LIBLOOT_INCLUDE_DIRS})
+    ${LIBLOOT_INCLUDE_DIRS})
 
 target_include_directories(libloot_internals_tests SYSTEM PRIVATE
-${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS}
-${GTEST_INCLUDE_DIRS})
+    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
 target_include_directories(libloot_tests PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(libloot_tests SYSTEM PRIVATE
-    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS}
-    ${GTEST_INCLUDE_DIRS})
+    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(libloot_internals_tests PRIVATE
         UNICODE _UNICODE LOOT_STATIC YAML_CPP_STATIC_DEFINE)
     target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
 
-    set(LOOT_LIBS ws2_32 bcrypt)
-
     if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
         target_compile_definitions(libloot_tests PRIVATE LOOT_STATIC)
-        set(LOOT_LIBS ${LOOT_LIBS} tbb_static)
     endif()
-
-    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
-    target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
-else()
-    set(LOOT_LIBS ICU::data ICU::uc pthread TBB::tbb)
-
-    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
-    target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 endif()
+
+target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
+target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set_target_properties(libloot_internals_tests libloot_tests
