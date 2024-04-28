@@ -30,6 +30,13 @@ def update_resource_file(path, version):
     replace_in_file(path, 'VERSION \\d+, \\d+, \\d+', 'VERSION {}'.format(comma_separated_version))
     replace_in_file(path, 'Version", "\\d+\\.\\d+\\.\\d+"', 'Version", "{}"'.format(version))
 
+def update_cmakelists(path, version):
+    version_parts = version.split('.')
+
+    replace_in_file(path, 'set\\(LIBLOOT_VERSION "\\d+\\.\\d+\\.\\d+"\\)', 'set(LIBLOOT_VERSION "{}")'.format(version))
+    replace_in_file(path, 'TARGET loot PROPERTY SOVERSION \\d+', 'TARGET loot PROPERTY SOVERSION {}'.format(version_parts[0]))
+    replace_in_file(path, 'INTERFACE_libloot_MAJOR_VERSION \\d+', 'INTERFACE_libloot_MAJOR_VERSION {}'.format(version_parts[0]))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Set the libloot version number')
     parser.add_argument('version', nargs='+')
@@ -44,3 +51,4 @@ if __name__ == "__main__":
 
     update_cpp_file(os.path.join('include', 'loot', 'loot_version.h'), arguments.version[0])
     update_resource_file(os.path.join('src', 'api', 'resource.rc'), arguments.version[0])
+    update_cmakelists(os.path.join('CMakeLists.txt'), arguments.version[0])
