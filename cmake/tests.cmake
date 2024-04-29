@@ -36,6 +36,7 @@ set(LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/main.cpp")
 
 set(LIBLOOT_SRC_TESTS_INTERNALS_H_FILES
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/bsa_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/game_cache_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/load_order_handler_test.h"

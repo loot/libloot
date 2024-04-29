@@ -27,6 +27,10 @@ along with LOOT.  If not, see
 
 #include <gtest/gtest.h>
 
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <fstream>
+
 #include "api/bsa.h"
 
 namespace loot::test {
@@ -131,6 +135,48 @@ TEST(GetAssetsInBethesdaArchive, shouldSupportTextureBA2s) {
 
   EXPECT_EQ(1, assets.find(folderHash)->second.size());
   EXPECT_EQ(1, assets.find(folderHash)->second.count(fileHash));
+}
+
+class GetAssetsInBethesdaArchive_BA2Version
+    : public ::testing::TestWithParam<char> {
+protected:
+  GetAssetsInBethesdaArchive_BA2Version() : path(GetArchivePath()) {
+    const auto sourcePath =
+        std::filesystem::u8path("./Fallout 4/Data/Blank - Main.ba2");
+    std::filesystem::copy(sourcePath, path);
+
+    std::fstream stream(
+        path, std::ios_base::binary | std::ios_base::in | std::ios_base::out);
+    stream.seekp(4);
+    stream.put(GetParam());
+    stream.close();
+  }
+
+  void TearDown() override { std::filesystem::remove(path); }
+
+  const std::filesystem::path path;
+
+private:
+  std::filesystem::path GetArchivePath() {
+    const auto tempFilename =
+        "LOOT-test-" +
+        boost::lexical_cast<std::string>((boost::uuids::random_generator())()) +
+        ".ba2";
+
+    return std::filesystem::temp_directory_path() / tempFilename;
+  }
+};
+
+// Pass an empty first argument, as it's a prefix for the test instantation,
+// but we only have the one so no prefix is necessary.
+INSTANTIATE_TEST_SUITE_P(,
+                         GetAssetsInBethesdaArchive_BA2Version,
+                         ::testing::Values(1, 2, 3, 7, 8));
+
+TEST_P(GetAssetsInBethesdaArchive_BA2Version, shouldSupportBA2Version) {
+  const auto assets = GetAssetsInBethesdaArchive(path);
+
+  EXPECT_FALSE(assets.empty());
 }
 
 TEST(GetAssetsInBethesdaArchives, shouldSkipFilesThatCannotBeRead) {

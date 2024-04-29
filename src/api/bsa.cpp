@@ -217,8 +217,9 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2(std::istream& in,
     throw std::runtime_error("BA2 file header type ID is invalid");
   }
 
-  // The header version is 1 for Fallout 4 and 2 or 3 for Starfield.
-  if (header.version != 1 && header.version != 2 && header.version != 3) {
+  // The header version is 1, 7 or 8 for Fallout 4 and 2 or 3 for Starfield.
+  if (header.version != 1 && header.version != 2 && header.version != 3 &&
+      header.version != 7 && header.version != 8) {
     throw std::runtime_error("BA2 file header version is invalid");
   }
 
