@@ -72,12 +72,13 @@ endif()
 
 if(NOT DEFINED ESPLUGIN_URL)
     set(ESPLUGIN_URL "https://github.com/Ortham/esplugin/archive/4.1.1.tar.gz")
+    set(ESPLUGIN_HASH "SHA256=4c61199fc85ae7ebd8a3954c95e99598b4052ee923567d24f95d7a334c2c6525")
 endif()
 
 ExternalProject_Add(esplugin
     PREFIX "external"
     URL ${ESPLUGIN_URL}
-    URL_HASH "SHA256=4c61199fc85ae7ebd8a3954c95e99598b4052ee923567d24f95d7a334c2c6525"
+    URL_HASH ${ESPLUGIN_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -95,12 +96,13 @@ endif()
 
 if(NOT DEFINED LIBLOADORDER_URL)
     set(LIBLOADORDER_URL "https://github.com/Ortham/libloadorder/archive/15.0.2.tar.gz")
+    set(LIBLOADORDER_HASH "SHA256=7048984da19f6e1e6a271b0b396fc5a47ae3c25ff715995c885dc8a7a9bbc5d6")
 endif()
 
 ExternalProject_Add(libloadorder
     PREFIX "external"
     URL ${LIBLOADORDER_URL}
-    URL_HASH "SHA256=7048984da19f6e1e6a271b0b396fc5a47ae3c25ff715995c885dc8a7a9bbc5d6"
+    URL_HASH ${LIBLOADORDER_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
@@ -118,12 +120,13 @@ endif()
 
 if(NOT DEFINED LOOT_CONDITION_INTERPRETER_URL)
     set(LOOT_CONDITION_INTERPRETER_URL "https://github.com/loot/loot-condition-interpreter/archive/3.1.0.tar.gz")
+    set(LOOT_CONDITION_INTERPRETER_HASH "SHA256=a2dcadff0e6f9fd4fdc12785d296bf5ee24cc556f4b20a357233e2a2e79d025c")
 endif()
 
 ExternalProject_Add(loot-condition-interpreter
     PREFIX "external"
     URL ${LOOT_CONDITION_INTERPRETER_URL}
-    URL_HASH "SHA256=a2dcadff0e6f9fd4fdc12785d296bf5ee24cc556f4b20a357233e2a2e79d025c"
+    URL_HASH ${LOOT_CONDITION_INTERPRETER_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
