@@ -155,13 +155,10 @@ set(YAML_BUILD_SHARED_LIBS OFF)
 set(YAML_CPP_BUILD_TESTS OFF)
 # Suppress additional targets added by CTest, which is pulled in by yaml-cpp.
 set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
-# Suppress uninstall target
-# TODO: Cherry-pick https://github.com/jbeder/yaml-cpp/commit/ac144ed46cbc7e93a953ed08c6fbb5edad4f79b1 into loot/yaml-cpp.
-add_library(uninstall INTERFACE)
 FetchContent_Declare(
     yaml-cpp
-    URL "https://github.com/loot/yaml-cpp/archive/0.8.0+merge-key-support.1.tar.gz"
-    URL_HASH "SHA256=07ebe9352aec55f1b2d855c8751befcb981b42d4602336527edcfd1bfae9a1fc"
+    URL "https://github.com/loot/yaml-cpp/archive/0.8.0+merge-key-support.2.tar.gz"
+    URL_HASH "SHA256=e91779044cd4025ec10ed31986031031ef22ebce90a64cc8f85e7c7e95a1abc6"
     FIND_PACKAGE_ARGS)
 
 FetchContent_MakeAvailable(spdlog yaml-cpp)
