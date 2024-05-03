@@ -2,6 +2,44 @@
 Version History
 ***************
 
+0.22.4 - 2024-05-03
+===================
+
+Added
+-----
+
+- Support Fallout 4 installs from the Epic Games Store.
+- Support for Fallout 4's new BA2 versions.
+- A ``LIBLOOT_BUILD_TESTS`` CMake option that defaults to ``ON`` and allows you
+  to disable building tests and their dependencies.
+- A ``LIBLOOT_INSTALL_DOCS`` CMake option that defaults to ``ON`` and allows you
+  to skip installing the docs.
+- ``ESPLUGIN_URL``, ``ESPLUGIN_HASH``, ``LIBLOADORDER_URL``,
+  ``LIBLOADORDER_HASH``, ``LOOT_CONDITION_INTERPRETER_URL`` and
+  ``LOOT_CONDITION_INTERPRETER_HASH`` CMake variables for overriding the URLs
+  and archive hashes used to fetch esplugin, libloadorder and
+  loot-condition-interpreter.
+
+Changed
+-------
+
+- It's now possible to use existing builds of Google Test, spdlog and yaml-cpp
+  that CMake can find installed.
+- The build archives now include the necessary CMake config to be found by
+  CMake's ``FindPackage``.
+- The build archives produced by CPack now follow the GNU directory structure
+  (e.g. ``bin``, ``include``, ``lib``, ``share``).
+- Updated esplugin to v5.0.1.
+- Updated libloadorder v16.0.0.
+- Updated loot-condition-interpreter to v4.0.0.
+- Updated spdlog to v1.14.1.
+- Updated yaml-cpp to v0.8.0+merge-key-support.2.
+
+Removed
+-------
+
+- The Linux build no longer links to ``stdc++fs``.
+
 0.22.3 - 2023-12-06
 ===================
 

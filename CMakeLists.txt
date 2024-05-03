@@ -398,7 +398,7 @@ endif()
 # Install
 ########################################
 
-set(LIBLOOT_VERSION "0.22.3")
+set(LIBLOOT_VERSION "0.22.4")
 
 set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
 set_property(TARGET loot PROPERTY SOVERSION 0)
