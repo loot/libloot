@@ -245,10 +245,13 @@ void LoadOrderHandler::SetAdditionalDataPaths(
   }
 
   std::vector<std::string> dataPathStrings;
-  std::vector<const char*> dataPathCStrings;
   for (const auto& dataPath : dataPaths) {
     dataPathStrings.push_back(dataPath.u8string());
-    dataPathCStrings.push_back(dataPathStrings.back().c_str());
+  }
+
+  std::vector<const char*> dataPathCStrings;
+  for (const auto& dataPath : dataPathStrings) {
+    dataPathCStrings.push_back(dataPath.c_str());
   }
 
   const unsigned int ret = lo_set_additional_plugins_directories(
