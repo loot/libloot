@@ -179,6 +179,31 @@ std::vector<std::filesystem::path> FindAssociatedArchives(
   }
 }
 
+void HandleEspluginError(const std::string& operation,
+                         unsigned int returnCode) {
+  if (returnCode == ESP_OK) {
+    return;
+  }
+
+  auto err = "esplugin failed to " + operation +
+             ". Error code: " + std::to_string(returnCode);
+
+  const char* e = nullptr;
+  esp_get_error_message(&e);
+  if (e == nullptr) {
+    err += ". Details could not be fetched.";
+  } else {
+    err += ". Details: " + std::string(e);
+  }
+
+  auto logger = getLogger();
+  if (logger) {
+    logger->error(err);
+  }
+
+  throw FileAccessError(err);
+}
+
 Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
                std::filesystem::path pluginPath,
@@ -194,11 +219,7 @@ Plugin::Plugin(const GameType gameType,
     Load(pluginPath, gameType, headerOnly);
 
     auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
-    if (ret != ESP_OK) {
-      throw FileAccessError(
-          "Error checking if \"" + pluginPath.u8string() +
-          "\" is empty. esplugin error code: " + std::to_string(ret));
-    }
+    HandleEspluginError("check if \"" + name_ + "\" is empty", ret);
 
     archivePaths_ = FindAssociatedArchives(gameType, gameCache, pluginPath);
 
@@ -231,10 +252,7 @@ Plugin::Plugin(const GameType gameType,
 
 void Plugin::ResolveRecordIds(Vec_PluginMetadata* pluginsMetadata) const {
   auto ret = esp_plugin_resolve_record_ids(esPlugin.get(), pluginsMetadata);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("resolve the record IDs of \"" + name_ + "\"", ret);
 }
 
 std::string Plugin::GetName() const { return name_; }
@@ -243,10 +261,7 @@ std::optional<float> Plugin::GetHeaderVersion() const {
   float version = 0.0f;
 
   const auto ret = esp_plugin_header_version(esPlugin.get(), &version);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("get the header version of \"" + name_ + "\"", ret);
 
   if (std::isnan(version)) {
     return std::nullopt;
@@ -263,10 +278,7 @@ std::vector<std::string> Plugin::GetMasters() const {
   char** masters = nullptr;
   size_t numMasters = 0;
   const auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("get the masters of \"" + name_ + "\"", ret);
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   std::vector<std::string> mastersVec(masters, masters + numMasters);
@@ -282,10 +294,7 @@ std::optional<uint32_t> Plugin::GetCRC() const { return crc_; }
 bool Plugin::IsMaster() const {
   bool isMaster = false;
   const auto ret = esp_plugin_is_master(esPlugin.get(), &isMaster);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("check if \"" + name_ + "\" is a master", ret);
 
   return isMaster;
 }
@@ -293,10 +302,7 @@ bool Plugin::IsMaster() const {
 bool Plugin::IsLightPlugin() const {
   bool isLightPlugin = false;
   const auto ret = esp_plugin_is_light_plugin(esPlugin.get(), &isLightPlugin);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("check if \"" + name_ + "\" is a light plugin", ret);
 
   return isLightPlugin;
 }
@@ -305,10 +311,7 @@ bool Plugin::IsOverridePlugin() const {
   bool isOverridePlugin = false;
   const auto ret =
       esp_plugin_is_update_plugin(esPlugin.get(), &isOverridePlugin);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("check if \"" + name_ + "\" is an override plugin", ret);
 
   return isOverridePlugin;
 }
@@ -317,10 +320,8 @@ bool Plugin::IsValidAsLightPlugin() const {
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("check if \"" + name_ + "\" is valid as a light plugin",
+                      ret);
 
   return isValid;
 }
@@ -329,10 +330,8 @@ bool Plugin::IsValidAsOverridePlugin() const {
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_update_plugin(esPlugin.get(), &isValid);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError(
+      "check if \"" + name_ + "\" is valid as an override plugin", ret);
 
   return isValid;
 }
@@ -348,10 +347,9 @@ bool Plugin::DoRecordsOverlap(const PluginInterface& plugin) const {
     bool doPluginsOverlap = false;
     const auto ret = esp_plugin_do_records_overlap(
         esPlugin.get(), otherPlugin.esPlugin.get(), &doPluginsOverlap);
-    if (ret != ESP_OK) {
-      throw FileAccessError(name_ +
-                            " : esplugin error code: " + std::to_string(ret));
-    }
+    HandleEspluginError("check if \"" + name_ + "\" and \"" +
+                            otherPlugin.GetName() + "\" overlap",
+                        ret);
 
     return doPluginsOverlap;
   } catch (std::bad_cast&) {
@@ -394,10 +392,7 @@ size_t Plugin::GetOverlapSize(
   size_t overlapSize = 0;
   const auto ret = esp_plugin_records_overlap_size(
       esPlugin.get(), esPlugins.data(), esPlugins.size(), &overlapSize);
-  if (ret != ESP_OK) {
-    throw FileAccessError("Error getting overlap size for \"" + name_ +
-                          "\". esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("get overlap size for \"" + name_ + "\"", ret);
 
   return overlapSize;
 }
@@ -406,10 +401,7 @@ size_t Plugin::GetOverrideRecordCount() const {
   size_t overrideRecordCount;
   const auto ret =
       esp_plugin_count_override_records(esPlugin.get(), &overrideRecordCount);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("count override records in \"" + name_ + "\"", ret);
 
   return overrideRecordCount;
 }
@@ -418,11 +410,7 @@ uint32_t Plugin::GetRecordAndGroupCount() const {
   uint32_t recordAndGroupCount = 0;
   const auto ret =
       esp_plugin_record_and_group_count(esPlugin.get(), &recordAndGroupCount);
-  if (ret != ESP_OK) {
-    throw FileAccessError("Error getting record and group count for \"" +
-                          name_ +
-                          "\". esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("get record and group count for \"" + name_ + "\"", ret);
 
   return recordAndGroupCount;
 }
@@ -487,28 +475,20 @@ void Plugin::Load(const std::filesystem::path& path,
   ::Plugin* plugin = nullptr;
   auto ret = esp_plugin_new(
       &plugin, GetEspluginGameId(gameType), path.u8string().c_str());
-  if (ret != ESP_OK) {
-    throw FileAccessError(path.u8string() +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("load plugin \"" + path.u8string() + "\"", ret);
 
   esPlugin = std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(
       plugin, esp_plugin_free);
 
   ret = esp_plugin_parse(esPlugin.get(), headerOnly);
-  if (ret != ESP_OK) {
-    throw FileAccessError(path.u8string() +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("parse plugin \"" + path.u8string() + "\"", ret);
 }
 
 std::string Plugin::GetDescription() const {
   char* description = nullptr;
   const auto ret = esp_plugin_description(esPlugin.get(), &description);
-  if (ret != ESP_OK) {
-    throw FileAccessError(name_ +
-                          " : esplugin error code: " + std::to_string(ret));
-  }
+  HandleEspluginError("read the description of \"" + name_ + "\"", ret);
+
   if (description == nullptr) {
     return "";
   }
@@ -536,11 +516,7 @@ Plugin::GetPluginsMetadata(std::vector<const Plugin*> plugins) {
   Vec_PluginMetadata* pluginsMetadata = nullptr;
   const auto ret = esp_get_plugins_metadata(
       esPlugins.data(), esPlugins.size(), &pluginsMetadata);
-  if (ret != ESP_OK) {
-    throw FileAccessError(
-        "Failed to get plugins metadata: esplugin error code: " +
-        std::to_string(ret));
-  }
+  HandleEspluginError("get plugins metadata", ret);
 
   return std::unique_ptr<Vec_PluginMetadata,
                          decltype(&esp_plugins_metadata_free)>(
