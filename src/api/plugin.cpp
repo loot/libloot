@@ -307,6 +307,14 @@ bool Plugin::IsLightPlugin() const {
   return isLightPlugin;
 }
 
+bool Plugin::IsMediumPlugin() const {
+  bool isMediumPlugin = false;
+  const auto ret = esp_plugin_is_medium_plugin(esPlugin.get(), &isMediumPlugin);
+  HandleEspluginError("check if \"" + name_ + "\" is a medium plugin", ret);
+
+  return isMediumPlugin;
+}
+
 bool Plugin::IsOverridePlugin() const {
   bool isOverridePlugin = false;
   const auto ret =
@@ -321,6 +329,16 @@ bool Plugin::IsValidAsLightPlugin() const {
   const auto ret =
       esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
   HandleEspluginError("check if \"" + name_ + "\" is valid as a light plugin",
+                      ret);
+
+  return isValid;
+}
+
+bool Plugin::IsValidAsMediumPlugin() const {
+  bool isValid = false;
+  const auto ret =
+      esp_plugin_is_valid_as_medium_plugin(esPlugin.get(), &isValid);
+  HandleEspluginError("check if \"" + name_ + "\" is valid as a medium plugin",
                       ret);
 
   return isValid;

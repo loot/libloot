@@ -60,9 +60,13 @@ public:
 
   bool IsLightPlugin() const override { return false; }
 
+  bool IsMediumPlugin() const override { return false; }
+
   bool IsOverridePlugin() const override { return false; }
 
   bool IsValidAsLightPlugin() const override { return false; }
+
+  bool IsValidAsMediumPlugin() const override { return false; }
 
   bool IsValidAsOverridePlugin() const override { return false; }
 

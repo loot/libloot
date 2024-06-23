@@ -197,8 +197,10 @@ public:
 
   bool IsMaster() const override { return false; }
   bool IsLightPlugin() const override { return false; }
+  bool IsMediumPlugin() const override { return false; }
   bool IsOverridePlugin() const override { return false; }
   bool IsValidAsLightPlugin() const override { return false; }
+  bool IsValidAsMediumPlugin() const override { return false; }
   bool IsValidAsOverridePlugin() const override { return false; }
   bool IsEmpty() const override { return false; }
   bool LoadsArchive() const override { return false; }
@@ -356,6 +358,23 @@ TEST_P(
                 GetParam() == GameType::tes5vr ||
                 GetParam() == GameType::starfield,
             plugin3.IsLightPlugin());
+}
+
+TEST_P(
+  PluginTest,
+       isMediumPluginShouldBeTrueForAMediumFlaggedPluginForStarfield) {
+  if (GetParam() != GameType::starfield) {
+    auto bytes = ReadFile(dataPath / blankEsm);
+    bytes[9] = 0x4;
+    WriteFile(dataPath / blankEsm, bytes);
+  }
+
+  const auto pluginName =
+      GetParam() == GameType::starfield ? blankMediumEsm : blankEsm;
+  Plugin plugin(game_.GetType(), game_.GetCache(), game_.DataPath() / pluginName,
+                true);
+
+  EXPECT_EQ(GetParam() == GameType::starfield, plugin.IsMediumPlugin());
 }
 
 TEST_P(PluginTest,
@@ -539,6 +558,20 @@ TEST_P(
   if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
       GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
       GetParam() == GameType::starfield) {
+    EXPECT_TRUE(valid);
+  } else {
+    EXPECT_FALSE(valid);
+  }
+}
+
+TEST_P(
+    PluginTest,
+    isValidAsMediumPluginShouldReturnTrueOnlyForAStarfieldPluginWithNewFormIdsBetween0And0xFFFFInclusive) {
+  bool valid =
+      Plugin(
+          game_.GetType(), game_.GetCache(), dataPath / blankEsm, true)
+          .IsValidAsMediumPlugin();
+  if (GetParam() == GameType::starfield) {
     EXPECT_TRUE(valid);
   } else {
     EXPECT_FALSE(valid);

@@ -72,9 +72,11 @@ public:
   bool IsMaster() const override;
 
   bool IsLightPlugin() const override;
+  bool IsMediumPlugin() const override;
   bool IsOverridePlugin() const override;
 
   bool IsValidAsLightPlugin() const override;
+  bool IsValidAsMediumPlugin() const override;
   bool IsValidAsOverridePlugin() const override;
   bool IsEmpty() const override;
   bool LoadsArchive() const override;
