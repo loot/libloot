@@ -242,10 +242,13 @@ void ConditionEvaluator::RefreshLoadedPluginsState(
 void ConditionEvaluator::SetAdditionalDataPaths(
     const std::vector<std::filesystem::path>& dataPaths) {
   std::vector<std::string> dataPathStrings;
-  std::vector<const char*> dataPathCStrings;
   for (const auto& dataPath : dataPaths) {
     dataPathStrings.push_back(dataPath.u8string());
-    dataPathCStrings.push_back(dataPathStrings.back().c_str());
+  }
+
+  std::vector<const char*> dataPathCStrings;
+  for (const auto& dataPath : dataPathStrings) {
+    dataPathCStrings.push_back(dataPath.c_str());
   }
 
   int result = lci_state_set_additional_data_paths(
