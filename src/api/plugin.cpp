@@ -315,13 +315,13 @@ bool Plugin::IsMediumPlugin() const {
   return isMediumPlugin;
 }
 
-bool Plugin::IsOverridePlugin() const {
-  bool isOverridePlugin = false;
+bool Plugin::IsUpdatePlugin() const {
+  bool isUpdatePlugin = false;
   const auto ret =
-      esp_plugin_is_update_plugin(esPlugin.get(), &isOverridePlugin);
-  HandleEspluginError("check if \"" + name_ + "\" is an override plugin", ret);
+      esp_plugin_is_update_plugin(esPlugin.get(), &isUpdatePlugin);
+  HandleEspluginError("check if \"" + name_ + "\" is an update plugin", ret);
 
-  return isOverridePlugin;
+  return isUpdatePlugin;
 }
 
 bool Plugin::IsValidAsLightPlugin() const {
@@ -344,12 +344,12 @@ bool Plugin::IsValidAsMediumPlugin() const {
   return isValid;
 }
 
-bool Plugin::IsValidAsOverridePlugin() const {
+bool Plugin::IsValidAsUpdatePlugin() const {
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_update_plugin(esPlugin.get(), &isValid);
   HandleEspluginError(
-      "check if \"" + name_ + "\" is valid as an override plugin", ret);
+      "check if \"" + name_ + "\" is valid as an update plugin", ret);
 
   return isValid;
 }

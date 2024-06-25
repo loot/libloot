@@ -198,10 +198,10 @@ public:
   bool IsMaster() const override { return false; }
   bool IsLightPlugin() const override { return false; }
   bool IsMediumPlugin() const override { return false; }
-  bool IsOverridePlugin() const override { return false; }
+  bool IsUpdatePlugin() const override { return false; }
   bool IsValidAsLightPlugin() const override { return false; }
   bool IsValidAsMediumPlugin() const override { return false; }
-  bool IsValidAsOverridePlugin() const override { return false; }
+  bool IsValidAsUpdatePlugin() const override { return false; }
   bool IsEmpty() const override { return false; }
   bool LoadsArchive() const override { return false; }
   bool DoRecordsOverlap(const PluginInterface&) const override { return true; }
@@ -378,7 +378,7 @@ TEST_P(
 }
 
 TEST_P(PluginTest,
-       isOverridePluginShouldOnlyBeTrueForAStarfieldOverridePlugin) {
+       isUpdatePluginShouldOnlyBeTrueForAStarfieldUpdatePlugin) {
   auto bytes = ReadFile(dataPath / blankMasterDependentEsp);
   bytes[9] = 0x2;
   WriteFile(dataPath / blankMasterDependentEsp, bytes);
@@ -390,8 +390,8 @@ TEST_P(PluginTest,
                  game_.DataPath() / blankMasterDependentEsp,
                  true);
 
-  EXPECT_FALSE(plugin1.IsOverridePlugin());
-  EXPECT_EQ(GetParam() == GameType::starfield, plugin2.IsOverridePlugin());
+  EXPECT_FALSE(plugin1.IsUpdatePlugin());
+  EXPECT_EQ(GetParam() == GameType::starfield, plugin2.IsUpdatePlugin());
 }
 
 TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
@@ -580,19 +580,21 @@ TEST_P(
 
 TEST_P(
     PluginTest,
-    IsValidAsOverridePluginShouldOnlyReturnTrueForAStarfieldPluginWithNoNewRecords) {
-  const auto sourcePluginName =
-      GetParam() == GameType::starfield ? blankFullEsm : blankEsp;
-  const auto overridePluginName = GetParam() == GameType::starfield
-                                      ? blankMasterDependentEsp
-                                      : blankDifferentPluginDependentEsp;
+    IsValidAsUpdatePluginShouldOnlyReturnTrueForAStarfieldPluginWithNoNewRecords) {
+  const auto sourcePluginName = GetParam() == GameType::starfield
+                                  ? blankFullEsm
+                                  : blankEsp;
+  const auto updatePluginName = GetParam() == GameType::starfield
+                                  ? blankMasterDependentEsp
+                                  : blankDifferentPluginDependentEsp;
+
   Plugin plugin1(game_.GetType(),
                  game_.GetCache(),
                  game_.DataPath() / sourcePluginName,
                  false);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
-                 game_.DataPath() / overridePluginName,
+                 game_.DataPath() / updatePluginName,
                  false);
 
   if (GetParam() == GameType::starfield) {
@@ -603,9 +605,9 @@ TEST_P(
     plugin2.ResolveRecordIds(nullptr);
   }
 
-  EXPECT_FALSE(plugin1.IsValidAsOverridePlugin());
+  EXPECT_FALSE(plugin1.IsValidAsUpdatePlugin());
   EXPECT_EQ(GetParam() == GameType::starfield,
-            plugin2.IsValidAsOverridePlugin());
+            plugin2.IsValidAsUpdatePlugin());
 }
 
 TEST_P(PluginTest,
