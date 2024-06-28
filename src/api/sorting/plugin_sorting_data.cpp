@@ -75,30 +75,7 @@ PluginSortingData::PluginSortingData(
     }
   }
 
-  if (gameType == GameType::tes3) {
-    auto masterNames = plugin->GetMasters();
-    if (masterNames.empty()) {
-      overrideRecordCount_ = 0;
-    } else {
-      auto masters = GetPluginsSubset(loadedPlugins, masterNames);
-      if (masters.size() == masterNames.size()) {
-        overrideRecordCount_ = plugin->GetOverlapSize(masters);
-      } else {
-        // Not all masters are loaded, fall back to using the plugin's
-        // total record count (Morrowind doesn't have groups). This is OK
-        // because plugins with missing masters can't be loaded by the game,
-        // so the correctness of their load order positions is less important
-        // (it may not matter at all, depending on the sophistication/usage of
-        // merge patches in Morrowind). It's better for LOOT to sort a load
-        // order with missing masters with potentially poorer results than
-        // for it to error out, as masters may be missing for a variety of
-        // development & testing reasons.
-        overrideRecordCount_ = plugin->GetRecordAndGroupCount();
-      }
-    }
-  } else {
-    overrideRecordCount_ = plugin->GetOverrideRecordCount();
-  }
+  overrideRecordCount_ = plugin->GetOverrideRecordCount();
 }
 
 std::string PluginSortingData::GetName() const { return plugin_->GetName(); }

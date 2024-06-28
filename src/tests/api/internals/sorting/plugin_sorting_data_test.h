@@ -150,36 +150,6 @@ TEST_P(PluginSortingDataTest,
       getLoadedPlugins());
   EXPECT_EQ(4, plugin.GetOverrideRecordCount());
 }
-
-TEST_P(
-    PluginSortingDataTest,
-    constructorShouldUseTotalRecordCountAsOverrideRecordCountForTes3PluginWithAMasterThatIsNotLoaded) {
-  if (GetParam() != GameType::tes3) {
-    return;
-  }
-
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-  auto loadedPlugins = getLoadedPlugins();
-
-  // Pretend that blankEsm isn't loaded.
-  for (auto it = loadedPlugins.begin(); it != loadedPlugins.end();) {
-    if ((*it)->GetName() == blankEsm) {
-      it = loadedPlugins.erase(it);
-    } else {
-      ++it;
-    }
-  }
-
-  auto plugin = PluginSortingData(
-      dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
-      PluginMetadata(),
-      PluginMetadata(),
-      getLoadOrder(),
-      game_.GetType(),
-      loadedPlugins);
-
-  EXPECT_EQ(10, plugin.GetOverrideRecordCount());
-}
 }
 }
 

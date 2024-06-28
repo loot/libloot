@@ -46,9 +46,6 @@ public:
   virtual size_t GetOverrideRecordCount() const = 0;
   virtual uint32_t GetRecordAndGroupCount() const = 0;
 
-  virtual size_t GetOverlapSize(
-      const std::vector<const PluginInterface*>& plugins) const = 0;
-
   virtual size_t GetAssetCount() const = 0;
   virtual bool DoAssetsOverlap(const PluginSortingInterface& plugin) const = 0;
 };
@@ -81,8 +78,6 @@ public:
   bool IsEmpty() const override;
   bool LoadsArchive() const override;
   bool DoRecordsOverlap(const PluginInterface& plugin) const override;
-  size_t GetOverlapSize(
-      const std::vector<const PluginInterface*>& plugins) const override;
 
   // Load ordering functions.
   size_t GetOverrideRecordCount() const override;

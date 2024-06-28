@@ -209,11 +209,6 @@ public:
   size_t GetOverrideRecordCount() const override { return 0; };
   uint32_t GetRecordAndGroupCount() const override { return 0; };
 
-  size_t GetOverlapSize(
-      const std::vector<const PluginInterface*>&) const override {
-    return 0;
-  };
-
   size_t GetAssetCount() const override { return 0; };
   bool DoAssetsOverlap(const PluginSortingInterface&) const override {
     return true;
@@ -670,92 +665,6 @@ TEST_P(PluginTest,
 
   EXPECT_TRUE(plugin1.DoRecordsOverlap(plugin2));
   EXPECT_TRUE(plugin2.DoRecordsOverlap(plugin1));
-}
-
-TEST_P(PluginTest,
-       getOverlapSizeShouldThrowIfGivenAVectorContainingANonPluginObject) {
-  Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
-  OtherPluginType plugin2;
-
-  EXPECT_THROW(plugin1.GetOverlapSize({&plugin2, &plugin2}),
-               std::invalid_argument);
-  EXPECT_EQ(0, plugin2.GetOverlapSize({&plugin1}));
-}
-
-TEST_P(PluginTest, getOverlapSizeShouldCountEachRecordOnce) {
-  const auto plugin1Name =
-      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
-
-  Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / plugin1Name, false);
-  Plugin plugin2(game_.GetType(),
-                 game_.GetCache(),
-                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
-                 false);
-
-  if (GetParam() == GameType::starfield) {
-    plugin1.ResolveRecordIds(nullptr);
-
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&plugin1});
-    plugin2.ResolveRecordIds(pluginsMetadata.get());
-
-    EXPECT_EQ(1, plugin1.GetOverlapSize({&plugin2, &plugin2}));
-  } else {
-    EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin2}));
-  }
-}
-
-TEST_P(PluginTest, getOverlapSizeShouldCheckAgainstAllGivenPlugins) {
-  const auto plugin1Name =
-      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
-
-  Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / plugin1Name, false);
-  Plugin plugin2(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
-  Plugin plugin3(game_.GetType(),
-                 game_.GetCache(),
-                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
-                 false);
-
-  if (GetParam() == GameType::starfield) {
-    plugin1.ResolveRecordIds(nullptr);
-    plugin2.ResolveRecordIds(nullptr);
-
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&plugin1});
-    plugin3.ResolveRecordIds(pluginsMetadata.get());
-
-    EXPECT_EQ(1, plugin1.GetOverlapSize({&plugin2, &plugin3}));
-  } else {
-    EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin3}));
-  }
-}
-
-TEST_P(PluginTest,
-       getOverlapSizeShouldReturnZeroForPluginsWithOnlyHeadersLoaded) {
-  Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, true);
-  Plugin plugin2(game_.GetType(),
-                 game_.GetCache(),
-                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
-                 true);
-
-  EXPECT_EQ(0, plugin1.GetOverlapSize({&plugin2}));
-}
-
-TEST_P(PluginTest, getOverlapSizeShouldReturnZeroForPluginsThatDoNotOverlap) {
-  Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
-  Plugin plugin2(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
-
-  if (GetParam() == GameType::starfield) {
-    plugin1.ResolveRecordIds(nullptr);
-    plugin2.ResolveRecordIds(nullptr);
-  }
-
-  EXPECT_EQ(0, plugin1.GetOverlapSize({&plugin2}));
 }
 
 TEST_P(PluginTest, getRecordAndGroupCountShouldReturnTheHeaderFieldValue) {

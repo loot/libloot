@@ -86,11 +86,6 @@ public:
 
   uint32_t GetRecordAndGroupCount() const override { return uint32_t(); }
 
-  size_t GetOverlapSize(
-      const std::vector<const PluginInterface*>&) const override {
-    return size_t();
-  }
-
   size_t GetAssetCount() const override { return assetCount_; };
 
   bool DoAssetsOverlap(const PluginSortingInterface& plugin) const override {
