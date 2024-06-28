@@ -37,21 +37,34 @@ protected:
   }
 
   void loadInstalledPlugins(Game& game, bool headersOnly) {
-    const std::vector<std::filesystem::path> plugins({
-        // These are all ASCII filenames.
-        masterFile,
-        blankEsm,
-        blankDifferentEsm,
-        blankMasterDependentEsm,
-        blankDifferentMasterDependentEsm,
-        blankEsp,
-        blankDifferentEsp,
-        blankMasterDependentEsp,
-        blankDifferentMasterDependentEsp,
-        blankPluginDependentEsp,
-        blankDifferentPluginDependentEsp,
-    });
-    game.LoadPlugins(plugins, headersOnly);
+    if (GetParam() == GameType::starfield) {
+      const std::vector<std::filesystem::path> plugins({
+          // These are all ASCII filenames.
+          masterFile,
+          blankEsm,
+          blankFullEsm,
+          blankMasterDependentEsm,
+          blankEsp,
+          blankMasterDependentEsp,
+      });
+      game.LoadPlugins(plugins, headersOnly);
+    } else {
+      const std::vector<std::filesystem::path> plugins({
+          // These are all ASCII filenames.
+          masterFile,
+          blankEsm,
+          blankDifferentEsm,
+          blankMasterDependentEsm,
+          blankDifferentMasterDependentEsm,
+          blankEsp,
+          blankDifferentEsp,
+          blankMasterDependentEsp,
+          blankDifferentMasterDependentEsp,
+          blankPluginDependentEsp,
+          blankDifferentPluginDependentEsp,
+      });
+      game.LoadPlugins(plugins, headersOnly);
+    }
   }
 
   const std::string blankArchive;
@@ -208,7 +221,11 @@ TEST_P(
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));
-  EXPECT_EQ(11, game.GetCache().GetPlugins().size());
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(6, game.GetCache().GetPlugins().size());
+  } else {
+    EXPECT_EQ(11, game.GetCache().GetPlugins().size());
+  }
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(game.GetPlugin(masterFile));
@@ -252,7 +269,11 @@ TEST_P(GameTest,
   Game game = Game(GetParam(), dataPath.parent_path(), localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
-  EXPECT_EQ(11, game.GetCache().GetPlugins().size());
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(6, game.GetCache().GetPlugins().size());
+  } else {
+    EXPECT_EQ(11, game.GetCache().GetPlugins().size());
+  }
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(game.GetPlugin(blankEsm));

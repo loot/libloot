@@ -71,14 +71,6 @@ protected:
           std::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
     }
 
-    if (GetParam() == GameType::starfield) {
-      // The ESL flag is not the same as in Skyrim SE, so modify the file
-      // accordingly.
-      auto bytes = ReadFile(dataPath / blankEsl);
-      bytes[9] = 0x1;
-      WriteFile(dataPath / blankEsl, bytes);
-    }
-
     // Copy across archive files.
     std::filesystem::path blankMasterDependentArchive;
     if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
@@ -265,6 +257,8 @@ TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
     EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion().value());
   } else if (GetParam() == GameType::tes4) {
     EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion().value());
+  } else if (GetParam() == GameType::starfield) {
+    EXPECT_FLOAT_EQ(0.96f, plugin.GetHeaderVersion().value());
   } else {
     EXPECT_FLOAT_EQ(0.94f, plugin.GetHeaderVersion().value());
   }
@@ -291,6 +285,8 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
     EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion().value());
   } else if (GetParam() == GameType::tes4) {
     EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion().value());
+  } else if (GetParam() == GameType::starfield) {
+    EXPECT_FLOAT_EQ(0.96f, plugin.GetHeaderVersion().value());
   } else {
     EXPECT_FLOAT_EQ(0.94f, plugin.GetHeaderVersion().value());
   }
@@ -304,6 +300,8 @@ TEST_P(PluginTest, loadingWholePluginShouldReadFields) {
 
   if (GetParam() == GameType::tes3) {
     EXPECT_EQ(0, plugin.GetOverrideRecordCount());
+  } else if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(1, plugin.GetOverrideRecordCount());
   } else {
     EXPECT_EQ(4, plugin.GetOverrideRecordCount());
   }
@@ -348,15 +346,15 @@ TEST_P(
 
 TEST_P(PluginTest,
        isOverridePluginShouldOnlyBeTrueForAStarfieldOverridePlugin) {
-  auto bytes = ReadFile(dataPath / blankDifferentPluginDependentEsp);
+  auto bytes = ReadFile(dataPath / blankMasterDependentEsp);
   bytes[9] = 0x2;
-  WriteFile(dataPath / blankDifferentPluginDependentEsp, bytes);
+  WriteFile(dataPath / blankMasterDependentEsp, bytes);
 
   Plugin plugin1(
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, true);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
-                 game_.DataPath() / blankDifferentPluginDependentEsp,
+                 game_.DataPath() / blankMasterDependentEsp,
                  true);
 
   EXPECT_FALSE(plugin1.IsOverridePlugin());
@@ -369,7 +367,11 @@ TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
                 game_.DataPath() / blankMasterDependentEsp,
                 true);
 
-  EXPECT_EQ(std::vector<std::string>({blankEsm}), plugin.GetMasters());
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(std::vector<std::string>({blankFullEsm}), plugin.GetMasters());
+  } else {
+    EXPECT_EQ(std::vector<std::string>({blankEsm}), plugin.GetMasters());
+  }
 }
 
 TEST_P(PluginTest, loadingAPluginThatDoesNotExistShouldThrow) {
@@ -484,9 +486,12 @@ TEST_P(
 
 TEST_P(PluginTest,
        loadsArchiveShouldReturnFalseForAPluginThatDoesNotLoadAnArchive) {
+  const auto pluginName = GetParam() == GameType::starfield
+                              ? blankDifferentEsp
+                              : blankDifferentMasterDependentEsp;
   EXPECT_FALSE(Plugin(game_.GetType(),
                       game_.GetCache(),
-                      game_.DataPath() / blankDifferentMasterDependentEsp,
+                      game_.DataPath() / pluginName,
                       true)
                    .LoadsArchive());
 }
@@ -529,11 +534,18 @@ TEST_P(
 TEST_P(
     PluginTest,
     IsValidAsOverridePluginShouldOnlyReturnTrueForAStarfieldPluginWithNoNewRecords) {
-  Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
+  const auto sourcePluginName =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsp;
+  const auto overridePluginName = GetParam() == GameType::starfield
+                                      ? blankMasterDependentEsp
+                                      : blankDifferentPluginDependentEsp;
+  Plugin plugin1(game_.GetType(),
+                 game_.GetCache(),
+                 game_.DataPath() / sourcePluginName,
+                 false);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
-                 game_.DataPath() / blankDifferentPluginDependentEsp,
+                 game_.DataPath() / overridePluginName,
                  false);
 
   EXPECT_FALSE(plugin1.IsValidAsOverridePlugin());
@@ -577,8 +589,11 @@ TEST_P(PluginTest,
 
 TEST_P(PluginTest,
        doRecordsOverlapShouldReturnTrueIfOnePluginOverridesTheOthersRecords) {
+  const auto plugin1Name =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+
   Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+      game_.GetType(), game_.GetCache(), game_.DataPath() / plugin1Name, false);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
                  game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
@@ -600,19 +615,29 @@ TEST_P(PluginTest,
 }
 
 TEST_P(PluginTest, getOverlapSizeShouldCountEachRecordOnce) {
+  const auto plugin1Name =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+
   Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+      game_.GetType(), game_.GetCache(), game_.DataPath() / plugin1Name, false);
   Plugin plugin2(game_.GetType(),
                  game_.GetCache(),
                  game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                  false);
 
-  EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin2}));
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(1, plugin1.GetOverlapSize({&plugin2, &plugin2}));
+  } else {
+    EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin2}));
+  }
 }
 
 TEST_P(PluginTest, getOverlapSizeShouldCheckAgainstAllGivenPlugins) {
+  const auto plugin1Name =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+
   Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+      game_.GetType(), game_.GetCache(), game_.DataPath() / plugin1Name, false);
   Plugin plugin2(
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
   Plugin plugin3(game_.GetType(),
@@ -620,7 +645,11 @@ TEST_P(PluginTest, getOverlapSizeShouldCheckAgainstAllGivenPlugins) {
                  game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                  false);
 
-  EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin3}));
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(1, plugin1.GetOverlapSize({&plugin2, &plugin3}));
+  } else {
+    EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin3}));
+  }
 }
 
 TEST_P(PluginTest,

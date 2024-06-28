@@ -65,6 +65,8 @@ protected:
       nonPluginFile("NotAPlugin.esm"),
       invalidPlugin("Invalid.esm"),
       blankEsm("Blank.esm"),
+      blankFullEsm("Blank.full.esm"),
+      blankMediumEsm("Blank.medium.esm"),
       blankDifferentEsm("Blank - Different.esm"),
       blankMasterDependentEsm("Blank - Master Dependent.esm"),
       blankDifferentMasterDependentEsm(
@@ -97,19 +99,55 @@ protected:
 
     auto sourcePluginsPath = getSourcePluginsPath();
 
-    copyPlugin(sourcePluginsPath, blankEsm);
-    copyPlugin(sourcePluginsPath, blankDifferentEsm);
-    copyPlugin(sourcePluginsPath, blankMasterDependentEsm);
-    copyPlugin(sourcePluginsPath, blankDifferentMasterDependentEsm);
-    copyPlugin(sourcePluginsPath, blankEsp);
-    copyPlugin(sourcePluginsPath, blankDifferentEsp);
-    copyPlugin(sourcePluginsPath, blankMasterDependentEsp);
-    copyPlugin(sourcePluginsPath, blankDifferentMasterDependentEsp);
-    copyPlugin(sourcePluginsPath, blankPluginDependentEsp);
-    copyPlugin(sourcePluginsPath, blankDifferentPluginDependentEsp);
+    if (GetParam() == GameType::starfield) {
+      copyPlugin(sourcePluginsPath, blankFullEsm);
+      copyPlugin(sourcePluginsPath, blankMediumEsm);
+
+      std::filesystem::copy_file(sourcePluginsPath / blankFullEsm,
+                                 dataPath / blankEsm);
+      ASSERT_TRUE(exists(dataPath / blankEsm));
+
+      std::filesystem::copy_file(sourcePluginsPath / blankFullEsm,
+                                 dataPath / blankDifferentEsm);
+      ASSERT_TRUE(exists(dataPath / blankDifferentEsm));
+
+      std::filesystem::copy_file(
+          sourcePluginsPath / "Blank - Override.full.esm",
+          dataPath / blankMasterDependentEsm);
+      ASSERT_TRUE(exists(dataPath / blankMasterDependentEsm));
+
+      std::filesystem::copy_file(sourcePluginsPath / "Blank.esp",
+                                 dataPath / blankEsp);
+      ASSERT_TRUE(exists(dataPath / blankEsp));
+
+      std::filesystem::copy_file(sourcePluginsPath / blankEsp,
+                                 dataPath / blankDifferentEsp);
+      ASSERT_TRUE(exists(dataPath / blankDifferentEsp));
+
+      std::filesystem::copy_file(sourcePluginsPath / "Blank - Override.esp",
+                                 dataPath / blankMasterDependentEsp);
+      ASSERT_TRUE(exists(dataPath / blankMasterDependentEsp));
+    } else {
+      copyPlugin(sourcePluginsPath, blankEsm);
+      copyPlugin(sourcePluginsPath, blankDifferentEsm);
+      copyPlugin(sourcePluginsPath, blankMasterDependentEsm);
+      copyPlugin(sourcePluginsPath, blankDifferentMasterDependentEsm);
+      copyPlugin(sourcePluginsPath, blankEsp);
+      copyPlugin(sourcePluginsPath, blankDifferentEsp);
+      copyPlugin(sourcePluginsPath, blankMasterDependentEsp);
+      copyPlugin(sourcePluginsPath, blankDifferentMasterDependentEsp);
+      copyPlugin(sourcePluginsPath, blankPluginDependentEsp);
+      copyPlugin(sourcePluginsPath, blankDifferentPluginDependentEsp);
+    }
 
     if (supportsLightPlugins(GetParam())) {
-      copyPlugin(sourcePluginsPath, blankEsl);
+      if (GetParam() == GameType::starfield) {
+        std::filesystem::copy_file(sourcePluginsPath / "Blank.small.esm",
+                                   dataPath / blankEsl);
+        ASSERT_TRUE(exists(dataPath / blankEsl));
+      } else {
+        copyPlugin(sourcePluginsPath, blankEsl);
+      }
     }
 
     // Make sure the game master file exists.
@@ -211,22 +249,40 @@ protected:
   }
 
   std::vector<std::pair<std::string, bool>> getInitialLoadOrder() const {
-    auto loadOrder = std::vector<std::pair<std::string, bool>>({
-        {masterFile, true},
-        {blankEsm, true},
-        {blankDifferentEsm, false},
-        {blankMasterDependentEsm, false},
-        {blankDifferentMasterDependentEsm, false},
-        {blankEsp, false},
-        {blankDifferentEsp, false},
-        {blankMasterDependentEsp, false},
-        {blankDifferentMasterDependentEsp, true},
-        {blankPluginDependentEsp, false},
-        {blankDifferentPluginDependentEsp, false},
-    });
+    std::vector<std::pair<std::string, bool>> loadOrder;
 
-    if (supportsLightPlugins(GetParam())) {
-      loadOrder.insert(loadOrder.begin() + 5, std::make_pair(blankEsl, false));
+    if (GetParam() == GameType::starfield) {
+      loadOrder = {
+          {masterFile, true},
+          {blankEsm, true},
+          {blankDifferentEsm, false},
+          {blankFullEsm, false},
+          {blankMasterDependentEsm, false},
+          {blankMediumEsm, false},
+          {blankEsl, false},
+          {blankEsp, false},
+          {blankDifferentEsp, false},
+          {blankMasterDependentEsp, false},
+      };
+    } else {
+      loadOrder = {
+          {masterFile, true},
+          {blankEsm, true},
+          {blankDifferentEsm, false},
+          {blankMasterDependentEsm, false},
+          {blankDifferentMasterDependentEsm, false},
+          {blankEsp, false},
+          {blankDifferentEsp, false},
+          {blankMasterDependentEsp, false},
+          {blankDifferentMasterDependentEsp, true},
+          {blankPluginDependentEsp, false},
+          {blankDifferentPluginDependentEsp, false},
+      };
+
+      if (supportsLightPlugins(GetParam())) {
+        loadOrder.insert(loadOrder.begin() + 5,
+                         std::make_pair(blankEsl, false));
+      }
     }
 
     return loadOrder;
@@ -238,6 +294,8 @@ protected:
       return absolute("./Morrowind/Data Files");
     else if (GetParam() == GameType::tes4)
       return absolute("./Oblivion/Data");
+    else if (GetParam() == GameType::starfield)
+      return absolute("./Starfield/Data");
     else if (supportsLightPlugins(GetParam()))
       return absolute("./SkyrimSE/Data");
     else
@@ -267,6 +325,8 @@ protected:
   const std::string nonPluginFile;
   const std::string invalidPlugin;
   const std::string blankEsm;
+  const std::string blankFullEsm;
+  const std::string blankMediumEsm;
   const std::string blankDifferentEsm;
   const std::string blankMasterDependentEsm;
   const std::string blankDifferentMasterDependentEsm;
@@ -315,6 +375,8 @@ private:
         return 0x790DC6FB;
       case GameType::tes4:
         return 0x374E2A6F;
+      case GameType::starfield:
+        return 0xDE586309;
       default:
         return 0x6A1273DC;
     }

@@ -33,9 +33,22 @@ namespace test {
 class GameInterfaceTest : public ApiGameOperationsTest {
 protected:
   GameInterfaceTest() :
-      emptyFile("EmptyFile.esm"),
-      nonAsciiEsm(u8"non\u00C1scii.esm"),
-      pluginsToLoad({
+      emptyFile("EmptyFile.esm"), nonAsciiEsm(u8"non\u00C1scii.esm") {
+    // Make sure the plugin with a non-ASCII filename exists.
+    std::filesystem::copy_file(dataPath / blankEsm,
+                               dataPath / std::filesystem::u8path(nonAsciiEsm));
+
+    if (GetParam() == GameType::starfield) {
+      pluginsToLoad = {
+          masterFile,
+          blankEsm,
+          blankFullEsm,
+          blankMasterDependentEsm,
+          blankEsp,
+          blankMasterDependentEsp,
+      };
+    } else {
+      pluginsToLoad = {
           // These are all ASCII filenames.
           masterFile,
           blankEsm,
@@ -48,15 +61,13 @@ protected:
           blankDifferentMasterDependentEsp,
           blankPluginDependentEsp,
           blankDifferentPluginDependentEsp,
-      }) {
-    // Make sure the plugin with a non-ASCII filename exists.
-    std::filesystem::copy_file(dataPath / blankEsm,
-                               dataPath / std::filesystem::u8path(nonAsciiEsm));
+      };
+    }
   }
 
   const std::string emptyFile;
   const std::string nonAsciiEsm;
-  const std::vector<std::filesystem::path> pluginsToLoad;
+  std::vector<std::filesystem::path> pluginsToLoad;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -108,7 +119,11 @@ TEST_P(
     GameInterfaceTest,
     loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
   handle_->LoadPlugins(pluginsToLoad, true);
-  EXPECT_EQ(11, handle_->GetLoadedPlugins().size());
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(6, handle_->GetLoadedPlugins().size());
+  } else {
+    EXPECT_EQ(11, handle_->GetLoadedPlugins().size());
+  }
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(handle_->GetPlugin(masterFile));
@@ -132,7 +147,11 @@ TEST_P(GameInterfaceTest, loadPluginsShouldTrimDotGhostFileExtensions) {
 TEST_P(GameInterfaceTest,
        loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
   handle_->LoadPlugins(pluginsToLoad, false);
-  EXPECT_EQ(11, handle_->GetLoadedPlugins().size());
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(6, handle_->GetLoadedPlugins().size());
+  } else {
+    EXPECT_EQ(11, handle_->GetLoadedPlugins().size());
+  }
 
   // Check that one plugin's header has been read.
   ASSERT_NO_THROW(handle_->GetPlugin(masterFile));
@@ -165,19 +184,31 @@ TEST_P(GameInterfaceTest,
 }
 
 TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
-  std::vector<std::string> expectedOrder = {
-      masterFile,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankDifferentEsm,
-      blankDifferentMasterDependentEsm,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankEsp,
-      blankPluginDependentEsp,
-      blankDifferentEsp,
-      blankDifferentPluginDependentEsp,
-  };
+  std::vector<std::string> expectedOrder;
+  if (GetParam() == GameType::starfield) {
+    expectedOrder = {
+        masterFile,
+        blankEsm,
+        blankFullEsm,
+        blankMasterDependentEsm,
+        blankEsp,
+        blankMasterDependentEsp,
+    };
+  } else {
+    expectedOrder = {
+        masterFile,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankEsp,
+        blankPluginDependentEsp,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+    };
+  }
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     expectedOrder.insert(expectedOrder.begin() + 5, blankEsl);
@@ -186,27 +217,12 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""));
 
-  std::vector<std::filesystem::path> pluginsToSort({
-      // These are all ASCII filenames.
-      blankEsp,
-      blankPluginDependentEsp,
-      blankDifferentMasterDependentEsm,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankDifferentEsp,
-      blankDifferentPluginDependentEsp,
-      masterFile,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankDifferentEsm,
-  });
-
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    pluginsToSort.push_back(blankEsl);
+    pluginsToLoad.push_back(blankEsl);
   }
 
   handle_->LoadCurrentLoadOrderState();
-  std::vector<std::string> actualOrder = handle_->SortPlugins(pluginsToSort);
+  std::vector<std::string> actualOrder = handle_->SortPlugins(pluginsToLoad);
 
   EXPECT_EQ(expectedOrder, actualOrder);
 }
@@ -245,27 +261,41 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
   handle_->SetAdditionalDataPaths({});
 
   handle_->LoadCurrentLoadOrderState();
-  std::vector<std::string> loadOrder({
-      masterFile,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankDifferentEsm,
-      blankDifferentMasterDependentEsm,
-      blankDifferentEsp,
-      blankDifferentPluginDependentEsp,
-      blankEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-  });
 
   const auto gameSupportsEsl =
       GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
       GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
       GetParam() == GameType::starfield;
 
-  if (gameSupportsEsl) {
-    loadOrder.insert(loadOrder.begin() + 5, blankEsl);
+  std::vector<std::string> loadOrder;
+  if (GetParam() == GameType::starfield) {
+    loadOrder = {
+        masterFile,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankDifferentEsm,
+        blankDifferentEsp,
+        blankEsp,
+        blankMasterDependentEsp,
+    };
+  } else {
+    loadOrder = {
+        masterFile,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+    };
+
+    if (gameSupportsEsl) {
+      loadOrder.insert(loadOrder.begin() + 5, blankEsl);
+    }
   }
 
   EXPECT_NO_THROW(handle_->SetLoadOrder(loadOrder));
