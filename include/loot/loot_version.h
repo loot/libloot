@@ -34,10 +34,10 @@ namespace loot {
 inline constexpr unsigned int LIBLOOT_VERSION_MAJOR = 0;
 
 /** @brief libloot's minor version number. */
-inline constexpr unsigned int LIBLOOT_VERSION_MINOR = 22;
+inline constexpr unsigned int LIBLOOT_VERSION_MINOR = 23;
 
 /** @brief libloot's patch version number. */
-inline constexpr unsigned int LIBLOOT_VERSION_PATCH = 4;
+inline constexpr unsigned int LIBLOOT_VERSION_PATCH = 0;
 
 /**
  * @brief Get the library version.

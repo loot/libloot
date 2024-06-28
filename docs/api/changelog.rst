@@ -2,6 +2,76 @@
 Version History
 ***************
 
+0.23.0 - 2024-06-29
+===================
+
+Added
+-----
+
+- Support for Starfield's new medium plugin type (via esplugin and
+  libloadorder).
+- :cpp:any:`PluginInterface::IsMediumPlugin()`
+- :cpp:any:`PluginInterface::IsValidAsMediumPlugin()`
+
+Fixed
+-----
+
+- A couple of use-after-free bugs that could happen when configuring additional
+  data paths (e.g. for Fallout 4 installs from the Microsoft Store).
+- :cpp:any:`PluginInterface::IsMaster()` incorrectly checked the file extension
+  of Morrowind plugins instead of their header's master flag (via esplugin).
+- :cpp:any:`PluginInterface::DoRecordsOverlap()` was not able to reliably check
+  if two Starfield plugins had overlapping records (via esplugin).
+- The sorting process was unable to reliably count the number of records that a
+  Starfield plugin overrode, which could negatively impact the quality of the
+  sorted load order (via esplugin).
+- If a non-master plugin was a master of two master plugins, it would be hoisted
+  to load before the master that loaded second instead of the master that loaded
+  first (via libloadorder).
+- If more than one plugin needed to be hoisted while reading the load order,
+  some plugins could be moved too late in the load order (via libloadorder).
+- When getting the load order, the result will now correctly reflect the
+  supported games' ability to hoist master files to load above other master
+  files that depend on them (via libloadorder).
+
+
+Changed
+-------
+
+- Support for getting and setting Starfield's load order has been updated to
+  reflect the changes in the game's behaviour between its initial release and
+  the arrival of the Creation Kit alongside Starfield v1.12.30.0 (via
+  libloadorder).
+
+  - Starfield's ``Starfield.ccc`` file will now be read from the
+    ``My Games\Starfield`` directory as well as its install directory, with the
+    former taking precedence over the latter.
+  - Starfield plugins will now be loaded from the ``My Games\Starfield\Data``
+    directory as well as the game install path's ``Data`` directory, but only
+    for plugins that are present in both directories.
+  - Starfield's ``Starfield.esm``, ``Constellation.esm`` and ``OldMars.esm`` are
+    no longer treated as hardcoded: instead, they are now treated as implicitly
+    active, along with ``BlueprintShips-Starfield.esm``, ``SFBGS003.esm``,
+    ``SFBGS006.esm``, ``SFBGS007.esm`` and ``SFBGS008.esm``.
+  - Plugins that have the update flag (introduced by Starfield) set are no
+    longer given special treatment when checking active plugin limits, to match
+    Starfield's current behaviour. Previously such plugins would not count
+    towards the maximum number of plugins you could have active at the same
+    time.
+
+- :cpp:any:`loot::GameInterface::LoadPlugins()` will now throw if attempting to
+  fully load Morrowind or Starfield plugins without also loading all their
+  masters.
+- Renamed ``PluginInterface::IsOverridePlugin()`` to
+  :cpp:any:`PluginInterface::IsUpdatePlugin()` to reflect the terminology used
+  by Starfield's Creation Kit.
+- Renamed ``PluginInterface::IsValidAsOverridePlugin()`` to
+  :cpp:any:`PluginInterface::IsValidAsUpdatePlugin()` to reflect the terminology
+  used by Starfield's Creation Kit.
+- Updated esplugin to v6.0.0.
+- Updated libloadorder to v17.0.1.
+- Updated loot-condition-interpreter to v4.0.1.
+
 0.22.4 - 2024-05-03
 ===================
 
