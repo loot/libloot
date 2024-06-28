@@ -307,6 +307,15 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
         }
       });
 
+  if (!loadHeadersOnly &&
+      (GetType() == GameType::tes3 || GetType() == GameType::starfield)) {
+    auto plugins = cache_.GetPlugins();
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata(plugins);
+    for (auto& plugin : plugins) {
+      plugin->ResolveRecordIds(pluginsMetadata.get());
+    }
+  }
+
   conditionEvaluator_->RefreshLoadedPluginsState(GetLoadedPlugins());
 }
 

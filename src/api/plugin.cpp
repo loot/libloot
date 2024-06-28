@@ -187,8 +187,7 @@ Plugin::Plugin(const GameType gameType,
     esPlugin(
         std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(nullptr,
                                                               esp_plugin_free)),
-    isEmpty_(true),
-    overrideRecordCount_(0) {
+    isEmpty_(true) {
   auto logger = getLogger();
 
   try {
@@ -205,14 +204,6 @@ Plugin::Plugin(const GameType gameType,
 
     if (!headerOnly) {
       crc_ = GetCrc32(pluginPath);
-
-      ret = esp_plugin_count_override_records(esPlugin.get(),
-                                              &overrideRecordCount_);
-      if (ret != ESP_OK) {
-        throw FileAccessError(
-            "Error counting override records in \"" + pluginPath.u8string() +
-            "\". esplugin error code: " + std::to_string(ret));
-      }
 
       // Get the assets in the BSAs that this plugin loads.
       auto assets = GetAssetsInBethesdaArchives(archivePaths_);
@@ -235,6 +226,14 @@ Plugin::Plugin(const GameType gameType,
     }
     throw FileAccessError("Cannot read \"" + pluginPath.u8string() +
                           "\". Details: " + e.what());
+  }
+}
+
+void Plugin::ResolveRecordIds(Vec_PluginMetadata* pluginsMetadata) const {
+  auto ret = esp_plugin_resolve_record_ids(esPlugin.get(), pluginsMetadata);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ +
+                          " : esplugin error code: " + std::to_string(ret));
   }
 }
 
@@ -305,7 +304,7 @@ bool Plugin::IsLightPlugin() const {
 bool Plugin::IsOverridePlugin() const {
   bool isOverridePlugin = false;
   const auto ret =
-      esp_plugin_is_override_plugin(esPlugin.get(), &isOverridePlugin);
+      esp_plugin_is_update_plugin(esPlugin.get(), &isOverridePlugin);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -329,7 +328,7 @@ bool Plugin::IsValidAsLightPlugin() const {
 bool Plugin::IsValidAsOverridePlugin() const {
   bool isValid = false;
   const auto ret =
-      esp_plugin_is_valid_as_override_plugin(esPlugin.get(), &isValid);
+      esp_plugin_is_valid_as_update_plugin(esPlugin.get(), &isValid);
   if (ret != ESP_OK) {
     throw FileAccessError(name_ +
                           " : esplugin error code: " + std::to_string(ret));
@@ -403,7 +402,17 @@ size_t Plugin::GetOverlapSize(
   return overlapSize;
 }
 
-size_t Plugin::GetOverrideRecordCount() const { return overrideRecordCount_; }
+size_t Plugin::GetOverrideRecordCount() const {
+  size_t overrideRecordCount;
+  const auto ret =
+      esp_plugin_count_override_records(esPlugin.get(), &overrideRecordCount);
+  if (ret != ESP_OK) {
+    throw FileAccessError(name_ +
+                          " : esplugin error code: " + std::to_string(ret));
+  }
+
+  return overrideRecordCount;
+}
 
 uint32_t Plugin::GetRecordAndGroupCount() const {
   uint32_t recordAndGroupCount = 0;
@@ -508,6 +517,34 @@ std::string Plugin::GetDescription() const {
   esp_string_free(description);
 
   return descriptionStr;
+}
+
+std::unique_ptr<Vec_PluginMetadata, decltype(&esp_plugins_metadata_free)>
+Plugin::GetPluginsMetadata(std::vector<const Plugin*> plugins) {
+  if (plugins.empty()) {
+    return std::unique_ptr<Vec_PluginMetadata,
+                           decltype(&esp_plugins_metadata_free)>(
+        nullptr, esp_plugins_metadata_free);
+  }
+
+  std::vector<const ::Plugin*> esPlugins;
+  esPlugins.reserve(plugins.size());
+  for (const auto& plugin : plugins) {
+    esPlugins.push_back(plugin->esPlugin.get());
+  }
+
+  Vec_PluginMetadata* pluginsMetadata = nullptr;
+  const auto ret = esp_get_plugins_metadata(
+      esPlugins.data(), esPlugins.size(), &pluginsMetadata);
+  if (ret != ESP_OK) {
+    throw FileAccessError(
+        "Failed to get plugins metadata: esplugin error code: " +
+        std::to_string(ret));
+  }
+
+  return std::unique_ptr<Vec_PluginMetadata,
+                         decltype(&esp_plugins_metadata_free)>(
+      pluginsMetadata, esp_plugins_metadata_free);
 }
 
 std::string GetArchiveFileExtension(const GameType gameType) {

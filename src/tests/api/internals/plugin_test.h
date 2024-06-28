@@ -299,8 +299,22 @@ TEST_P(PluginTest, loadingWholePluginShouldReadFields) {
                 false);
 
   if (GetParam() == GameType::tes3) {
-    EXPECT_EQ(0, plugin.GetOverrideRecordCount());
+    Plugin master(
+        game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&master});
+
+    EXPECT_NO_THROW(plugin.ResolveRecordIds(pluginsMetadata.get()));
+
+    EXPECT_EQ(4, plugin.GetOverrideRecordCount());
   } else if (GetParam() == GameType::starfield) {
+    Plugin master(game_.GetType(),
+                  game_.GetCache(),
+                  game_.DataPath() / blankFullEsm,
+                  true);
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&master});
+
+    EXPECT_NO_THROW(plugin.ResolveRecordIds(pluginsMetadata.get()));
+
     EXPECT_EQ(1, plugin.GetOverrideRecordCount());
   } else {
     EXPECT_EQ(4, plugin.GetOverrideRecordCount());
@@ -548,6 +562,14 @@ TEST_P(
                  game_.DataPath() / overridePluginName,
                  false);
 
+  if (GetParam() == GameType::starfield) {
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&plugin1});
+    plugin2.ResolveRecordIds(pluginsMetadata.get());
+
+    plugin1.ResolveRecordIds(nullptr);
+    plugin2.ResolveRecordIds(nullptr);
+  }
+
   EXPECT_FALSE(plugin1.IsValidAsOverridePlugin());
   EXPECT_EQ(GetParam() == GameType::starfield,
             plugin2.IsValidAsOverridePlugin());
@@ -583,6 +605,11 @@ TEST_P(PluginTest,
   Plugin plugin2(
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
 
+  if (GetParam() == GameType::starfield) {
+    plugin1.ResolveRecordIds(nullptr);
+    plugin2.ResolveRecordIds(nullptr);
+  }
+
   EXPECT_FALSE(plugin1.DoRecordsOverlap(plugin2));
   EXPECT_FALSE(plugin2.DoRecordsOverlap(plugin1));
 }
@@ -598,6 +625,13 @@ TEST_P(PluginTest,
                  game_.GetCache(),
                  game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
                  false);
+
+  if (GetParam() == GameType::starfield) {
+    plugin1.ResolveRecordIds(nullptr);
+
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&plugin1});
+    plugin2.ResolveRecordIds(pluginsMetadata.get());
+  }
 
   EXPECT_TRUE(plugin1.DoRecordsOverlap(plugin2));
   EXPECT_TRUE(plugin2.DoRecordsOverlap(plugin1));
@@ -626,6 +660,11 @@ TEST_P(PluginTest, getOverlapSizeShouldCountEachRecordOnce) {
                  false);
 
   if (GetParam() == GameType::starfield) {
+    plugin1.ResolveRecordIds(nullptr);
+
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&plugin1});
+    plugin2.ResolveRecordIds(pluginsMetadata.get());
+
     EXPECT_EQ(1, plugin1.GetOverlapSize({&plugin2, &plugin2}));
   } else {
     EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin2}));
@@ -646,6 +685,12 @@ TEST_P(PluginTest, getOverlapSizeShouldCheckAgainstAllGivenPlugins) {
                  false);
 
   if (GetParam() == GameType::starfield) {
+    plugin1.ResolveRecordIds(nullptr);
+    plugin2.ResolveRecordIds(nullptr);
+
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&plugin1});
+    plugin3.ResolveRecordIds(pluginsMetadata.get());
+
     EXPECT_EQ(1, plugin1.GetOverlapSize({&plugin2, &plugin3}));
   } else {
     EXPECT_EQ(4, plugin1.GetOverlapSize({&plugin2, &plugin3}));
@@ -669,6 +714,11 @@ TEST_P(PluginTest, getOverlapSizeShouldReturnZeroForPluginsThatDoNotOverlap) {
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
   Plugin plugin2(
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
+
+  if (GetParam() == GameType::starfield) {
+    plugin1.ResolveRecordIds(nullptr);
+    plugin2.ResolveRecordIds(nullptr);
+  }
 
   EXPECT_EQ(0, plugin1.GetOverlapSize({&plugin2}));
 }
