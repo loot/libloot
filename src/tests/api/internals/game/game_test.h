@@ -179,11 +179,18 @@ TEST_P(GameTest,
   game.LoadCurrentLoadOrderState();
   auto loadOrder = game.GetLoadOrder();
 
+  const auto filename = "plugin.esp";
   const auto dataFilePath =
-      dataPath.parent_path().parent_path() / "Data" / "plugin.esp";
+      dataPath.parent_path().parent_path() / "Data" / filename;
   std::filesystem::create_directories(dataFilePath.parent_path());
   std::filesystem::copy_file(getSourcePluginsPath() / blankEsp, dataFilePath);
   ASSERT_TRUE(std::filesystem::exists(dataFilePath));
+
+  if (GetParam() == GameType::starfield) {
+    std::filesystem::copy_file(getSourcePluginsPath() / blankEsp,
+                               dataPath / filename);
+    ASSERT_TRUE(std::filesystem::exists(dataPath / filename));
+  }
 
   std::filesystem::last_write_time(
       dataFilePath,
@@ -192,7 +199,7 @@ TEST_P(GameTest,
   game.SetAdditionalDataPaths({dataFilePath.parent_path()});
   game.LoadCurrentLoadOrderState();
 
-  loadOrder.push_back("plugin.esp");
+  loadOrder.push_back(filename);
 
   EXPECT_EQ(loadOrder, game.GetLoadOrder());
 }

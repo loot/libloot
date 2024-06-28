@@ -98,8 +98,8 @@ else()
 endif()
 
 if(NOT DEFINED LIBLOADORDER_URL)
-    set(LIBLOADORDER_URL "https://github.com/Ortham/libloadorder/archive/16.0.0.tar.gz")
-    set(LIBLOADORDER_HASH "SHA256=920d1f1f52b204ef70d726d50c6c7d03ce206b5f28f642aceeb7bad578d0635c")
+    set(LIBLOADORDER_URL "https://github.com/Ortham/libloadorder/archive/refs/tags/17.0.0.tar.gz")
+    set(LIBLOADORDER_HASH "SHA256=8a495df8a20b242bb7cd5263064f0c16a1d207a3512a902188db8f68df28d4a9")
 endif()
 
 ExternalProject_Add(libloadorder
