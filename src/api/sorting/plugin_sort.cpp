@@ -32,7 +32,6 @@
 
 namespace loot {
 std::vector<PluginSortingData> GetPluginsSortingData(
-    const GameType gameType,
     const DatabaseInterface& db,
     const std::vector<const PluginInterface*> loadedPluginInterfaces,
     const std::vector<std::string>& loadOrder) {
@@ -57,12 +56,8 @@ std::vector<PluginSortingData> GetPluginsSortingData(
     const auto userMetadata = db.GetPluginUserMetadata(plugin->GetName(), true)
                                   .value_or(PluginMetadata(plugin->GetName()));
 
-    const auto pluginSortingData = PluginSortingData(plugin,
-                                                     masterlistMetadata,
-                                                     userMetadata,
-                                                     loadOrder,
-                                                     gameType,
-                                                     loadedPluginInterfaces);
+    const auto pluginSortingData =
+        PluginSortingData(plugin, masterlistMetadata, userMetadata, loadOrder);
 
     pluginsSortingData.push_back(pluginSortingData);
   }
@@ -274,7 +269,7 @@ std::vector<std::string> SortPlugins(
     Game& game,
     const std::vector<std::string>& loadOrder) {
   auto pluginsSortingData = GetPluginsSortingData(
-      game.GetType(), game.GetDatabase(), game.GetLoadedPlugins(), loadOrder);
+      game.GetDatabase(), game.GetLoadedPlugins(), loadOrder);
 
   const auto logger = getLogger();
   if (logger) {

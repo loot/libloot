@@ -156,7 +156,7 @@ protected:
     const auto plugin = GetPlugin(name);
 
     return PluginSortingData(
-        plugin, PluginMetadata(), PluginMetadata(), {}, GameType::tes4, {});
+        plugin, PluginMetadata(), PluginMetadata(), {});
   }
 
   PluginSortingData CreatePluginSortingData(const std::string& name,
@@ -174,7 +174,7 @@ protected:
     }
 
     return PluginSortingData(
-        plugin, masterlistMetadata, userMetadata, {}, GameType::tes4, {});
+        plugin, masterlistMetadata, userMetadata, {});
   }
 
   plugingraph::TestPlugin* GetPlugin(const std::string& name) {

@@ -101,18 +101,14 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
       dynamic_cast<const PluginSortingInterface *>(game_.GetPlugin(blankEsp)),
       PluginMetadata(),
       PluginMetadata(),
-      getLoadOrder(),
-      game_.GetType(),
-      loadedPlugins);
+      getLoadOrder());
   EXPECT_FALSE(esp.IsMaster());
 
   auto master = PluginSortingData(
       dynamic_cast<const PluginSortingInterface *>(game_.GetPlugin(blankEsm)),
       PluginMetadata(),
       PluginMetadata(),
-      getLoadOrder(),
-      game_.GetType(),
-      loadedPlugins);
+      getLoadOrder());
   EXPECT_TRUE(master.IsMaster());
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
@@ -120,9 +116,7 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
         dynamic_cast<const PluginSortingInterface *>(game_.GetPlugin(blankEsl)),
         PluginMetadata(),
         PluginMetadata(),
-        getLoadOrder(),
-        game_.GetType(),
-        loadedPlugins);
+        getLoadOrder());
     EXPECT_TRUE(lightMaster.IsMaster());
 
     auto lightPlugin =
@@ -130,9 +124,7 @@ TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
                               game_.GetPlugin(blankEslEsp)),
                           PluginMetadata(),
                           PluginMetadata(),
-                          getLoadOrder(),
-                          game_.GetType(),
-                          loadedPlugins);
+                          getLoadOrder());
     EXPECT_FALSE(lightPlugin.IsMaster());
   }
 }
@@ -145,9 +137,7 @@ TEST_P(PluginSortingDataTest,
       dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
       PluginMetadata(),
       PluginMetadata(),
-      getLoadOrder(),
-      game_.GetType(),
-      getLoadedPlugins());
+      getLoadOrder());
   EXPECT_EQ(4, plugin.GetOverrideRecordCount());
 }
 }

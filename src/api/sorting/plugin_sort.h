@@ -36,7 +36,7 @@ std::vector<std::string> SortPlugins(
     std::vector<PluginSortingData>&& pluginsSortingData,
     const std::vector<Group> masterlistGroups,
     const std::vector<Group> userGroups,
-    const std::vector<std::string>& implicitlyActivePlugins);
+    const std::vector<std::string>& earlyLoadingPlugins);
 
 std::vector<std::string> SortPlugins(Game& game,
                                      const std::vector<std::string>& loadOrder);

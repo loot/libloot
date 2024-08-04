@@ -99,9 +99,7 @@ protected:
     return PluginSortingData(plugin,
                              PluginMetadata(),
                              PluginMetadata(),
-                             loadOrder,
-                             GameType::tes4,
-                             {});
+                             loadOrder);
   }
 
   plugingraph::TestPlugin* GetPlugin(const std::string& name) {

@@ -44,9 +44,7 @@ public:
       const PluginSortingInterface* plugin,
       const PluginMetadata& masterlistMetadata,
       const PluginMetadata& userMetadata,
-      const std::vector<std::string>& loadOrder,
-      const GameType gameType,
-      const std::vector<const PluginInterface*>& loadedPlugins);
+      const std::vector<std::string>& loadOrder);
 
   std::string GetName() const;
   bool IsMaster() const;

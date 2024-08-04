@@ -53,9 +53,7 @@ PluginSortingData::PluginSortingData(
     const PluginSortingInterface* plugin,
     const PluginMetadata& masterlistMetadata,
     const PluginMetadata& userMetadata,
-    const std::vector<std::string>& loadOrder,
-    const GameType gameType,
-    const std::vector<const PluginInterface*>& loadedPlugins) :
+    const std::vector<std::string>& loadOrder) :
     plugin_(plugin),
     group_(userMetadata.GetGroup().value_or(
         masterlistMetadata.GetGroup().value_or(Group::DEFAULT_NAME))),
