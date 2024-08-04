@@ -170,7 +170,7 @@ std::vector<std::string> LoadOrderHandler::GetActivePlugins() const {
 std::vector<std::string> LoadOrderHandler::GetEarlyLoadingPlugins() const {
   auto logger = getLogger();
   if (logger) {
-    logger->trace("Getting implicitly active plugins.");
+    logger->trace("Getting early loading plugins.");
   }
 
   char** pluginArr = nullptr;
@@ -179,7 +179,7 @@ std::vector<std::string> LoadOrderHandler::GetEarlyLoadingPlugins() const {
   const unsigned int ret =
       lo_get_early_loading_plugins(gh_.get(), &pluginArr, &pluginArrSize);
 
-  HandleError("get implicitly active plugins", ret);
+  HandleError("get early loading plugins", ret);
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   std::vector<std::string> loadOrder(pluginArr, pluginArr + pluginArrSize);
