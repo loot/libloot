@@ -49,4 +49,5 @@ Thumbs.db
 *.sdf
 *.opensdf
 build
+.venv/
 .vscode/
