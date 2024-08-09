@@ -65,12 +65,9 @@ jobs:
           echo "root=${BOOST_BASENAME}" >> $GITHUB_OUTPUT
 
       - name: Get ICU
-        id: get-icu
         run: |
           wget https://github.com/unicode-org/icu/releases/download/release-71-1/icu4c-71_1-Ubuntu20.04-x64.tgz
-          tar -xf icu4c-71_1-Ubuntu20.04-x64.tgz
-
-          echo "root=${{ github.workspace }}/icu/usr/local" >> $GITHUB_OUTPUT
+          sudo tar -xf icu4c-71_1-Ubuntu20.04-x64.tgz -C /usr/local --strip-components=4
 
       - name: Install APT package dependencies
         run: |
@@ -87,13 +84,12 @@ jobs:
           mkdir build
           cd build
           export CXX="g++-10" CC="gcc-10"
-          cmake .. -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" -DICU_ROOT="${{ steps.get-icu.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
+          cmake .. -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}"
           make all
 
       - name: Run tests
         run: |
           cd build
-          export LD_LIBRARY_PATH="${{ steps.get-icu.outputs.root }}/lib"
           ./libloot_internals_tests
           ./libloot_tests
 
