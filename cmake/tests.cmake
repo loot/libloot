@@ -3,6 +3,7 @@
 ##############################
 
 include(FetchContent)
+include(GoogleTest)
 
 set(BUILD_GMOCK OFF)
 set(gtest_force_shared_crt ON)
@@ -125,6 +126,9 @@ add_executable(libloot_tests ${LIBLOOT_INTERFACE_TESTS_ALL_SOURCES})
 add_dependencies(libloot_tests loot)
 target_link_libraries(libloot_tests PRIVATE loot Boost::headers GTest::gtest_main)
 
+enable_testing()
+gtest_discover_tests(libloot_internals_tests)
+gtest_discover_tests(libloot_tests)
 
 ##############################
 # Set Target-Specific Flags
