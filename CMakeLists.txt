@@ -49,20 +49,25 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-        if(CMAKE_GENERATOR_PLATFORM STREQUAL  "Win32")
+        if(CMAKE_GENERATOR_PLATFORM STREQUAL "Win32")
             set(RUST_TARGET i686-pc-windows-msvc)
-        else()
+        elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "x64")
             set(RUST_TARGET x86_64-pc-windows-msvc)
         endif()
     else()
-        if(CMAKE_GENERATOR_PLATFORM STREQUAL  "Win32")
+        if(CMAKE_GENERATOR_PLATFORM STREQUAL "Win32")
             set(RUST_TARGET i686-pc-windows-gnu)
-        else()
+        elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "x64")
             set(RUST_TARGET x86_64-pc-windows-gnu)
         endif()
     endif()
+endif()
+
+if(DEFINED RUST_TARGET)
+    set(RUST_TARGET_ARGS --target ${RUST_TARGET})
+    set(RUST_CLEANUP_COMMAND ${CMAKE_COMMAND} -E rm -r "target/${RUST_TARGET}/release/deps" "target/release")
 else()
-    set(RUST_TARGET x86_64-unknown-linux-gnu)
+    set(RUST_CLEANUP_COMMAND ${CMAKE_COMMAND} -E rm -r "target/release/build" "target/release/deps")
 endif()
 
 find_package(Boost REQUIRED)
@@ -83,9 +88,9 @@ ExternalProject_Add(esplugin
     URL_HASH ${ESPLUGIN_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
+    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
         cbindgen ffi/ -o ffi/include/esplugin.hpp
-    COMMAND ${CMAKE_COMMAND} -E rm -r "target/${RUST_TARGET}/release/deps" "target/release"
+    COMMAND ${RUST_CLEANUP_COMMAND}
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS "<SOURCE_DIR>/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}esplugin_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
 ExternalProject_Get_Property(esplugin SOURCE_DIR)
@@ -108,9 +113,9 @@ ExternalProject_Add(libloadorder
     URL_HASH ${LIBLOADORDER_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
+    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
         cbindgen ffi/ -l c++ -o ffi/include/libloadorder.hpp
-    COMMAND ${CMAKE_COMMAND} -E rm -r "target/${RUST_TARGET}/release/deps" "target/release"
+    COMMAND ${RUST_CLEANUP_COMMAND}
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS "<SOURCE_DIR>/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}loadorder_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
 ExternalProject_Get_Property(libloadorder SOURCE_DIR)
@@ -133,9 +138,9 @@ ExternalProject_Add(loot-condition-interpreter
     URL_HASH ${LOOT_CONDITION_INTERPRETER_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml --target ${RUST_TARGET} &&
+    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
         cbindgen ffi/ -o ffi/include/loot_condition_interpreter.h
-    COMMAND ${CMAKE_COMMAND} -E rm -r "target/${RUST_TARGET}/release/deps" "target/release"
+    COMMAND ${RUST_CLEANUP_COMMAND}
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS "<SOURCE_DIR>/target/${RUST_TARGET}/release/${CMAKE_STATIC_LIBRARY_PREFIX}loot_condition_interpreter_ffi${CMAKE_STATIC_LIBRARY_SUFFIX}")
 ExternalProject_Get_Property(loot-condition-interpreter SOURCE_DIR)
