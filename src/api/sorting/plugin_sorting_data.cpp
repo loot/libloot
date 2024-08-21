@@ -79,10 +79,7 @@ PluginSortingData::PluginSortingData(
 std::string PluginSortingData::GetName() const { return plugin_->GetName(); }
 
 bool PluginSortingData::IsMaster() const {
-  return plugin_ != nullptr &&
-         (plugin_->IsMaster() ||
-          (plugin_->IsLightPlugin() &&
-           !boost::iends_with(plugin_->GetName(), ".esp")));
+  return plugin_ != nullptr && plugin_->IsMaster();
 }
 
 bool PluginSortingData::LoadsArchive() const {
