@@ -82,6 +82,11 @@ bool PluginSortingData::IsMaster() const {
   return plugin_ != nullptr && plugin_->IsMaster();
 }
 
+bool PluginSortingData::IsBlueprintMaster() const {
+  return plugin_ != nullptr && plugin_->IsMaster() &&
+         plugin_->IsBlueprintPlugin();
+}
+
 bool PluginSortingData::LoadsArchive() const {
   return plugin_ != nullptr && plugin_->LoadsArchive();
 }

@@ -64,7 +64,7 @@ public:
 
   bool IsUpdatePlugin() const override { return false; }
 
-  bool IsBlueprintPlugin() const override { return false; }
+  bool IsBlueprintPlugin() const override { return isBlueprintMaster_; }
 
   bool IsValidAsLightPlugin() const override { return false; }
 
@@ -100,6 +100,10 @@ public:
 
   void SetIsMaster(bool isMaster) { isMaster_ = isMaster; }
 
+  void SetIsBlueprintMaster(bool isBlueprintMaster) {
+    isBlueprintMaster_ = isBlueprintMaster;
+  }
+
   void AddOverlappingRecords(const PluginInterface& plugin) {
     recordsOverlapWith.insert(&plugin);
   }
@@ -122,6 +126,7 @@ private:
   size_t overrideRecordCount_{0};
   size_t assetCount_{0};
   bool isMaster_{false};
+  bool isBlueprintMaster_{false};
 };
 }
 

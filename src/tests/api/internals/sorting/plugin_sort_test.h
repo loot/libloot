@@ -445,6 +445,33 @@ TEST_P(PluginSortTest,
   EXPECT_EQ(expectedSortedOrder, sorted);
 }
 
+TEST_P(PluginSortTest, sortingShouldPutBlueprintPluginsAfterAllOthers) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankEsm);
+
+  Game newGame(GetParam(), dataPath.parent_path(), localPath);
+  ASSERT_NO_THROW(loadInstalledPlugins(newGame, false));
+
+  std::vector<std::string> expectedSortedOrder({
+      masterFile,
+      blankDifferentEsm,
+      blankFullEsm,
+      blankMasterDependentEsm,
+      blankMediumEsm,
+      blankEsl,
+      blankEsp,
+      blankDifferentEsp,
+      blankMasterDependentEsp,
+      blankEsm,
+  });
+
+  const auto sorted = SortPlugins(newGame, newGame.GetLoadOrder());
+  EXPECT_EQ(expectedSortedOrder, sorted);
+}
+
 TEST_P(PluginSortTest, sortingShouldThrowIfACyclicInteractionIsEncountered) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
@@ -616,6 +643,382 @@ TEST_P(PluginSortTest,
     EXPECT_EQ(EdgeType::masterFlag,
               e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
   }
+}
+
+TEST_P(PluginSortTest,
+       sortingShouldThrowIfAMasterEdgeWouldPutABlueprintMasterBeforeAMaster) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankFullEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankFullEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankMasterDependentEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(PluginSortTest,
+       sortingShouldThrowIfAMasterEdgeWouldPutABlueprintMasterBeforeANonMaster) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  // Can't test with the test plugin files, so use the other SortPlugins()
+  // overload to provide stubs.
+  const auto esp = GetPlugin(blankMasterDependentEsp);
+  const auto blueprint = GetPlugin(blankFullEsm);
+
+  esp->AddMaster(blankFullEsm);
+  blueprint->SetIsMaster(true);
+  blueprint->SetIsBlueprintMaster(true);
+
+  std::vector<PluginSortingData> pluginsSortingData{
+      CreatePluginSortingData(esp->GetName()),
+      CreatePluginSortingData(blueprint->GetName())};
+
+  try {
+    SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankFullEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankMasterDependentEsp, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfAMasterlistRequirementEdgeWouldPutABlueprintMasterBeforeAMaster) {
+  using std::endl;
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankDifferentEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  const auto masterlistPath = metadataFilesPath / "masterlist.yaml";
+  std::ofstream masterlist(masterlistPath);
+  masterlist << "plugins:" << endl
+             << "  - name: " << blankEsm << endl
+             << "    req:" << endl
+             << "      - " << blankDifferentEsm << endl;
+  masterlist.close();
+
+  game_.GetDatabase().LoadLists(masterlistPath);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankDifferentEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistRequirement,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfAMasterlistRequirementEdgeWouldPutABlueprintMasterBeforeANonMaster) {
+  using std::endl;
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankDifferentEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  const auto masterlistPath = metadataFilesPath / "masterlist.yaml";
+  std::ofstream masterlist(masterlistPath);
+  masterlist << "plugins:" << endl
+             << "  - name: " << blankEsp << endl
+             << "    req:" << endl
+             << "      - " << blankDifferentEsm << endl;
+  masterlist.close();
+
+  game_.GetDatabase().LoadLists(masterlistPath);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankDifferentEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistRequirement,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsp, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfAUserRequirementEdgeWouldPutABlueprintMasterBeforeAMaster) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankDifferentEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  PluginMetadata plugin(blankEsm);
+  plugin.SetRequirements({File(blankDifferentEsm)});
+
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankDifferentEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userRequirement,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfAUserRequirementEdgeWouldPutABlueprintMasterBeforeANonMaster) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankDifferentEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  PluginMetadata plugin(blankEsp);
+  plugin.SetRequirements({File(blankDifferentEsm)});
+
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankDifferentEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userRequirement,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsp, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfAMasterlistLoadAfterEdgeWouldPutABlueprintMasterBeforeAMaster) {
+  using std::endl;
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankDifferentEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  const auto masterlistPath = metadataFilesPath / "masterlist.yaml";
+  std::ofstream masterlist(masterlistPath);
+  masterlist << "plugins:" << endl
+             << "  - name: " << blankEsm << endl
+             << "    after:" << endl
+             << "      - " << blankDifferentEsm << endl;
+  masterlist.close();
+
+  game_.GetDatabase().LoadLists(masterlistPath);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankDifferentEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfAMasterlistLoadAfterEdgeWouldPutABlueprintMasterBeforeANonMaster) {
+  using std::endl;
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankDifferentEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  const auto masterlistPath = metadataFilesPath / "masterlist.yaml";
+  std::ofstream masterlist(masterlistPath);
+  masterlist << "plugins:" << endl
+             << "  - name: " << blankEsp << endl
+             << "    after:" << endl
+             << "      - " << blankDifferentEsm << endl;
+  masterlist.close();
+
+  game_.GetDatabase().LoadLists(masterlistPath);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankDifferentEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsp, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfAUserLoadAfterEdgeWouldPutABlueprintMasterBeforeAMaster) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankDifferentEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  PluginMetadata plugin(blankEsm);
+  plugin.SetLoadAfterFiles({File(blankDifferentEsm)});
+
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankDifferentEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsm, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldThrowIfAUserLoadAfterEdgeWouldPutABlueprintMasterBeforeANonMaster) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+
+  SetBlueprintFlag(dataPath / blankDifferentEsm);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  PluginMetadata plugin(blankEsp);
+  plugin.SetLoadAfterFiles({File(blankDifferentEsm)});
+
+  game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+  try {
+    SortPlugins(game_, game_.GetLoadOrder());
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ(blankDifferentEsm, e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsp, e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::blueprintMaster,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldNotThrowIfAHardcodedEdgeWouldPutABlueprintMasterBeforeAMaster) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+  // Can't test with the test plugin files, so use the other SortPlugins()
+  // overload to provide stubs.
+  const auto esm = GetPlugin(blankEsm);
+  const auto blueprint = GetPlugin(blankDifferentEsm);
+
+  esm->SetIsMaster(true);
+  blueprint->SetIsMaster(true);
+  blueprint->SetIsBlueprintMaster(true);
+
+  std::vector<PluginSortingData> pluginsSortingData{
+      CreatePluginSortingData(esm->GetName()),
+      CreatePluginSortingData(blueprint->GetName())};
+
+  const auto sorted = SortPlugins(
+      std::move(pluginsSortingData), {Group()}, {}, {blueprint->GetName()});
+
+  EXPECT_EQ(std::vector<std::string>({
+                blankEsm, blankDifferentEsm,
+            }),
+            sorted);
+}
+
+TEST_P(
+    PluginSortTest,
+    sortingShouldNotThrowIfAHardcodedEdgeWouldPutABlueprintMasterBeforeANonMaster) {
+  if (GetParam() != GameType::starfield) {
+    return;
+  }
+  // Can't test with the test plugin files, so use the other SortPlugins()
+  // overload to provide stubs.
+  const auto esm = GetPlugin(blankEsp);
+  const auto blueprint = GetPlugin(blankDifferentEsm);
+
+  esm->SetIsMaster(true);
+  blueprint->SetIsMaster(true);
+  blueprint->SetIsBlueprintMaster(true);
+
+  std::vector<PluginSortingData> pluginsSortingData{
+      CreatePluginSortingData(esm->GetName()),
+      CreatePluginSortingData(blueprint->GetName())};
+
+  const auto sorted = SortPlugins(
+      std::move(pluginsSortingData), {Group()}, {}, {blueprint->GetName()});
+
+  EXPECT_EQ(std::vector<std::string>({
+                blankEsp,
+                blankDifferentEsm,
+            }),
+            sorted);
 }
 }
 }

@@ -132,6 +132,45 @@ TEST_P(PluginSortingDataTest,
     EXPECT_EQ(4, plugin.GetOverrideRecordCount());
   }
 }
+
+TEST_P(PluginSortingDataTest,
+       isBlueprintMasterShouldBeTrueIfPluginIsAMasterAndABlueprintPlugin) {
+  SetBlueprintFlag(dataPath / blankEsm);
+  SetBlueprintFlag(dataPath / blankEsp);
+
+  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+
+  auto plugin = PluginSortingData(
+      dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm)),
+      PluginMetadata(),
+      PluginMetadata(),
+                        getLoadOrder());
+  if (GetParam() == GameType::starfield) {
+    EXPECT_TRUE(plugin.IsBlueprintMaster());
+  } else {
+    EXPECT_FALSE(plugin.IsBlueprintMaster());
+  }
+
+  plugin = PluginSortingData(
+      dynamic_cast<const Plugin *>(game_.GetPlugin(blankDifferentEsm)),
+      PluginMetadata(),
+      PluginMetadata(),
+      getLoadOrder());
+  EXPECT_FALSE(plugin.IsBlueprintMaster());
+
+  plugin = PluginSortingData(dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp)),
+      PluginMetadata(),
+      PluginMetadata(),
+      getLoadOrder());
+  EXPECT_FALSE(plugin.IsBlueprintMaster());
+
+  plugin = PluginSortingData(
+      dynamic_cast<const Plugin *>(game_.GetPlugin(blankDifferentEsp)),
+      PluginMetadata(),
+      PluginMetadata(),
+      getLoadOrder());
+  EXPECT_FALSE(plugin.IsBlueprintMaster());
+}
 }
 }
 

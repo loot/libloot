@@ -78,24 +78,39 @@ std::unordered_map<std::string, Group> GetGroupsMap(
   return groupsMap;
 }
 
+bool IsInRange(const std::vector<PluginSortingData>::const_iterator& begin,
+               const std::vector<PluginSortingData>::const_iterator& end,
+               const std::string& name) {
+  return std::any_of(begin, end, [&](const PluginSortingData& plugin) {
+    return CompareFilenames(plugin.GetName(), name) == 0;
+  });
+}
+
 void ValidateSpecificAndHardcodedEdges(
     const std::vector<PluginSortingData>::const_iterator& begin,
+    const std::vector<PluginSortingData>::const_iterator& firstBlueprintMaster,
     const std::vector<PluginSortingData>::const_iterator& firstNonMaster,
     const std::vector<PluginSortingData>::const_iterator& end,
     const std::vector<std::string>& hardcodedPlugins) {
   const auto isNonMaster = [&](const std::string& name) {
-    return std::any_of(
-        firstNonMaster, end, [&](const PluginSortingData& plugin) {
-          return CompareFilenames(plugin.GetName(), name) == 0;
-        });
+    return IsInRange(firstNonMaster, end, name);
+  };
+  const auto isBlueprintMaster = [&](const std::string& name) {
+    return IsInRange(firstBlueprintMaster, firstNonMaster, name);
   };
 
-  for (auto it = begin; it != firstNonMaster; ++it) {
+  for (auto it = begin; it != firstBlueprintMaster; ++it) {
     for (const auto& master : it->GetMasters()) {
       if (isNonMaster(master)) {
         throw CyclicInteractionError(
             std::vector<Vertex>{Vertex(master, EdgeType::master),
                                 Vertex(it->GetName(), EdgeType::masterFlag)});
+      }
+
+      if (isBlueprintMaster(master)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(master, EdgeType::master),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
       }
     }
 
@@ -106,6 +121,12 @@ void ValidateSpecificAndHardcodedEdges(
             std::vector<Vertex>{Vertex(name, EdgeType::masterlistRequirement),
                                 Vertex(it->GetName(), EdgeType::masterFlag)});
       }
+
+      if (isBlueprintMaster(name)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(name, EdgeType::masterlistRequirement),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      }
     }
 
     for (const auto& file : it->GetUserRequirements()) {
@@ -114,6 +135,12 @@ void ValidateSpecificAndHardcodedEdges(
         throw CyclicInteractionError(
             std::vector<Vertex>{Vertex(name, EdgeType::userRequirement),
                                 Vertex(it->GetName(), EdgeType::masterFlag)});
+      }
+
+      if (isBlueprintMaster(name)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(name, EdgeType::userRequirement),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
       }
     }
 
@@ -124,6 +151,12 @@ void ValidateSpecificAndHardcodedEdges(
             std::vector<Vertex>{Vertex(name, EdgeType::masterlistLoadAfter),
                                 Vertex(it->GetName(), EdgeType::masterFlag)});
       }
+
+      if (isBlueprintMaster(name)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(name, EdgeType::masterlistLoadAfter),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      }
     }
 
     for (const auto& file : it->GetUserLoadAfterFiles()) {
@@ -132,6 +165,58 @@ void ValidateSpecificAndHardcodedEdges(
         throw CyclicInteractionError(
             std::vector<Vertex>{Vertex(name, EdgeType::userLoadAfter),
                                 Vertex(it->GetName(), EdgeType::masterFlag)});
+      }
+
+      if (isBlueprintMaster(name)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(name, EdgeType::userLoadAfter),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      }
+    }
+  }
+
+  for (auto it = firstNonMaster; it != end; ++it) {
+    for (const auto& master : it->GetMasters()) {
+      if (isBlueprintMaster(master)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(master, EdgeType::master),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      }
+    }
+
+    for (const auto& file : it->GetMasterlistRequirements()) {
+      const auto name = std::string(file.GetName());
+      if (isBlueprintMaster(name)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(name, EdgeType::masterlistRequirement),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      }
+    }
+
+    for (const auto& file : it->GetUserRequirements()) {
+      const auto name = std::string(file.GetName());
+      if (isBlueprintMaster(name)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(name, EdgeType::userRequirement),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      }
+    }
+
+    for (const auto& file : it->GetMasterlistLoadAfterFiles()) {
+      const auto name = std::string(file.GetName());
+      if (isBlueprintMaster(name)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(name, EdgeType::masterlistLoadAfter),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      }
+    }
+
+    for (const auto& file : it->GetUserLoadAfterFiles()) {
+      const auto name = std::string(file.GetName());
+      if (isBlueprintMaster(name)) {
+        throw CyclicInteractionError(std::vector<Vertex>{
+            Vertex(name, EdgeType::userLoadAfter),
+            Vertex(it->GetName(), EdgeType::blueprintMaster)});
       }
     }
   }
@@ -231,26 +316,41 @@ std::vector<std::string> SortPlugins(
   // two thirds of all edges added. The cost of each bidirectional search
   // scales with the number of edges, so reducing edges makes searches
   // faster.
-  // As such, sort plugins using two separate graphs for masters and
-  // non-masters. This means that any edges that go from a non-master to a
-  // master are effectively ignored, so won't cause cyclic interaction errors.
-  // Edges going the other way will also effectively be ignored, but that
-  // shouldn't have a noticeable impact.
+  // Similarly, blueprint plugins load after all others.
+  // As such, sort plugins using three separate graphs for masters,
+  // non-masters and blueprint plugins. This means that any edges that go from a
+  // non-master to a master are effectively ignored, so won't cause cyclic
+  // interaction errors. Edges going the other way will also effectively be
+  // ignored, but that shouldn't have a noticeable impact.
   const auto firstNonMasterIt = std::stable_partition(
       pluginsSortingData.begin(),
       pluginsSortingData.end(),
       [](const PluginSortingData& plugin) { return plugin.IsMaster(); });
 
+  const auto firstBlueprintPluginIt =
+      std::stable_partition(pluginsSortingData.begin(),
+                            firstNonMasterIt,
+                            [](const PluginSortingData& plugin) {
+                              return !plugin.IsBlueprintMaster();
+                            });
+
   ValidateSpecificAndHardcodedEdges(pluginsSortingData.begin(),
+                                    firstBlueprintPluginIt,
                                     firstNonMasterIt,
                                     pluginsSortingData.end(),
                                     earlyLoadingPlugins);
 
-  auto newLoadOrder = SortPlugins(pluginsSortingData.begin(),
-                                  firstNonMasterIt,
-                                  earlyLoadingPlugins,
-                                  groupsMap,
-                                  predecessorGroupsMap);
+  auto newMastersLoadOrder = SortPlugins(pluginsSortingData.begin(),
+                                         firstBlueprintPluginIt,
+                                         earlyLoadingPlugins,
+                                         groupsMap,
+                                         predecessorGroupsMap);
+
+  const auto newBlueprintMastersLoadOrder = SortPlugins(firstBlueprintPluginIt,
+                                                        firstNonMasterIt,
+                                                        earlyLoadingPlugins,
+                                                        groupsMap,
+                                                        predecessorGroupsMap);
 
   const auto newNonMastersLoadOrder = SortPlugins(firstNonMasterIt,
                                                   pluginsSortingData.end(),
@@ -258,11 +358,14 @@ std::vector<std::string> SortPlugins(
                                                   groupsMap,
                                                   predecessorGroupsMap);
 
-  newLoadOrder.insert(newLoadOrder.end(),
-                      newNonMastersLoadOrder.begin(),
-                      newNonMastersLoadOrder.end());
+  newMastersLoadOrder.insert(newMastersLoadOrder.end(),
+                             newNonMastersLoadOrder.begin(),
+                             newNonMastersLoadOrder.end());
+  newMastersLoadOrder.insert(newMastersLoadOrder.end(),
+                             newBlueprintMastersLoadOrder.begin(),
+                             newBlueprintMastersLoadOrder.end());
 
-  return newLoadOrder;
+  return newMastersLoadOrder;
 }
 
 std::vector<std::string> SortPlugins(

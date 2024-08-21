@@ -40,14 +40,14 @@ public:
    * PluginSortingData objects must not live longer than the Plugin objects
    * that they are constructed from.
    */
-  explicit PluginSortingData(
-      const PluginSortingInterface* plugin,
-      const PluginMetadata& masterlistMetadata,
-      const PluginMetadata& userMetadata,
-      const std::vector<std::string>& loadOrder);
+  explicit PluginSortingData(const PluginSortingInterface* plugin,
+                             const PluginMetadata& masterlistMetadata,
+                             const PluginMetadata& userMetadata,
+                             const std::vector<std::string>& loadOrder);
 
   std::string GetName() const;
   bool IsMaster() const;
+  bool IsBlueprintMaster() const;
   bool LoadsArchive() const;
   std::vector<std::string> GetMasters() const;
   size_t GetOverrideRecordCount() const;

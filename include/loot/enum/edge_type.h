@@ -46,6 +46,7 @@ enum struct EdgeType : unsigned int {
   recordOverlap,
   assetOverlap,
   tieBreak,
+  blueprintMaster,
 };
 }
 
