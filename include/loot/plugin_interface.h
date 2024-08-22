@@ -112,6 +112,12 @@ public:
   virtual bool IsUpdatePlugin() const = 0;
 
   /**
+   * Check if the plugin is a blueprint plugin.
+   * @return True if plugin is a blueprint plugin, false otherwise.
+   */
+  virtual bool IsBlueprintPlugin() const = 0;
+
+  /**
    * Check if the plugin is or would be valid as a light plugin.
    * @return True if the plugin is a valid light plugin or would be a valid
    *         light plugin, false otherwise.
