@@ -83,10 +83,8 @@ protected:
       const std::vector<std::string>& loadOrder = {}) {
     const auto plugin = GetPlugin(name);
 
-    return PluginSortingData(plugin,
-                             PluginMetadata(),
-                             PluginMetadata(),
-                             loadOrder);
+    return PluginSortingData(
+        plugin, PluginMetadata(), PluginMetadata(), loadOrder);
   }
 
   plugingraph::TestPlugin* GetPlugin(const std::string& name) {
@@ -115,7 +113,8 @@ INSTANTIATE_TEST_SUITE_P(,
                          PluginSortTest,
                          ::testing::Values(GameType::tes3,
                                            GameType::tes4,
-                                           GameType::fo4));
+                                           GameType::fo4,
+                                           GameType::starfield));
 
 TEST_P(PluginSortTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
   std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
@@ -200,19 +199,35 @@ TEST_P(PluginSortTest,
   plugin.SetGroup("B");
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
-  std::vector<std::string> expectedSortedOrder({
-      masterFile,
-      blankDifferentEsm,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
-  });
+  std::vector<std::string> expectedSortedOrder;
+  if (GetParam() == GameType::starfield) {
+    expectedSortedOrder = {
+        masterFile,
+        blankDifferentEsm,
+        blankEsm,
+        blankFullEsm,
+        blankMasterDependentEsm,
+        blankMediumEsm,
+        blankEsl,
+        blankEsp,
+        blankDifferentEsp,
+        blankMasterDependentEsp,
+    };
+  } else {
+    expectedSortedOrder = {
+        masterFile,
+        blankDifferentEsm,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankDifferentMasterDependentEsm,
+        blankEsp,
+        blankDifferentEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+        blankDifferentPluginDependentEsp,
+    };
+  }
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
@@ -254,19 +269,35 @@ TEST_P(PluginSortTest,
   plugin.SetGroup("A");
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
-  std::vector<std::string> expectedSortedOrder({
-      masterFile,
-      blankDifferentEsm,
-      blankDifferentMasterDependentEsm,
-      blankEsm,
-      blankMasterDependentEsm,
-      blankEsp,
-      blankDifferentEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-      blankDifferentPluginDependentEsp,
-  });
+  std::vector<std::string> expectedSortedOrder;
+  if (GetParam() == GameType::starfield) {
+    expectedSortedOrder = {
+        masterFile,
+        blankFullEsm,
+        blankMasterDependentEsm,
+        blankMediumEsm,
+        blankEsl,
+        blankDifferentEsm,
+        blankEsm,
+        blankEsp,
+        blankDifferentEsp,
+        blankMasterDependentEsp,
+    };
+  } else {
+    expectedSortedOrder = {
+        masterFile,
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankEsp,
+        blankDifferentEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+        blankDifferentPluginDependentEsp,
+    };
+  }
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 1, blankEsl);
@@ -279,7 +310,7 @@ TEST_P(PluginSortTest,
 TEST_P(PluginSortTest, sortingShouldThrowIfAPluginHasAGroupThatDoesNotExist) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
-  PluginMetadata plugin(blankDifferentEsm);
+  PluginMetadata plugin(blankEsm);
   plugin.SetGroup("group1");
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
@@ -296,19 +327,35 @@ TEST_P(PluginSortTest,
   });
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
-  std::vector<std::string> expectedSortedOrder({
-      masterFile,
-      blankEsm,
-      blankDifferentEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankDifferentEsp,
-      blankDifferentPluginDependentEsp,
-      blankEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-  });
+  std::vector<std::string> expectedSortedOrder;
+  if (GetParam() == GameType::starfield) {
+    expectedSortedOrder = {
+        masterFile,
+        blankEsm,
+        blankDifferentEsm,
+        blankFullEsm,
+        blankMasterDependentEsm,
+        blankMediumEsm,
+        blankEsl,
+        blankDifferentEsp,
+        blankEsp,
+        blankMasterDependentEsp,
+    };
+  } else {
+    expectedSortedOrder = {
+        masterFile,
+        blankEsm,
+        blankDifferentEsm,
+        blankMasterDependentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+    };
+  }
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
@@ -328,19 +375,35 @@ TEST_P(PluginSortTest,
   });
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
-  std::vector<std::string> expectedSortedOrder({
-      masterFile,
-      blankEsm,
-      blankDifferentEsm,
-      blankMasterDependentEsm,
-      blankDifferentMasterDependentEsm,
-      blankDifferentEsp,
-      blankDifferentPluginDependentEsp,
-      blankEsp,
-      blankMasterDependentEsp,
-      blankDifferentMasterDependentEsp,
-      blankPluginDependentEsp,
-  });
+  std::vector<std::string> expectedSortedOrder;
+  if (GetParam() == GameType::starfield) {
+    expectedSortedOrder = {
+        masterFile,
+        blankEsm,
+        blankDifferentEsm,
+        blankFullEsm,
+        blankMasterDependentEsm,
+        blankMediumEsm,
+        blankEsl,
+        blankDifferentEsp,
+        blankEsp,
+        blankMasterDependentEsp,
+    };
+  } else {
+    expectedSortedOrder = {
+        masterFile,
+        blankEsm,
+        blankDifferentEsm,
+        blankMasterDependentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsp,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankPluginDependentEsp,
+    };
+  }
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
     expectedSortedOrder.insert(expectedSortedOrder.begin() + 5, blankEsl);
@@ -384,7 +447,10 @@ TEST_P(PluginSortTest,
 
 TEST_P(PluginSortTest, sortingShouldThrowIfACyclicInteractionIsEncountered) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-  PluginMetadata plugin(blankEsm);
+
+  const auto pluginName =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+  PluginMetadata plugin(pluginName);
   plugin.SetLoadAfterFiles({File(blankMasterDependentEsm)});
   game_.GetDatabase().SetPluginUserMetadata(plugin);
 
@@ -538,11 +604,6 @@ TEST_P(PluginSortTest,
   std::vector<PluginSortingData> pluginsSortingData{
       CreatePluginSortingData(esm->GetName()),
       CreatePluginSortingData(esp->GetName())};
-
-  EXPECT_THROW(
-      SortPlugins(
-          std::move(pluginsSortingData), {Group()}, {}, {esp->GetName()}),
-      CyclicInteractionError);
 
   try {
     SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {esp->GetName()});

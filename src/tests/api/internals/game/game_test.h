@@ -203,7 +203,7 @@ TEST_P(
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));
   if (GetParam() == GameType::starfield) {
-    EXPECT_EQ(6, game.GetCache().GetPlugins().size());
+    EXPECT_EQ(10, game.GetCache().GetPlugins().size());
   } else {
     EXPECT_EQ(11, game.GetCache().GetPlugins().size());
   }
@@ -251,7 +251,7 @@ TEST_P(GameTest,
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
   if (GetParam() == GameType::starfield) {
-    EXPECT_EQ(6, game.GetCache().GetPlugins().size());
+    EXPECT_EQ(10, game.GetCache().GetPlugins().size());
   } else {
     EXPECT_EQ(11, game.GetCache().GetPlugins().size());
   }

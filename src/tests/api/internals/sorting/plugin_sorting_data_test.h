@@ -73,7 +73,8 @@ INSTANTIATE_TEST_SUITE_P(,
                          PluginSortingDataTest,
                          ::testing::Values(GameType::tes3,
                                            GameType::tes4,
-                                           GameType::fo4));
+                                           GameType::fo4,
+                                           GameType::starfield));
 
 TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
@@ -125,7 +126,11 @@ TEST_P(PluginSortingDataTest,
       PluginMetadata(),
       PluginMetadata(),
       getLoadOrder());
-  EXPECT_EQ(4, plugin.GetOverrideRecordCount());
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(1, plugin.GetOverrideRecordCount());
+  } else {
+    EXPECT_EQ(4, plugin.GetOverrideRecordCount());
+  }
 }
 }
 }

@@ -331,9 +331,13 @@ protected:
       return {
           masterFile,
           blankEsm,
+          blankDifferentEsm,
           blankFullEsm,
           blankMasterDependentEsm,
+          blankMediumEsm,
+          blankEsl,
           blankEsp,
+          blankDifferentEsp,
           blankMasterDependentEsp,
       };
     } else {
