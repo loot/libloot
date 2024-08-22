@@ -182,6 +182,7 @@ public:
   bool IsLightPlugin() const override { return false; }
   bool IsMediumPlugin() const override { return false; }
   bool IsUpdatePlugin() const override { return false; }
+  bool IsBlueprintPlugin() const override { return false; }
   bool IsValidAsLightPlugin() const override { return false; }
   bool IsValidAsMediumPlugin() const override { return false; }
   bool IsValidAsUpdatePlugin() const override { return false; }
@@ -368,6 +369,21 @@ TEST_P(PluginTest, isUpdatePluginShouldOnlyBeTrueForAStarfieldUpdatePlugin) {
 
   EXPECT_FALSE(plugin1.IsUpdatePlugin());
   EXPECT_EQ(GetParam() == GameType::starfield, plugin2.IsUpdatePlugin());
+}
+
+TEST_P(PluginTest,
+       isBlueprintPluginShouldOnlyBeTrueForAStarfieldBlueprintPlugin) {
+  SetBlueprintFlag(dataPath / blankMasterDependentEsp);
+
+  Plugin plugin1(
+      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, true);
+  Plugin plugin2(game_.GetType(),
+                 game_.GetCache(),
+                 game_.DataPath() / blankMasterDependentEsp,
+                 true);
+
+  EXPECT_FALSE(plugin1.IsBlueprintPlugin());
+  EXPECT_EQ(GetParam() == GameType::starfield, plugin2.IsBlueprintPlugin());
 }
 
 TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {

@@ -357,6 +357,12 @@ protected:
     }
   }
 
+  void SetBlueprintFlag(const std::filesystem::path& path) {
+    auto bytes = ReadFile(path);
+    bytes[9] = 0x8;
+    WriteFile(path, bytes);
+  }
+
 private:
   const std::filesystem::path rootTestPath;
 

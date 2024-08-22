@@ -64,6 +64,8 @@ public:
 
   bool IsUpdatePlugin() const override { return false; }
 
+  bool IsBlueprintPlugin() const override { return false; }
+
   bool IsValidAsLightPlugin() const override { return false; }
 
   bool IsValidAsMediumPlugin() const override { return false; }

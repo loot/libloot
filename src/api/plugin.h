@@ -43,6 +43,8 @@ class GameCache;
 // An interface containing member functions that are used when sorting plugins.
 class PluginSortingInterface : public PluginInterface {
 public:
+  virtual bool IsBlueprintPlugin() const = 0;
+
   virtual size_t GetOverrideRecordCount() const = 0;
   virtual uint32_t GetRecordAndGroupCount() const = 0;
 
@@ -71,6 +73,7 @@ public:
   bool IsLightPlugin() const override;
   bool IsMediumPlugin() const override;
   bool IsUpdatePlugin() const override;
+  bool IsBlueprintPlugin() const override;
 
   bool IsValidAsLightPlugin() const override;
   bool IsValidAsMediumPlugin() const override;

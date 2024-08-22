@@ -337,6 +337,15 @@ bool Plugin::IsUpdatePlugin() const {
   return isUpdatePlugin;
 }
 
+bool Plugin::IsBlueprintPlugin() const {
+  bool isBlueprintPlugin = false;
+  const auto ret =
+      esp_plugin_is_blueprint_plugin(esPlugin.get(), &isBlueprintPlugin);
+  HandleEspluginError("check if \"" + name_ + "\" is a blueprint plugin", ret);
+
+  return isBlueprintPlugin;
+}
+
 bool Plugin::IsValidAsLightPlugin() const {
   bool isValid = false;
   const auto ret =
