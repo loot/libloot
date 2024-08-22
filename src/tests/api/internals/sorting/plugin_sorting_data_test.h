@@ -37,20 +37,7 @@ protected:
       blankEslEsp("Blank.esl.esp") {}
 
   void loadInstalledPlugins(Game &game, bool headersOnly) {
-    std::vector<std::filesystem::path> plugins({
-        // These are all ASCII filenames.
-        masterFile,
-        blankEsm,
-        blankDifferentEsm,
-        blankMasterDependentEsm,
-        blankDifferentMasterDependentEsm,
-        blankEsp,
-        blankDifferentEsp,
-        blankMasterDependentEsp,
-        blankDifferentMasterDependentEsp,
-        blankPluginDependentEsp,
-        blankDifferentPluginDependentEsp,
-    });
+    auto plugins = GetInstalledPlugins();
 
     if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
       plugins.push_back(blankEsl);

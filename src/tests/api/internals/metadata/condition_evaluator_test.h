@@ -60,21 +60,9 @@ protected:
   }
 
   void loadInstalledPlugins() {
-    std::vector<std::filesystem::path> plugins({
-        // These are mostly ASCII filenames.
-        masterFile,
-        blankEsm,
-        blankDifferentEsm,
-        blankMasterDependentEsm,
-        blankDifferentMasterDependentEsm,
-        blankEsp,
-        blankDifferentEsp,
-        blankMasterDependentEsp,
-        blankDifferentMasterDependentEsp,
-        blankPluginDependentEsp,
-        blankDifferentPluginDependentEsp,
-        std::filesystem::u8path(nonAsciiEsm),
-    });
+    auto plugins = GetInstalledPlugins();
+
+    plugins.push_back(std::filesystem::u8path(nonAsciiEsm));
 
     if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
       plugins.push_back(blankEsl);

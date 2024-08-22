@@ -37,34 +37,8 @@ protected:
   }
 
   void loadInstalledPlugins(Game& game, bool headersOnly) {
-    if (GetParam() == GameType::starfield) {
-      const std::vector<std::filesystem::path> plugins({
-          // These are all ASCII filenames.
-          masterFile,
-          blankEsm,
-          blankFullEsm,
-          blankMasterDependentEsm,
-          blankEsp,
-          blankMasterDependentEsp,
-      });
-      game.LoadPlugins(plugins, headersOnly);
-    } else {
-      const std::vector<std::filesystem::path> plugins({
-          // These are all ASCII filenames.
-          masterFile,
-          blankEsm,
-          blankDifferentEsm,
-          blankMasterDependentEsm,
-          blankDifferentMasterDependentEsm,
-          blankEsp,
-          blankDifferentEsp,
-          blankMasterDependentEsp,
-          blankDifferentMasterDependentEsp,
-          blankPluginDependentEsp,
-          blankDifferentPluginDependentEsp,
-      });
-      game.LoadPlugins(plugins, headersOnly);
-    }
+    const auto plugins = GetInstalledPlugins();
+    game.LoadPlugins(plugins, headersOnly);
   }
 
   const std::string blankArchive;

@@ -308,6 +308,51 @@ protected:
     out.close();
   }
 
+  std::vector<char> ReadFile(const std::filesystem::path& path) {
+    std::vector<char> bytes;
+    std::ifstream in(path, std::ios::binary);
+
+    std::copy(std::istreambuf_iterator<char>(in),
+              std::istreambuf_iterator<char>(),
+              std::back_inserter(bytes));
+
+    return bytes;
+  }
+
+  void WriteFile(const std::filesystem::path& path,
+                 const std::vector<char>& content) {
+    std::ofstream out(path, std::ios::binary);
+
+    out.write(content.data(), content.size());
+  }
+
+  std::vector<std::filesystem::path> GetInstalledPlugins() {
+    if (GetParam() == GameType::starfield) {
+      return {
+          masterFile,
+          blankEsm,
+          blankFullEsm,
+          blankMasterDependentEsm,
+          blankEsp,
+          blankMasterDependentEsp,
+      };
+    } else {
+      return {
+          masterFile,
+          blankEsm,
+          blankDifferentEsm,
+          blankMasterDependentEsm,
+          blankDifferentMasterDependentEsm,
+          blankEsp,
+          blankDifferentEsp,
+          blankMasterDependentEsp,
+          blankDifferentMasterDependentEsp,
+          blankPluginDependentEsp,
+          blankDifferentPluginDependentEsp,
+      };
+    }
+  }
+
 private:
   const std::filesystem::path rootTestPath;
 
