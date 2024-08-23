@@ -26,6 +26,7 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_GAME_GAME_TEST
 
 #include "api/game/game.h"
+#include "loot/exception/error_categories.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -361,6 +362,31 @@ TEST_P(GameTest, loadPluginsShouldUseAbsolutePathsAsGiven) {
   game.LoadPlugins(std::vector<std::filesystem::path>({absolutePath}), true);
 
   EXPECT_NE(nullptr, game.GetPlugin(blankEsm));
+}
+
+TEST_P(
+    GameTest,
+    loadPluginsShouldThrowIfFullyLoadingAPluginWithAMissingMasterIfGameIsMorrowindOrStarfield) {
+  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+
+  const auto pluginName =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+
+  std::filesystem::remove(dataPath / pluginName);
+
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::starfield) {
+    try {
+      game.LoadPlugins({blankMasterDependentEsm}, false);
+      FAIL(); 
+    } catch (const std::system_error& e) {
+      EXPECT_EQ(ESP_ERROR_PLUGIN_METADATA_NOT_FOUND, e.code().value());
+      EXPECT_EQ(esplugin_category(), e.code().category());
+    }
+  } else {
+    game.LoadPlugins({blankMasterDependentEsm}, false);
+
+    EXPECT_NE(nullptr, game.GetPlugin(blankMasterDependentEsm));
+  }
 }
 
 TEST_P(GameTest, sortPluginsShouldHandlePluginPathsThatAreNotJustFilenames) {

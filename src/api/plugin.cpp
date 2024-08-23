@@ -33,6 +33,7 @@
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"
 #include "api/helpers/text.h"
+#include "loot/exception/error_categories.h"
 #include "loot/exception/file_access_error.h"
 
 namespace loot {
@@ -201,7 +202,7 @@ void HandleEspluginError(const std::string& operation,
     logger->error(err);
   }
 
-  throw FileAccessError(err);
+  throw std::system_error(returnCode, esplugin_category(), err);
 }
 
 Plugin::Plugin(const GameType gameType,
@@ -239,6 +240,18 @@ Plugin::Plugin(const GameType gameType,
     }
 
     tags_ = ExtractBashTags(GetDescription());
+  } catch (const std::system_error& e) {
+    if (e.code().category() == esplugin_category()) {
+      throw;
+    }
+
+    if (logger) {
+      logger->error("Cannot read plugin file \"{}\". Details: {}",
+                    pluginPath.u8string(),
+                    e.what());
+    }
+    throw FileAccessError("Cannot read \"" + pluginPath.u8string() +
+                          "\". Details: " + e.what());
   } catch (const std::exception& e) {
     if (logger) {
       logger->error("Cannot read plugin file \"{}\". Details: {}",

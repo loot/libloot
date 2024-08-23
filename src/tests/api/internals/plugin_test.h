@@ -27,6 +27,7 @@ along with LOOT.  If not, see
 
 #include "api/game/game.h"
 #include "api/plugin.h"
+#include "loot/exception/error_categories.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -337,8 +338,7 @@ TEST_P(
             plugin3.IsLightPlugin());
 }
 
-TEST_P(
-  PluginTest,
+TEST_P(PluginTest,
        isMediumPluginShouldBeTrueForAMediumFlaggedPluginForStarfield) {
   if (GetParam() != GameType::starfield) {
     auto bytes = ReadFile(dataPath / blankEsm);
@@ -348,14 +348,13 @@ TEST_P(
 
   const auto pluginName =
       GetParam() == GameType::starfield ? blankMediumEsm : blankEsm;
-  Plugin plugin(game_.GetType(), game_.GetCache(), game_.DataPath() / pluginName,
-                true);
+  Plugin plugin(
+      game_.GetType(), game_.GetCache(), game_.DataPath() / pluginName, true);
 
   EXPECT_EQ(GetParam() == GameType::starfield, plugin.IsMediumPlugin());
 }
 
-TEST_P(PluginTest,
-       isUpdatePluginShouldOnlyBeTrueForAStarfieldUpdatePlugin) {
+TEST_P(PluginTest, isUpdatePluginShouldOnlyBeTrueForAStarfieldUpdatePlugin) {
   auto bytes = ReadFile(dataPath / blankMasterDependentEsp);
   bytes[9] = 0x2;
   WriteFile(dataPath / blankMasterDependentEsp, bytes);
@@ -385,11 +384,16 @@ TEST_P(PluginTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
 }
 
 TEST_P(PluginTest, loadingAPluginThatDoesNotExistShouldThrow) {
-  EXPECT_THROW(Plugin(game_.GetType(),
-                      game_.GetCache(),
-                      game_.DataPath() / "Blank\\.esp",
-                      true),
-               FileAccessError);
+  try {
+    Plugin(game_.GetType(),
+           game_.GetCache(),
+           game_.DataPath() / "Blank\\.esp",
+           true);
+    FAIL();
+  } catch (const std::system_error& e) {
+    EXPECT_EQ(ESP_ERROR_FILE_NOT_FOUND, e.code().value());
+    EXPECT_EQ(esplugin_category(), e.code().category());
+  }
 }
 
 TEST_P(
@@ -545,8 +549,7 @@ TEST_P(
     PluginTest,
     isValidAsMediumPluginShouldReturnTrueOnlyForAStarfieldPluginWithNewFormIdsBetween0And0xFFFFInclusive) {
   bool valid =
-      Plugin(
-          game_.GetType(), game_.GetCache(), dataPath / blankEsm, true)
+      Plugin(game_.GetType(), game_.GetCache(), dataPath / blankEsm, true)
           .IsValidAsMediumPlugin();
   if (GetParam() == GameType::starfield) {
     EXPECT_TRUE(valid);
@@ -558,12 +561,11 @@ TEST_P(
 TEST_P(
     PluginTest,
     IsValidAsUpdatePluginShouldOnlyReturnTrueForAStarfieldPluginWithNoNewRecords) {
-  const auto sourcePluginName = GetParam() == GameType::starfield
-                                  ? blankFullEsm
-                                  : blankEsp;
+  const auto sourcePluginName =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsp;
   const auto updatePluginName = GetParam() == GameType::starfield
-                                  ? blankMasterDependentEsp
-                                  : blankDifferentPluginDependentEsp;
+                                    ? blankMasterDependentEsp
+                                    : blankDifferentPluginDependentEsp;
 
   Plugin plugin1(game_.GetType(),
                  game_.GetCache(),
@@ -583,8 +585,7 @@ TEST_P(
   }
 
   EXPECT_FALSE(plugin1.IsValidAsUpdatePlugin());
-  EXPECT_EQ(GetParam() == GameType::starfield,
-            plugin2.IsValidAsUpdatePlugin());
+  EXPECT_EQ(GetParam() == GameType::starfield, plugin2.IsValidAsUpdatePlugin());
 }
 
 TEST_P(PluginTest,
