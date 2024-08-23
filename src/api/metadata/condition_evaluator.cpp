@@ -29,6 +29,7 @@
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"
 #include "loot/exception/condition_syntax_error.h"
+#include "loot/exception/error_categories.h"
 
 namespace loot {
 void HandleError(const std::string operation, int returnCode) {
@@ -50,7 +51,7 @@ void HandleError(const std::string operation, int returnCode) {
     logger->error(err);
   }
 
-  throw ConditionSyntaxError(err);
+  throw ConditionSyntaxError(returnCode, loot_condition_interpreter_category(), err);
 }
 
 int mapGameType(GameType gameType) {
