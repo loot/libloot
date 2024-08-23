@@ -645,8 +645,9 @@ TEST_P(PluginSortTest,
   }
 }
 
-TEST_P(PluginSortTest,
-       sortingShouldThrowIfAMasterEdgeWouldPutABlueprintMasterBeforeAMaster) {
+TEST_P(
+    PluginSortTest,
+    sortingShouldNotThrowIfAMasterEdgeWouldPutABlueprintMasterBeforeAMaster) {
   if (GetParam() != GameType::starfield) {
     return;
   }
@@ -655,21 +656,26 @@ TEST_P(PluginSortTest,
 
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
-  try {
-    SortPlugins(game_, game_.GetLoadOrder());
-    FAIL();
-  } catch (const CyclicInteractionError& e) {
-    ASSERT_EQ(2, e.GetCycle().size());
-    EXPECT_EQ(blankFullEsm, e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ(blankMasterDependentEsm, e.GetCycle()[1].GetName());
-    EXPECT_EQ(EdgeType::blueprintMaster,
-              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-  }
+  const auto sorted = SortPlugins(game_, game_.GetLoadOrder());
+
+  EXPECT_EQ(std::vector<std::string>({
+                masterFile,
+                blankEsm,
+                blankDifferentEsm,
+                blankMasterDependentEsm,
+                blankMediumEsm,
+                blankEsl,
+                blankEsp,
+                blankDifferentEsp,
+                blankMasterDependentEsp,
+                blankFullEsm,
+            }),
+            sorted);
 }
 
-TEST_P(PluginSortTest,
-       sortingShouldThrowIfAMasterEdgeWouldPutABlueprintMasterBeforeANonMaster) {
+TEST_P(
+    PluginSortTest,
+    sortingShouldNotThrowIfAMasterEdgeWouldPutABlueprintMasterBeforeANonMaster) {
   if (GetParam() != GameType::starfield) {
     return;
   }
@@ -687,17 +693,11 @@ TEST_P(PluginSortTest,
       CreatePluginSortingData(esp->GetName()),
       CreatePluginSortingData(blueprint->GetName())};
 
-  try {
-    SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
-    FAIL();
-  } catch (const CyclicInteractionError& e) {
-    ASSERT_EQ(2, e.GetCycle().size());
-    EXPECT_EQ(blankFullEsm, e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::master, e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ(blankMasterDependentEsp, e.GetCycle()[1].GetName());
-    EXPECT_EQ(EdgeType::blueprintMaster,
-              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-  }
+  const auto sorted =
+      SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
+
+  EXPECT_EQ(std::vector<std::string>({blankMasterDependentEsp, blankFullEsm}),
+            sorted);
 }
 
 TEST_P(
@@ -987,7 +987,8 @@ TEST_P(
       std::move(pluginsSortingData), {Group()}, {}, {blueprint->GetName()});
 
   EXPECT_EQ(std::vector<std::string>({
-                blankEsm, blankDifferentEsm,
+                blankEsm,
+                blankDifferentEsm,
             }),
             sorted);
 }

@@ -92,6 +92,8 @@ void ValidateSpecificAndHardcodedEdges(
     const std::vector<PluginSortingData>::const_iterator& firstNonMaster,
     const std::vector<PluginSortingData>::const_iterator& end,
     const std::vector<std::string>& hardcodedPlugins) {
+  const auto logger = getLogger();
+
   const auto isNonMaster = [&](const std::string& name) {
     return IsInRange(firstNonMaster, end, name);
   };
@@ -107,10 +109,16 @@ void ValidateSpecificAndHardcodedEdges(
                                 Vertex(it->GetName(), EdgeType::masterFlag)});
       }
 
-      if (isBlueprintMaster(master)) {
-        throw CyclicInteractionError(std::vector<Vertex>{
-            Vertex(master, EdgeType::master),
-            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      if (isBlueprintMaster(master) && logger) {
+        // Log a warning instead of throwing an exception because the game will
+        // just ignore this master, and the issue can't be fixed without
+        // editing the plugin and the blueprint master may not actually have
+        // any of its records overridden.
+        logger->warn(
+            "The master plugin \"{}\" has the blueprint master \"{}\" as one "
+            "of its masters",
+            it->GetName(),
+            master);
       }
     }
 
@@ -177,10 +185,16 @@ void ValidateSpecificAndHardcodedEdges(
 
   for (auto it = firstNonMaster; it != end; ++it) {
     for (const auto& master : it->GetMasters()) {
-      if (isBlueprintMaster(master)) {
-        throw CyclicInteractionError(std::vector<Vertex>{
-            Vertex(master, EdgeType::master),
-            Vertex(it->GetName(), EdgeType::blueprintMaster)});
+      if (isBlueprintMaster(master) && logger) {
+        // Log a warning instead of throwing an exception because the game will
+        // just ignore this master, and the issue can't be fixed without
+        // editing the plugin and the blueprint master may not actually have
+        // any of its records overridden.
+        logger->warn(
+            "The non-master plugin \"{}\" has the blueprint master \"{}\" as "
+            "one of its masters",
+            it->GetName(),
+            master);
       }
     }
 
