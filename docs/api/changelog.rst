@@ -10,18 +10,19 @@ Added
 
 - Support for Starfield's new medium plugin type (via esplugin and
   libloadorder).
-- :cpp:any:`PluginInterface::IsMediumPlugin()`
-- :cpp:any:`PluginInterface::IsValidAsMediumPlugin()`
+- :cpp:any:`loot::PluginInterface::IsMediumPlugin()`
+- :cpp:any:`loot::PluginInterface::IsValidAsMediumPlugin()`
 
 Fixed
 -----
 
 - A couple of use-after-free bugs that could happen when configuring additional
   data paths (e.g. for Fallout 4 installs from the Microsoft Store).
-- :cpp:any:`PluginInterface::IsMaster()` incorrectly checked the file extension
-  of Morrowind plugins instead of their header's master flag (via esplugin).
-- :cpp:any:`PluginInterface::DoRecordsOverlap()` was not able to reliably check
-  if two Starfield plugins had overlapping records (via esplugin).
+- :cpp:any:`loot::PluginInterface::IsMaster()` incorrectly checked the file
+  extension of Morrowind plugins instead of their header's master flag (via
+  esplugin).
+- :cpp:any:`loot::PluginInterface::DoRecordsOverlap()` was not able to reliably
+  check if two Starfield plugins had overlapping records (via esplugin).
 - The sorting process was unable to reliably count the number of records that a
   Starfield plugin overrode, which could negatively impact the quality of the
   sorted load order (via esplugin).
@@ -63,11 +64,11 @@ Changed
   fully load Morrowind or Starfield plugins without also loading all their
   masters.
 - Renamed ``PluginInterface::IsOverridePlugin()`` to
-  :cpp:any:`PluginInterface::IsUpdatePlugin()` to reflect the terminology used
-  by Starfield's Creation Kit.
-- Renamed ``PluginInterface::IsValidAsOverridePlugin()`` to
-  :cpp:any:`PluginInterface::IsValidAsUpdatePlugin()` to reflect the terminology
+  :cpp:any:`loot::PluginInterface::IsUpdatePlugin()` to reflect the terminology
   used by Starfield's Creation Kit.
+- Renamed ``PluginInterface::IsValidAsOverridePlugin()`` to
+  :cpp:any:`loot::PluginInterface::IsValidAsUpdatePlugin()` to reflect the
+  terminology used by Starfield's Creation Kit.
 - Updated esplugin to v6.0.0.
 - Updated libloadorder to v17.0.1.
 - Updated loot-condition-interpreter to v4.0.1.
@@ -116,17 +117,17 @@ Removed
 Added
 -----
 
-- :cpp:any:`PluginInterface::IsValidAsLightPlugin()` now supports the extended
-  FormID range introduced in Skyrim SE v1.6.1130.0 for light plugins with a
-  header version of 1.71. Via esplugin.
+- :cpp:any:`loot::PluginInterface::IsValidAsLightPlugin()` now supports the
+  extended FormID range introduced in Skyrim SE v1.6.1130.0 for light plugins
+  with a header version of 1.71. Via esplugin.
 
 Fixed
 -----
 
-- :cpp:any:`PluginInterface::IsValidAsLightPlugin()` used Fallout 4's extended
-  range when validating FormIDs, even when the plugin's header version was less
-  than 1.0. Plugins with header versions less than 1.0 are now validated using
-  the appropriate range (0x800 to 0xFFF). Via esplugin.
+- :cpp:any:`loot::PluginInterface::IsValidAsLightPlugin()` used Fallout 4's
+  extended range when validating FormIDs, even when the plugin's header version
+  was less than 1.0. Plugins with header versions less than 1.0 are now
+  validated using the appropriate range (0x800 to 0xFFF). Via esplugin.
 
 Changed
 -------
@@ -162,24 +163,27 @@ Changed
 Fixed
 -----
 
-- :cpp:any:`GameInterface::LoadCurrentLoadOrderState()` now correctly handles
-  the case where plugin timestamps matter for load order and two plugins have
-  the same timestamp. The plugins are sorted in ascending filename order for
-  Starfield and descending filename order for all other games. Via libloadorder.
-- :cpp:any:`GameInterface::LoadCurrentLoadOrderState()` now sorts installed
-  plugins by timestamp instead of filename before they are added to the load
-  order. This ensures that plugins that do not have an explicit load order
-  position are given a position that matches the game's behaviour and the
+- :cpp:any:`loot::GameInterface::LoadCurrentLoadOrderState()` now correctly
+  handles the case where plugin timestamps matter for load order and two plugins
+  have the same timestamp. The plugins are sorted in ascending filename order
+  for Starfield and descending filename order for all other games. Via
+  libloadorder.
+- :cpp:any:`loot::GameInterface::LoadCurrentLoadOrderState()` now sorts
+  installed plugins by timestamp instead of filename before they are added to
+  the load order. This ensures that plugins that do not have an explicit load
+  order position are given a position that matches the game's behaviour and the
   behaviour of xEdit and Wrye Bash. Via libloadorder.
-- :cpp:any:`GameInterface::IsLoadOrderAmbiguous()` now always returns false for
-  Morrowind, Oblivion, Fallout 3 and Fallout New Vegas. Via libloadorder.
-- :cpp:any:`GameInterface::IsLoadOrderAmbiguous()` no longer requires implicitly
-  active plugins to be listed in ``plugins.txt`` for the load order to be
-  unambiguous for Skyrim Special Edition, Skyrim VR, Fallout 4, Fallout 4 VR and
-  Starfield. Via libloadorder.
-- :cpp:any:`GameInterface::SetLoadOrder()` now modifies plugin file modification
-  timestamps to match the given load order if the game is Fallout 4, Fallout 4
-  VR or Starfield, and if ``plugins.txt`` is being ignored. Via libloadorder.
+- :cpp:any:`loot::GameInterface::IsLoadOrderAmbiguous()` now always returns
+  false for Morrowind, Oblivion, Fallout 3 and Fallout New Vegas. Via
+  libloadorder.
+- :cpp:any:`loot::GameInterface::IsLoadOrderAmbiguous()` no longer requires
+  implicitly active plugins to be listed in ``plugins.txt`` for the load order
+  to be unambiguous for Skyrim Special Edition, Skyrim VR, Fallout 4,
+  Fallout 4 VR and Starfield. Via libloadorder.
+- :cpp:any:`loot::GameInterface::SetLoadOrder()` now modifies plugin file
+  modification timestamps to match the given load order if the game is
+  Fallout 4, Fallout 4 VR or Starfield, and if ``plugins.txt`` is being ignored.
+  Via libloadorder.
 
 0.22.0 - 2023-09-29
 ===================
