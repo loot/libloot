@@ -108,4 +108,6 @@ Error Categories
 LOOT uses error category objects to identify errors with codes that originate in
 lower-level libraries.
 
+.. doxygenfunction:: loot::esplugin_category
+
 .. doxygenfunction:: loot::libloadorder_category

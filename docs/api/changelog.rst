@@ -2,6 +2,29 @@
 Version History
 ***************
 
+0.23.1 - 2024-08-24
+===================
+
+Added
+-----
+
+- :cpp:any:`loot::esplugin_category()`, which returns the
+  ``std::error_category`` that is used when throwing esplugin errors as
+  exceptions.
+
+Fixed
+-----
+
+- Inaccurate log messages when getting early loading plugins.
+
+Changed
+-------
+
+- When an esplugin function returns an error, it is now thrown as a
+  ``std::system_error`` using the error category returned by
+  :cpp:any:`loot::esplugin_category()`, instead of as a
+  :cpp:any:`loot::FileAccessError`.
+
 0.23.0 - 2024-06-29
 ===================
 
