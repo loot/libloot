@@ -2,6 +2,37 @@
 Version History
 ***************
 
+0.24.0 - Unreleased
+===================
+
+Added
+-----
+
+- Support for Starfield's blueprint master plugin type.
+- :cpp:any:`loot::PluginInterface::IsBlueprintPlugin()`
+- :cpp:any:`loot::EdgeType::blueprintMaster`
+- :cpp:any:`loot::loot_condition_interpreter_category()`, which returns the
+  ``std::error_category`` that is used when throwing loot-condition-interpreter
+  errors as :cpp:any:`loot::ConditionSyntaxError` exceptions.
+
+Fixed
+-----
+
+- Cross-compiling from Linux to Windows using MinGW-w64 was broken in 0.23.1.
+
+Changed
+-------
+
+- Blueprint master plugins are now sorted after all other plugins, to match
+  Starfield's behaviour. If a non-blueprint-master plugin has a blueprint master
+  as one of its masters, sorting logs a warning but does not fail. Other cyclic
+  dependencies (e.g. involving requirement metadata) will cause sorting to fail.
+- :cpp:any:`loot::ConditionSyntaxError` now inherits from ``std::system_error``.
+- The Linux shared library no longer has a runpath set. It was previously set to
+  ``.``.
+- Updated esplugin to v6.1.0.
+- Updated libloadorder to v18.0.0.
+
 0.23.1 - 2024-08-24
 ===================
 
