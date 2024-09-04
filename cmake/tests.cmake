@@ -158,11 +158,6 @@ target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
 target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set_target_properties(libloot_internals_tests libloot_tests
-        PROPERTIES
-            INSTALL_RPATH "${CMAKE_INSTALL_RPATH};."
-            BUILD_WITH_INSTALL_RPATH ON)
-
     target_compile_options(libloot_internals_tests PRIVATE "-Wall" "-Wextra")
     target_compile_options(libloot_tests PRIVATE "-Wall" "-Wextra")
 endif()

@@ -342,11 +342,6 @@ else()
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set_target_properties(loot
-        PROPERTIES
-            INSTALL_RPATH "${CMAKE_INSTALL_RPATH};."
-            BUILD_WITH_INSTALL_RPATH ON)
-
     target_compile_options(loot PRIVATE "-Wall" "-Wextra")
 endif()
 
