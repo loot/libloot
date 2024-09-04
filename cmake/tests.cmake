@@ -127,8 +127,8 @@ add_dependencies(libloot_tests loot)
 target_link_libraries(libloot_tests PRIVATE loot Boost::headers GTest::gtest_main)
 
 enable_testing()
-gtest_discover_tests(libloot_internals_tests)
-gtest_discover_tests(libloot_tests)
+gtest_discover_tests(libloot_internals_tests DISCOVERY_TIMEOUT 10)
+gtest_discover_tests(libloot_tests DISCOVERY_TIMEOUT 10)
 
 ##############################
 # Set Target-Specific Flags
