@@ -2,6 +2,16 @@
 Version History
 ***************
 
+0.24.1 - 2024-09-15
+===================
+
+Changed
+-------
+
+- spdlog's bundled copy of the fmt library is no longer used: instead, the fmt
+  dependency is managed separately. If fmt is not found by CMake when building
+  libloot, fmt v11.0.2 will be downloaded from GitHub.
+
 0.24.0 - 2024-09-14
 ===================
 
