@@ -25,10 +25,6 @@
 #ifndef LOOT_API_SORTING_PLUGIN_SORTER
 #define LOOT_API_SORTING_PLUGIN_SORTER
 
-#define FMT_NO_FMT_STRING_ALIAS
-
-#include <spdlog/spdlog.h>
-
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <map>

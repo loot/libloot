@@ -24,8 +24,6 @@
 
 #include "api/helpers/logging.h"
 
-#define FMT_USE_STD_STRING_VIEW
-
 #include <spdlog/sinks/base_sink.h>
 
 namespace {

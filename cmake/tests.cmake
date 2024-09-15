@@ -117,7 +117,8 @@ target_link_libraries(libloot_internals_tests PRIVATE
     ${ESPLUGIN_LIBRARIES}
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
-    spdlog::spdlog_header_only
+    fmt::fmt
+    spdlog::spdlog
     yaml-cpp::yaml-cpp
     GTest::gtest_main)
 

@@ -24,8 +24,9 @@
 
 #include "api/helpers/crc.h"
 
-#include <spdlog/fmt/fmt.h>
+#include <fmt/base.h>
 
+#include <array>
 #include <boost/crc.hpp>
 #include <fstream>
 

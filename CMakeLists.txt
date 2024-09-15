@@ -155,6 +155,12 @@ else()
 endif()
 
 FetchContent_Declare(
+    fmt
+    URL "https://github.com/fmtlib/fmt/archive/refs/tags/11.0.2.tar.gz"
+    FIND_PACKAGE_ARGS)
+
+set(SPDLOG_FMT_EXTERNAL ON)
+FetchContent_Declare(
     spdlog
     URL "https://github.com/gabime/spdlog/archive/v1.14.1.tar.gz"
     URL_HASH "SHA256=1586508029a7d0670dfcb2d97575dcdc242d3868a259742b69f100801ab4e16b"
@@ -173,7 +179,15 @@ FetchContent_Declare(
     URL_HASH "SHA256=e91779044cd4025ec10ed31986031031ef22ebce90a64cc8f85e7c7e95a1abc6"
     FIND_PACKAGE_ARGS)
 
-FetchContent_MakeAvailable(spdlog yaml-cpp)
+# Set BUILD_SHARED_LIBS=OFF to prevent fmt and spdlog from being built as shared
+# libraries.
+set(LIBLOOT_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS OFF)
+
+FetchContent_MakeAvailable(fmt spdlog yaml-cpp)
+
+# Restore the original value of BUILD_SHARED_LIBS.
+set(BUILD_SHARED_LIBS ${LIBLOOT_BUILD_SHARED_LIBS})
 
 ##############################
 # General Settings
@@ -301,7 +315,8 @@ target_link_libraries(loot PRIVATE
     ${ESPLUGIN_LIBRARIES}
     ${LIBLOADORDER_LIBRARIES}
     ${LCI_LIBRARIES}
-    spdlog::spdlog_header_only
+    fmt::fmt
+    spdlog::spdlog
     yaml-cpp::yaml-cpp)
 
 ##############################

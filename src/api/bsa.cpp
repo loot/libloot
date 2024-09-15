@@ -24,6 +24,7 @@
 
 #include "api/bsa.h"
 
+#include <array>
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 

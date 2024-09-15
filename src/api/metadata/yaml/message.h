@@ -26,8 +26,7 @@
 
 #define YAML_CPP_SUPPORT_MERGE_KEYS
 
-#include <spdlog/fmt/bundled/args.h>
-#include <spdlog/fmt/fmt.h>
+#include <fmt/args.h>
 #include <yaml-cpp/yaml.h>
 
 #include <string>
