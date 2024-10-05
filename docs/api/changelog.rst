@@ -2,6 +2,15 @@
 Version History
 ***************
 
+0.24.3 - 2024-10-05
+===================
+
+Fixed
+-----
+
+- An incorrect validation error when setting the load order and a game's CCC
+  file contains a plugin that has a hardcoded load order index.
+
 0.24.2 - 2024-10-05
 ===================
 
