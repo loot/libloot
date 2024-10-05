@@ -2,6 +2,25 @@
 Version History
 ***************
 
+0.24.2 - 2024-10-05
+===================
+
+Added
+-----
+
+- ``ShatteredSpace.esm`` is now recognised as a Starfield plugin with a
+  hardcoded load order index of ``01``. Via libloadorder.
+
+Changed
+-------
+
+- Starfield's official plugins were treated as being implicitly active, but now
+  ``Starfield.esm``, ``Constellation.esm``, ``OldMars.esm``, ``SFBGS003.esm``,
+  ``SFBGS004.esm``, ``SFBGS006.esm``, ``SFBGS007.esm`` and ``SFBGS008.esm`` have
+  hardcoded load order indexes, to match the behaviour of Starfield v1.14.70.0.
+  Via libloadorder.
+- Updated libloadorder to v18.1.0.
+
 0.24.1 - 2024-09-15
 ===================
 
