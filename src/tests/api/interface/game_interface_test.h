@@ -302,7 +302,7 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
 
   EXPECT_EQ(loadOrder, handle_->GetLoadOrder());
 
-  if (gameSupportsEsl && GetParam() != GameType::starfield) {
+  if (gameSupportsEsl) {
     loadOrder.erase(std::begin(loadOrder));
   }
 
