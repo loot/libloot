@@ -2,6 +2,23 @@
 Version History
 ***************
 
+0.24.4 - 2024-10-08
+===================
+
+Fixed
+-----
+
+- A performance regression introduced in v0.24.0 when interacting with the load
+  order, particularly when using
+  :cpp:any:`loot::GameInterface::LoadCurrentLoadOrderState()`.
+
+Changed
+-------
+
+- Updated esplugin to 6.1.1.
+- Updated libloadorder to 18.1.2.
+- Updated loot-condition-interpreter to 4.0.2.
+
 0.24.3 - 2024-10-05
 ===================
 
