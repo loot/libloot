@@ -80,8 +80,8 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 if(NOT DEFINED ESPLUGIN_URL)
-    set(ESPLUGIN_URL "https://github.com/Ortham/esplugin/archive/refs/tags/6.1.0.tar.gz")
-    set(ESPLUGIN_HASH "SHA256=52dec796d98426e1c75c5cf3c41351c0b3431a6301137e00fcf6023f4e47b502")
+    set(ESPLUGIN_URL "https://github.com/Ortham/esplugin/archive/refs/tags/6.1.1.tar.gz")
+    set(ESPLUGIN_HASH "SHA256=8896859a6469e810c6e5430ed910fa8f8c31d39e032703b87ab090759663a240")
 endif()
 
 ExternalProject_Add(esplugin
