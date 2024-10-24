@@ -13,7 +13,12 @@ Load plugin data
 In this first stage, the plugins to be sorted are parsed and their record IDs
 (which are FormIDs for all games apart from Morrowind) are stored. When parsing
 plugins, all subrecords are skipped over for efficiency, apart from the
-subrecords of the ``TES4`` header record.
+subrecords of the ``TES4`` header record, and some Morrowind plugin subrecords.
+
+Due to how their record IDs work, Morrowind and Starfield plugins can only have
+their record IDs properly understood if all of their masters can also be parsed,
+so sorting will fail at this point if any Morrowind or Starfield plugin has a
+master that is not installed.
 
 Loading plugin data also involves loading any metadata that the plugin may have
 in the masterlist and userlist.
@@ -22,27 +27,41 @@ Create plugin graph vertices
 ============================
 
 Once the plugins have been loaded, they are sorted into lexicographical order.
+This ensures that the sorting process operates on the plugins in the same order
+every time, so that it gives consistent results.
 
-After that, two graphs are created, and the plugins are added to them as
-vertices in their sorted order. Plugins that have their master flag set go in
-one graph, and plugins that do not have the flag set go in the other.
+After that, three graphs are created, and the plugins are added to them as
+vertices in their sorted order:
 
-Two graphs are used because master-flagged plugins must always load before
-non-master-flagged plugins, and it's much more efficient to sort them separately
-and then combine their load orders than to enforce those relationships within a
-single graph.
+- One graph contains plugins that are not masters (e.g. they don't have their
+  master flag set - for some games they must also not have the ``.esm`` file
+  extension).
+- One graph contains plugins that are blueprint masters: blueprint masters are
+  a type of plugin specific to Starfield, so for all other games this graph will
+  be empty.
+- One graph contains plugins that are non-blueprint masters.
 
-A consequence of using two separate graphs is that any plugin data or metadata
-that involves a pair of plugins with and without their master flag set will be
-silently ignored. For example: if plugin A is master-flagged and plugin B is
-not, and plugin A has metadata saying it must load after plugin B, then that
-metadata will be ignored because the two plugins are sorted independently, as if
-the other plugin is not installed.
+Three graphs are used because blueprint master plugins always load after all
+other plugins and non-masters always load after non-blueprint masters (not
+quite, but LOOT doesn't currently support hoisting non-masters), and it's
+much more efficient to sort them separately and then combine their load orders
+than to enforce those relationships within a single graph.
+
+A consequence of using three separate graphs is that any plugin data or metadata
+that involves a pair of plugins that go in different graphs will be silently
+ignored. For example: if plugin A is master-flagged and plugin B is not, and
+plugin A has metadata saying it must load after plugin B, then that metadata
+will be ignored because the two plugins are sorted independently, as if the
+other plugin is not installed.
+
+To help catch invalid metadata, there's also a validation step that checks for
+things like requirement metadata that tries to load a blueprint master before
+another plugin, and sorting will fail if any such invalid metadata is found.
 
 Create plugin graph edges
 =========================
 
-The steps described in this section are run on both graphs independently.
+The steps described in this section are run on all graphs independently.
 
 In this section, the terms *vertex* and *plugin* are used interchangeably, and
 the iteration order 'for each plugin' is the order in which the vertices were
@@ -181,7 +200,7 @@ vertex is now pinned.
 Topologically sort the plugin graphs
 ====================================
 
-This is done for both graphs independently.
+This is done for all graphs independently.
 
 Note that edges for explicit interdependencies are the only edges allowed to
 create cycles. However, the graph is again checked for cycles to guard against
@@ -190,9 +209,13 @@ potential logic bugs, and if a cycle is encountered an error is thrown.
 Once the graph is confirmed to be cycle-free, a topological sort is performed on
 the graph, outputting a list of plugins in their newly-sorted load order.
 
-Combine the two load orders
-===========================
+Combine the load orders
+=======================
 
-Finally, the sorted load order for non-master-flagged plugins is appended to the
-sorted load order for master-flagged plugins to give the complete sorted load
-order.
+Finally, the sorted load orders are combined in this order:
+
+1. master-flagged plugins
+2. non-master-flagged plugins
+3. blueprint master plugins
+
+That gives the complete sorted load order.
