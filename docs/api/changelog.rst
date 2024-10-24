@@ -2,6 +2,20 @@
 Version History
 ***************
 
+0.24.5 - 2024-10-24
+===================
+
+Fixed
+-----
+
+- Starfield's ``ShatteredSpace.esm`` is now placed after ``OldMars.esm``, to
+  match where it is hardcoded to load by the game.
+
+Changed
+-------
+
+- Updated libloadorder to 18.1.3.
+
 0.24.4 - 2024-10-08
 ===================
 
@@ -10,7 +24,7 @@ Fixed
 
 - A performance regression introduced in v0.24.0 when interacting with the load
   order, particularly when using
-  :cpp:any:`loot::GameInterface::LoadCurrentLoadOrderState()`.
+  :cpp:any:`loot::GameInterface::LoadCurrentLoadOrderState()`. Via libloadorder.
 
 Changed
 -------
