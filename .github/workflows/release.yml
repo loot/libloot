@@ -35,8 +35,6 @@ jobs:
             - [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)
             - [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)
 
-            *Note: The files below with `tar.xz` extensions contain Linux binaries. They won't work on Windows computers.*
-
 
   linux:
     runs-on: ubuntu-20.04
@@ -107,23 +105,9 @@ jobs:
         run: sphinx-build -b html docs build/docs/html
 
       - name: Build archive
-        id: build-archive
-        shell: bash
         run: |
           cd build
           cpack
-
-          echo "filename=libloot-${{ needs.create_release.outputs.git_tag }}-Linux.tar.xz" >> $GITHUB_OUTPUT
-
-      - name: Upload Archive
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: build/package/${{ steps.build-archive.outputs.filename }}
-          asset_name: ${{ steps.build-archive.outputs.filename }}
-          asset_content_type: application/octet-stream
 
   windows:
     runs-on: windows-2019
