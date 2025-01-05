@@ -5,7 +5,7 @@ on:
     tags: '*'
 
 env:
-  BOOST_VERSION: 1.83.0
+  BOOST_VERSION: 1.87.0
   CARGO_TERM_COLOR: always
   MSVC_CONFIG: RelWithDebInfo
 
@@ -57,7 +57,7 @@ jobs:
         id: get-boost
         run: |
           BOOST_BASENAME=boost_${BOOST_VERSION//./_}
-          wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_BASENAME}.tar.gz
+          wget https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_BASENAME}.tar.gz
           tar -xf ${BOOST_BASENAME}.tar.gz
 
           echo "root=${BOOST_BASENAME}" >> $GITHUB_OUTPUT
@@ -138,7 +138,7 @@ jobs:
         id: get-boost
         run: |
           $BOOST_BASENAME="boost_" + $env:BOOST_VERSION -replace "\.", "_"
-          curl -sSfLO "https://boostorg.jfrog.io/artifactory/main/release/${env:BOOST_VERSION}/source/${BOOST_BASENAME}.7z"
+          curl -sSfLO "https://archives.boost.io/release/${env:BOOST_VERSION}/source/${BOOST_BASENAME}.7z"
           7z x "${BOOST_BASENAME}.7z"
 
           echo "root=$BOOST_BASENAME" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
