@@ -148,6 +148,10 @@ std::filesystem::path ResolvePluginPath(
 
   // In case the plugin is ghosted.
   if (!std::filesystem::exists(absolutePath)) {
+    const auto logger = loot::getLogger();
+    if (logger) {
+      logger->debug("Could not find plugin at {}, adding {} file extension", absolutePath.u8string(), loot::GHOST_FILE_EXTENSION);
+    }
     absolutePath += loot::GHOST_FILE_EXTENSION;
   }
 
