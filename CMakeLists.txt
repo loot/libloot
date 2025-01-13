@@ -75,7 +75,7 @@ endif()
 find_package(Boost REQUIRED)
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    find_package(ICU 71.1 REQUIRED COMPONENTS data uc)
+    find_package(ICU REQUIRED COMPONENTS data uc)
     find_package(TBB REQUIRED)
 endif()
 
