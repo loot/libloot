@@ -50,11 +50,6 @@ jobs:
 
           echo "root=${BOOST_BASENAME}" >> $GITHUB_OUTPUT
 
-      - name: Get ICU
-        run: |
-          wget https://github.com/unicode-org/icu/releases/download/release-71-1/icu4c-71_1-Ubuntu20.04-x64.tgz
-          sudo tar -xf icu4c-71_1-Ubuntu20.04-x64.tgz -C /usr/local --strip-components=4
-
       - name: Install APT package dependencies
         run: |
           sudo apt-get update
@@ -63,7 +58,8 @@ jobs:
             doxygen \
             language-pack-el \
             language-pack-tr \
-            libtbb-dev
+            libtbb-dev \
+            libicu-dev
 
       - name: Run CMake
         run: |
