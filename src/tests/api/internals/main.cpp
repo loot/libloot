@@ -165,7 +165,6 @@ TEST(Filesystem, equalityShouldBeCaseSensitive) {
   EXPECT_NE(lower, upper);
 }
 
-#ifdef _WIN32
 TEST(Filesystem, equivalentShouldRequireThatBothPathsExist) {
   auto upper = std::filesystem::path("LICENSE");
   auto lower = std::filesystem::path("license2");
@@ -174,6 +173,7 @@ TEST(Filesystem, equivalentShouldRequireThatBothPathsExist) {
                std::filesystem::filesystem_error);
 }
 
+#ifdef _WIN32
 TEST(Filesystem, equivalentShouldBeCaseInsensitive) {
   auto upper = std::filesystem::path("LICENSE");
   auto lower = std::filesystem::path("license");
@@ -193,16 +193,12 @@ TEST(
                std::system_error);
 }
 #else
-TEST(Filesystem, equivalentShouldNotRequireThatBothPathsExist) {
-  auto upper = std::filesystem::path("LICENSE");
-  auto lower = std::filesystem::path("license2");
-
-  EXPECT_FALSE(std::filesystem::equivalent(lower, upper));
-}
-
 TEST(Filesystem, equivalentShouldBeCaseSensitive) {
   auto upper = std::filesystem::path("LICENSE");
   auto lower = std::filesystem::path("license");
+
+  std::ofstream out(lower);
+  out.close();
 
   EXPECT_FALSE(std::filesystem::equivalent(lower, upper));
 }

@@ -14,7 +14,7 @@ env:
 
 jobs:
   linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -56,17 +56,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-upgrade \
+            cbindgen \
             doxygen \
             language-pack-el \
             language-pack-tr \
-            libtbb-dev \
-            g++-10
+            libtbb-dev
 
       - name: Run CMake
         run: |
           mkdir build
           cd build
-          export CXX="g++-10" CC="gcc-10"
           cmake .. -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
           make all
 
