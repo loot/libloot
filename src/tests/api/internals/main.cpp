@@ -162,6 +162,8 @@ TEST(Filesystem, equalityShouldBeCaseSensitive) {
   auto upper = std::filesystem::path("LICENSE");
   auto lower = std::filesystem::path("license");
 
+  ASSERT_NE(lower.u8string(), upper.u8string());
+
   EXPECT_NE(lower, upper);
 }
 
@@ -169,14 +171,20 @@ TEST(Filesystem, equivalentShouldRequireThatBothPathsExist) {
   auto upper = std::filesystem::path("LICENSE");
   auto lower = std::filesystem::path("license2");
 
+  ASSERT_FALSE(std::filesystem::exists(upper));
+  ASSERT_FALSE(std::filesystem::exists(lower));
+
   EXPECT_THROW(std::ignore = std::filesystem::equivalent(lower, upper),
                std::filesystem::filesystem_error);
 }
 
 #ifdef _WIN32
 TEST(Filesystem, equivalentShouldBeCaseInsensitive) {
-  auto upper = std::filesystem::path("LICENSE");
-  auto lower = std::filesystem::path("license");
+  auto upper = std::filesystem::path("./testing-plugins/LICENSE");
+  auto lower = std::filesystem::path("./testing-plugins/license");
+
+  ASSERT_TRUE(std::filesystem::exists(upper));
+  ASSERT_TRUE(std::filesystem::exists(lower));
 
   EXPECT_TRUE(std::filesystem::equivalent(lower, upper));
 }
@@ -194,11 +202,14 @@ TEST(
 }
 #else
 TEST(Filesystem, equivalentShouldBeCaseSensitive) {
-  auto upper = std::filesystem::path("LICENSE");
-  auto lower = std::filesystem::path("license");
+  auto upper = std::filesystem::path("./testing-plugins/LICENSE");
+  auto lower = std::filesystem::path("./testing-plugins/license");
 
   std::ofstream out(lower);
   out.close();
+
+  ASSERT_TRUE(std::filesystem::exists(upper));
+  ASSERT_TRUE(std::filesystem::exists(lower));
 
   EXPECT_FALSE(std::filesystem::equivalent(lower, upper));
 }

@@ -226,9 +226,9 @@ endif()
 add_custom_command(TARGET libloot_internals_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${testing-plugins_SOURCE_DIR}
-        $<TARGET_FILE_DIR:libloot_internals_tests>)
+        ${CMAKE_CURRENT_BINARY_DIR}/testing-plugins)
 
 add_custom_command(TARGET libloot_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${testing-plugins_SOURCE_DIR}
-        $<TARGET_FILE_DIR:libloot_tests>)
+        ${CMAKE_CURRENT_BINARY_DIR}/testing-plugins)

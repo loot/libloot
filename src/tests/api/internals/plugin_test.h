@@ -76,12 +76,13 @@ protected:
     std::filesystem::path blankMasterDependentArchive;
     if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
         GetParam() == GameType::starfield) {
-      copyPlugin("./Fallout 4/Data", "Blank - Main.ba2");
-      copyPlugin("./Fallout 4/Data", "Blank - Textures.ba2");
+      copyPlugin(getSourceArchivesPath(GetParam()), "Blank - Main.ba2");
+      copyPlugin(getSourceArchivesPath(GetParam()), "Blank - Textures.ba2");
 
       blankMasterDependentArchive = "Blank - Master Dependent - Main.ba2";
-      std::filesystem::copy_file("./Fallout 4/Data/Blank - Main.ba2",
-                                 dataPath / blankMasterDependentArchive);
+      std::filesystem::copy_file(
+          getSourceArchivesPath(GetParam()) / "Blank - Main.ba2",
+          dataPath / blankMasterDependentArchive);
       ASSERT_TRUE(
           std::filesystem::exists(dataPath / blankMasterDependentArchive));
     } else if (GetParam() == GameType::tes3) {
@@ -785,8 +786,11 @@ TEST_P(
 }
 
 TEST(equivalent, shouldReturnTrueIfGivenEqualPathsThatExist) {
-  auto path1 = std::filesystem::path("LICENSE");
-  auto path2 = std::filesystem::path("LICENSE");
+  auto path1 = std::filesystem::path("./testing-plugins/LICENSE");
+  auto path2 = std::filesystem::path("./testing-plugins/LICENSE");
+
+  ASSERT_EQ(path1, path2);
+  ASSERT_TRUE(std::filesystem::exists(path1));
 
   EXPECT_TRUE(loot::equivalent(path1, path2));
 }
@@ -795,22 +799,10 @@ TEST(equivalent, shouldReturnTrueIfGivenEqualPathsThatDoNotExist) {
   auto path1 = std::filesystem::path("LICENSE2");
   auto path2 = std::filesystem::path("LICENSE2");
 
+  ASSERT_EQ(path1, path2);
+  ASSERT_FALSE(std::filesystem::exists(path1));
+
   EXPECT_TRUE(loot::equivalent(path1, path2));
-}
-
-TEST(equivalent, shouldReturnFalseIfPathsAreNotCaseInsensitivelyEqual) {
-  auto upper = std::filesystem::path("LICENSE");
-  auto lower = std::filesystem::path("license2");
-
-  EXPECT_FALSE(loot::equivalent(lower, upper));
-}
-
-#ifdef _WIN32
-TEST(equivalent, shouldReturnTrueIfGivenCaseInsensitivelyEqualPathsThatExist) {
-  auto upper = std::filesystem::path("LICENSE");
-  auto lower = std::filesystem::path("license");
-
-  EXPECT_TRUE(loot::equivalent(lower, upper));
 }
 
 TEST(equivalent,
@@ -818,7 +810,34 @@ TEST(equivalent,
   auto upper = std::filesystem::path("LICENSE2");
   auto lower = std::filesystem::path("license2");
 
+  ASSERT_TRUE(boost::iequals(upper.u8string(), lower.u8string()));
+  ASSERT_FALSE(std::filesystem::exists(upper));
+  ASSERT_FALSE(std::filesystem::exists(lower));
+
   EXPECT_FALSE(loot::equivalent(lower, upper));
+}
+
+TEST(equivalent, shouldReturnFalseIfGivenCaseInsensitivelyUnequalThatExist) {
+  auto path1 = std::filesystem::path("./testing-plugins/LICENSE");
+  auto path2 = std::filesystem::path("./testing-plugins/README.md");
+
+  ASSERT_FALSE(boost::iequals(path1.u8string(), path2.u8string()));
+  ASSERT_TRUE(std::filesystem::exists(path1));
+  ASSERT_TRUE(std::filesystem::exists(path2));
+
+  EXPECT_FALSE(loot::equivalent(path1, path2));
+}
+
+#ifdef _WIN32
+TEST(equivalent, shouldReturnTrueIfGivenCaseInsensitivelyEqualPathsThatExist) {
+  auto upper = std::filesystem::path("./testing-plugins/LICENSE");
+  auto lower = std::filesystem::path("./testing-plugins/license");
+
+  ASSERT_TRUE(boost::iequals(upper.u8string(), lower.u8string()));
+  ASSERT_TRUE(std::filesystem::exists(upper));
+  ASSERT_TRUE(std::filesystem::exists(lower));
+
+  EXPECT_TRUE(loot::equivalent(lower, upper));
 }
 
 TEST(
@@ -844,16 +863,15 @@ TEST(
 }
 #else
 TEST(equivalent, shouldReturnFalseIfGivenCaseInsensitivelyEqualPathsThatExist) {
-  auto upper = std::filesystem::path("LICENSE");
-  auto lower = std::filesystem::path("license");
+  auto upper = std::filesystem::path("./testing-plugins/LICENSE");
+  auto lower = std::filesystem::path("./testing-plugins/license");
 
-  EXPECT_FALSE(loot::equivalent(lower, upper));
-}
+  std::ofstream out(lower);
+  out.close();
 
-TEST(equivalent,
-     shouldReturnFalseIfGivenCaseInsensitivelyEqualPathsThatDoNotExist) {
-  auto upper = std::filesystem::path("LICENSE2");
-  auto lower = std::filesystem::path("license2");
+  ASSERT_TRUE(boost::iequals(upper.u8string(), lower.u8string()));
+  ASSERT_TRUE(std::filesystem::exists(upper));
+  ASSERT_TRUE(std::filesystem::exists(lower));
 
   EXPECT_FALSE(loot::equivalent(lower, upper));
 }

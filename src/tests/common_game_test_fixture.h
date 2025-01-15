@@ -34,7 +34,6 @@ along with LOOT.  If not, see
 #include <map>
 
 #include "loot/enum/game_type.h"
-
 #include "tests/test_helpers.h"
 
 namespace loot {
@@ -278,17 +277,7 @@ protected:
   }
 
   std::filesystem::path getSourcePluginsPath() const {
-    using std::filesystem::absolute;
-    if (GetParam() == GameType::tes3)
-      return absolute("./Morrowind/Data Files");
-    else if (GetParam() == GameType::tes4)
-      return absolute("./Oblivion/Data");
-    else if (GetParam() == GameType::starfield)
-      return absolute("./Starfield/Data");
-    else if (supportsLightPlugins(GetParam()))
-      return absolute("./SkyrimSE/Data");
-    else
-      return absolute("./Skyrim/Data");
+    return loot::test::getSourcePluginsPath(GetParam());
   }
 
   void touch(const std::filesystem::path& path) {
@@ -472,12 +461,6 @@ private:
   static bool isLoadOrderTimestampBased(GameType gameType) {
     return gameType == GameType::tes3 || gameType == GameType::tes4 ||
            gameType == GameType::fo3 || gameType == GameType::fonv;
-  }
-
-  static bool supportsLightPlugins(GameType gameType) {
-    return gameType == GameType::tes5se || gameType == GameType::tes5vr ||
-           gameType == GameType::fo4 || gameType == GameType::fo4vr ||
-           gameType == GameType::starfield;
   }
 };
 }

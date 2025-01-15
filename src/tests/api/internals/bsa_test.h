@@ -34,7 +34,7 @@ along with LOOT.  If not, see
 
 namespace loot::test {
 TEST(GetAssetsInBethesdaArchive, shouldSupportV103BSAs) {
-  const auto path = std::filesystem::u8path("./Oblivion/Data/Blank.bsa");
+  const auto path = getSourceArchivesPath(GameType::tes4) / "Blank.bsa";
 
   const auto assets = GetAssetsInBethesdaArchive(path);
 
@@ -51,7 +51,7 @@ TEST(GetAssetsInBethesdaArchive, shouldSupportV103BSAs) {
 }
 
 TEST(GetAssetsInBethesdaArchive, shouldSupportV104BSAs) {
-  const auto path = std::filesystem::u8path("./Skyrim/Data/Blank.bsa");
+  const auto path = getSourceArchivesPath(GameType::tes5) / "Blank.bsa";
 
   const auto assets = GetAssetsInBethesdaArchive(path);
 
@@ -68,7 +68,7 @@ TEST(GetAssetsInBethesdaArchive, shouldSupportV104BSAs) {
 }
 
 TEST(GetAssetsInBethesdaArchive, shouldSupportV105BSAs) {
-  const auto path = std::filesystem::u8path("./SkyrimSE/Data/Blank.bsa");
+  const auto path = getSourceArchivesPath(GameType::tes5se) / "Blank.bsa";
 
   const auto assets = GetAssetsInBethesdaArchive(path);
 
@@ -91,8 +91,7 @@ TEST(GetAssetsInBethesdaArchive, shouldThrowIfFileCannotBeOpened) {
 }
 
 TEST(GetAssetsInBethesdaArchive, shouldSupportGeneralBA2s) {
-  const auto path =
-      std::filesystem::u8path("./Fallout 4/Data/Blank - Main.ba2");
+  const auto path = getSourceArchivesPath(GameType::fo4) / "Blank - Main.ba2";
   const uint64_t folderHash =
       std::hash<std::string>{}("dev\\git\\testing-plugins");
   const uint64_t fileHash = std::hash<std::string>{}("license.txt");
@@ -115,7 +114,7 @@ TEST(GetAssetsInBethesdaArchive, shouldSupportGeneralBA2s) {
 
 TEST(GetAssetsInBethesdaArchive, shouldSupportTextureBA2s) {
   const auto path =
-      std::filesystem::u8path("./Fallout 4/Data/Blank - Textures.ba2");
+      getSourceArchivesPath(GameType::fo4) / "Blank - Textures.ba2";
   const uint64_t folderHash =
       std::hash<std::string>{}("dev\\git\\testing-plugins");
   const uint64_t fileHash = std::hash<std::string>{}("blank.dds");
@@ -143,7 +142,7 @@ protected:
     std::filesystem::create_directories(path.parent_path());
 
     const auto sourcePath =
-        std::filesystem::u8path("./Fallout 4/Data/Blank - Main.ba2");
+        getSourceArchivesPath(GameType::fo4) / "Blank - Main.ba2";
     std::filesystem::copy(sourcePath, path);
 
     std::fstream stream(
@@ -178,7 +177,7 @@ TEST_P(GetAssetsInBethesdaArchive_BA2Version, shouldSupportBA2Version) {
 TEST(GetAssetsInBethesdaArchives, shouldSkipFilesThatCannotBeRead) {
   std::vector<std::filesystem::path> paths(
       {std::filesystem::u8path("invalid.bsa"),
-       std::filesystem::u8path("./Skyrim/Data/Blank.bsa")});
+       getSourceArchivesPath(GameType::tes5) / "Blank.bsa"});
 
   const auto assets = GetAssetsInBethesdaArchives(paths);
 
@@ -196,9 +195,9 @@ TEST(GetAssetsInBethesdaArchives, shouldSkipFilesThatCannotBeRead) {
 
 TEST(GetAssetsInBethesdaArchives, shouldCombineAssetsFromEachLoadedArchive) {
   std::vector<std::filesystem::path> paths(
-      {std::filesystem::u8path("./Oblivion/Data/Blank.bsa"),
-       std::filesystem::u8path("./Skyrim/Data/Blank.bsa"),
-       std::filesystem::u8path("./SkyrimSE/Data/Blank.bsa")});
+      {getSourceArchivesPath(GameType::tes4) / "Blank.bsa",
+       getSourceArchivesPath(GameType::tes5) / "Blank.bsa",
+       getSourceArchivesPath(GameType::tes5se) / "Blank.bsa"});
 
   const auto assets = GetAssetsInBethesdaArchives(paths);
 
@@ -221,7 +220,7 @@ TEST(GetAssetsInBethesdaArchives, shouldCombineAssetsFromEachLoadedArchive) {
 }
 
 TEST(DoAssetsIntersect, shouldReturnTrueIfTheSameFileExistsInTheSameFolder) {
-  const auto path = std::filesystem::u8path("./Oblivion/Data/Blank.bsa");
+  const auto path = getSourceArchivesPath(GameType::tes4) / "Blank.bsa";
 
   const auto assets = GetAssetsInBethesdaArchive(path);
 
@@ -230,10 +229,10 @@ TEST(DoAssetsIntersect, shouldReturnTrueIfTheSameFileExistsInTheSameFolder) {
 
 TEST(DoAssetsIntersect,
      shouldReturnFalseIfTheSameFileExistsInDifferentFolders) {
-  const auto path1 = std::filesystem::u8path("./Oblivion/Data/Blank.bsa");
+  const auto path1 = getSourceArchivesPath(GameType::tes4) / "Blank.bsa";
   const auto assets1 = GetAssetsInBethesdaArchive(path1);
 
-  const auto path2 = std::filesystem::u8path("./Skyrim/Data/Blank.bsa");
+  const auto path2 = getSourceArchivesPath(GameType::tes5) / "Blank.bsa";
   const auto assets2 = GetAssetsInBethesdaArchive(path2);
 
   EXPECT_EQ(*assets2.at(0x2E01002E).begin(), *assets1.at(0).begin());

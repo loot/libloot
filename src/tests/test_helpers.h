@@ -29,7 +29,39 @@ along with LOOT.  If not, see
 #include <random>
 #include <string>
 
+#include "loot/enum/game_type.h"
+
 namespace loot::test {
+bool supportsLightPlugins(GameType gameType) {
+  return gameType == GameType::tes5se || gameType == GameType::tes5vr ||
+         gameType == GameType::fo4 || gameType == GameType::fo4vr ||
+         gameType == GameType::starfield;
+}
+
+std::filesystem::path getSourcePluginsPath(GameType gameType) {
+  using std::filesystem::absolute;
+  if (gameType == GameType::tes3) {
+    return absolute("./testing-plugins/Morrowind/Data Files");
+  } else if (gameType == GameType::tes4) {
+    return absolute("./testing-plugins/Oblivion/Data");
+  } else if (gameType == GameType::starfield) {
+    return absolute("./testing-plugins/Starfield/Data");
+  } else if (supportsLightPlugins(gameType)) {
+    return absolute("./testing-plugins/SkyrimSE/Data");
+  } else {
+    return absolute("./testing-plugins/Skyrim/Data");
+  }
+}
+
+std::filesystem::path getSourceArchivesPath(GameType gameType) {
+  if (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
+      gameType == GameType::starfield) {
+    return "./testing-plugins/Fallout 4/Data";
+  } else {
+    return getSourcePluginsPath(gameType);
+  }
+}
+
 std::filesystem::path getRootTestPath() {
   std::random_device randomDevice;
   std::default_random_engine prng(randomDevice());
