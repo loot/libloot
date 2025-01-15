@@ -93,12 +93,14 @@ set(LIBLOOT_INTERNALS_TESTS_ALL_SOURCES
     ${LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES}
     ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES}
     "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/test_helpers.h"
     "${CMAKE_SOURCE_DIR}/src/tests/printers.h")
 
 set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
     ${LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES}
     ${LIBLOOT_SRC_TESTS_INTERFACE_H_FILES}
     "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/test_helpers.h"
     "${CMAKE_SOURCE_DIR}/src/tests/printers.h")
 
 

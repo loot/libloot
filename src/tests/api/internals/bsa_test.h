@@ -27,11 +27,10 @@ along with LOOT.  If not, see
 
 #include <gtest/gtest.h>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/uuid/uuid_generators.hpp>
 #include <fstream>
 
 #include "api/bsa.h"
+#include "tests/test_helpers.h"
 
 namespace loot::test {
 TEST(GetAssetsInBethesdaArchive, shouldSupportV103BSAs) {
@@ -141,6 +140,8 @@ class GetAssetsInBethesdaArchive_BA2Version
     : public ::testing::TestWithParam<char> {
 protected:
   GetAssetsInBethesdaArchive_BA2Version() : path(GetArchivePath()) {
+    std::filesystem::create_directories(path.parent_path());
+
     const auto sourcePath =
         std::filesystem::u8path("./Fallout 4/Data/Blank - Main.ba2");
     std::filesystem::copy(sourcePath, path);
@@ -152,18 +153,13 @@ protected:
     stream.close();
   }
 
-  void TearDown() override { std::filesystem::remove(path); }
+  void TearDown() override { std::filesystem::remove_all(path.parent_path()); }
 
   const std::filesystem::path path;
 
 private:
   std::filesystem::path GetArchivePath() {
-    const auto tempFilename =
-        "LOOT-test-" +
-        boost::lexical_cast<std::string>((boost::uuids::random_generator())()) +
-        ".ba2";
-
-    return std::filesystem::temp_directory_path() / tempFilename;
+    return getRootTestPath() / "test.ba2";
   }
 };
 
