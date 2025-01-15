@@ -83,7 +83,7 @@ jobs:
           cmake --build build
 
       - name: Run tests
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build --output-on-failure --parallel
 
       - uses: actions/setup-python@v5
         with:
@@ -192,7 +192,7 @@ jobs:
           cmake --build build --config ${{ env.MSVC_CONFIG }}
 
       - name: Run tests
-        run: ctest --test-dir build --build-config ${{ env.MSVC_CONFIG }} --output-on-failure
+        run: ctest --test-dir build --build-config ${{ env.MSVC_CONFIG }} --output-on-failure --parallel
 
       - uses: actions/setup-python@v5
         with:
