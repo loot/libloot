@@ -63,10 +63,11 @@ jobs:
 
       - name: Run CMake
         run: |
-          mkdir build
-          cd build
-          cmake .. -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
-          make all
+          cmake \
+            -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" \
+            -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" \
+            -B build
+          cmake --build build
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
@@ -157,10 +158,12 @@ jobs:
 
       - name: Run CMake
         run: |
-          mkdir build
-          cd build
-          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.platform }} -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}"
-          cmake --build . --config ${{ env.MSVC_CONFIG }}
+          cmake -G "Visual Studio 16 2019" `
+            -A ${{ matrix.platform }} `
+            -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" `
+            -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" `
+            -B build
+          cmake --build build --config ${{ env.MSVC_CONFIG }}
 
       - name: Run tests
         run: ctest --test-dir build --build-config ${{ env.MSVC_CONFIG }} --output-on-failure
