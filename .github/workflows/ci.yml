@@ -69,10 +69,7 @@ jobs:
           make all
 
       - name: Run tests
-        run: |
-          cd build
-          ./libloot_internals_tests
-          ./libloot_tests
+        run: ctest --test-dir build --output-on-failure
 
       - uses: actions/setup-python@v5
         with:
@@ -166,10 +163,7 @@ jobs:
           cmake --build . --config ${{ env.MSVC_CONFIG }}
 
       - name: Run tests
-        run: |
-          cd build/${{ env.MSVC_CONFIG }}
-          .\libloot_internals_tests.exe
-          .\libloot_tests.exe
+        run: ctest --test-dir build --build-config ${{ env.MSVC_CONFIG }} --output-on-failure
 
       - uses: actions/setup-python@v5
         with:
