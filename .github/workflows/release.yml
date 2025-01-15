@@ -62,20 +62,33 @@ jobs:
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
 
-      - name: Download Boost
-        id: get-boost
+      - name: Get Boost metadata
+        id: boost-metadata
         run: |
-          $BOOST_BASENAME="boost_" + $env:BOOST_VERSION -replace "\.", "_"
-          curl -sSfLO "https://archives.boost.io/release/${env:BOOST_VERSION}/source/${BOOST_BASENAME}.7z"
-          7z x "${BOOST_BASENAME}.7z"
+          $BOOST_ROOT="${{ github.workspace }}/boost_" + $env:BOOST_VERSION -replace "\.", "_"
+          echo "root=$BOOST_ROOT" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-          echo "root=$BOOST_BASENAME" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+      - name: Boost cache
+        id: boost-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.boost-metadata.outputs.root }}/boost
+            ${{ steps.boost-metadata.outputs.root }}/stage
+          key: ${{ runner.os }}-x64-Boost-${{ env.BOOST_VERSION }}
+
+      # Need to build Boost's 'system' stub to generate the CMake config file.
+      - name: Download & build Boost
+        run: |
+          curl -sSfLO https://raw.githubusercontent.com/Ortham/ci-scripts/2.2.1/install_boost.py
+          python install_boost.py --directory ${{ github.workspace }} --boost-version ${{ env.BOOST_VERSION }} -a 64 system
+        if: steps.boost-cache.outputs.cache-hit != 'true'
 
       - name: Run CMake
         run: |
           cmake -G "Visual Studio 16 2019" `
             -A ${{ matrix.platform }} `
-            -DBOOST_ROOT="${{ steps.get-boost.outputs.root }}" `
+            -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" `
             -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}" `
             -B build
           cmake --build build --config ${{ env.MSVC_CONFIG }}
