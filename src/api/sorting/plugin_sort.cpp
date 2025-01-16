@@ -309,8 +309,8 @@ std::vector<std::string> SortPlugins(
 
 std::vector<std::string> SortPlugins(
     std::vector<PluginSortingData>&& pluginsSortingData,
-    const std::vector<Group> masterlistGroups,
-    const std::vector<Group> userGroups,
+    const std::vector<Group>& masterlistGroups,
+    const std::vector<Group>& userGroups,
     const std::vector<std::string>& earlyLoadingPlugins) {
   // If there aren't any plugins, exit early, because sorting assumes
   // there is at least one plugin.
