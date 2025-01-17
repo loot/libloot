@@ -28,6 +28,7 @@
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/topological_sort.hpp>
+#include <boost/unordered/unordered_flat_set.hpp>
 #include <queue>
 
 #include "api/helpers/logging.h"
@@ -476,8 +477,8 @@ bool FindPath(RawPluginGraph& graph,
               BidirVisitor& visitor) {
   std::queue<vertex_t> forwardQueue;
   std::queue<vertex_t> reverseQueue;
-  std::unordered_set<vertex_t> forwardVisited;
-  std::unordered_set<vertex_t> reverseVisited;
+  boost::unordered_flat_set<vertex_t> forwardVisited;
+  boost::unordered_flat_set<vertex_t> reverseVisited;
 
   forwardQueue.push(fromVertex);
   forwardVisited.insert(fromVertex);
