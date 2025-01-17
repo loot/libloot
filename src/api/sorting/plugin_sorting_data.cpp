@@ -59,6 +59,7 @@ PluginSortingData::PluginSortingData(
     const std::vector<std::string>& loadOrder) :
 #endif
     plugin_(plugin),
+    name_(plugin == nullptr ? std::string() : plugin->GetName()),
     group_(userMetadata.GetGroup().value_or(
         masterlistMetadata.GetGroup().value_or(Group::DEFAULT_NAME))),
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
@@ -89,7 +90,7 @@ PluginSortingData::PluginSortingData(
   overrideRecordCount_ = plugin->GetOverrideRecordCount();
 }
 
-std::string PluginSortingData::GetName() const { return plugin_->GetName(); }
+const std::string& PluginSortingData::GetName() const { return name_; }
 
 bool PluginSortingData::IsMaster() const {
   return plugin_ != nullptr && plugin_->IsMaster();

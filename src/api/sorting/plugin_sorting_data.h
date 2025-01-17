@@ -49,7 +49,7 @@ public:
                              const std::vector<std::string>& loadOrder);
 #endif
 
-  std::string GetName() const;
+  const std::string& GetName() const;
   bool IsMaster() const;
   bool IsBlueprintMaster() const;
   bool LoadsArchive() const;
@@ -72,6 +72,7 @@ public:
 
 private:
   const PluginSortingInterface* plugin_{nullptr};
+  std::string name_;
   std::string group_;
 
   std::vector<File> masterlistLoadAfter_;
