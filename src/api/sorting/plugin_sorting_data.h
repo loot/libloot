@@ -73,6 +73,7 @@ public:
 private:
   const PluginSortingInterface* plugin_{nullptr};
   std::string name_;
+  bool isMaster_{false};
   std::string group_;
 
   std::vector<File> masterlistLoadAfter_;

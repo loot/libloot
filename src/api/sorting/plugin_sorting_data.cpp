@@ -60,6 +60,7 @@ PluginSortingData::PluginSortingData(
 #endif
     plugin_(plugin),
     name_(plugin == nullptr ? std::string() : plugin->GetName()),
+    isMaster_(plugin != nullptr && plugin->IsMaster()),
     group_(userMetadata.GetGroup().value_or(
         masterlistMetadata.GetGroup().value_or(Group::DEFAULT_NAME))),
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
@@ -92,12 +93,10 @@ PluginSortingData::PluginSortingData(
 
 const std::string& PluginSortingData::GetName() const { return name_; }
 
-bool PluginSortingData::IsMaster() const {
-  return plugin_ != nullptr && plugin_->IsMaster();
-}
+bool PluginSortingData::IsMaster() const { return isMaster_; }
 
 bool PluginSortingData::IsBlueprintMaster() const {
-  return plugin_ != nullptr && plugin_->IsMaster() &&
+  return isMaster_ &&
          plugin_->IsBlueprintPlugin();
 }
 
