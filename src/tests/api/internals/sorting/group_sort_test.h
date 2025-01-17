@@ -51,8 +51,121 @@ TEST(BuildGroupGraph, shouldThrowIfMasterlistGroupLoadsAfterAUserlistGroup) {
                              Group("e", {"b", "d"})});
   std::vector<Group> userGroups({Group("d", {"c"})});
 
-  EXPECT_THROW(BuildGroupGraph(groups, userGroups),
-               UndefinedGroupError);
+  EXPECT_THROW(BuildGroupGraph(groups, userGroups), UndefinedGroupError);
+}
+
+TEST(BuildGroupGraph, shouldThrowIfAfterGroupsAreCyclic) {
+  std::vector<Group> groups({Group("a"), Group("b", {"a"})});
+  std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
+
+  try {
+    const auto groupGraph = BuildGroupGraph(groups, userGroups);
+    FAIL();
+  } catch (CyclicInteractionError& e) {
+    ASSERT_EQ(3, e.GetCycle().size());
+
+    // Vertices can be added in any order, so which group is first is
+    // undefined.
+    if (e.GetCycle()[0].GetName() == "a") {
+      EXPECT_EQ(EdgeType::userLoadAfter,
+                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+
+      EXPECT_EQ("c", e.GetCycle()[1].GetName());
+      EXPECT_EQ(EdgeType::userLoadAfter,
+                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+
+      EXPECT_EQ("b", e.GetCycle()[2].GetName());
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
+                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+    } else if (e.GetCycle()[0].GetName() == "b") {
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
+                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+
+      EXPECT_EQ("a", e.GetCycle()[1].GetName());
+      EXPECT_EQ(EdgeType::userLoadAfter,
+                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+
+      EXPECT_EQ("c", e.GetCycle()[2].GetName());
+      EXPECT_EQ(EdgeType::userLoadAfter,
+                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+    } else {
+      EXPECT_EQ("c", e.GetCycle()[0].GetName());
+      EXPECT_EQ(EdgeType::userLoadAfter,
+                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+
+      EXPECT_EQ("b", e.GetCycle()[1].GetName());
+      EXPECT_EQ(EdgeType::masterlistLoadAfter,
+                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+
+      EXPECT_EQ("a", e.GetCycle()[2].GetName());
+      EXPECT_EQ(EdgeType::userLoadAfter,
+                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
+    }
+  }
+}
+
+TEST(BuildGroupGraph, shouldNotThrowIfThereIsNoCycle) {
+  std::vector<Group> groups({Group("a"), Group("b", {"a"})});
+
+  EXPECT_NO_THROW(BuildGroupGraph(groups, {}));
+}
+
+TEST(BuildGroupGraph, shouldThrowIfThereIsACycle) {
+  std::vector<Group> groups({Group("a", {"b"}), Group("b", {"a"})});
+
+  try {
+    BuildGroupGraph(groups, {});
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("a", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("b", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST(BuildGroupGraph,
+     exceptionThrownShouldOnlyRecordGroupsThatArePartOfTheCycle) {
+  std::vector<Group> groups(
+      {Group("a", {"b"}), Group("b", {"a"}), Group("c", {"b"})});
+
+  try {
+    BuildGroupGraph(groups, {});
+    FAIL();
+  } catch (const CyclicInteractionError& e) {
+    ASSERT_EQ(2, e.GetCycle().size());
+    EXPECT_EQ("a", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("b", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST(GetPredecessorGroups, shouldMapGroupsToTheirPredecessorGroups) {
+  std::vector<Group> groups({Group("a"), Group("b", {"a"}), Group("c", {"b"})});
+
+  const auto groupGraph = BuildGroupGraph(groups, {});
+  auto predecessors = GetPredecessorGroups(groupGraph);
+
+  EXPECT_TRUE(predecessors["a"].empty());
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"a"}}), predecessors["b"]);
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a"}}), predecessors["c"]);
+}
+
+TEST(GetPredecessorGroups,
+     shouldRecordIfADirectSuccessorIsDefinedInUserMetadata) {
+  std::vector<Group> masterlistGroups({Group("a")});
+  std::vector<Group> userlistGroups({Group("b", {"a"})});
+
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
+  auto predecessors = GetPredecessorGroups(groupGraph);
+
+  EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
 }
 
 TEST(GetPredecessorGroups,
@@ -110,124 +223,22 @@ TEST(GetPredecessorGroups,
             predecessors["d"]);
 }
 
-TEST(GetPredecessorGroups, shouldThrowIfAfterGroupsAreCyclic) {
-  std::vector<Group> groups({Group("a"), Group("b", {"a"})});
-  std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
-
-  const auto groupGraph = BuildGroupGraph(groups, userGroups);
-
-  try {
-    GetPredecessorGroups(groupGraph);
-    FAIL();
-  } catch (CyclicInteractionError& e) {
-    ASSERT_EQ(3, e.GetCycle().size());
-
-    // Vertices can be added in any order, so which group is first is
-    // undefined.
-    if (e.GetCycle()[0].GetName() == "a") {
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("c", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("b", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
-                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-    } else if (e.GetCycle()[0].GetName() == "b") {
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
-                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("a", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("c", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-    } else {
-      EXPECT_EQ("c", e.GetCycle()[0].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("b", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
-                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("a", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-    }
-  }
-}
-
-TEST(GetPredecessorGroups, shouldNotThrowIfThereIsNoCycle) {
-  std::vector<Group> groups({Group("a"), Group("b", {"a"})});
-
-  const auto groupGraph = BuildGroupGraph(groups, {});
-
-  EXPECT_NO_THROW(GetPredecessorGroups(groupGraph));
-}
-
-TEST(GetPredecessorGroups, shouldThrowIfThereIsACycle) {
-  std::vector<Group> groups({Group("a", {"b"}), Group("b", {"a"})});
-
-  const auto groupGraph = BuildGroupGraph(groups, {});
-
-  try {
-    GetPredecessorGroups(groupGraph);
-    FAIL();
-  } catch (const CyclicInteractionError& e) {
-    ASSERT_EQ(2, e.GetCycle().size());
-    EXPECT_EQ("a", e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::masterlistLoadAfter,
-              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ("b", e.GetCycle()[1].GetName());
-    EXPECT_EQ(EdgeType::masterlistLoadAfter,
-              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-  }
-}
-
-TEST(GetPredecessorGroups,
-     exceptionThrownShouldOnlyRecordGroupsThatArePartOfTheCycle) {
-  std::vector<Group> groups(
-      {Group("a", {"b"}), Group("b", {"a"}), Group("c", {"b"})});
-
-  const auto groupGraph = BuildGroupGraph(groups, {});
-
-  try {
-    GetPredecessorGroups(groupGraph);
-    FAIL();
-  } catch (const CyclicInteractionError& e) {
-    ASSERT_EQ(2, e.GetCycle().size());
-    EXPECT_EQ("a", e.GetCycle()[0].GetName());
-    EXPECT_EQ(EdgeType::masterlistLoadAfter,
-              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ("b", e.GetCycle()[1].GetName());
-    EXPECT_EQ(EdgeType::masterlistLoadAfter,
-              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-  }
-}
-
 TEST(GetGroupsPath, shouldThrowIfTheFromGroupDoesNotExist) {
   std::vector<Group> groups({Group("a"), Group("b", {"a"})});
-  std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
+  std::vector<Group> userGroups({Group("a", {"c"}), Group("c")});
 
   const auto groupGraph = BuildGroupGraph(groups, userGroups);
 
-  EXPECT_THROW(GetGroupsPath(groupGraph, "d", "a"),
-               std::invalid_argument);
+  EXPECT_THROW(GetGroupsPath(groupGraph, "d", "a"), std::invalid_argument);
 }
 
 TEST(GetGroupsPath, shouldThrowIfTheToGroupDoesNotExist) {
   std::vector<Group> groups({Group("a"), Group("b", {"a"})});
-  std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
+  std::vector<Group> userGroups({Group("a", {"c"}), Group("c")});
 
   const auto groupGraph = BuildGroupGraph(groups, userGroups);
 
-  EXPECT_THROW(GetGroupsPath(groupGraph, "a", "d"),
-               std::invalid_argument);
+  EXPECT_THROW(GetGroupsPath(groupGraph, "a", "d"), std::invalid_argument);
 }
 
 TEST(GetGroupsPath,

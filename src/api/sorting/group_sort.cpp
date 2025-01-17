@@ -179,6 +179,11 @@ GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
   }
   addGroups(userGroups, EdgeType::userLoadAfter);
 
+  if (logger) {
+    logger->trace("Checking for cycles in the group graph");
+  }
+  boost::depth_first_search(graph, boost::visitor(CycleDetector()));
+
   return graph;
 }
 
@@ -188,12 +193,6 @@ GetPredecessorGroups(const GroupGraph& graph) {
   if (logger) {
     logger->trace("Sorting groups according to their load after data");
   }
-
-  // Check for cycles.
-  if (logger) {
-    logger->trace("Checking for cycles in the group graph");
-  }
-  boost::depth_first_search(graph, boost::visitor(CycleDetector()));
 
   std::unordered_map<std::string, std::vector<PredecessorGroup>>
       transitiveAfterGroups;
