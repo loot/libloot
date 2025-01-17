@@ -27,6 +27,8 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
+#include <boost/unordered/unordered_flat_map.hpp>
+#include <boost/unordered/unordered_flat_set.hpp>
 #include <map>
 
 #include "api/sorting/group_sort.h"
@@ -52,7 +54,8 @@ public:
   void CachePath(const vertex_t& fromVertex, const vertex_t& toVertex);
 
 private:
-  std::unordered_map<vertex_t, std::unordered_set<vertex_t>> pathsCache_;
+  boost::unordered_flat_map<vertex_t, boost::unordered_flat_set<vertex_t>>
+      pathsCache_;
 };
 
 #if _WIN32

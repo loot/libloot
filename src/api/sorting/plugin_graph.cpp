@@ -28,7 +28,6 @@
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/topological_sort.hpp>
-#include <boost/unordered/unordered_flat_set.hpp>
 #include <queue>
 
 #include "api/helpers/logging.h"
@@ -571,23 +570,23 @@ int ComparePlugins(const PluginSortingData& plugin1,
 
 bool PathsCache::IsPathCached(const vertex_t& fromVertex,
                               const vertex_t& toVertex) const {
-  const auto descendents = pathsCache_.find(fromVertex);
+  const auto descendants = pathsCache_.find(fromVertex);
 
-  if (descendents == pathsCache_.end()) {
+  if (descendants == pathsCache_.end()) {
     return false;
   }
 
-  return descendents->second.count(toVertex);
+  return descendants->second.contains(toVertex);
 }
 
 void PathsCache::CachePath(const vertex_t& fromVertex,
                            const vertex_t& toVertex) {
-  auto descendents = pathsCache_.find(fromVertex);
+  const auto descendants = pathsCache_.find(fromVertex);
 
-  if (descendents == pathsCache_.end()) {
-    pathsCache_.emplace(fromVertex, std::unordered_set<vertex_t>({toVertex}));
+  if (descendants == pathsCache_.end()) {
+    pathsCache_.emplace(fromVertex, boost::unordered_flat_set{toVertex});
   } else {
-    descendents->second.insert(toVertex);
+    descendants->second.emplace(toVertex);
   }
 }
 
@@ -619,7 +618,7 @@ std::optional<vertex_t> PluginGraph::GetVertexByName(
     auto& wideVertexName =
         wideStringCache_.GetOrInsert(GetPlugin(vertex).GetName());
     auto& wideName = wideStringCache_.GetOrInsert(name);
-      
+
     int comparison = CompareFilenames(wideVertexName, wideName);
 #else
     int comparison = CompareFilenames(GetPlugin(vertex).GetName(), name);
