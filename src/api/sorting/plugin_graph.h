@@ -55,6 +55,16 @@ private:
   std::unordered_map<vertex_t, std::unordered_set<vertex_t>> pathsCache_;
 };
 
+#if _WIN32
+class WideStringsCache {
+public:
+  const std::wstring& GetOrInsert(const std::string& narrowString);
+
+private:
+  std::unordered_map<std::string, std::wstring> wideStringsCache_;
+};
+#endif
+
 class PluginGraph {
 public:
   size_t CountVertices() const;
@@ -99,6 +109,9 @@ public:
 private:
   RawPluginGraph graph_;
   PathsCache pathsCache_;
+#if _WIN32
+  mutable WideStringsCache wideStringCache_;
+#endif
 };
 }
 

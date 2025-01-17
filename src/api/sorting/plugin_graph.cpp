@@ -590,6 +590,19 @@ void PathsCache::CachePath(const vertex_t& fromVertex,
   }
 }
 
+#if _WIN32
+const std::wstring& WideStringsCache::GetOrInsert(
+    const std::string& narrowString) {
+  auto vertexNameIt = wideStringsCache_.find(narrowString);
+  if (vertexNameIt == wideStringsCache_.end()) {
+    vertexNameIt =
+        wideStringsCache_.emplace(narrowString, ToWinWide(narrowString)).first;
+  }
+
+  return vertexNameIt->second;
+}
+#endif
+
 size_t PluginGraph::CountVertices() const {
   return boost::num_vertices(graph_);
 }
@@ -601,7 +614,16 @@ std::pair<vertex_it, vertex_it> PluginGraph::GetVertices() const {
 std::optional<vertex_t> PluginGraph::GetVertexByName(
     const std::string& name) const {
   for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
-    if (CompareFilenames(GetPlugin(vertex).GetName(), name) == 0) {
+#if _WIN32
+    auto& wideVertexName =
+        wideStringCache_.GetOrInsert(GetPlugin(vertex).GetName());
+    auto& wideName = wideStringCache_.GetOrInsert(name);
+      
+    int comparison = CompareFilenames(wideVertexName, wideName);
+#else
+    int comparison = CompareFilenames(GetPlugin(vertex).GetName(), name);
+#endif
+    if (comparison == 0) {
       return vertex;
     }
   }

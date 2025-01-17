@@ -182,11 +182,21 @@ std::string FromWinWide(const std::wstring& wstr) {
 
 int CompareFilenames(const std::string& lhs, const std::string& rhs) {
 #ifdef _WIN32
-  // On Windows, use CompareStringOrdinal as that will perform case conversion
+  return CompareFilenames(ToWinWide(lhs), ToWinWide(rhs));
+#else
+  auto unicodeLhs = icu::UnicodeString::fromUTF8(lhs);
+  auto unicodeRhs = icu::UnicodeString::fromUTF8(rhs);
+  return unicodeLhs.caseCompare(unicodeRhs, U_FOLD_CASE_DEFAULT);
+#endif
+}
+
+#ifdef _WIN32
+int CompareFilenames(const std::wstring& lhs, const std::wstring& rhs) {
+  // Use CompareStringOrdinal as that will perform case conversion
   // using the operating system uppercase table information, which (I think)
   // will give results that match the filesystem, and is not locale-dependent.
   int result = CompareStringOrdinal(
-      ToWinWide(lhs).c_str(), -1, ToWinWide(rhs).c_str(), -1, true);
+      lhs.c_str(), -1, rhs.c_str(), -1, true);
   switch (result) {
     case CSTR_LESS_THAN:
       return -1;
@@ -198,12 +208,8 @@ int CompareFilenames(const std::string& lhs, const std::string& rhs) {
       throw std::invalid_argument(
           "One of the filenames to compare was invalid.");
   }
-#else
-  auto unicodeLhs = icu::UnicodeString::fromUTF8(lhs);
-  auto unicodeRhs = icu::UnicodeString::fromUTF8(rhs);
-  return unicodeLhs.caseCompare(unicodeRhs, U_FOLD_CASE_DEFAULT);
-#endif
 }
+#endif
 
 std::string NormalizeFilename(const std::string& filename) {
 #ifdef _WIN32

@@ -46,6 +46,12 @@ std::optional<std::string> ExtractVersion(const std::string& text);
 // locale-invariant.
 int CompareFilenames(const std::string& lhs, const std::string& rhs);
 
+#ifdef _WIN32
+std::wstring ToWinWide(const std::string& str);
+
+int CompareFilenames(const std::wstring& lhs, const std::wstring& rhs);
+#endif
+
 // Normalize the given filename in a way that is locale-invariant. On Windows,
 // this uppercases the filename according to the same case mapping rules as used
 // by the filesystem. On Linux, case folding is used and gives results that are
