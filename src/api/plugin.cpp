@@ -180,8 +180,8 @@ std::vector<std::filesystem::path> FindAssociatedArchives(
   }
 }
 
-void HandleEspluginError(const std::string& operation,
-                         unsigned int returnCode) {
+void HandleEspluginError(unsigned int returnCode,
+                         const std::string& operation) {
   if (returnCode == ESP_OK) {
     return;
   }
@@ -205,6 +205,26 @@ void HandleEspluginError(const std::string& operation,
   throw std::system_error(returnCode, esplugin_category(), err);
 }
 
+void HandleEspluginError(unsigned int returnCode,
+                         const std::string& message,
+                         const std::string& args...) {
+  if (returnCode == ESP_OK) {
+    return;
+  }
+
+  auto operation = fmt::format(message, args);
+  return HandleEspluginError(returnCode, operation);
+}
+
+void HandleEspluginError(unsigned int returnCode,
+                         const std::function<std::string()>& getMessage) {
+  if (returnCode == ESP_OK) {
+    return;
+  }
+
+  return HandleEspluginError(returnCode, getMessage());
+}
+
 Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
                std::filesystem::path pluginPath,
@@ -220,7 +240,7 @@ Plugin::Plugin(const GameType gameType,
     Load(pluginPath, gameType, headerOnly);
 
     auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
-    HandleEspluginError("check if \"" + name_ + "\" is empty", ret);
+    HandleEspluginError(ret, "check if \"{}\" is empty", name_);
 
     archivePaths_ = FindAssociatedArchives(gameType, gameCache, pluginPath);
 
@@ -265,7 +285,7 @@ Plugin::Plugin(const GameType gameType,
 
 void Plugin::ResolveRecordIds(Vec_PluginMetadata* pluginsMetadata) const {
   auto ret = esp_plugin_resolve_record_ids(esPlugin.get(), pluginsMetadata);
-  HandleEspluginError("resolve the record IDs of \"" + name_ + "\"", ret);
+  HandleEspluginError(ret, "resolve the record IDs of \"{}\"", name_);
 }
 
 std::string Plugin::GetName() const { return name_; }
@@ -274,7 +294,7 @@ std::optional<float> Plugin::GetHeaderVersion() const {
   float version = 0.0f;
 
   const auto ret = esp_plugin_header_version(esPlugin.get(), &version);
-  HandleEspluginError("get the header version of \"" + name_ + "\"", ret);
+  HandleEspluginError(ret, "get the header version of \"{}\"", name_);
 
   if (std::isnan(version)) {
     return std::nullopt;
@@ -291,7 +311,7 @@ std::vector<std::string> Plugin::GetMasters() const {
   char** masters = nullptr;
   size_t numMasters = 0;
   const auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
-  HandleEspluginError("get the masters of \"" + name_ + "\"", ret);
+  HandleEspluginError(ret, "get the masters of \"{}\"", name_);
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   std::vector<std::string> mastersVec(masters, masters + numMasters);
@@ -307,7 +327,7 @@ std::optional<uint32_t> Plugin::GetCRC() const { return crc_; }
 bool Plugin::IsMaster() const {
   bool isMaster = false;
   const auto ret = esp_plugin_is_master(esPlugin.get(), &isMaster);
-  HandleEspluginError("check if \"" + name_ + "\" is a master", ret);
+  HandleEspluginError(ret, "check if \"{}\" is a master", name_);
 
   return isMaster;
 }
@@ -315,7 +335,7 @@ bool Plugin::IsMaster() const {
 bool Plugin::IsLightPlugin() const {
   bool isLightPlugin = false;
   const auto ret = esp_plugin_is_light_plugin(esPlugin.get(), &isLightPlugin);
-  HandleEspluginError("check if \"" + name_ + "\" is a light plugin", ret);
+  HandleEspluginError(ret, "check if \"{}\" is a light plugin", name_);
 
   return isLightPlugin;
 }
@@ -323,16 +343,15 @@ bool Plugin::IsLightPlugin() const {
 bool Plugin::IsMediumPlugin() const {
   bool isMediumPlugin = false;
   const auto ret = esp_plugin_is_medium_plugin(esPlugin.get(), &isMediumPlugin);
-  HandleEspluginError("check if \"" + name_ + "\" is a medium plugin", ret);
+  HandleEspluginError(ret, "check if \"{}\" is a medium plugin", name_);
 
   return isMediumPlugin;
 }
 
 bool Plugin::IsUpdatePlugin() const {
   bool isUpdatePlugin = false;
-  const auto ret =
-      esp_plugin_is_update_plugin(esPlugin.get(), &isUpdatePlugin);
-  HandleEspluginError("check if \"" + name_ + "\" is an update plugin", ret);
+  const auto ret = esp_plugin_is_update_plugin(esPlugin.get(), &isUpdatePlugin);
+  HandleEspluginError(ret, "check if \"{}\" is an update plugin", name_);
 
   return isUpdatePlugin;
 }
@@ -341,7 +360,7 @@ bool Plugin::IsBlueprintPlugin() const {
   bool isBlueprintPlugin = false;
   const auto ret =
       esp_plugin_is_blueprint_plugin(esPlugin.get(), &isBlueprintPlugin);
-  HandleEspluginError("check if \"" + name_ + "\" is a blueprint plugin", ret);
+  HandleEspluginError(ret, "check if \"{}\" is a blueprint plugin", name_);
 
   return isBlueprintPlugin;
 }
@@ -350,8 +369,7 @@ bool Plugin::IsValidAsLightPlugin() const {
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
-  HandleEspluginError("check if \"" + name_ + "\" is valid as a light plugin",
-                      ret);
+  HandleEspluginError(ret, "check if \"{}\" is valid as a light plugin", name_);
 
   return isValid;
 }
@@ -360,8 +378,8 @@ bool Plugin::IsValidAsMediumPlugin() const {
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_medium_plugin(esPlugin.get(), &isValid);
-  HandleEspluginError("check if \"" + name_ + "\" is valid as a medium plugin",
-                      ret);
+  HandleEspluginError(
+      ret, "check if \"{}\" is valid as a medium plugin", name_);
 
   return isValid;
 }
@@ -371,7 +389,7 @@ bool Plugin::IsValidAsUpdatePlugin() const {
   const auto ret =
       esp_plugin_is_valid_as_update_plugin(esPlugin.get(), &isValid);
   HandleEspluginError(
-      "check if \"" + name_ + "\" is valid as an update plugin", ret);
+      ret, "check if \"{}\" is valid as an update plugin", name_);
 
   return isValid;
 }
@@ -387,9 +405,10 @@ bool Plugin::DoRecordsOverlap(const PluginInterface& plugin) const {
     bool doPluginsOverlap = false;
     const auto ret = esp_plugin_do_records_overlap(
         esPlugin.get(), otherPlugin.esPlugin.get(), &doPluginsOverlap);
-    HandleEspluginError("check if \"" + name_ + "\" and \"" +
-                            otherPlugin.GetName() + "\" overlap",
-                        ret);
+    HandleEspluginError(ret, [&]() {
+      return fmt::format(
+          "check if \"{}\" and \"{}\" overlap", name_, otherPlugin.GetName());
+    });
 
     return doPluginsOverlap;
   } catch (std::bad_cast&) {
@@ -408,7 +427,7 @@ size_t Plugin::GetOverrideRecordCount() const {
   size_t overrideRecordCount;
   const auto ret =
       esp_plugin_count_override_records(esPlugin.get(), &overrideRecordCount);
-  HandleEspluginError("count override records in \"" + name_ + "\"", ret);
+  HandleEspluginError(ret, "count override records in \"{}\"", name_);
 
   return overrideRecordCount;
 }
@@ -417,7 +436,7 @@ uint32_t Plugin::GetRecordAndGroupCount() const {
   uint32_t recordAndGroupCount = 0;
   const auto ret =
       esp_plugin_record_and_group_count(esPlugin.get(), &recordAndGroupCount);
-  HandleEspluginError("get record and group count for \"" + name_ + "\"", ret);
+  HandleEspluginError(ret, "get record and group count for \"{}\"", name_);
 
   return recordAndGroupCount;
 }
@@ -482,19 +501,23 @@ void Plugin::Load(const std::filesystem::path& path,
   ::Plugin* plugin = nullptr;
   auto ret = esp_plugin_new(
       &plugin, GetEspluginGameId(gameType), path.u8string().c_str());
-  HandleEspluginError("load plugin \"" + path.u8string() + "\"", ret);
+  HandleEspluginError(ret, [&]() {
+    return fmt::format("load plugin \"{}\"", path.u8string());
+  });
 
   esPlugin = std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(
       plugin, esp_plugin_free);
 
   ret = esp_plugin_parse(esPlugin.get(), headerOnly);
-  HandleEspluginError("parse plugin \"" + path.u8string() + "\"", ret);
+  HandleEspluginError(ret, [&]() {
+    return fmt::format("parse plugin \"{}\"", path.u8string());
+  });
 }
 
 std::string Plugin::GetDescription() const {
   char* description = nullptr;
   const auto ret = esp_plugin_description(esPlugin.get(), &description);
-  HandleEspluginError("read the description of \"" + name_ + "\"", ret);
+  HandleEspluginError(ret, "read the description of \"{}\"", name_);
 
   if (description == nullptr) {
     return "";
@@ -523,7 +546,9 @@ Plugin::GetPluginsMetadata(std::vector<const Plugin*> plugins) {
   Vec_PluginMetadata* pluginsMetadata = nullptr;
   const auto ret = esp_get_plugins_metadata(
       esPlugins.data(), esPlugins.size(), &pluginsMetadata);
-  HandleEspluginError("get plugins metadata", ret);
+  HandleEspluginError(ret, [&]() {
+    return fmt::format("get metadata for {} plugins", plugins.size());
+  });
 
   return std::unique_ptr<Vec_PluginMetadata,
                          decltype(&esp_plugins_metadata_free)>(
