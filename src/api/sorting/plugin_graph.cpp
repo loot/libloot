@@ -25,6 +25,7 @@
 #include "plugin_graph.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/container/deque.hpp>
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/topological_sort.hpp>
@@ -474,8 +475,8 @@ bool FindPath(RawPluginGraph& graph,
               const vertex_t& fromVertex,
               const vertex_t& toVertex,
               BidirVisitor& visitor) {
-  std::queue<vertex_t> forwardQueue;
-  std::queue<vertex_t> reverseQueue;
+  std::queue<vertex_t, boost::container::deque<vertex_t>> forwardQueue;
+  std::queue<vertex_t, boost::container::deque<vertex_t>> reverseQueue;
   boost::unordered_flat_set<vertex_t> forwardVisited;
   boost::unordered_flat_set<vertex_t> reverseVisited;
 
