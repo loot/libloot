@@ -43,7 +43,11 @@ public:
   explicit PluginSortingData(const PluginSortingInterface* plugin,
                              const PluginMetadata& masterlistMetadata,
                              const PluginMetadata& userMetadata,
+#ifdef _WIN32
+                             const std::vector<std::wstring>& loadOrder);
+#else
                              const std::vector<std::string>& loadOrder);
+#endif
 
   std::string GetName() const;
   bool IsMaster() const;
