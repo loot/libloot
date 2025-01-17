@@ -334,8 +334,8 @@ std::vector<std::string> SortPlugins(
 
   // Create some shared data structures.
   const auto groupsMap = GetGroupsMap(masterlistGroups, userGroups);
-  const auto predecessorGroupsMap =
-      GetPredecessorGroups(masterlistGroups, userGroups);
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, userGroups);
+  const auto predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   // Some parts of sorting are O(N^2) for N plugins, and master flags cause
   // O(M*N) edges to be added for M masters and N non-masters, which can be

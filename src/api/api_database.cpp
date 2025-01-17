@@ -160,8 +160,9 @@ std::vector<Vertex> ApiDatabase::GetGroupsPath(
   auto masterlistGroups = GetGroups(false);
   auto userGroups = GetUserGroups();
 
-  return loot::GetGroupsPath(
-      masterlistGroups, userGroups, fromGroupName, toGroupName);
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, userGroups);
+
+  return loot::GetGroupsPath(groupGraph, fromGroupName, toGroupName);
 }
 
 std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(

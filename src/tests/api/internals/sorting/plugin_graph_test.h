@@ -142,8 +142,8 @@ protected:
     std::vector<Group> userlistGroups{Group("C", {"B"})};
 
     groupsMap = GetGroupsMap(masterlistGroups, userlistGroups);
-    predecessorGroupsMap =
-        GetPredecessorGroups(masterlistGroups, userlistGroups);
+    const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
+    predecessorGroupsMap = GetPredecessorGroups(groupGraph);
   }
 
   static std::unordered_map<std::string, Group> GetGroupsMap(
@@ -162,8 +162,7 @@ protected:
   PluginSortingData CreatePluginSortingData(const std::string& name) {
     const auto plugin = GetPlugin(name);
 
-    return PluginSortingData(
-        plugin, PluginMetadata(), PluginMetadata(), {});
+    return PluginSortingData(plugin, PluginMetadata(), PluginMetadata(), {});
   }
 
   PluginSortingData CreatePluginSortingData(const std::string& name,
@@ -180,8 +179,7 @@ protected:
       masterlistMetadata.SetGroup(group);
     }
 
-    return PluginSortingData(
-        plugin, masterlistMetadata, userMetadata, {});
+    return PluginSortingData(plugin, masterlistMetadata, userMetadata, {});
   }
 
   plugingraph::TestPlugin* GetPlugin(const std::string& name) {
@@ -1016,7 +1014,8 @@ TEST_F(PluginGraphTest,
                                       Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   PluginGraph graph;
 
@@ -1050,7 +1049,8 @@ TEST_F(PluginGraphTest,
                                       Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   PluginGraph graph;
 
@@ -1087,7 +1087,8 @@ TEST_F(
                                       Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   PluginGraph graph;
 
@@ -1121,7 +1122,8 @@ TEST_F(
                                       Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   PluginGraph graph;
 
@@ -1163,7 +1165,8 @@ TEST_F(PluginGraphTest,
                                       Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
   const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
@@ -1200,7 +1203,8 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldHandleIsolatedGroups) {
       Group("A"), Group("B", {"A"}), Group("C"), Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   PluginGraph graph;
 
@@ -1226,7 +1230,8 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldHandleDisconnectedGroupGraphs) {
       Group("A"), Group("B", {"A"}), Group("C"), Group("D", {"C"}), Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   PluginGraph graph;
 
@@ -1262,7 +1267,8 @@ TEST_F(PluginGraphTest,
                                       Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   PluginGraph graph;
 
@@ -1296,7 +1302,8 @@ TEST_F(
 
   for (const auto& masterlistGroups : masterlistsGroups) {
     groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
     PluginGraph graph;
 
@@ -1328,7 +1335,8 @@ TEST_F(PluginGraphTest,
                                         Group()};
 
     groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
     PluginGraph graph;
 
@@ -1365,7 +1373,8 @@ TEST_F(PluginGraphTest,
                                         Group()};
 
     groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
     PluginGraph graph;
 
@@ -1403,7 +1412,8 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
                                         Group()};
 
     groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
     PluginGraph graph;
 
@@ -1442,7 +1452,8 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
                                         Group()};
 
     groupsMap = GetGroupsMap(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+    const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+    predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
     PluginGraph graph;
 
@@ -1479,7 +1490,8 @@ TEST_F(PluginGraphTest, addGroupEdgesDoesNotDependOnPluginGraphVertexOrder) {
       Group("A"), Group("B", {"A"}), Group("C", {"B"}), Group()};
 
   groupsMap = GetGroupsMap(masterlistGroups, {});
-  predecessorGroupsMap = GetPredecessorGroups(masterlistGroups, {});
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+  predecessorGroupsMap = GetPredecessorGroups(groupGraph);
 
   const auto a1Data = CreatePluginSortingData("A1.esp", "A");
   const auto a2Data = CreatePluginSortingData("A2.esp", "A");

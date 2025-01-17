@@ -38,24 +38,21 @@ bool operator==(const PredecessorGroup& lhs, const PredecessorGroup& rhs) {
 }
 
 namespace test {
-TEST(GetPredecessorGroups, shouldMapGroupsToTheirPredecessorGroups) {
-  std::vector<Group> groups({Group("a"), Group("b", {"a"}), Group("c", {"b"})});
+TEST(BuildGroupGraph, shouldThrowIfAnAfterGroupDoesNotExist) {
+  std::vector<Group> groups({Group("b", {"a"})});
 
-  auto predecessors = GetPredecessorGroups(groups, {});
-
-  EXPECT_TRUE(predecessors["a"].empty());
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"a"}}), predecessors["b"]);
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a"}}), predecessors["c"]);
+  EXPECT_THROW(BuildGroupGraph(groups, {}), UndefinedGroupError);
 }
 
-TEST(GetPredecessorGroups,
-     shouldRecordIfADirectSuccessorIsDefinedInUserMetadata) {
-  std::vector<Group> masterlistGroups({Group("a")});
-  std::vector<Group> userlistGroups({Group("b", {"a"})});
+TEST(BuildGroupGraph, shouldThrowIfMasterlistGroupLoadsAfterAUserlistGroup) {
+  std::vector<Group> groups({Group("a", {}),
+                             Group("b", {"a"}),
+                             Group("c", {"a"}),
+                             Group("e", {"b", "d"})});
+  std::vector<Group> userGroups({Group("d", {"c"})});
 
-  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
-
-  EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
+  EXPECT_THROW(BuildGroupGraph(groups, userGroups),
+               UndefinedGroupError);
 }
 
 TEST(GetPredecessorGroups,
@@ -63,7 +60,8 @@ TEST(GetPredecessorGroups,
   std::vector<Group> masterlistGroups({Group("a"), Group("b")});
   std::vector<Group> userlistGroups({Group("b", {"a"})});
 
-  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
+  auto predecessors = GetPredecessorGroups(groupGraph);
 
   EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
 }
@@ -73,7 +71,8 @@ TEST(GetPredecessorGroups,
   std::vector<Group> masterlistGroups({Group("a"), Group("b", {"a"})});
   std::vector<Group> userlistGroups({Group("c", {"b"})});
 
-  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
+  auto predecessors = GetPredecessorGroups(groupGraph);
 
   EXPECT_EQ(std::vector<PredecessorGroup>({{"a"}}), predecessors["b"]);
   EXPECT_EQ(std::vector<PredecessorGroup>({{"b", true}, {"a", true}}),
@@ -86,7 +85,8 @@ TEST(GetPredecessorGroups,
       {Group("a"), Group("b"), Group("c", {"b"})});
   std::vector<Group> userlistGroups({Group("b", {"a"})});
 
-  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
+  auto predecessors = GetPredecessorGroups(groupGraph);
 
   EXPECT_EQ(std::vector<PredecessorGroup>({{"a", true}}), predecessors["b"]);
   EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a", true}}),
@@ -103,24 +103,21 @@ TEST(GetPredecessorGroups,
       {Group("a"), Group("b"), Group("c"), Group("d", {"b", "c"})});
   std::vector<Group> userlistGroups({Group("b", {"a"})});
 
-  auto predecessors = GetPredecessorGroups(masterlistGroups, userlistGroups);
+  const auto groupGraph = BuildGroupGraph(masterlistGroups, userlistGroups);
+  auto predecessors = GetPredecessorGroups(groupGraph);
 
   EXPECT_EQ(std::vector<PredecessorGroup>({{"b"}, {"a", true}, {"c"}}),
             predecessors["d"]);
-}
-
-TEST(GetPredecessorGroups, shouldThrowIfAnAfterGroupDoesNotExist) {
-  std::vector<Group> groups({Group("b", {"a"})});
-
-  EXPECT_THROW(GetPredecessorGroups(groups, {}), UndefinedGroupError);
 }
 
 TEST(GetPredecessorGroups, shouldThrowIfAfterGroupsAreCyclic) {
   std::vector<Group> groups({Group("a"), Group("b", {"a"})});
   std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
+  const auto groupGraph = BuildGroupGraph(groups, userGroups);
+
   try {
-    GetPredecessorGroups(groups, userGroups);
+    GetPredecessorGroups(groupGraph);
     FAIL();
   } catch (CyclicInteractionError& e) {
     ASSERT_EQ(3, e.GetCycle().size());
@@ -168,14 +165,19 @@ TEST(GetPredecessorGroups, shouldThrowIfAfterGroupsAreCyclic) {
 TEST(GetPredecessorGroups, shouldNotThrowIfThereIsNoCycle) {
   std::vector<Group> groups({Group("a"), Group("b", {"a"})});
 
-  EXPECT_NO_THROW(GetPredecessorGroups(groups, {}));
+  const auto groupGraph = BuildGroupGraph(groups, {});
+
+  EXPECT_NO_THROW(GetPredecessorGroups(groupGraph));
 }
 
 TEST(GetPredecessorGroups, shouldThrowIfThereIsACycle) {
   std::vector<Group> groups({Group("a", {"b"}), Group("b", {"a"})});
 
+  const auto groupGraph = BuildGroupGraph(groups, {});
+
   try {
-    GetPredecessorGroups(groups, {});
+    GetPredecessorGroups(groupGraph);
+    FAIL();
   } catch (const CyclicInteractionError& e) {
     ASSERT_EQ(2, e.GetCycle().size());
     EXPECT_EQ("a", e.GetCycle()[0].GetName());
@@ -192,8 +194,11 @@ TEST(GetPredecessorGroups,
   std::vector<Group> groups(
       {Group("a", {"b"}), Group("b", {"a"}), Group("c", {"b"})});
 
+  const auto groupGraph = BuildGroupGraph(groups, {});
+
   try {
-    GetPredecessorGroups(groups, {});
+    GetPredecessorGroups(groupGraph);
+    FAIL();
   } catch (const CyclicInteractionError& e) {
     ASSERT_EQ(2, e.GetCycle().size());
     EXPECT_EQ("a", e.GetCycle()[0].GetName());
@@ -209,7 +214,9 @@ TEST(GetGroupsPath, shouldThrowIfTheFromGroupDoesNotExist) {
   std::vector<Group> groups({Group("a"), Group("b", {"a"})});
   std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
-  EXPECT_THROW(GetGroupsPath(groups, userGroups, "d", "a"),
+  const auto groupGraph = BuildGroupGraph(groups, userGroups);
+
+  EXPECT_THROW(GetGroupsPath(groupGraph, "d", "a"),
                std::invalid_argument);
 }
 
@@ -217,7 +224,9 @@ TEST(GetGroupsPath, shouldThrowIfTheToGroupDoesNotExist) {
   std::vector<Group> groups({Group("a"), Group("b", {"a"})});
   std::vector<Group> userGroups({Group("a", {"c"}), Group("c", {"b"})});
 
-  EXPECT_THROW(GetGroupsPath(groups, userGroups, "a", "d"),
+  const auto groupGraph = BuildGroupGraph(groups, userGroups);
+
+  EXPECT_THROW(GetGroupsPath(groupGraph, "a", "d"),
                std::invalid_argument);
 }
 
@@ -229,7 +238,8 @@ TEST(GetGroupsPath,
                              Group("d", {"c"}),
                              Group("e", {"b", "d"})});
 
-  auto path = GetGroupsPath(groups, {}, "b", "d");
+  const auto groupGraph = BuildGroupGraph(groups, {});
+  auto path = GetGroupsPath(groupGraph, "b", "d");
 
   EXPECT_TRUE(path.empty());
 }
@@ -242,7 +252,8 @@ TEST(GetGroupsPath,
                              Group("d", {"c"}),
                              Group("e", {"b", "d"})});
 
-  auto path = GetGroupsPath(groups, {}, "a", "e");
+  const auto groupGraph = BuildGroupGraph(groups, {});
+  auto path = GetGroupsPath(groupGraph, "a", "e");
 
   ASSERT_EQ(3, path.size());
   EXPECT_EQ("a", path[0].GetName());
@@ -263,7 +274,8 @@ TEST(GetGroupsPath,
                              Group("e", {"b"})});
   std::vector<Group> userGroups({Group("d", {"c"}), Group("e", {"d"})});
 
-  auto path = GetGroupsPath(groups, userGroups, "a", "e");
+  const auto groupGraph = BuildGroupGraph(groups, userGroups);
+  auto path = GetGroupsPath(groupGraph, "a", "e");
 
   ASSERT_EQ(4, path.size());
   EXPECT_EQ("a", path[0].GetName());
@@ -277,17 +289,6 @@ TEST(GetGroupsPath,
             path[2].GetTypeOfEdgeToNextVertex().value());
   EXPECT_EQ("e", path[3].GetName());
   EXPECT_FALSE(path[3].GetTypeOfEdgeToNextVertex().has_value());
-}
-
-TEST(GetGroupsPath, shouldThrowIfMasterlistGroupLoadsAfterAUserlistGroup) {
-  std::vector<Group> groups({Group("a", {}),
-                             Group("b", {"a"}),
-                             Group("c", {"a"}),
-                             Group("e", {"b", "d"})});
-  std::vector<Group> userGroups({Group("d", {"c"})});
-
-  EXPECT_THROW(GetGroupsPath(groups, userGroups, "a", "e"),
-               UndefinedGroupError);
 }
 }
 }

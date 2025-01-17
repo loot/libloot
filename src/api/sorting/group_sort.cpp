@@ -24,7 +24,7 @@
 
 #include "group_sort.h"
 
-#include <boost/graph/adjacency_list.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/graph/bellman_ford_shortest_paths.hpp>
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/graph_traits.hpp>
@@ -34,12 +34,6 @@
 #include "loot/exception/undefined_group_error.h"
 
 namespace loot {
-typedef boost::adjacency_list<boost::vecS,
-                              boost::vecS,
-                              boost::directedS,
-                              std::string,
-                              EdgeType>
-    GroupGraph;
 typedef boost::graph_traits<GroupGraph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<GroupGraph>::edge_descriptor edge_t;
 typedef boost::associative_property_map<std::map<edge_t, int>> edge_map_t;
@@ -126,15 +120,6 @@ private:
   std::vector<Vertex> trail;
 };
 
-std::string joinVector(const std::vector<std::string>& container) {
-  std::string output;
-  for (const auto& element : container) {
-    output += element + ", ";
-  }
-
-  return output.substr(0, output.length() - 2);
-}
-
 std::string joinVector(const std::vector<PredecessorGroup>& container) {
   std::string output;
   for (const auto& element : container) {
@@ -145,71 +130,60 @@ std::string joinVector(const std::vector<PredecessorGroup>& container) {
   return output.substr(0, output.length() - 2);
 }
 
-GroupGraph BuildGraph(const std::vector<Group>& masterlistGroups,
-                      const std::vector<Group>& userGroups) {
+GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
+                           const std::vector<Group>& userGroups) {
+  const auto logger = getLogger();
+
   GroupGraph graph;
-
   std::unordered_map<std::string, vertex_t> groupVertices;
-  for (const auto& group : masterlistGroups) {
-    auto vertex = boost::add_vertex(group.GetName(), graph);
-    groupVertices.emplace(group.GetName(), vertex);
-  }
 
-  auto logger = getLogger();
-  for (const auto& group : masterlistGroups) {
-    if (logger) {
-      logger->trace(
-          "Masterlist group \"{}\" directly loads after groups \"{}\"",
-          group.GetName(),
-          joinVector(group.GetAfterGroups()));
+  const auto addGroups = [&](const std::vector<Group>& groups,
+                             const EdgeType edgeType) {
+    for (const auto& group : groups) {
+      const auto groupName = group.GetName();
+
+      if (groupVertices.find(groupName) == groupVertices.end()) {
+        const auto vertex = boost::add_vertex(groupName, graph);
+        groupVertices.emplace(groupName, vertex);
+      }
     }
 
-    auto vertex = groupVertices.at(group.GetName());
-    for (const auto& otherGroupName : group.GetAfterGroups()) {
-      const auto otherVertex = groupVertices.find(otherGroupName);
-      if (otherVertex == groupVertices.end()) {
-        throw UndefinedGroupError(otherGroupName);
+    for (const auto& group : groups) {
+      const auto groupName = group.GetName();
+
+      if (logger) {
+        logger->trace("Group \"{}\" directly loads after groups \"{}\"",
+                      groupName,
+                      boost::join(group.GetAfterGroups(), ", "));
       }
 
-      boost::add_edge(
-          vertex, otherVertex->second, EdgeType::masterlistLoadAfter, graph);
-    }
-  }
+      const auto vertex = groupVertices.at(groupName);
+      for (const auto& otherGroupName : group.GetAfterGroups()) {
+        const auto otherVertex = groupVertices.find(otherGroupName);
+        if (otherVertex == groupVertices.end()) {
+          throw UndefinedGroupError(otherGroupName);
+        }
 
-  for (const auto& group : userGroups) {
-    if (groupVertices.find(group.GetName()) == groupVertices.end()) {
-      auto vertex = boost::add_vertex(group.GetName(), graph);
-      groupVertices.emplace(group.GetName(), vertex);
-    }
-  }
-
-  for (const auto& group : userGroups) {
-    if (logger) {
-      logger->trace("Userlist group \"{}\" directly loads after groups \"{}\"",
-                    group.GetName(),
-                    joinVector(group.GetAfterGroups()));
-    }
-
-    auto vertex = groupVertices.at(group.GetName());
-    for (const auto& otherGroupName : group.GetAfterGroups()) {
-      const auto otherVertex = groupVertices.find(otherGroupName);
-      if (otherVertex == groupVertices.end()) {
-        throw UndefinedGroupError(otherGroupName);
+        boost::add_edge(vertex, otherVertex->second, edgeType, graph);
       }
-
-      boost::add_edge(
-          vertex, otherVertex->second, EdgeType::userLoadAfter, graph);
     }
+  };
+
+  if (logger) {
+    logger->trace("Adding masterlist groups to groups graph...");
   }
+  addGroups(masterlistGroups, EdgeType::masterlistLoadAfter);
+
+  if (logger) {
+    logger->trace("Adding user groups to groups graph...");
+  }
+  addGroups(userGroups, EdgeType::userLoadAfter);
 
   return graph;
 }
 
 std::unordered_map<std::string, std::vector<PredecessorGroup>>
-GetPredecessorGroups(const std::vector<Group>& masterlistGroups,
-                     const std::vector<Group>& userGroups) {
-  GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
-
+GetPredecessorGroups(const GroupGraph& graph) {
   auto logger = getLogger();
   if (logger) {
     logger->trace("Sorting groups according to their load after data");
@@ -264,12 +238,9 @@ vertex_t GetVertexByName(const GroupGraph& graph, const std::string& name) {
   throw std::invalid_argument("Can't find group with name \"" + name + "\"");
 }
 
-std::vector<Vertex> GetGroupsPath(const std::vector<Group>& masterlistGroups,
-                                  const std::vector<Group>& userGroups,
+std::vector<Vertex> GetGroupsPath(const GroupGraph& graph,
                                   const std::string& fromGroupName,
                                   const std::string& toGroupName) {
-  GroupGraph graph = BuildGraph(masterlistGroups, userGroups);
-
   auto logger = getLogger();
 
   auto fromVertex = GetVertexByName(graph, fromGroupName);
