@@ -130,6 +130,21 @@ std::string joinVector(const std::vector<PredecessorGroup>& container) {
   return output.substr(0, output.length() - 2);
 }
 
+std::vector<Group> SortByName(const std::vector<Group>& groups) {
+  auto copy = groups;
+  std::sort(copy.begin(), copy.end(), [](const auto& lhs, const auto& rhs) {
+    return lhs.GetName() < rhs.GetName();
+  });
+
+  return copy;
+}
+
+std::vector<std::string> SortNames(std::vector<std::string>&& groupNames) {
+  std::sort(groupNames.begin(), groupNames.end());
+
+  return groupNames;
+}
+
 GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
                            const std::vector<Group>& userGroups) {
   const auto logger = getLogger();
@@ -158,7 +173,12 @@ GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
       }
 
       const auto vertex = groupVertices.at(groupName);
-      for (const auto& otherGroupName : group.GetAfterGroups()) {
+
+      // Similar to groups, after groups are sorted by name so that the order
+      // of a group vertex's in-edges is independent of the order they're
+      // listed in the group definition. The order of in-edges affects the
+      // result of calling GetGroupsPath().
+      for (const auto& otherGroupName : SortNames(group.GetAfterGroups())) {
         const auto otherVertex = groupVertices.find(otherGroupName);
         if (otherVertex == groupVertices.end()) {
           throw UndefinedGroupError(otherGroupName);
@@ -169,15 +189,29 @@ GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
     }
   };
 
+  // Sort groups by name so that they get added to the graph in an order that
+  // is consistent and independent of the order in which they are defined.
+  // This is important because the order in which vertices are created affects
+  // the order in which edges are created and so can affect the outcome of
+  // sorting.
+  // It would be surprising if swapping the order in which two groups were
+  // defined in e.g. the masterlist had an impact on LOOT's sorting behaviour,
+  // but if a group's name changes that's effectively deleting one group and
+  // creating another. It would also be surprising that the groups' names can
+  // have an effect, but the effect is at least constant for a given set of
+  // groups.
+  // It might also be surprising that whether a group is defined in the
+  // masterlist or userlist can have an effect, but it's consistent with the
+  // handling of edges for all other masterlist and userlist metadata.
   if (logger) {
     logger->trace("Adding masterlist groups to groups graph...");
   }
-  addGroups(masterlistGroups, EdgeType::masterlistLoadAfter);
+  addGroups(SortByName(masterlistGroups), EdgeType::masterlistLoadAfter);
 
   if (logger) {
     logger->trace("Adding user groups to groups graph...");
   }
-  addGroups(userGroups, EdgeType::userLoadAfter);
+  addGroups(SortByName(userGroups), EdgeType::userLoadAfter);
 
   if (logger) {
     logger->trace("Checking for cycles in the group graph");

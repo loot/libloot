@@ -64,43 +64,17 @@ TEST(BuildGroupGraph, shouldThrowIfAfterGroupsAreCyclic) {
   } catch (CyclicInteractionError& e) {
     ASSERT_EQ(3, e.GetCycle().size());
 
-    // Vertices can be added in any order, so which group is first is
-    // undefined.
-    if (e.GetCycle()[0].GetName() == "a") {
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("a", e.GetCycle()[0].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter,
+              e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
 
-      EXPECT_EQ("c", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ("c", e.GetCycle()[1].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter,
+              e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
 
-      EXPECT_EQ("b", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
-                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-    } else if (e.GetCycle()[0].GetName() == "b") {
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
-                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("a", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("c", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-    } else {
-      EXPECT_EQ("c", e.GetCycle()[0].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[0].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("b", e.GetCycle()[1].GetName());
-      EXPECT_EQ(EdgeType::masterlistLoadAfter,
-                e.GetCycle()[1].GetTypeOfEdgeToNextVertex());
-
-      EXPECT_EQ("a", e.GetCycle()[2].GetName());
-      EXPECT_EQ(EdgeType::userLoadAfter,
-                e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
-    }
+    EXPECT_EQ("b", e.GetCycle()[2].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              e.GetCycle()[2].GetTypeOfEdgeToNextVertex());
   }
 }
 
@@ -300,6 +274,42 @@ TEST(GetGroupsPath,
             path[2].GetTypeOfEdgeToNextVertex().value());
   EXPECT_EQ("e", path[3].GetName());
   EXPECT_FALSE(path[3].GetTypeOfEdgeToNextVertex().has_value());
+}
+
+TEST(GetGroupsPath, shouldNotDependOnTheAfterGroupDefinitionOrder) {
+  std::vector<std::vector<Group>> orders{
+      // Create a graph with after groups in one order.
+      {Group("A"),
+       Group("B", {"A"}),
+       Group("C", {"A"}),
+       Group("D", {"B", "C"}),
+       Group("E", {"D"}),
+       Group()},
+      // Now do the same again, but with a different after group order for D.
+      {Group("A"),
+       Group("B", {"A"}),
+       Group("C", {"A"}),
+       Group("D", {"C", "B"}),
+       Group("E", {"D"}),
+       Group()}};
+
+  for (const auto& masterlistGroups : orders) {
+    const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
+    auto path = GetGroupsPath(groupGraph, "A", "E");
+
+    ASSERT_EQ(4, path.size());
+    EXPECT_EQ("A", path[0].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              path[0].GetTypeOfEdgeToNextVertex().value());
+    EXPECT_EQ("B", path[1].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              path[1].GetTypeOfEdgeToNextVertex().value());
+    EXPECT_EQ("D", path[2].GetName());
+    EXPECT_EQ(EdgeType::masterlistLoadAfter,
+              path[2].GetTypeOfEdgeToNextVertex().value());
+    EXPECT_EQ("E", path[3].GetName());
+    EXPECT_FALSE(path[3].GetTypeOfEdgeToNextVertex().has_value());
+  }
 }
 }
 }

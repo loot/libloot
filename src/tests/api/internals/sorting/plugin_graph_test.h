@@ -1295,7 +1295,7 @@ TEST_F(PluginGraphTest,
 
 TEST_F(
     PluginGraphTest,
-    addGroupEdgesDoesNotDependOnGroupDefinitionOrderIfThereIsASingleLinearPath) {
+    addGroupEdgesShouldNotDependOnGroupDefinitionOrderIfThereIsASingleLinearPath) {
   std::vector<std::vector<Group>> masterlistsGroups{
       {Group("B"), Group("C", {"B"}), Group("default", {"C"})},
       {Group("C", {"B"}), Group("B"), Group("default", {"C"})}};
@@ -1324,16 +1324,23 @@ TEST_F(
   }
 }
 
-TEST_F(PluginGraphTest,
-       addGroupEdgesDependsOnGroupDefinitionOrderIfThereAreMultipleRoots) {
-  // Create a graph with groups in one order.
-  {
-    std::vector<Group> masterlistGroups{Group("A"),
-                                        Group("B"),
-                                        Group("C", {"A", "B"}),
-                                        Group("D", {"C"}),
-                                        Group()};
-
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldNotDependOnGroupDefinitionOrderIfThereAreMultipleRoots) {
+  std::vector<std::vector<Group>> orders{
+      // Create a graph with groups in one order.
+      {Group("A"),
+       Group("B"),
+       Group("C", {"A", "B"}),
+       Group("D", {"C"}),
+       Group()},
+      // Now do the same again, but with a different group order for A and B.
+      {Group("B"),
+       Group("A"),
+       Group("C", {"A", "B"}),
+       Group("D", {"C"}),
+       Group()}};
+  for (const auto& masterlistGroups : orders) {
     groupsMap = GetGroupsMap(masterlistGroups, {});
     const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
     predecessorGroupsMap = GetPredecessorGroups(groupGraph);
@@ -1363,54 +1370,26 @@ TEST_F(PluginGraphTest,
 
     EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
   }
-
-  // Now do the same again, but with a different group order for A and B.
-  {
-    std::vector<Group> masterlistGroups{Group("B"),
-                                        Group("A"),
-                                        Group("C", {"A", "B"}),
-                                        Group("D", {"C"}),
-                                        Group()};
-
-    groupsMap = GetGroupsMap(masterlistGroups, {});
-    const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(groupGraph);
-
-    PluginGraph graph;
-
-    const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
-    const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
-    const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
-    const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
-
-    graph.AddEdge(d, a, EdgeType::master);
-
-    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
-
-    // Should be B.esp -> C.esp -> D.esp -> A.esp
-    EXPECT_TRUE(graph.EdgeExists(d, a));
-    EXPECT_TRUE(graph.EdgeExists(b, c));
-    EXPECT_TRUE(graph.EdgeExists(c, d));
-    EXPECT_FALSE(graph.EdgeExists(a, b));
-    EXPECT_FALSE(graph.EdgeExists(b, a));
-
-    // FIXME: This edge is unwanted and causes a cycle.
-    EXPECT_TRUE(graph.EdgeExists(a, c));
-
-    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
-  }
 }
 
-TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
-  // Create a graph with groups in one order.
-  {
-    std::vector<Group> masterlistGroups{Group("A"),
-                                        Group("B", {"A"}),
-                                        Group("C", {"A"}),
-                                        Group("D", {"B", "C"}),
-                                        Group("E", {"D"}),
-                                        Group()};
-
+TEST_F(PluginGraphTest,
+       addGroupEdgesShouldNotDependOnBranchingGroupDefinitionOrder) {
+  std::vector<std::vector<Group>> orders{
+      // Create a graph with groups in one order.
+      {Group("A"),
+       Group("B", {"A"}),
+       Group("C", {"A"}),
+       Group("D", {"B", "C"}),
+       Group("E", {"D"}),
+       Group()},
+      // Now do the same again, but with a different group order for B and C.
+      {Group("A"),
+       Group("C", {"A"}),
+       Group("B", {"A"}),
+       Group("D", {"B", "C"}),
+       Group("E", {"D"}),
+       Group()}};
+  for (const auto& masterlistGroups : orders) {
     groupsMap = GetGroupsMap(masterlistGroups, {});
     const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
     predecessorGroupsMap = GetPredecessorGroups(groupGraph);
@@ -1428,64 +1407,28 @@ TEST_F(PluginGraphTest, addGroupEdgesDependsOnBranchingGroupDefinitionOrder) {
     graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
 
     // Should be A.esp -> B.esp -> D.esp -> E.esp -> C.esp
-    EXPECT_TRUE(graph.EdgeExists(e, c));
     EXPECT_TRUE(graph.EdgeExists(a, b));
-    EXPECT_TRUE(graph.EdgeExists(b, d));
-    EXPECT_TRUE(graph.EdgeExists(d, e));
     EXPECT_TRUE(graph.EdgeExists(a, c));
-    EXPECT_FALSE(graph.EdgeExists(b, c));
-    EXPECT_FALSE(graph.EdgeExists(c, b));
-
-    // FIXME: This edge is unwanted and causes a cycle.
-    EXPECT_TRUE(graph.EdgeExists(c, d));
-
-    EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
-  }
-
-  // Now do the same again, but with a different group order for B and C.
-  {
-    std::vector<Group> masterlistGroups{Group("A"),
-                                        Group("C", {"A"}),
-                                        Group("B", {"A"}),
-                                        Group("D", {"B", "C"}),
-                                        Group("E", {"D"}),
-                                        Group()};
-
-    groupsMap = GetGroupsMap(masterlistGroups, {});
-    const auto groupGraph = BuildGroupGraph(masterlistGroups, {});
-    predecessorGroupsMap = GetPredecessorGroups(groupGraph);
-
-    PluginGraph graph;
-
-    const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
-    const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
-    const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
-    const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
-    const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
-
-    graph.AddEdge(e, c, EdgeType::master);
-
-    graph.AddGroupEdges(groupsMap, predecessorGroupsMap);
-
-    // Should be A.esp -> B.esp -> E.esp -> C.esp -> D.esp
-    EXPECT_TRUE(graph.EdgeExists(e, c));
-    EXPECT_TRUE(graph.EdgeExists(a, b));
+    EXPECT_TRUE(graph.EdgeExists(a, d));
+    EXPECT_TRUE(graph.EdgeExists(a, e));
     EXPECT_TRUE(graph.EdgeExists(b, d));
     EXPECT_TRUE(graph.EdgeExists(b, e));
-    EXPECT_TRUE(graph.EdgeExists(a, e));
-    EXPECT_TRUE(graph.EdgeExists(a, c));
-    EXPECT_TRUE(graph.EdgeExists(c, d));
+    EXPECT_TRUE(graph.EdgeExists(d, e));
+    EXPECT_TRUE(graph.EdgeExists(e, c));
+
     EXPECT_FALSE(graph.EdgeExists(b, c));
     EXPECT_FALSE(graph.EdgeExists(c, b));
+    EXPECT_FALSE(graph.EdgeExists(c, e));
+    EXPECT_FALSE(graph.EdgeExists(d, c));
 
     // FIXME: This edge is unwanted and causes a cycle.
-    EXPECT_TRUE(graph.EdgeExists(d, e));
+    EXPECT_TRUE(graph.EdgeExists(c, d));
 
     EXPECT_THROW(graph.CheckForCycles(), CyclicInteractionError);
   }
 }
 
-TEST_F(PluginGraphTest, addGroupEdgesDoesNotDependOnPluginGraphVertexOrder) {
+TEST_F(PluginGraphTest, addGroupEdgesShouldNotDependOnPluginGraphVertexOrder) {
   std::vector<Group> masterlistGroups{
       Group("A"), Group("B", {"A"}), Group("C", {"B"}), Group()};
 
