@@ -61,10 +61,12 @@ private:
 #if _WIN32
 class WideStringsCache {
 public:
+  void Insert(const std::string& narrowString);
+  const std::wstring& Get(const std::string& narrowString);
   const std::wstring& GetOrInsert(const std::string& narrowString);
 
 private:
-  std::unordered_map<std::string, std::wstring> wideStringsCache_;
+  boost::unordered_flat_map<std::string, std::wstring> wideStringsCache_;
 };
 #endif
 

@@ -591,6 +591,15 @@ void PathsCache::CachePath(const vertex_t& fromVertex,
 }
 
 #if _WIN32
+const std::wstring& WideStringsCache::Get(const std::string& narrowString) {
+  auto vertexNameIt = wideStringsCache_.find(narrowString);
+  if (vertexNameIt == wideStringsCache_.end()) {
+    throw std::invalid_argument("Given string was not already cached");
+  }
+
+  return vertexNameIt->second;
+}
+
 const std::wstring& WideStringsCache::GetOrInsert(
     const std::string& narrowString) {
   auto vertexNameIt = wideStringsCache_.find(narrowString);
@@ -600,6 +609,12 @@ const std::wstring& WideStringsCache::GetOrInsert(
   }
 
   return vertexNameIt->second;
+}
+
+void WideStringsCache::Insert(const std::string& narrowString) {
+  if (!wideStringsCache_.contains(narrowString)) {
+    wideStringsCache_.emplace(narrowString, ToWinWide(narrowString));
+  }
 }
 #endif
 
@@ -615,9 +630,10 @@ std::optional<vertex_t> PluginGraph::GetVertexByName(
     const std::string& name) const {
   for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
 #if _WIN32
-    auto& wideVertexName =
-        wideStringCache_.GetOrInsert(GetPlugin(vertex).GetName());
+    const auto& vertexName = GetPlugin(vertex).GetName();
+    wideStringCache_.Insert(vertexName);
     auto& wideName = wideStringCache_.GetOrInsert(name);
+    auto& wideVertexName = wideStringCache_.Get(vertexName);
 
     int comparison = CompareFilenames(wideVertexName, wideName);
 #else
