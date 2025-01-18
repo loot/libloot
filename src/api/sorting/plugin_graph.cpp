@@ -38,11 +38,85 @@
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/undefined_group_error.h"
 
+namespace {
+using loot::GroupGraph;
+typedef boost::graph_traits<GroupGraph>::vertex_descriptor GroupGraphVertex;
+
+bool IsRootVertex(const GroupGraphVertex& vertex, const GroupGraph& graph) {
+  return boost::in_degree(vertex, graph) == 0;
+}
+
+class GroupsPathLengthVisitor : public boost::dfs_visitor<> {
+public:
+  explicit GroupsPathLengthVisitor(size_t& maxPathLength) :
+      maxPathLength_(&maxPathLength) {}
+
+  typedef boost::graph_traits<GroupGraph>::edge_descriptor GroupGraphEdge;
+
+  void discover_vertex(GroupGraphVertex, const GroupGraph&) {
+    currentPathLength_ += 1;
+    if (currentPathLength_ > *maxPathLength_) {
+      *maxPathLength_ = currentPathLength_;
+    }
+  }
+  void finish_vertex(GroupGraphVertex, const GroupGraph&) {
+    currentPathLength_ -= 1;
+  }
+
+private:
+  size_t currentPathLength_{0};
+  size_t* maxPathLength_{nullptr};
+};
+
+void DepthFirstVisit(
+    const GroupGraph& graph,
+    const boost::graph_traits<GroupGraph>::vertex_descriptor& startingVertex,
+    GroupsPathLengthVisitor& visitor) {
+  std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
+  const auto colorMap = boost::make_iterator_property_map(
+      colorVec.begin(), boost::get(boost::vertex_index, graph), colorVec.at(0));
+
+  boost::depth_first_visit(graph, startingVertex, visitor, colorMap);
+}
+
+// Sort the group vertices so that root vertices come first, in order of
+// decreasing path length, but otherwise preserving the existing
+// (lexicographical) ordering.
+std::vector<GroupGraphVertex> GetSortedGroupVertices(
+    const GroupGraph& groupGraph) {
+  const auto [gvit, gvitend] = boost::vertices(groupGraph);
+  std::vector<GroupGraphVertex> groupVertices{gvit, gvitend};
+
+  // Calculate the max path lengths for root vertices.
+  std::unordered_map<GroupGraphVertex, size_t> maxPathLengths;
+  for (const auto& groupVertex : groupVertices) {
+    if (IsRootVertex(groupVertex, groupGraph)) {
+      size_t maxPathLength = 0;
+      GroupsPathLengthVisitor visitor(maxPathLength);
+
+      DepthFirstVisit(groupGraph, groupVertex, visitor);
+
+      maxPathLengths.emplace(groupVertex, maxPathLength);
+    }
+  }
+
+  // Now sort the group vertices.
+  std::stable_sort(
+      groupVertices.begin(),
+      groupVertices.end(),
+      [&](const GroupGraphVertex& lhs, const GroupGraphVertex& rhs) {
+        return IsRootVertex(lhs, groupGraph) &&
+               (!IsRootVertex(rhs, groupGraph) ||
+                (maxPathLengths[lhs] > maxPathLengths[rhs]));
+      });
+
+  return groupVertices;
+}
+}
+
 namespace loot {
 typedef boost::graph_traits<RawPluginGraph>::edge_descriptor edge_t;
 typedef boost::graph_traits<RawPluginGraph>::edge_iterator edge_it;
-
-typedef boost::graph_traits<GroupGraph>::vertex_descriptor GroupGraphVertex;
 
 class CycleDetector : public boost::dfs_visitor<> {
 public:
@@ -115,12 +189,11 @@ boost::graph_traits<GroupGraph>::vertex_descriptor GetDefaultVertex(
   throw std::logic_error("Could not find default group in group graph");
 }
 
-class GroupsVisitor : public boost::dfs_visitor<> {
+class GroupsPathVisitor : public boost::dfs_visitor<> {
 public:
   typedef boost::graph_traits<GroupGraph>::edge_descriptor GroupGraphEdge;
-  typedef boost::graph_traits<GroupGraph>::vertex_descriptor GroupGraphVertex;
 
-  explicit GroupsVisitor(
+  explicit GroupsPathVisitor(
       PluginGraph& pluginGraph,
       std::unordered_set<GroupGraphVertex>& finishedVertices,
       const std::unordered_map<std::string, std::vector<vertex_t>>&
@@ -130,7 +203,7 @@ public:
       finishedVertices_(&finishedVertices),
       logger_(getLogger()) {}
 
-  explicit GroupsVisitor(
+  explicit GroupsPathVisitor(
       PluginGraph& pluginGraph,
       std::unordered_set<GroupGraphVertex>& finishedVertices,
       const std::unordered_map<std::string, std::vector<vertex_t>>&
@@ -292,7 +365,7 @@ private:
 void DepthFirstVisit(
     const GroupGraph& graph,
     const boost::graph_traits<GroupGraph>::vertex_descriptor& startingVertex,
-    GroupsVisitor& visitor) {
+    GroupsPathVisitor& visitor) {
   std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
   const auto colorMap = boost::make_iterator_property_map(
       colorVec.begin(), boost::get(boost::vertex_index, graph), colorVec.at(0));
@@ -914,19 +987,25 @@ void PluginGraph::AddGroupEdges(const GroupGraph& groupGraph) {
   // Get the default group's vertex because it's needed for the DFSes.
   const auto defaultVertex = GetDefaultVertex(groupGraph);
 
+  // The vertex sort order prioritises resolving potential cycles in
+  // favour of earlier-loading groups. It does not guarantee that the
+  // longest paths will be walked first, because a root vertex may be in
+  // more than one path and the vertex sort order here does not influence
+  // which path the DFS takes.
+  const auto groupVertices = GetSortedGroupVertices(groupGraph);
+
   // Now loop over the vertices in the groups graph.
   // Keep a record of which vertices have already been fully explored to avoid
   // adding edges from their plugins more than once.
   std::unordered_set<GroupGraphVertex> finishedVertices;
-  for (const auto& groupVertex :
-       boost::make_iterator_range(boost::vertices(groupGraph))) {
+  for (const auto& groupVertex : groupVertices) {
     // Run a DFS from each vertex in the group graph, adding edges except from
     // plugins in the default group. This could be run only on the root
     // vertices, except that the DFS only visits each vertex once, so a branch
     // and merge inside a given root's DAG would result in plugins from one of
     // the branches not being carried forwards past the point at which the
     // branches merge.
-    GroupsVisitor visitor(
+    GroupsPathVisitor visitor(
         *this, finishedVertices, groupsPlugins, defaultVertex);
 
     DepthFirstVisit(groupGraph, groupVertex, visitor);
@@ -934,7 +1013,7 @@ void PluginGraph::AddGroupEdges(const GroupGraph& groupGraph) {
 
   // Now do one last DFS starting from the default group and not ignoring its
   // plugins.
-  GroupsVisitor visitor(*this, finishedVertices, groupsPlugins);
+  GroupsPathVisitor visitor(*this, finishedVertices, groupsPlugins);
 
   DepthFirstVisit(groupGraph, defaultVertex, visitor);
 }

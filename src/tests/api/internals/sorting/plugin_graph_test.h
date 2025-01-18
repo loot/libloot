@@ -1458,6 +1458,112 @@ TEST_F(PluginGraphTest, addGroupEdgesShouldNotDependOnPluginGraphVertexOrder) {
   }
 }
 
+TEST_F(
+    PluginGraphTest,
+    addGroupEdgesShouldStartSearchingFromRootGroupsBeforeGoingInLexicographicalOrder) {
+  std::vector<Group> masterlistGroups{Group("D"),
+                                      Group("A", {"D"}),
+                                      Group("B", {"A"}),
+                                      Group("C", {"B"}),
+                                      Group()};
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+
+  graph.AddEdge(c, d, EdgeType::master);
+
+  graph.AddGroupEdges(groupGraph);
+
+  // Should be C.esp -> D.esp -> A.esp -> B.esp
+  // Processing groups lexicographically would give:
+  // A.esp -> B.esp -> C.esp -> D.esp
+  EXPECT_TRUE(graph.EdgeExists(c, d));
+  EXPECT_TRUE(graph.EdgeExists(d, a));
+  EXPECT_TRUE(graph.EdgeExists(d, b));
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+
+  EXPECT_FALSE(graph.EdgeExists(a, c));
+  EXPECT_FALSE(graph.EdgeExists(a, d));
+  EXPECT_FALSE(graph.EdgeExists(b, a));
+  EXPECT_FALSE(graph.EdgeExists(b, c));
+  EXPECT_FALSE(graph.EdgeExists(b, d));
+  EXPECT_FALSE(graph.EdgeExists(d, c));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest,
+    addGroupEdgesShouldStartSearchingFromTheRootGroupWithTheLongestPath) {
+  std::vector<Group> masterlistGroups{Group("D"),
+                                      Group("B", {"D"}),
+                                      Group("C", {"B"}),
+                                      Group("A"),
+                                      Group("E", {"C", "A"}),
+                                      Group("F", {"E"}),
+                                      Group()};
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+  const auto f = graph.AddVertex(CreatePluginSortingData("F.esp", "F"));
+
+  graph.AddEdge(f, b, EdgeType::master);
+
+  graph.AddGroupEdges(groupGraph);
+
+  // Should be          D.esp -> B.esp -> C.esp -> E.esp
+  //  A.esp -> F.esp ----------> B.esp
+  //  A.esp -------------------------------------> E.esp
+  EXPECT_TRUE(graph.EdgeExists(d, b));
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(c, e));
+  EXPECT_TRUE(graph.EdgeExists(a, f));
+  EXPECT_TRUE(graph.EdgeExists(a, e));
+  EXPECT_TRUE(graph.EdgeExists(f, b));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
+TEST_F(PluginGraphTest, addGroupEdgesDoesNotStartSearchingWithTheLongestPath) {
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B", {"A"}),
+                                      Group("C", {"A"}),
+                                      Group("D", {"C"}),
+                                      Group("E", {"B", "D"}),
+                                      Group()};
+  groupGraph = BuildGroupGraph(masterlistGroups, {});
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+  const auto e = graph.AddVertex(CreatePluginSortingData("E.esp", "E"));
+
+  graph.AddEdge(e, c, EdgeType::master);
+
+  graph.AddGroupEdges(groupGraph);
+
+  // Should be A.esp -> B.esp -> E.esp -> C.esp -> D.esp
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(b, e));
+  EXPECT_TRUE(graph.EdgeExists(e, c));
+  EXPECT_TRUE(graph.EdgeExists(c, d));
+
+  EXPECT_NO_THROW(graph.CheckForCycles());
+}
+
 TEST_F(PluginGraphTest,
        addOverlapEdgesShouldNotAddEdgesBetweenNonOverlappingPlugins) {
   PluginGraph graph;
