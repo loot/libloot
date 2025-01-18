@@ -58,6 +58,10 @@ To help catch invalid metadata, there's also a validation step that checks for
 things like requirement metadata that tries to load a blueprint master before
 another plugin, and sorting will fail if any such invalid metadata is found.
 
+A fourth graph is created to represent which groups must load after
+which other groups, with groups being added in lexicographical order and
+masterlist groups before userlist groups.
+
 Create plugin graph edges
 =========================
 
@@ -87,38 +91,31 @@ Some games hardcode certain plugins to load in certain positions, and this
 section adds edges in the correct order between those plugins, and between those
 plugins and the rest of the plugins in the graph.
 
+At this point the plugin graph is checked for cycles, and an error is thrown if
+any are encountered, so that metadata (or indeed plugin data) that cause them
+can be corrected.
+
 Group edges
 -----------
 
-First a graph of groups is created to represent which groups must load after
-which other groups, with groups being added in lexicographical order and
-masterlist groups before userlist groups. Once all the groups have been added,
-a depth-first search is performed starting from each group in the order they
-were added.
+A depth-first search of the groups graph is performed for each group in the
+graph, in the order that they were added to the graph, except that root vertices
+go first, in descending order of their longest path length.
 
-At the start of each search, the starting group is used as the first element in
-a stack that will represent the current path through the graph. On each new edge
-encountered, the target group is appended to the stack and edges are
-added going from the plugins in the edge's source group to the plugins in the
-edge's target group, unless the edge to be added would cause a cycle, or unless
-the source group is the ``default`` group, in which case its plugins are
-ignored. The same is done for all the groups currently recorded in the stack.
-Once all a group's out-edges (going to groups that load directly after it) have
-been processed, the group is removed from the stack.
+As the groups graph is searched, a stack of edges is used to record the current
+path through the graph from the starting group. On each new edge encountered, it
+is added to the stack and plugin graph edges are added going from all the
+plugins in the current path's groups to the current edge's target group, except
+when that would cause a cycle, and for plugins in the ``default`` group, which
+are ignored. Once the graph beyond an edge's target group has been fully
+explored, that edge is removed from the stack.
 
 Once all the groups have been iterated over, one final depth-first search is
 performed, this time starting from the ``default`` group and *not* skipping
 edges from its plugins.
 
 In this way all plugins have edges added from them to all the plugins in the
-groups that load after their group, unless the edge would cause a cycle. The
-order in which groups are defined can affect which edges are skipped, but the
-order of groups' "load after" metadata does not, and neither does the order in
-which plugins in each group are looped over.
-
-At this point the plugin graph is checked for cycles, and an error is thrown if
-any are encountered, so that metadata (or indeed plugin data) that cause them
-can be corrected.
+groups that load after their group, unless the edge would cause a cycle.
 
 Overlap edges
 -------------
