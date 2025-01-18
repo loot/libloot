@@ -90,8 +90,7 @@ public:
 
   bool EdgeExists(const vertex_t& fromVertex, const vertex_t& toVertex);
   bool PathExists(const vertex_t& fromVertex, const vertex_t& toVertex);
-  bool PathExistsInEitherDirection(const vertex_t& vertex,
-                                   const vertex_t& otherVertex);
+  bool IsPathCached(const vertex_t& fromVertex, const vertex_t& toVertex);
 
   std::optional<std::vector<vertex_t>> FindPath(const vertex_t& fromVertex,
                                                 const vertex_t& toVertex);

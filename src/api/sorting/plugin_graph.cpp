@@ -259,7 +259,8 @@ private:
     for (const auto& toVertex : toPlugins) {
       const auto& toPlugin = pluginGraph_->GetPlugin(toVertex);
 
-      if (!pluginGraph_->PathExistsInEitherDirection(toVertex, fromVertex)) {
+      if (!pluginGraph_->IsPathCached(fromVertex, toVertex) &&
+          !pluginGraph_->PathExists(toVertex, fromVertex)) {
         const auto involvesUserMetadata = groupPathInvolvesUserMetadata ||
                                           fromPlugin.IsGroupUserMetadata() ||
                                           toPlugin.IsGroupUserMetadata();
@@ -738,24 +739,9 @@ bool PluginGraph::PathExists(const vertex_t& fromVertex,
   return loot::FindPath(graph_, fromVertex, toVertex, visitor);
 }
 
-bool PluginGraph::PathExistsInEitherDirection(const vertex_t& vertex,
-                                              const vertex_t& otherVertex) {
-  if (pathsCache_.IsPathCached(vertex, otherVertex) ||
-      pathsCache_.IsPathCached(otherVertex, vertex)) {
-    return true;
-  }
-
-  {
-    PathCacher visitor(pathsCache_, vertex, otherVertex);
-
-    if (loot::FindPath(graph_, vertex, otherVertex, visitor)) {
-      return true;
-    }
-  }
-
-  PathCacher visitor(pathsCache_, otherVertex, vertex);
-
-  return loot::FindPath(graph_, otherVertex, vertex, visitor);
+bool PluginGraph::IsPathCached(const vertex_t& fromVertex,
+                               const vertex_t& toVertex) {
+  return pathsCache_.IsPathCached(fromVertex, toVertex);
 }
 
 std::optional<std::vector<vertex_t>> PluginGraph::FindPath(
@@ -1052,7 +1038,8 @@ void PluginGraph::AddOverlapEdges() {
       const auto fromVertex = thisPluginLoadsFirst ? vertex : otherVertex;
       const auto toVertex = thisPluginLoadsFirst ? otherVertex : vertex;
 
-      if (!PathExistsInEitherDirection(toVertex, fromVertex)) {
+      if (!IsPathCached(fromVertex, toVertex) &&
+          !PathExists(toVertex, fromVertex)) {
         AddEdge(fromVertex, toVertex, edgeType);
       } else if (logger) {
         logger->debug(
