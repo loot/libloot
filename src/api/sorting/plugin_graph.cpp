@@ -345,9 +345,9 @@ private:
   }
 
   PluginGraph* pluginGraph_{nullptr};
-  std::unordered_set<GroupGraphVertex>* finishedVertices_;
   const std::unordered_map<std::string, std::vector<vertex_t>>* groupsPlugins_{
       nullptr};
+  std::unordered_set<GroupGraphVertex>* finishedVertices_{nullptr};
   std::optional<GroupGraphVertex> vertexToIgnoreAsSource_;
   std::shared_ptr<spdlog::logger> logger_;
 
