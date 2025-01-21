@@ -31,14 +31,27 @@
 
 #include "loot/metadata/tag.h"
 
+#ifndef _WIN32
+#define UNISTR_FROM_STRING_EXPLICIT explicit
+#include <unicode/unistr.h>
+#endif
+
 namespace loot {
 inline constexpr const char* GHOST_FILE_EXTENSION = ".ghost";
 inline constexpr std::size_t GHOST_FILE_EXTENSION_LENGTH =
     std::char_traits<char>::length(GHOST_FILE_EXTENSION);
 
+#ifdef _WIN32
+typedef std::wstring ComparableFilename;
+#else
+typedef icu::UnicodeString ComparableFilename;
+#endif
+
 std::vector<Tag> ExtractBashTags(const std::string& description);
 
 std::optional<std::string> ExtractVersion(const std::string& text);
+
+ComparableFilename ToComparableFilename(const std::string filename);
 
 // Compare strings as if they're filenames, respecting filesystem case
 // insensitivity on Windows. Returns -1 if lhs < rhs, 0 if lhs == rhs, and 1 if
@@ -46,11 +59,8 @@ std::optional<std::string> ExtractVersion(const std::string& text);
 // locale-invariant.
 int CompareFilenames(const std::string& lhs, const std::string& rhs);
 
-#ifdef _WIN32
-std::wstring ToWinWide(const std::string& str);
-
-int CompareFilenames(const std::wstring& lhs, const std::wstring& rhs);
-#endif
+int CompareFilenames(const ComparableFilename& lhs,
+                     const ComparableFilename& rhs);
 
 // Normalize the given filename in a way that is locale-invariant. On Windows,
 // this uppercases the filename according to the same case mapping rules as used

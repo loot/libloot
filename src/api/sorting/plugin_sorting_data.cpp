@@ -53,11 +53,7 @@ PluginSortingData::PluginSortingData(
     const PluginSortingInterface* plugin,
     const PluginMetadata& masterlistMetadata,
     const PluginMetadata& userMetadata,
-#ifdef _WIN32
-    const std::vector<std::wstring>& loadOrder) :
-#else
-    const std::vector<std::string>& loadOrder) :
-#endif
+    const std::vector<ComparableFilename>& loadOrder) :
     plugin_(plugin),
     name_(plugin == nullptr ? std::string() : plugin->GetName()),
     isMaster_(plugin != nullptr && plugin->IsMaster()),
@@ -72,17 +68,10 @@ PluginSortingData::PluginSortingData(
     return;
   }
 
-#ifdef _WIN32
-  auto wideName = ToWinWide(GetName());
-#endif
+  const auto comparableName = ToComparableFilename(GetName());
 
   for (size_t i = 0; i < loadOrder.size(); i++) {
-#ifdef _WIN32
-    int comparison = CompareFilenames(wideName, loadOrder.at(i));
-#else
-    int comparison = CompareFilenames(GetName(), loadOrder.at(i));
-#endif
-    if (comparison == 0) {
+    if (CompareFilenames(comparableName, loadOrder.at(i)) == 0) {
       loadOrderIndex_ = i;
       break;
     }

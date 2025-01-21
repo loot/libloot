@@ -28,6 +28,7 @@
 #include <unordered_set>
 
 #include "api/plugin.h"
+#include "api/helpers/text.h"
 #include "loot/metadata/plugin_metadata.h"
 
 namespace loot {
@@ -43,11 +44,7 @@ public:
   explicit PluginSortingData(const PluginSortingInterface* plugin,
                              const PluginMetadata& masterlistMetadata,
                              const PluginMetadata& userMetadata,
-#ifdef _WIN32
-                             const std::vector<std::wstring>& loadOrder);
-#else
-                             const std::vector<std::string>& loadOrder);
-#endif
+                             const std::vector<ComparableFilename>& loadOrder);
 
   const std::string& GetName() const;
   bool IsMaster() const;

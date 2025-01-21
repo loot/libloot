@@ -39,12 +39,10 @@ std::vector<PluginSortingData> GetPluginsSortingData(
   std::vector<PluginSortingData> pluginsSortingData;
   pluginsSortingData.reserve(loadedPluginInterfaces.size());
 
-#ifdef _WIN32
-  std::vector<std::wstring> wideLoadOrder;
+  std::vector<ComparableFilename> comparableLoadOrder;
   for (const auto& pluginName : loadOrder) {
-    wideLoadOrder.push_back(ToWinWide(pluginName));
+    comparableLoadOrder.push_back(ToComparableFilename(pluginName));
   }
-#endif
 
   for (const auto& pluginInterface : loadedPluginInterfaces) {
     if (!pluginInterface) {
@@ -64,13 +62,8 @@ std::vector<PluginSortingData> GetPluginsSortingData(
     const auto userMetadata = db.GetPluginUserMetadata(plugin->GetName(), true)
                                   .value_or(PluginMetadata(plugin->GetName()));
 
-#ifdef _WIN32
     const auto pluginSortingData = PluginSortingData(
-        plugin, masterlistMetadata, userMetadata, wideLoadOrder);
-#else
-    const auto pluginSortingData =
-        PluginSortingData(plugin, masterlistMetadata, userMetadata, loadOrder);
-#endif
+        plugin, masterlistMetadata, userMetadata, comparableLoadOrder);
 
     pluginsSortingData.push_back(pluginSortingData);
   }

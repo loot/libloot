@@ -659,33 +659,35 @@ void PathsCache::CachePath(const vertex_t& fromVertex,
   }
 }
 
-#if _WIN32
-const std::wstring& WideStringsCache::Get(const std::string& narrowString) {
-  auto vertexNameIt = wideStringsCache_.find(narrowString);
-  if (vertexNameIt == wideStringsCache_.end()) {
+const ComparableFilename& ComparableFilenamesCache::Get(
+    const std::string& narrowString) {
+  auto vertexNameIt = comparableFilenamesCache_.find(narrowString);
+  if (vertexNameIt == comparableFilenamesCache_.end()) {
     throw std::invalid_argument("Given string was not already cached");
   }
 
   return vertexNameIt->second;
 }
 
-const std::wstring& WideStringsCache::GetOrInsert(
+const ComparableFilename& ComparableFilenamesCache::GetOrInsert(
     const std::string& narrowString) {
-  auto vertexNameIt = wideStringsCache_.find(narrowString);
-  if (vertexNameIt == wideStringsCache_.end()) {
+  auto vertexNameIt = comparableFilenamesCache_.find(narrowString);
+  if (vertexNameIt == comparableFilenamesCache_.end()) {
     vertexNameIt =
-        wideStringsCache_.emplace(narrowString, ToWinWide(narrowString)).first;
+        comparableFilenamesCache_
+            .emplace(narrowString, ToComparableFilename(narrowString))
+            .first;
   }
 
   return vertexNameIt->second;
 }
 
-void WideStringsCache::Insert(const std::string& narrowString) {
-  if (!wideStringsCache_.contains(narrowString)) {
-    wideStringsCache_.emplace(narrowString, ToWinWide(narrowString));
+void ComparableFilenamesCache::Insert(const std::string& narrowString) {
+  if (!comparableFilenamesCache_.contains(narrowString)) {
+    comparableFilenamesCache_.emplace(narrowString,
+                                      ToComparableFilename(narrowString));
   }
 }
-#endif
 
 size_t PluginGraph::CountVertices() const {
   return boost::num_vertices(graph_);
@@ -696,19 +698,14 @@ std::pair<vertex_it, vertex_it> PluginGraph::GetVertices() const {
 }
 
 std::optional<vertex_t> PluginGraph::GetVertexByName(
-    const std::string& name) const {
+    const std::string& name) {
   for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
-#if _WIN32
     const auto& vertexName = GetPlugin(vertex).GetName();
-    wideStringCache_.Insert(vertexName);
-    auto& wideName = wideStringCache_.GetOrInsert(name);
-    auto& wideVertexName = wideStringCache_.Get(vertexName);
+    comparableFilenamesCache_.Insert(vertexName);
+    const auto& comparableName = comparableFilenamesCache_.GetOrInsert(name);
+    const auto& comparableVertexName = comparableFilenamesCache_.Get(vertexName);
 
-    int comparison = CompareFilenames(wideVertexName, wideName);
-#else
-    int comparison = CompareFilenames(GetPlugin(vertex).GetName(), name);
-#endif
-    if (comparison == 0) {
+    if (CompareFilenames(comparableVertexName, comparableName) == 0) {
       return vertex;
     }
   }

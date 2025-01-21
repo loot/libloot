@@ -31,6 +31,7 @@
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <map>
 
+#include "api/helpers/text.h"
 #include "api/sorting/group_sort.h"
 #include "api/sorting/plugin_sorting_data.h"
 #include "loot/enum/edge_type.h"
@@ -58,23 +59,22 @@ private:
       pathsCache_;
 };
 
-#if _WIN32
-class WideStringsCache {
+class ComparableFilenamesCache {
 public:
   void Insert(const std::string& narrowString);
-  const std::wstring& Get(const std::string& narrowString);
-  const std::wstring& GetOrInsert(const std::string& narrowString);
+  const ComparableFilename& Get(const std::string& narrowString);
+  const ComparableFilename& GetOrInsert(const std::string& narrowString);
 
 private:
-  boost::unordered_flat_map<std::string, std::wstring> wideStringsCache_;
+  boost::unordered_flat_map<std::string, ComparableFilename>
+      comparableFilenamesCache_;
 };
-#endif
 
 class PluginGraph {
 public:
   size_t CountVertices() const;
   std::pair<vertex_it, vertex_it> GetVertices() const;
-  std::optional<vertex_t> GetVertexByName(const std::string& name) const;
+  std::optional<vertex_t> GetVertexByName(const std::string& name);
 
   const PluginSortingData& GetPlugin(const vertex_t& vertex) const;
 
@@ -112,9 +112,7 @@ public:
 private:
   RawPluginGraph graph_;
   PathsCache pathsCache_;
-#if _WIN32
-  mutable WideStringsCache wideStringCache_;
-#endif
+  ComparableFilenamesCache comparableFilenamesCache_;
 };
 }
 

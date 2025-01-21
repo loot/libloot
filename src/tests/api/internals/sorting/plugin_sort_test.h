@@ -83,18 +83,13 @@ protected:
       const std::vector<std::string>& loadOrder = {}) {
     const auto plugin = GetPlugin(name);
 
-#ifdef _WIN32
-    std::vector<std::wstring> wideLoadOrder;
+    std::vector<ComparableFilename> comparableLoadOrder;
     for (const auto& pluginName : loadOrder) {
-      wideLoadOrder.push_back(ToWinWide(pluginName));
+      comparableLoadOrder.push_back(ToComparableFilename(pluginName));
     }
 
     return PluginSortingData(
-        plugin, PluginMetadata(), PluginMetadata(), wideLoadOrder);
-#else
-    return PluginSortingData(
-        plugin, PluginMetadata(), PluginMetadata(), loadOrder);
-#endif
+        plugin, PluginMetadata(), PluginMetadata(), comparableLoadOrder);
   }
 
   plugingraph::TestPlugin* GetPlugin(const std::string& name) {

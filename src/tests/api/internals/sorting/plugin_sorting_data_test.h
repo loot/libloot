@@ -63,18 +63,14 @@ protected:
     return loadedPluginInterfaces;
   }
 
-#ifdef _WIN32
-  std::vector<std::wstring> getNativeLoadOrder() {
-    std::vector<std::wstring> wideLoadOrder;
+  std::vector<ComparableFilename> getNativeLoadOrder() {
+    std::vector<ComparableFilename> wideLoadOrder;
     for (const auto &pluginName : getLoadOrder()) {
-      wideLoadOrder.push_back(ToWinWide(pluginName));
+      wideLoadOrder.push_back(ToComparableFilename(pluginName));
     }
 
     return wideLoadOrder;
   }
-#else
-  std::vector<std::string> getNativeLoadOrder() { return getLoadOrder(); }
-#endif
 
   Game game_;
   const std::string blankEslEsp;
