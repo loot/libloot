@@ -222,25 +222,21 @@ public:
     // Add the edge to the stack so that its providence can be taken into
     // account when adding edges from this source group and previous groups'
     // plugins.
-    edgeStack_.push_back(std::make_pair(edge, std::vector<vertex_t>()));
+    // Also record the plugins in the edge's source group, unless the source
+    // group should be ignored (e.g. because the visitor has been configured
+    // to ignore the default group's plugins as sources).
+    edgeStack_.push_back(std::make_pair(
+        edge,
+        ShouldIgnoreSourceVertex(source) ? std::vector<vertex_t>()
+                                         : FindPluginsInGroup(source, graph)));
 
     // Find the plugins in the target group.
     const auto targetPlugins = FindPluginsInGroup(target, graph);
 
-    // Add edges going from all the plugins in the previous groups in the path
-    // being currently walked, to the plugins in the current target group's
-    // plugins.
+    // Add edges going from all the plugins in the groups in the path being
+    // currently walked, to the plugins in the current target group's plugins.
     for (size_t i = 0; i < edgeStack_.size(); i += 1) {
       AddPluginGraphEdges(i, targetPlugins, graph);
-    }
-
-    // For each source plugin, add an edge to each target plugin, unless the
-    // source group should be ignored (e.g. because the visitor has been
-    // configured to ignore the default group's plugins as sources).
-    if (!ShouldIgnoreSourceVertex(source)) {
-      edgeStack_.back().second = FindPluginsInGroup(source, graph);
-
-      AddPluginGraphEdges(edgeStack_.size() - 1, targetPlugins, graph);
     }
   }
 
