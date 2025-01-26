@@ -58,7 +58,7 @@ Parameter | Values | Default |Description
 `LIBLOADORDER_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
 `LOOT_CONDITION_INTERPRETER_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
 
-You may also need to set `BOOST_ROOT` if CMake cannot find Boost.
+You may also need to set `CMAKE_PREFIX_PATH` if CMake cannot find Boost.
 
 ## Building The Documentation
 
