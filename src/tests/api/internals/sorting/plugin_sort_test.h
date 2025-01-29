@@ -36,9 +36,9 @@ namespace test {
 class PluginSortTest : public CommonGameTestFixture {
 protected:
   PluginSortTest() :
-      game_(GetParam(), dataPath.parent_path(), localPath),
+      game_(GetParam(), gamePath, localPath),
       blankEslEsp("Blank.esl.esp"),
-      cccPath_(dataPath.parent_path() / getCCCFilename()) {}
+      cccPath_(gamePath / getCCCFilename()) {}
 
   void loadInstalledPlugins(Game& game, bool headersOnly) {
     auto plugins = GetInstalledPlugins();
@@ -427,7 +427,7 @@ TEST_P(PluginSortTest,
   // Need to generate CCC file then recreate game object as the file is only
   // read during intialisation.
   GenerateCCCFile();
-  Game newGame(GetParam(), dataPath.parent_path(), localPath);
+  Game newGame(GetParam(), gamePath, localPath);
   ASSERT_NO_THROW(loadInstalledPlugins(newGame, false));
 
   std::vector<std::string> expectedSortedOrder({
@@ -457,7 +457,7 @@ TEST_P(PluginSortTest, sortingShouldPutBlueprintPluginsAfterAllOthers) {
 
   SetBlueprintFlag(dataPath / blankEsm);
 
-  Game newGame(GetParam(), dataPath.parent_path(), localPath);
+  Game newGame(GetParam(), gamePath, localPath);
   ASSERT_NO_THROW(loadInstalledPlugins(newGame, false));
 
   std::vector<std::string> expectedSortedOrder({

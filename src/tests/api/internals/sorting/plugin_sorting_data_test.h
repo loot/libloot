@@ -33,8 +33,7 @@ namespace test {
 class PluginSortingDataTest : public CommonGameTestFixture {
 protected:
   PluginSortingDataTest() :
-      game_(GetParam(), dataPath.parent_path(), localPath),
-      blankEslEsp("Blank.esl.esp") {}
+      game_(GetParam(), gamePath, localPath), blankEslEsp("Blank.esl.esp") {}
 
   void loadInstalledPlugins(Game &game, bool headersOnly) {
     auto plugins = GetInstalledPlugins();

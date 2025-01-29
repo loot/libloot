@@ -45,7 +45,8 @@ protected:
       french("fr"),
       german("de"),
       missingPath(rootTestPath / "missing"),
-      dataPath(rootTestPath / "games" / "game" / getPluginsFolder()),
+      gamePath(rootTestPath / "games" / "game"),
+          dataPath(gamePath / getPluginsFolder()),
       localPath(rootTestPath / "local" / "game"),
       metadataFilesPath(rootTestPath / "metadata"),
       masterFile(getMasterFile()),
@@ -349,6 +350,7 @@ protected:
   const std::string german;
 
   const std::filesystem::path missingPath;
+  const std::filesystem::path gamePath;
   const std::filesystem::path dataPath;
   const std::filesystem::path localPath;
   const std::filesystem::path metadataFilesPath;
@@ -418,7 +420,7 @@ private:
   void setLoadOrder(
       const std::vector<std::pair<std::string, bool>>& loadOrder) const {
     if (GetParam() == GameType::tes3) {
-      std::ofstream out(dataPath.parent_path() / "Morrowind.ini");
+      std::ofstream out(gamePath / "Morrowind.ini");
       for (const auto& plugin : loadOrder) {
         if (plugin.second) {
           out << "GameFile0=" << plugin.first << std::endl;

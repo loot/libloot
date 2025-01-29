@@ -61,7 +61,7 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::starfield));
 
 TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_EQ(GetParam(), game.GetType());
   EXPECT_EQ(dataPath, game.DataPath());
@@ -71,19 +71,19 @@ TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
 TEST_P(GameTest,
        constructingShouldThrowOnLinuxIfLocalPathIsNotGivenExceptForMorrowind) {
   if (GetParam() == GameType::tes3) {
-    EXPECT_NO_THROW(Game(GetParam(), dataPath.parent_path()));
+    EXPECT_NO_THROW(Game(GetParam(), gamePath));
   } else {
-    EXPECT_THROW(Game(GetParam(), dataPath.parent_path()), std::system_error);
+    EXPECT_THROW(Game(GetParam(), gamePath), std::system_error);
   }
 }
 #else
 TEST_P(GameTest, constructingShouldNotThrowOnWindowsIfLocalPathIsNotGiven) {
-  EXPECT_NO_THROW(Game(GetParam(), dataPath.parent_path()));
+  EXPECT_NO_THROW(Game(GetParam(), gamePath));
 }
 #endif
 
 TEST_P(GameTest, constructingShouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
-  EXPECT_NO_THROW(Game(GetParam(), dataPath.parent_path(), localPath));
+  EXPECT_NO_THROW(Game(GetParam(), gamePath, localPath));
 }
 
 TEST_P(
@@ -91,13 +91,13 @@ TEST_P(
     constructingForFallout4FromMicrosoftStoreOrStarfieldShouldSetAdditionalDataPaths) {
   if (GetParam() == GameType::fo4) {
     // Create the file that indicates it's a Microsoft Store install.
-    touch(dataPath.parent_path() / "appxmanifest.xml");
+    touch(gamePath / "appxmanifest.xml");
   }
 
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   if (GetParam() == GameType::fo4) {
-    const auto basePath = dataPath.parent_path() / ".." / "..";
+    const auto basePath = gamePath / ".." / "..";
     EXPECT_EQ(std::vector<std::filesystem::path>(
                   {basePath / "Fallout 4- Automatron (PC)" / "Content" / "Data",
                    basePath / "Fallout 4- Nuka-World (PC)" / "Content" / "Data",
@@ -124,7 +124,7 @@ TEST_P(
 }
 
 TEST_P(GameTest, setAdditionalDataPathsShouldClearTheConditionCache) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   PluginMetadata metadata(blankEsm);
   metadata.SetLoadAfterFiles({File("plugin.esp", "", "file(\"plugin.esp\")")});
@@ -134,8 +134,7 @@ TEST_P(GameTest, setAdditionalDataPathsShouldClearTheConditionCache) {
       game.GetDatabase().GetPluginUserMetadata(blankEsm, true).value();
   EXPECT_TRUE(evaluatedMetadata.GetLoadAfterFiles().empty());
 
-  const auto dataFilePath =
-      dataPath.parent_path().parent_path() / "Data" / "plugin.esp";
+  const auto dataFilePath = gamePath.parent_path() / "Data" / "plugin.esp";
   touch(dataFilePath);
   game.SetAdditionalDataPaths({dataFilePath.parent_path()});
 
@@ -146,7 +145,7 @@ TEST_P(GameTest, setAdditionalDataPathsShouldClearTheConditionCache) {
 
 TEST_P(GameTest,
        setAdditionalDataPathsShouldUpdateWhereLoadOrderPluginsAreFound) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   // Set no additional data paths to avoid picking up non-test plugins on PCs
   // which have Starfield or Fallout 4 installed.
@@ -155,8 +154,7 @@ TEST_P(GameTest,
   auto loadOrder = game.GetLoadOrder();
 
   const auto filename = "plugin.esp";
-  const auto dataFilePath =
-      dataPath.parent_path().parent_path() / "Data" / filename;
+  const auto dataFilePath = gamePath.parent_path() / "Data" / filename;
   std::filesystem::create_directories(dataFilePath.parent_path());
   std::filesystem::copy_file(getSourcePluginsPath() / blankEsp, dataFilePath);
   ASSERT_TRUE(std::filesystem::exists(dataFilePath));
@@ -180,7 +178,7 @@ TEST_P(GameTest,
 }
 
 TEST_P(GameTest, isValidPluginShouldResolveRelativePathsRelativeToDataPath) {
-  const Game game(GetParam(), dataPath.parent_path(), localPath);
+  const Game game(GetParam(), gamePath, localPath);
 
   const auto path = ".." / dataPath.filename() / blankEsm;
 
@@ -188,7 +186,7 @@ TEST_P(GameTest, isValidPluginShouldResolveRelativePathsRelativeToDataPath) {
 }
 
 TEST_P(GameTest, isValidPluginShouldUseAbsolutePathsAsGiven) {
-  const Game game(GetParam(), dataPath.parent_path(), localPath);
+  const Game game(GetParam(), gamePath, localPath);
 
   ASSERT_TRUE(dataPath.is_absolute());
 
@@ -200,7 +198,7 @@ TEST_P(GameTest, isValidPluginShouldUseAbsolutePathsAsGiven) {
 TEST_P(
     GameTest,
     loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));
   if (GetParam() == GameType::starfield) {
@@ -219,7 +217,7 @@ TEST_P(
 }
 
 TEST_P(GameTest, loadPluginsWithANonPluginShouldNotAddItToTheLoadedPlugins) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   ASSERT_THROW(game.LoadPlugins(
                    std::vector<std::filesystem::path>({nonPluginFile}), false),
@@ -238,7 +236,7 @@ TEST_P(GameTest,
   out << "GRUP0";
   out.close();
 
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   ASSERT_NO_THROW(game.LoadPlugins(
       std::vector<std::filesystem::path>({invalidPlugin}), false));
@@ -248,7 +246,7 @@ TEST_P(GameTest,
 
 TEST_P(GameTest,
        loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
   if (GetParam() == GameType::starfield) {
@@ -269,7 +267,7 @@ TEST_P(GameTest,
 TEST_P(
     GameTest,
     loadPluginsShouldFindAndCacheArchivesForLoadDetectionWhenLoadingPlugins) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
 
@@ -286,18 +284,17 @@ TEST_P(GameTest, loadPluginsShouldFindArchivesInAdditionalDataPaths) {
           : ".bsa";
 
   const auto ba2Path1 =
-      dataPath.parent_path() /
+      gamePath /
       ("../../Fallout 4- Far Harbor (PC)/Content/Data/DLCCoast - Main" +
        archiveFileExtension);
   const auto ba2Path2 =
-      dataPath.parent_path() /
-      ("../../Fallout 4- Nuka-World (PC)/Content/Data/DLCNukaWorld "
+      gamePath / ("../../Fallout 4- Nuka-World (PC)/Content/Data/DLCNukaWorld "
        "- Voices_it" +
        archiveFileExtension);
   touch(ba2Path1);
   touch(ba2Path2);
 
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   game.SetAdditionalDataPaths({ba2Path1.parent_path(), ba2Path2.parent_path()});
 
@@ -311,7 +308,7 @@ TEST_P(GameTest, loadPluginsShouldFindArchivesInAdditionalDataPaths) {
 }
 
 TEST_P(GameTest, loadPluginsShouldClearTheArchivesCacheBeforeFindingArchives) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
@@ -325,14 +322,14 @@ TEST_P(
         std::filesystem::u8path(
             u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.txt"));
 
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
 }
 
 TEST_P(GameTest,
        loadPluginsShouldThrowIfGivenVectorElementsWithTheSameFilename) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   const auto dataPluginPath = dataPath / std::filesystem::u8path(blankEsm);
   const auto sourcePluginPath =
@@ -345,7 +342,7 @@ TEST_P(GameTest,
 }
 
 TEST_P(GameTest, loadPluginsShouldResolveRelativePathsRelativeToDataPath) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   const auto relativePath = ".." / dataPath.filename() / blankEsm;
 
@@ -355,7 +352,7 @@ TEST_P(GameTest, loadPluginsShouldResolveRelativePathsRelativeToDataPath) {
 }
 
 TEST_P(GameTest, loadPluginsShouldUseAbsolutePathsAsGiven) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
 
@@ -367,7 +364,7 @@ TEST_P(GameTest, loadPluginsShouldUseAbsolutePathsAsGiven) {
 TEST_P(
     GameTest,
     loadPluginsShouldThrowIfFullyLoadingAPluginWithAMissingMasterIfGameIsMorrowindOrStarfield) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   const auto pluginName =
       GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
@@ -390,7 +387,7 @@ TEST_P(
 }
 
 TEST_P(GameTest, sortPluginsShouldHandlePluginPathsThatAreNotJustFilenames) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
 
   const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
 
@@ -401,21 +398,21 @@ TEST_P(GameTest, sortPluginsShouldHandlePluginPathsThatAreNotJustFilenames) {
 }
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasNotBeenLoaded) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
   EXPECT_TRUE(game.IsPluginActive(blankEsm));
 }
 
 TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItHasNotBeenLoaded) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
   EXPECT_FALSE(game.IsPluginActive(blankEsp));
 }
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItsHeaderHasBeenLoaded) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
   ASSERT_NO_THROW(loadInstalledPlugins(game, true));
@@ -424,7 +421,7 @@ TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItsHeaderHasBeenLoaded) {
 }
 
 TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItsHeaderHasBeenLoaded) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
   ASSERT_NO_THROW(loadInstalledPlugins(game, true));
@@ -433,7 +430,7 @@ TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItsHeaderHasBeenLoaded) {
 }
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasBeenFullyLoaded) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
   ASSERT_NO_THROW(loadInstalledPlugins(game, false));
@@ -442,7 +439,7 @@ TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasBeenFullyLoaded) {
 }
 
 TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItHasBeenFullyLoaded) {
-  Game game = Game(GetParam(), dataPath.parent_path(), localPath);
+  Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
   ASSERT_NO_THROW(loadInstalledPlugins(game, false));

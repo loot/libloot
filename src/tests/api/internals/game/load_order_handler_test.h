@@ -52,7 +52,7 @@ protected:
   }
 
   LoadOrderHandler createHandler() {
-    return LoadOrderHandler(GetParam(), dataPath.parent_path(), localPath);
+    return LoadOrderHandler(GetParam(), gamePath, localPath);
   }
 
   std::vector<std::string> getEarlyLoadingPlugins() {
@@ -124,24 +124,22 @@ TEST_P(LoadOrderHandlerTest, constructorShouldThrowIfNoGamePathIsSet) {
 
 #ifdef _WIN32
 TEST_P(LoadOrderHandlerTest, constructorShouldNotThrowIfNoLocalPathIsSet) {
-  EXPECT_NO_THROW(LoadOrderHandler(GetParam(), dataPath.parent_path()));
+  EXPECT_NO_THROW(LoadOrderHandler(GetParam(), gamePath));
 }
 #else
 TEST_P(LoadOrderHandlerTest,
        constructorShouldNotThrowIfNoLocalPathIsSetAndGameTypeIsMorrowind) {
   if (GetParam() == GameType::tes3) {
-    EXPECT_NO_THROW(LoadOrderHandler(GetParam(), dataPath.parent_path()));
+    EXPECT_NO_THROW(LoadOrderHandler(GetParam(), gamePath));
   } else {
-    EXPECT_THROW(LoadOrderHandler(GetParam(), dataPath.parent_path()),
-                 std::system_error);
+    EXPECT_THROW(LoadOrderHandler(GetParam(), gamePath), std::system_error);
   }
 }
 #endif
 
 TEST_P(LoadOrderHandlerTest,
        constructorShouldNotThrowIfAValidGameIdAndGamePathAndLocalPathAreSet) {
-  EXPECT_NO_THROW(
-      LoadOrderHandler(GetParam(), dataPath.parent_path(), localPath));
+  EXPECT_NO_THROW(LoadOrderHandler(GetParam(), gamePath, localPath));
 }
 
 TEST_P(LoadOrderHandlerTest,

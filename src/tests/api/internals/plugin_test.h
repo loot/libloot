@@ -42,7 +42,7 @@ protected:
       blankArchive("Blank" + GetArchiveFileExtension(GetParam())),
       blankSuffixArchive("Blank - Different - suffix" +
                          GetArchiveFileExtension(GetParam())),
-      game_(GetParam(), dataPath.parent_path(), localPath) {}
+      game_(GetParam(), gamePath, localPath) {}
 
   void SetUp() override {
     CommonGameTestFixture::SetUp();
@@ -123,28 +123,6 @@ protected:
                                         dataPath / blankSuffixArchive,
                                         dataPath / nonAsciiArchivePath,
                                         dataPath / nonAsciiPrefixArchivePath});
-  }
-
-  uintmax_t getGhostedPluginFileSize() {
-    switch (GetParam()) {
-      case GameType::tes3:
-        return 702;
-      case GameType::tes4:
-        return 390;
-      default:
-        return 1358;
-    }
-  }
-
-  uintmax_t getNonAsciiEspFileSize() {
-    switch (GetParam()) {
-      case GameType::tes3:
-        return 582;
-      case GameType::tes4:
-        return 55;
-      default:
-        return 1019;
-    }
   }
 
   const std::string emptyFile;

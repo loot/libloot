@@ -122,7 +122,7 @@ INSTANTIATE_TEST_SUITE_P(,
 
 TEST_P(DatabaseInterfaceTest,
        loadListsShouldSucceedEvenIfGameHandleIsDiscarded) {
-  handle_ = CreateGameHandle(GetParam(), dataPath.parent_path(), localPath);
+  handle_ = CreateGameHandle(GetParam(), gamePath, localPath);
 
   ASSERT_NO_THROW(GenerateMasterlist());
 

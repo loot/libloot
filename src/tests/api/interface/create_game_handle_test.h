@@ -36,9 +36,9 @@ class CreateGameHandleTest : public CommonGameTestFixture {
 protected:
   CreateGameHandleTest() :
       handle_(nullptr),
-      gamePathSymlink(dataPath.parent_path().string() + ".symlink"),
+      gamePathSymlink(gamePath.string() + ".symlink"),
       localPathSymlink(localPath.string() + ".symlink"),
-      gamePathJunctionLink(dataPath.parent_path().string() + ".junction"),
+      gamePathJunctionLink(gamePath.string() + ".junction"),
       localPathJunctionLink(localPath.string() + ".junction"),
       originalWorkingDirectory(std::filesystem::current_path()) {}
 
@@ -47,8 +47,7 @@ protected:
     using std::filesystem::status;
     CommonGameTestFixture::SetUp();
 
-    std::filesystem::create_directory_symlink(dataPath.parent_path(),
-                                              gamePathSymlink);
+    std::filesystem::create_directory_symlink(gamePath, gamePathSymlink);
     ASSERT_EQ(file_type::directory, status(gamePathSymlink).type());
 
     std::filesystem::create_directory_symlink(localPath, localPathSymlink);
@@ -67,7 +66,7 @@ protected:
 
     // relative() doesn't work when the current working directory and the given
     // path are on separate drives, so ensure that's not the case.
-    std::filesystem::current_path(dataPath.parent_path().parent_path());
+    std::filesystem::current_path(gamePath.parent_path());
   }
 
   void TearDown() override {
@@ -101,16 +100,14 @@ INSTANTIATE_TEST_SUITE_P(,
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {
   using std::filesystem::relative;
-  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(),
-                                             relative(dataPath.parent_path()),
-                                             relative(localPath)));
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(
+                      GetParam(), relative(gamePath), relative(localPath)));
   EXPECT_TRUE(handle_);
 }
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithAbsolutePaths) {
-  EXPECT_NO_THROW(handle_ = CreateGameHandle(
-                      GetParam(), dataPath.parent_path(), localPath));
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), gamePath, localPath));
   EXPECT_TRUE(handle_);
 }
 
@@ -120,21 +117,19 @@ TEST_P(CreateGameHandleTest, shouldThrowIfPassedAGamePathThatDoesNotExist) {
 }
 
 TEST_P(CreateGameHandleTest, shouldSucceedIfPassedALocalPathThatDoesNotExist) {
-  EXPECT_NO_THROW(handle_ = CreateGameHandle(
-                      GetParam(), dataPath.parent_path(), missingPath));
+  EXPECT_NO_THROW(handle_ =
+                      CreateGameHandle(GetParam(), gamePath, missingPath));
   EXPECT_TRUE(handle_);
 }
 
 TEST_P(CreateGameHandleTest, shouldThrowIfPassedALocalPathThatIsNotADirectory) {
-  EXPECT_THROW(
-      CreateGameHandle(GetParam(), dataPath.parent_path(), dataPath / blankEsm),
+  EXPECT_THROW(CreateGameHandle(GetParam(), gamePath, dataPath / blankEsm),
       std::invalid_argument);
 }
 
 #ifdef _WIN32
 TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedAnEmptyLocalPathString) {
-  EXPECT_NO_THROW(handle_ =
-                      CreateGameHandle(GetParam(), dataPath.parent_path(), ""));
+  EXPECT_NO_THROW(handle_ = CreateGameHandle(GetParam(), gamePath, ""));
   EXPECT_TRUE(handle_);
 }
 #endif
