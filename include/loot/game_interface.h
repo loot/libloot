@@ -147,8 +147,11 @@ public:
    *  @brief Identify the game's main master file.
    *  @details When sorting, LOOT always only loads the headers of the game's
    *           main master file as a performance optimisation.
+   *
+   *           A relative path is resolved relative to the game's plugins
+   *           directory, while an absolute path is used as given.
    */
-  virtual void IdentifyMainMasterFile(const std::string& masterFile) = 0;
+  virtual void IdentifyMainMasterFile(const std::filesystem::path& masterFile) = 0;
 
   /**
    *  @brief Calculates a new load order for the game's installed plugins

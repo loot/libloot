@@ -68,7 +68,7 @@ protected:
       plugins.push_back(blankEsl);
     }
 
-    game_.IdentifyMainMasterFile(masterFile);
+    game_.IdentifyMainMasterFile(std::filesystem::u8path(masterFile));
     game_.LoadCurrentLoadOrderState();
     game_.LoadPlugins(plugins, true);
   }

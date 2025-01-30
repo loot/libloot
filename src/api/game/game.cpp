@@ -161,35 +161,6 @@ std::vector<std::filesystem::path> FindArchives(
 
   return archivePaths;
 }
-
-std::filesystem::path FindPlugin(
-    GameType gameType,
-    const std::filesystem::path& dataPath,
-    const std::vector<std::filesystem::path>& additionalDataPaths,
-    const std::string& pluginName) {
-  const auto relativePath = std::filesystem::u8path(pluginName);
-
-  const auto finder = [&](const auto& path) {
-    const auto resolvedPath = ResolvePluginPath(gameType, path, relativePath);
-    return std::filesystem::exists(resolvedPath);
-  };
-
-  if (gameType == GameType::openmw) {
-    const auto it = std::find_if(
-        additionalDataPaths.rbegin(), additionalDataPaths.rend(), finder);
-    if (it != additionalDataPaths.rend()) {
-      return *it;
-    }
-  } else {
-    const auto it = std::find_if(
-        additionalDataPaths.begin(), additionalDataPaths.end(), finder);
-    if (it != additionalDataPaths.end()) {
-      return *it;
-    }
-  }
-
-  return dataPath / relativePath;
-}
 }
 
 namespace loot {
@@ -295,12 +266,6 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
     logger->trace("Starting plugin loading.");
   }
 
-  const auto masterPath = GetType() == GameType::openmw
-                              ? FindPlugin(GetType(),
-                                           DataPath(),
-                                           GetAdditionalDataPaths(),
-                                           masterFilename_)
-                              : DataPath() / u8path(masterFilename_);
   std::for_each(
       std::execution::par_unseq,
       pluginPaths.begin(),
@@ -312,7 +277,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
 
           const bool loadHeader =
               loadHeadersOnly ||
-              loot::equivalent(resolvedPluginPath, masterPath);
+              loot::equivalent(resolvedPluginPath, masterFilePath_);
 
           cache_.AddPlugin(
               Plugin(GetType(), cache_, resolvedPluginPath, loadHeader));
@@ -352,8 +317,8 @@ std::vector<const PluginInterface*> Game::GetLoadedPlugins() const {
   return interfacePointers;
 }
 
-void Game::IdentifyMainMasterFile(const std::string& masterFile) {
-  masterFilename_ = masterFile;
+void Game::IdentifyMainMasterFile(const std::filesystem::path& masterFile) {
+  masterFilePath_ = ResolvePluginPath(GetType(), DataPath(), masterFile);
 }
 
 std::vector<std::string> Game::SortPlugins(

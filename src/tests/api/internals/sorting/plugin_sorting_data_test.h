@@ -46,7 +46,7 @@ protected:
       }
     }
 
-    game.IdentifyMainMasterFile(masterFile);
+    game.IdentifyMainMasterFile(std::filesystem::u8path(masterFile));
     game.LoadCurrentLoadOrderState();
     game.LoadPlugins(plugins, headersOnly);
   }

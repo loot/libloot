@@ -75,7 +75,7 @@ public:
 
   std::vector<const PluginInterface*> GetLoadedPlugins() const override;
 
-  void IdentifyMainMasterFile(const std::string& masterFile) override;
+  void IdentifyMainMasterFile(const std::filesystem::path& masterFile) override;
 
   std::vector<std::string> SortPlugins(
       const std::vector<std::filesystem::path>& pluginPaths) override;
@@ -103,7 +103,7 @@ private:
   std::shared_ptr<ConditionEvaluator> conditionEvaluator_;
   ApiDatabase database_;
 
-  std::string masterFilename_;
+  std::filesystem::path masterFilePath_;
 
   std::vector<std::filesystem::path> additionalDataPaths_;
 };
