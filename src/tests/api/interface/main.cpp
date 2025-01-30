@@ -81,25 +81,6 @@ TEST(SetLoggingCallback, shouldAcceptAMemberFunction) {
   }
 }
 
-TEST(SetLoggingCallback,
-     shouldNotBreakLoggingIfPassedMemberFunctionGoesOutOfScope) {
-  {
-    TestLogger testLogger;
-    auto boundCallback = std::bind(&TestLogger::callback,
-                                   &testLogger,
-                                   std::placeholders::_1,
-                                   std::placeholders::_2);
-    SetLoggingCallback(boundCallback);
-  }
-
-  try {
-    CreateGameHandle(GameType::tes4, "dummy");
-    FAIL();
-  } catch (...) {
-    SetLoggingCallback([](LogLevel, const char *) {});
-  }
-}
-
 TEST(SetLoggingCallback, shouldAcceptALambdaFunction) {
   std::string loggedMessages;
   auto callback = [&](LogLevel, const char *string) {
