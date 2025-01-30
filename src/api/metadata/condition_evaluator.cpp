@@ -51,7 +51,8 @@ void HandleError(const std::string operation, int returnCode) {
     logger->error(err);
   }
 
-  throw ConditionSyntaxError(returnCode, loot_condition_interpreter_category(), err);
+  throw ConditionSyntaxError(
+      returnCode, loot_condition_interpreter_category(), err);
 }
 
 int mapGameType(GameType gameType) {
@@ -76,6 +77,8 @@ int mapGameType(GameType gameType) {
       return LCI_GAME_FALLOUT_4_VR;
     case GameType::starfield:
       return LCI_GAME_STARFIELD;
+    case GameType::openmw:
+      return LCI_GAME_OPENMW;
     default:
       throw std::runtime_error(
           "Unrecognised game type encountered while mapping for condition "
@@ -90,9 +93,8 @@ ConditionEvaluator::ConditionEvaluator(const GameType gameType,
         lci_state_destroy)) {
   lci_state* state = nullptr;
 
-  int result = lci_state_create(&state,
-                                mapGameType(gameType),
-                                dataPath.u8string().c_str());
+  int result = lci_state_create(
+      &state, mapGameType(gameType), dataPath.u8string().c_str());
   HandleError("create state object for condition evaluation", result);
 
   lciState_ = std::unique_ptr<lci_state, decltype(&lci_state_destroy)>(

@@ -95,7 +95,8 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo4vr,
                                            GameType::tes5vr,
                                            GameType::tes3,
-                                           GameType::starfield));
+                                           GameType::starfield,
+                                           GameType::openmw));
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {
@@ -124,7 +125,7 @@ TEST_P(CreateGameHandleTest, shouldSucceedIfPassedALocalPathThatDoesNotExist) {
 
 TEST_P(CreateGameHandleTest, shouldThrowIfPassedALocalPathThatIsNotADirectory) {
   EXPECT_THROW(CreateGameHandle(GetParam(), gamePath, dataPath / blankEsm),
-      std::invalid_argument);
+               std::invalid_argument);
 }
 
 #ifdef _WIN32

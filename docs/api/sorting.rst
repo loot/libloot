@@ -33,9 +33,9 @@ every time, so that it gives consistent results.
 After that, three graphs are created, and the plugins are added to them as
 vertices in their sorted order:
 
-- One graph contains plugins that are not masters (e.g. they don't have their
-  master flag set - for some games they must also not have the ``.esm`` file
-  extension).
+- One graph contains plugins that are not masters (meaning master plugins in
+  their own right, not that they are listed as a master within another plugin's
+  header).
 - One graph contains plugins that are blueprint masters: blueprint masters are
   a type of plugin specific to Starfield, so for all other games this graph will
   be empty.
@@ -49,7 +49,7 @@ than to enforce those relationships within a single graph.
 
 A consequence of using three separate graphs is that any plugin data or metadata
 that involves a pair of plugins that go in different graphs will be silently
-ignored. For example: if plugin A is master-flagged and plugin B is not, and
+ignored. For example: if plugin A is a master and plugin B is not, and
 plugin A has metadata saying it must load after plugin B, then that metadata
 will be ignored because the two plugins are sorted independently, as if the
 other plugin is not installed.
@@ -224,8 +224,8 @@ Combine the load orders
 
 Finally, the sorted load orders are combined in this order:
 
-1. master-flagged plugins
-2. non-master-flagged plugins
+1. master plugins
+2. non-master plugins
 3. blueprint master plugins
 
 That gives the complete sorted load order.

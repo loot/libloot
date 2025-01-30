@@ -57,6 +57,8 @@ protected:
 
   std::vector<std::string> getEarlyLoadingPlugins() {
     switch (GetParam()) {
+      case GameType::openmw:
+        return {"builtin.omwscripts"};
       case GameType::tes5:
         return {"Skyrim.esm"};
       case GameType::tes5se:
@@ -111,7 +113,8 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo3,
                                            GameType::fonv,
                                            GameType::fo4,
-                                           GameType::tes5se));
+                                           GameType::tes5se,
+                                           GameType::openmw));
 
 TEST_P(LoadOrderHandlerTest, constructorShouldThrowIfNoGamePathIsSet) {
   EXPECT_THROW(LoadOrderHandler(GetParam(), ""), std::invalid_argument);
@@ -129,7 +132,7 @@ TEST_P(LoadOrderHandlerTest, constructorShouldNotThrowIfNoLocalPathIsSet) {
 #else
 TEST_P(LoadOrderHandlerTest,
        constructorShouldNotThrowIfNoLocalPathIsSetAndGameTypeIsMorrowind) {
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_NO_THROW(LoadOrderHandler(GetParam(), gamePath));
   } else {
     EXPECT_THROW(LoadOrderHandler(GetParam(), gamePath), std::system_error);
@@ -179,7 +182,24 @@ TEST_P(LoadOrderHandlerTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
   auto loadOrderHandler = createHandler();
   loadOrderHandler.LoadCurrentState();
 
-  ASSERT_EQ(getLoadOrder(), loadOrderHandler.GetLoadOrder());
+  if (GetParam() == GameType::openmw) {
+    EXPECT_EQ(std::vector<std::string>({
+                  blankDifferentEsm,
+                  blankDifferentMasterDependentEsm,
+                  blankDifferentEsp,
+                  blankDifferentPluginDependentEsp,
+                  blankMasterDependentEsm,
+                  blankMasterDependentEsp,
+                  blankEsp,
+                  blankPluginDependentEsp,
+                  masterFile,
+                  blankEsm,
+                  blankDifferentMasterDependentEsp,
+              }),
+              loadOrderHandler.GetLoadOrder());
+  } else {
+    ASSERT_EQ(getLoadOrder(), loadOrderHandler.GetLoadOrder());
+  }
 }
 
 TEST_P(LoadOrderHandlerTest,
@@ -209,6 +229,45 @@ TEST_P(LoadOrderHandlerTest,
             loadOrderHandler.GetEarlyLoadingPlugins());
 }
 
+TEST_P(LoadOrderHandlerTest, getAdditionalDataPathsShouldReturnValidData) {
+  if (GetParam() == GameType::fo4) {
+    // Create the file that indicates it's a Microsoft Store install.
+    touch(gamePath / "appxmanifest.xml");
+  }
+
+  auto loadOrderHandler = createHandler();
+
+  if (GetParam() == GameType::fo4) {
+    const auto basePath = gamePath / ".." / "..";
+    EXPECT_EQ(std::vector<std::filesystem::path>(
+                  {basePath / "Fallout 4- Automatron (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Nuka-World (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Wasteland Workshop (PC)" / "Content" /
+                       "Data",
+                   basePath / "Fallout 4- High Resolution Texture Pack" /
+                       "Content" / "Data",
+                   basePath / "Fallout 4- Vault-Tec Workshop (PC)" / "Content" /
+                       "Data",
+                   basePath / "Fallout 4- Far Harbor (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Contraptions Workshop (PC)" /
+                       "Content" / "Data"}),
+              loadOrderHandler.GetAdditionalDataPaths());
+  } else if (GetParam() == GameType::starfield) {
+    ASSERT_EQ(1, loadOrderHandler.GetAdditionalDataPaths().size());
+
+    const auto expectedSuffix = std::filesystem::u8path("Documents") /
+                                "My Games" / "Starfield" / "Data";
+    EXPECT_TRUE(boost::ends_with(
+        loadOrderHandler.GetAdditionalDataPaths()[0].u8string(),
+        expectedSuffix.u8string()));
+  } else if (GetParam() == GameType::openmw) {
+    EXPECT_EQ(std::vector<std::filesystem::path>{localPath / "data"},
+              loadOrderHandler.GetAdditionalDataPaths());
+  } else {
+    EXPECT_TRUE(loadOrderHandler.GetAdditionalDataPaths().empty());
+  }
+}
+
 TEST_P(LoadOrderHandlerTest, setLoadOrderShouldSetTheLoadOrder) {
   auto loadOrderHandler = createHandler();
   loadOrderHandler.LoadCurrentState();
@@ -218,7 +277,14 @@ TEST_P(LoadOrderHandlerTest, setLoadOrderShouldSetTheLoadOrder) {
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
     loadOrderToSet_.erase(begin(loadOrderToSet_));
 
-  EXPECT_EQ(loadOrderToSet_, getLoadOrder());
+  if (GetParam() == GameType::openmw) {
+    // Can't set the load order positions of inactive plugins,
+    // this reads what libloadorder has cached in memory instead of
+    // what was actually saved.
+    EXPECT_EQ(loadOrderToSet_, loadOrderHandler.GetLoadOrder());
+  } else {
+    EXPECT_EQ(loadOrderToSet_, getLoadOrder());
+  }
 }
 
 TEST_P(LoadOrderHandlerTest, setExternalPluginPathsShouldAcceptAnEmptyVector) {

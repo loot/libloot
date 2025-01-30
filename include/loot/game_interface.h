@@ -41,9 +41,11 @@ public:
 
   /**
    * @brief   Gets the currently-set additional data paths.
-   * @details Only Fallout 4 installed from the Microsoft Store is configured
-   *          with any additional data paths by default, as its DLC directories
-   *          are installed outside of the Fallout 4 install path.
+   * @details The following games are configured with additional data paths by
+   *          default:
+   *          - Fallout 4, when installed from the Microsoft Store
+   *          - Starfield
+   *          - OpenMW
    */
   virtual std::vector<std::filesystem::path> GetAdditionalDataPaths() const = 0;
 
@@ -52,8 +54,9 @@ public:
    * @details The additional data paths are used when interacting with the load
    *          order, evaluating conditions and scanning for archives (BSA/BA2
    *          depending on the game). Additional data paths are used in the
-   *          order they are given, and take precedence over the game's main
-   *          data path.
+   *          order they are given (except with OpenMW, which checks them in
+   *          reverse order), and take precedence over the game's main data
+   *          path.
    */
   virtual void SetAdditionalDataPaths(
       const std::vector<std::filesystem::path>& additionalDataPaths) = 0;
@@ -87,9 +90,9 @@ public:
 
   /**
    * @brief Check if a file is a valid plugin.
-   * @details The validity check is not exhaustive: it checks that the file
-   *          extension is ``.esm`` or ``.esp`` (after trimming any ``.ghost``
-   *          extension), and that the ``TES4`` header can be parsed.
+   * @details The validity check is not exhaustive: it generally checks that the
+   *          file is a valid plugin file extension for the game and that its
+   *          header (if applicable) can be parsed.
    * @param  pluginPath
    *         The path to the file to check. Relative paths are resolved relative
    *         to the game's plugins directory, while absolute paths are used
@@ -107,10 +110,9 @@ public:
    *        the game's plugins directory, while absolute paths are used as
    *        given. Each plugin filename must be unique within the vector.
    * @param loadHeadersOnly
-   *        If true, only the plugins' ``TES4`` headers are loaded. If false,
-   *        all records in the plugins are parsed, apart from the main master
-   *        file if it has been identified by a previous call to
-   *        ``IdentifyMainMasterFile()``.
+   *        If true, only the plugins' headers are loaded. If false, all records
+   *        in the plugins are parsed, apart from the main master file if it has
+   *        been identified by a previous call to ``IdentifyMainMasterFile()``.
    */
   virtual void LoadPlugins(
       const std::vector<std::filesystem::path>& pluginPaths,
@@ -219,6 +221,9 @@ public:
 
   /**
    * @brief Set the game's load order.
+   * @details There is no way to persist the load order of inactive OpenMW
+   *          plugins, so setting an OpenMW load order will have no effect if
+   *          the relative order of active plugins is unchanged.
    * @param loadOrder
    *        A vector of plugin filenames sorted in the load order to set.
    */

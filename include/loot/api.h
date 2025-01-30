@@ -98,11 +98,13 @@ LOOT_API bool IsCompatible(const unsigned int major,
  *        The relative or absolute path to the directory containing the
  *        game's executable.
  * @param game_local_path
- *        The relative or absolute path to the game's folder in
- *        `%%LOCALAPPDATA%` or an empty path. If an empty path, the API will
- *        attempt to look up the path that `%%LOCALAPPDATA%` corresponds to.
- *        This parameter is provided so that systems lacking that environmental
- *        variable (eg. Linux) can still use the API.
+ *        The relative or absolute path to the game's local data folder, or an
+ *        empty path. The local data folder is usually in `%%LOCALAPPDATA%`, but
+ *        Morrowind has no local data folder and OpenMW's is in the user's
+ *        My Games folder on Windows and in `$HOME/.config` on Linux. If an
+ *        empty path is provided, the API will attempt to look up the relevant
+ *        local data path, which may fail in some situations (e.g. when running
+ *        libloot natively on Linux for a game other than Morrowind or OpenMW).
  * @returns The new game handle.
  */
 LOOT_API std::unique_ptr<GameInterface> CreateGameHandle(

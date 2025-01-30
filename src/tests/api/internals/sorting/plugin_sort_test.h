@@ -119,7 +119,8 @@ INSTANTIATE_TEST_SUITE_P(,
                          ::testing::Values(GameType::tes3,
                                            GameType::tes4,
                                            GameType::fo4,
-                                           GameType::starfield));
+                                           GameType::starfield,
+                                           GameType::openmw));
 
 TEST_P(PluginSortTest, sortingWithNoLoadedPluginsShouldReturnAnEmptyList) {
   std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
@@ -131,11 +132,31 @@ TEST_P(PluginSortTest,
        sortingShouldNotMakeUnnecessaryChangesToAnExistingLoadOrder) {
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
-  std::vector<std::string> expectedSortedOrder = getLoadOrder();
+  std::vector<std::string> expectedSortedOrder;
+  if (GetParam() == GameType::openmw) {
+    // The existing load order for OpenMW doesn't have plugins loading after
+    // their masters, because the game doesn't enforce that, and the test
+    // setup cannot enforce the positions of inactive plugins.
+    expectedSortedOrder = {
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankMasterDependentEsp,
+        blankEsp,
+        blankPluginDependentEsp,
+        masterFile,
+        blankDifferentMasterDependentEsp,
+    };
+  } else {
+    expectedSortedOrder = getLoadOrder();
+  }
 
   // Check stability by running the sort 100 times.
   for (int i = 0; i < 100; i++) {
-    std::vector<std::string> sorted = SortPlugins(game_, game_.GetLoadOrder());
+    auto sorted = SortPlugins(game_, game_.GetLoadOrder());
     ASSERT_EQ(expectedSortedOrder, sorted) << " for sort " << i;
   }
 }
@@ -218,6 +239,26 @@ TEST_P(PluginSortTest,
         blankDifferentEsp,
         blankMasterDependentEsp,
     };
+  } else if (GetParam() == GameType::openmw) {
+    // OpenMW's starting order is different, so more metadata is needed to see
+    // a change.
+    plugin = PluginMetadata(blankEsp);
+    plugin.SetGroup("A");
+    game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+    expectedSortedOrder = {
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsp,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankMasterDependentEsp,
+        blankPluginDependentEsp,
+        masterFile,
+        blankDifferentMasterDependentEsp,
+    };
   } else {
     expectedSortedOrder = {
         masterFile,
@@ -288,6 +329,20 @@ TEST_P(PluginSortTest,
         blankDifferentEsp,
         blankMasterDependentEsp,
     };
+  } else if (GetParam() == GameType::openmw) {
+    expectedSortedOrder = {
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsp,
+        blankPluginDependentEsp,
+        masterFile,
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentMasterDependentEsp,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankMasterDependentEsp,
+    };
   } else {
     expectedSortedOrder = {
         masterFile,
@@ -346,6 +401,26 @@ TEST_P(PluginSortTest,
         blankEsp,
         blankMasterDependentEsp,
     };
+  } else if (GetParam() == GameType::openmw) {
+    // OpenMW's starting order is different, so more metadata is needed to see
+    // a change.
+    plugin = PluginMetadata(blankEsp);
+    plugin.SetLoadAfterFiles({File(blankDifferentMasterDependentEsp)});
+    game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+    expectedSortedOrder = {
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankEsp,
+        blankPluginDependentEsp,
+        masterFile,
+    };
   } else {
     expectedSortedOrder = {
         masterFile,
@@ -393,6 +468,26 @@ TEST_P(PluginSortTest,
         blankDifferentEsp,
         blankEsp,
         blankMasterDependentEsp,
+    };
+  } else if (GetParam() == GameType::openmw) {
+    // OpenMW's starting order is different, so more metadata is needed to see
+    // a change.
+    plugin = PluginMetadata(blankEsp);
+    plugin.SetRequirements({File(blankDifferentMasterDependentEsp)});
+    game_.GetDatabase().SetPluginUserMetadata(plugin);
+
+    expectedSortedOrder = {
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankMasterDependentEsp,
+        blankDifferentMasterDependentEsp,
+        blankEsp,
+        blankPluginDependentEsp,
+        masterFile,
     };
   } else {
     expectedSortedOrder = {
@@ -520,6 +615,11 @@ TEST_P(PluginSortTest,
 TEST_P(
     PluginSortTest,
     sortingShouldThrowIfMasterlistRequirementEdgeWouldContradictMasterFlags) {
+  if (GetParam() == GameType::openmw) {
+    // OpenMW doesn't require master-flagged plugins to load before others.
+    return;
+  }
+
   using std::endl;
 
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
@@ -550,6 +650,11 @@ TEST_P(
 
 TEST_P(PluginSortTest,
        sortingShouldThrowIfUserRequirementEdgeWouldContradictMasterFlags) {
+  if (GetParam() == GameType::openmw) {
+    // OpenMW doesn't require master-flagged plugins to load before others.
+    return;
+  }
+
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   PluginMetadata plugin(blankEsm);
@@ -573,6 +678,11 @@ TEST_P(PluginSortTest,
 
 TEST_P(PluginSortTest,
        sortingShouldThrowIfMasterlistLoadAfterEdgeWouldContradictMasterFlags) {
+  if (GetParam() == GameType::openmw) {
+    // OpenMW doesn't require master-flagged plugins to load before others.
+    return;
+  }
+
   using std::endl;
 
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
@@ -603,6 +713,11 @@ TEST_P(PluginSortTest,
 
 TEST_P(PluginSortTest,
        sortingShouldThrowIfUserLoadAfterEdgeWouldContradictMasterFlags) {
+  if (GetParam() == GameType::openmw) {
+    // OpenMW doesn't require master-flagged plugins to load before others.
+    return;
+  }
+
   ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
 
   PluginMetadata plugin(blankEsm);

@@ -27,17 +27,33 @@ along with LOOT.  If not, see
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <boost/algorithm/string.hpp>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <unordered_set>
 
 #include "loot/enum/game_type.h"
 #include "tests/test_helpers.h"
 
 namespace loot {
 namespace test {
+static const std::array<GameType, 11> ALL_GAME_TYPES = {
+    GameType::tes3,
+    GameType::tes4,
+    GameType::tes5,
+    GameType::tes5se,
+    GameType::tes5vr,
+    GameType::fo3,
+    GameType::fonv,
+    GameType::fo4,
+    GameType::fo4vr,
+    GameType::starfield,
+    GameType::openmw,
+};
+
 class CommonGameTestFixture : public ::testing::TestWithParam<GameType> {
 protected:
   CommonGameTestFixture() :
@@ -46,7 +62,7 @@ protected:
       german("de"),
       missingPath(rootTestPath / "missing"),
       gamePath(rootTestPath / "games" / "game"),
-          dataPath(gamePath / getPluginsFolder()),
+      dataPath(gamePath / getPluginsFolder()),
       localPath(rootTestPath / "local" / "game"),
       metadataFilesPath(rootTestPath / "metadata"),
       masterFile(getMasterFile()),
@@ -147,12 +163,16 @@ protected:
     // Set initial load order and active plugins.
     setLoadOrder(getInitialLoadOrder());
 
-    // Ghost a plugin.
-    ASSERT_NO_THROW(std::filesystem::rename(
-        dataPath / blankMasterDependentEsm,
-        dataPath / (blankMasterDependentEsm + ".ghost")));
-    ASSERT_FALSE(exists(dataPath / blankMasterDependentEsm));
-    ASSERT_TRUE(exists(dataPath / (blankMasterDependentEsm + ".ghost")));
+    // Ghost a plugin, except for OpenMW.
+    if (GetParam() != GameType::openmw) {
+      ASSERT_NO_THROW(std::filesystem::rename(
+          dataPath / blankMasterDependentEsm,
+          dataPath / (blankMasterDependentEsm + ".ghost")));
+      ASSERT_FALSE(exists(dataPath / blankMasterDependentEsm));
+      ASSERT_TRUE(exists(dataPath / (blankMasterDependentEsm + ".ghost")));
+    } else {
+      touch(gamePath / "openmw.cfg");
+    }
 
     // Write out an non-empty, non-plugin file.
     std::ofstream out(dataPath / nonPluginFile);
@@ -226,6 +246,10 @@ protected:
         if (!line.empty())
           actual.push_back(line);
       }
+    } else if (GetParam() == GameType::openmw) {
+      throw std::runtime_error(
+          "OpenMW's load order derivation is too complicated to replicate "
+          "accurately just for a test.");
     } else {
       actual = readFileLines(localPath / "Plugins.txt");
       for (auto& line : actual) {
@@ -377,7 +401,7 @@ protected:
 
 private:
   std::string getMasterFile() const {
-    if (GetParam() == GameType::tes3)
+    if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw)
       return "Morrowind.esm";
     else if (GetParam() == GameType::tes4)
       return "Oblivion.esm";
@@ -397,7 +421,9 @@ private:
   }
 
   std::string getPluginsFolder() const {
-    if (GetParam() == GameType::tes3) {
+    if (GetParam() == GameType::openmw) {
+      return "resources/vfs";
+    } else if (GetParam() == GameType::tes3) {
       return "Data Files";
     } else {
       return "Data";
@@ -407,6 +433,7 @@ private:
   uint32_t getBlankEsmCrc() const {
     switch (GetParam()) {
       case GameType::tes3:
+      case GameType::openmw:
         return 0x790DC6FB;
       case GameType::tes4:
         return 0x374E2A6F;
@@ -424,6 +451,14 @@ private:
       for (const auto& plugin : loadOrder) {
         if (plugin.second) {
           out << "GameFile0=" << plugin.first << std::endl;
+        }
+      }
+    } else if (GetParam() == GameType::openmw) {
+      std::ofstream out(localPath / "openmw.cfg");
+
+      for (const auto& plugin : loadOrder) {
+        if (plugin.second) {
+          out << "content=" << plugin.first << std::endl;
         }
       }
     } else {

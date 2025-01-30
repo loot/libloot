@@ -85,7 +85,7 @@ protected:
           dataPath / blankMasterDependentArchive);
       ASSERT_TRUE(
           std::filesystem::exists(dataPath / blankMasterDependentArchive));
-    } else if (GetParam() == GameType::tes3) {
+    } else if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
       touch(dataPath / blankArchive);
 
       blankMasterDependentArchive = "Blank - Master Dependent.bsa";
@@ -191,7 +191,26 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo4vr,
                                            GameType::tes5vr,
                                            GameType::tes3,
-                                           GameType::starfield));
+                                           GameType::starfield,
+                                           GameType::openmw));
+
+TEST_P(PluginTest, constructorShouldTrimGhostExtensionExceptForOpenMW) {
+  const auto pluginPath =
+      game_.DataPath() / (blankMasterDependentEsm + ".ghost");
+
+  if (GetParam() == GameType::openmw) {
+    // This wasn't done for OpenMW during common setup.
+    std::filesystem::rename(dataPath / blankMasterDependentEsm, pluginPath);
+  }
+
+  Plugin plugin(game_.GetType(), game_.GetCache(), pluginPath, true);
+
+  if (GetParam() == GameType::openmw) {
+    EXPECT_EQ(pluginPath.filename().u8string(), plugin.GetName());
+  } else {
+    EXPECT_EQ(blankMasterDependentEsm, plugin.GetName());
+  }
+}
 
 TEST_P(PluginTest, loadingShouldHandleNonAsciiFilenamesCorrectly) {
   Plugin plugin(game_.GetType(),
@@ -209,11 +228,15 @@ TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.GetMasters().empty());
-  EXPECT_TRUE(plugin.IsMaster());
+  if (GetParam() == GameType::openmw) {
+    EXPECT_FALSE(plugin.IsMaster());
+  } else {
+    EXPECT_TRUE(plugin.IsMaster());
+  }
   EXPECT_FALSE(plugin.IsEmpty());
   EXPECT_EQ("5.0", plugin.GetVersion());
 
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion().value());
   } else if (GetParam() == GameType::tes4) {
     EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion().value());
@@ -237,11 +260,15 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.GetMasters().empty());
-  EXPECT_TRUE(plugin.IsMaster());
+  if (GetParam() == GameType::openmw) {
+    EXPECT_FALSE(plugin.IsMaster());
+  } else {
+    EXPECT_TRUE(plugin.IsMaster());
+  }
   EXPECT_FALSE(plugin.IsEmpty());
   EXPECT_EQ("5.0", plugin.GetVersion());
 
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion().value());
   } else if (GetParam() == GameType::tes4) {
     EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion().value());
@@ -253,12 +280,13 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
 }
 
 TEST_P(PluginTest, loadingWholePluginShouldReadFields) {
-  Plugin plugin(game_.GetType(),
-                game_.GetCache(),
-                game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
-                false);
+  const auto pluginName = GetParam() == GameType::openmw
+                              ? blankMasterDependentEsm
+                              : blankMasterDependentEsm + ".ghost";
+  Plugin plugin(
+      game_.GetType(), game_.GetCache(), game_.DataPath() / pluginName, false);
 
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     Plugin master(
         game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
     const auto pluginsMetadata = Plugin::GetPluginsMetadata({&master});
@@ -295,6 +323,30 @@ TEST_P(PluginTest, loadingANonMasterPluginShouldReadTheMasterFlagAsFalse) {
                 true);
 
   EXPECT_FALSE(plugin.IsMaster());
+}
+
+TEST_P(PluginTest, loadingWholePluginShouldSucceedForOpenMWPlugins) {
+  const auto omwgame = "Blank.omwgame";
+  const auto omwaddon = "Blank.omwaddon";
+  const auto omwscripts = "Blank.omwscripts";
+
+  std::filesystem::rename(dataPath / blankEsm, dataPath / omwgame);
+  std::filesystem::rename(dataPath / blankEsp, dataPath / omwaddon);
+  std::ofstream out(dataPath / omwscripts);
+  out.close();
+
+  EXPECT_NO_THROW(
+      Plugin(game_.GetType(), game_.GetCache(), dataPath / omwgame, false));
+  EXPECT_NO_THROW(
+      Plugin(game_.GetType(), game_.GetCache(), dataPath / omwaddon, false));
+  if (GetParam() == GameType::openmw) {
+    EXPECT_NO_THROW(Plugin(
+        game_.GetType(), game_.GetCache(), dataPath / omwscripts, false));
+  } else {
+    EXPECT_THROW(
+        Plugin(game_.GetType(), game_.GetCache(), dataPath / omwscripts, false),
+        std::system_error);
+  }
 }
 
 TEST_P(
@@ -399,7 +451,8 @@ TEST_P(
           game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, true)
           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::tes4)
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::tes4)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
@@ -416,7 +469,8 @@ TEST_P(
              true)
           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::starfield)
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::starfield)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
@@ -431,7 +485,7 @@ TEST_P(
           game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, true)
           .LoadsArchive();
 
-  if (GetParam() == GameType::tes3)
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
@@ -597,10 +651,12 @@ TEST_P(PluginTest,
        doRecordsOverlapShouldReturnFalseForTwoPluginsWithOnlyHeadersLoaded) {
   Plugin plugin1(
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, true);
-  Plugin plugin2(game_.GetType(),
-                 game_.GetCache(),
-                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
-                 true);
+
+  const auto pluginName = GetParam() == GameType::openmw
+                              ? blankMasterDependentEsm
+                              : blankMasterDependentEsm + ".ghost";
+  Plugin plugin2(
+      game_.GetType(), game_.GetCache(), game_.DataPath() / pluginName, true);
 
   EXPECT_FALSE(plugin1.DoRecordsOverlap(plugin2));
   EXPECT_FALSE(plugin2.DoRecordsOverlap(plugin1));
@@ -626,13 +682,14 @@ TEST_P(PluginTest,
        doRecordsOverlapShouldReturnTrueIfOnePluginOverridesTheOthersRecords) {
   const auto plugin1Name =
       GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+  const auto plugin2Name = GetParam() == GameType::openmw
+                               ? blankMasterDependentEsm
+                               : blankMasterDependentEsm + ".ghost";
 
   Plugin plugin1(
       game_.GetType(), game_.GetCache(), game_.DataPath() / plugin1Name, false);
-  Plugin plugin2(game_.GetType(),
-                 game_.GetCache(),
-                 game_.DataPath() / (blankMasterDependentEsm + ".ghost"),
-                 false);
+  Plugin plugin2(
+      game_.GetType(), game_.GetCache(), game_.DataPath() / plugin2Name, false);
 
   if (GetParam() == GameType::starfield) {
     plugin1.ResolveRecordIds(nullptr);
@@ -649,7 +706,7 @@ TEST_P(PluginTest, getRecordAndGroupCountShouldReturnTheHeaderFieldValue) {
   Plugin plugin(
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, true);
 
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_EQ(10u, plugin.GetRecordAndGroupCount());
   } else if (GetParam() == GameType::tes4) {
     EXPECT_EQ(14u, plugin.GetRecordAndGroupCount());
@@ -665,7 +722,7 @@ TEST_P(PluginTest,
           game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false)
           .GetAssetCount();
 
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_EQ(0, assetCount);
   } else if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
              GetParam() == GameType::starfield) {
@@ -690,7 +747,7 @@ TEST_P(PluginTest,
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
   OtherPluginType plugin2;
 
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
   } else {
     EXPECT_THROW(plugin1.DoAssetsOverlap(plugin2), std::invalid_argument);
@@ -734,7 +791,7 @@ TEST_P(PluginTest,
                  game_.DataPath() / blankMasterDependentEsp,
                  false);
 
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     // Morrowind plugins can't load assets.
     EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
     EXPECT_FALSE(plugin2.DoAssetsOverlap(plugin1));
@@ -744,16 +801,20 @@ TEST_P(PluginTest,
   }
 }
 
-TEST_P(PluginTest,
-       hasPluginFileExtensionShouldBeTrueIfFileEndsInDotEspOrDotEsm) {
+class HasPluginFileExtensionTest : public ::testing::TestWithParam<GameType> {};
+
+INSTANTIATE_TEST_SUITE_P(,
+                         HasPluginFileExtensionTest,
+                         ::testing::ValuesIn(ALL_GAME_TYPES));
+
+TEST_P(HasPluginFileExtensionTest, shouldBeTrueIfFileEndsInDotEspOrDotEsm) {
   EXPECT_TRUE(hasPluginFileExtension("file.esp", GetParam()));
   EXPECT_TRUE(hasPluginFileExtension("file.esm", GetParam()));
   EXPECT_FALSE(hasPluginFileExtension("file.bsa", GetParam()));
 }
 
-TEST_P(
-    PluginTest,
-    hasPluginFileExtensionShouldBeTrueIfFileEndsInDotEslOnlyForFallout4AndLater) {
+TEST_P(HasPluginFileExtensionTest,
+       shouldBeTrueIfFileEndsInDotEslOnlyForFallout4AndLater) {
   bool result = hasPluginFileExtension("file.esl", GetParam());
 
   EXPECT_EQ(GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
@@ -761,6 +822,26 @@ TEST_P(
                 GetParam() == GameType::tes5vr ||
                 GetParam() == GameType::starfield,
             result);
+}
+
+TEST_P(HasPluginFileExtensionTest, shouldTrimGhostExtensionExceptForOpenMW) {
+  if (GetParam() == GameType::openmw) {
+    EXPECT_FALSE(hasPluginFileExtension("file.esp.ghost", GetParam()));
+    EXPECT_FALSE(hasPluginFileExtension("file.esm.ghost", GetParam()));
+  } else {
+    EXPECT_TRUE(hasPluginFileExtension("file.esp.ghost", GetParam()));
+    EXPECT_TRUE(hasPluginFileExtension("file.esm.ghost", GetParam()));
+  }
+  EXPECT_FALSE(hasPluginFileExtension("file.bsa.ghost", GetParam()));
+}
+
+TEST_P(HasPluginFileExtensionTest, shouldRecogniseOpenMWPluginExtensions) {
+  EXPECT_EQ(GetParam() == GameType::openmw,
+            hasPluginFileExtension("file.omwgame", GetParam()));
+  EXPECT_EQ(GetParam() == GameType::openmw,
+            hasPluginFileExtension("file.omwaddon", GetParam()));
+  EXPECT_EQ(GetParam() == GameType::openmw,
+            hasPluginFileExtension("file.omwscripts", GetParam()));
 }
 
 TEST(equivalent, shouldReturnTrueIfGivenEqualPathsThatExist) {

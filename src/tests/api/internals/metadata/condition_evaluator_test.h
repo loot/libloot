@@ -91,7 +91,8 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo3,
                                            GameType::fonv,
                                            GameType::fo4,
-                                           GameType::tes5se));
+                                           GameType::tes5se,
+                                           GameType::openmw));
 
 TEST_P(ConditionEvaluatorTest,
        evaluateShouldReturnTrueForAnEmptyConditionString) {

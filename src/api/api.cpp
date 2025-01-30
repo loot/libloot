@@ -54,6 +54,8 @@ const char* DescribeGameType(GameType gameType) {
       return "The Elder Scrolls III: Morrowind";
     case GameType::starfield:
       return "Starfield";
+    case GameType::openmw:
+      return "OpenMW";
     default:
       return "Unknown";
   }

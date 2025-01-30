@@ -40,7 +40,7 @@ bool supportsLightPlugins(GameType gameType) {
 
 std::filesystem::path getSourcePluginsPath(GameType gameType) {
   using std::filesystem::absolute;
-  if (gameType == GameType::tes3) {
+  if (gameType == GameType::tes3 || gameType == GameType::openmw) {
     return absolute("./testing-plugins/Morrowind/Data Files");
   } else if (gameType == GameType::tes4) {
     return absolute("./testing-plugins/Oblivion/Data");

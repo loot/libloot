@@ -93,8 +93,7 @@ public:
 
   static std::unique_ptr<Vec_PluginMetadata,
                          decltype(&esp_plugins_metadata_free)>
-      GetPluginsMetadata(
-      std::vector<const Plugin*>);
+  GetPluginsMetadata(const std::vector<const Plugin*>& plugins);
 
 private:
   void Load(const std::filesystem::path& path,
@@ -106,8 +105,10 @@ private:
 
   std::string name_;
   std::unique_ptr<::Plugin, decltype(&esp_plugin_free)> esPlugin;
-  bool isEmpty_;  // Does the plugin contain any records other than the TES4
-                  // header?
+  bool ignoreMasterFlag_{false};
+  bool isEmpty_{false};  // Does the plugin contain any records other than the
+                         // TES4
+                         // header?
   std::optional<std::string> version_;  // Obtained from description field.
   std::optional<uint32_t> crc_;
   std::vector<Tag> tags_;

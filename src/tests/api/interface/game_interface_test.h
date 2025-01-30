@@ -83,7 +83,8 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo4vr,
                                            GameType::tes5vr,
                                            GameType::tes3,
-                                           GameType::starfield));
+                                           GameType::starfield,
+                                           GameType::openmw));
 
 TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldDoThat) {
   const auto paths = std::vector<std::filesystem::path>{
@@ -135,7 +136,16 @@ TEST_P(
 }
 
 TEST_P(GameInterfaceTest, loadPluginsShouldTrimDotGhostFileExtensions) {
-  handle_->LoadPlugins({blankMasterDependentEsm + ".ghost"}, true);
+  if (GetParam() == GameType::openmw) {
+    // Ghosting is not supported for OpenMW.
+    EXPECT_THROW(
+        handle_->LoadPlugins({blankMasterDependentEsm + ".ghost"}, true),
+        std::invalid_argument);
+    return;
+  } else {
+    handle_->LoadPlugins({blankMasterDependentEsm + ".ghost"}, true);
+  }
+
   EXPECT_EQ(1, handle_->GetLoadedPlugins().size());
 
   ASSERT_NO_THROW(handle_->GetPlugin(blankMasterDependentEsm));
@@ -245,11 +255,32 @@ TEST_P(GameInterfaceTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {
   std::filesystem::remove(dataPath / std::filesystem::u8path(nonAsciiEsm));
 
   // Set no additional data paths to avoid picking up non-test plugins on PCs
-  // which have Starfield or Fallout 4 installed.
-  handle_->SetAdditionalDataPaths({});
+  // which have Starfield or Fallout 4 installed. Don't clear the additional
+  // data paths for OpenMW because they come from test config.
+  if (GetParam() != GameType::openmw) {
+    handle_->SetAdditionalDataPaths({});
+  }
 
   handle_->LoadCurrentLoadOrderState();
-  ASSERT_EQ(getLoadOrder(), handle_->GetLoadOrder());
+
+  if (GetParam() == GameType::openmw) {
+    ASSERT_EQ(std::vector<std::string>({
+                  blankDifferentEsm,
+                  blankDifferentMasterDependentEsm,
+                  blankDifferentEsp,
+                  blankDifferentPluginDependentEsp,
+                  blankMasterDependentEsm,
+                  blankMasterDependentEsp,
+                  blankEsp,
+                  blankPluginDependentEsp,
+                  masterFile,
+                  blankEsm,
+                  blankDifferentMasterDependentEsp,
+              }),
+              handle_->GetLoadOrder());
+  } else {
+    ASSERT_EQ(getLoadOrder(), handle_->GetLoadOrder());
+  }
 }
 
 TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
@@ -257,8 +288,11 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
   std::filesystem::remove(dataPath / std::filesystem::u8path(nonAsciiEsm));
 
   // Set no additional data paths to avoid picking up non-test plugins on PCs
-  // which have Starfield or Fallout 4 installed.
-  handle_->SetAdditionalDataPaths({});
+  // which have Starfield or Fallout 4 installed. Don't clear the additional
+  // data paths for OpenMW because they come from test config.
+  if (GetParam() != GameType::openmw) {
+    handle_->SetAdditionalDataPaths({});
+  }
 
   handle_->LoadCurrentLoadOrderState();
 
@@ -277,6 +311,20 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
         blankDifferentEsp,
         blankEsp,
         blankMasterDependentEsp,
+    };
+  } else if (GetParam() == GameType::openmw) {
+    loadOrder = {
+        blankDifferentMasterDependentEsm,
+        blankDifferentPluginDependentEsp,
+        blankDifferentEsm,
+        blankDifferentEsp,
+        blankMasterDependentEsm,
+        blankMasterDependentEsp,
+        blankPluginDependentEsp,
+        blankEsp,
+        masterFile,
+        blankDifferentMasterDependentEsp,
+        blankEsm,
     };
   } else {
     loadOrder = {
@@ -302,11 +350,15 @@ TEST_P(GameInterfaceTest, setLoadOrderShouldSetTheLoadOrder) {
 
   EXPECT_EQ(loadOrder, handle_->GetLoadOrder());
 
-  if (gameSupportsEsl) {
-    loadOrder.erase(std::begin(loadOrder));
-  }
+  // It's not possible to persist the load order of inactive plugins for
+  // OpenMW.
+  if (GetParam() != GameType::openmw) {
+    if (gameSupportsEsl) {
+      loadOrder.erase(std::begin(loadOrder));
+    }
 
-  EXPECT_EQ(loadOrder, getLoadOrder());
+    EXPECT_EQ(loadOrder, getLoadOrder());
+  }
 }
 }
 }

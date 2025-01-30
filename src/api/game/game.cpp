@@ -89,6 +89,7 @@ bool IsMicrosoftStoreInstall(const GameType gameType,
     case GameType::tes5:
     case GameType::tes5vr:
     case GameType::fo4vr:
+    case GameType::openmw:
       return false;
     default:
       throw std::logic_error("Unrecognised game type");
@@ -115,42 +116,20 @@ std::filesystem::path GetUserDocumentsPath(
 #endif
 }
 
-std::vector<std::filesystem::path> GetAdditionalDataPaths(
-    const GameType gameType,
-    const std::filesystem::path& dataPath,
-    const std::filesystem::path& gameLocalPath) {
-  const auto gamePath = dataPath.parent_path();
-
-  if (gameType == GameType::fo4 &&
-      IsMicrosoftStoreInstall(gameType, gamePath)) {
-    return {gamePath / MS_FO4_AUTOMATRON_DATA_PATH,
-            gamePath / MS_FO4_NUKA_WORLD_DATA_PATH,
-            gamePath / MS_FO4_WASTELAND_DATA_PATH,
-            gamePath / MS_FO4_TEXTURE_PACK_DATA_PATH,
-            gamePath / MS_FO4_VAULT_TEC_DATA_PATH,
-            gamePath / MS_FO4_FAR_HARBOR_DATA_PATH,
-            gamePath / MS_FO4_CONTRAPTIONS_DATA_PATH};
-  }
-
-  if (gameType == GameType::starfield) {
-    return {GetUserDocumentsPath(gameLocalPath) / "My Games" / "Starfield" /
-            "Data"};
-  }
-
-  return {};
-}
-
 std::filesystem::path ResolvePluginPath(
+    GameType gameType,
     const std::filesystem::path& dataPath,
     const std::filesystem::path& pluginPath) {
   auto absolutePath =
       pluginPath.is_absolute() ? pluginPath : dataPath / pluginPath;
 
   // In case the plugin is ghosted.
-  if (!std::filesystem::exists(absolutePath)) {
+  if (gameType != GameType::openmw && !std::filesystem::exists(absolutePath)) {
     const auto logger = loot::getLogger();
     if (logger) {
-      logger->debug("Could not find plugin at {}, adding {} file extension", absolutePath.u8string(), loot::GHOST_FILE_EXTENSION);
+      logger->debug("Could not find plugin at {}, adding {} file extension",
+                    absolutePath.u8string(),
+                    loot::GHOST_FILE_EXTENSION);
     }
     absolutePath += loot::GHOST_FILE_EXTENSION;
   }
@@ -182,6 +161,35 @@ std::vector<std::filesystem::path> FindArchives(
 
   return archivePaths;
 }
+
+std::filesystem::path FindPlugin(
+    GameType gameType,
+    const std::filesystem::path& dataPath,
+    const std::vector<std::filesystem::path>& additionalDataPaths,
+    const std::string& pluginName) {
+  const auto relativePath = std::filesystem::u8path(pluginName);
+
+  const auto finder = [&](const auto& path) {
+    const auto resolvedPath = ResolvePluginPath(gameType, path, relativePath);
+    return std::filesystem::exists(resolvedPath);
+  };
+
+  if (gameType == GameType::openmw) {
+    const auto it = std::find_if(
+        additionalDataPaths.rbegin(), additionalDataPaths.rend(), finder);
+    if (it != additionalDataPaths.rend()) {
+      return *it;
+    }
+  } else {
+    const auto it = std::find_if(
+        additionalDataPaths.begin(), additionalDataPaths.end(), finder);
+    if (it != additionalDataPaths.end()) {
+      return *it;
+    }
+  }
+
+  return dataPath / relativePath;
+}
 }
 
 namespace loot {
@@ -193,9 +201,8 @@ Game::Game(const GameType gameType,
     loadOrderHandler_(type_, gamePath_, localDataPath),
     conditionEvaluator_(
         std::make_shared<ConditionEvaluator>(GetType(), DataPath())),
-    database_(ApiDatabase(conditionEvaluator_)),
-    additionalDataPaths_(
-        ::GetAdditionalDataPaths(GetType(), DataPath(), localDataPath)) {
+    database_(ApiDatabase(conditionEvaluator_)) {
+  additionalDataPaths_ = loadOrderHandler_.GetAdditionalDataPaths();
   conditionEvaluator_->SetAdditionalDataPaths(additionalDataPaths_);
 }
 
@@ -204,6 +211,8 @@ GameType Game::GetType() const { return type_; }
 std::filesystem::path Game::DataPath() const {
   if (type_ == GameType::tes3) {
     return gamePath_ / "Data Files";
+  } else if (type_ == GameType::openmw) {
+    return gamePath_ / "resources" / "vfs";
   } else {
     return gamePath_ / "Data";
   }
@@ -237,7 +246,8 @@ void Game::SetAdditionalDataPaths(
 }
 
 bool Game::IsValidPlugin(const std::filesystem::path& pluginPath) const {
-  return Plugin::IsValid(GetType(), ResolvePluginPath(DataPath(), pluginPath));
+  return Plugin::IsValid(GetType(),
+                         ResolvePluginPath(GetType(), DataPath(), pluginPath));
 }
 
 void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
@@ -285,7 +295,12 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
     logger->trace("Starting plugin loading.");
   }
 
-  const auto masterPath = DataPath() / u8path(masterFilename_);
+  const auto masterPath = GetType() == GameType::openmw
+                              ? FindPlugin(GetType(),
+                                           DataPath(),
+                                           GetAdditionalDataPaths(),
+                                           masterFilename_)
+                              : DataPath() / u8path(masterFilename_);
   std::for_each(
       std::execution::par_unseq,
       pluginPaths.begin(),
@@ -293,7 +308,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
       [&](const std::filesystem::path& pluginPath) {
         try {
           const auto resolvedPluginPath =
-              ResolvePluginPath(DataPath(), pluginPath);
+              ResolvePluginPath(GetType(), DataPath(), pluginPath);
 
           const bool loadHeader =
               loadHeadersOnly ||
@@ -312,7 +327,8 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
       });
 
   if (!loadHeadersOnly &&
-      (GetType() == GameType::tes3 || GetType() == GameType::starfield)) {
+      (GetType() == GameType::tes3 || GetType() == GameType::openmw ||
+       GetType() == GameType::starfield)) {
     auto plugins = cache_.GetPlugins();
     const auto pluginsMetadata = Plugin::GetPluginsMetadata(plugins);
     for (auto& plugin : plugins) {

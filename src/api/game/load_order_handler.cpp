@@ -50,6 +50,8 @@ unsigned int mapGameId(GameType gameType) {
       return LIBLO_GAME_FO4VR;
     case GameType::starfield:
       return LIBLO_GAME_STARFIELD;
+    case GameType::openmw:
+      return LIBLO_GAME_OPENMW;
     default:
       throw std::logic_error("Unexpected game type");
   }
@@ -206,6 +208,28 @@ std::filesystem::path LoadOrderHandler::GetActivePluginsFilePath() const {
   lo_free_string(filePathCString);
 
   return filePath;
+}
+
+std::vector<std::filesystem::path> LoadOrderHandler::GetAdditionalDataPaths() const {
+  const auto logger = getLogger();
+  if (logger) {
+    logger->trace("Getting additional data paths.");
+  }
+
+  char** pathArr = nullptr;
+  size_t pathArrSize = 0;
+
+  const unsigned int ret = lo_get_additional_plugins_directories(gh_.get(), &pathArr, &pathArrSize);
+
+  HandleError("get additional data paths", ret);
+
+  std::vector<std::filesystem::path> loadOrder;
+  for (size_t i = 0; i < pathArrSize; i += 1) {
+    loadOrder.push_back(std::filesystem::u8path(std::string(pathArr[i])));
+  }
+  lo_free_string_array(pathArr, pathArrSize);
+
+  return loadOrder;
 }
 
 void LoadOrderHandler::SetLoadOrder(

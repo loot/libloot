@@ -58,7 +58,8 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::fo4vr,
                                            GameType::tes5vr,
                                            GameType::tes3,
-                                           GameType::starfield));
+                                           GameType::starfield,
+                                           GameType::openmw));
 
 TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
   Game game = Game(GetParam(), gamePath, localPath);
@@ -70,7 +71,7 @@ TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
 #ifndef _WIN32
 TEST_P(GameTest,
        constructingShouldThrowOnLinuxIfLocalPathIsNotGivenExceptForMorrowind) {
-  if (GetParam() == GameType::tes3) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_NO_THROW(Game(GetParam(), gamePath));
   } else {
     EXPECT_THROW(Game(GetParam(), gamePath), std::system_error);
@@ -118,6 +119,9 @@ TEST_P(
                                 "My Games" / "Starfield" / "Data";
     EXPECT_TRUE(boost::ends_with(game.GetAdditionalDataPaths()[0].u8string(),
                                  expectedSuffix.u8string()));
+  } else if (GetParam() == GameType::openmw) {
+    EXPECT_EQ(std::vector<std::filesystem::path>{localPath / "data"},
+              game.GetAdditionalDataPaths());
   } else {
     EXPECT_TRUE(game.GetAdditionalDataPaths().empty());
   }
@@ -193,6 +197,23 @@ TEST_P(GameTest, isValidPluginShouldUseAbsolutePathsAsGiven) {
   const auto path = dataPath / std::filesystem::u8path(blankEsm);
 
   EXPECT_TRUE(game.IsValidPlugin(path));
+}
+
+TEST_P(
+    GameTest,
+    isValidPluginShouldTryGhostedPathIfGivenPluginDoesNotExistExceptForOpenMW) {
+  const Game game(GetParam(), gamePath, localPath);
+
+  if (GetParam() == GameType::openmw) {
+    // This wasn't done for OpenMW during common setup.
+    const auto pluginPath =
+        game.DataPath() / (blankMasterDependentEsm + ".ghost");
+    std::filesystem::rename(dataPath / blankMasterDependentEsm, pluginPath);
+
+    EXPECT_FALSE(game.IsValidPlugin(blankMasterDependentEsm));
+  } else {
+    EXPECT_TRUE(game.IsValidPlugin(blankMasterDependentEsm));
+  }
 }
 
 TEST_P(
@@ -289,8 +310,8 @@ TEST_P(GameTest, loadPluginsShouldFindArchivesInAdditionalDataPaths) {
        archiveFileExtension);
   const auto ba2Path2 =
       gamePath / ("../../Fallout 4- Nuka-World (PC)/Content/Data/DLCNukaWorld "
-       "- Voices_it" +
-       archiveFileExtension);
+                  "- Voices_it" +
+                  archiveFileExtension);
   touch(ba2Path1);
   touch(ba2Path2);
 
@@ -371,10 +392,11 @@ TEST_P(
 
   std::filesystem::remove(dataPath / pluginName);
 
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::starfield) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::starfield) {
     try {
       game.LoadPlugins({blankMasterDependentEsm}, false);
-      FAIL(); 
+      FAIL();
     } catch (const std::system_error& e) {
       EXPECT_EQ(ESP_ERROR_PLUGIN_METADATA_NOT_FOUND, e.code().value());
       EXPECT_EQ(esplugin_category(), e.code().category());

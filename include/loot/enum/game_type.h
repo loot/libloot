@@ -50,7 +50,9 @@ enum struct GameType : unsigned int {
   /** The Elder Scrolls III: Morrowind */
   tes3,
   /** Starfield */
-  starfield
+  starfield,
+  /** OpenMW */
+  openmw
 };
 }
 

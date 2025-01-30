@@ -106,7 +106,7 @@ There are several conditions that can be tested for using the functions detailed
 
 .. describe:: is_master(file_path path)
 
-  Returns true if ``path`` is an installed master plugin, and false otherwise.
+  Returns true if ``path`` is an installed master plugin, and false otherwise. This returns false for all OpenMW plugins, as OpenMW does not force master plugins to load before others.
 
 .. describe:: checksum(file_path path, checksum expected_checksum)
 

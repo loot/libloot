@@ -135,6 +135,7 @@ std::vector<std::filesystem::path> FindAssociatedArchives(
     const std::filesystem::path& pluginPath) {
   switch (gameType) {
     case GameType::tes3:
+    case GameType::openmw:
       return {};
     case GameType::tes5:
       // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
@@ -229,18 +230,24 @@ Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
                std::filesystem::path pluginPath,
                const bool headerOnly) :
-    name_(TrimDotGhostExtension(pluginPath.filename().u8string())),
+    name_(gameType == GameType::openmw
+              ? pluginPath.filename().u8string()
+              : TrimDotGhostExtension(pluginPath.filename().u8string())),
     esPlugin(
         std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(nullptr,
                                                               esp_plugin_free)),
+    ignoreMasterFlag_(gameType == GameType::openmw),
     isEmpty_(true) {
   auto logger = getLogger();
 
   try {
-    Load(pluginPath, gameType, headerOnly);
+    if (gameType != GameType::openmw ||
+        pluginPath.extension() != ".omwscripts") {
+      Load(pluginPath, gameType, headerOnly);
 
-    auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
-    HandleEspluginError(ret, "check if \"{}\" is empty", name_);
+      auto ret = esp_plugin_is_empty(esPlugin.get(), &isEmpty_);
+      HandleEspluginError(ret, "check if \"{}\" is empty", name_);
+    }
 
     archivePaths_ = FindAssociatedArchives(gameType, gameCache, pluginPath);
 
@@ -284,6 +291,10 @@ Plugin::Plugin(const GameType gameType,
 }
 
 void Plugin::ResolveRecordIds(Vec_PluginMetadata* pluginsMetadata) const {
+  if (esPlugin == nullptr) {
+    return;
+  }
+
   auto ret = esp_plugin_resolve_record_ids(esPlugin.get(), pluginsMetadata);
   HandleEspluginError(ret, "resolve the record IDs of \"{}\"", name_);
 }
@@ -291,6 +302,10 @@ void Plugin::ResolveRecordIds(Vec_PluginMetadata* pluginsMetadata) const {
 std::string Plugin::GetName() const { return name_; }
 
 std::optional<float> Plugin::GetHeaderVersion() const {
+  if (esPlugin == nullptr) {
+    return std::nullopt;
+  }
+
   float version = 0.0f;
 
   const auto ret = esp_plugin_header_version(esPlugin.get(), &version);
@@ -308,6 +323,10 @@ std::optional<std::string> Plugin::GetVersion() const {
 }
 
 std::vector<std::string> Plugin::GetMasters() const {
+  if (esPlugin == nullptr) {
+    return {};
+  }
+
   char** masters = nullptr;
   size_t numMasters = 0;
   const auto ret = esp_plugin_masters(esPlugin.get(), &masters, &numMasters);
@@ -325,6 +344,10 @@ std::vector<Tag> Plugin::GetBashTags() const { return tags_; }
 std::optional<uint32_t> Plugin::GetCRC() const { return crc_; }
 
 bool Plugin::IsMaster() const {
+  if (ignoreMasterFlag_ || esPlugin == nullptr) {
+    return false;
+  }
+
   bool isMaster = false;
   const auto ret = esp_plugin_is_master(esPlugin.get(), &isMaster);
   HandleEspluginError(ret, "check if \"{}\" is a master", name_);
@@ -333,6 +356,10 @@ bool Plugin::IsMaster() const {
 }
 
 bool Plugin::IsLightPlugin() const {
+  if (esPlugin == nullptr) {
+    return false;
+  }
+
   bool isLightPlugin = false;
   const auto ret = esp_plugin_is_light_plugin(esPlugin.get(), &isLightPlugin);
   HandleEspluginError(ret, "check if \"{}\" is a light plugin", name_);
@@ -341,6 +368,10 @@ bool Plugin::IsLightPlugin() const {
 }
 
 bool Plugin::IsMediumPlugin() const {
+  if (esPlugin == nullptr) {
+    return false;
+  }
+
   bool isMediumPlugin = false;
   const auto ret = esp_plugin_is_medium_plugin(esPlugin.get(), &isMediumPlugin);
   HandleEspluginError(ret, "check if \"{}\" is a medium plugin", name_);
@@ -349,6 +380,10 @@ bool Plugin::IsMediumPlugin() const {
 }
 
 bool Plugin::IsUpdatePlugin() const {
+  if (esPlugin == nullptr) {
+    return false;
+  }
+
   bool isUpdatePlugin = false;
   const auto ret = esp_plugin_is_update_plugin(esPlugin.get(), &isUpdatePlugin);
   HandleEspluginError(ret, "check if \"{}\" is an update plugin", name_);
@@ -357,6 +392,10 @@ bool Plugin::IsUpdatePlugin() const {
 }
 
 bool Plugin::IsBlueprintPlugin() const {
+  if (esPlugin == nullptr) {
+    return false;
+  }
+
   bool isBlueprintPlugin = false;
   const auto ret =
       esp_plugin_is_blueprint_plugin(esPlugin.get(), &isBlueprintPlugin);
@@ -366,6 +405,10 @@ bool Plugin::IsBlueprintPlugin() const {
 }
 
 bool Plugin::IsValidAsLightPlugin() const {
+  if (esPlugin == nullptr) {
+    return false;
+  }
+
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_light_plugin(esPlugin.get(), &isValid);
@@ -375,6 +418,10 @@ bool Plugin::IsValidAsLightPlugin() const {
 }
 
 bool Plugin::IsValidAsMediumPlugin() const {
+  if (esPlugin == nullptr) {
+    return false;
+  }
+
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_medium_plugin(esPlugin.get(), &isValid);
@@ -385,6 +432,10 @@ bool Plugin::IsValidAsMediumPlugin() const {
 }
 
 bool Plugin::IsValidAsUpdatePlugin() const {
+  if (esPlugin == nullptr) {
+    return false;
+  }
+
   bool isValid = false;
   const auto ret =
       esp_plugin_is_valid_as_update_plugin(esPlugin.get(), &isValid);
@@ -399,8 +450,16 @@ bool Plugin::IsEmpty() const { return isEmpty_; }
 bool Plugin::LoadsArchive() const { return !archivePaths_.empty(); }
 
 bool Plugin::DoRecordsOverlap(const PluginInterface& plugin) const {
+  if (esPlugin == nullptr) {
+    return false;
+  }
+
   try {
     auto& otherPlugin = dynamic_cast<const Plugin&>(plugin);
+
+    if (otherPlugin.esPlugin == nullptr) {
+      return false;
+    }
 
     bool doPluginsOverlap = false;
     const auto ret = esp_plugin_do_records_overlap(
@@ -424,6 +483,10 @@ bool Plugin::DoRecordsOverlap(const PluginInterface& plugin) const {
 }
 
 size_t Plugin::GetOverrideRecordCount() const {
+  if (esPlugin == nullptr) {
+    return 0;
+  }
+
   size_t overrideRecordCount;
   const auto ret =
       esp_plugin_count_override_records(esPlugin.get(), &overrideRecordCount);
@@ -433,6 +496,10 @@ size_t Plugin::GetOverrideRecordCount() const {
 }
 
 uint32_t Plugin::GetRecordAndGroupCount() const {
+  if (esPlugin == nullptr) {
+    return 0;
+  }
+
   uint32_t recordAndGroupCount = 0;
   const auto ret =
       esp_plugin_record_and_group_count(esPlugin.get(), &recordAndGroupCount);
@@ -515,6 +582,10 @@ void Plugin::Load(const std::filesystem::path& path,
 }
 
 std::string Plugin::GetDescription() const {
+  if (esPlugin == nullptr) {
+    return "";
+  }
+
   char* description = nullptr;
   const auto ret = esp_plugin_description(esPlugin.get(), &description);
   HandleEspluginError(ret, "read the description of \"{}\"", name_);
@@ -530,7 +601,7 @@ std::string Plugin::GetDescription() const {
 }
 
 std::unique_ptr<Vec_PluginMetadata, decltype(&esp_plugins_metadata_free)>
-Plugin::GetPluginsMetadata(std::vector<const Plugin*> plugins) {
+Plugin::GetPluginsMetadata(const std::vector<const Plugin*>& plugins) {
   if (plugins.empty()) {
     return std::unique_ptr<Vec_PluginMetadata,
                            decltype(&esp_plugins_metadata_free)>(
@@ -540,7 +611,10 @@ Plugin::GetPluginsMetadata(std::vector<const Plugin*> plugins) {
   std::vector<const ::Plugin*> esPlugins;
   esPlugins.reserve(plugins.size());
   for (const auto& plugin : plugins) {
-    esPlugins.push_back(plugin->esPlugin.get());
+    const auto esPlugin = plugin->esPlugin.get();
+    if (esPlugin != nullptr) {
+      esPlugins.push_back(plugin->esPlugin.get());
+    }
   }
 
   Vec_PluginMetadata* pluginsMetadata = nullptr;
@@ -566,6 +640,7 @@ std::string GetArchiveFileExtension(const GameType gameType) {
 unsigned int Plugin::GetEspluginGameId(GameType gameType) {
   switch (gameType) {
     case GameType::tes3:
+    case GameType::openmw:
       return ESP_GAME_MORROWIND;
     case GameType::tes4:
       return ESP_GAME_OBLIVION;
@@ -589,18 +664,31 @@ unsigned int Plugin::GetEspluginGameId(GameType gameType) {
 }
 
 bool hasPluginFileExtension(std::string filename, GameType gameType) {
-  if (boost::iends_with(filename, GHOST_FILE_EXTENSION)) {
+  if (gameType != GameType::openmw &&
+      boost::iends_with(filename, GHOST_FILE_EXTENSION)) {
     filename =
         filename.substr(0, filename.length() - GHOST_FILE_EXTENSION_LENGTH);
   }
 
-  bool isEspOrEsm = boost::iends_with(filename, ".esp") ||
-                    boost::iends_with(filename, ".esm");
-  bool isEsl = (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
-                gameType == GameType::tes5se || gameType == GameType::tes5vr ||
-                gameType == GameType::starfield) &&
-               boost::iends_with(filename, ".esl");
+  if (boost::iends_with(filename, ".esp") ||
+      boost::iends_with(filename, ".esm")) {
+    return true;
+  }
 
-  return isEspOrEsm || isEsl;
+  if (gameType == GameType::openmw &&
+      (boost::iends_with(filename, ".omwaddon") ||
+       boost::iends_with(filename, ".omwgame") ||
+       boost::iends_with(filename, ".omwscripts"))) {
+    return true;
+  }
+
+  if ((gameType == GameType::fo4 || gameType == GameType::fo4vr ||
+       gameType == GameType::tes5se || gameType == GameType::tes5vr ||
+       gameType == GameType::starfield) &&
+      boost::iends_with(filename, ".esl")) {
+    return true;
+  }
+
+  return false;
 }
 }
