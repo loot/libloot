@@ -132,8 +132,8 @@ else()
 endif()
 
 if(NOT DEFINED LOOT_CONDITION_INTERPRETER_URL)
-    set(LOOT_CONDITION_INTERPRETER_URL "https://github.com/loot/loot-condition-interpreter/archive/refs/tags/4.0.2.tar.gz")
-    set(LOOT_CONDITION_INTERPRETER_HASH "SHA256=95b47e11cb6ddb63b3208f7620f1608dc51ea7f17639f321ee91fa1bc0c23797")
+    set(LOOT_CONDITION_INTERPRETER_URL "https://github.com/loot/loot-condition-interpreter/archive/refs/tags/5.0.0.tar.gz")
+    set(LOOT_CONDITION_INTERPRETER_HASH "SHA256=5cf58a5e30d62fec84985ea28bc52c7913007241dc5690369231a2f893620d8c")
 endif()
 
 ExternalProject_Add(loot-condition-interpreter
