@@ -2,6 +2,72 @@
 Version History
 ***************
 
+0.25.0 - Unreleased
+===================
+
+Added
+-----
+
+- Support for OpenMW. A game handle can be obtained for OpenMW using
+  :cpp:any:`loot::GameType::openmw`. There are a few notable differences between
+  OpenMW and other supported games:
+
+  - OpenMW does not provide any way to persist changes to the load order
+    positions of inactive plugins, so getting the load order after setting it
+    and reloading the load order state may give an order different to what was
+    set.
+  - OpenMW does not force master plugins to load before other plugins: all
+    plugins are treated as non-masters.
+  - While libloot (via libloadorder) attempts to give the same result as the
+    OpenMW Launcher when reading the load order, the Launcher may automatically
+    activate some plugins and hide others from view, while libloot does neither.
+  - OpenMW makes much greater use of additional data paths than other games: as
+    such most plugin paths will probably need to passed to libloot as absolute
+    paths to ensure that they are resolved correctly.
+  - Ghosted plugins are not supported for OpenMW.
+
+Fixed
+-----
+
+- Several cases where plugin group memberships would cause cyclic interaction
+  errors during sorting.
+- Running the tests using ctest.
+- The minimum required CMake version given in CMakeLists.txt is now 3.24, which
+  should more accurately reflect reality.
+
+Changed
+-------
+
+- :cpp:any:`loot::GameInterface::IdentifyMainMasterFile()` now takes a
+  ``const std::filesystem::path&`` instead of a
+  ``const std::string&``.
+- The application of plugin groups as part of the sorting process has been
+  overhauled. As well as fixing several known bugs, the new approach avoids
+  causing cyclic interaction errors, handles groups more consistently and is
+  easier to understand. As a result of these changes, sorting may now give
+  different results compared to v0.24.5 and earlier.
+- The performance of :cpp:any:`loot::GameInterface::SortPlugins()` has
+  significantly improved, particularly for larger load orders, with over 2x
+  v0.24.5's performance observed.
+- When resolving a given plugin path, libloot may add a ``.ghost`` file
+  extension is the path doesn't exist, and will now log a debug message when it
+  does so.
+- The build no longer uses CMake's bundled ``FindBoost`` module as it is now
+  deprecated, so setting ``BOOST_ROOT`` to locate Boost no longer has any
+  effect. Instead, include the Boost path in ``CMAKE_PREFIX_PATH``.
+- Updated Boost to v1.87.0.
+- Updated fmt to v11.1.3.
+- Updated libloadorder to v18.2.0.
+- Updated loot-condition-interpreter to v5.0.0.
+- Updated spdlog to v1.15.1.
+
+Removed
+-------
+
+- Prebuilt Linux release binaries are no longer provided, as the binaries that
+  were previously provided were not very portable beyond the Linux distribution
+  versions that they were built on.
+
 0.24.5 - 2024-10-24
 ===================
 
