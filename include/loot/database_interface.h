@@ -99,7 +99,7 @@ public:
 
   /**
    * @brief Gets the Bash Tags that are listed in the loaded metadata lists.
-   * @details Bash Tag suggestions can include plugins not in this list.
+   * @details Bash Tag suggestions can include Bash Tags not in this list.
    * @returns A set of Bash Tag names.
    */
   virtual std::vector<std::string> GetKnownBashTags() const = 0;
