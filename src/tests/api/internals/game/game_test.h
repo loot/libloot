@@ -218,7 +218,7 @@ TEST_P(
 
 TEST_P(
     GameTest,
-    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
+    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfGivenPlugins) {
   Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));
@@ -266,7 +266,7 @@ TEST_P(GameTest,
 }
 
 TEST_P(GameTest,
-       loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
+       loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllGivenPlugins) {
   Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
@@ -283,6 +283,32 @@ TEST_P(GameTest,
 
   // Check that not only the header has been read.
   EXPECT_EQ(blankEsmCrc, plugin->GetCRC().value());
+}
+
+TEST_P(GameTest, loadPluginsShouldNotClearThePluginsCache) {
+  Game game = Game(GetParam(), gamePath, localPath);
+
+  game.LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+  const auto pointer = game.GetPlugin(blankEsm);
+  ASSERT_NE(nullptr, pointer);
+
+  game.LoadPlugins({std::filesystem::u8path(blankEsp)}, true);
+
+  EXPECT_EQ(pointer, game.GetPlugin(blankEsm));
+}
+
+TEST_P(GameTest, loadPluginsShouldReplaceCacheEntriesForTheGivenPlugins) {
+  Game game = Game(GetParam(), gamePath, localPath);
+
+  game.LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+  const auto pointer = game.GetPlugin(blankEsm);
+  ASSERT_NE(nullptr, pointer);
+
+  game.LoadPlugins({std::filesystem::u8path(blankEsm)}, false);
+
+  const auto newPointer = game.GetPlugin(blankEsm);
+  ASSERT_NE(nullptr, newPointer);
+  EXPECT_NE(pointer, newPointer);
 }
 
 TEST_P(
@@ -408,15 +434,16 @@ TEST_P(
   }
 }
 
-TEST_P(GameTest, sortPluginsShouldHandlePluginPathsThatAreNotJustFilenames) {
+TEST_P(GameTest, clearLoadedPluginsShouldClearThePluginsCache) {
   Game game = Game(GetParam(), gamePath, localPath);
 
-  const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
+  game.LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+  const auto pointer = game.GetPlugin(blankEsm);
+  ASSERT_NE(nullptr, pointer);
 
-  const auto newLoadOrder =
-      game.SortPlugins(std::vector<std::filesystem::path>({absolutePath}));
+  game.ClearLoadedPlugins();
 
-  EXPECT_EQ(std::vector<std::string>{blankEsm}, newLoadOrder);
+  EXPECT_EQ(nullptr, game.GetPlugin(blankEsm));
 }
 
 TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasNotBeenLoaded) {

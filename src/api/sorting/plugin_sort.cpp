@@ -34,33 +34,23 @@
 namespace loot {
 std::vector<PluginSortingData> GetPluginsSortingData(
     const DatabaseInterface& db,
-    const std::vector<const PluginInterface*> loadedPluginInterfaces,
-    const std::vector<std::string>& loadOrder) {
+    const std::vector<const Plugin*>& loadOrder) {
   std::vector<PluginSortingData> pluginsSortingData;
-  pluginsSortingData.reserve(loadedPluginInterfaces.size());
+  pluginsSortingData.reserve(loadOrder.size());
 
   std::vector<ComparableFilename> comparableLoadOrder;
-  for (const auto& pluginName : loadOrder) {
-    comparableLoadOrder.push_back(ToComparableFilename(pluginName));
+  for (const auto& plugin : loadOrder) {
+    comparableLoadOrder.push_back(ToComparableFilename(plugin->GetName()));
   }
 
-  for (const auto& pluginInterface : loadedPluginInterfaces) {
-    if (!pluginInterface) {
-      continue;
-    }
-
-    const auto plugin = dynamic_cast<const Plugin* const>(pluginInterface);
-
-    if (!plugin) {
-      throw std::logic_error(
-          "Tried to case a PluginInterface pointer to a Plugin pointer.");
-    }
+  for (const auto& plugin : loadOrder) {
+    const auto pluginFilename = plugin->GetName();
 
     const auto masterlistMetadata =
-        db.GetPluginMetadata(plugin->GetName(), false, true)
-            .value_or(PluginMetadata(plugin->GetName()));
-    const auto userMetadata = db.GetPluginUserMetadata(plugin->GetName(), true)
-                                  .value_or(PluginMetadata(plugin->GetName()));
+        db.GetPluginMetadata(pluginFilename, false, true)
+            .value_or(PluginMetadata(pluginFilename));
+    const auto userMetadata = db.GetPluginUserMetadata(pluginFilename, true)
+                                  .value_or(PluginMetadata(pluginFilename));
 
     const auto pluginSortingData = PluginSortingData(
         plugin, masterlistMetadata, userMetadata, comparableLoadOrder);
@@ -313,8 +303,7 @@ std::vector<std::string> SortPlugins(
     return {};
   }
 
-  // Sort the plugins according to into their existing load order, or
-  // lexicographical ordering for pairs of plugins without load order positions.
+  // Sort the plugins according to the lexicographical order of their names.
   // This ensures a consistent iteration order for vertices given the same input
   // data. The vertex iteration order can affect what edges get added and so
   // the final sorting result, so consistency is important.
@@ -387,8 +376,18 @@ std::vector<std::string> SortPlugins(
 std::vector<std::string> SortPlugins(
     Game& game,
     const std::vector<std::string>& loadOrder) {
-  auto pluginsSortingData = GetPluginsSortingData(
-      game.GetDatabase(), game.GetLoadedPlugins(), loadOrder);
+  std::vector<const Plugin*> plugins;
+  for (const auto& pluginFilename : loadOrder) {
+    const auto plugin = game.GetCache().GetPlugin(pluginFilename);
+    if (plugin == nullptr) {
+      throw std::invalid_argument("The plugin \"" + pluginFilename +
+                                  "\" has not been loaded.");
+    }
+
+    plugins.push_back(plugin);
+  }
+
+  auto pluginsSortingData = GetPluginsSortingData(game.GetDatabase(), plugins);
 
   const auto logger = getLogger();
   if (logger) {

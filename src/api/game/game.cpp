@@ -255,9 +255,6 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
                                 "\" is not a valid plugin");
   }
 
-  // Clear the existing plugin and archive caches.
-  cache_.ClearCachedPlugins();
-
   // Search for and cache archives.
   CacheArchives();
 
@@ -275,12 +272,8 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
           const auto resolvedPluginPath =
               ResolvePluginPath(GetType(), DataPath(), pluginPath);
 
-          const bool loadHeader =
-              loadHeadersOnly ||
-              loot::equivalent(resolvedPluginPath, masterFilePath_);
-
           cache_.AddPlugin(
-              Plugin(GetType(), cache_, resolvedPluginPath, loadHeader));
+              Plugin(GetType(), cache_, resolvedPluginPath, loadHeadersOnly));
         } catch (const std::exception& e) {
           if (logger) {
             logger->error(
@@ -304,6 +297,10 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
   conditionEvaluator_->RefreshLoadedPluginsState(GetLoadedPlugins());
 }
 
+void Game::ClearLoadedPlugins() {
+  cache_.ClearCachedPlugins();
+}
+
 const PluginInterface* Game::GetPlugin(const std::string& pluginName) const {
   return cache_.GetPlugin(pluginName);
 }
@@ -317,21 +314,9 @@ std::vector<const PluginInterface*> Game::GetLoadedPlugins() const {
   return interfacePointers;
 }
 
-void Game::IdentifyMainMasterFile(const std::filesystem::path& masterFile) {
-  masterFilePath_ = ResolvePluginPath(GetType(), DataPath(), masterFile);
-}
-
 std::vector<std::string> Game::SortPlugins(
-    const std::vector<std::filesystem::path>& pluginPaths) {
-  LoadPlugins(pluginPaths, false);
-
-  std::vector<std::string> loadOrder;
-  for (const auto& pluginPath : pluginPaths) {
-    loadOrder.push_back(pluginPath.filename().u8string());
-  }
-
-  // Sort plugins into their load order.
-  return loot::SortPlugins(*this, loadOrder);
+    const std::vector<std::string>& pluginFilenames) {
+  return loot::SortPlugins(*this, pluginFilenames);
 }
 
 void Game::LoadCurrentLoadOrderState() {

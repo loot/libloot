@@ -211,7 +211,7 @@ public:
 
   /**
    * Check if the plugin name is a regular expression.
-   * @return True if the plugin name contains any of the characters ``:\*?|``,
+   * @return True if the plugin name contains any of the characters `:\*?|`,
    *         false otherwise.
    */
   LOOT_API bool IsRegexPlugin() const;

@@ -93,12 +93,14 @@ void GameCache::AddPlugin(Plugin&& plugin) {
   lock_guard<mutex> lock(mutex_);
 
   auto normalizedName = NormalizeFilename(plugin.GetName());
+  auto pluginPointer = std::make_shared<Plugin>(std::move(plugin));
 
   const auto it = plugins_.find(normalizedName);
-  if (it != end(plugins_))
-    plugins_.erase(it);
-
-  plugins_.emplace(normalizedName, std::make_shared<Plugin>(std::move(plugin)));
+  if (it != end(plugins_)) {
+    it->second = pluginPointer;
+  } else {
+    plugins_.emplace(normalizedName, pluginPointer);
+  }
 }
 
 std::set<std::filesystem::path> GameCache::GetArchivePaths() const {

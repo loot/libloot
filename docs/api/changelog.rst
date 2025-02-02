@@ -26,6 +26,8 @@ Added
     paths to ensure that they are resolved correctly.
   - Ghosted plugins are not supported for OpenMW.
 
+- :cpp:any:`loot::GameInterface::ClearLoadedPlugins()`
+
 Fixed
 -----
 
@@ -38,9 +40,13 @@ Fixed
 Changed
 -------
 
-- :cpp:any:`loot::GameInterface::IdentifyMainMasterFile()` now takes a
-  ``const std::filesystem::path&`` instead of a
-  ``const std::string&``.
+- :cpp:any:`loot::GameInterface::LoadPlugins()` no longer clears the data of
+  previously-loaded plugins, though if any of the given paths have filenames
+  that match previously-loaded plugins, the previously-loaded data will be
+  still be replaced.
+- :cpp:any:`loot::GameInterface::SortPlugins()` now takes a vector of filenames
+  instead of a vector of strings, and no longer loads the given plugins. It
+  instead expects the plugins to have already been loaded.
 - The application of plugin groups as part of the sorting process has been
   overhauled. As well as fixing several known bugs, the new approach avoids
   causing cyclic interaction errors, handles groups more consistently and is
@@ -64,6 +70,10 @@ Changed
 Removed
 -------
 
+- ``loot::GameInterface::IdentifyMainMasterFile()``: callers should instead
+  call :cpp:any:`loot::GameInterface::LoadPlugins()` with the main master file
+  to load only its headers, and omit the main master file when calling
+  :cpp:any:`loot::GameInterface::LoadPlugins()` to fully load plugins.
 - Prebuilt Linux release binaries are no longer provided, as the binaries that
   were previously provided were not very portable beyond the Linux distribution
   versions that they were built on.

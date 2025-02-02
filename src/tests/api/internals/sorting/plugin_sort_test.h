@@ -51,8 +51,14 @@ protected:
       }
     }
 
-    game.IdentifyMainMasterFile(std::filesystem::u8path(masterFile));
     game.LoadCurrentLoadOrderState();
+
+    if (!headersOnly) {
+      const auto gameMasterPlugin = plugins.front();
+      game.LoadPlugins({gameMasterPlugin}, true);
+      plugins.erase(plugins.begin());
+    }
+     
     game.LoadPlugins(plugins, headersOnly);
   }
 
@@ -1140,6 +1146,23 @@ TEST_P(
                 blankDifferentEsm,
             }),
             sorted);
+}
+
+TEST_P(PluginSortTest, sortingShouldOnlySortTheGivenPlugins) {
+  loadInstalledPlugins(game_, false);
+
+  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+  std::vector<std::string> sorted = SortPlugins(game_, plugins);
+
+  EXPECT_EQ(plugins, sorted);
+}
+
+TEST_P(PluginSortTest, sortingShouldThrowIfAGivenPluginIsNotLoaded) {
+  game_.ClearLoadedPlugins();
+
+  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+  
+  EXPECT_THROW(SortPlugins(game_, plugins), std::invalid_argument);
 }
 }
 }

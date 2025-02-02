@@ -118,7 +118,7 @@ TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForAnEmptyFile) {
 
 TEST_P(
     GameInterfaceTest,
-    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllInstalledPlugins) {
+    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllGivenPlugins) {
   handle_->LoadPlugins(pluginsToLoad, true);
   if (GetParam() == GameType::starfield) {
     EXPECT_EQ(6, handle_->GetLoadedPlugins().size());
@@ -184,7 +184,17 @@ TEST_P(GameInterfaceTest, loadPluginsWithANonAsciiPluginShouldLoadIt) {
   EXPECT_EQ(blankEsmCrc, plugin->GetCRC().value());
 }
 
-TEST_P(GameInterfaceTest, getPluginThatIsNotCachedShouldReturnAnEmptyOptional) {
+TEST_P(GameInterfaceTest, clearLoadedPluginsShouldClearThePluginsCache) {
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+  const auto pointer = handle_->GetPlugin(blankEsm);
+  ASSERT_NE(nullptr, pointer);
+
+  handle_->ClearLoadedPlugins();
+
+  EXPECT_EQ(nullptr, handle_->GetPlugin(blankEsm));
+}
+
+TEST_P(GameInterfaceTest, getPluginThatIsNotCachedShouldReturnANullPointer) {
   EXPECT_FALSE(handle_->GetPlugin(blankEsm));
 }
 
@@ -232,7 +242,14 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
   }
 
   handle_->LoadCurrentLoadOrderState();
-  std::vector<std::string> actualOrder = handle_->SortPlugins(pluginsToLoad);
+  handle_->LoadPlugins(pluginsToLoad, false);
+
+  std::vector<std::string> pluginsToSort;
+  for (const auto& plugin : pluginsToLoad) {
+    pluginsToSort.push_back(plugin.filename().u8string());
+  }
+
+  std::vector<std::string> actualOrder = handle_->SortPlugins(pluginsToSort);
 
   EXPECT_EQ(expectedOrder, actualOrder);
 }
