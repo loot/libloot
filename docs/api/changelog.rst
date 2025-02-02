@@ -18,6 +18,8 @@ Added
     set.
   - OpenMW does not force master plugins to load before other plugins: all
     plugins are treated as non-masters.
+  - OpenMW supports a practically unlimited number of active plugins
+    (2147483646).
   - While libloot (via libloadorder) attempts to give the same result as the
     OpenMW Launcher when reading the load order, the Launcher may automatically
     activate some plugins and hide others from view, while libloot does neither.
@@ -63,7 +65,7 @@ Changed
   effect. Instead, include the Boost path in ``CMAKE_PREFIX_PATH``.
 - Updated Boost to v1.87.0.
 - Updated fmt to v11.1.3.
-- Updated libloadorder to v18.2.0.
+- Updated libloadorder to v18.2.1.
 - Updated loot-condition-interpreter to v5.0.0.
 - Updated spdlog to v1.15.1.
 
