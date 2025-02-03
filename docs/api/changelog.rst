@@ -2,6 +2,15 @@
 Version History
 ***************
 
+0.25.1 - 2025-02-03
+===================
+
+Fixed
+-----
+
+- :cpp:any:`loot::GameInterface::IsValidPlugin()` returned false for OpenMW
+  ``.omwscripts`` plugins.
+
 0.25.0 - 2025-02-02
 ===================
 
