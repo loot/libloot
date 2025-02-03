@@ -542,6 +542,11 @@ bool Plugin::IsValid(const GameType gameType,
                      const std::filesystem::path& pluginPath) {
   // Check that the file has a valid extension.
   if (hasPluginFileExtension(pluginPath.filename().u8string(), gameType)) {
+    if (gameType == GameType::openmw &&
+        pluginPath.extension() == ".omwscripts") {
+      return true;
+    }
+
     bool isValid = false;
     auto returnCode = esp_plugin_is_valid(GetEspluginGameId(gameType),
                                           pluginPath.u8string().c_str(),

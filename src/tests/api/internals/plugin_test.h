@@ -578,6 +578,20 @@ TEST_P(PluginTest, isValidShouldReturnFalseForAnEmptyFile) {
   EXPECT_FALSE(Plugin::IsValid(game_.GetType(), game_.DataPath() / emptyFile));
 }
 
+TEST_P(PluginTest, isValidShouldReturnTrueForAnOpenMWOmwscriptsFile) {
+  const auto omwscripts = "Blank.omwscripts";
+  std::ofstream out(dataPath / omwscripts);
+  out.close();
+
+  if (GetParam() == GameType::openmw) {
+    EXPECT_TRUE(
+        Plugin::IsValid(game_.GetType(), game_.DataPath() / omwscripts));
+  } else {
+    EXPECT_FALSE(
+        Plugin::IsValid(game_.GetType(), game_.DataPath() / omwscripts));
+  }
+}
+
 TEST_P(
     PluginTest,
     isValidAsLightPluginShouldReturnTrueOnlyForASkyrimSEOrFallout4PluginWithNewFormIdsBetween0x800And0xFFFInclusive) {
