@@ -93,6 +93,11 @@ TEST_P(
   if (GetParam() == GameType::fo4) {
     // Create the file that indicates it's a Microsoft Store install.
     touch(gamePath / "appxmanifest.xml");
+  } else if (GetParam() == GameType::openmw) {
+    std::ofstream out(gamePath / "openmw.cfg");
+    out << "data-local=\"" << (localPath / "data").u8string() << "\""
+        << std::endl
+        << "config=\"" << localPath.u8string() << "\"";
   }
 
   Game game = Game(GetParam(), gamePath, localPath);
