@@ -2,6 +2,24 @@
 Version History
 ***************
 
+0.25.2 - 2025-02-10
+===================
+
+Fixed
+-----
+
+- OpenMW configuration is now loaded in a similar way to how OpenMW loads it,
+  so a wider variety of config file locations are now supported, including the
+  locations used by Linux packages linked to at <https://openmw.org/downloads/>.
+  Via libloadorder.
+- A panic that could occur when loading an OpenMW load order that contains no
+  plugins. Via libloadorder.
+
+Changed
+-------
+
+- Updated libloadorder to v18.2.2.
+
 0.25.1 - 2025-02-03
 ===================
 
