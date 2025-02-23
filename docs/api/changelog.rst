@@ -2,6 +2,14 @@
 Version History
 ***************
 
+0.25.3 - 2025-02-23
+===================
+
+Changed
+-------
+
+- Updated loot-condition-interpreter to v5.2.0.
+
 0.25.2 - 2025-02-10
 ===================
 
