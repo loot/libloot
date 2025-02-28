@@ -374,7 +374,7 @@ std::vector<std::string> SortPlugins(
 }
 
 std::vector<std::string> SortPlugins(
-    Game& game,
+    const Game& game,
     const std::vector<std::string>& loadOrder) {
   std::vector<const Plugin*> plugins;
   for (const auto& pluginFilename : loadOrder) {
