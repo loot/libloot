@@ -266,7 +266,9 @@ Plugin::Plugin(const GameType gameType,
       }
     }
 
-    tags_ = ExtractBashTags(GetDescription());
+    const auto description = GetDescription();
+    tags_ = ExtractBashTags(description);
+    version_ = ExtractVersion(description);
   } catch (const std::system_error& e) {
     if (e.code().category() == esplugin_category()) {
       throw;
@@ -318,9 +320,7 @@ std::optional<float> Plugin::GetHeaderVersion() const {
   return version;
 }
 
-std::optional<std::string> Plugin::GetVersion() const {
-  return ExtractVersion(GetDescription());
-}
+std::optional<std::string> Plugin::GetVersion() const { return version_; }
 
 std::vector<std::string> Plugin::GetMasters() const {
   if (esPlugin == nullptr) {
