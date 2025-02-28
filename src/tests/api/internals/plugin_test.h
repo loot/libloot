@@ -170,7 +170,6 @@ public:
   bool DoRecordsOverlap(const PluginInterface&) const override { return true; }
 
   size_t GetOverrideRecordCount() const override { return 0; };
-  uint32_t GetRecordAndGroupCount() const override { return 0; };
 
   size_t GetAssetCount() const override { return 0; };
   bool DoAssetsOverlap(const PluginSortingInterface&) const override {
@@ -714,19 +713,6 @@ TEST_P(PluginTest,
 
   EXPECT_TRUE(plugin1.DoRecordsOverlap(plugin2));
   EXPECT_TRUE(plugin2.DoRecordsOverlap(plugin1));
-}
-
-TEST_P(PluginTest, getRecordAndGroupCountShouldReturnTheHeaderFieldValue) {
-  Plugin plugin(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, true);
-
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
-    EXPECT_EQ(10u, plugin.GetRecordAndGroupCount());
-  } else if (GetParam() == GameType::tes4) {
-    EXPECT_EQ(14u, plugin.GetRecordAndGroupCount());
-  } else {
-    EXPECT_EQ(15u, plugin.GetRecordAndGroupCount());
-  }
 }
 
 TEST_P(PluginTest,

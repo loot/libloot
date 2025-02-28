@@ -553,8 +553,6 @@ bool FindPath(RawPluginGraph& graph,
   reverseQueue.push(toVertex);
   reverseVisited.insert(toVertex);
 
-  const auto logger = getLogger();
-
   while (!forwardQueue.empty() && !reverseQueue.empty()) {
     if (!forwardQueue.empty()) {
       const auto v = forwardQueue.front();

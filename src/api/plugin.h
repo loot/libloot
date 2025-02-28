@@ -44,7 +44,6 @@ class GameCache;
 class PluginSortingInterface : public PluginInterface {
 public:
   virtual size_t GetOverrideRecordCount() const = 0;
-  virtual uint32_t GetRecordAndGroupCount() const = 0;
 
   virtual size_t GetAssetCount() const = 0;
   virtual bool DoAssetsOverlap(const PluginSortingInterface& plugin) const = 0;
@@ -82,7 +81,6 @@ public:
 
   // Load ordering functions.
   size_t GetOverrideRecordCount() const override;
-  uint32_t GetRecordAndGroupCount() const override;
 
   size_t GetAssetCount() const;
   bool DoAssetsOverlap(const PluginSortingInterface& plugin) const;
@@ -122,9 +120,6 @@ bool hasPluginFileExtension(std::string filename, GameType gameType);
 
 bool equivalent(const std::filesystem::path& path1,
                 const std::filesystem::path& path2);
-
-std::filesystem::path replaceExtension(std::filesystem::path path,
-                                       const std::string& newExtension);
 }
 
 #endif
