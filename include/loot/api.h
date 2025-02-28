@@ -50,8 +50,6 @@ namespace loot {
 
 /**
  * @brief Set the callback function that is called when logging.
- * @details If this function is not called, the default behaviour is to
- *          print messages to the console.
  * @param callback
  *        The function called when logging. The first parameter is the
  *        level of the message being logged, and the second is the message.
