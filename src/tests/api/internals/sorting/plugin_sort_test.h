@@ -86,16 +86,11 @@ protected:
 
   PluginSortingData CreatePluginSortingData(
       const std::string& name,
-      const std::vector<std::string>& loadOrder = {}) {
+      const size_t loadOrderIndex) {
     const auto plugin = GetPlugin(name);
 
-    std::vector<ComparableFilename> comparableLoadOrder;
-    for (const auto& pluginName : loadOrder) {
-      comparableLoadOrder.push_back(ToComparableFilename(pluginName));
-    }
-
     return PluginSortingData(
-        plugin, PluginMetadata(), PluginMetadata(), comparableLoadOrder);
+        plugin, PluginMetadata(), PluginMetadata(), loadOrderIndex);
   }
 
   plugingraph::TestPlugin* GetPlugin(const std::string& name) {
@@ -194,9 +189,9 @@ TEST_P(PluginSortTest,
   // Now sort the plugins.
   {
     std::vector<PluginSortingData> pluginsSortingData{
-        CreatePluginSortingData(p1->GetName(), loadOrder),
-        CreatePluginSortingData(p2->GetName(), loadOrder),
-        CreatePluginSortingData(p3->GetName(), loadOrder)};
+        CreatePluginSortingData(p1->GetName(), 0),
+        CreatePluginSortingData(p2->GetName(), 1),
+        CreatePluginSortingData(p3->GetName(), 2)};
 
     auto sorted = SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
     ASSERT_EQ(expectedSortedOrder, sorted);
@@ -208,9 +203,9 @@ TEST_P(PluginSortTest,
   // order.
   {
     std::vector<PluginSortingData> pluginsSortingData{
-        CreatePluginSortingData(p1->GetName(), loadOrder),
-        CreatePluginSortingData(p2->GetName(), loadOrder),
-        CreatePluginSortingData(p3->GetName(), loadOrder)};
+        CreatePluginSortingData(p1->GetName(), 1),
+        CreatePluginSortingData(p2->GetName(), 2),
+        CreatePluginSortingData(p3->GetName(), 0)};
 
     auto sorted = SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
     ASSERT_EQ(expectedSortedOrder, sorted);
@@ -602,8 +597,8 @@ TEST_P(PluginSortTest,
   esm->AddMaster(esp->GetName());
 
   std::vector<PluginSortingData> pluginsSortingData{
-      CreatePluginSortingData(esm->GetName()),
-      CreatePluginSortingData(esp->GetName())};
+      CreatePluginSortingData(esm->GetName(), 0),
+      CreatePluginSortingData(esp->GetName(), 1)};
 
   try {
     SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
@@ -755,8 +750,8 @@ TEST_P(PluginSortTest,
   esm->SetIsMaster(true);
 
   std::vector<PluginSortingData> pluginsSortingData{
-      CreatePluginSortingData(esm->GetName()),
-      CreatePluginSortingData(esp->GetName())};
+      CreatePluginSortingData(esm->GetName(), 0),
+      CreatePluginSortingData(esp->GetName(), 1)};
 
   try {
     SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {esp->GetName()});
@@ -816,8 +811,8 @@ TEST_P(
   blueprint->SetIsBlueprintMaster(true);
 
   std::vector<PluginSortingData> pluginsSortingData{
-      CreatePluginSortingData(esp->GetName()),
-      CreatePluginSortingData(blueprint->GetName())};
+      CreatePluginSortingData(esp->GetName(), 0),
+      CreatePluginSortingData(blueprint->GetName(), 1)};
 
   const auto sorted =
       SortPlugins(std::move(pluginsSortingData), {Group()}, {}, {});
@@ -1106,8 +1101,8 @@ TEST_P(
   blueprint->SetIsBlueprintMaster(true);
 
   std::vector<PluginSortingData> pluginsSortingData{
-      CreatePluginSortingData(esm->GetName()),
-      CreatePluginSortingData(blueprint->GetName())};
+      CreatePluginSortingData(esm->GetName(), 0),
+      CreatePluginSortingData(blueprint->GetName(), 0)};
 
   const auto sorted = SortPlugins(
       std::move(pluginsSortingData), {Group()}, {}, {blueprint->GetName()});
@@ -1135,8 +1130,8 @@ TEST_P(
   blueprint->SetIsBlueprintMaster(true);
 
   std::vector<PluginSortingData> pluginsSortingData{
-      CreatePluginSortingData(esm->GetName()),
-      CreatePluginSortingData(blueprint->GetName())};
+      CreatePluginSortingData(esm->GetName(), 0),
+      CreatePluginSortingData(blueprint->GetName(), 1)};
 
   const auto sorted = SortPlugins(
       std::move(pluginsSortingData), {Group()}, {}, {blueprint->GetName()});

@@ -44,7 +44,7 @@ public:
   explicit PluginSortingData(const PluginSortingInterface* plugin,
                              const PluginMetadata& masterlistMetadata,
                              const PluginMetadata& userMetadata,
-                             const std::vector<ComparableFilename>& loadOrder);
+                             const size_t loadOrderIndex);
 
   const std::string& GetName() const;
   bool IsMaster() const;
@@ -64,7 +64,7 @@ public:
   const std::vector<File>& GetMasterlistRequirements() const;
   const std::vector<File>& GetUserRequirements() const;
 
-  const std::optional<size_t>& GetLoadOrderIndex() const;
+  size_t GetLoadOrderIndex() const;
 
 private:
   const PluginSortingInterface* plugin_{nullptr};
@@ -77,7 +77,7 @@ private:
   std::vector<File> masterlistReq_;
   std::vector<File> userReq_;
 
-  std::optional<size_t> loadOrderIndex_;
+  size_t loadOrderIndex_{0};
   size_t overrideRecordCount_{0};
   bool groupIsUserMetadata_{0};
 };

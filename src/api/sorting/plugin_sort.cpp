@@ -38,11 +38,7 @@ std::vector<PluginSortingData> GetPluginsSortingData(
   std::vector<PluginSortingData> pluginsSortingData;
   pluginsSortingData.reserve(loadOrder.size());
 
-  std::vector<ComparableFilename> comparableLoadOrder;
-  for (const auto& plugin : loadOrder) {
-    comparableLoadOrder.push_back(ToComparableFilename(plugin->GetName()));
-  }
-
+  size_t i = 0;
   for (const auto& plugin : loadOrder) {
     const auto pluginFilename = plugin->GetName();
 
@@ -53,9 +49,10 @@ std::vector<PluginSortingData> GetPluginsSortingData(
                                   .value_or(PluginMetadata(pluginFilename));
 
     const auto pluginSortingData = PluginSortingData(
-        plugin, masterlistMetadata, userMetadata, comparableLoadOrder);
+        plugin, masterlistMetadata, userMetadata, i);
 
     pluginsSortingData.push_back(pluginSortingData);
+    i += 1;
   }
 
   return pluginsSortingData;

@@ -49,11 +49,10 @@ std::vector<const PluginInterface*> GetPluginsSubset(
   return pluginsSubset;
 }
 
-PluginSortingData::PluginSortingData(
-    const PluginSortingInterface* plugin,
-    const PluginMetadata& masterlistMetadata,
-    const PluginMetadata& userMetadata,
-    const std::vector<ComparableFilename>& loadOrder) :
+PluginSortingData::PluginSortingData(const PluginSortingInterface* plugin,
+                                     const PluginMetadata& masterlistMetadata,
+                                     const PluginMetadata& userMetadata,
+                                     const size_t loadOrderIndex) :
     plugin_(plugin),
     name_(plugin == nullptr ? std::string() : plugin->GetName()),
     isMaster_(plugin != nullptr && plugin->IsMaster()),
@@ -63,30 +62,17 @@ PluginSortingData::PluginSortingData(
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),
     masterlistReq_(masterlistMetadata.GetRequirements()),
     userReq_(userMetadata.GetRequirements()),
-    groupIsUserMetadata_(userMetadata.GetGroup().has_value()) {
-  if (plugin == nullptr) {
-    return;
-  }
-
-  const auto comparableName = ToComparableFilename(GetName());
-
-  for (size_t i = 0; i < loadOrder.size(); i++) {
-    if (CompareFilenames(comparableName, loadOrder.at(i)) == 0) {
-      loadOrderIndex_ = i;
-      break;
-    }
-  }
-
-  overrideRecordCount_ = plugin->GetOverrideRecordCount();
-}
+    loadOrderIndex_(loadOrderIndex),
+    overrideRecordCount_(plugin == nullptr ? 0
+                                           : plugin->GetOverrideRecordCount()),
+    groupIsUserMetadata_(userMetadata.GetGroup().has_value()) {}
 
 const std::string& PluginSortingData::GetName() const { return name_; }
 
 bool PluginSortingData::IsMaster() const { return isMaster_; }
 
 bool PluginSortingData::IsBlueprintMaster() const {
-  return isMaster_ &&
-         plugin_->IsBlueprintPlugin();
+  return isMaster_ && plugin_->IsBlueprintPlugin();
 }
 
 std::vector<std::string> PluginSortingData::GetMasters() const {
@@ -138,7 +124,6 @@ const std::vector<File>& PluginSortingData::GetMasterlistRequirements() const {
 const std::vector<File>& PluginSortingData::GetUserRequirements() const {
   return userReq_;
 }
-const std::optional<size_t>& PluginSortingData::GetLoadOrderIndex() const {
-  return loadOrderIndex_;
-}
+
+size_t PluginSortingData::GetLoadOrderIndex() const { return loadOrderIndex_; }
 }
