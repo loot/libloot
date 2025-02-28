@@ -45,23 +45,6 @@ std::vector<T> mergeVectors(std::vector<T> first,
 
   return first;
 }
-
-// Returns the elements in first that are not in second. Although this is
-// O(F * S), both input vectors are expected to be small (with tens of elements
-// being an unusually large number).
-template<typename T>
-std::vector<T> diffVectors(const std::vector<T>& first,
-                           const std::vector<T>& second) {
-  std::vector<T> result;
-
-  for (const auto& element : first) {
-    if (std::find(second.begin(), second.end(), element) == second.end()) {
-      result.push_back(element);
-    }
-  }
-
-  return result;
-}
 }
 
 #endif
