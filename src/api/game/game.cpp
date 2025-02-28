@@ -263,6 +263,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
     logger->trace("Starting plugin loading.");
   }
 
+  std::mutex mutex;
   std::for_each(
       std::execution::par_unseq,
       pluginPaths.begin(),
@@ -271,6 +272,8 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
         try {
           const auto resolvedPluginPath =
               ResolvePluginPath(GetType(), DataPath(), pluginPath);
+
+          std::lock_guard<std::mutex> lock(mutex);
 
           cache_.AddPlugin(
               Plugin(GetType(), cache_, resolvedPluginPath, loadHeadersOnly));
