@@ -25,7 +25,6 @@
 #ifndef LOOT_API_GAME_GAME_CACHE
 #define LOOT_API_GAME_GAME_CACHE
 
-#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -34,14 +33,6 @@
 namespace loot {
 class GameCache {
 public:
-  GameCache() = default;
-  GameCache(const GameCache& cache);
-  GameCache(GameCache&& cache);
-  ~GameCache() = default;
-
-  GameCache& operator=(const GameCache& cache);
-  GameCache& operator=(GameCache&& cache);
-
   std::vector<const Plugin*> GetPlugins() const;
   const Plugin* GetPlugin(const std::string& pluginName) const;
   void AddPlugin(Plugin&& plugin);
@@ -54,8 +45,6 @@ public:
 private:
   std::unordered_map<std::string, std::shared_ptr<const Plugin>> plugins_;
   std::set<std::filesystem::path> archivePaths_;
-
-  mutable std::mutex mutex_;
 };
 }
 

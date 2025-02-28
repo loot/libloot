@@ -24,53 +24,10 @@
 
 #include "api/game/game_cache.h"
 
-#include <thread>
-
 #include "api/helpers/text.h"
 
-using std::lock_guard;
-using std::mutex;
-
 namespace loot {
-GameCache::GameCache(const GameCache& cache) {
-  lock_guard<mutex> lock(cache.mutex_);
-
-  plugins_ = cache.plugins_;
-  archivePaths_ = cache.archivePaths_;
-}
-
-GameCache::GameCache(GameCache&& cache) {
-  lock_guard<mutex> lock(cache.mutex_);
-
-  plugins_ = std::move(cache.plugins_);
-  archivePaths_ = std::move(cache.archivePaths_);
-}
-
-GameCache& GameCache::operator=(const GameCache& cache) {
-  if (&cache != this) {
-    std::scoped_lock lock(mutex_, cache.mutex_);
-
-    plugins_ = cache.plugins_;
-    archivePaths_ = cache.archivePaths_;
-  }
-
-  return *this;
-}
-
-GameCache& GameCache::operator=(GameCache&& cache) {
-  if (&cache != this) {
-    std::scoped_lock lock(mutex_, cache.mutex_);
-
-    plugins_ = std::move(cache.plugins_);
-    archivePaths_ = std::move(cache.archivePaths_);
-  }
-
-  return *this;
-}
-
 std::vector<const Plugin*> GameCache::GetPlugins() const {
-  lock_guard<mutex> lock(mutex_);
-
   std::vector<const Plugin*> output(plugins_.size());
   std::transform(
       begin(plugins_), end(plugins_), begin(output), [](const auto& pair) {
@@ -80,8 +37,6 @@ std::vector<const Plugin*> GameCache::GetPlugins() const {
 }
 
 const Plugin* GameCache::GetPlugin(const std::string& pluginName) const {
-  lock_guard<mutex> lock(mutex_);
-
   const auto it = plugins_.find(NormalizeFilename(pluginName));
   if (it != end(plugins_))
     return it->second.get();
@@ -90,8 +45,6 @@ const Plugin* GameCache::GetPlugin(const std::string& pluginName) const {
 }
 
 void GameCache::AddPlugin(Plugin&& plugin) {
-  lock_guard<mutex> lock(mutex_);
-
   auto normalizedName = NormalizeFilename(plugin.GetName());
   auto pluginPointer = std::make_shared<Plugin>(std::move(plugin));
 
@@ -104,20 +57,14 @@ void GameCache::AddPlugin(Plugin&& plugin) {
 }
 
 std::set<std::filesystem::path> GameCache::GetArchivePaths() const {
-  lock_guard<mutex> lock(mutex_);
-
   return archivePaths_;
 }
 
 void GameCache::CacheArchivePaths(std::set<std::filesystem::path>&& paths) {
-  lock_guard<mutex> lock(mutex_);
-
   archivePaths_ = std::move(paths);
 }
 
 void GameCache::ClearCachedPlugins() {
-  lock_guard<mutex> guard(mutex_);
-
   plugins_.clear();
 }
 }
