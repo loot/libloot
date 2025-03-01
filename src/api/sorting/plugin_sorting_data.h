@@ -49,7 +49,6 @@ public:
   const std::string& GetName() const;
   bool IsMaster() const;
   bool IsBlueprintMaster() const;
-  bool LoadsArchive() const;
   std::vector<std::string> GetMasters() const;
   size_t GetOverrideRecordCount() const;
   bool DoRecordsOverlap(const PluginSortingData& plugin) const;

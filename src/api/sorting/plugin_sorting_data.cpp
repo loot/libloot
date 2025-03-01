@@ -75,10 +75,6 @@ bool PluginSortingData::IsBlueprintMaster() const {
   return isMaster_ && plugin_->IsBlueprintPlugin();
 }
 
-bool PluginSortingData::LoadsArchive() const {
-  return plugin_ != nullptr && plugin_->LoadsArchive();
-}
-
 std::vector<std::string> PluginSortingData::GetMasters() const {
   if (plugin_ == nullptr) {
     return {};
