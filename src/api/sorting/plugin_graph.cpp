@@ -24,6 +24,8 @@
 
 #include "plugin_graph.h"
 
+#include <fmt/ranges.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/container/deque.hpp>
 #include <boost/graph/breadth_first_search.hpp>
@@ -174,6 +176,18 @@ std::unordered_map<std::string, std::vector<vertex_t>> GetGroupsPlugins(
     }
   }
 
+  const auto logger = getLogger();
+  if (logger && logger->should_log(spdlog::level::debug)) {
+    logger->debug("Found the following plugins in groups:");
+    for (const auto [key, value] : groupsPlugins) {
+      std::vector<std::string> pluginNames;
+      for (const auto vertex : value) {
+        pluginNames.push_back("\"" + graph.GetPlugin(vertex).GetName() + "\"");
+      }
+      logger->debug("\t{}: {}", key, fmt::join(pluginNames, ", "));
+    }
+  }
+
   return groupsPlugins;
 }
 
@@ -218,6 +232,19 @@ public:
   void tree_edge(GroupGraphEdge edge, const GroupGraph& graph) {
     const auto source = boost::source(edge, graph);
     const auto target = boost::target(edge, graph);
+    const auto shouldIgnoreSourceVertex = ShouldIgnoreSourceVertex(source);
+
+    if (logger_) {
+      logger_->trace("Found groups graph {} edge going from {} to {}",
+                     describeEdgeType(graph[edge]),
+                     graph[source],
+                     graph[target]);
+
+      if (shouldIgnoreSourceVertex) {
+        logger_->debug("Ignoring plugins in the source vertex {}",
+                       graph[source]);
+      }
+    }
 
     // Add the edge to the stack so that its providence can be taken into
     // account when adding edges from this source group and previous groups'
@@ -227,8 +254,8 @@ public:
     // to ignore the default group's plugins as sources).
     edgeStack_.push_back(std::make_pair(
         edge,
-        ShouldIgnoreSourceVertex(source) ? std::vector<vertex_t>()
-                                         : FindPluginsInGroup(source, graph)));
+        shouldIgnoreSourceVertex ? std::vector<vertex_t>()
+                                 : FindPluginsInGroup(source, graph)));
 
     // Find the plugins in the target group.
     const auto targetPlugins = FindPluginsInGroup(target, graph);
@@ -244,15 +271,29 @@ public:
     // Mark the source vertex as unfinishable, because none of the plugins in
     // in the path so far can have edges added to plugins past the target
     // vertex.
-    unfinishableVertices_.insert(boost::source(edge, graph));
+    const auto source = boost::source(edge, graph);
+    unfinishableVertices_.insert(source);
+
+    if (logger_) {
+      logger_->trace(
+          "Found groups graph forward or cross {} edge going from {}, recorded "
+          "it as unfinishable",
+          describeEdgeType(graph[edge]),
+          graph[source]);
+    }
   }
 
-  void finish_vertex(GroupGraphVertex vertex, const GroupGraph&) {
+  void finish_vertex(GroupGraphVertex vertex, const GroupGraph& graph) {
     // Now that this vertex's DFS-tree has been fully explored, mark it as
     // finished so that it won't have edges added from its plugins again in a
     // different DFS that uses the same finished vertices set.
     if (vertex != vertexToIgnoreAsSource_ &&
         unfinishableVertices_.count(vertex) == 0) {
+      if (logger_) {
+        logger_->trace(
+            "Recording groups graph vertex {} as finished",
+                       graph[vertex]);
+      }
       finishedVertices_->insert(vertex);
     }
 
@@ -311,8 +352,19 @@ private:
     for (const auto& toVertex : toPluginVertices) {
       const auto& toPlugin = pluginGraph_->GetPlugin(toVertex);
 
-      if (!pluginGraph_->IsPathCached(fromPluginVertex, toVertex) &&
-          !pluginGraph_->PathExists(toVertex, fromPluginVertex)) {
+      if (pluginGraph_->IsPathCached(fromPluginVertex, toVertex)) {
+        if (logger_) {
+          logger_->trace(
+              "Skipping group edge from \"{}\" to \"{}\" as a path already "
+              "exists.",
+              fromPlugin.GetName(),
+              toPlugin.GetName());
+        }
+        continue;
+      }
+
+
+      if (!pluginGraph_->PathExists(toVertex, fromPluginVertex)) {
         const auto involvesUserMetadata = groupPathInvolvesUserMetadata ||
                                           fromPlugin.IsGroupUserMetadata() ||
                                           toPlugin.IsGroupUserMetadata();
@@ -362,6 +414,13 @@ void DepthFirstVisit(
     const GroupGraph& graph,
     const boost::graph_traits<GroupGraph>::vertex_descriptor& startingVertex,
     GroupsPathVisitor& visitor) {
+  const auto logger = getLogger();
+  if (logger) {
+    logger->trace(
+        "Starting depth-first search of the groups graph starting from \"{}\"",
+        graph[startingVertex]);
+  }
+
   std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
   const auto colorMap = boost::make_iterator_property_map(
       colorVec.begin(), boost::get(boost::vertex_index, graph), colorVec.at(0));
@@ -809,11 +868,20 @@ std::optional<EdgeType> PluginGraph::GetEdgeType(const vertex_t& fromVertex,
 void PluginGraph::AddEdge(const vertex_t& fromVertex,
                           const vertex_t& toVertex,
                           EdgeType edgeType) {
+  const auto logger = getLogger();
+
   if (pathsCache_.IsPathCached(fromVertex, toVertex)) {
+    if (logger) {
+      logger->trace(
+          "Skipping {} edge from \"{}\" to \"{}\" as a path already "
+          "exists.",
+          describeEdgeType(edgeType),
+          GetPlugin(fromVertex).GetName(),
+          GetPlugin(toVertex).GetName());
+    }
     return;
   }
 
-  const auto logger = getLogger();
   if (logger) {
     logger->debug("Adding {} edge from \"{}\" to \"{}\".",
                   describeEdgeType(edgeType),
@@ -1086,16 +1154,25 @@ void PluginGraph::AddOverlapEdges() {
       const auto fromVertex = thisPluginLoadsFirst ? vertex : otherVertex;
       const auto toVertex = thisPluginLoadsFirst ? otherVertex : vertex;
 
-      if (!IsPathCached(fromVertex, toVertex) &&
-          !PathExists(toVertex, fromVertex)) {
-        AddEdge(fromVertex, toVertex, edgeType);
-      } else if (logger) {
-        logger->debug(
-            "Skipping {} edge from \"{}\" to \"{}\" as it would "
-            "create a cycle.",
-            describeEdgeType(edgeType),
-            GetPlugin(fromVertex).GetName(),
-            GetPlugin(toVertex).GetName());
+      if (!IsPathCached(fromVertex, toVertex)) {
+        if (!PathExists(toVertex, fromVertex)) {
+          AddEdge(fromVertex, toVertex, edgeType);
+        } else if (logger) {
+          logger->debug(
+              "Skipping {} edge from \"{}\" to \"{}\" as it would "
+              "create a cycle.",
+              describeEdgeType(edgeType),
+              GetPlugin(fromVertex).GetName(),
+              GetPlugin(toVertex).GetName());
+        }
+      } else {
+        if (logger) {
+          logger->trace(
+              "Skipping overlap edge from \"{}\" to \"{}\" as a path already "
+              "exists.",
+              GetPlugin(fromVertex).GetName(),
+              GetPlugin(toVertex).GetName());
+        }
       }
     }
   }
