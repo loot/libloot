@@ -495,19 +495,6 @@ size_t Plugin::GetOverrideRecordCount() const {
   return overrideRecordCount;
 }
 
-uint32_t Plugin::GetRecordAndGroupCount() const {
-  if (esPlugin == nullptr) {
-    return 0;
-  }
-
-  uint32_t recordAndGroupCount = 0;
-  const auto ret =
-      esp_plugin_record_and_group_count(esPlugin.get(), &recordAndGroupCount);
-  HandleEspluginError(ret, "get record and group count for \"{}\"", name_);
-
-  return recordAndGroupCount;
-}
-
 size_t Plugin::GetAssetCount() const {
   return std::accumulate(
       archiveAssets_.begin(),

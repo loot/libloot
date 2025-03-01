@@ -86,8 +86,6 @@ public:
     return overrideRecordCount_;
   }
 
-  uint32_t GetRecordAndGroupCount() const override { return uint32_t(); }
-
   size_t GetAssetCount() const override { return assetCount_; };
 
   bool DoAssetsOverlap(const PluginSortingInterface& plugin) const override {
