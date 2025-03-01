@@ -264,6 +264,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
   }
 
   std::mutex mutex;
+  std::vector<Plugin> plugins;
   std::for_each(
       std::execution::par_unseq,
       pluginPaths.begin(),
@@ -273,10 +274,12 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
           const auto resolvedPluginPath =
               ResolvePluginPath(GetType(), DataPath(), pluginPath);
 
+          auto plugin =
+              Plugin(GetType(), cache_, resolvedPluginPath, loadHeadersOnly);
+
           std::lock_guard<std::mutex> lock(mutex);
 
-          cache_.AddPlugin(
-              Plugin(GetType(), cache_, resolvedPluginPath, loadHeadersOnly));
+          plugins.push_back(std::move(plugin));
         } catch (const std::exception& e) {
           if (logger) {
             logger->error(
@@ -290,11 +293,14 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
   if (!loadHeadersOnly &&
       (GetType() == GameType::tes3 || GetType() == GameType::openmw ||
        GetType() == GameType::starfield)) {
-    auto plugins = cache_.GetPlugins();
     const auto pluginsMetadata = Plugin::GetPluginsMetadata(plugins);
     for (auto& plugin : plugins) {
-      plugin->ResolveRecordIds(pluginsMetadata.get());
+      plugin.ResolveRecordIds(pluginsMetadata.get());
     }
+  }
+
+  for (auto& plugin : plugins) {
+    cache_.AddPlugin(std::move(plugin));
   }
 
   conditionEvaluator_->RefreshLoadedPluginsState(GetLoadedPlugins());
