@@ -24,6 +24,8 @@
 
 #include "plugin_graph.h"
 
+#include <fmt/ranges.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/container/deque.hpp>
 #include <boost/graph/breadth_first_search.hpp>
@@ -174,6 +176,18 @@ std::unordered_map<std::string, std::vector<vertex_t>> GetGroupsPlugins(
     }
   }
 
+  const auto logger = getLogger();
+  if (logger && logger->should_log(spdlog::level::debug)) {
+    logger->debug("Found the following plugins in groups:");
+    for (const auto [key, value] : groupsPlugins) {
+      std::vector<std::string> pluginNames;
+      for (const auto vertex : value) {
+        pluginNames.push_back("\"" + graph.GetPlugin(vertex).GetName() + "\"");
+      }
+      logger->debug("\t{}: {}", key, fmt::join(pluginNames, ", "));
+    }
+  }
+
   return groupsPlugins;
 }
 
@@ -241,19 +255,27 @@ public:
   }
 
   void forward_or_cross_edge(GroupGraphEdge edge, const GroupGraph& graph) {
-    // Mark the source vertex as unfinishable, because none of the plugins in
-    // in the path so far can have edges added to plugins past the target
-    // vertex.
-    unfinishableVertices_.insert(boost::source(edge, graph));
+    // Mark the source vertex and all edges in the current stack as
+    // unfinishable, because none of the plugins in in the path so far can have
+    // edges added to plugins past the target vertex.
+    for (const auto& edgeInPath : edgeStack_) {
+      MarkSourceAsUnfinishable(edgeInPath.first, graph);
+    }
+
+    MarkSourceAsUnfinishable(edge, graph);
   }
 
-  void finish_vertex(GroupGraphVertex vertex, const GroupGraph&) {
+  void finish_vertex(GroupGraphVertex vertex, const GroupGraph& graph) {
     // Now that this vertex's DFS-tree has been fully explored, mark it as
     // finished so that it won't have edges added from its plugins again in a
     // different DFS that uses the same finished vertices set.
     if (vertex != vertexToIgnoreAsSource_ &&
         unfinishableVertices_.count(vertex) == 0) {
-      finishedVertices_->insert(vertex);
+      const auto inserted = finishedVertices_->insert(vertex).second;
+      if (inserted && logger_) {
+        logger_->debug("Recorded groups graph vertex \"{}\" as finished",
+                       graph[vertex]);
+      }
     }
 
     // Since this vertex has been fully explored, pop the edge stack to remove
@@ -311,24 +333,26 @@ private:
     for (const auto& toVertex : toPluginVertices) {
       const auto& toPlugin = pluginGraph_->GetPlugin(toVertex);
 
-      if (!pluginGraph_->IsPathCached(fromPluginVertex, toVertex) &&
-          !pluginGraph_->PathExists(toVertex, fromPluginVertex)) {
-        const auto involvesUserMetadata = groupPathInvolvesUserMetadata ||
-                                          fromPlugin.IsGroupUserMetadata() ||
-                                          toPlugin.IsGroupUserMetadata();
+      if (pluginGraph_->IsPathCached(fromPluginVertex, toVertex)) {
+        continue;
+      }
 
-        const auto edgeType = involvesUserMetadata ? EdgeType::userGroup
-                                                   : EdgeType::masterlistGroup;
+      const auto involvesUserMetadata = groupPathInvolvesUserMetadata ||
+                                        fromPlugin.IsGroupUserMetadata() ||
+                                        toPlugin.IsGroupUserMetadata();
 
+      const auto edgeType = involvesUserMetadata ? EdgeType::userGroup
+                                                 : EdgeType::masterlistGroup;
+
+      if (!pluginGraph_->PathExists(toVertex, fromPluginVertex)) {
         pluginGraph_->AddEdge(fromPluginVertex, toVertex, edgeType);
-      } else {
-        if (logger_) {
-          logger_->debug(
-              "Skipping group edge from \"{}\" to \"{}\" as it would "
-              "create a cycle.",
-              fromPlugin.GetName(),
-              toPlugin.GetName());
-        }
+      } else if (logger_) {
+        logger_->debug(
+            "Skipping a \"{}\" edge from \"{}\" to \"{}\" as it would "
+            "create a cycle.",
+            describeEdgeType(edgeType),
+            fromPlugin.GetName(),
+            toPlugin.GetName());
       }
     }
   }
@@ -341,6 +365,23 @@ private:
   void PopEdgeStack() {
     if (!edgeStack_.empty()) {
       edgeStack_.pop_back();
+    }
+  }
+
+  void MarkSourceAsUnfinishable(const GroupGraphEdge edge,
+                                const GroupGraph& graph) {
+    const auto source = boost::source(edge, graph);
+    const auto inserted = unfinishableVertices_.insert(source).second;
+
+    if (logger_ && inserted) {
+      const auto target = boost::source(edge, graph);
+
+      logger_->debug(
+          "Found groups graph forward or cross \"{}\" edge going from \"{}\" "
+          "to \"{}\", treating the source as unfinishable",
+          describeEdgeType(graph[edge]),
+          graph[source],
+          graph[target]);
     }
   }
 
@@ -362,6 +403,13 @@ void DepthFirstVisit(
     const GroupGraph& graph,
     const boost::graph_traits<GroupGraph>::vertex_descriptor& startingVertex,
     GroupsPathVisitor& visitor) {
+  const auto logger = getLogger();
+  if (logger) {
+    logger->trace(
+        "Starting depth-first search of the groups graph starting from \"{}\"",
+        graph[startingVertex]);
+  }
+
   std::vector<boost::default_color_type> colorVec(boost::num_vertices(graph));
   const auto colorMap = boost::make_iterator_property_map(
       colorVec.begin(), boost::get(boost::vertex_index, graph), colorVec.at(0));
@@ -1047,7 +1095,7 @@ void PluginGraph::AddOverlapEdges() {
           AddEdge(fromVertex, toVertex, edgeType);
         } else if (logger) {
           logger->debug(
-              "Skipping {} edge from \"{}\" to \"{}\" as it would "
+              "Skipping \"{}\" edge from \"{}\" to \"{}\" as it would "
               "create a cycle.",
               describeEdgeType(edgeType),
               GetPlugin(fromVertex).GetName(),

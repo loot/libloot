@@ -1563,6 +1563,44 @@ TEST_F(PluginGraphTest, addGroupEdgesDoesNotStartSearchingWithTheLongestPath) {
 }
 
 TEST_F(PluginGraphTest,
+    addGroupEdgesShouldMarkVerticesAsUnfinishableIfAVertexInTheirSubtreeIsUnfinishable) {
+  std::vector<Group> masterlistGroups{Group("A"),
+                                      Group("B", {"A"}),
+                                      Group("C", {"B"}),
+                                      Group("D", {"C"}),
+                                      Group()};
+  std::vector<Group> userGroups {Group("BU1", {"B"}), Group("BU2", {"BU1"}), Group("C", {"BU2"})};
+  groupGraph = BuildGroupGraph(masterlistGroups, userGroups);
+
+  PluginGraph graph;
+
+  const auto a = graph.AddVertex(CreatePluginSortingData("A.esp", "A"));
+  const auto b = graph.AddVertex(CreatePluginSortingData("B.esp", "B"));
+  const auto bu1 = graph.AddVertex(CreatePluginSortingData("BU1.esp", "BU1"));
+  const auto bu2 = graph.AddVertex(CreatePluginSortingData("BU2.esp", "BU2"));
+  const auto c = graph.AddVertex(CreatePluginSortingData("C.esp", "C"));
+  const auto d = graph.AddVertex(CreatePluginSortingData("D.esp", "D"));
+
+  graph.AddGroupEdges(groupGraph);
+
+  // Should be A.esp -> B.esp -----------------------> C.esp -> D.esp
+  //                          -> BU1.esp -> BU2.esp ->
+  EXPECT_TRUE(graph.EdgeExists(a, b));
+  EXPECT_TRUE(graph.EdgeExists(a, c));
+  EXPECT_TRUE(graph.EdgeExists(a, d));
+  EXPECT_TRUE(graph.EdgeExists(b, c));
+  EXPECT_TRUE(graph.EdgeExists(b, d));
+  EXPECT_TRUE(graph.EdgeExists(b, bu1));
+  EXPECT_TRUE(graph.EdgeExists(b, bu2));
+  EXPECT_TRUE(graph.EdgeExists(bu1, bu2));
+  EXPECT_TRUE(graph.EdgeExists(bu1, c));
+  EXPECT_TRUE(graph.EdgeExists(bu1, d));
+  EXPECT_TRUE(graph.EdgeExists(bu2, c));
+  EXPECT_TRUE(graph.EdgeExists(bu2, d));
+  EXPECT_TRUE(graph.EdgeExists(c, d));
+}
+
+TEST_F(PluginGraphTest,
        addOverlapEdgesShouldNotAddEdgesBetweenNonOverlappingPlugins) {
   PluginGraph graph;
 
