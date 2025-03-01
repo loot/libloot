@@ -1042,16 +1042,17 @@ void PluginGraph::AddOverlapEdges() {
       const auto fromVertex = thisPluginLoadsFirst ? vertex : otherVertex;
       const auto toVertex = thisPluginLoadsFirst ? otherVertex : vertex;
 
-      if (!IsPathCached(fromVertex, toVertex) &&
-          !PathExists(toVertex, fromVertex)) {
-        AddEdge(fromVertex, toVertex, edgeType);
-      } else if (logger) {
-        logger->debug(
-            "Skipping {} edge from \"{}\" to \"{}\" as it would "
-            "create a cycle.",
-            describeEdgeType(edgeType),
-            GetPlugin(fromVertex).GetName(),
-            GetPlugin(toVertex).GetName());
+      if (!IsPathCached(fromVertex, toVertex)) {
+        if (!PathExists(toVertex, fromVertex)) {
+          AddEdge(fromVertex, toVertex, edgeType);
+        } else if (logger) {
+          logger->debug(
+              "Skipping {} edge from \"{}\" to \"{}\" as it would "
+              "create a cycle.",
+              describeEdgeType(edgeType),
+              GetPlugin(fromVertex).GetName(),
+              GetPlugin(toVertex).GetName());
+        }
       }
     }
   }
