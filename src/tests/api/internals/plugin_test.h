@@ -286,19 +286,21 @@ TEST_P(PluginTest, loadingWholePluginShouldReadFields) {
       game_.GetType(), game_.GetCache(), game_.DataPath() / pluginName, false);
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
-    Plugin master(
-        game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&master});
+    std::vector<Plugin> masters;
+    masters.push_back(Plugin(
+        game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false));
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata(masters);
 
     EXPECT_NO_THROW(plugin.ResolveRecordIds(pluginsMetadata.get()));
 
     EXPECT_EQ(4, plugin.GetOverrideRecordCount());
   } else if (GetParam() == GameType::starfield) {
-    Plugin master(game_.GetType(),
-                  game_.GetCache(),
-                  game_.DataPath() / blankFullEsm,
-                  true);
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&master});
+    std::vector<Plugin> masters;
+    masters.push_back(Plugin(game_.GetType(),
+                             game_.GetCache(),
+                             game_.DataPath() / blankFullEsm,
+                             true));
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata(masters);
 
     EXPECT_NO_THROW(plugin.ResolveRecordIds(pluginsMetadata.get()));
 
@@ -629,25 +631,27 @@ TEST_P(
                                     ? blankMasterDependentEsp
                                     : blankDifferentPluginDependentEsp;
 
-  Plugin plugin1(game_.GetType(),
-                 game_.GetCache(),
-                 game_.DataPath() / sourcePluginName,
-                 false);
-  Plugin plugin2(game_.GetType(),
-                 game_.GetCache(),
-                 game_.DataPath() / updatePluginName,
-                 false);
+  std::vector<Plugin> plugins;
+  plugins.push_back(Plugin(game_.GetType(),
+                           game_.GetCache(),
+                           game_.DataPath() / sourcePluginName,
+                           false));
+  plugins.push_back(Plugin(game_.GetType(),
+                           game_.GetCache(),
+                           game_.DataPath() / updatePluginName,
+                           false));
 
   if (GetParam() == GameType::starfield) {
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&plugin1});
-    plugin2.ResolveRecordIds(pluginsMetadata.get());
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata(plugins);
+    plugins[1].ResolveRecordIds(pluginsMetadata.get());
 
-    plugin1.ResolveRecordIds(nullptr);
-    plugin2.ResolveRecordIds(nullptr);
+    plugins[0].ResolveRecordIds(nullptr);
+    plugins[1].ResolveRecordIds(nullptr);
   }
 
-  EXPECT_FALSE(plugin1.IsValidAsUpdatePlugin());
-  EXPECT_EQ(GetParam() == GameType::starfield, plugin2.IsValidAsUpdatePlugin());
+  EXPECT_FALSE(plugins[0].IsValidAsUpdatePlugin());
+  EXPECT_EQ(GetParam() == GameType::starfield,
+            plugins[1].IsValidAsUpdatePlugin());
 }
 
 TEST_P(PluginTest,
@@ -699,20 +703,25 @@ TEST_P(PluginTest,
                                ? blankMasterDependentEsm
                                : blankMasterDependentEsm + ".ghost";
 
-  Plugin plugin1(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / plugin1Name, false);
-  Plugin plugin2(
-      game_.GetType(), game_.GetCache(), game_.DataPath() / plugin2Name, false);
+  std::vector<Plugin> plugins;
+  plugins.push_back(Plugin(game_.GetType(),
+                           game_.GetCache(),
+                           game_.DataPath() / plugin1Name,
+                           false));
+  plugins.push_back(Plugin(game_.GetType(),
+                           game_.GetCache(),
+                           game_.DataPath() / plugin2Name,
+                           false));
 
   if (GetParam() == GameType::starfield) {
-    plugin1.ResolveRecordIds(nullptr);
+    plugins[0].ResolveRecordIds(nullptr);
 
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&plugin1});
-    plugin2.ResolveRecordIds(pluginsMetadata.get());
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata(plugins);
+    plugins[1].ResolveRecordIds(pluginsMetadata.get());
   }
 
-  EXPECT_TRUE(plugin1.DoRecordsOverlap(plugin2));
-  EXPECT_TRUE(plugin2.DoRecordsOverlap(plugin1));
+  EXPECT_TRUE(plugins[0].DoRecordsOverlap(plugins[1]));
+  EXPECT_TRUE(plugins[1].DoRecordsOverlap(plugins[0]));
 }
 
 TEST_P(PluginTest,

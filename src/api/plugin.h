@@ -91,7 +91,7 @@ public:
 
   static std::unique_ptr<Vec_PluginMetadata,
                          decltype(&esp_plugins_metadata_free)>
-  GetPluginsMetadata(const std::vector<const Plugin*>& plugins);
+  GetPluginsMetadata(const std::vector<Plugin>& plugins);
 
 private:
   void Load(const std::filesystem::path& path,
