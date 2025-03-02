@@ -1,0 +1,21 @@
+[package]
+name = "libloot"
+version = "0.25.3"
+edition = "2024"
+license = "GPL-3.0"
+
+[dependencies]
+crc32fast = "1.4.2"
+esplugin = "6.1.1"
+libloadorder = { git = "https://github.com/Ortham/libloadorder.git", rev = "6245dbc6824c4751daef5ab01dfe7b9497f5446f" }
+log = { version = "0.4.26", features = ["std"] }
+loot-condition-interpreter = { git = "https://github.com/loot/loot-condition-interpreter.git", rev = "f7d9947fa434037743ce81e2d409184ec0bfb693" }
+petgraph = "0.7.1"
+fancy-regex = "0.14.0"
+saphyr = "0.0.3"
+saphyr-parser = "0.0.3"
+unicase = "2.8.1"
+rayon = "1.10.0"
+
+[dev-dependencies]
+tempfile = "3.17.1"
