@@ -646,10 +646,10 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         // significantly slower because it generally involves going further back
         // along the "new load order" path.
         let previous_node_position = new_load_order
-            .get(range_start..)
-            .expect("last_pos is within the new_load_order vec")
             .iter()
-            .rposition(|ni| !self.path_exists(node_index, *ni));
+            .skip(range_start)
+            .rposition(|ni| !self.path_exists(node_index, *ni))
+            .map(|p| range_start + p);
 
         // Add an edge going from the found vertex to this one, in case it
         // doesn't exist (we only know there's not a path going the other way).
@@ -662,7 +662,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         // Insert position is just after the found vertex, and a forward iterator
         // points to the element one after the element pointed to by the
         // corresponding reverse iterator.
-        let insert_position = previous_node_position.map(|i| i + 1).unwrap_or(0);
+        let insert_position = previous_node_position.map(|i| i + 1).unwrap_or(range_start);
 
         // Add an edge going from this vertex to the next one in the "new load
         // order" path, in case there isn't already one.
@@ -672,6 +672,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         // Now update newLoadOrder with the vertex's new position.
         new_load_order.insert(insert_position, node_index);
+        processed_nodes.insert(node_index);
 
         if log_enabled!(log::Level::Debug) {
             if let Some(next_node_index) = new_load_order.get(insert_position + 1) {

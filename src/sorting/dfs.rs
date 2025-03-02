@@ -188,6 +188,10 @@ impl<'a, N, F: FnMut(&N) -> String> DfsVisitor<'a> for CycleDetector<'a, N, F> {
     fn visit_forward_or_cross_edge(&mut self, _: EdgeReference<'a, EdgeType>) {}
 
     fn visit_back_edge(&mut self, edge_ref: EdgeReference<'a, EdgeType>) {
+        if self.found_cycle {
+            return;
+        }
+
         self.visit_tree_edge(edge_ref);
 
         let target_name = (self.get_node_name)(&self.graph[edge_ref.target()]);

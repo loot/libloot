@@ -23,7 +23,7 @@ use super::{
 
 static MERGE_KEY: LazyLock<MarkedYaml> = LazyLock::new(|| as_string_node("<<"));
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MetadataDocument {
     bash_tags: Vec<String>,
     groups: Vec<Group>,
@@ -287,7 +287,16 @@ impl MetadataDocument {
     }
 
     pub fn set_groups(&mut self, groups: Vec<Group>) {
-        self.groups = groups;
+        // Ensure that the default group is present.
+        let default_group_exists = groups.iter().any(|g| g.name() == Group::DEFAULT_NAME);
+
+        if !default_group_exists {
+            self.groups.clear();
+            self.groups.push(Group::default());
+            self.groups.extend(groups);
+        } else {
+            self.groups = groups;
+        }
     }
 
     pub fn set_plugin_metadata(&mut self, plugin_metadata: PluginMetadata) {
@@ -307,6 +316,18 @@ impl MetadataDocument {
         self.messages.clear();
         self.plugins.clear();
         self.regex_plugins.clear();
+    }
+}
+
+impl std::default::Default for MetadataDocument {
+    fn default() -> Self {
+        Self {
+            bash_tags: Default::default(),
+            groups: vec![Group::default()],
+            messages: Default::default(),
+            plugins: Default::default(),
+            regex_plugins: Default::default(),
+        }
     }
 }
 

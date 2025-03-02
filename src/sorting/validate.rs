@@ -39,7 +39,7 @@ pub fn validate_specific_and_hardcoded_edges<T: SortingPlugin>(
     log::trace!("Validating specific and early-loading plugin edges...");
 
     let non_masters_set: HashSet<UniCase<&str>> =
-        masters.iter().map(|p| UniCase::new(p.name())).collect();
+        non_masters.iter().map(|p| UniCase::new(p.name())).collect();
     let blueprint_masters_set: HashSet<UniCase<&str>> = blueprint_masters
         .iter()
         .map(|p| UniCase::new(p.name()))

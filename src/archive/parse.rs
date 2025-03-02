@@ -98,7 +98,7 @@ pub(super) fn to_u32(bytes: &[u8]) -> u32 {
 
 pub(super) fn to_u64(bytes: &[u8]) -> u64 {
     let array =
-        <[u8; 8]>::try_from(&bytes[..4]).expect("Bytes slice is large enough to hold a u64");
+        <[u8; 8]>::try_from(&bytes[..8]).expect("Bytes slice is large enough to hold a u64");
     u64::from_le_bytes(array)
 }
 
