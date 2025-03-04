@@ -6,7 +6,7 @@ use std::{
 };
 
 use super::error::{ArchiveParsingError, ArchivePathParsingError};
-use crate::plugin::has_ascii_extension;
+use crate::{logging, plugin::has_ascii_extension};
 
 use super::{ba2, bsa};
 
@@ -14,7 +14,7 @@ pub fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTreeSet<u
     let mut archive_assets: BTreeMap<u64, BTreeSet<u64>> = BTreeMap::new();
 
     for archive_path in archive_paths {
-        log::trace!(
+        logging::trace!(
             "Getting assets loaded from the Bethesda archive at \"{}\"",
             archive_path.display()
         );
@@ -22,7 +22,7 @@ pub fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTreeSet<u
         let assets = match get_assets_in_archive(archive_path) {
             Ok(a) => a,
             Err(e) => {
-                log::error!(
+                logging::error!(
                     "Encountered an error while trying to read the Bethesda archive at \"{}\": {}",
                     archive_path.display(),
                     e
@@ -38,7 +38,7 @@ pub fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTreeSet<u
 
             for file_hash in file_hashes {
                 if !entry_file_hashes.insert(file_hash) && warn_on_hash_collisions {
-                    log::warn!(
+                    logging::warn!(
                         "The folder and file with hashes {:x} and {:x} in \"{}\" are present in another Bethesda archive.",
                         folder_hash,
                         file_hash,

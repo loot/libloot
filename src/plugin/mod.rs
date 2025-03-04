@@ -16,7 +16,7 @@ use crate::{
     GameType,
     archive::{assets_in_archives, find_associated_archives},
     game::GameCache,
-    regex,
+    logging, regex,
 };
 use error::{
     InvalidFilenameReason, LoadPluginError, PluginDataError, PluginValidationError,
@@ -337,7 +337,7 @@ pub(crate) fn validate_plugin_path_and_header(
     if game_type == GameType::OpenMW && has_ascii_extension(plugin_path, "omwscripts") {
         Ok(())
     } else if !has_plugin_file_extension(game_type, plugin_path) {
-        log::debug!(
+        logging::debug!(
             "The file \"{}\" is not a valid plugin",
             plugin_path.display()
         );
@@ -349,7 +349,7 @@ pub(crate) fn validate_plugin_path_and_header(
     {
         Ok(())
     } else {
-        log::debug!(
+        logging::debug!(
             "The file \"{}\" is not a valid plugin",
             plugin_path.display()
         );

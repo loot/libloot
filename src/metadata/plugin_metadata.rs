@@ -1,7 +1,7 @@
 use fancy_regex::Regex;
 use saphyr::MarkedYaml;
 
-use crate::regex;
+use crate::{logging, regex};
 
 use super::{
     error::{MetadataParsingErrorReason, ParseMetadataError, RegexError},
@@ -201,7 +201,7 @@ impl PluginMetadata {
     pub fn name_matches(&self, other_name: &str) -> bool {
         if let Some(regex) = &self.name.regex {
             regex.is_match(other_name).inspect_err(|e| {
-                log::error!("Encountered an error while trying to match the regex {} to the string {}: {}", regex.as_str(), other_name, e);
+                logging::error!("Encountered an error while trying to match the regex {} to the string {}: {}", regex.as_str(), other_name, e);
             }).unwrap_or(false)
         } else {
             unicase::eq(self.name.string.as_str(), other_name)

@@ -9,7 +9,7 @@ Currently complete:
 - [x] Public API types and function declarations
 - [x] Public API doc comments
 - [x] Library versioning
-- [ ] Setting a logging callback
+- [x] Setting a logging callback
 - [x] Parsing metadata from YAML
 - [x] Serialising metadata to YAML
 - [x] Game-related functionality

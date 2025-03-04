@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use unicase::UniCase;
 
 use crate::{
-    EdgeType, Vertex,
+    EdgeType, Vertex, logging,
     sorting::error::{CyclicInteractionError, PluginGraphValidationError, UndefinedGroupError},
 };
 
@@ -36,7 +36,7 @@ pub fn validate_specific_and_hardcoded_edges<T: SortingPlugin>(
     non_masters: &[PluginSortingData<'_, T>],
     early_loading_plugins: &[String],
 ) -> Result<(), PluginGraphValidationError> {
-    log::trace!("Validating specific and early-loading plugin edges...");
+    logging::trace!("Validating specific and early-loading plugin edges...");
 
     let non_masters_set: HashSet<UniCase<&str>> =
         non_masters.iter().map(|p| UniCase::new(p.name())).collect();
@@ -61,7 +61,7 @@ fn validate_masters<T: SortingPlugin>(
     non_masters: &HashSet<UniCase<&str>>,
     blueprint_masters: &HashSet<UniCase<&str>>,
 ) -> Result<(), PluginGraphValidationError> {
-    log::trace!(
+    logging::trace!(
         "Validating specific and early-loading plugin edges for non-blueprint master files..."
     );
     masters
@@ -73,7 +73,7 @@ fn validate_non_masters<T: SortingPlugin>(
     non_masters: &[PluginSortingData<'_, T>],
     blueprint_masters: &HashSet<UniCase<&str>>,
 ) -> Result<(), PluginGraphValidationError> {
-    log::trace!("Validating specific and early-loading plugin edges for non-master files...");
+    logging::trace!("Validating specific and early-loading plugin edges for non-master files...");
 
     // Pass an empty set of non-masters so that the non-masters don't get validated against themselves.
     let empty_set = HashSet::new();
@@ -108,7 +108,7 @@ fn validate_plugin<T: SortingPlugin>(
             } else {
                 "non-master"
             };
-            log::warn!(
+            logging::warn!(
                 "The {} plugin \"{}\" has the blueprint master \"{}\" as one of its masters",
                 plugin_type,
                 plugin.name(),

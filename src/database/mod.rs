@@ -6,6 +6,7 @@ use std::{collections::HashMap, path::Path};
 use conditions::{evaluate_all_conditions, filter_map_on_condition};
 
 use crate::{
+    logging,
     metadata::{
         Group, Message, PluginMetadata,
         error::{LoadMetadataError, WriteMetadataError, WriteMetadataErrorReason},
@@ -45,7 +46,7 @@ impl Database {
 
     pub(crate) fn clear_condition_cache(&mut self) {
         if let Err(e) = self.condition_evaluator_state.clear_condition_cache() {
-            log::error!("The condition cache's lock is poisoned, assigning a new cache");
+            logging::error!("The condition cache's lock is poisoned, assigning a new cache");
             *e.into_inner() = HashMap::new();
         }
     }

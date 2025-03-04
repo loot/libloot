@@ -6,7 +6,7 @@ use petgraph::{
     visit::EdgeRef,
 };
 
-use crate::{EdgeType, Vertex};
+use crate::{EdgeType, Vertex, logging};
 
 pub trait DfsVisitor<'a> {
     fn visit_tree_edge(&mut self, edge_ref: EdgeReference<'a, EdgeType>);
@@ -200,7 +200,9 @@ impl<'a, N, F: FnMut(&N) -> String> DfsVisitor<'a> for CycleDetector<'a, N, F> {
             self.trail.drain(..pos);
             self.found_cycle = true;
         } else {
-            log::error!("The target of a back edge cannot be found in the current visitor trail");
+            logging::error!(
+                "The target of a back edge cannot be found in the current visitor trail"
+            );
         }
     }
 

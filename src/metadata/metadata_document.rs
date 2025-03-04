@@ -41,7 +41,7 @@ impl MetadataDocument {
             ));
         }
 
-        log::trace!("Loading file: {:?}", file_path);
+        logging::trace!("Loading file: {:?}", file_path);
 
         let content = std::fs::read_to_string(file_path)
             .map_err(|e| LoadMetadataError::from_io_error(file_path.into(), e))?;
@@ -49,7 +49,7 @@ impl MetadataDocument {
         self.load_from_str(&content)
             .map_err(|e| LoadMetadataError::new(file_path.into(), e))?;
 
-        log::trace!(
+        logging::trace!(
             "Successfully loaded metadata from file at \"{:?}\".",
             file_path
         );
@@ -87,7 +87,7 @@ impl MetadataDocument {
         self.load_from_str(&masterlist)
             .map_err(|e| LoadMetadataError::new(masterlist_path.into(), e))?;
 
-        log::trace!(
+        logging::trace!(
             "Successfully loaded metadata from file at \"{:?}\".",
             masterlist_path
         );

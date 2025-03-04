@@ -14,12 +14,16 @@ use crate::{
         DatabaseLockPoisonError, GameHandleCreationError, LoadOrderError, LoadOrderStateError,
         LoadPluginsError, SortPluginsError,
     },
+    logging,
     metadata::{
         Filename,
         plugin_metadata::{GHOST_FILE_EXTENSION, iends_with_ascii},
     },
-    plugin::error::{InvalidFilenameReason, PluginValidationError},
-    plugin::{LoadScope, Plugin, plugins_metadata, validate_plugin_path_and_header},
+    plugin::{
+        LoadScope, Plugin,
+        error::{InvalidFilenameReason, PluginValidationError},
+        plugins_metadata, validate_plugin_path_and_header,
+    },
     sorting::{
         groups::build_groups_graph,
         plugins::{PluginSortingData, sort_plugins},
@@ -149,7 +153,7 @@ impl Game {
     /// for a game other than Morrowind or OpenMW). [Game::with_local_path]
     /// can be used to provide the local path instead.
     pub fn new(game_type: GameType, game_path: &Path) -> Result<Self, GameHandleCreationError> {
-        log::info!(
+        logging::info!(
             "Attempting to create a game handle for game type {} with game path {:?}",
             game_type,
             game_path
@@ -191,7 +195,7 @@ impl Game {
         game_path: &Path,
         game_local_path: &Path,
     ) -> Result<Self, GameHandleCreationError> {
-        log::info!(
+        logging::info!(
             "Attempting to create a game handle for game type {} with game path {:?} and game local path {:?}",
             game_type,
             game_path,
@@ -366,7 +370,7 @@ impl Game {
 
         self.cache.set_archive_paths(archive_paths);
 
-        log::trace!("Starting loading {}s.", load_scope);
+        logging::trace!("Starting loading {}s.", load_scope);
 
         let plugins: Vec<_> = plugin_paths
             .par_iter()
@@ -445,9 +449,9 @@ impl Game {
             .collect::<Result<Vec<_>, _>>()?;
 
         if log::log_enabled!(log::Level::Debug) {
-            log::debug!("Current load order:");
+            logging::debug!("Current load order:");
             for plugin_name in plugin_names {
-                log::debug!("\t{}", plugin_name);
+                logging::debug!("\t{}", plugin_name);
             }
         }
 
@@ -460,9 +464,9 @@ impl Game {
         )?;
 
         if log::log_enabled!(log::Level::Debug) {
-            log::debug!("Sorted load order:");
+            logging::debug!("Sorted load order:");
             for plugin_name in &new_load_order {
-                log::debug!("\t{}", plugin_name);
+                logging::debug!("\t{}", plugin_name);
             }
         }
 
@@ -650,7 +654,7 @@ fn try_load_plugin(
     match Plugin::new(game_type, game_cache, &resolved_path, load_scope) {
         Ok(p) => Some(p),
         Err(e) => {
-            log::error!(
+            logging::error!(
                 "Caught error while trying to load \"{}\": {}",
                 plugin_path.display(),
                 e
@@ -665,7 +669,7 @@ fn resolve_plugin_path(game_type: GameType, data_path: &Path, plugin_path: &Path
 
     if game_type != GameType::OpenMW && !plugin_path.exists() {
         if let Some(filename) = plugin_path.file_name() {
-            log::debug!(
+            logging::debug!(
                 "Could not find plugin at {}, adding {} file extension",
                 plugin_path.display(),
                 GHOST_FILE_EXTENSION
@@ -699,14 +703,14 @@ fn update_loaded_plugin_state<'a>(
     }
 
     if let Err(e) = state.clear_condition_cache() {
-        log::error!("The condition cache's lock is poisoned, assigning a new cache");
+        logging::error!("The condition cache's lock is poisoned, assigning a new cache");
         *e.into_inner() = HashMap::new();
     }
 
     state.set_plugin_versions(&plugin_versions);
 
     if let Err(e) = state.set_cached_crcs(&plugin_crcs) {
-        log::error!(
+        logging::error!(
             "The condition interpreter's CRC cache's lock is poisoned, clearing the cache and assigning a new value"
         );
         let mut cache = e.into_inner();

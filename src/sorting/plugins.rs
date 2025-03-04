@@ -11,11 +11,13 @@ use petgraph::{
 };
 
 use crate::{
-    EdgeType, Plugin,
+    EdgeType, Plugin, logging,
     metadata::{File, Group, PluginMetadata},
     plugin::error::PluginDataError,
-    sorting::error::{CyclicInteractionError, PathfindingError, SortingError, UndefinedGroupError},
-    sorting::groups::{get_default_group_node, sorted_group_nodes},
+    sorting::{
+        error::{CyclicInteractionError, PathfindingError, SortingError, UndefinedGroupError},
+        groups::{get_default_group_node, sorted_group_nodes},
+    },
 };
 
 use super::{
@@ -171,7 +173,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
             return;
         }
 
-        log::debug!(
+        logging::debug!(
             "Adding {} edge from \"{}\" to \"{}\".",
             edge_type,
             self.inner[from].name(),
@@ -188,7 +190,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     }
 
     fn add_specific_edges(&mut self) -> Result<(), SortingError> {
-        log::trace!("Adding edges based on plugin data and non-group metadata...");
+        logging::trace!("Adding edges based on plugin data and non-group metadata...");
 
         let mut node_index_iter = self.node_indices();
         while let Some(node_index) = node_index_iter.next() {
@@ -250,7 +252,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     }
 
     fn add_early_loading_plugin_edges(&mut self, early_loading_plugins: &[String]) {
-        log::trace!(
+        logging::trace!(
             "Adding edges for implicitly active plugins and plugins with hardcoded positions..."
         );
 
@@ -310,7 +312,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     }
 
     fn add_group_edges(&mut self, groups_graph: &GroupsGraph) -> Result<(), UndefinedGroupError> {
-        log::trace!("Adding edges based on plugin group memberships...");
+        logging::trace!("Adding edges based on plugin group memberships...");
 
         // First build a map from groups to the plugins in those groups.
         let plugins_in_groups = get_plugins_in_groups(&self.inner);
@@ -366,7 +368,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     }
 
     fn add_overlap_edges(&mut self) -> Result<(), SortingError> {
-        log::trace!("Adding edges for overlapping plugins...");
+        logging::trace!("Adding edges for overlapping plugins...");
 
         let mut node_index_iter = self.node_indices();
         while let Some(node_index) = node_index_iter.next() {
@@ -374,7 +376,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
             let plugin_asset_count = plugin.asset_count();
 
             if plugin.override_record_count == 0 && plugin_asset_count == 0 {
-                log::debug!(
+                logging::debug!(
                     "Skipping vertex for \"{}\": the plugin contains no override records and loads no assets",
                     plugin.name()
                 );
@@ -447,7 +449,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                     if !self.path_exists(to_index, from_index) {
                         self.add_edge(from_index, to_index, edge_type);
                     } else {
-                        log::debug!(
+                        logging::debug!(
                             "Skipping {} edge from \"{}\" to \"{}\" as it would create a cycle.",
                             edge_type,
                             self[from_index].name(),
@@ -462,7 +464,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     }
 
     fn add_tie_break_edges(&mut self) -> Result<(), PathfindingError> {
-        log::trace!("Adding edges to break ties between plugins...");
+        logging::trace!("Adding edges to break ties between plugins...");
 
         // In order for the sort to be performed stably, there must be only one
         // possible result. This can be enforced by adding edges between all vertices
@@ -536,12 +538,12 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                         new_load_order.push(current);
                         processed_nodes.insert(current);
 
-                        log::debug!(
+                        logging::debug!(
                             "The plugin \"{}\" loads at the end of the new load order so far.",
                             self[current].name()
                         );
                     } else if new_load_order.last() != Some(&current) {
-                        log::trace!(
+                        logging::trace!(
                             "The plugin \"{}\" has already been processed and is not the last in the new load order, determining where to place \"{}\".",
                             self[current].name(),
                             self[next].name()
@@ -572,7 +574,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                         // Don't need to add any edges because there's nothing for nextVertex
                         // to load after at this point.
                         if log_enabled!(log::Level::Debug) {
-                            log::debug!(
+                            logging::debug!(
                                 "The path ends with the first plugin checked, treating the following path as the start of the load order: {}",
                                 path_to_string(&self.inner, &path_from_next_node)
                             );
@@ -630,7 +632,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         // e.g. because it was visited earlier in the old load order or
         // as part of a path that was processed. In that case just skip it.
         if processed_nodes.contains(&node_index) {
-            log::debug!(
+            logging::debug!(
                 "The plugin \"{}\" has already been processed, skipping it.",
                 self[node_index].name()
             );
@@ -676,13 +678,13 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         if log_enabled!(log::Level::Debug) {
             if let Some(next_node_index) = new_load_order.get(insert_position + 1) {
-                log::debug!(
+                logging::debug!(
                     "The plugin \"{}\" loads before \"{}\" in the new load order.",
                     self[node_index].name(),
                     self[*next_node_index].name()
                 );
             } else {
-                log::debug!(
+                logging::debug!(
                     "The plugin \"{}\" loads at the end of the new load order so far.",
                     self[node_index].name()
                 );
@@ -704,7 +706,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     }
 
     fn is_hamiltonian_path(&mut self, path: &[NodeIndex]) -> Option<(NodeIndex, NodeIndex)> {
-        log::trace!("Checking uniqueness of path through plugin graph...");
+        logging::trace!("Checking uniqueness of path through plugin graph...");
 
         path.windows(2).find_map(|slice| match slice {
             [a, b] => self.inner.contains_edge(*a, *b).then_some((*a, *b)),
@@ -861,7 +863,7 @@ fn sort_plugins_partition<T: SortingPlugin>(
     let sorted_nodes = graph.topological_sort()?;
 
     if let Some((first, second)) = graph.is_hamiltonian_path(&sorted_nodes) {
-        log::error!(
+        logging::error!(
             "The path is not unique. No edge exists between {} and {}",
             graph[first].name(),
             graph[second].name()
@@ -928,7 +930,7 @@ impl<'a, 'b, T: SortingPlugin> PathFinder<'a, 'b, T> {
                         path.push(*next);
                         current_node = *next;
                     } else {
-                        log::error!(
+                        logging::error!(
                             "Could not find parent vertex of {}. Path so far is {}",
                             self.graph[current_node].name(),
                             path_to_string(self.graph, &path)
@@ -949,7 +951,7 @@ impl<'a, 'b, T: SortingPlugin> PathFinder<'a, 'b, T> {
                         path.push(*next);
                         current_node = *next;
                     } else {
-                        log::error!(
+                        logging::error!(
                             "Could not find child vertex of {}. Path so far is {}",
                             self.graph[current_node].name(),
                             path_to_string(self.graph, &path)
@@ -1122,7 +1124,7 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
                     self.plugins_graph
                         .add_edge(from_plugin, *to_plugin, edge_type);
                 } else {
-                    log::debug!(
+                    logging::debug!(
                         "Skipping group edge from \"{}\" to \"{}\" as it would create a cycle.",
                         self.plugins_graph[from_plugin].name(),
                         self.plugins_graph[*to_plugin].name()

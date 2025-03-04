@@ -3,11 +3,13 @@ use std::{cmp::Reverse, collections::HashMap};
 use petgraph::{Graph, algo::bellman_ford, graph::NodeIndex};
 
 use crate::{
-    EdgeType, Vertex,
+    EdgeType, Vertex, logging,
     metadata::Group,
-    sorting::dfs::find_cycle,
-    sorting::error::{
-        BuildGroupsGraphError, CyclicInteractionError, PathfindingError, UndefinedGroupError,
+    sorting::{
+        dfs::find_cycle,
+        error::{
+            BuildGroupsGraphError, CyclicInteractionError, PathfindingError, UndefinedGroupError,
+        },
     },
 };
 
@@ -28,7 +30,7 @@ pub fn build_groups_graph(
     let mut graph = GroupsGraph::new();
     let mut group_nodes: HashMap<&str, NodeIndex> = HashMap::new();
 
-    log::trace!("Adding masterlist groups to groups graph...");
+    logging::trace!("Adding masterlist groups to groups graph...");
     add_groups(
         &mut graph,
         &mut group_nodes,
@@ -36,7 +38,7 @@ pub fn build_groups_graph(
         EdgeType::MasterlistLoadAfter,
     )?;
 
-    log::trace!("Adding user groups to groups graph...");
+    logging::trace!("Adding user groups to groups graph...");
     add_groups(
         &mut graph,
         &mut group_nodes,
@@ -74,7 +76,7 @@ fn add_groups<'a>(
 
     for group in groups {
         if log::log_enabled!(log::Level::Trace) {
-            log::trace!(
+            logging::trace!(
                 "Group \"{}\" directly loads after groups \"{}\"",
                 group.name(),
                 group.after_groups().join(", ")
@@ -133,7 +135,7 @@ pub fn find_path(
         let preceding_vertex = match paths.predecessors.get(current.index()) {
             Some(Some(v)) => v,
             Some(None) => {
-                log::info!(
+                logging::info!(
                     "No path found from {} to {} while looking for path to {}",
                     graph[from_vertex],
                     graph[current],
@@ -147,7 +149,7 @@ pub fn find_path(
         };
 
         if *preceding_vertex == current {
-            log::error!(
+            logging::error!(
                 "Unreachable vertex {} encountered while looking for vertex {}",
                 graph[current],
                 graph[from_vertex]
@@ -187,7 +189,7 @@ fn find_node_by_weight(
     {
         Some(n) => Ok(n),
         None => {
-            log::error!("Can't find group with name {}", weight);
+            logging::error!("Can't find group with name {}", weight);
             Err(UndefinedGroupError::new(weight.to_string()))
         }
     }
