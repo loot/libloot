@@ -321,3 +321,27 @@ impl TryFrom<&MarkedYaml> for Message {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod select_message_content {
+        use super::*;
+
+        #[test]
+        fn should_return_none_if_the_slice_is_empty() {
+            let content = select_message_content(&[], MessageContent::DEFAULT_LANGUAGE);
+
+            assert!(content.is_none());
+        }
+
+        #[test]
+        fn should_return_the_only_element_of_a_single_element_slice() {
+            let slice = &[MessageContent::new("test".into()).with_language("de".into())];
+            let content = select_message_content(slice, "fr");
+
+            assert_eq!(&slice[0], content.unwrap());
+        }
+    }
+}

@@ -45,3 +45,68 @@ const fn libloot_revision_const() -> &'static str {
         "unknown"
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod is_compatible {
+        use super::*;
+
+        #[test]
+        fn should_return_true_if_given_the_current_version() {
+            assert!(is_compatible(
+                LIBLOOT_VERSION_MAJOR,
+                LIBLOOT_VERSION_MINOR,
+                LIBLOOT_VERSION_PATCH
+            ));
+        }
+
+        #[test]
+        fn should_return_true_if_given_a_different_patch_version() {
+            assert!(is_compatible(
+                LIBLOOT_VERSION_MAJOR,
+                LIBLOOT_VERSION_MINOR,
+                LIBLOOT_VERSION_PATCH + 1
+            ));
+        }
+
+        #[test]
+        fn should_return_false_if_given_a_different_major_version() {
+            assert!(!is_compatible(
+                LIBLOOT_VERSION_MAJOR + 1,
+                LIBLOOT_VERSION_MINOR,
+                LIBLOOT_VERSION_PATCH
+            ));
+        }
+
+        #[test]
+        fn should_return_false_if_given_a_different_minor_version() {
+            assert!(!is_compatible(
+                LIBLOOT_VERSION_MAJOR,
+                LIBLOOT_VERSION_MINOR + 1,
+                LIBLOOT_VERSION_PATCH
+            ));
+        }
+    }
+    mod libloot_version {
+        use super::*;
+
+        #[test]
+        fn should_be_version_numbers_separated_by_periods() {
+            let expected =
+                format!("{LIBLOOT_VERSION_MAJOR}.{LIBLOOT_VERSION_MINOR}.{LIBLOOT_VERSION_PATCH}",);
+
+            assert_eq!(expected, libloot_version());
+        }
+    }
+
+    mod libloot_revision {
+        use super::*;
+
+        #[test]
+        fn should_not_be_empty() {
+            assert!(!libloot_revision().is_empty());
+        }
+    }
+}

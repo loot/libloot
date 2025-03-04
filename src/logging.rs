@@ -72,3 +72,80 @@ impl<T: Fn(LogLevel, &str) + Send + Sync> log::Log for CallbackLogger<T> {
 
     fn flush(&self) {}
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod set_logging_callback {
+        use super::*;
+
+        use std::sync::{Arc, LazyLock, Mutex};
+
+        #[test]
+        #[ignore]
+        fn set_logging_callback_should_be_callable_multiple_times() {
+            let callback = |_, _: &str| {};
+            set_logging_callback(callback);
+
+            let messages = Arc::new(Mutex::new(Vec::<(LogLevel, String)>::new()));
+            let cloned_messages = messages.clone();
+            let callback = move |level, message: &str| {
+                if let Ok(mut messages) = cloned_messages.lock() {
+                    messages.push((level, message.to_string()));
+                }
+            };
+
+            set_logging_callback(callback);
+
+            log::error!("Test message");
+
+            assert_eq!(
+                vec![(LogLevel::Error, "Test message".into())],
+                *messages.lock().unwrap()
+            );
+        }
+
+        #[test]
+        fn should_support_a_closure_with_captured_state() {
+            let messages = Arc::new(Mutex::new(Vec::<(LogLevel, String)>::new()));
+            let cloned_messages = messages.clone();
+            let callback = move |level, message: &str| {
+                if let Ok(mut messages) = cloned_messages.lock() {
+                    messages.push((level, message.to_string()));
+                }
+            };
+
+            set_logging_callback(callback);
+
+            log::error!("Test message");
+
+            assert_eq!(
+                vec![(LogLevel::Error, "Test message".into())],
+                *messages.lock().unwrap()
+            );
+        }
+
+        #[test]
+        #[ignore]
+        fn should_support_a_function() {
+            static MESSAGES: LazyLock<Mutex<Vec<(LogLevel, String)>>> =
+                LazyLock::new(|| Mutex::new(Vec::new()));
+
+            fn callback(level: LogLevel, message: &str) {
+                if let Ok(mut messages) = MESSAGES.lock() {
+                    messages.push((level, message.to_string()));
+                }
+            }
+
+            set_logging_callback(callback);
+
+            log::error!("Test message");
+
+            assert_eq!(
+                vec![(LogLevel::Error, "Test message".into())],
+                *MESSAGES.lock().unwrap()
+            );
+        }
+    }
+}
