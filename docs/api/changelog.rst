@@ -2,6 +2,28 @@
 Version History
 ***************
 
+0.25.4 - 2025-03-04
+===================
+
+Fixed
+-----
+
+- The changes to groups handling during sorting that were introduced in v0.25.0
+  included an optimisation that skipped processing groups that had already been
+  processed, but it prematurely skipped groups when the defined groups included
+  one that loaded directly after more than one other group.
+- :cpp:any:`loot::GameInterface::LoadPlugins()` added loaded plugins to the
+  internal cache before resolving their record IDs, so a failure to do the
+  latter could result in valid loaded plugin state being replaced by invalid
+  plugin state. The cache is now only updated after record IDs have been
+  successfully resolved.
+- A couple of misleading log statements about edges being skipped during sorting
+  to avoid cycles were also written when edges were skipped due to a path
+  between the plugins in question already existing.
+- The documentation for :cpp:any:`loot::SetLoggingCallback()` incorrectly stated
+  that libloot would print mesages to the console until that function was
+  called.
+
 0.25.3 - 2025-02-23
 ===================
 
