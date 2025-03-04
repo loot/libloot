@@ -424,7 +424,7 @@ fn find_prelude_bounds(masterlist: &str) -> Option<(usize, usize)> {
             break;
         }
 
-        pos = next_line_break_pos + 1;
+        pos += next_line_break_pos + 1;
 
         if let Some(c) = masterlist.as_bytes().get(pos) {
             if *c != b' ' && *c != b'#' && *c != b'\n' {
