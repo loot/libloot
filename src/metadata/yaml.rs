@@ -1,6 +1,9 @@
+use std::str::FromStr;
+
+use loot_condition_interpreter::Expression;
 use saphyr::{AnnotatedArray, AnnotatedHash, MarkedYaml, Marker, Yaml, YamlData};
 
-use crate::error::{GeneralError, YamlParseError};
+use super::error::{ExpectedType, MetadataParsingErrorReason, ParseMetadataError};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum YamlObjectType {
@@ -13,6 +16,7 @@ pub enum YamlObjectType {
     PluginMetadata,
     Tag,
     MetadataDocument,
+    BashTagsElement,
 }
 
 impl std::fmt::Display for YamlObjectType {
@@ -27,6 +31,7 @@ impl std::fmt::Display for YamlObjectType {
             YamlObjectType::PluginMetadata => write!(f, "plugin metadata"),
             YamlObjectType::Tag => write!(f, "tag"),
             YamlObjectType::MetadataDocument => write!(f, "metadata document"),
+            YamlObjectType::BashTagsElement => write!(f, "bash tags"),
         }
     }
 }
@@ -64,15 +69,17 @@ pub fn as_string_node(value: &str) -> MarkedYaml {
 
 pub fn get_string_value<'a>(
     hash: &'a AnnotatedHash<MarkedYaml>,
-    key: &str,
+    key: &'static str,
     yaml_type: YamlObjectType,
-) -> Result<Option<&'a str>, YamlParseError> {
+) -> Result<Option<(Marker, &'a str)>, ParseMetadataError> {
     match hash.get(&as_string_node(key)) {
         Some(n) => match n.data.as_str() {
-            Some(n) => Ok(Some(n)),
-            None => Err(YamlParseError::new(
+            Some(s) => Ok(Some((n.span.start, s))),
+            None => Err(ParseMetadataError::unexpected_value_type(
                 n.span.start,
-                format!("'{}' key in '{}' map is not a string", key, yaml_type),
+                key,
+                yaml_type,
+                ExpectedType::String,
             )),
         },
         None => Ok(None),
@@ -82,35 +89,39 @@ pub fn get_string_value<'a>(
 pub fn get_required_string_value<'a>(
     marker: Marker,
     hash: &'a AnnotatedHash<MarkedYaml>,
-    key: &str,
+    key: &'static str,
     yaml_type: YamlObjectType,
-) -> Result<&'a str, YamlParseError> {
+) -> Result<&'a str, ParseMetadataError> {
     match get_string_value(hash, key, yaml_type)? {
-        Some(n) => Ok(n),
-        None => Err(YamlParseError::missing_key(marker, key, yaml_type)),
+        Some(n) => Ok(n.1),
+        None => Err(ParseMetadataError::missing_key(marker, key, yaml_type)),
     }
 }
 
 pub fn get_strings_vec_value<'a>(
     hash: &'a AnnotatedHash<MarkedYaml>,
-    key: &str,
+    key: &'static str,
     yaml_type: YamlObjectType,
-) -> Result<Vec<&'a str>, YamlParseError> {
+) -> Result<Vec<&'a str>, ParseMetadataError> {
     match hash.get(&as_string_node(key)) {
         Some(n) => match n.data.as_vec() {
             Some(n) => n
                 .iter()
                 .map(|e| match e.data.as_str() {
                     Some(s) => Ok(s),
-                    None => Err(YamlParseError::new(
+                    None => Err(ParseMetadataError::unexpected_value_type(
                         e.span.start,
-                        "Element in list is not a string".into(),
+                        key,
+                        yaml_type,
+                        ExpectedType::String,
                     )),
                 })
                 .collect::<Result<Vec<_>, _>>(),
-            None => Err(YamlParseError::new(
+            None => Err(ParseMetadataError::unexpected_value_type(
                 n.span.start,
-                format!("'{}' key in '{}' map is not a list", key, yaml_type),
+                key,
+                yaml_type,
+                ExpectedType::Array,
             )),
         },
         None => Ok(Vec::new()),
@@ -120,29 +131,33 @@ pub fn get_strings_vec_value<'a>(
 pub fn get_as_hash(
     value: &MarkedYaml,
     yaml_type: YamlObjectType,
-) -> Result<&AnnotatedHash<MarkedYaml>, YamlParseError> {
+) -> Result<&AnnotatedHash<MarkedYaml>, ParseMetadataError> {
     match value.data.as_hash() {
         Some(h) => Ok(h),
-        None => Err(YamlParseError::new(
+        None => Err(ParseMetadataError::unexpected_type(
             value.span.start,
-            format!("'{}' object must be a map", yaml_type),
+            yaml_type,
+            ExpectedType::Map,
         )),
     }
 }
 
 pub fn get_u32_value(
     hash: &AnnotatedHash<MarkedYaml>,
-    key: &str,
+    key: &'static str,
     yaml_type: YamlObjectType,
-) -> Result<Option<u32>, GeneralError> {
+) -> Result<Option<u32>, ParseMetadataError> {
     match hash.get(&as_string_node(key)) {
         Some(n) => match n.data.as_i64() {
-            Some(n) => Ok(Some(n.try_into()?)),
-            None => Err(YamlParseError::new(
+            Some(i) => i.try_into().map(Some).map_err(|_| {
+                ParseMetadataError::new(n.span.start, MetadataParsingErrorReason::NonU32Number(i))
+            }),
+            None => Err(ParseMetadataError::unexpected_value_type(
                 n.span.start,
-                format!("'{}' key in '{}' map is not a string", key, yaml_type),
-            )
-            .into()),
+                key,
+                yaml_type,
+                ExpectedType::Number,
+            )),
         },
         None => Ok(None),
     }
@@ -150,18 +165,36 @@ pub fn get_u32_value(
 
 pub fn get_as_slice<'a>(
     hash: &'a saphyr::AnnotatedHash<MarkedYaml>,
-    key: &str,
+    key: &'static str,
     yaml_type: YamlObjectType,
-) -> Result<&'a [MarkedYaml], YamlParseError> {
+) -> Result<&'a [MarkedYaml], ParseMetadataError> {
     if let Some(value) = hash.get(&as_string_node(key)) {
         match value.data.as_vec() {
             Some(n) => Ok(n.as_slice()),
-            None => Err(YamlParseError::new(
+            None => Err(ParseMetadataError::unexpected_value_type(
                 value.span.start,
-                format!("'{}' key in '{}' map is not an array", key, yaml_type),
+                key,
+                yaml_type,
+                ExpectedType::Array,
             )),
         }
     } else {
         Ok(&[])
+    }
+}
+
+pub fn parse_condition(
+    hash: &saphyr::AnnotatedHash<MarkedYaml>,
+    yaml_type: YamlObjectType,
+) -> Result<Option<String>, ParseMetadataError> {
+    match get_string_value(hash, "condition", yaml_type)? {
+        Some((marker, s)) => {
+            let s = s.to_string();
+            if let Err(e) = Expression::from_str(&s) {
+                return Err(ParseMetadataError::invalid_condition(marker, s, e));
+            }
+            Ok(Some(s))
+        }
+        None => Ok(None),
     }
 }

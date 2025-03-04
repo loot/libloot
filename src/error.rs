@@ -1,353 +1,275 @@
-use std::fmt::Display;
+//! Holds all error types aside from those related to LOOT metadata.
+use std::path::PathBuf;
 
-use petgraph::graph::NodeIndex;
-use saphyr::Marker;
+pub use crate::database::{ConditionEvaluationError, MetadataRetrievalError};
+pub use crate::plugin::error::PluginDataError;
+use crate::plugin::error::PluginValidationError;
+pub use crate::sorting::error::GroupsPathError;
 
-use crate::{
-    metadata::{
-        MessageContent,
-        yaml::{YamlObjectType, to_yaml},
-    },
-    sorting::vertex::Vertex,
+use crate::Vertex;
+use crate::sorting::error::{
+    BuildGroupsGraphError, PluginGraphValidationError, SortingError, display_cycle,
 };
 
+/// Represents an error that occurred while trying to create a [Game][crate::Game].
 #[derive(Debug)]
-pub struct CyclicInteractionError {
-    pub cycle: Vec<Vertex>,
+#[non_exhaustive]
+pub enum GameHandleCreationError {
+    NotADirectory(PathBuf),
+    LoadOrderError(LoadOrderError),
 }
 
-impl CyclicInteractionError {
-    pub fn new(cycle: Vec<Vertex>) -> Self {
-        Self { cycle }
-    }
-}
-
-impl Display for CyclicInteractionError {
+impl std::fmt::Display for GameHandleCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let cycle: String = self
-            .cycle
-            .iter()
-            .map(|v| {
-                if let Some(edge_type) = v.out_edge_type() {
-                    format!("{} --[{}]-> ", v.name(), edge_type)
-                } else {
-                    v.name().to_string()
-                }
-            })
-            .chain(self.cycle.first().iter().map(|v| v.name().to_string()))
-            .collect();
-        write!(f, "Cyclic interaction detected: {}", cycle)
-    }
-}
-
-impl std::error::Error for CyclicInteractionError {}
-
-#[derive(Debug)]
-pub struct FileAccessError {
-    pub message: String,
-}
-
-impl FileAccessError {
-    pub(crate) fn new(message: String) -> Self {
-        FileAccessError { message }
-    }
-}
-
-impl std::fmt::Display for FileAccessError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for FileAccessError {}
-
-#[derive(Debug)]
-pub struct UndefinedGroupError {
-    pub group_name: String,
-}
-
-impl UndefinedGroupError {
-    pub fn new(group_name: String) -> Self {
-        Self { group_name }
-    }
-}
-
-impl Display for UndefinedGroupError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "The group \"{}\" does not exist", self.group_name)
-    }
-}
-
-impl std::error::Error for UndefinedGroupError {}
-
-#[derive(Debug)]
-pub struct InvalidArgumentError {
-    pub message: String,
-}
-
-impl std::fmt::Display for InvalidArgumentError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for InvalidArgumentError {}
-
-#[derive(Debug)]
-pub(crate) struct YamlMergeKeyError {
-    value: saphyr::MarkedYaml,
-}
-
-impl YamlMergeKeyError {
-    pub(crate) fn new(value: saphyr::MarkedYaml) -> Self {
-        YamlMergeKeyError { value }
-    }
-}
-
-impl std::fmt::Display for YamlMergeKeyError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut output = String::new();
-
-        let yaml = to_yaml(&self.value);
-
-        if saphyr::YamlEmitter::new(&mut output).dump(&yaml).is_ok() {
-            write!(
+        match self {
+            Self::NotADirectory(p) => write!(
                 f,
-                "Invalid YAML merge key value at line {} column {}: {}",
-                self.value.span.start.line(),
-                self.value.span.start.col(),
-                output
-            )
-        } else {
-            write!(
-                f,
-                "Invalid YAML merge key value at line {} column {}: {:?}",
-                self.value.span.start.line(),
-                self.value.span.start.col(),
-                self.value
-            )
+                "the path \"{}\" does not resolve to a directory",
+                p.display()
+            ),
+            Self::LoadOrderError(_) => {
+                write!(f, "failed to initialise the load order game settings")
+            }
         }
     }
 }
 
-impl std::error::Error for YamlMergeKeyError {}
-
-#[derive(Debug)]
-pub struct YamlParseError {
-    marker: saphyr::Marker,
-    message: String,
-}
-
-impl YamlParseError {
-    pub fn new(marker: Marker, message: String) -> Self {
-        YamlParseError { marker, message }
-    }
-
-    pub fn missing_key(marker: Marker, key: &str, yaml_type: YamlObjectType) -> Self {
-        YamlParseError::new(
-            marker,
-            format!("'{}' key missing from '{}' map object", key, yaml_type),
-        )
-    }
-}
-
-impl std::fmt::Display for YamlParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Encountered a YAML parsing error at line {} column {}: {}",
-            self.marker.line(),
-            self.marker.col(),
-            self.message
-        )
-    }
-}
-
-impl std::error::Error for YamlParseError {}
-
-#[derive(Debug)]
-pub struct InvalidMultilingualMessageContents {}
-
-impl std::fmt::Display for InvalidMultilingualMessageContents {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Multilingual messages must contain a content string that uses the {} language code",
-            MessageContent::DEFAULT_LANGUAGE
-        )
-    }
-}
-
-impl std::error::Error for InvalidMultilingualMessageContents {}
-
-#[derive(Debug)]
-pub struct PoisonedMutexError;
-
-impl std::fmt::Display for PoisonedMutexError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "A mutex is poisoned",)
-    }
-}
-
-impl std::error::Error for PoisonedMutexError {}
-
-#[derive(Debug)]
-pub struct PathfindingError {
-    message: String,
-}
-
-impl PathfindingError {
-    pub fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl std::fmt::Display for PathfindingError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for PathfindingError {}
-
-#[derive(Debug)]
-pub struct SortingLogicError {
-    message: String,
-}
-
-impl SortingLogicError {
-    pub fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl std::fmt::Display for SortingLogicError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for SortingLogicError {}
-
-#[derive(Debug)]
-pub struct GeneralError(Box<dyn std::error::Error + Send + Sync + 'static>);
-
-impl std::fmt::Display for GeneralError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl std::error::Error for GeneralError {
+impl std::error::Error for GameHandleCreationError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(self.0.as_ref())
+        match self {
+            Self::NotADirectory(_) => None,
+            Self::LoadOrderError(e) => Some(e),
+        }
     }
 }
 
-impl From<std::io::Error> for GeneralError {
-    fn from(value: std::io::Error) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<saphyr::ScanError> for GeneralError {
-    fn from(value: saphyr::ScanError) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<YamlMergeKeyError> for GeneralError {
-    fn from(value: YamlMergeKeyError) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<FileAccessError> for GeneralError {
-    fn from(value: FileAccessError) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<YamlParseError> for GeneralError {
-    fn from(value: YamlParseError) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<loot_condition_interpreter::Error> for GeneralError {
-    fn from(value: loot_condition_interpreter::Error) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<std::num::TryFromIntError> for GeneralError {
-    fn from(value: std::num::TryFromIntError) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<InvalidMultilingualMessageContents> for GeneralError {
-    fn from(value: InvalidMultilingualMessageContents) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<InvalidArgumentError> for GeneralError {
-    fn from(value: InvalidArgumentError) -> Self {
-        GeneralError(Box::new(value))
-    }
-}
-
-impl From<loadorder::Error> for GeneralError {
+impl From<loadorder::Error> for GameHandleCreationError {
     fn from(value: loadorder::Error) -> Self {
-        GeneralError(Box::new(value))
+        GameHandleCreationError::LoadOrderError(value.into())
     }
 }
 
-impl<T> From<std::sync::PoisonError<T>> for GeneralError {
+/// Represents an error that occurred while trying to interact with the load order.
+#[derive(Debug)]
+pub struct LoadOrderError(Box<loadorder::Error>);
+
+impl std::fmt::Display for LoadOrderError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "load order interaction failed")
+    }
+}
+
+impl std::error::Error for LoadOrderError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
+    }
+}
+
+impl From<loadorder::Error> for LoadOrderError {
+    fn from(value: loadorder::Error) -> Self {
+        LoadOrderError(Box::new(value))
+    }
+}
+
+/// Indicates that the Database's RwLock wrapper has been poisoned and as such
+/// the Database may be in an invalid state.
+#[derive(Clone, Copy, Default, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct DatabaseLockPoisonError;
+
+impl std::fmt::Display for DatabaseLockPoisonError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "the database's lock has been poisoned")
+    }
+}
+
+impl std::error::Error for DatabaseLockPoisonError {}
+
+impl<T> From<std::sync::PoisonError<T>> for DatabaseLockPoisonError {
     fn from(_: std::sync::PoisonError<T>) -> Self {
-        GeneralError(Box::new(PoisonedMutexError))
+        DatabaseLockPoisonError
     }
 }
 
-impl From<esplugin::Error> for GeneralError {
-    fn from(value: esplugin::Error) -> Self {
-        GeneralError(Box::new(value))
+/// Represents an error that occurred while loading plugins.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum LoadPluginsError {
+    DatabaseLockPoisoned,
+    IoError(Box<std::io::Error>),
+    PluginValidationError(Box<dyn std::error::Error + Send + Sync + 'static>),
+    PluginDataError(PluginDataError),
+}
+
+impl std::fmt::Display for LoadPluginsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DatabaseLockPoisoned => DatabaseLockPoisonError.fmt(f),
+            Self::IoError(_) => write!(f, "an I/O error occurred"),
+            Self::PluginValidationError(_) => write!(f, "failed validation of input plugin paths"),
+            Self::PluginDataError(_) => write!(f, "failed to read loaded plugin data"),
+        }
     }
 }
 
-impl From<Box<fancy_regex::Error>> for GeneralError {
-    fn from(value: Box<fancy_regex::Error>) -> Self {
-        GeneralError(value)
+impl std::error::Error for LoadPluginsError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::DatabaseLockPoisoned => None,
+            Self::IoError(e) => Some(e),
+            Self::PluginValidationError(e) => Some(e.as_ref()),
+            Self::PluginDataError(e) => Some(e),
+        }
     }
 }
 
-impl From<UndefinedGroupError> for GeneralError {
-    fn from(value: UndefinedGroupError) -> Self {
-        GeneralError(Box::new(value))
+impl<T> From<std::sync::PoisonError<T>> for LoadPluginsError {
+    fn from(_: std::sync::PoisonError<T>) -> Self {
+        LoadPluginsError::DatabaseLockPoisoned
     }
 }
 
-impl From<CyclicInteractionError> for GeneralError {
-    fn from(value: CyclicInteractionError) -> Self {
-        GeneralError(Box::new(value))
+impl From<DatabaseLockPoisonError> for LoadPluginsError {
+    fn from(_: DatabaseLockPoisonError) -> Self {
+        LoadPluginsError::DatabaseLockPoisoned
     }
 }
 
-impl From<PathfindingError> for GeneralError {
-    fn from(value: PathfindingError) -> Self {
-        GeneralError(Box::new(value))
+impl From<std::io::Error> for LoadPluginsError {
+    fn from(value: std::io::Error) -> Self {
+        LoadPluginsError::IoError(Box::new(value))
     }
 }
 
-impl From<petgraph::algo::Cycle<NodeIndex>> for GeneralError {
-    fn from(_: petgraph::algo::Cycle<NodeIndex>) -> Self {
-        GeneralError(Box::new(CyclicInteractionError { cycle: Vec::new() }))
+impl From<PluginValidationError> for LoadPluginsError {
+    fn from(value: PluginValidationError) -> Self {
+        LoadPluginsError::PluginValidationError(Box::new(value))
     }
 }
 
-impl From<SortingLogicError> for GeneralError {
-    fn from(value: SortingLogicError) -> Self {
-        GeneralError(Box::new(value))
+impl From<PluginDataError> for LoadPluginsError {
+    fn from(value: PluginDataError) -> Self {
+        LoadPluginsError::PluginDataError(value)
+    }
+}
+
+/// Represents an error that occurred while trying to load the current load
+/// order state.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum LoadOrderStateError {
+    DatabaseLockPoisoned,
+    LoadOrderError(LoadOrderError),
+}
+
+impl std::fmt::Display for LoadOrderStateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DatabaseLockPoisoned => DatabaseLockPoisonError.fmt(f),
+            Self::LoadOrderError(_) => write!(f, "failed to load the current load order state"),
+        }
+    }
+}
+
+impl std::error::Error for LoadOrderStateError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::DatabaseLockPoisoned => None,
+            Self::LoadOrderError(e) => Some(e),
+        }
+    }
+}
+
+impl<T> From<std::sync::PoisonError<T>> for LoadOrderStateError {
+    fn from(_: std::sync::PoisonError<T>) -> Self {
+        LoadOrderStateError::DatabaseLockPoisoned
+    }
+}
+
+impl From<loadorder::Error> for LoadOrderStateError {
+    fn from(value: loadorder::Error) -> Self {
+        LoadOrderStateError::LoadOrderError(value.into())
+    }
+}
+
+/// Represents an error that occurred during sorting.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum SortPluginsError {
+    DatabaseLockPoisoned,
+    PluginNotLoaded(String),
+    MetadataRetrievalError(MetadataRetrievalError),
+    UndefinedGroup(String),
+    CycleFound(Vec<Vertex>),
+    CycleFoundInvolving(String),
+    PluginDataError(PluginDataError),
+    PathfindingError(Box<dyn std::error::Error + Send + Sync + 'static>),
+}
+
+impl std::fmt::Display for SortPluginsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DatabaseLockPoisoned => DatabaseLockPoisonError.fmt(f),
+            Self::PluginNotLoaded(n) => write!(f, "the plugin \"{}\" has not been loaded", n),
+            Self::UndefinedGroup(g) => write!(f, "the group \"{}\" does not exist", g),
+            Self::CycleFound(c) => write!(f, "found a cycle: {}", display_cycle(c)),
+            Self::CycleFoundInvolving(n) => write!(f, "found a cycle involving \"{}\"", n),
+            Self::PluginDataError(_) => write!(f, "failed to read loaded plugin data"),
+            Self::MetadataRetrievalError(_) => write!(f, "failed to retrieve plugin metadata"),
+            Self::PathfindingError(_) => write!(f, "failed to find a path in the plugins graph"),
+        }
+    }
+}
+
+impl std::error::Error for SortPluginsError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::MetadataRetrievalError(e) => Some(e),
+            Self::PluginDataError(e) => Some(e),
+            Self::PathfindingError(e) => Some(e.as_ref()),
+            _ => None,
+        }
+    }
+}
+
+impl<T> From<std::sync::PoisonError<T>> for SortPluginsError {
+    fn from(_: std::sync::PoisonError<T>) -> Self {
+        SortPluginsError::DatabaseLockPoisoned
+    }
+}
+
+impl From<SortingError> for SortPluginsError {
+    fn from(value: SortingError) -> Self {
+        match value {
+            SortingError::ValidationError(e) => match e {
+                PluginGraphValidationError::CycleFound(c) => Self::CycleFound(c.into_cycle()),
+                PluginGraphValidationError::PluginDataError(e) => Self::PluginDataError(e),
+            },
+            SortingError::UndefinedGroup(g) => Self::UndefinedGroup(g.into_group_name()),
+            SortingError::CycleFound(c) => Self::CycleFound(c.into_cycle()),
+            SortingError::CycleInvolving(n) => Self::CycleFoundInvolving(n),
+            SortingError::PluginDataError(e) => Self::PluginDataError(e),
+            SortingError::PathfindingError(e) => Self::PathfindingError(Box::new(e)),
+        }
+    }
+}
+
+impl From<BuildGroupsGraphError> for SortPluginsError {
+    fn from(value: BuildGroupsGraphError) -> Self {
+        match value {
+            BuildGroupsGraphError::UndefinedGroup(g) => Self::UndefinedGroup(g.into_group_name()),
+            BuildGroupsGraphError::CycleFound(c) => Self::CycleFound(c.into_cycle()),
+        }
+    }
+}
+
+impl From<PluginDataError> for SortPluginsError {
+    fn from(value: PluginDataError) -> Self {
+        SortPluginsError::PluginDataError(value)
+    }
+}
+
+impl From<MetadataRetrievalError> for SortPluginsError {
+    fn from(value: MetadataRetrievalError) -> Self {
+        SortPluginsError::MetadataRetrievalError(value)
     }
 }

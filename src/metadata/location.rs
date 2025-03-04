@@ -1,6 +1,7 @@
 use saphyr::{MarkedYaml, YamlData};
 
-use crate::error::{GeneralError, YamlParseError};
+use super::error::ExpectedType;
+use super::error::ParseMetadataError;
 
 use super::yaml::{YamlObjectType, get_required_string_value};
 
@@ -40,7 +41,7 @@ impl Location {
 }
 
 impl TryFrom<&MarkedYaml> for Location {
-    type Error = GeneralError;
+    type Error = ParseMetadataError;
 
     fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
         match &value.data {
@@ -67,11 +68,11 @@ impl TryFrom<&MarkedYaml> for Location {
                     name: Some(name.to_string()),
                 })
             }
-            _ => Err(YamlParseError::new(
+            _ => Err(ParseMetadataError::unexpected_type(
                 value.span.start,
-                "'tag' object must be a map or string".into(),
-            )
-            .into()),
+                YamlObjectType::Location,
+                ExpectedType::MapOrString,
+            )),
         }
     }
 }

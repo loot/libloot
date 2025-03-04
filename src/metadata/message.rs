@@ -1,13 +1,15 @@
-use std::str::FromStr;
-
-use loot_condition_interpreter::Expression;
 use saphyr::{MarkedYaml, YamlData};
 
-use super::yaml::{
-    YamlObjectType, as_string_node, get_as_hash, get_required_string_value, get_string_value,
-    get_strings_vec_value,
+use super::{
+    error::{
+        ExpectedType, MetadataParsingErrorReason, MultilingualMessageContentsError,
+        ParseMetadataError,
+    },
+    yaml::{
+        YamlObjectType, as_string_node, get_as_hash, get_required_string_value,
+        get_strings_vec_value, parse_condition,
+    },
 };
-use crate::error::{GeneralError, InvalidMultilingualMessageContents, YamlParseError};
 
 /// Codes used to indicate the type of a message.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -163,7 +165,7 @@ impl Message {
     pub fn multilingual(
         message_type: MessageType,
         content: Vec<MessageContent>,
-    ) -> Result<Self, GeneralError> {
+    ) -> Result<Self, MultilingualMessageContentsError> {
         validate_message_contents(&content)?;
 
         Ok(Self {
@@ -198,14 +200,14 @@ impl Message {
 
 pub(crate) fn validate_message_contents(
     contents: &[MessageContent],
-) -> Result<(), InvalidMultilingualMessageContents> {
+) -> Result<(), MultilingualMessageContentsError> {
     if contents.len() > 1 {
         let english_string_exists = contents
             .iter()
             .any(|c| c.language == MessageContent::DEFAULT_LANGUAGE);
 
         if !english_string_exists {
-            return Err(InvalidMultilingualMessageContents {});
+            return Err(MultilingualMessageContentsError {});
         }
     }
 
@@ -213,7 +215,7 @@ pub(crate) fn validate_message_contents(
 }
 
 impl TryFrom<&MarkedYaml> for MessageContent {
-    type Error = YamlParseError;
+    type Error = ParseMetadataError;
 
     fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
         let hash = get_as_hash(value, YamlObjectType::MessageContent)?;
@@ -233,9 +235,9 @@ impl TryFrom<&MarkedYaml> for MessageContent {
 
 pub(crate) fn parse_message_contents_yaml(
     value: &MarkedYaml,
-    key: &str,
+    key: &'static str,
     parent_yaml_type: YamlObjectType,
-) -> Result<Vec<MessageContent>, GeneralError> {
+) -> Result<Vec<MessageContent>, ParseMetadataError> {
     let contents = match &value.data {
         YamlData::String(s) => {
             vec![MessageContent {
@@ -248,24 +250,27 @@ pub(crate) fn parse_message_contents_yaml(
             .map(MessageContent::try_from)
             .collect::<Result<Vec<MessageContent>, _>>()?,
         _ => {
-            return Err(YamlParseError::new(
+            return Err(ParseMetadataError::unexpected_value_type(
                 value.span.start,
-                format!(
-                    "'{}' key in '{}' map is not a list or string",
-                    key, parent_yaml_type
-                ),
-            )
-            .into());
+                key,
+                parent_yaml_type,
+                ExpectedType::ArrayOrString,
+            ));
         }
     };
 
-    validate_message_contents(&contents)?;
-
-    Ok(contents)
+    if validate_message_contents(&contents).is_err() {
+        Err(ParseMetadataError::new(
+            value.span.start,
+            MetadataParsingErrorReason::InvalidMultilingualMessageContents,
+        ))
+    } else {
+        Ok(contents)
+    }
 }
 
 impl TryFrom<&MarkedYaml> for Message {
-    type Error = GeneralError;
+    type Error = ParseMetadataError;
 
     fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
         let hash = get_as_hash(value, YamlObjectType::Message)?;
@@ -281,12 +286,11 @@ impl TryFrom<&MarkedYaml> for Message {
         let mut content = match hash.get(&as_string_node("content")) {
             Some(n) => parse_message_contents_yaml(n, "content", YamlObjectType::Message)?,
             None => {
-                return Err(YamlParseError::missing_key(
+                return Err(ParseMetadataError::missing_key(
                     value.span.start,
                     "content",
                     YamlObjectType::Message,
-                )
-                .into());
+                ));
             }
         };
 
@@ -297,7 +301,10 @@ impl TryFrom<&MarkedYaml> for Message {
                 for (index, sub) in subs.iter().enumerate() {
                     let placeholder = format!("{}", index);
                     if !mc.text.contains(&placeholder) {
-                        return Err(YamlParseError::new(value.span.start, format!("Failed to substitute \"{}\" into message, no placeholder \"{}\" was found", sub, placeholder)).into());
+                        return Err(ParseMetadataError::new(
+                            value.span.start,
+                            MetadataParsingErrorReason::MissingPlaceholder(sub.to_string(), index),
+                        ));
                     }
 
                     mc.text = mc.text.replace(&placeholder, sub);
@@ -305,13 +312,7 @@ impl TryFrom<&MarkedYaml> for Message {
             }
         }
 
-        let condition = match get_string_value(hash, "condition", YamlObjectType::Message)? {
-            Some(c) => {
-                Expression::from_str(c)?;
-                Some(c.to_string())
-            }
-            None => None,
-        };
+        let condition = parse_condition(hash, YamlObjectType::Message)?;
 
         Ok(Message {
             message_type,

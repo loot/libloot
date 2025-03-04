@@ -1,3 +1,5 @@
+//! Holds all types related to LOOT metadata.
+pub mod error;
 mod file;
 mod group;
 mod location;

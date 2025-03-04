@@ -6,9 +6,11 @@ use std::{
 
 use saphyr::{MarkedYaml, YamlData};
 
-use crate::error::{FileAccessError, GeneralError, YamlMergeKeyError, YamlParseError};
-
 use super::{
+    error::{
+        ExpectedType, LoadMetadataError, MetadataDocumentParsingError, ParseMetadataError,
+        RegexError, WriteMetadataError, YamlMergeKeyError,
+    },
     file::Filename,
     group::Group,
     message::Message,
@@ -28,12 +30,21 @@ pub struct MetadataDocument {
 }
 
 impl MetadataDocument {
-    pub fn load(&mut self, file_path: &Path) -> Result<(), GeneralError> {
+    pub fn load(&mut self, file_path: &Path) -> Result<(), LoadMetadataError> {
+        if !file_path.exists() {
+            return Err(LoadMetadataError::new(
+                file_path.into(),
+                MetadataDocumentParsingError::PathNotFound,
+            ));
+        }
+
         log::trace!("Loading file: {:?}", file_path);
 
-        let content = std::fs::read_to_string(file_path)?;
+        let content = std::fs::read_to_string(file_path)
+            .map_err(|e| LoadMetadataError::from_io_error(file_path.into(), e))?;
 
-        self.load_from_str(&content)?;
+        self.load_from_str(&content)
+            .map_err(|e| LoadMetadataError::new(file_path.into(), e))?;
 
         log::trace!(
             "Successfully loaded metadata from file at \"{:?}\".",
@@ -47,13 +58,31 @@ impl MetadataDocument {
         &mut self,
         masterlist_path: &Path,
         prelude_path: &Path,
-    ) -> Result<(), GeneralError> {
-        let masterlist = std::fs::read_to_string(masterlist_path)?;
-        let prelude = std::fs::read_to_string(prelude_path)?;
+    ) -> Result<(), LoadMetadataError> {
+        if !masterlist_path.exists() {
+            return Err(LoadMetadataError::new(
+                masterlist_path.into(),
+                MetadataDocumentParsingError::PathNotFound,
+            ));
+        }
+
+        if !prelude_path.exists() {
+            return Err(LoadMetadataError::new(
+                prelude_path.into(),
+                MetadataDocumentParsingError::PathNotFound,
+            ));
+        }
+
+        let masterlist = std::fs::read_to_string(masterlist_path)
+            .map_err(|e| LoadMetadataError::from_io_error(masterlist_path.into(), e))?;
+
+        let prelude = std::fs::read_to_string(prelude_path)
+            .map_err(|e| LoadMetadataError::from_io_error(masterlist_path.into(), e))?;
 
         let masterlist = replace_prelude(masterlist, prelude);
 
-        self.load_from_str(&masterlist)?;
+        self.load_from_str(&masterlist)
+            .map_err(|e| LoadMetadataError::new(masterlist_path.into(), e))?;
 
         log::trace!(
             "Successfully loaded metadata from file at \"{:?}\".",
@@ -63,27 +92,26 @@ impl MetadataDocument {
         Ok(())
     }
 
-    fn load_from_str(&mut self, string: &str) -> Result<(), GeneralError> {
+    fn load_from_str(&mut self, string: &str) -> Result<(), MetadataDocumentParsingError> {
         let mut docs = MarkedYaml::load_from_str(string)?;
 
         let doc = docs
             .pop()
-            .ok_or_else(|| FileAccessError::new("No documents in the loaded YAML".into()))?;
+            .ok_or_else(|| MetadataDocumentParsingError::NoDocuments)?;
         if !docs.is_empty() {
-            return Err(FileAccessError::new(format!(
-                "YAML file contained more than one document, found {}",
-                docs.len() + 1
-            ))
-            .into());
+            return Err(MetadataDocumentParsingError::MoreThanOneDocument(
+                docs.len() + 1,
+            ));
         }
         let doc = process_merge_keys(doc)?;
 
         let doc = match doc.data {
             YamlData::Hash(h) => h,
             _ => {
-                return Err(YamlParseError::new(
+                return Err(ParseMetadataError::unexpected_type(
                     doc.span.start,
-                    "The root of the YAML document is not a map.".into(),
+                    YamlObjectType::MetadataDocument,
+                    ExpectedType::Map,
                 )
                 .into());
             }
@@ -91,17 +119,18 @@ impl MetadataDocument {
 
         let mut plugins: HashMap<Filename, PluginMetadata> = HashMap::new();
         let mut regex_plugins: Vec<PluginMetadata> = Vec::new();
-        for plugin in get_as_slice(&doc, "plugins", YamlObjectType::MetadataDocument)? {
-            let plugin = PluginMetadata::try_from(plugin)?;
+        for plugin_yaml in get_as_slice(&doc, "plugins", YamlObjectType::MetadataDocument)? {
+            let plugin = PluginMetadata::try_from(plugin_yaml)?;
             if plugin.is_regex_plugin() {
                 regex_plugins.push(plugin);
             } else {
                 let filename = Filename::new(plugin.name().to_string());
                 if plugins.contains_key(&filename) {
-                    return Err(FileAccessError::new(format!(
-                        "More than one entry exists for plugin \"{}\"",
-                        plugin.name()
-                    ))
+                    return Err(ParseMetadataError::duplicate_entry(
+                        plugin_yaml.span.start,
+                        plugin.name().to_string(),
+                        YamlObjectType::PluginMetadata,
+                    )
                     .into());
                 }
                 plugins.insert(filename, plugin);
@@ -116,21 +145,23 @@ impl MetadataDocument {
         let mut bash_tags = Vec::new();
         let mut str_set = HashSet::new();
         for bash_tag_yaml in get_as_slice(&doc, "bash_tags", YamlObjectType::MetadataDocument)? {
-            let bash_tag = match bash_tag_yaml.data.as_str() {
+            let bash_tag: &str = match bash_tag_yaml.data.as_str() {
                 Some(b) => b,
                 None => {
-                    return Err(YamlParseError::new(
+                    return Err(ParseMetadataError::unexpected_type(
                         bash_tag_yaml.span.start,
-                        "Found a non-string Bash Tag.".into(),
+                        YamlObjectType::BashTagsElement,
+                        ExpectedType::String,
                     )
                     .into());
                 }
             };
 
             if str_set.contains(bash_tag) {
-                return Err(YamlParseError::new(
+                return Err(ParseMetadataError::duplicate_entry(
                     bash_tag_yaml.span.start,
-                    format!("More than one entry exists for Bash Tag \"{}\"", bash_tag),
+                    bash_tag.to_string(),
+                    YamlObjectType::BashTagsElement,
                 )
                 .into());
             }
@@ -146,9 +177,10 @@ impl MetadataDocument {
 
             let name = group.name().to_string();
             if group_names.contains(&name) {
-                return Err(YamlParseError::new(
+                return Err(ParseMetadataError::duplicate_entry(
                     group_yaml.span.start,
-                    format!("More than one entry exists for group \"{}\"", group.name()),
+                    group.name().to_string(),
+                    YamlObjectType::Group,
                 )
                 .into());
             }
@@ -170,7 +202,7 @@ impl MetadataDocument {
         Ok(())
     }
 
-    pub fn save(&self, file_path: &Path) -> Result<(), GeneralError> {
+    pub fn save(&self, file_path: &Path) -> Result<(), WriteMetadataError> {
         // let mut hash = saphyr::Hash::new();
 
         // hash.insert(
@@ -208,7 +240,7 @@ impl MetadataDocument {
         self.plugins.values().chain(self.regex_plugins.iter())
     }
 
-    pub fn find_plugin(&self, plugin_name: &str) -> Result<Option<PluginMetadata>, GeneralError> {
+    pub fn find_plugin(&self, plugin_name: &str) -> Result<Option<PluginMetadata>, RegexError> {
         let mut metadata = match self.plugins.get(&Filename::new(plugin_name.to_string())) {
             Some(m) => m.clone(),
             None => PluginMetadata::new(plugin_name)?,
@@ -254,7 +286,6 @@ impl MetadataDocument {
 
 fn process_merge_keys(mut yaml: MarkedYaml) -> Result<MarkedYaml, YamlMergeKeyError> {
     match yaml.data {
-        YamlData::Alias(_) => panic!("Alias encountered!"),
         YamlData::Array(a) => {
             yaml.data = merge_array_elements(a).map(YamlData::Array)?;
             Ok(yaml)

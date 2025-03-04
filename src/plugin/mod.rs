@@ -1,3 +1,5 @@
+pub mod error;
+
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::File,
@@ -13,9 +15,12 @@ use fancy_regex::Regex;
 use crate::{
     GameType,
     archive::{assets_in_archives, find_associated_archives},
-    error::{GeneralError, InvalidArgumentError},
     game::GameCache,
     regex,
+};
+use error::{
+    InvalidFilenameReason, LoadPluginError, PluginDataError, PluginValidationError,
+    PluginValidationErrorReason,
 };
 
 static VERSION_REGEXES: LazyLock<Box<[Regex]>> = LazyLock::new(|| {
@@ -77,7 +82,7 @@ impl Plugin {
         game_cache: &GameCache,
         plugin_path: &Path,
         load_scope: LoadScope,
-    ) -> Result<Self, GeneralError> {
+    ) -> Result<Self, LoadPluginError> {
         let name = name_string(plugin_path)?;
 
         let (parse_options, crc) = if load_scope == LoadScope::HeaderOnly {
@@ -152,7 +157,7 @@ impl Plugin {
     }
 
     /// Get the plugin's masters.
-    pub fn masters(&self) -> Result<Vec<String>, GeneralError> {
+    pub fn masters(&self) -> Result<Vec<String>, PluginDataError> {
         self.plugin
             .as_ref()
             .map(|p| p.masters().map_err(Into::into))
@@ -227,7 +232,7 @@ impl Plugin {
     }
 
     /// Check if the plugin is or would be valid as a light plugin.
-    pub fn is_valid_as_light_plugin(&self) -> Result<bool, GeneralError> {
+    pub fn is_valid_as_light_plugin(&self) -> Result<bool, PluginDataError> {
         self.plugin
             .as_ref()
             .map(|p| p.is_valid_as_light_plugin().map_err(Into::into))
@@ -235,7 +240,7 @@ impl Plugin {
     }
 
     /// Check if the plugin is or would be valid as a medium plugin.
-    pub fn is_valid_as_medium_plugin(&self) -> Result<bool, GeneralError> {
+    pub fn is_valid_as_medium_plugin(&self) -> Result<bool, PluginDataError> {
         self.plugin
             .as_ref()
             .map(|p| p.is_valid_as_medium_plugin().map_err(Into::into))
@@ -243,7 +248,7 @@ impl Plugin {
     }
 
     /// Check if the plugin is or would be valid as an update plugin.
-    pub fn is_valid_as_update_plugin(&self) -> Result<bool, GeneralError> {
+    pub fn is_valid_as_update_plugin(&self) -> Result<bool, PluginDataError> {
         self.plugin
             .as_ref()
             .map(|p| p.is_valid_as_update_plugin().map_err(Into::into))
@@ -269,7 +274,7 @@ impl Plugin {
     ///
     /// FormIDs are compared for all games apart from Morrowind, which doesn't
     /// have FormIDs and so has other identifying data compared.
-    pub fn do_records_overlap(&self, plugin: &Plugin) -> Result<bool, GeneralError> {
+    pub fn do_records_overlap(&self, plugin: &Plugin) -> Result<bool, PluginDataError> {
         if let (Some(plugin), Some(other_plugin)) = (&self.plugin, &plugin.plugin) {
             plugin.overlaps_with(other_plugin).map_err(Into::into)
         } else {
@@ -277,7 +282,7 @@ impl Plugin {
         }
     }
 
-    pub(crate) fn override_record_count(&self) -> Result<usize, GeneralError> {
+    pub(crate) fn override_record_count(&self) -> Result<usize, PluginDataError> {
         self.plugin
             .as_ref()
             .map(|p| p.count_override_records().map_err(Into::into))
@@ -317,26 +322,41 @@ impl Plugin {
     pub(crate) fn resolve_record_ids(
         &mut self,
         plugins_metadata: &[esplugin::PluginMetadata],
-    ) -> Result<(), esplugin::Error> {
+    ) -> Result<(), PluginDataError> {
         if let Some(plugin) = &mut self.plugin {
-            plugin.resolve_record_ids(plugins_metadata)
-        } else {
-            Ok(())
+            plugin.resolve_record_ids(plugins_metadata)?;
         }
+        Ok(())
     }
 }
 
-pub(crate) fn is_valid_plugin(game_type: GameType, plugin_path: &Path) -> bool {
+pub(crate) fn validate_plugin_path_and_header(
+    game_type: GameType,
+    plugin_path: &Path,
+) -> Result<(), PluginValidationError> {
     if game_type == GameType::OpenMW && has_ascii_extension(plugin_path, "omwscripts") {
-        true
-    } else if has_plugin_file_extension(game_type, plugin_path) {
-        esplugin::Plugin::is_valid(game_type.into(), plugin_path, ParseOptions::header_only())
+        Ok(())
+    } else if !has_plugin_file_extension(game_type, plugin_path) {
+        log::debug!(
+            "The file \"{}\" is not a valid plugin",
+            plugin_path.display()
+        );
+        Err(PluginValidationError::invalid(
+            plugin_path.into(),
+            InvalidFilenameReason::UnsupportedFileExtension,
+        ))
+    } else if esplugin::Plugin::is_valid(game_type.into(), plugin_path, ParseOptions::header_only())
+    {
+        Ok(())
     } else {
         log::debug!(
             "The file \"{}\" is not a valid plugin",
             plugin_path.display()
         );
-        false
+        Err(PluginValidationError::new(
+            plugin_path.into(),
+            PluginValidationErrorReason::InvalidPluginHeader,
+        ))
     }
 }
 
@@ -381,22 +401,22 @@ pub(crate) fn has_ascii_extension(path: &Path, extension: &str) -> bool {
 
 pub(crate) fn plugins_metadata(
     plugins: &[Plugin],
-) -> Result<Vec<esplugin::PluginMetadata>, esplugin::Error> {
+) -> Result<Vec<esplugin::PluginMetadata>, PluginDataError> {
     let esplugins: Vec<_> = plugins.iter().filter_map(|p| p.plugin.as_ref()).collect();
-    esplugin::plugins_metadata(&esplugins)
+    Ok(esplugin::plugins_metadata(&esplugins)?)
 }
 
-fn name_string(path: &Path) -> Result<String, InvalidArgumentError> {
+fn name_string(path: &Path) -> Result<String, LoadPluginError> {
     match path.file_name() {
         Some(f) => match f.to_str() {
             Some(f) => Ok(f.to_string()),
-            None => Err(InvalidArgumentError {
-                message: format!("The path \"{:?}\" has a non-Unicode filename", path),
-            }),
+            None => Err(LoadPluginError::InvalidFilename(
+                InvalidFilenameReason::NonUnicode,
+            )),
         },
-        None => Err(InvalidArgumentError {
-            message: format!("The path \"{}\" has no filename", path.display()),
-        }),
+        None => Err(LoadPluginError::InvalidFilename(
+            InvalidFilenameReason::Empty,
+        )),
     }
 }
 

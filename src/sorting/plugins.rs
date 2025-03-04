@@ -12,8 +12,9 @@ use petgraph::{
 
 use crate::{
     EdgeType, Plugin,
-    error::{CyclicInteractionError, GeneralError, SortingLogicError, UndefinedGroupError},
     metadata::{File, Group, PluginMetadata},
+    plugin::error::PluginDataError,
+    sorting::error::{CyclicInteractionError, PathfindingError, SortingError, UndefinedGroupError},
     sorting::groups::{get_default_group_node, sorted_group_nodes},
 };
 
@@ -45,7 +46,7 @@ impl<'a> PluginSortingData<'a> {
         masterlist_metadata: Option<&PluginMetadata>,
         user_metadata: Option<&PluginMetadata>,
         load_order_index: usize,
-    ) -> Result<Self, GeneralError> {
+    ) -> Result<Self, PluginDataError> {
         let override_record_count = plugin.override_record_count()?;
 
         Ok(Self {
@@ -86,11 +87,11 @@ impl<'a> PluginSortingData<'a> {
         self.plugin.asset_count()
     }
 
-    pub(super) fn masters(&self) -> Result<Vec<String>, GeneralError> {
+    pub(super) fn masters(&self) -> Result<Vec<String>, PluginDataError> {
         self.plugin.masters()
     }
 
-    fn do_records_overlap(&self, other: &PluginSortingData) -> Result<bool, GeneralError> {
+    fn do_records_overlap(&self, other: &PluginSortingData) -> Result<bool, PluginDataError> {
         self.plugin.do_records_overlap(other.plugin)
     }
 
@@ -145,7 +146,7 @@ impl<'a> PluginsGraph<'a> {
         self.inner.node_indices()
     }
 
-    fn add_specific_edges(&mut self) -> Result<(), GeneralError> {
+    fn add_specific_edges(&mut self) -> Result<(), SortingError> {
         log::trace!("Adding edges based on plugin data and non-group metadata...");
 
         let mut node_index_iter = self.node_indices();
@@ -323,7 +324,7 @@ impl<'a> PluginsGraph<'a> {
         Ok(())
     }
 
-    fn add_overlap_edges(&mut self) -> Result<(), GeneralError> {
+    fn add_overlap_edges(&mut self) -> Result<(), SortingError> {
         log::trace!("Adding edges for overlapping plugins...");
 
         let mut node_index_iter = self.node_indices();
@@ -419,7 +420,7 @@ impl<'a> PluginsGraph<'a> {
         Ok(())
     }
 
-    fn add_tie_break_edges(&mut self) -> Result<(), SortingLogicError> {
+    fn add_tie_break_edges(&mut self) -> Result<(), PathfindingError> {
         log::trace!("Adding edges to break ties between plugins...");
 
         // In order for the sort to be performed stably, there must be only one
@@ -655,8 +656,9 @@ impl<'a> PluginsGraph<'a> {
         insert_position + 1
     }
 
-    fn topological_sort(&self) -> Result<Vec<NodeIndex>, petgraph::algo::Cycle<NodeIndex>> {
+    fn topological_sort(&self) -> Result<Vec<NodeIndex>, SortingError> {
         petgraph::algo::toposort(&self.inner, None)
+            .map_err(|e| SortingError::CycleInvolving(self[e.node_id()].name().to_string()))
     }
 
     fn is_hamiltonian_path(&mut self, path: &[NodeIndex]) -> Option<(NodeIndex, NodeIndex)> {
@@ -698,7 +700,7 @@ impl<'a> PluginsGraph<'a> {
         &mut self,
         from: NodeIndex,
         to: NodeIndex,
-    ) -> Result<Option<Vec<NodeIndex>>, SortingLogicError> {
+    ) -> Result<Option<Vec<NodeIndex>>, PathfindingError> {
         let mut path_finder = PathFinder::new(&self.inner, &mut self.paths_cache, from, to);
 
         if bidirectional_bfs(&self.inner, from, to, &mut path_finder) {
@@ -721,7 +723,7 @@ pub fn sort_plugins(
     mut plugins_sorting_data: Vec<PluginSortingData>,
     groups_graph: &GroupsGraph,
     early_loading_plugins: &[String],
-) -> Result<Vec<String>, GeneralError> {
+) -> Result<Vec<String>, SortingError> {
     if plugins_sorting_data.is_empty() {
         return Ok(Vec::new());
     }
@@ -780,7 +782,7 @@ fn sort_plugins_partition(
     plugins_sorting_data: Vec<PluginSortingData>,
     groups_graph: &GroupsGraph,
     early_loading_plugins: &[String],
-) -> Result<Vec<String>, GeneralError> {
+) -> Result<Vec<String>, SortingError> {
     let mut graph = PluginsGraph::new();
 
     for plugin in plugins_sorting_data {
@@ -862,7 +864,7 @@ impl<'a, 'b> PathFinder<'a, 'b> {
         self.cache.entry(from).or_default().insert(to);
     }
 
-    fn path(&self) -> Result<Option<Vec<NodeIndex>>, SortingLogicError> {
+    fn path(&self) -> Result<Option<Vec<NodeIndex>>, PathfindingError> {
         match self.intersection_node {
             None => Ok(None),
             Some(intersection_node) => {
@@ -879,10 +881,9 @@ impl<'a, 'b> PathFinder<'a, 'b> {
                             self.graph[current_node].name(),
                             path_to_string(self.graph, &path)
                         );
-                        return Err(SortingLogicError::new(format!(
-                            "Could not find parent vertex of {}",
-                            self.graph[current_node].name()
-                        )));
+                        return Err(PathfindingError::PrecedingNodeNotFound(
+                            self.graph[current_node].name().to_string(),
+                        ));
                     }
                 }
 
@@ -901,10 +902,9 @@ impl<'a, 'b> PathFinder<'a, 'b> {
                             self.graph[current_node].name(),
                             path_to_string(self.graph, &path)
                         );
-                        return Err(SortingLogicError::new(format!(
-                            "Could not find child vertex of {}",
-                            self.graph[current_node].name()
-                        )));
+                        return Err(PathfindingError::FollowingNodeNotFound(
+                            self.graph[current_node].name().to_string(),
+                        ));
                     }
                 }
 

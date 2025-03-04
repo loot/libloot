@@ -1,18 +1,23 @@
-use std::{path::Path, str::FromStr};
+mod conditions;
+mod error;
 
-use loot_condition_interpreter::Expression;
+use std::{collections::HashMap, path::Path};
+
+use conditions::{evaluate_all_conditions, filter_map_on_condition};
 
 use crate::{
-    error::{FileAccessError, GeneralError, InvalidArgumentError},
     metadata::{
-        File, Group, Message, PluginCleaningData, PluginMetadata,
+        Group, Message, PluginMetadata,
+        error::{LoadMetadataError, WriteMetadataError, WriteMetadataErrorReason},
         metadata_document::MetadataDocument,
     },
     sorting::{
+        error::GroupsPathError,
         groups::{build_groups_graph, find_path},
         vertex::Vertex,
     },
 };
+pub use error::{ConditionEvaluationError, MetadataRetrievalError};
 
 /// The interface through which metadata can be accessed.
 #[derive(Debug)]
@@ -38,21 +43,18 @@ impl Database {
         &mut self.condition_evaluator_state
     }
 
+    pub(crate) fn clear_condition_cache(&mut self) {
+        if let Err(e) = self.condition_evaluator_state.clear_condition_cache() {
+            log::error!("The condition cache's lock is poisoned, assigning a new cache");
+            *e.into_inner() = HashMap::new();
+        }
+    }
+
     /// Loads the masterlist from the given path.
     ///
     /// Replaces any existing data that was previously loaded from a masterlist.
-    pub fn load_masterlist(&mut self, path: &Path) -> Result<(), GeneralError> {
-        if path.exists() {
-            self.masterlist.load(path)
-        } else {
-            Err(FileAccessError {
-                message: format!(
-                    "The given masterlist path does not exist: {}",
-                    path.display()
-                ),
-            }
-            .into())
-        }
+    pub fn load_masterlist(&mut self, path: &Path) -> Result<(), LoadMetadataError> {
+        self.masterlist.load(path)
     }
 
     /// Loads the masterlist from the given path, using the prelude at the given
@@ -63,41 +65,16 @@ impl Database {
         &mut self,
         masterlist_path: &Path,
         prelude_path: &Path,
-    ) -> Result<(), GeneralError> {
-        if !masterlist_path.exists() {
-            Err(FileAccessError {
-                message: format!(
-                    "The given masterlist path does not exist: {}",
-                    masterlist_path.display()
-                ),
-            }
-            .into())
-        } else if !prelude_path.exists() {
-            Err(FileAccessError {
-                message: format!(
-                    "The given prelude path does not exist: {}",
-                    prelude_path.display()
-                ),
-            }
-            .into())
-        } else {
-            self.masterlist
-                .load_with_prelude(masterlist_path, prelude_path)
-        }
+    ) -> Result<(), LoadMetadataError> {
+        self.masterlist
+            .load_with_prelude(masterlist_path, prelude_path)
     }
 
     /// Loads the userlist from the given path.
     ///
     /// Replaces any existing data that was previously loaded from a userlist.
-    pub fn load_userlist(&mut self, path: &Path) -> Result<(), GeneralError> {
-        if path.exists() {
-            self.userlist.load(path)
-        } else {
-            Err(FileAccessError {
-                message: format!("The given userlist path does not exist: {}", path.display()),
-            }
-            .into())
-        }
+    pub fn load_userlist(&mut self, path: &Path) -> Result<(), LoadMetadataError> {
+        self.userlist.load(path)
     }
 
     /// Writes a metadata file containing all loaded user-added metadata.
@@ -108,7 +85,7 @@ impl Database {
         &self,
         output_path: &Path,
         overwrite: bool,
-    ) -> Result<(), GeneralError> {
+    ) -> Result<(), WriteMetadataError> {
         validate_write_path(output_path, overwrite)?;
 
         self.userlist.save(output_path)
@@ -123,13 +100,14 @@ impl Database {
         &self,
         output_path: &Path,
         overwrite: bool,
-    ) -> Result<(), GeneralError> {
+    ) -> Result<(), WriteMetadataError> {
         validate_write_path(output_path, overwrite)?;
 
         let mut doc = MetadataDocument::default();
 
         for plugin in self.masterlist.plugins() {
-            let mut minimal_plugin = PluginMetadata::new(plugin.name())?;
+            let mut minimal_plugin = PluginMetadata::new(plugin.name())
+                .expect("Regex plugin name from existing PluginMetadata object is valid");
             minimal_plugin.set_tags(plugin.tags().to_vec());
             minimal_plugin.set_dirty_info(plugin.dirty_info().to_vec());
 
@@ -158,7 +136,11 @@ impl Database {
     pub fn general_messages(
         &mut self,
         evaluate_conditions: bool,
-    ) -> Result<Vec<Message>, GeneralError> {
+    ) -> Result<Vec<Message>, ConditionEvaluationError> {
+        if evaluate_conditions {
+            self.clear_condition_cache();
+        }
+
         let messages_iter = self
             .masterlist
             .messages()
@@ -166,8 +148,6 @@ impl Database {
             .chain(self.userlist.messages());
 
         if evaluate_conditions {
-            self.condition_evaluator_state.clear_condition_cache()?;
-
             let messages = messages_iter
                 .filter_map(|m| {
                     filter_map_on_condition(m, m.condition(), &self.condition_evaluator_state)
@@ -217,10 +197,12 @@ impl Database {
         &self,
         from_group_name: &str,
         to_group_name: &str,
-    ) -> Result<Vec<Vertex>, GeneralError> {
+    ) -> Result<Vec<Vertex>, GroupsPathError> {
         let graph = build_groups_graph(self.masterlist.groups(), self.userlist.groups())?;
 
-        find_path(&graph, from_group_name, to_group_name)
+        let path = find_path(&graph, from_group_name, to_group_name)?;
+
+        Ok(path)
     }
 
     /// Get all of a plugin's loaded metadata.
@@ -238,7 +220,7 @@ impl Database {
         plugin_name: &str,
         include_user_metadata: bool,
         evaluate_conditions: bool,
-    ) -> Result<Option<PluginMetadata>, GeneralError> {
+    ) -> Result<Option<PluginMetadata>, MetadataRetrievalError> {
         let mut metadata = self.masterlist.find_plugin(plugin_name)?;
 
         if include_user_metadata {
@@ -270,17 +252,17 @@ impl Database {
         &self,
         plugin_name: &str,
         evaluate_conditions: bool,
-    ) -> Result<Option<PluginMetadata>, GeneralError> {
-        let metadata = self.userlist.find_plugin(plugin_name);
+    ) -> Result<Option<PluginMetadata>, MetadataRetrievalError> {
+        let metadata = self.userlist.find_plugin(plugin_name)?;
 
         if evaluate_conditions {
-            if let Ok(Some(metadata)) = metadata {
+            if let Some(metadata) = metadata {
                 return evaluate_all_conditions(metadata, &self.condition_evaluator_state)
                     .map_err(Into::into);
             }
         }
 
-        metadata
+        Ok(metadata)
     }
 
     /// Sets a plugin's user metadata, replacing any loaded user metadata for
@@ -302,17 +284,17 @@ impl Database {
     }
 }
 
-fn validate_write_path(output_path: &Path, overwrite: bool) -> Result<(), GeneralError> {
+fn validate_write_path(output_path: &Path, overwrite: bool) -> Result<(), WriteMetadataError> {
     if !output_path.parent().map(|p| p.exists()).unwrap_or(false) {
-        Err(InvalidArgumentError {
-            message: "The output directory does not exist.".into(),
-        }
-        .into())
+        Err(WriteMetadataError::new(
+            output_path.into(),
+            WriteMetadataErrorReason::ParentDirectoryNotFound,
+        ))
     } else if !overwrite && output_path.exists() {
-        Err(FileAccessError {
-            message: "Output file exists but overwrite is not set to true.".into(),
-        }
-        .into())
+        Err(WriteMetadataError::new(
+            output_path.into(),
+            WriteMetadataErrorReason::PathAlreadyExists,
+        ))
     } else {
         Ok(())
     }
@@ -349,107 +331,4 @@ fn merge_groups(lhs: &[Group], rhs: &[Group]) -> Vec<Group> {
     groups.extend(new_groups);
 
     groups
-}
-
-fn evaluate_all_conditions(
-    mut metadata: PluginMetadata,
-    state: &loot_condition_interpreter::State,
-) -> Result<Option<PluginMetadata>, loot_condition_interpreter::Error> {
-    metadata.set_load_after_files(filter_files_on_conditions(
-        metadata.load_after_files(),
-        state,
-    )?);
-
-    metadata.set_requirements(filter_files_on_conditions(metadata.requirements(), state)?);
-
-    metadata.set_incompatibilities(filter_files_on_conditions(
-        metadata.incompatibilities(),
-        state,
-    )?);
-
-    metadata.set_messages(
-        metadata
-            .messages()
-            .iter()
-            .filter_map(|m| filter_map_on_condition(m, m.condition(), state))
-            .collect::<Result<Vec<_>, _>>()?,
-    );
-
-    metadata.set_tags(
-        metadata
-            .tags()
-            .iter()
-            .filter_map(|t| filter_map_on_condition(t, t.condition(), state))
-            .collect::<Result<Vec<_>, _>>()?,
-    );
-
-    if !metadata.is_regex_plugin() {
-        metadata.set_dirty_info(filter_cleaning_data_on_conditions(
-            metadata.name(),
-            metadata.dirty_info(),
-            state,
-        )?);
-
-        metadata.set_clean_info(filter_cleaning_data_on_conditions(
-            metadata.name(),
-            metadata.clean_info(),
-            state,
-        )?);
-    }
-
-    if metadata.has_name_only() {
-        Ok(None)
-    } else {
-        Ok(Some(metadata))
-    }
-}
-
-fn evaluate_condition(
-    condition: Option<&str>,
-    state: &loot_condition_interpreter::State,
-) -> Result<bool, loot_condition_interpreter::Error> {
-    if let Some(condition) = condition {
-        Expression::from_str(condition).and_then(|e| e.eval(state))
-    } else {
-        Ok(true)
-    }
-}
-
-fn filter_map_on_condition<T: Clone>(
-    item: &T,
-    condition: Option<&str>,
-    state: &loot_condition_interpreter::State,
-) -> Option<Result<T, loot_condition_interpreter::Error>> {
-    evaluate_condition(condition, state)
-        .map(|r| r.then(|| item.clone()))
-        .transpose()
-}
-
-fn filter_files_on_conditions(
-    files: &[File],
-    state: &loot_condition_interpreter::State,
-) -> Result<Vec<File>, loot_condition_interpreter::Error> {
-    files
-        .iter()
-        .filter_map(|file| filter_map_on_condition(file, file.condition(), state))
-        .collect::<Result<Vec<_>, _>>()
-}
-
-fn filter_cleaning_data_on_conditions(
-    plugin_name: &str,
-    cleaning_info: &[PluginCleaningData],
-    state: &loot_condition_interpreter::State,
-) -> Result<Vec<PluginCleaningData>, loot_condition_interpreter::Error> {
-    if plugin_name.is_empty() {
-        return Ok(Vec::new());
-    }
-
-    cleaning_info
-        .iter()
-        .filter_map(|i| {
-            let condition = format!("checksum(\"{}\", {:08X})", plugin_name, i.crc());
-
-            filter_map_on_condition(i, Some(condition.as_str()), state)
-        })
-        .collect::<Result<Vec<_>, _>>()
 }

@@ -1,10 +1,8 @@
-use std::str::FromStr;
-
-use loot_condition_interpreter::Expression;
 use saphyr::YamlData;
 
-use super::yaml::{YamlObjectType, get_required_string_value, get_string_value};
-use crate::error::{GeneralError, YamlParseError};
+use super::error::ExpectedType;
+use super::error::ParseMetadataError;
+use super::yaml::{YamlObjectType, get_required_string_value, parse_condition};
 
 /// Represents whether a Bash Tag suggestion is for addition or removal.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -57,7 +55,7 @@ impl Tag {
 }
 
 impl TryFrom<&saphyr::MarkedYaml> for Tag {
-    type Error = GeneralError;
+    type Error = ParseMetadataError;
 
     fn try_from(value: &saphyr::MarkedYaml) -> Result<Self, Self::Error> {
         match &value.data {
@@ -73,13 +71,7 @@ impl TryFrom<&saphyr::MarkedYaml> for Tag {
                 let name =
                     get_required_string_value(value.span.start, h, "name", YamlObjectType::Tag)?;
 
-                let condition = match get_string_value(h, "condition", YamlObjectType::Tag)? {
-                    Some(n) => {
-                        Expression::from_str(n)?;
-                        Some(n.to_string())
-                    }
-                    None => None,
-                };
+                let condition = parse_condition(h, YamlObjectType::Tag)?;
 
                 let (name, suggestion) = name_and_suggestion(name);
                 Ok(Tag {
@@ -88,11 +80,11 @@ impl TryFrom<&saphyr::MarkedYaml> for Tag {
                     condition,
                 })
             }
-            _ => Err(YamlParseError::new(
+            _ => Err(ParseMetadataError::unexpected_type(
                 value.span.start,
-                "'tag' object must be a map or string".into(),
-            )
-            .into()),
+                YamlObjectType::Tag,
+                ExpectedType::MapOrString,
+            )),
         }
     }
 }

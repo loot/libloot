@@ -4,22 +4,24 @@ use petgraph::{Graph, algo::bellman_ford, graph::NodeIndex};
 
 use crate::{
     EdgeType, Vertex,
-    error::{
-        CyclicInteractionError, GeneralError, InvalidArgumentError, PathfindingError,
-        UndefinedGroupError,
-    },
     metadata::Group,
     sorting::dfs::find_cycle,
+    sorting::error::{
+        BuildGroupsGraphError, CyclicInteractionError, PathfindingError, UndefinedGroupError,
+    },
 };
 
-use super::dfs::{DfsVisitor, depth_first_search};
+use super::{
+    dfs::{DfsVisitor, depth_first_search},
+    error::GroupsPathError,
+};
 
 pub type GroupsGraph = Graph<String, EdgeType>;
 
 pub fn build_groups_graph(
     masterlist_groups: &[Group],
     userlist_groups: &[Group],
-) -> Result<GroupsGraph, GeneralError> {
+) -> Result<GroupsGraph, BuildGroupsGraphError> {
     let masterlist_groups = sorted_by_name(masterlist_groups);
     let userlist_groups = sorted_by_name(userlist_groups);
 
@@ -43,7 +45,7 @@ pub fn build_groups_graph(
     )?;
 
     if let Some(cycle) = find_cycle(&graph, |node| node.clone()) {
-        Err(CyclicInteractionError { cycle }.into())
+        Err(CyclicInteractionError::new(cycle).into())
     } else {
         Ok(graph)
     }
@@ -106,7 +108,7 @@ pub fn find_path(
     graph: &GroupsGraph,
     from_group_name: &str,
     to_group_name: &str,
-) -> Result<Vec<Vertex>, GeneralError> {
+) -> Result<Vec<Vertex>, GroupsPathError> {
     let float_graph: Graph<&String, f32> = graph.map(
         |_, n| n,
         |_, e| {
@@ -122,9 +124,8 @@ pub fn find_path(
     let from_vertex = find_node_by_weight(graph, from_group_name)?;
     let to_vertex = find_node_by_weight(graph, to_group_name)?;
 
-    let paths = bellman_ford(&float_graph, from_vertex).map_err(|_| InvalidArgumentError {
-        message: "Groups graph contains a negative cycle".into(),
-    })?;
+    let paths =
+        bellman_ford(&float_graph, from_vertex).map_err(|_| PathfindingError::NegativeCycle)?;
 
     let mut path = vec![Vertex::new(graph[to_vertex].clone())];
     let mut current = to_vertex;
@@ -141,10 +142,7 @@ pub fn find_path(
                 return Ok(Vec::new());
             }
             _ => {
-                return Err(PathfindingError::new(
-                    "Could not find a node in the graph while pathfinding".into(),
-                )
-                .into());
+                return Err(PathfindingError::PrecedingNodeNotFound(graph[current].clone()).into());
             }
         };
 
@@ -160,10 +158,10 @@ pub fn find_path(
         let edge = match graph.find_edge(*preceding_vertex, current) {
             Some(e) => e,
             None => {
-                return Err(PathfindingError::new(format!(
-                    "Could not find edge from \"{}\" to \"{}\"",
-                    graph[*preceding_vertex], graph[current]
-                ))
+                return Err(PathfindingError::EdgeNotFound {
+                    from_group: graph[*preceding_vertex].clone(),
+                    to_group: graph[current].clone(),
+                }
                 .into());
             }
         };
@@ -182,7 +180,7 @@ pub fn find_path(
 fn find_node_by_weight(
     graph: &Graph<String, EdgeType>,
     weight: &str,
-) -> Result<NodeIndex, InvalidArgumentError> {
+) -> Result<NodeIndex, UndefinedGroupError> {
     match graph
         .node_indices()
         .find(|i| graph.node_weight(*i).map(|w| *w == weight).unwrap_or(false))
@@ -190,9 +188,7 @@ fn find_node_by_weight(
         Some(n) => Ok(n),
         None => {
             log::error!("Can't find group with name {}", weight);
-            Err(InvalidArgumentError {
-                message: format!("Can't find group with name {}", weight),
-            })
+            Err(UndefinedGroupError::new(weight.to_string()))
         }
     }
 }

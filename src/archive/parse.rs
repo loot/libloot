@@ -5,10 +5,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{
-    error::{GeneralError, InvalidArgumentError},
-    plugin::has_ascii_extension,
-};
+use super::error::{ArchiveParsingError, ArchivePathParsingError};
+use crate::plugin::has_ascii_extension;
 
 use super::{ba2, bsa};
 
@@ -70,22 +68,25 @@ fn should_warn_on_hash_collisions(archive_path: &Path) -> bool {
 
 fn get_assets_in_archive(
     archive_path: &Path,
-) -> Result<BTreeMap<u64, BTreeSet<u64>>, GeneralError> {
-    let mut reader = BufReader::new(File::open(archive_path)?);
+) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchivePathParsingError> {
+    let file = File::open(archive_path)
+        .map_err(|e| ArchivePathParsingError::from_io_error(archive_path.into(), e))?;
+    let mut reader = BufReader::new(file);
 
     let mut type_id: [u8; 4] = [0; 4];
-    reader.read_exact(&mut type_id)?;
+    reader
+        .read_exact(&mut type_id)
+        .map_err(|e| ArchivePathParsingError::from_io_error(archive_path.into(), e))?;
 
     match type_id {
-        bsa::TYPE_ID => bsa::read_assets(reader),
-        ba2::TYPE_ID => ba2::read_assets(reader),
-        _ => Err(InvalidArgumentError {
-            message: format!(
-                "Bethesda archive at \"{}\" has an unrecognised type ID",
-                archive_path.display()
-            ),
-        }
-        .into()),
+        bsa::TYPE_ID => bsa::read_assets(reader)
+            .map_err(|e| ArchivePathParsingError::new(archive_path.into(), e)),
+        ba2::TYPE_ID => ba2::read_assets(reader)
+            .map_err(|e| ArchivePathParsingError::new(archive_path.into(), e)),
+        _ => Err(ArchivePathParsingError::new(
+            archive_path.into(),
+            ArchiveParsingError::UnsupportedArchiveTypeId(type_id),
+        )),
     }
 }
 

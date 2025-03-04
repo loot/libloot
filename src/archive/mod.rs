@@ -1,5 +1,6 @@
 mod ba2;
 mod bsa;
+mod error;
 mod find;
 mod parse;
 

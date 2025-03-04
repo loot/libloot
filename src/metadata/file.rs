@@ -1,14 +1,14 @@
-use std::str::FromStr;
-
-use loot_condition_interpreter::Expression;
 use saphyr::{MarkedYaml, YamlData};
 use unicase::UniCase;
 
-use crate::error::{GeneralError, InvalidMultilingualMessageContents, YamlParseError};
-
 use super::{
+    error::ExpectedType,
+    error::{MultilingualMessageContentsError, ParseMetadataError},
     message::{MessageContent, parse_message_contents_yaml, validate_message_contents},
-    yaml::{YamlObjectType, as_string_node, get_required_string_value, get_string_value},
+    yaml::{
+        YamlObjectType, as_string_node, get_required_string_value, get_string_value,
+        parse_condition,
+    },
 };
 
 /// Represents a file in a game's Data folder, including files in
@@ -52,7 +52,7 @@ impl File {
     pub fn with_detail(
         mut self,
         detail: Vec<MessageContent>,
-    ) -> Result<Self, InvalidMultilingualMessageContents> {
+    ) -> Result<Self, MultilingualMessageContentsError> {
         validate_message_contents(&detail)?;
         self.detail = detail;
         Ok(self)
@@ -108,12 +108,12 @@ impl AsRef<str> for &Filename {
 
 impl std::fmt::Display for Filename {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        self.0.fmt(f)
     }
 }
 
 impl TryFrom<&MarkedYaml> for File {
-    type Error = GeneralError;
+    type Error = ParseMetadataError;
 
     fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
         match &value.data {
@@ -138,26 +138,20 @@ impl TryFrom<&MarkedYaml> for File {
                     None => Vec::new(),
                 };
 
-                let condition = match get_string_value(h, "condition", YamlObjectType::File)? {
-                    Some(n) => {
-                        Expression::from_str(n)?;
-                        Some(n.to_string())
-                    }
-                    None => None,
-                };
+                let condition = parse_condition(h, YamlObjectType::File)?;
 
                 Ok(File {
                     name: Filename(UniCase::new(name.to_string())),
-                    display_name: display_name.map(|s| s.to_string()),
+                    display_name: display_name.map(|(_, s)| s.to_string()),
                     detail,
                     condition,
                 })
             }
-            _ => Err(YamlParseError::new(
+            _ => Err(ParseMetadataError::unexpected_type(
                 value.span.start,
-                "'file' object must be a map or string".into(),
-            )
-            .into()),
+                YamlObjectType::File,
+                ExpectedType::MapOrString,
+            )),
         }
     }
 }

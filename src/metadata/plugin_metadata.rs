@@ -1,12 +1,10 @@
 use fancy_regex::Regex;
 use saphyr::MarkedYaml;
 
-use crate::{
-    error::{GeneralError, YamlParseError},
-    regex,
-};
+use crate::regex;
 
 use super::{
+    error::{MetadataParsingErrorReason, ParseMetadataError, RegexError},
     file::File,
     location::Location,
     message::Message,
@@ -37,7 +35,7 @@ pub struct PluginMetadata {
 impl PluginMetadata {
     /// Construct a [PluginMetadata] object with no metadata for a plugin with
     /// the given filename.
-    pub fn new(name: &str) -> Result<Self, Box<fancy_regex::Error>> {
+    pub fn new(name: &str) -> Result<Self, RegexError> {
         Ok(Self {
             name: PluginName::new(name)?,
             ..Default::default()
@@ -299,7 +297,7 @@ fn merge_vecs<T: Clone + PartialEq>(target: &mut Vec<T>, source: &[T]) {
 }
 
 impl TryFrom<&MarkedYaml> for PluginMetadata {
-    type Error = GeneralError;
+    type Error = ParseMetadataError;
 
     fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
         let hash = get_as_hash(value, YamlObjectType::PluginMetadata)?;
@@ -313,11 +311,10 @@ impl TryFrom<&MarkedYaml> for PluginMetadata {
         let name = match PluginName::new(name) {
             Ok(n) => n,
             Err(e) => {
-                return Err(YamlParseError::new(
+                return Err(ParseMetadataError::new(
                     value.span.start,
-                    format!("Invalid regex in \"name\" key: {}", e),
-                )
-                .into());
+                    MetadataParsingErrorReason::InvalidRegex(e),
+                ));
             }
         };
 
@@ -334,7 +331,7 @@ impl TryFrom<&MarkedYaml> for PluginMetadata {
 
         Ok(PluginMetadata {
             name,
-            group: group.map(|g| g.to_string()),
+            group: group.map(|g| g.1.to_string()),
             load_after,
             requirements,
             incompatibilities,
@@ -347,15 +344,12 @@ impl TryFrom<&MarkedYaml> for PluginMetadata {
     }
 }
 
-fn get_vec<'a, T: TryFrom<&'a MarkedYaml, Error = GeneralError>>(
+fn get_vec<'a, T: TryFrom<&'a MarkedYaml, Error = impl Into<ParseMetadataError>>>(
     hash: &'a saphyr::AnnotatedHash<MarkedYaml>,
-    key: &str,
-) -> Result<Vec<T>, GeneralError>
-where
-    GeneralError: From<<T as TryFrom<&'a MarkedYaml>>::Error>,
-{
+    key: &'static str,
+) -> Result<Vec<T>, ParseMetadataError> {
     get_as_slice(hash, key, YamlObjectType::PluginMetadata)?
         .iter()
-        .map(|e| T::try_from(e))
+        .map(|e| T::try_from(e).map_err(Into::into))
         .collect::<Result<Vec<T>, _>>()
 }

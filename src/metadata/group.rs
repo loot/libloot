@@ -1,9 +1,9 @@
 use saphyr::MarkedYaml;
 
+use super::error::ParseMetadataError;
 use super::yaml::{
     YamlObjectType, get_as_hash, get_required_string_value, get_string_value, get_strings_vec_value,
 };
-use crate::error::YamlParseError;
 
 /// Represents a group to which plugin metadata objects can belong.
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -70,7 +70,7 @@ impl std::default::Default for Group {
 }
 
 impl TryFrom<&MarkedYaml> for Group {
-    type Error = YamlParseError;
+    type Error = ParseMetadataError;
 
     fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
         let hash = get_as_hash(value, YamlObjectType::Group)?;
@@ -84,7 +84,7 @@ impl TryFrom<&MarkedYaml> for Group {
 
         Ok(Group {
             name: name.to_string(),
-            description: description.map(|d| d.to_string()),
+            description: description.map(|d| d.1.to_string()),
             after_groups: after.iter().map(|a| a.to_string()).collect(),
         })
     }

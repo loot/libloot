@@ -4,7 +4,7 @@ use std::{
     io::{BufRead, Seek},
 };
 
-use crate::error::{GeneralError, InvalidArgumentError};
+use super::error::ArchiveParsingError;
 
 use super::parse::{to_u32, to_u64};
 
@@ -23,7 +23,7 @@ struct Header {
 }
 
 impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
-    type Error = InvalidArgumentError;
+    type Error = ArchiveParsingError;
 
     fn try_from(value: [u8; HEADER_SIZE - TYPE_ID.len()]) -> Result<Self, Self::Error> {
         let header = Self {
@@ -37,15 +37,15 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
 
         // The header version is 1, 7 or 8 for Fallout 4 and 2 or 3 for Starfield.
         if !matches!(header.version, 1 | 2 | 3 | 7 | 8) {
-            return Err(InvalidArgumentError {
-                message: "BA2 file header version is invalid".into(),
-            });
+            return Err(ArchiveParsingError::UnsupportedHeaderVersion(
+                header.version,
+            ));
         }
 
         if !matches!(header.archive_type, BA2_GENERAL_TYPE | BA2_TEXTURE_TYPE) {
-            return Err(InvalidArgumentError {
-                message: "BA2 file header archive type is invalid".into(),
-            });
+            return Err(ArchiveParsingError::UnsupportedHeaderArchiveType(
+                header.archive_type,
+            ));
         }
 
         Ok(header)
@@ -54,7 +54,7 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
 
 pub(super) fn read_assets<T: BufRead + Seek>(
     mut reader: T,
-) -> Result<BTreeMap<u64, BTreeSet<u64>>, GeneralError> {
+) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
     let mut header_buffer = [0; HEADER_SIZE - TYPE_ID.len()];
 
     reader.read_exact(&mut header_buffer)?;
@@ -84,13 +84,10 @@ pub(super) fn read_assets<T: BufRead + Seek>(
         let file_hashes: &mut BTreeSet<u64> = assets.entry(folder_hash).or_default();
 
         if !file_hashes.insert(file_hash) {
-            return Err(InvalidArgumentError {
-                message: format!(
-                    "Unexpected collision for file name hash {:x} in set for folder name hash {:x}",
-                    file_hash, folder_hash
-                ),
-            }
-            .into());
+            return Err(ArchiveParsingError::HashCollision {
+                folder_hash,
+                file_hash,
+            });
         }
     }
 

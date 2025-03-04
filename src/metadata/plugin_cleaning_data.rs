@@ -1,8 +1,7 @@
 use saphyr::MarkedYaml;
 
-use crate::error::{GeneralError, InvalidMultilingualMessageContents, YamlParseError};
-
 use super::{
+    error::{MultilingualMessageContentsError, ParseMetadataError},
     message::{MessageContent, parse_message_contents_yaml, validate_message_contents},
     yaml::{YamlObjectType, as_string_node, get_as_hash, get_required_string_value, get_u32_value},
 };
@@ -59,7 +58,7 @@ impl PluginCleaningData {
     pub fn with_detail(
         mut self,
         detail: Vec<MessageContent>,
-    ) -> Result<Self, InvalidMultilingualMessageContents> {
+    ) -> Result<Self, MultilingualMessageContentsError> {
         validate_message_contents(&detail)?;
         self.detail = detail;
         Ok(self)
@@ -103,7 +102,7 @@ impl PluginCleaningData {
 }
 
 impl TryFrom<&MarkedYaml> for PluginCleaningData {
-    type Error = GeneralError;
+    type Error = ParseMetadataError;
 
     fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
         let hash = get_as_hash(value, YamlObjectType::PluginCleaningData)?;
@@ -111,12 +110,11 @@ impl TryFrom<&MarkedYaml> for PluginCleaningData {
         let crc = match get_u32_value(hash, "crc", YamlObjectType::PluginCleaningData)? {
             Some(n) => n,
             None => {
-                return Err(YamlParseError::missing_key(
+                return Err(ParseMetadataError::missing_key(
                     value.span.start,
                     "crc",
                     YamlObjectType::PluginCleaningData,
-                )
-                .into());
+                ));
             }
         };
 

@@ -3,7 +3,7 @@ use std::{
     io::BufRead,
 };
 
-use crate::error::{GeneralError, InvalidArgumentError};
+use super::error::ArchiveParsingError;
 
 use super::parse::{to_u32, to_u64, to_usize};
 
@@ -25,7 +25,7 @@ struct Header {
 }
 
 impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
-    type Error = InvalidArgumentError;
+    type Error = ArchiveParsingError;
 
     fn try_from(value: [u8; HEADER_SIZE - TYPE_ID.len()]) -> Result<Self, Self::Error> {
         let header = Self {
@@ -40,19 +40,18 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
             content_type_flags: to_u32(&value[28..]),
         };
 
-        if header.records_offset != 36 {
-            return Err(InvalidArgumentError {
-                message: format!(
-                    "BSA file has an invalid records offset value: {}",
-                    header.records_offset
-                ),
-            });
+        if header.records_offset
+            != HEADER_SIZE
+                .try_into()
+                .expect("header size can fit in a u32")
+        {
+            return Err(ArchiveParsingError::InvalidRecordsOffset(
+                header.records_offset,
+            ));
         }
 
         if (header.archive_flags & 0x40) != 0 {
-            return Err(InvalidArgumentError {
-                message: "BSA file uses big-endian numbers".into(),
-            });
+            return Err(ArchiveParsingError::UsesBigEndianNumbers);
         }
 
         Ok(header)
@@ -104,7 +103,7 @@ mod v105 {
 
 pub(super) fn read_assets<T: BufRead>(
     mut reader: T,
-) -> Result<BTreeMap<u64, BTreeSet<u64>>, GeneralError> {
+) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
     let mut header_buffer = [0; HEADER_SIZE - TYPE_ID.len()];
 
     reader.read_exact(&mut header_buffer)?;
@@ -122,10 +121,9 @@ pub(super) fn read_assets<T: BufRead>(
             &header,
             v105::read_folder_record,
         ),
-        _ => Err(InvalidArgumentError {
-            message: format!("BSA file has an unrecognised version: {}", header.version),
-        }
-        .into()),
+        _ => Err(ArchiveParsingError::UnsupportedHeaderVersion(
+            header.version,
+        )),
     }
 }
 
@@ -133,7 +131,7 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
     mut reader: T,
     header: &Header,
     read_folder_record: impl Fn(&[u8]) -> FolderRecord,
-) -> Result<BTreeMap<u64, BTreeSet<u64>>, GeneralError> {
+) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
     let mut folders_buffer: Vec<u8> = vec![0; U * to_usize(header.folder_count)];
 
     reader.read_exact(folders_buffer.as_mut_slice())?;
@@ -155,13 +153,9 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
 
         let entry = assets.entry(folder_record.name_hash);
         if let Entry::Occupied(_) = entry {
-            return Err(InvalidArgumentError {
-                message: format!(
-                    "Unexpected collision for folder name hash {:x}",
-                    folder_record.name_hash
-                ),
-            }
-            .into());
+            return Err(ArchiveParsingError::FolderHashCollision(
+                folder_record.name_hash,
+            ));
         }
 
         let file_records_offset = if (header.archive_flags & 0x1) == 0 {
@@ -173,20 +167,18 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
             if let Some(folder_name_length) = file_records_buffer.get(folder_name_length_offset) {
                 folder_name_length_offset + 1 + to_usize(u32::from(*folder_name_length))
             } else {
-                return Err(InvalidArgumentError {
-                    message: "BSA file contains an invalid folder name length offset".into(),
-                }
-                .into());
+                return Err(ArchiveParsingError::InvalidFolderNameLengthOffset(
+                    folder_name_length_offset,
+                ));
             }
         };
 
         let file_records_buffer = match file_records_buffer.get(file_records_offset..) {
             Some(s) => s,
             None => {
-                return Err(InvalidArgumentError {
-                    message: "BSA file contains an invalid file records offset".into(),
-                }
-                .into());
+                return Err(ArchiveParsingError::InvalidFileRecordsOffset(
+                    file_records_offset,
+                ));
             }
         };
 
@@ -199,7 +191,10 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
             let file_hash = to_u64(file_chunk);
 
             if !file_hashes.insert(file_hash) {
-                return Err(InvalidArgumentError { message: format!("Unexpected collision for file name hash {:x} in set for folder name hash {:x}", file_hash, folder_record.name_hash)}.into());
+                return Err(ArchiveParsingError::HashCollision {
+                    folder_hash: folder_record.name_hash,
+                    file_hash,
+                });
             }
         }
     }

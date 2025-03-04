@@ -10,12 +10,16 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::{
     database::Database,
-    error::{GeneralError, InvalidArgumentError},
+    error::{
+        DatabaseLockPoisonError, GameHandleCreationError, LoadOrderError, LoadOrderStateError,
+        LoadPluginsError, SortPluginsError,
+    },
     metadata::{
         Filename,
         plugin_metadata::{GHOST_FILE_EXTENSION, iends_with_ascii},
     },
-    plugin::{LoadScope, Plugin, is_valid_plugin, plugins_metadata},
+    plugin::error::{InvalidFilenameReason, PluginValidationError},
+    plugin::{LoadScope, Plugin, plugins_metadata, validate_plugin_path_and_header},
     sorting::{
         groups::build_groups_graph,
         plugins::{PluginSortingData, sort_plugins},
@@ -144,7 +148,7 @@ impl Game {
     /// may fail in some situations (e.g. when running libloot natively on Linux
     /// for a game other than Morrowind or OpenMW). [Game::with_local_path]
     /// can be used to provide the local path instead.
-    pub fn new(game_type: GameType, game_path: &Path) -> Result<Self, GeneralError> {
+    pub fn new(game_type: GameType, game_path: &Path) -> Result<Self, GameHandleCreationError> {
         log::info!(
             "Attempting to create a game handle for game type {} with game path {:?}",
             game_type,
@@ -153,13 +157,7 @@ impl Game {
 
         let resolved_game_path = resolve_path(game_path);
         if !resolved_game_path.is_dir() {
-            return Err(InvalidArgumentError {
-                message: format!(
-                    "Given game path \"{:?}\" does not resolve to a valid directory.",
-                    game_path
-                ),
-            }
-            .into());
+            return Err(GameHandleCreationError::NotADirectory(game_path.into()));
         }
 
         let load_order =
@@ -192,7 +190,7 @@ impl Game {
         game_type: GameType,
         game_path: &Path,
         game_local_path: &Path,
-    ) -> Result<Self, GeneralError> {
+    ) -> Result<Self, GameHandleCreationError> {
         log::info!(
             "Attempting to create a game handle for game type {} with game path {:?} and game local path {:?}",
             game_type,
@@ -202,23 +200,14 @@ impl Game {
 
         let resolved_game_path = resolve_path(game_path);
         if !resolved_game_path.is_dir() {
-            return Err(InvalidArgumentError {
-                message: format!(
-                    "Given game path \"{:?}\" does not resolve to a valid directory.",
-                    game_path
-                ),
-            }
-            .into());
+            return Err(GameHandleCreationError::NotADirectory(game_path.into()));
         }
 
         let resolved_game_local_path = resolve_path(game_local_path);
         if resolved_game_local_path.exists() && !resolved_game_local_path.is_dir() {
-            return Err(InvalidArgumentError {
-                message: format!(
-                    "Given game local path \"{:?}\" resolves to a path that exists but is not a valid directory.",
-                    game_local_path
-                ),
-            }.into());
+            return Err(GameHandleCreationError::NotADirectory(
+                game_local_path.into(),
+            ));
         }
 
         let load_order = loadorder::GameSettings::with_local_path(
@@ -272,21 +261,22 @@ impl Game {
     pub fn set_additional_data_paths(
         &mut self,
         additional_data_paths: &[&Path],
-    ) -> Result<(), GeneralError> {
+    ) -> Result<(), DatabaseLockPoisonError> {
         let paths: Vec<_> = additional_data_paths
             .iter()
             .map(|p| p.to_path_buf())
             .collect();
 
         let mut database = self.database.write()?;
-        let state = database.condition_evaluator_state_mut();
-        state.clear_condition_cache()?;
+        database.clear_condition_cache();
 
         self.load_order
             .game_settings_mut()
             .set_additional_plugins_directories(paths.clone());
 
-        state.set_additional_data_paths(paths);
+        database
+            .condition_evaluator_state_mut()
+            .set_additional_data_paths(paths);
 
         Ok(())
     }
@@ -306,7 +296,7 @@ impl Game {
     /// relative to the game's plugins directory, while absolute paths are used
     /// as given.
     pub fn is_valid_plugin(&self, plugin_path: &Path) -> bool {
-        is_valid_plugin(self.game_type, plugin_path)
+        validate_plugin_path_and_header(self.game_type, plugin_path).is_ok()
     }
 
     /// Fully parses plugins and loads their data.
@@ -324,7 +314,7 @@ impl Game {
     ///
     /// Loading plugins clears the condition cache in this game's database
     /// object.
-    pub fn load_plugins(&mut self, plugin_paths: &[&Path]) -> Result<(), GeneralError> {
+    pub fn load_plugins(&mut self, plugin_paths: &[&Path]) -> Result<(), LoadPluginsError> {
         let mut plugins = self.load_plugins_common(plugin_paths, LoadScope::WholePlugin)?;
 
         if matches!(
@@ -338,7 +328,9 @@ impl Game {
             }
         }
 
-        self.store_plugins(plugins)
+        self.store_plugins(plugins)?;
+
+        Ok(())
     }
 
     /// Parses plugin headers and loads their data.
@@ -352,17 +344,19 @@ impl Game {
     ///
     /// Loading plugins clears the condition cache in this game's database
     /// object.
-    pub fn load_plugin_headers(&mut self, plugin_paths: &[&Path]) -> Result<(), GeneralError> {
+    pub fn load_plugin_headers(&mut self, plugin_paths: &[&Path]) -> Result<(), LoadPluginsError> {
         let plugins = self.load_plugins_common(plugin_paths, LoadScope::HeaderOnly)?;
 
-        self.store_plugins(plugins)
+        self.store_plugins(plugins)?;
+
+        Ok(())
     }
 
     fn load_plugins_common(
         &mut self,
         plugin_paths: &[&Path],
         load_scope: LoadScope,
-    ) -> Result<Vec<Plugin>, GeneralError> {
+    ) -> Result<Vec<Plugin>, LoadPluginsError> {
         validate_plugin_paths(self.game_type, plugin_paths)?;
 
         let data_path = data_path(self.game_type, &self.game_path);
@@ -384,14 +378,16 @@ impl Game {
         Ok(plugins)
     }
 
-    fn store_plugins(&mut self, plugins: Vec<Plugin>) -> Result<(), GeneralError> {
+    fn store_plugins(&mut self, plugins: Vec<Plugin>) -> Result<(), DatabaseLockPoisonError> {
         self.cache.insert_plugins(plugins);
 
         let mut database = self.database.write()?;
         update_loaded_plugin_state(
             database.condition_evaluator_state_mut(),
             self.cache.plugins(),
-        )
+        );
+
+        Ok(())
     }
 
     /// Clears the plugins loaded by previous calls to [Game::load_plugins] or
@@ -421,13 +417,12 @@ impl Game {
     /// The order in which plugins are listed in `plugin_filenames` is used as
     /// their current load order. All given plugins must have been already been
     /// loaded using [Game::load_plugins] or [Game::load_plugin_headers].
-    pub fn sort_plugins(&self, plugin_names: &[&str]) -> Result<Vec<String>, GeneralError> {
+    pub fn sort_plugins(&self, plugin_names: &[&str]) -> Result<Vec<String>, SortPluginsError> {
         let plugins = plugin_names
             .iter()
             .map(|n| {
-                self.plugin(n).ok_or_else(|| InvalidArgumentError {
-                    message: format!("The plugin \"{}\" has not been loaded.", n),
-                })
+                self.plugin(n)
+                    .ok_or_else(|| SortPluginsError::PluginNotLoaded(n.to_string()))
             })
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -439,7 +434,13 @@ impl Game {
             .map(|(i, p)| {
                 let masterlist_metadata = database.plugin_metadata(p.name(), false, true)?;
                 let user_metadata = database.plugin_user_metadata(p.name(), true)?;
-                PluginSortingData::new(p, masterlist_metadata.as_ref(), user_metadata.as_ref(), i)
+                let plugin = PluginSortingData::new(
+                    p,
+                    masterlist_metadata.as_ref(),
+                    user_metadata.as_ref(),
+                    i,
+                )?;
+                Ok::<_, SortPluginsError>(plugin)
             })
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -476,13 +477,14 @@ impl Game {
     ///
     /// Loading the current load order state clears the condition cache in this
     /// game's database object.
-    pub fn load_current_load_order_state(&mut self) -> Result<(), GeneralError> {
+    pub fn load_current_load_order_state(&mut self) -> Result<(), LoadOrderStateError> {
         self.load_order.load()?;
 
         let mut database = self.database.write()?;
-        let state = database.condition_evaluator_state_mut();
-        state.clear_condition_cache()?;
-        state.set_active_plugins(&self.load_order.active_plugin_names());
+        database.clear_condition_cache();
+        database
+            .condition_evaluator_state_mut()
+            .set_active_plugins(&self.load_order.active_plugin_names());
         Ok(())
     }
 
@@ -492,8 +494,8 @@ impl Game {
     /// well-defined position in the "on disk" state, and that all data sources
     /// are consistent. If the load order is ambiguous, different applications
     /// may read different load orders from the same source data.
-    pub fn is_load_order_ambiguous(&self) -> Result<bool, loadorder::Error> {
-        self.load_order.is_ambiguous()
+    pub fn is_load_order_ambiguous(&self) -> Result<bool, LoadOrderError> {
+        Ok(self.load_order.is_ambiguous()?)
     }
 
     /// Gets the path to the file that holds the list of active plugins.
@@ -519,8 +521,9 @@ impl Game {
     /// There is no way to persist the load order of inactive OpenMW plugins, so
     /// setting an OpenMW load order will have no effect if the relative order
     /// of active plugins is unchanged.
-    pub fn set_load_order(&mut self, load_order: &[&str]) -> Result<(), loadorder::Error> {
-        self.load_order.set_load_order(load_order)
+    pub fn set_load_order(&mut self, load_order: &[&str]) -> Result<(), LoadOrderError> {
+        self.load_order.set_load_order(load_order)?;
+        Ok(())
     }
 }
 
@@ -562,35 +565,31 @@ fn new_condition_evaluator_state(
 fn validate_plugin_paths(
     game_type: GameType,
     plugin_paths: &[&Path],
-) -> Result<(), InvalidArgumentError> {
+) -> Result<(), PluginValidationError> {
     // Check that all plugin filenames are unique.
     let mut set = HashSet::new();
     for path in plugin_paths {
         let filename = match path.file_name() {
             Some(f) => f.to_string_lossy(),
             None => {
-                return Err(InvalidArgumentError {
-                    message: format!("The path \"{}\" has no filename.", path.display()),
-                });
+                return Err(PluginValidationError::invalid(
+                    path.into(),
+                    InvalidFilenameReason::Empty,
+                ));
             }
         };
         if !set.insert(Filename::new(filename.to_string())) {
-            return Err(InvalidArgumentError {
-                message: format!("The filename \"{}\" is not unique.", filename),
-            });
+            return Err(PluginValidationError::invalid(
+                path.into(),
+                InvalidFilenameReason::NonUnique,
+            ));
         }
     }
 
-    let invalid_path = plugin_paths
+    plugin_paths
         .par_iter()
-        .find_any(|path| !is_valid_plugin(game_type, path));
-    if let Some(invalid_path) = invalid_path {
-        return Err(InvalidArgumentError {
-            message: format!("\"{}\" is not a valid plugin", invalid_path.display()),
-        });
-    }
-
-    Ok(())
+        .map(|path| validate_plugin_path_and_header(game_type, path))
+        .collect::<Result<(), PluginValidationError>>()
 }
 
 fn find_archives(
@@ -685,7 +684,7 @@ fn resolve_plugin_path(game_type: GameType, data_path: &Path, plugin_path: &Path
 fn update_loaded_plugin_state<'a>(
     state: &mut loot_condition_interpreter::State,
     plugins: impl Iterator<Item = &'a Plugin>,
-) -> Result<(), GeneralError> {
+) {
     let mut plugin_versions = Vec::new();
     let mut plugin_crcs = Vec::new();
 
@@ -699,13 +698,24 @@ fn update_loaded_plugin_state<'a>(
         }
     }
 
-    state.clear_condition_cache()?;
+    if let Err(e) = state.clear_condition_cache() {
+        log::error!("The condition cache's lock is poisoned, assigning a new cache");
+        *e.into_inner() = HashMap::new();
+    }
 
     state.set_plugin_versions(&plugin_versions);
 
-    state.set_cached_crcs(&plugin_crcs)?;
-
-    Ok(())
+    if let Err(e) = state.set_cached_crcs(&plugin_crcs) {
+        log::error!(
+            "The condition interpreter's CRC cache's lock is poisoned, clearing the cache and assigning a new value"
+        );
+        let mut cache = e.into_inner();
+        cache.clear();
+        *cache = plugin_crcs
+            .into_iter()
+            .map(|(n, c)| (n.to_lowercase(), c))
+            .collect();
+    }
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]

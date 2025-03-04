@@ -6,8 +6,7 @@ This is an **incomplete** and **experimental** reimplementation of [libloot](htt
 
 Currently complete:
 
-- [x] Public API types and function declarations (excluding errors)
-- [ ] Public API error types
+- [x] Public API types and function declarations
 - [x] Public API doc comments
 - [x] Library versioning
 - [ ] Setting a logging callback
