@@ -30,8 +30,10 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class ConditionalMetadataTest : public CommonGameTestFixture {
+class ConditionalMetadataTest : public CommonGameTestFixture,
+                                public testing::WithParamInterface<GameType> {
 protected:
+  ConditionalMetadataTest() : CommonGameTestFixture(GetParam()) {}
   ConditionalMetadata conditionalMetadata_;
 };
 

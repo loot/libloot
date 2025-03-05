@@ -31,19 +31,16 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class GetCrc32Test : public CommonGameTestFixture {};
+class GetCrc32Test : public CommonGameTestFixture {
+protected:
+  GetCrc32Test() : CommonGameTestFixture(GameType::tes5) {}
+};
 
-// Pass an empty first argument, as it's a prefix for the test instantation,
-// but we only have the one so no prefix is necessary.
-// Just test with one game because if it works for one it will work for them
-// all.
-INSTANTIATE_TEST_SUITE_P(, GetCrc32Test, ::testing::Values(GameType::tes5));
-
-TEST_P(GetCrc32Test, gettingTheCrcOfAMissingFileShouldThrow) {
+TEST_F(GetCrc32Test, gettingTheCrcOfAMissingFileShouldThrow) {
   EXPECT_THROW(GetCrc32(dataPath / missingEsp), FileAccessError);
 }
 
-TEST_P(GetCrc32Test, gettingTheCrcOfAFileShouldReturnTheCorrectValue) {
+TEST_F(GetCrc32Test, gettingTheCrcOfAFileShouldReturnTheCorrectValue) {
   EXPECT_EQ(blankEsmCrc, GetCrc32(dataPath / blankEsm));
 }
 }

@@ -31,9 +31,12 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class GameTest : public CommonGameTestFixture {
+class GameTest : public CommonGameTestFixture,
+                 public testing::WithParamInterface<GameType> {
 protected:
-  GameTest() : blankArchive("Blank" + GetArchiveFileExtension(GetParam())) {
+  GameTest() :
+      CommonGameTestFixture(GetParam()),
+      blankArchive("Blank" + GetArchiveFileExtension(GetParam())) {
     touch(dataPath / blankArchive);
   }
 
@@ -221,9 +224,8 @@ TEST_P(
   }
 }
 
-TEST_P(
-    GameTest,
-    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfGivenPlugins) {
+TEST_P(GameTest,
+       loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfGivenPlugins) {
   Game game = Game(GetParam(), gamePath, localPath);
 
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));

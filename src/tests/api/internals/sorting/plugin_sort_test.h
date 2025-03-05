@@ -33,9 +33,11 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class PluginSortTest : public CommonGameTestFixture {
+class PluginSortTest : public CommonGameTestFixture,
+                       public testing::WithParamInterface<GameType> {
 protected:
   PluginSortTest() :
+      CommonGameTestFixture(GetParam()),
       game_(GetParam(), gamePath, localPath),
       blankEslEsp("Blank.esl.esp"),
       cccPath_(gamePath / getCCCFilename()) {}
@@ -58,7 +60,7 @@ protected:
       game.LoadPlugins({gameMasterPlugin}, true);
       plugins.erase(plugins.begin());
     }
-     
+
     game.LoadPlugins(plugins, headersOnly);
   }
 
@@ -84,9 +86,8 @@ protected:
     }
   }
 
-  PluginSortingData CreatePluginSortingData(
-      const std::string& name,
-      const size_t loadOrderIndex) {
+  PluginSortingData CreatePluginSortingData(const std::string& name,
+                                            const size_t loadOrderIndex) {
     const auto plugin = GetPlugin(name);
 
     return PluginSortingData(
@@ -1156,7 +1157,7 @@ TEST_P(PluginSortTest, sortingShouldThrowIfAGivenPluginIsNotLoaded) {
   game_.ClearLoadedPlugins();
 
   std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
-  
+
   EXPECT_THROW(SortPlugins(game_, plugins), std::invalid_argument);
 }
 }

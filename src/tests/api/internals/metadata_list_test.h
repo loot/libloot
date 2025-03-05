@@ -33,6 +33,7 @@ namespace test {
 class MetadataListTest : public CommonGameTestFixture {
 protected:
   MetadataListTest() :
+      CommonGameTestFixture(GameType::tes4),
       metadataPath(metadataFilesPath / "masterlist.yaml"),
       savedMetadataPath(metadataFilesPath / "saved.masterlist.yaml"),
       missingMetadataPath(metadataFilesPath / "missing-metadata.yaml") {}
@@ -104,11 +105,7 @@ plugins:
   const std::filesystem::path missingMetadataPath;
 };
 
-// Pass an empty first argument, as it's a prefix for the test instantation,
-// but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_SUITE_P(, MetadataListTest, ::testing::Values(GameType::tes4));
-
-TEST_P(MetadataListTest, loadShouldLoadGlobalMessages) {
+TEST_F(MetadataListTest, loadShouldLoadGlobalMessages) {
   MetadataList metadataList;
 
   EXPECT_NO_THROW(metadataList.Load(metadataPath));
@@ -118,7 +115,7 @@ TEST_P(MetadataListTest, loadShouldLoadGlobalMessages) {
             metadataList.Messages());
 }
 
-TEST_P(MetadataListTest, loadShouldLoadPluginMetadata) {
+TEST_F(MetadataListTest, loadShouldLoadPluginMetadata) {
   MetadataList metadataList;
 
   EXPECT_NO_THROW(metadataList.Load(metadataPath));
@@ -142,7 +139,7 @@ TEST_P(MetadataListTest, loadShouldLoadPluginMetadata) {
             names);
 }
 
-TEST_P(MetadataListTest, loadShouldLoadBashTags) {
+TEST_F(MetadataListTest, loadShouldLoadBashTags) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
@@ -150,7 +147,7 @@ TEST_P(MetadataListTest, loadShouldLoadBashTags) {
             metadataList.BashTags());
 }
 
-TEST_P(MetadataListTest, loadShouldLoadGroups) {
+TEST_F(MetadataListTest, loadShouldLoadGroups) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
@@ -168,7 +165,7 @@ TEST_P(MetadataListTest, loadShouldLoadGroups) {
   EXPECT_EQ(std::vector<std::string>({"default"}), groups[2].GetAfterGroups());
 }
 
-TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
+TEST_F(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
   using std::endl;
 
   std::ofstream out(metadataPath);
@@ -194,7 +191,7 @@ TEST_P(MetadataListTest, loadYamlParsingShouldSupportMergeKeys) {
   EXPECT_EQ(std::vector<std::string>({"earliest"}), groups[0].GetAfterGroups());
 }
 
-TEST_P(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
+TEST_F(MetadataListTest, loadShouldThrowIfAnInvalidMetadataFileIsGiven) {
   MetadataList metadataList;
 
   std::ofstream out(metadataPath);
@@ -237,7 +234,7 @@ plugins:
   EXPECT_THROW(metadataList.Load(metadataPath), FileAccessError);
 }
 
-TEST_P(MetadataListTest,
+TEST_F(MetadataListTest,
        loadShouldClearExistingDataIfAnInvalidMetadataFileIsGiven) {
   MetadataList metadataList;
 
@@ -252,7 +249,7 @@ TEST_P(MetadataListTest,
   EXPECT_TRUE(metadataList.BashTags().empty());
 }
 
-TEST_P(MetadataListTest,
+TEST_F(MetadataListTest,
        loadShouldClearExistingDataIfAMissingMetadataFileIsGiven) {
   MetadataList metadataList;
 
@@ -267,7 +264,7 @@ TEST_P(MetadataListTest,
   EXPECT_TRUE(metadataList.BashTags().empty());
 }
 
-TEST_P(
+TEST_F(
     MetadataListTest,
     loadWithPreludeShouldReplaceThePreludeInTheFirstFileWithTheContentOfTheSecond) {
   using std::endl;
@@ -299,7 +296,7 @@ TEST_P(
   EXPECT_EQ("Loaded from prelude", messages[0].GetContent()[0].GetText());
 }
 
-TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
+TEST_F(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
@@ -342,7 +339,7 @@ TEST_P(MetadataListTest, saveShouldWriteTheLoadedMetadataToTheGivenFilePath) {
             names);
 }
 
-TEST_P(MetadataListTest, clearShouldClearLoadedData) {
+TEST_F(MetadataListTest, clearShouldClearLoadedData) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
   ASSERT_FALSE(metadataList.Messages().empty());
@@ -355,7 +352,7 @@ TEST_P(MetadataListTest, clearShouldClearLoadedData) {
   EXPECT_TRUE(metadataList.BashTags().empty());
 }
 
-TEST_P(MetadataListTest, setGroupsShouldReplaceExistingGroups) {
+TEST_F(MetadataListTest, setGroupsShouldReplaceExistingGroups) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
@@ -372,14 +369,14 @@ TEST_P(MetadataListTest, setGroupsShouldReplaceExistingGroups) {
   EXPECT_TRUE(groups[1].GetAfterGroups().empty());
 }
 
-TEST_P(
+TEST_F(
     MetadataListTest,
     findPluginShouldReturnAnEmptyOptionalIfTheGivenPluginIsNotInTheMetadataList) {
   MetadataList metadataList;
   EXPECT_FALSE(metadataList.FindPlugin(blankDifferentEsm));
 }
 
-TEST_P(
+TEST_F(
     MetadataListTest,
     findPluginShouldReturnTheMetadataObjectInTheMetadataListIfOneExistsForTheGivenPlugin) {
   MetadataList metadataList;
@@ -398,7 +395,7 @@ TEST_P(
             plugin.GetIncompatibilities());
 }
 
-TEST_P(MetadataListTest, addPluginShouldStoreGivenSpecificPluginMetadata) {
+TEST_F(MetadataListTest, addPluginShouldStoreGivenSpecificPluginMetadata) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
   ASSERT_FALSE(metadataList.FindPlugin(blankDifferentEsm));
@@ -413,7 +410,7 @@ TEST_P(MetadataListTest, addPluginShouldStoreGivenSpecificPluginMetadata) {
   EXPECT_EQ("group1", plugin.GetGroup());
 }
 
-TEST_P(MetadataListTest, addPluginShouldStoreGivenRegexPluginMetadata) {
+TEST_F(MetadataListTest, addPluginShouldStoreGivenRegexPluginMetadata) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
@@ -426,7 +423,7 @@ TEST_P(MetadataListTest, addPluginShouldStoreGivenRegexPluginMetadata) {
   EXPECT_EQ("group1", plugin.GetGroup());
 }
 
-TEST_P(MetadataListTest, addPluginShouldThrowIfAMatchingPluginAlreadyExists) {
+TEST_F(MetadataListTest, addPluginShouldThrowIfAMatchingPluginAlreadyExists) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));
 
@@ -437,7 +434,7 @@ TEST_P(MetadataListTest, addPluginShouldThrowIfAMatchingPluginAlreadyExists) {
                std::invalid_argument);
 }
 
-TEST_P(MetadataListTest,
+TEST_F(MetadataListTest,
        erasePluginShouldRemoveStoredMetadataForTheGivenPlugin) {
   MetadataList metadataList;
   ASSERT_NO_THROW(metadataList.Load(metadataPath));

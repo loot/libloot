@@ -31,9 +31,11 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class ConditionEvaluatorTest : public CommonGameTestFixture {
+class ConditionEvaluatorTest : public CommonGameTestFixture,
+                               public testing::WithParamInterface<GameType> {
 protected:
   ConditionEvaluatorTest() :
+      CommonGameTestFixture(GetParam()),
       info_(std::vector<MessageContent>({
           MessageContent("info"),
       })),

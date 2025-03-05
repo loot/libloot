@@ -30,9 +30,11 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class LoadOrderHandlerTest : public CommonGameTestFixture {
+class LoadOrderHandlerTest : public CommonGameTestFixture,
+                             public testing::WithParamInterface<GameType> {
 protected:
   LoadOrderHandlerTest() :
+      CommonGameTestFixture(GetParam()),
       loadOrderToSet_({
           masterFile,
           blankEsm,

@@ -32,9 +32,11 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class CreateGameHandleTest : public CommonGameTestFixture {
+class CreateGameHandleTest : public CommonGameTestFixture,
+                             public testing::WithParamInterface<GameType> {
 protected:
   CreateGameHandleTest() :
+      CommonGameTestFixture(GetParam()),
       handle_(nullptr),
       gamePathSymlink(gamePath.string() + ".symlink"),
       localPathSymlink(localPath.string() + ".symlink"),

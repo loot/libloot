@@ -30,10 +30,13 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class PluginSortingDataTest : public CommonGameTestFixture {
+class PluginSortingDataTest : public CommonGameTestFixture,
+                              public testing::WithParamInterface<GameType> {
 protected:
   PluginSortingDataTest() :
-      game_(GetParam(), gamePath, localPath), blankEslEsp("Blank.esl.esp") {}
+      CommonGameTestFixture(GetParam()),
+      game_(GetParam(), gamePath, localPath),
+      blankEslEsp("Blank.esl.esp") {}
 
   void loadInstalledPlugins(Game &game, bool headersOnly) {
     auto plugins = GetInstalledPlugins();

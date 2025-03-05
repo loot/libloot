@@ -54,9 +54,10 @@ static const std::array<GameType, 11> ALL_GAME_TYPES = {
     GameType::openmw,
 };
 
-class CommonGameTestFixture : public ::testing::TestWithParam<GameType> {
+class CommonGameTestFixture : public ::testing::Test {
 protected:
-  CommonGameTestFixture() :
+  CommonGameTestFixture(GameType gameType) :
+      gameType_(gameType),
       rootTestPath(getRootTestPath()),
       french("fr"),
       german("de"),
@@ -104,7 +105,7 @@ protected:
 
     auto sourcePluginsPath = getSourcePluginsPath();
 
-    if (GetParam() == GameType::starfield) {
+    if (gameType_ == GameType::starfield) {
       copyPlugin(sourcePluginsPath, blankFullEsm);
       copyPlugin(sourcePluginsPath, blankMediumEsm);
 
@@ -145,8 +146,8 @@ protected:
       copyPlugin(sourcePluginsPath, blankDifferentPluginDependentEsp);
     }
 
-    if (supportsLightPlugins(GetParam())) {
-      if (GetParam() == GameType::starfield) {
+    if (supportsLightPlugins(gameType_)) {
+      if (gameType_ == GameType::starfield) {
         std::filesystem::copy_file(sourcePluginsPath / "Blank.small.esm",
                                    dataPath / blankEsl);
         ASSERT_TRUE(exists(dataPath / blankEsl));
@@ -164,7 +165,7 @@ protected:
     setLoadOrder(getInitialLoadOrder());
 
     // Ghost a plugin, except for OpenMW.
-    if (GetParam() != GameType::openmw) {
+    if (gameType_ != GameType::openmw) {
       ASSERT_NO_THROW(std::filesystem::rename(
           dataPath / blankMasterDependentEsm,
           dataPath / (blankMasterDependentEsm + ".ghost")));
@@ -219,7 +220,7 @@ protected:
 
   std::vector<std::string> getLoadOrder() {
     std::vector<std::string> actual;
-    if (isLoadOrderTimestampBased(GetParam())) {
+    if (isLoadOrderTimestampBased(gameType_)) {
       std::map<std::filesystem::file_time_type, std::string> loadOrder;
       for (std::filesystem::directory_iterator it(dataPath);
            it != std::filesystem::directory_iterator();
@@ -237,7 +238,7 @@ protected:
         }
       }
       for (const auto& plugin : loadOrder) actual.push_back(plugin.second);
-    } else if (GetParam() == GameType::tes5) {
+    } else if (gameType_ == GameType::tes5) {
       std::ifstream in(localPath / "loadorder.txt");
       while (in) {
         std::string line;
@@ -246,7 +247,7 @@ protected:
         if (!line.empty())
           actual.push_back(line);
       }
-    } else if (GetParam() == GameType::openmw) {
+    } else if (gameType_ == GameType::openmw) {
       throw std::runtime_error(
           "OpenMW's load order derivation is too complicated to replicate "
           "accurately just for a test.");
@@ -264,7 +265,7 @@ protected:
   std::vector<std::pair<std::string, bool>> getInitialLoadOrder() const {
     std::vector<std::pair<std::string, bool>> loadOrder;
 
-    if (GetParam() == GameType::starfield) {
+    if (gameType_ == GameType::starfield) {
       loadOrder = {
           {masterFile, true},
           {blankEsm, true},
@@ -292,7 +293,7 @@ protected:
           {blankDifferentPluginDependentEsp, false},
       };
 
-      if (supportsLightPlugins(GetParam())) {
+      if (supportsLightPlugins(gameType_)) {
         loadOrder.insert(loadOrder.begin() + 5,
                          std::make_pair(blankEsl, false));
       }
@@ -302,7 +303,7 @@ protected:
   }
 
   std::filesystem::path getSourcePluginsPath() const {
-    return loot::test::getSourcePluginsPath(GetParam());
+    return loot::test::getSourcePluginsPath(gameType_);
   }
 
   void touch(const std::filesystem::path& path) {
@@ -330,7 +331,7 @@ protected:
   }
 
   std::vector<std::filesystem::path> GetInstalledPlugins() {
-    if (GetParam() == GameType::starfield) {
+    if (gameType_ == GameType::starfield) {
       return {
           masterFile,
           blankEsm,
@@ -367,6 +368,7 @@ protected:
   }
 
 private:
+  GameType gameType_;
   const std::filesystem::path rootTestPath;
 
 protected:
@@ -401,29 +403,29 @@ protected:
 
 private:
   std::string getMasterFile() const {
-    if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw)
+    if (gameType_ == GameType::tes3 || gameType_ == GameType::openmw)
       return "Morrowind.esm";
-    else if (GetParam() == GameType::tes4)
+    else if (gameType_ == GameType::tes4)
       return "Oblivion.esm";
-    else if (GetParam() == GameType::tes5 || GetParam() == GameType::tes5se ||
-             GetParam() == GameType::tes5vr)
+    else if (gameType_ == GameType::tes5 || gameType_ == GameType::tes5se ||
+             gameType_ == GameType::tes5vr)
       return "Skyrim.esm";
-    else if (GetParam() == GameType::fo3)
+    else if (gameType_ == GameType::fo3)
       return "Fallout3.esm";
-    else if (GetParam() == GameType::fonv)
+    else if (gameType_ == GameType::fonv)
       return "FalloutNV.esm";
-    else if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr)
+    else if (gameType_ == GameType::fo4 || gameType_ == GameType::fo4vr)
       return "Fallout4.esm";
-    else if (GetParam() == GameType::starfield)
+    else if (gameType_ == GameType::starfield)
       return "Starfield.esm";
     else
       throw std::logic_error("Unrecognised game type");
   }
 
   std::string getPluginsFolder() const {
-    if (GetParam() == GameType::openmw) {
+    if (gameType_ == GameType::openmw) {
       return "resources/vfs";
-    } else if (GetParam() == GameType::tes3) {
+    } else if (gameType_ == GameType::tes3) {
       return "Data Files";
     } else {
       return "Data";
@@ -431,7 +433,7 @@ private:
   }
 
   uint32_t getBlankEsmCrc() const {
-    switch (GetParam()) {
+    switch (gameType_) {
       case GameType::tes3:
       case GameType::openmw:
         return 0x790DC6FB;
@@ -446,14 +448,14 @@ private:
 
   void setLoadOrder(
       const std::vector<std::pair<std::string, bool>>& loadOrder) const {
-    if (GetParam() == GameType::tes3) {
+    if (gameType_ == GameType::tes3) {
       std::ofstream out(gamePath / "Morrowind.ini");
       for (const auto& plugin : loadOrder) {
         if (plugin.second) {
           out << "GameFile0=" << plugin.first << std::endl;
         }
       }
-    } else if (GetParam() == GameType::openmw) {
+    } else if (gameType_ == GameType::openmw) {
       std::ofstream out(localPath / "openmw.cfg");
 
       for (const auto& plugin : loadOrder) {
@@ -464,7 +466,7 @@ private:
     } else {
       std::ofstream out(localPath / "Plugins.txt");
       for (const auto& plugin : loadOrder) {
-        if (supportsLightPlugins(GetParam())) {
+        if (supportsLightPlugins(gameType_)) {
           if (plugin.second)
             out << '*';
         } else if (!plugin.second)
@@ -474,7 +476,7 @@ private:
       }
     }
 
-    if (isLoadOrderTimestampBased(GetParam())) {
+    if (isLoadOrderTimestampBased(gameType_)) {
       std::filesystem::file_time_type modificationTime =
           std::filesystem::file_time_type::clock::now();
       for (const auto& plugin : loadOrder) {
@@ -489,7 +491,7 @@ private:
         }
         modificationTime += std::chrono::seconds(60);
       }
-    } else if (GetParam() == GameType::tes5) {
+    } else if (gameType_ == GameType::tes5) {
       std::ofstream out(localPath / "loadorder.txt");
       for (const auto& plugin : loadOrder) out << plugin.first << std::endl;
     }

@@ -34,6 +34,7 @@ namespace test {
 class PluginMetadataTest : public CommonGameTestFixture {
 protected:
   PluginMetadataTest() :
+      CommonGameTestFixture(GameType::tes5),
       info_(std::vector<MessageContent>({
           MessageContent("info"),
       })) {}
@@ -41,13 +42,7 @@ protected:
   const std::vector<MessageContent> info_;
 };
 
-// Pass an empty first argument, as it's a prefix for the test instantation,
-// but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_SUITE_P(,
-                         PluginMetadataTest,
-                         ::testing::Values(GameType::tes5));
-
-TEST_P(
+TEST_F(
     PluginMetadataTest,
     defaultConstructorShouldLeaveNameEmptyAndEnableMetadataAndLeaveGroupUnset) {
   PluginMetadata plugin;
@@ -56,7 +51,7 @@ TEST_P(
   EXPECT_FALSE(plugin.GetGroup());
 }
 
-TEST_P(
+TEST_F(
     PluginMetadataTest,
     stringConstructorShouldSetNameToGivenStringAndEnableMetadataAndLeaveGroupUnset) {
   PluginMetadata plugin(blankEsm);
@@ -65,7 +60,7 @@ TEST_P(
   EXPECT_FALSE(plugin.GetGroup());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        nameMatchesShouldUseCaseInsensitiveNameComparisonForNonRegexNames) {
   PluginMetadata plugin(blankEsm);
 
@@ -73,7 +68,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(plugin.NameMatches(blankDifferentEsm));
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        nameMatchesShouldTreatGivenPluginNameStringsAsLiterals) {
   PluginMetadata plugin(blankEsm);
   std::string regex = "blan.\\.esm";
@@ -81,7 +76,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(plugin.NameMatches(regex));
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        nameMatchesShouldUseCaseInsensitiveRegexMatchingForARegexName) {
   PluginMetadata plugin("Blan.\\.esm");
 
@@ -89,7 +84,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(plugin.NameMatches(blankDifferentEsm));
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldNotChangeName) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldNotChangeName) {
   PluginMetadata plugin1(blankEsm);
   PluginMetadata plugin2(blankDifferentEsm);
 
@@ -98,7 +93,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldNotChangeName) {
   EXPECT_EQ(blankEsm, plugin1.GetName());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothExplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
@@ -110,7 +105,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_EQ("group1", plugin1.GetGroup());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothImplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
@@ -120,7 +115,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(plugin1.GetGroup().has_value());
 }
 
-TEST_P(
+TEST_F(
     PluginMetadataTest,
     mergeMetadataShouldNotUseMergedGroupIfItIsImplicitAndCurrentGroupIsExplicit) {
   PluginMetadata plugin1;
@@ -132,7 +127,7 @@ TEST_P(
   EXPECT_EQ("group1", plugin1.GetGroup());
 }
 
-TEST_P(
+TEST_F(
     PluginMetadataTest,
     mergeMetadataShouldUseMergedGroupIfItIsExplicitAndCurrentGroupIsImplicit) {
   PluginMetadata plugin1;
@@ -144,7 +139,7 @@ TEST_P(
   EXPECT_EQ("group2", plugin1.GetGroup());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeLoadAfterData) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldMergeLoadAfterData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   File file1(blankEsm);
@@ -157,7 +152,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeLoadAfterData) {
   EXPECT_EQ(std::vector<File>({file1, file2}), plugin1.GetLoadAfterFiles());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeRequirementData) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldMergeRequirementData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   File file1(blankEsm);
@@ -170,7 +165,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeRequirementData) {
   EXPECT_EQ(std::vector<File>({file1, file2}), plugin1.GetRequirements());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeIncompatibilityData) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldMergeIncompatibilityData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   File file1(blankEsm);
@@ -183,7 +178,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeIncompatibilityData) {
   EXPECT_EQ(std::vector<File>({file1, file2}), plugin1.GetIncompatibilities());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeMessages) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldMergeMessages) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Message message(MessageType::say, "content");
@@ -195,7 +190,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeMessages) {
   EXPECT_EQ(std::vector<Message>({message, message}), plugin1.GetMessages());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeTags) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldMergeTags) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Tag tag1("Relev");
@@ -209,7 +204,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeTags) {
   EXPECT_EQ(std::vector<Tag>({tag1, tag2, tag3}), plugin1.GetTags());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   PluginCleaningData info1(0x5, "utility", info_, 1, 2, 3);
@@ -222,7 +217,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
   EXPECT_EQ(std::vector<PluginCleaningData>({info1, info2}),
             plugin1.GetDirtyInfo());
 }
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   PluginCleaningData info1(0x5, "utility");
@@ -236,7 +231,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
             plugin1.GetCleanInfo());
 }
 
-TEST_P(PluginMetadataTest, mergeMetadataShouldMergeLocationData) {
+TEST_F(PluginMetadataTest, mergeMetadataShouldMergeLocationData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Location location1("http://www.example.com/1");
@@ -250,7 +245,7 @@ TEST_P(PluginMetadataTest, mergeMetadataShouldMergeLocationData) {
             plugin1.GetLocations());
 }
 
-TEST_P(PluginMetadataTest, unsetGroupShouldLeaveNoGroupValueSet) {
+TEST_F(PluginMetadataTest, unsetGroupShouldLeaveNoGroupValueSet) {
   PluginMetadata plugin;
   EXPECT_FALSE(plugin.GetGroup().has_value());
 
@@ -261,35 +256,35 @@ TEST_P(PluginMetadataTest, unsetGroupShouldLeaveNoGroupValueSet) {
   EXPECT_FALSE(plugin.GetGroup().has_value());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        hasNameOnlyShouldBeTrueForADefaultConstructedPluginMetadataObject) {
   PluginMetadata plugin;
 
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        hasNameOnlyShouldBeTrueForAPluginMetadataObjectConstructedWithAName) {
   PluginMetadata plugin(blankEsp);
 
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTheGroupIsExplicit) {
+TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTheGroupIsExplicit) {
   PluginMetadata plugin;
   plugin.SetGroup("group");
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfLoadAfterMetadataExists) {
+TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfLoadAfterMetadataExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLoadAfterFiles({File(blankEsm)});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        hasNameOnlyShouldBeFalseIfRequirementMetadataExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetRequirements({File(blankEsm)});
@@ -297,7 +292,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        hasNameOnlyShouldBeFalseIfIncompatibilityMetadataExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetIncompatibilities({File(blankEsm)});
@@ -305,89 +300,89 @@ TEST_P(PluginMetadataTest,
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfMessagesExist) {
+TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfMessagesExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetMessages({Message(MessageType::say, "content")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTagsExist) {
+TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTagsExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetTags({Tag("Relev")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfDirtyInfoExists) {
+TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfDirtyInfoExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetDirtyInfo({PluginCleaningData(5, "utility", info_, 0, 1, 2)});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfCleanInfoExists) {
+TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfCleanInfoExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetCleanInfo({PluginCleaningData(5, "utility")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, hasNameOnlyShouldBeFalseIfLocationsExist) {
+TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfLocationsExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLocations({Location("http://www.example.com")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_P(PluginMetadataTest, isRegexPluginShouldBeFalseForAnEmptyPluginName) {
+TEST_F(PluginMetadataTest, isRegexPluginShouldBeFalseForAnEmptyPluginName) {
   PluginMetadata plugin;
 
   EXPECT_FALSE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest, isRegexPluginShouldBeFalseForAnExactPluginFilename) {
+TEST_F(PluginMetadataTest, isRegexPluginShouldBeFalseForAnExactPluginFilename) {
   PluginMetadata plugin(blankEsm);
 
   EXPECT_FALSE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        isRegexPluginShouldBeTrueIfThePluginNameContainsAColon) {
   PluginMetadata plugin("Blank:.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        isRegexPluginShouldBeTrueIfThePluginNameContainsABackslash) {
   PluginMetadata plugin("Blank\\.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        isRegexPluginShouldBeTrueIfThePluginNameContainsAnAsterisk) {
   PluginMetadata plugin("Blank*.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        isRegexPluginShouldBeTrueIfThePluginNameContainsAQuestionMark) {
   PluginMetadata plugin("Blank?.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        isRegexPluginShouldBeTrueIfThePluginNameContainsAVerticalBar) {
   PluginMetadata plugin("Blank|.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        asYamlShouldReturnAStringContainingTheMetadataEmittedAsYaml) {
   PluginMetadata plugin(blankEsm);
   plugin.SetLoadAfterFiles({File(blankEsm)});
@@ -398,7 +393,7 @@ TEST_P(PluginMetadataTest,
       plugin.AsYaml());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithNoMetadataAsABlankString) {
   PluginMetadata plugin(blankEsm);
   YAML::Emitter emitter;
@@ -407,7 +402,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_STREQ("", emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginOmittingAnImplicitGroup) {
   PluginMetadata plugin(blankEsm);
   plugin.SetLoadAfterFiles({File(blankEsm)});
@@ -421,7 +416,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithAnExplicitGroup) {
   PluginMetadata plugin(blankEsm);
   plugin.SetGroup("group1");
@@ -435,7 +430,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithLoadAfterMetadataCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLoadAfterFiles({File(blankEsm)});
@@ -449,7 +444,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithRequirementsCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetRequirements({File(blankEsm)});
@@ -463,7 +458,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithIncompatibilitiesCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetIncompatibilities({File(blankEsm)});
@@ -477,7 +472,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithMessagesCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetMessages({Message(MessageType::say, "content")});
@@ -493,7 +488,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithTagsCorrectly) {
+TEST_F(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithTagsCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetTags({Tag("Relev")});
 
@@ -506,7 +501,7 @@ TEST_P(PluginMetadataTest, emittingAsYamlShouldOutputAPluginWithTagsCorrectly) {
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithDirtyInfoCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetDirtyInfo({PluginCleaningData(5, "utility", info_, 0, 1, 2)});
@@ -525,7 +520,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithCleanInfoCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetCleanInfo({PluginCleaningData(5, "utility")});
@@ -541,7 +536,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        emittingAsYamlShouldOutputAPluginWithLocationsCorrectly) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLocations({Location("http://www.example.com")});
@@ -555,7 +550,7 @@ TEST_P(PluginMetadataTest,
       emitter.c_str());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldOmitAllUnsetFields) {
+TEST_F(PluginMetadataTest, encodingAsYamlShouldOmitAllUnsetFields) {
   PluginMetadata plugin(blankEsp);
   YAML::Node node;
   node = plugin;
@@ -571,7 +566,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldOmitAllUnsetFields) {
   EXPECT_FALSE(node["url"]);
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        encodingAsYamlShouldSetAfterFieldIfLoadAfterMetadataExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLoadAfterFiles({File(blankEsm)});
@@ -581,7 +576,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_EQ(plugin.GetLoadAfterFiles(), node["after"].as<std::vector<File>>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetReqFieldIfRequirementsExist) {
+TEST_F(PluginMetadataTest, encodingAsYamlShouldSetReqFieldIfRequirementsExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetRequirements({File(blankEsm)});
   YAML::Node node;
@@ -590,7 +585,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetReqFieldIfRequirementsExist) {
   EXPECT_EQ(plugin.GetRequirements(), node["req"].as<std::vector<File>>());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        encodingAsYamlShouldSetIncFieldIfIncompatibilitiesExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetIncompatibilities({File(blankEsm)});
@@ -600,7 +595,7 @@ TEST_P(PluginMetadataTest,
   EXPECT_EQ(plugin.GetIncompatibilities(), node["inc"].as<std::vector<File>>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetMsgFieldIfMessagesExist) {
+TEST_F(PluginMetadataTest, encodingAsYamlShouldSetMsgFieldIfMessagesExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetMessages({Message(MessageType::say, "content")});
   YAML::Node node;
@@ -609,7 +604,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetMsgFieldIfMessagesExist) {
   EXPECT_EQ(plugin.GetMessages(), node["msg"].as<std::vector<Message>>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetTagFieldIfTagsExist) {
+TEST_F(PluginMetadataTest, encodingAsYamlShouldSetTagFieldIfTagsExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetTags({Tag("Relev")});
   YAML::Node node;
@@ -618,7 +613,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetTagFieldIfTagsExist) {
   EXPECT_EQ(plugin.GetTags(), node["tag"].as<std::vector<Tag>>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetDirtyFieldIfDirtyInfoExists) {
+TEST_F(PluginMetadataTest, encodingAsYamlShouldSetDirtyFieldIfDirtyInfoExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetDirtyInfo({PluginCleaningData(5, "utility", info_, 0, 1, 2)});
   YAML::Node node;
@@ -628,7 +623,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetDirtyFieldIfDirtyInfoExists) {
             node["dirty"].as<std::vector<PluginCleaningData>>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetCleanFieldIfCleanInfoExists) {
+TEST_F(PluginMetadataTest, encodingAsYamlShouldSetCleanFieldIfCleanInfoExists) {
   PluginMetadata plugin(blankEsp);
   plugin.SetCleanInfo({PluginCleaningData(5, "utility")});
   YAML::Node node;
@@ -638,7 +633,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetCleanFieldIfCleanInfoExists) {
             node["clean"].as<std::vector<PluginCleaningData>>());
 }
 
-TEST_P(PluginMetadataTest, encodingAsYamlShouldSetUrlFieldIfLocationsExist) {
+TEST_F(PluginMetadataTest, encodingAsYamlShouldSetUrlFieldIfLocationsExist) {
   PluginMetadata plugin(blankEsp);
   plugin.SetLocations({Location("http://www.example.com")});
   YAML::Node node;
@@ -647,7 +642,7 @@ TEST_P(PluginMetadataTest, encodingAsYamlShouldSetUrlFieldIfLocationsExist) {
   EXPECT_EQ(plugin.GetLocations(), node["url"].as<std::vector<Location>>());
 }
 
-TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
+TEST_F(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
   YAML::Node node = YAML::Load(
       "name: 'Blank.esp'\n"
       "after:\n"
@@ -690,7 +685,7 @@ TEST_P(PluginMetadataTest, decodingFromYamlShouldStoreAllGivenData) {
             plugin.GetLocations());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        decodingFromYamlWithDirtyInfoInARegexPluginMetadataObjectShouldThrow) {
   YAML::Node node = YAML::Load(
       "name: 'Blank\\.esp'\n"
@@ -707,7 +702,7 @@ TEST_P(PluginMetadataTest,
             plugin.GetDirtyInfo());
 }
 
-TEST_P(PluginMetadataTest,
+TEST_F(PluginMetadataTest,
        decodingFromYamlWithCleanInfoInARegexPluginMetadataObjectShouldThrow) {
   YAML::Node node = YAML::Load(
       "name: 'Blank\\.esp'\n"
@@ -721,7 +716,7 @@ TEST_P(PluginMetadataTest,
             plugin.GetCleanInfo());
 }
 
-TEST_P(PluginMetadataTest, decodingFromYamlWithAnInvalidRegexNameShouldThrow) {
+TEST_F(PluginMetadataTest, decodingFromYamlWithAnInvalidRegexNameShouldThrow) {
   YAML::Node node = YAML::Load(
       "name: 'RagnvaldBook(Farengar(+Ragnvald)?)?\\.esp'\n"
       "dirty:\n"
@@ -733,13 +728,13 @@ TEST_P(PluginMetadataTest, decodingFromYamlWithAnInvalidRegexNameShouldThrow) {
   EXPECT_THROW(node.as<PluginMetadata>(), YAML::RepresentationException);
 }
 
-TEST_P(PluginMetadataTest, decodingFromAYamlScalarShouldThrow) {
+TEST_F(PluginMetadataTest, decodingFromAYamlScalarShouldThrow) {
   YAML::Node node = YAML::Load("scalar");
 
   EXPECT_THROW(node.as<PluginMetadata>(), YAML::RepresentationException);
 }
 
-TEST_P(PluginMetadataTest, decodingFromAYamlListShouldThrow) {
+TEST_F(PluginMetadataTest, decodingFromAYamlListShouldThrow) {
   YAML::Node node = YAML::Load("[0, 1, 2]");
 
   EXPECT_THROW(node.as<PluginMetadata>(), YAML::RepresentationException);

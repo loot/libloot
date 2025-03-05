@@ -34,7 +34,8 @@ namespace test {
 class GameCacheTest : public CommonGameTestFixture {
 protected:
   GameCacheTest() :
-      game_(GetParam(), gamePath, localPath),
+      CommonGameTestFixture(GameType::tes5),
+      game_(GameType::tes5, gamePath, localPath),
       condition("Condition"),
       conditionLowercase("condition") {}
 
@@ -45,19 +46,13 @@ protected:
   const std::string conditionLowercase;
 };
 
-// Pass an empty first argument, as it's a prefix for the test instantation,
-// but we only have the one so no prefix is necessary.
-// Just test with one game_ because if it works for one it will work for them
-// all.
-INSTANTIATE_TEST_SUITE_P(, GameCacheTest, ::testing::Values(GameType::tes5));
-
-TEST_P(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
+TEST_F(GameCacheTest, addingAPluginThatDoesNotExistShouldSucceed) {
   cache_.AddPlugin(
       Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
   EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm)->GetName());
 }
 
-TEST_P(GameCacheTest,
+TEST_F(GameCacheTest,
        addingAPluginThatIsAlreadyCachedShouldOverwriteExistingEntry) {
   cache_.AddPlugin(
       Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
@@ -68,22 +63,22 @@ TEST_P(GameCacheTest,
   EXPECT_EQ(blankEsmCrc, cache_.GetPlugin(blankEsm)->GetCRC().value());
 }
 
-TEST_P(GameCacheTest, gettingAPluginThatIsNotCachedShouldReturnANullPointer) {
+TEST_F(GameCacheTest, gettingAPluginThatIsNotCachedShouldReturnANullPointer) {
   EXPECT_FALSE(cache_.GetPlugin(blankEsm));
 }
 
-TEST_P(GameCacheTest, gettingAPluginShouldBeCaseInsensitive) {
+TEST_F(GameCacheTest, gettingAPluginShouldBeCaseInsensitive) {
   cache_.AddPlugin(
       Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
   EXPECT_EQ(blankEsm, cache_.GetPlugin(blankEsm)->GetName());
 }
 
-TEST_P(GameCacheTest,
+TEST_F(GameCacheTest,
        gettingPluginsShouldReturnAnEmptySetIfNoPluginsHaveBeenCached) {
   EXPECT_TRUE(cache_.GetPlugins().empty());
 }
 
-TEST_P(GameCacheTest,
+TEST_F(GameCacheTest,
        gettingPluginsShouldReturnASetOfCachedPluginsIfPluginsHaveBeenCached) {
   cache_.AddPlugin(
       Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
@@ -96,12 +91,12 @@ TEST_P(GameCacheTest,
   EXPECT_FALSE(cache_.GetPlugins().empty());
 }
 
-TEST_P(GameCacheTest,
+TEST_F(GameCacheTest,
        gettingArchivePathsShouldReturnAnEmptySetIfNoPathsHaveBeenCached) {
   EXPECT_TRUE(cache_.GetArchivePaths().empty());
 }
 
-TEST_P(GameCacheTest,
+TEST_F(GameCacheTest,
        gettingArchivePathsShouldReturnASetOfPathsIfPathsHaveBeenCached) {
   cache_.CacheArchivePaths({game_.DataPath() / blankEsm,
                             game_.DataPath() / blankMasterDependentEsm});
@@ -114,11 +109,11 @@ TEST_P(GameCacheTest,
   EXPECT_EQ(expected, cache_.GetArchivePaths());
 }
 
-TEST_P(GameCacheTest, clearingCachedPluginsShouldNotThrowIfNoPluginsAreCached) {
+TEST_F(GameCacheTest, clearingCachedPluginsShouldNotThrowIfNoPluginsAreCached) {
   EXPECT_NO_THROW(cache_.ClearCachedPlugins());
 }
 
-TEST_P(GameCacheTest, clearingCachedPluginsShouldClearAnyCachedPlugins) {
+TEST_F(GameCacheTest, clearingCachedPluginsShouldClearAnyCachedPlugins) {
   cache_.AddPlugin(
       Plugin(game_.GetType(), GameCache(), game_.DataPath() / blankEsm, true));
   cache_.ClearCachedPlugins();

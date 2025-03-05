@@ -32,9 +32,11 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class PluginTest : public CommonGameTestFixture {
+class PluginTest : public CommonGameTestFixture,
+                   public testing::WithParamInterface<GameType> {
 protected:
   PluginTest() :
+      CommonGameTestFixture(GetParam()),
       emptyFile("EmptyFile.esm"),
       lowercaseBlankEsp("blank.esp"),
       nonAsciiEsp(u8"non\u00C1scii.esp"),

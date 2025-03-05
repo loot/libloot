@@ -32,9 +32,11 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-class ApiGameOperationsTest : public CommonGameTestFixture {
+class ApiGameOperationsTest : public CommonGameTestFixture,
+                              public testing::WithParamInterface<GameType> {
 protected:
   ApiGameOperationsTest() :
+      CommonGameTestFixture(GetParam()),
       handle_(nullptr),
       masterlistPath(localPath / "masterlist.yaml"),
       noteMessage(

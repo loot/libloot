@@ -34,20 +34,17 @@ namespace loot {
 namespace test {
 class MessageTest : public CommonGameTestFixture {
 protected:
+  MessageTest() : CommonGameTestFixture(GameType::tes4) {}
   typedef std::vector<MessageContent> MessageContents;
 };
 
-// Pass an empty first argument, as it's a prefix for the test instantation,
-// but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_SUITE_P(, MessageTest, ::testing::Values(GameType::tes4));
-
-TEST_P(MessageTest, defaultConstructorShouldCreateNoteWithNoContent) {
+TEST_F(MessageTest, defaultConstructorShouldCreateNoteWithNoContent) {
   Message message;
   EXPECT_EQ(MessageType::say, message.GetType());
   EXPECT_EQ(MessageContents(), message.GetContent());
 }
 
-TEST_P(MessageTest,
+TEST_F(MessageTest,
        scalarContentConstructorShouldCreateAMessageWithASingleContentString) {
   MessageContent content = MessageContent("content1");
   Message message(MessageType::warn, content.GetText(), "condition1");
@@ -57,7 +54,7 @@ TEST_P(MessageTest,
   EXPECT_EQ("condition1", message.GetCondition());
 }
 
-TEST_P(MessageTest,
+TEST_F(MessageTest,
        vectorContentConstructorShouldCreateAMessageWithGivenContentStrings) {
   MessageContents contents({
       MessageContent("content1"),
@@ -70,7 +67,7 @@ TEST_P(MessageTest,
   EXPECT_EQ("condition1", message.GetCondition());
 }
 
-TEST_P(
+TEST_F(
     MessageTest,
     vectorContentConstructorShouldThrowIfMultipleContentStringsAreGivenAndNoneAreEnglish) {
   MessageContents contents({
@@ -81,7 +78,7 @@ TEST_P(
                std::invalid_argument);
 }
 
-TEST_P(MessageTest, equalityShouldRequireEqualMessageTypes) {
+TEST_F(MessageTest, equalityShouldRequireEqualMessageTypes) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -93,7 +90,7 @@ TEST_P(MessageTest, equalityShouldRequireEqualMessageTypes) {
   EXPECT_FALSE(message1 == message2);
 }
 
-TEST_P(MessageTest, equalityShouldRequireCaseSensitiveEqualityOnCondition) {
+TEST_F(MessageTest, equalityShouldRequireCaseSensitiveEqualityOnCondition) {
   Message message1(MessageType::say, "content", "condition");
   Message message2(MessageType::say, "content", "condition");
 
@@ -110,7 +107,7 @@ TEST_P(MessageTest, equalityShouldRequireCaseSensitiveEqualityOnCondition) {
   EXPECT_FALSE(message1 == message2);
 }
 
-TEST_P(MessageTest, equalityShouldRequireEqualContent) {
+TEST_F(MessageTest, equalityShouldRequireEqualContent) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -122,7 +119,7 @@ TEST_P(MessageTest, equalityShouldRequireEqualContent) {
   EXPECT_FALSE(message1 == message2);
 }
 
-TEST_P(MessageTest, inequalityShouldBeTheInverseOfEquality) {
+TEST_F(MessageTest, inequalityShouldBeTheInverseOfEquality) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -159,7 +156,7 @@ TEST_P(MessageTest, inequalityShouldBeTheInverseOfEquality) {
   EXPECT_TRUE(message1 != message2);
 }
 
-TEST_P(MessageTest, lessThanOperatorShouldCompareMessageTypes) {
+TEST_F(MessageTest, lessThanOperatorShouldCompareMessageTypes) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -173,7 +170,7 @@ TEST_P(MessageTest, lessThanOperatorShouldCompareMessageTypes) {
   EXPECT_FALSE(message2 < message1);
 }
 
-TEST_P(MessageTest, lessThanOperatorShouldCompareContent) {
+TEST_F(MessageTest, lessThanOperatorShouldCompareContent) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -187,7 +184,7 @@ TEST_P(MessageTest, lessThanOperatorShouldCompareContent) {
   EXPECT_FALSE(message2 < message1);
 }
 
-TEST_P(
+TEST_F(
     MessageTest,
     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForConditions) {
   Message message1(MessageType::say, "content", "condition");
@@ -209,7 +206,7 @@ TEST_P(
   EXPECT_FALSE(message2 < message1);
 }
 
-TEST_P(
+TEST_F(
     MessageTest,
     greaterThanOperatorShouldReturnTrueIfTheSecondMessageIsLessThanTheFirst) {
   Message message1(MessageType::say, "content");
@@ -255,7 +252,7 @@ TEST_P(
   EXPECT_TRUE(message2 > message1);
 }
 
-TEST_P(
+TEST_F(
     MessageTest,
     lessThanOrEqualOperatorShouldReturnTrueIfTheFirstMessageIsNotGreaterThanTheSecond) {
   Message message1(MessageType::say, "content");
@@ -301,7 +298,7 @@ TEST_P(
   EXPECT_FALSE(message2 <= message1);
 }
 
-TEST_P(
+TEST_F(
     MessageTest,
     greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstMessageIsNotLessThanTheSecond) {
   Message message1(MessageType::say, "content");
@@ -347,7 +344,7 @@ TEST_P(
   EXPECT_TRUE(message2 >= message1);
 }
 
-TEST_P(MessageTest, emittingAsYamlShouldOutputNoteMessageTypeCorrectly) {
+TEST_F(MessageTest, emittingAsYamlShouldOutputNoteMessageTypeCorrectly) {
   Message message(MessageType::say, "content1");
   YAML::Emitter emitter;
   emitter << message;
@@ -358,7 +355,7 @@ TEST_P(MessageTest, emittingAsYamlShouldOutputNoteMessageTypeCorrectly) {
       emitter.c_str());
 }
 
-TEST_P(MessageTest, emittingAsYamlShouldOutputWarnMessageTypeCorrectly) {
+TEST_F(MessageTest, emittingAsYamlShouldOutputWarnMessageTypeCorrectly) {
   Message message(MessageType::warn, "content1");
   YAML::Emitter emitter;
   emitter << message;
@@ -369,7 +366,7 @@ TEST_P(MessageTest, emittingAsYamlShouldOutputWarnMessageTypeCorrectly) {
       emitter.c_str());
 }
 
-TEST_P(MessageTest, emittingAsYamlShouldOutputErrorMessageTypeCorrectly) {
+TEST_F(MessageTest, emittingAsYamlShouldOutputErrorMessageTypeCorrectly) {
   Message message(MessageType::error, "content1");
   YAML::Emitter emitter;
   emitter << message;
@@ -380,7 +377,7 @@ TEST_P(MessageTest, emittingAsYamlShouldOutputErrorMessageTypeCorrectly) {
       emitter.c_str());
 }
 
-TEST_P(MessageTest, emittingAsYamlShouldOutputConditionIfItIsNotEmpty) {
+TEST_F(MessageTest, emittingAsYamlShouldOutputConditionIfItIsNotEmpty) {
   Message message(MessageType::say, "content1", "condition1");
   YAML::Emitter emitter;
   emitter << message;
@@ -392,7 +389,7 @@ TEST_P(MessageTest, emittingAsYamlShouldOutputConditionIfItIsNotEmpty) {
       emitter.c_str());
 }
 
-TEST_P(MessageTest, emittingAsYamlShouldOutputMultipleContentStringsAsAList) {
+TEST_F(MessageTest, emittingAsYamlShouldOutputMultipleContentStringsAsAList) {
   Message message(MessageType::say,
                   MessageContents({MessageContent("content1"),
                                    MessageContent("content2", french)}));
@@ -409,7 +406,7 @@ TEST_P(MessageTest, emittingAsYamlShouldOutputMultipleContentStringsAsAList) {
       emitter.c_str());
 }
 
-TEST_P(MessageTest, encodingAsYamlShouldStoreNoteMessageTypeCorrectly) {
+TEST_F(MessageTest, encodingAsYamlShouldStoreNoteMessageTypeCorrectly) {
   Message message(MessageType::say, "content1");
   YAML::Node node;
   node = message;
@@ -417,7 +414,7 @@ TEST_P(MessageTest, encodingAsYamlShouldStoreNoteMessageTypeCorrectly) {
   EXPECT_EQ("say", node["type"].as<std::string>());
 }
 
-TEST_P(MessageTest, encodingAsYamlShouldStoreWarningMessageTypeCorrectly) {
+TEST_F(MessageTest, encodingAsYamlShouldStoreWarningMessageTypeCorrectly) {
   Message message(MessageType::warn, "content1");
   YAML::Node node;
   node = message;
@@ -425,7 +422,7 @@ TEST_P(MessageTest, encodingAsYamlShouldStoreWarningMessageTypeCorrectly) {
   EXPECT_EQ("warn", node["type"].as<std::string>());
 }
 
-TEST_P(MessageTest, encodingAsYamlShouldStoreErrorMessageTypeCorrectly) {
+TEST_F(MessageTest, encodingAsYamlShouldStoreErrorMessageTypeCorrectly) {
   Message message(MessageType::error, "content1");
   YAML::Node node;
   node = message;
@@ -433,7 +430,7 @@ TEST_P(MessageTest, encodingAsYamlShouldStoreErrorMessageTypeCorrectly) {
   EXPECT_EQ("error", node["type"].as<std::string>());
 }
 
-TEST_P(MessageTest, encodingAsYamlShouldOmitConditionFieldIfItIsEmpty) {
+TEST_F(MessageTest, encodingAsYamlShouldOmitConditionFieldIfItIsEmpty) {
   Message message(MessageType::say, "content1");
   YAML::Node node;
   node = message;
@@ -441,7 +438,7 @@ TEST_P(MessageTest, encodingAsYamlShouldOmitConditionFieldIfItIsEmpty) {
   EXPECT_FALSE(node["condition"]);
 }
 
-TEST_P(MessageTest, encodingAsYamlShouldStoreConditionFieldIfItIsNotEmpty) {
+TEST_F(MessageTest, encodingAsYamlShouldStoreConditionFieldIfItIsNotEmpty) {
   Message message(MessageType::say, "content1", "condition1");
   YAML::Node node;
   node = message;
@@ -449,7 +446,7 @@ TEST_P(MessageTest, encodingAsYamlShouldStoreConditionFieldIfItIsNotEmpty) {
   EXPECT_EQ("condition1", node["condition"].as<std::string>());
 }
 
-TEST_P(MessageTest, encodingAsYamlShouldStoreASingleContentStringInAVector) {
+TEST_F(MessageTest, encodingAsYamlShouldStoreASingleContentStringInAVector) {
   Message message(MessageType::say, "content1");
   YAML::Node node;
   node = message;
@@ -457,7 +454,7 @@ TEST_P(MessageTest, encodingAsYamlShouldStoreASingleContentStringInAVector) {
   EXPECT_EQ(message.GetContent(), node["content"].as<MessageContents>());
 }
 
-TEST_P(MessageTest, encodingAsYamlShouldMultipleContentStringsInAVector) {
+TEST_F(MessageTest, encodingAsYamlShouldMultipleContentStringsInAVector) {
   MessageContents contents({
       MessageContent("content1"),
       MessageContent("content2", french),
@@ -469,7 +466,7 @@ TEST_P(MessageTest, encodingAsYamlShouldMultipleContentStringsInAVector) {
   EXPECT_EQ(contents, node["content"].as<MessageContents>());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldSetNoteTypeCorrectly) {
+TEST_F(MessageTest, decodingFromYamlShouldSetNoteTypeCorrectly) {
   YAML::Node node = YAML::Load(
       "type: say\n"
       "content: content1");
@@ -478,7 +475,7 @@ TEST_P(MessageTest, decodingFromYamlShouldSetNoteTypeCorrectly) {
   EXPECT_EQ(MessageType::say, message.GetType());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldSetWarningTypeCorrectly) {
+TEST_F(MessageTest, decodingFromYamlShouldSetWarningTypeCorrectly) {
   YAML::Node node = YAML::Load(
       "type: warn\n"
       "content: content1");
@@ -487,7 +484,7 @@ TEST_P(MessageTest, decodingFromYamlShouldSetWarningTypeCorrectly) {
   EXPECT_EQ(MessageType::warn, message.GetType());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldSetErrorTypeCorrectly) {
+TEST_F(MessageTest, decodingFromYamlShouldSetErrorTypeCorrectly) {
   YAML::Node node = YAML::Load(
       "type: error\n"
       "content: content1");
@@ -496,7 +493,7 @@ TEST_P(MessageTest, decodingFromYamlShouldSetErrorTypeCorrectly) {
   EXPECT_EQ(MessageType::error, message.GetType());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldHandleAnUnrecognisedTypeAsANote) {
+TEST_F(MessageTest, decodingFromYamlShouldHandleAnUnrecognisedTypeAsANote) {
   YAML::Node node = YAML::Load(
       "type: invalid\n"
       "content: content1");
@@ -505,7 +502,7 @@ TEST_P(MessageTest, decodingFromYamlShouldHandleAnUnrecognisedTypeAsANote) {
   EXPECT_EQ(MessageType::say, message.GetType());
 }
 
-TEST_P(MessageTest,
+TEST_F(MessageTest,
        decodingFromYamlShouldLeaveTheConditionEmptyIfNoneIsPresent) {
   YAML::Node node = YAML::Load(
       "type: say\n"
@@ -515,7 +512,7 @@ TEST_P(MessageTest,
   EXPECT_TRUE(message.GetCondition().empty());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldStoreANonEmptyConditionField) {
+TEST_F(MessageTest, decodingFromYamlShouldStoreANonEmptyConditionField) {
   YAML::Node node = YAML::Load(
       "type: say\n"
       "content: content1\n"
@@ -525,7 +522,7 @@ TEST_P(MessageTest, decodingFromYamlShouldStoreANonEmptyConditionField) {
   EXPECT_EQ("file(\"Foo.esp\")", message.GetCondition());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldStoreAScalarContentValueCorrectly) {
+TEST_F(MessageTest, decodingFromYamlShouldStoreAScalarContentValueCorrectly) {
   YAML::Node node = YAML::Load(
       "type: say\n"
       "content: content1\n");
@@ -535,7 +532,7 @@ TEST_P(MessageTest, decodingFromYamlShouldStoreAScalarContentValueCorrectly) {
   EXPECT_EQ(expectedContent, message.GetContent());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldStoreAListOfContentStringsCorrectly) {
+TEST_F(MessageTest, decodingFromYamlShouldStoreAListOfContentStringsCorrectly) {
   YAML::Node node = YAML::Load(
       "type: say\n"
       "content:\n"
@@ -552,7 +549,7 @@ TEST_P(MessageTest, decodingFromYamlShouldStoreAListOfContentStringsCorrectly) {
             message.GetContent());
 }
 
-TEST_P(MessageTest,
+TEST_F(MessageTest,
        decodingFromYamlShouldNotThrowIfTheOnlyContentStringIsNotEnglish) {
   YAML::Node node = YAML::Load(
       "type: say\n"
@@ -563,7 +560,7 @@ TEST_P(MessageTest,
   EXPECT_NO_THROW(Message message = node.as<Message>());
 }
 
-TEST_P(
+TEST_F(
     MessageTest,
     decodingFromYamlShouldThrowIfMultipleContentStringsAreGivenAndNoneAreEnglish) {
   YAML::Node node = YAML::Load(
@@ -577,7 +574,7 @@ TEST_P(
   EXPECT_THROW(node.as<Message>(), YAML::RepresentationException);
 }
 
-TEST_P(
+TEST_F(
     MessageTest,
     decodingFromYamlShouldApplySubstitutionsWhenThereIsOnlyOneContentString) {
   YAML::Node node = YAML::Load(
@@ -591,7 +588,7 @@ TEST_P(
             message.GetContent());
 }
 
-TEST_P(MessageTest,
+TEST_F(MessageTest,
        decodingFromYamlShouldApplySubstitutionsToAllContentStrings) {
   YAML::Node node = YAML::Load(
       "type: say\n"
@@ -611,7 +608,7 @@ TEST_P(MessageTest,
             message.GetContent());
 }
 
-TEST_P(
+TEST_F(
     MessageTest,
     decodingFromYamlShouldThrowIfTheContentStringExpectsMoreSubstitutionsThanExist) {
   YAML::Node node = YAML::Load(
@@ -625,7 +622,7 @@ TEST_P(
 
 // Don't throw because no subs are given, so none are expected in the content
 // string.
-TEST_P(MessageTest,
+TEST_F(MessageTest,
        decodingFromYamlShouldIgnoreSubstitutionSyntaxIfNoSubstitutionsExist) {
   YAML::Node node = YAML::Load(
       "type: say\n"
@@ -636,7 +633,7 @@ TEST_P(MessageTest,
             message.GetContent());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldAcceptPercentagePlaceholderSyntax) {
+TEST_F(MessageTest, decodingFromYamlShouldAcceptPercentagePlaceholderSyntax) {
   YAML::Node node = YAML::Load(
       "type: say\n"
       "content: content %1% %2% %3% %4% %5% %6% %7% %8% %9% %10% %11%\n"
@@ -658,7 +655,7 @@ TEST_P(MessageTest, decodingFromYamlShouldAcceptPercentagePlaceholderSyntax) {
   EXPECT_EQ("content a b c d e f g h i j k", message.GetContent()[0].GetText());
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldThrowIfAnInvalidConditionIsGiven) {
+TEST_F(MessageTest, decodingFromYamlShouldThrowIfAnInvalidConditionIsGiven) {
   YAML::Node node = YAML::Load(
       "type: say\n"
       "content: content1\n"
@@ -667,13 +664,13 @@ TEST_P(MessageTest, decodingFromYamlShouldThrowIfAnInvalidConditionIsGiven) {
   EXPECT_THROW(node.as<Message>(), YAML::RepresentationException);
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldThrowIfAScalarIsGiven) {
+TEST_F(MessageTest, decodingFromYamlShouldThrowIfAScalarIsGiven) {
   YAML::Node node = YAML::Load("scalar");
 
   EXPECT_THROW(node.as<Message>(), YAML::RepresentationException);
 }
 
-TEST_P(MessageTest, decodingFromYamlShouldThrowIfAListIsGiven) {
+TEST_F(MessageTest, decodingFromYamlShouldThrowIfAListIsGiven) {
   YAML::Node node = YAML::Load("[0, 1, 2]");
 
   EXPECT_THROW(node.as<Message>(), YAML::RepresentationException);

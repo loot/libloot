@@ -35,6 +35,7 @@ namespace test {
 class PluginCleaningDataTest : public CommonGameTestFixture {
 protected:
   PluginCleaningDataTest() :
+      CommonGameTestFixture(GameType::tes4),
       info_(std::vector<MessageContent>({
           MessageContent("info"),
       })) {}
@@ -42,13 +43,7 @@ protected:
   const std::vector<MessageContent> info_;
 };
 
-// Pass an empty first argument, as it's a prefix for the test instantation,
-// but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_SUITE_P(,
-                         PluginCleaningDataTest,
-                         ::testing::Values(GameType::tes4));
-
-TEST_P(PluginCleaningDataTest,
+TEST_F(PluginCleaningDataTest,
        defaultConstructorShouldLeaveAllCountsAtZeroAndTheUtilityStringEmpty) {
   PluginCleaningData info;
   EXPECT_EQ(0u, info.GetCRC());
@@ -59,7 +54,7 @@ TEST_P(PluginCleaningDataTest,
   EXPECT_TRUE(info.GetDetail().empty());
 }
 
-TEST_P(PluginCleaningDataTest, contentConstructorShouldStoreAllGivenData) {
+TEST_F(PluginCleaningDataTest, contentConstructorShouldStoreAllGivenData) {
   PluginCleaningData info(0x12345678, "cleaner", info_, 2, 10, 30);
   EXPECT_EQ(0x12345678u, info.GetCRC());
   EXPECT_EQ(2u, info.GetITMCount());
@@ -69,7 +64,7 @@ TEST_P(PluginCleaningDataTest, contentConstructorShouldStoreAllGivenData) {
   EXPECT_EQ(info_, info.GetDetail());
 }
 
-TEST_P(PluginCleaningDataTest, equalityShouldCheckEqualityOfAllFields) {
+TEST_F(PluginCleaningDataTest, equalityShouldCheckEqualityOfAllFields) {
   PluginCleaningData info1(0x12345678, "cleaner", info_, 2, 10, 30);
   PluginCleaningData info2(0x12345678, "cleaner", info_, 2, 10, 30);
   EXPECT_TRUE(info1 == info2);
@@ -104,7 +99,7 @@ TEST_P(PluginCleaningDataTest, equalityShouldCheckEqualityOfAllFields) {
   EXPECT_FALSE(info1 == info2);
 }
 
-TEST_P(PluginCleaningDataTest, inequalityShouldBeTheInverseOfEquality) {
+TEST_F(PluginCleaningDataTest, inequalityShouldBeTheInverseOfEquality) {
   PluginCleaningData info1(0x12345678, "cleaner", info_, 2, 10, 30);
   PluginCleaningData info2(0x12345678, "cleaner", info_, 2, 10, 30);
   EXPECT_FALSE(info1 != info2);
@@ -139,7 +134,7 @@ TEST_P(PluginCleaningDataTest, inequalityShouldBeTheInverseOfEquality) {
   EXPECT_TRUE(info1 != info2);
 }
 
-TEST_P(PluginCleaningDataTest, lessThanOperatorShouldCompareAllFields) {
+TEST_F(PluginCleaningDataTest, lessThanOperatorShouldCompareAllFields) {
   PluginCleaningData info1(0x12345678, "cleaner", info_, 2, 10, 30);
   PluginCleaningData info2(0x12345678, "cleaner", info_, 2, 10, 30);
   EXPECT_FALSE(info1 < info2);
@@ -182,7 +177,7 @@ TEST_P(PluginCleaningDataTest, lessThanOperatorShouldCompareAllFields) {
   EXPECT_FALSE(info2 < info1);
 }
 
-TEST_P(
+TEST_F(
     PluginCleaningDataTest,
     greaterThanOperatorShouldReturnTrueIfTheSecondPluginCleaningDataIsLessThanTheFirst) {
   PluginCleaningData info1(0x12345678, "cleaner", info_, 2, 10, 30);
@@ -227,7 +222,7 @@ TEST_P(
   EXPECT_TRUE(info2 > info1);
 }
 
-TEST_P(
+TEST_F(
     PluginCleaningDataTest,
     lessThanOrEqualOperatorShouldReturnTrueIfTheFirstPluginCleaningDataIsNotGreaterThanTheSecond) {
   PluginCleaningData info1(0x12345678, "cleaner", info_, 2, 10, 30);
@@ -272,7 +267,7 @@ TEST_P(
   EXPECT_FALSE(info2 < info1);
 }
 
-TEST_P(
+TEST_F(
     PluginCleaningDataTest,
     greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstPluginCleaningDataIsNotLessThanTheSecond) {
   PluginCleaningData info1(0x12345678, "cleaner", info_, 2, 10, 30);
@@ -317,7 +312,7 @@ TEST_P(
   EXPECT_TRUE(info2 > info1);
 }
 
-TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {
+TEST_F(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {
   PluginCleaningData info(0x12345678, "cleaner", info_, 2, 10, 30);
   YAML::Emitter emitter;
   emitter << info;
@@ -328,7 +323,7 @@ TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOutputAllNonZeroCounts) {
       emitter.c_str());
 }
 
-TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOmitAllZeroCounts) {
+TEST_F(PluginCleaningDataTest, emittingAsYamlShouldOmitAllZeroCounts) {
   PluginCleaningData info(0x12345678, "cleaner", info_, 0, 0, 0);
   YAML::Emitter emitter;
   emitter << info;
@@ -337,7 +332,7 @@ TEST_P(PluginCleaningDataTest, emittingAsYamlShouldOmitAllZeroCounts) {
                emitter.c_str());
 }
 
-TEST_P(PluginCleaningDataTest, encodingAsYamlShouldOmitAllZeroCountFields) {
+TEST_F(PluginCleaningDataTest, encodingAsYamlShouldOmitAllZeroCountFields) {
   PluginCleaningData info(0x12345678, "cleaner", info_, 0, 0, 0);
   YAML::Node node;
   node = info;
@@ -350,7 +345,7 @@ TEST_P(PluginCleaningDataTest, encodingAsYamlShouldOmitAllZeroCountFields) {
   EXPECT_FALSE(node["nav"]);
 }
 
-TEST_P(PluginCleaningDataTest,
+TEST_F(PluginCleaningDataTest,
        encodingAsYamlShouldOutputAllNonZeroCountFields) {
   PluginCleaningData info(0x12345678, "cleaner", info_, 2, 10, 30);
   YAML::Node node;
@@ -364,7 +359,7 @@ TEST_P(PluginCleaningDataTest,
   EXPECT_EQ(30u, node["nav"].as<unsigned int>());
 }
 
-TEST_P(PluginCleaningDataTest,
+TEST_F(PluginCleaningDataTest,
        decodingFromYamlShouldLeaveMissingFieldsWithZeroValues) {
   YAML::Node node = YAML::Load("{crc: 0x12345678, util: cleaner}");
   PluginCleaningData info = node.as<PluginCleaningData>();
@@ -377,7 +372,7 @@ TEST_P(PluginCleaningDataTest,
   EXPECT_EQ("cleaner", info.GetCleaningUtility());
 }
 
-TEST_P(PluginCleaningDataTest, decodingFromYamlShouldStoreAllNonZeroCounts) {
+TEST_F(PluginCleaningDataTest, decodingFromYamlShouldStoreAllNonZeroCounts) {
   YAML::Node node = YAML::Load(
       "{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: "
       "30}");
@@ -391,7 +386,7 @@ TEST_P(PluginCleaningDataTest, decodingFromYamlShouldStoreAllNonZeroCounts) {
   EXPECT_EQ("cleaner", info.GetCleaningUtility());
 }
 
-TEST_P(PluginCleaningDataTest,
+TEST_F(PluginCleaningDataTest,
        decodingFromYamlShouldNotThrowIfTheOnlyDetailStringIsNotEnglish) {
   YAML::Node node = YAML::Load(
       "crc: 0x12345678\n"
@@ -403,7 +398,7 @@ TEST_P(PluginCleaningDataTest,
   EXPECT_NO_THROW(node.as<PluginCleaningData>());
 }
 
-TEST_P(
+TEST_F(
     PluginCleaningDataTest,
     decodingFromYamlShouldThrowIfMultipleDetailStringsAreGivenAndNoneAreEnglish) {
   YAML::Node node = YAML::Load(
@@ -418,13 +413,13 @@ TEST_P(
   EXPECT_THROW(node.as<PluginCleaningData>(), YAML::RepresentationException);
 }
 
-TEST_P(PluginCleaningDataTest, decodingFromYamlScalarShouldThrow) {
+TEST_F(PluginCleaningDataTest, decodingFromYamlScalarShouldThrow) {
   YAML::Node node = YAML::Load("scalar");
 
   EXPECT_THROW(node.as<PluginCleaningData>(), YAML::RepresentationException);
 }
 
-TEST_P(PluginCleaningDataTest, decodingFromYamlListShouldThrow) {
+TEST_F(PluginCleaningDataTest, decodingFromYamlListShouldThrow) {
   YAML::Node node = YAML::Load("[0, 1, 2]");
 
   EXPECT_THROW(node.as<PluginCleaningData>(), YAML::RepresentationException);
