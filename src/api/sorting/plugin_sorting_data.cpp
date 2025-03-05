@@ -31,24 +31,6 @@
 #include "api/helpers/text.h"
 
 namespace loot {
-std::vector<const PluginInterface*> GetPluginsSubset(
-    const std::vector<const PluginInterface*>& plugins,
-    const std::vector<std::string>& pluginNames) {
-  std::vector<const PluginInterface*> pluginsSubset;
-
-  for (const auto& pluginName : pluginNames) {
-    auto pos = std::find_if(plugins.begin(), plugins.end(), [&](auto plugin) {
-      return CompareFilenames(plugin->GetName(), pluginName) == 0;
-    });
-
-    if (pos != plugins.end()) {
-      pluginsSubset.push_back(*pos);
-    }
-  }
-
-  return pluginsSubset;
-}
-
 PluginSortingData::PluginSortingData(const PluginSortingInterface* plugin,
                                      const PluginMetadata& masterlistMetadata,
                                      const PluginMetadata& userMetadata,
