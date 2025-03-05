@@ -25,8 +25,8 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct PluginSortingData<'a> {
-    plugin: &'a Plugin,
+pub struct PluginSortingData<'a, T: SortingPlugin> {
+    plugin: &'a T,
     pub(super) is_master: bool,
     override_record_count: usize,
 
@@ -40,9 +40,9 @@ pub struct PluginSortingData<'a> {
     pub(super) user_req: Vec<String>,
 }
 
-impl<'a> PluginSortingData<'a> {
+impl<'a, T: SortingPlugin> PluginSortingData<'a, T> {
     pub fn new(
-        plugin: &'a Plugin,
+        plugin: &'a T,
         masterlist_metadata: Option<&PluginMetadata>,
         user_metadata: Option<&PluginMetadata>,
         load_order_index: usize,
@@ -91,12 +91,53 @@ impl<'a> PluginSortingData<'a> {
         self.plugin.masters()
     }
 
-    fn do_records_overlap(&self, other: &PluginSortingData) -> Result<bool, PluginDataError> {
+    fn do_records_overlap(&self, other: &Self) -> Result<bool, PluginDataError> {
         self.plugin.do_records_overlap(other.plugin)
     }
 
-    fn do_assets_overlap(&self, other: &PluginSortingData) -> bool {
+    fn do_assets_overlap(&self, other: &Self) -> bool {
         self.plugin.do_assets_overlap(other.plugin)
+    }
+}
+
+pub trait SortingPlugin {
+    fn name(&self) -> &str;
+    fn is_master(&self) -> bool;
+    fn is_blueprint_plugin(&self) -> bool;
+    fn masters(&self) -> Result<Vec<String>, PluginDataError>;
+    fn override_record_count(&self) -> Result<usize, PluginDataError>;
+    fn asset_count(&self) -> usize;
+    fn do_records_overlap(&self, other: &Self) -> Result<bool, PluginDataError>;
+    fn do_assets_overlap(&self, other: &Self) -> bool;
+}
+
+impl SortingPlugin for Plugin {
+    fn name(&self) -> &str {
+        self.name()
+    }
+    fn is_master(&self) -> bool {
+        self.is_master()
+    }
+
+    fn is_blueprint_plugin(&self) -> bool {
+        self.is_blueprint_plugin()
+    }
+
+    fn masters(&self) -> Result<Vec<String>, PluginDataError> {
+        self.masters()
+    }
+    fn override_record_count(&self) -> Result<usize, PluginDataError> {
+        self.override_record_count()
+    }
+    fn asset_count(&self) -> usize {
+        self.asset_count()
+    }
+
+    fn do_records_overlap(&self, other: &Self) -> Result<bool, PluginDataError> {
+        self.do_records_overlap(other)
+    }
+    fn do_assets_overlap(&self, other: &Self) -> bool {
+        self.do_assets_overlap(other)
     }
 }
 
@@ -107,21 +148,21 @@ fn to_filenames(files: &[File]) -> Vec<String> {
         .collect()
 }
 
-type InnerPluginsGraph<'a> = Graph<Rc<PluginSortingData<'a>>, EdgeType>;
+type InnerPluginsGraph<'a, T> = Graph<Rc<PluginSortingData<'a, T>>, EdgeType>;
 
-#[derive(Debug, Default)]
-struct PluginsGraph<'a> {
+#[derive(Debug)]
+struct PluginsGraph<'a, T: SortingPlugin> {
     // Put the sorting data in Rc so that it can be held onto while mutating the graph.
-    inner: InnerPluginsGraph<'a>,
+    inner: InnerPluginsGraph<'a, T>,
     paths_cache: HashMap<NodeIndex, HashSet<NodeIndex>>,
 }
 
-impl<'a> PluginsGraph<'a> {
+impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     fn new() -> Self {
         PluginsGraph::default()
     }
 
-    fn add_node(&mut self, plugin: PluginSortingData<'a>) {
+    fn add_node(&mut self, plugin: PluginSortingData<'a, T>) {
         self.inner.add_node(Rc::new(plugin));
     }
 
@@ -711,16 +752,26 @@ impl<'a> PluginsGraph<'a> {
     }
 }
 
-impl<'a> std::ops::Index<NodeIndex> for PluginsGraph<'a> {
-    type Output = Rc<PluginSortingData<'a>>;
+// The derive macro for Default requires T: Default, but it's not actually necessary.
+impl<T: SortingPlugin> std::default::Default for PluginsGraph<'_, T> {
+    fn default() -> Self {
+        Self {
+            inner: Default::default(),
+            paths_cache: Default::default(),
+        }
+    }
+}
+
+impl<'a, T: SortingPlugin> std::ops::Index<NodeIndex> for PluginsGraph<'a, T> {
+    type Output = Rc<PluginSortingData<'a, T>>;
 
     fn index(&self, index: NodeIndex) -> &Self::Output {
         &self.inner[index]
     }
 }
 
-pub fn sort_plugins(
-    mut plugins_sorting_data: Vec<PluginSortingData>,
+pub fn sort_plugins<T: SortingPlugin>(
+    mut plugins_sorting_data: Vec<PluginSortingData<T>>,
     groups_graph: &GroupsGraph,
     early_loading_plugins: &[String],
 ) -> Result<Vec<String>, SortingError> {
@@ -778,8 +829,8 @@ pub fn sort_plugins(
     Ok(masters_load_order)
 }
 
-fn sort_plugins_partition(
-    plugins_sorting_data: Vec<PluginSortingData>,
+fn sort_plugins_partition<T: SortingPlugin>(
+    plugins_sorting_data: Vec<PluginSortingData<T>>,
     groups_graph: &GroupsGraph,
     early_loading_plugins: &[String],
 ) -> Result<Vec<String>, SortingError> {
@@ -824,7 +875,7 @@ fn sort_plugins_partition(
     Ok(sorted_plugin_names)
 }
 
-fn path_to_string(graph: &InnerPluginsGraph, path: &[NodeIndex]) -> String {
+fn path_to_string<T: SortingPlugin>(graph: &InnerPluginsGraph<T>, path: &[NodeIndex]) -> String {
     path.iter()
         .map(|i| graph[*i].name())
         .collect::<Vec<_>>()
@@ -832,8 +883,8 @@ fn path_to_string(graph: &InnerPluginsGraph, path: &[NodeIndex]) -> String {
 }
 
 #[derive(Debug)]
-struct PathFinder<'a, 'b> {
-    graph: &'a InnerPluginsGraph<'b>,
+struct PathFinder<'a, 'b, T: SortingPlugin> {
+    graph: &'a InnerPluginsGraph<'b, T>,
     cache: &'a mut HashMap<NodeIndex, HashSet<NodeIndex>>,
     from_node_index: NodeIndex,
     to_node_index: NodeIndex,
@@ -842,9 +893,9 @@ struct PathFinder<'a, 'b> {
     intersection_node: Option<NodeIndex>,
 }
 
-impl<'a, 'b> PathFinder<'a, 'b> {
+impl<'a, 'b, T: SortingPlugin> PathFinder<'a, 'b, T> {
     fn new(
-        graph: &'a InnerPluginsGraph<'b>,
+        graph: &'a InnerPluginsGraph<'b, T>,
         cache: &'a mut HashMap<NodeIndex, HashSet<NodeIndex>>,
         from_node_index: NodeIndex,
         to_node_index: NodeIndex,
@@ -914,7 +965,7 @@ impl<'a, 'b> PathFinder<'a, 'b> {
     }
 }
 
-impl BidirBfsVisitor for PathFinder<'_, '_> {
+impl<T: SortingPlugin> BidirBfsVisitor for PathFinder<'_, '_, T> {
     fn visit_forward_bfs_edge(&mut self, source: NodeIndex, target: NodeIndex) {
         self.cache_path(self.from_node_index, target);
 
@@ -939,7 +990,9 @@ struct PathCacher<'a> {
     to_node_index: NodeIndex,
 }
 
-fn get_plugins_in_groups(graph: &InnerPluginsGraph) -> HashMap<String, Vec<NodeIndex>> {
+fn get_plugins_in_groups<T: SortingPlugin>(
+    graph: &InnerPluginsGraph<T>,
+) -> HashMap<String, Vec<NodeIndex>> {
     let mut plugins_in_groups: HashMap<String, Vec<NodeIndex>> = HashMap::new();
 
     for node in graph.node_indices() {
@@ -985,8 +1038,8 @@ impl BidirBfsVisitor for PathCacher<'_> {
 type PluginNodeIndex = NodeIndex;
 type GroupNodeIndex = NodeIndex;
 
-struct GroupsPathVisitor<'a, 'b, 'c, 'd, 'e> {
-    plugins_graph: &'a mut PluginsGraph<'b>,
+struct GroupsPathVisitor<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> {
+    plugins_graph: &'a mut PluginsGraph<'b, T>,
     groups_graph: &'e GroupsGraph,
     groups_plugins: &'c HashMap<String, Vec<PluginNodeIndex>>,
     finished_group_vertices: &'d mut HashSet<GroupNodeIndex>,
@@ -995,9 +1048,9 @@ struct GroupsPathVisitor<'a, 'b, 'c, 'd, 'e> {
     unfinishable_nodes: HashSet<GroupNodeIndex>,
 }
 
-impl<'a, 'b, 'c, 'd, 'e> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e> {
+impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e, T> {
     fn new(
-        plugins_graph: &'a mut PluginsGraph<'b>,
+        plugins_graph: &'a mut PluginsGraph<'b, T>,
         groups_graph: &'e GroupsGraph,
         groups_plugins: &'c HashMap<String, Vec<PluginNodeIndex>>,
         finished_group_vertices: &'d mut HashSet<GroupNodeIndex>,
@@ -1079,7 +1132,7 @@ impl<'a, 'b, 'c, 'd, 'e> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e> {
     }
 }
 
-impl<'e> DfsVisitor<'e> for GroupsPathVisitor<'_, '_, '_, '_, 'e> {
+impl<'e, T: SortingPlugin> DfsVisitor<'e> for GroupsPathVisitor<'_, '_, '_, '_, 'e, T> {
     fn visit_tree_edge(&mut self, edge_ref: EdgeReference<'e, EdgeType>) {
         let source = edge_ref.source();
         let target = edge_ref.target();

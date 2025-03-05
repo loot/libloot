@@ -7,10 +7,13 @@ use crate::{
     sorting::error::{CyclicInteractionError, PluginGraphValidationError, UndefinedGroupError},
 };
 
-use super::{groups::GroupsGraph, plugins::PluginSortingData};
+use super::{
+    groups::GroupsGraph,
+    plugins::{PluginSortingData, SortingPlugin},
+};
 
-pub fn validate_plugin_groups(
-    plugins_sorting_data: &[PluginSortingData<'_>],
+pub fn validate_plugin_groups<T: SortingPlugin>(
+    plugins_sorting_data: &[PluginSortingData<'_, T>],
     groups_graph: &GroupsGraph,
 ) -> Result<(), UndefinedGroupError> {
     let group_names: HashSet<&String> = groups_graph
@@ -27,10 +30,10 @@ pub fn validate_plugin_groups(
     Ok(())
 }
 
-pub fn validate_specific_and_hardcoded_edges(
-    masters: &[PluginSortingData<'_>],
-    blueprint_masters: &[PluginSortingData<'_>],
-    non_masters: &[PluginSortingData<'_>],
+pub fn validate_specific_and_hardcoded_edges<T: SortingPlugin>(
+    masters: &[PluginSortingData<'_, T>],
+    blueprint_masters: &[PluginSortingData<'_, T>],
+    non_masters: &[PluginSortingData<'_, T>],
     early_loading_plugins: &[String],
 ) -> Result<(), PluginGraphValidationError> {
     log::trace!("Validating specific and early-loading plugin edges...");
@@ -53,8 +56,8 @@ pub fn validate_specific_and_hardcoded_edges(
     Ok(())
 }
 
-fn validate_masters(
-    masters: &[PluginSortingData<'_>],
+fn validate_masters<T: SortingPlugin>(
+    masters: &[PluginSortingData<'_, T>],
     non_masters: &HashSet<UniCase<&str>>,
     blueprint_masters: &HashSet<UniCase<&str>>,
 ) -> Result<(), PluginGraphValidationError> {
@@ -66,8 +69,8 @@ fn validate_masters(
         .try_for_each(|m| validate_plugin(m, non_masters, blueprint_masters))
 }
 
-fn validate_non_masters(
-    non_masters: &[PluginSortingData<'_>],
+fn validate_non_masters<T: SortingPlugin>(
+    non_masters: &[PluginSortingData<'_, T>],
     blueprint_masters: &HashSet<UniCase<&str>>,
 ) -> Result<(), PluginGraphValidationError> {
     log::trace!("Validating specific and early-loading plugin edges for non-master files...");
@@ -80,8 +83,8 @@ fn validate_non_masters(
         .try_for_each(|p| validate_plugin(p, &empty_set, blueprint_masters))
 }
 
-fn validate_plugin(
-    plugin: &PluginSortingData<'_>,
+fn validate_plugin<T: SortingPlugin>(
+    plugin: &PluginSortingData<'_, T>,
     non_masters: &HashSet<UniCase<&str>>,
     blueprint_masters: &HashSet<UniCase<&str>>,
 ) -> Result<(), PluginGraphValidationError> {
@@ -176,9 +179,9 @@ fn validate_files(
     Ok(())
 }
 
-fn validate_early_loading_plugins(
+fn validate_early_loading_plugins<T: SortingPlugin>(
     early_loading_plugins: &[String],
-    masters: &[PluginSortingData<'_>],
+    masters: &[PluginSortingData<'_, T>],
     non_masters: &HashSet<UniCase<&str>>,
 ) -> Result<(), CyclicInteractionError> {
     if let Some(master) = masters.first() {
