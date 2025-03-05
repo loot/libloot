@@ -3,6 +3,8 @@ use saphyr::YamlData;
 use super::error::ExpectedType;
 use super::error::ParseMetadataError;
 use super::yaml::{YamlObjectType, get_required_string_value, parse_condition};
+use super::yaml_emit::EmitYaml;
+use super::yaml_emit::YamlEmitter;
 
 /// Represents whether a Bash Tag suggestion is for addition or removal.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -94,5 +96,61 @@ fn name_and_suggestion(value: &str) -> (String, TagSuggestion) {
         (name.to_string(), TagSuggestion::Removal)
     } else {
         (value.to_string(), TagSuggestion::Addition)
+    }
+}
+
+impl EmitYaml for Tag {
+    fn is_scalar(&self) -> bool {
+        self.condition.is_none()
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        if let Some(condition) = &self.condition {
+            emitter.begin_map();
+
+            emitter.map_key("name");
+            if self.is_addition() {
+                emitter.unquoted_str(&self.name);
+            } else {
+                emitter.unquoted_str(&format!("-{}", self.name));
+            }
+
+            emitter.map_key("condition");
+            emitter.single_quoted_str(condition);
+
+            emitter.end_map();
+        } else if self.is_addition() {
+            emitter.unquoted_str(&self.name);
+        } else {
+            emitter.unquoted_str(&format!("-{}", self.name));
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod emit_yaml {
+        use crate::metadata::emit;
+
+        use super::*;
+
+        #[test]
+        fn should_emit_name_only_if_unconditional_addition() {
+            let tag = Tag::new("name1".into(), TagSuggestion::Addition);
+            let yaml = emit(&tag);
+
+            assert_eq!(tag.name(), yaml);
+        }
+
+        #[test]
+        fn should_emit_map_if_there_is_a_condition() {
+            let tag =
+                Tag::new("name1".into(), TagSuggestion::Removal).with_condition("condition".into());
+            let yaml = emit(&tag);
+
+            assert_eq!("name: -name1\ncondition: 'condition'", yaml);
+        }
     }
 }

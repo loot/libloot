@@ -363,7 +363,7 @@ impl std::fmt::Display for YamlMergeKeyError {
 impl std::error::Error for YamlMergeKeyError {}
 
 /// Represents an error that occurred while trying to write metadata to a file.
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug)]
 pub struct WriteMetadataError {
     path: PathBuf,
     reason: WriteMetadataErrorReason,
@@ -386,14 +386,29 @@ impl std::fmt::Display for WriteMetadataError {
             WriteMetadataErrorReason::PathAlreadyExists => {
                 write!(f, "the path \"{}\" already exists", self.path.display())
             }
+            WriteMetadataErrorReason::IoError(_) => write!(f, "an I/O error occurred"),
         }
     }
 }
 
-impl std::error::Error for WriteMetadataError {}
+impl std::error::Error for WriteMetadataError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match &self.reason {
+            WriteMetadataErrorReason::IoError(e) => Some(e),
+            _ => None,
+        }
+    }
+}
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug)]
 pub(crate) enum WriteMetadataErrorReason {
     ParentDirectoryNotFound,
     PathAlreadyExists,
+    IoError(std::io::Error),
+}
+
+impl From<std::io::Error> for WriteMetadataErrorReason {
+    fn from(value: std::io::Error) -> Self {
+        WriteMetadataErrorReason::IoError(value)
+    }
 }

@@ -2,13 +2,16 @@ use saphyr::{MarkedYaml, YamlData};
 use unicase::UniCase;
 
 use super::{
-    error::ExpectedType,
-    error::{MultilingualMessageContentsError, ParseMetadataError},
-    message::{MessageContent, parse_message_contents_yaml, validate_message_contents},
+    error::{ExpectedType, MultilingualMessageContentsError, ParseMetadataError},
+    message::{
+        MessageContent, emit_message_contents, parse_message_contents_yaml,
+        validate_message_contents,
+    },
     yaml::{
         YamlObjectType, as_string_node, get_required_string_value, get_string_value,
         parse_condition,
     },
+    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 /// Represents a file in a game's Data folder, including files in
@@ -152,6 +155,165 @@ impl TryFrom<&MarkedYaml> for File {
                 YamlObjectType::File,
                 ExpectedType::MapOrString,
             )),
+        }
+    }
+}
+
+impl EmitYaml for File {
+    fn is_scalar(&self) -> bool {
+        self.condition.is_none() && self.detail.is_empty() && self.display_name.is_none()
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        if self.is_scalar() {
+            emitter.single_quoted_str(self.name.as_str());
+        } else {
+            emitter.begin_map();
+
+            emitter.map_key("name");
+            emitter.single_quoted_str(self.name.as_str());
+
+            if let Some(display_name) = &self.display_name {
+                emitter.map_key("display");
+                emitter.single_quoted_str(display_name);
+            }
+
+            if let Some(condition) = &self.condition {
+                emitter.map_key("condition");
+                emitter.single_quoted_str(condition);
+            }
+
+            emit_message_contents(&self.detail, emitter, "detail");
+
+            emitter.end_map();
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod emit_yaml {
+        use crate::metadata::emit;
+
+        use super::*;
+
+        #[test]
+        fn should_emit_only_name_scalar_if_other_fields_are_empty() {
+            let file = File::new("filename".into());
+            let yaml = emit(&file);
+
+            assert_eq!(format!("'{}'", file.name.as_str()), yaml);
+        }
+
+        #[test]
+        fn should_emit_map_with_display_if_display_name_is_not_empty() {
+            let file = File::new("filename".into()).with_display_name("display1".into());
+            let yaml = emit(&file);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ndisplay: '{}'",
+                    file.name.as_str(),
+                    file.display_name.unwrap()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_map_with_condition_if_it_is_not_empty() {
+            let file = File::new("filename".into()).with_condition("condition1".into());
+            let yaml = emit(&file);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ncondition: '{}'",
+                    file.name.as_str(),
+                    file.condition.unwrap()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_map_with_a_detail_string_if_detail_is_monolingual() {
+            let file = File::new("filename".into())
+                .with_detail(vec![MessageContent::new("message".into())])
+                .unwrap();
+            let yaml = emit(&file);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ndetail: '{}'",
+                    file.name.as_str(),
+                    file.detail[0].text()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_map_with_a_detail_array_if_detail_is_multilingual() {
+            let file = File::new("filename".into())
+                .with_detail(vec![
+                    MessageContent::new("english".into()).with_language("en".into()),
+                    MessageContent::new("french".into()).with_language("fr".into()),
+                ])
+                .unwrap();
+            let yaml = emit(&file);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'
+detail:
+  - lang: {}
+    text: '{}'
+  - lang: {}
+    text: '{}'",
+                    file.name.as_str(),
+                    file.detail[0].language(),
+                    file.detail[0].text(),
+                    file.detail[1].language(),
+                    file.detail[1].text()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_map_with_all_fields_set() {
+            let file = File::new("filename".into())
+                .with_display_name("display1".into())
+                .with_condition("condition1".into())
+                .with_detail(vec![
+                    MessageContent::new("english".into()).with_language("en".into()),
+                    MessageContent::new("french".into()).with_language("fr".into()),
+                ])
+                .unwrap();
+            let yaml = emit(&file);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'
+display: '{}'
+condition: '{}'
+detail:
+  - lang: {}
+    text: '{}'
+  - lang: {}
+    text: '{}'",
+                    file.name.as_str(),
+                    file.display_name.unwrap(),
+                    file.condition.unwrap(),
+                    file.detail[0].language(),
+                    file.detail[0].text(),
+                    file.detail[1].language(),
+                    file.detail[1].text()
+                ),
+                yaml
+            );
         }
     }
 }

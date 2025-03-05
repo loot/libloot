@@ -11,7 +11,7 @@ Currently complete:
 - [x] Library versioning
 - [ ] Setting a logging callback
 - [x] Parsing metadata from YAML
-- [ ] Serialising metadata to YAML
+- [x] Serialising metadata to YAML
 - [x] Game-related functionality
 - [x] Plugin-related functionality
 - [x] Archive-related functionality

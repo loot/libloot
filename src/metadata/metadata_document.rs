@@ -6,6 +6,8 @@ use std::{
 
 use saphyr::{MarkedYaml, YamlData};
 
+use crate::logging;
+
 use super::{
     error::{
         ExpectedType, LoadMetadataError, MetadataDocumentParsingError, ParseMetadataError,
@@ -16,6 +18,7 @@ use super::{
     message::Message,
     plugin_metadata::PluginMetadata,
     yaml::{YamlObjectType, as_string_node, get_as_slice},
+    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 static MERGE_KEY: LazyLock<MarkedYaml> = LazyLock::new(|| as_string_node("<<"));
@@ -203,25 +206,48 @@ impl MetadataDocument {
     }
 
     pub fn save(&self, file_path: &Path) -> Result<(), WriteMetadataError> {
-        // let mut hash = saphyr::Hash::new();
+        logging::trace!("Saving metadata list to: {}", file_path.display());
 
-        // hash.insert(
-        //     Yaml::String("bash_tags".into()),
-        //     Yaml::Array(
-        //         self.bash_tags
-        //             .iter()
-        //             .map(|b| Yaml::String(b.to_string()))
-        //             .collect(),
-        //     ),
-        // );
+        let mut emitter = YamlEmitter::new();
 
-        // let mut yaml = Yaml::Hash(hash);
+        if !self.bash_tags.is_empty() {
+            emitter.map_key("bash_tags");
 
-        // let mut output = String::new();
-        // FIXME: Can't handle the error because it's a type that's not exported by saphyr.
-        // let emitter = YamlEmitter::new(&mut output).dump(&yaml)?;
+            emitter.begin_array();
 
-        todo!()
+            for tag in &self.bash_tags {
+                emitter.unquoted_str(tag);
+            }
+
+            emitter.end_array();
+        }
+
+        if !self.groups.is_empty() {
+            emitter.map_key("groups");
+            self.groups.emit_yaml(&mut emitter);
+        }
+
+        if !self.messages.is_empty() {
+            emitter.map_key("globals");
+            self.messages.emit_yaml(&mut emitter);
+        }
+
+        if !self.plugins.is_empty() || !self.regex_plugins.is_empty() {
+            emitter.map_key("plugins");
+
+            emitter.begin_array();
+
+            for plugin in self.plugins() {
+                plugin.emit_yaml(&mut emitter);
+            }
+
+            emitter.end_array();
+        }
+
+        std::fs::write(file_path, emitter.into_string())
+            .map_err(|e| WriteMetadataError::new(file_path.into(), e.into()))?;
+
+        Ok(())
     }
 
     pub fn bash_tags(&self) -> &[String] {
@@ -496,5 +522,24 @@ plugins:
 
         let mut metadata_list = MetadataDocument::default();
         metadata_list.load(&path).unwrap();
+    }
+
+    #[test]
+    fn save_should_write_the_loaded_metadata() {
+        let tmp_dir = tempdir().unwrap();
+
+        let path = tmp_dir.path().join("masterlist.yaml");
+        std::fs::write(&path, METADATA_LIST_YAML).unwrap();
+
+        let mut metadata = MetadataDocument::default();
+        metadata.load(&path).unwrap();
+
+        let other_path = tmp_dir.path().join("other.yaml");
+        metadata.save(&other_path).unwrap();
+
+        let mut other_metadata = MetadataDocument::default();
+        other_metadata.load(&other_path).unwrap();
+
+        assert_eq!(metadata, other_metadata);
     }
 }

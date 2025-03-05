@@ -4,6 +4,8 @@ use super::error::ExpectedType;
 use super::error::ParseMetadataError;
 
 use super::yaml::{YamlObjectType, get_required_string_value};
+use super::yaml_emit::EmitYaml;
+use super::yaml_emit::YamlEmitter;
 
 /// Represents a URL at which the parent plugin can be found.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -73,6 +75,63 @@ impl TryFrom<&MarkedYaml> for Location {
                 YamlObjectType::Location,
                 ExpectedType::MapOrString,
             )),
+        }
+    }
+}
+
+impl EmitYaml for Location {
+    fn is_scalar(&self) -> bool {
+        self.name.is_none()
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        if let Some(name) = &self.name {
+            emitter.begin_map();
+
+            emitter.map_key("link");
+            emitter.single_quoted_str(&self.url);
+
+            emitter.map_key("name");
+            emitter.single_quoted_str(name);
+
+            emitter.end_map();
+        } else {
+            emitter.single_quoted_str(&self.url);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod emit_yaml {
+        use crate::metadata::emit;
+
+        use super::*;
+
+        #[test]
+        fn should_emit_url_only_if_there_is_no_name() {
+            let location = Location::new("http://www.example.com".into());
+            let yaml = emit(&location);
+
+            assert_eq!(format!("'{}'", location.url), yaml);
+        }
+
+        #[test]
+        fn should_emit_map_if_there_is_a_name() {
+            let location =
+                Location::new("http://www.example.com".into()).with_name("example".into());
+            let yaml = emit(&location);
+
+            assert_eq!(
+                format!(
+                    "link: '{}'\nname: '{}'",
+                    location.url,
+                    location.name.unwrap()
+                ),
+                yaml
+            );
         }
     }
 }

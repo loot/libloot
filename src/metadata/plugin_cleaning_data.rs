@@ -2,8 +2,12 @@ use saphyr::MarkedYaml;
 
 use super::{
     error::{MultilingualMessageContentsError, ParseMetadataError},
-    message::{MessageContent, parse_message_contents_yaml, validate_message_contents},
+    message::{
+        MessageContent, emit_message_contents, parse_message_contents_yaml,
+        validate_message_contents,
+    },
     yaml::{YamlObjectType, as_string_node, get_as_hash, get_required_string_value, get_u32_value},
+    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 /// Represents data identifying the plugin under which it is stored as dirty or
@@ -144,5 +148,155 @@ impl TryFrom<&MarkedYaml> for PluginCleaningData {
             cleaning_utility: util.to_string(),
             detail,
         })
+    }
+}
+
+impl EmitYaml for PluginCleaningData {
+    fn is_scalar(&self) -> bool {
+        false
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        emitter.begin_map();
+
+        emitter.map_key("crc");
+        emitter.unquoted_str(&format!("0x{:08X}", self.crc));
+
+        emitter.map_key("util");
+        emitter.single_quoted_str(&self.cleaning_utility);
+
+        if self.itm_count > 0 {
+            emitter.map_key("itm");
+            emitter.u32(self.itm_count);
+        }
+
+        if self.deleted_reference_count > 0 {
+            emitter.map_key("udr");
+            emitter.u32(self.deleted_reference_count);
+        }
+
+        if self.deleted_navmesh_count > 0 {
+            emitter.map_key("nav");
+            emitter.u32(self.deleted_navmesh_count);
+        }
+
+        emit_message_contents(&self.detail, emitter, "detail");
+
+        emitter.end_map();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod emit_yaml {
+        use crate::metadata::emit;
+
+        use super::*;
+
+        #[test]
+        fn should_omit_zero_counts() {
+            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into());
+            let yaml = emit(&data);
+
+            assert_eq!("crc: 0xDEADBEEF\nutil: 'TES5Edit'", yaml);
+        }
+
+        #[test]
+        fn should_emit_non_zero_counts() {
+            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into())
+                .with_itm_count(1)
+                .with_deleted_reference_count(2)
+                .with_deleted_navmesh_count(3);
+            let yaml = emit(&data);
+
+            assert_eq!(
+                "crc: 0xDEADBEEF\nutil: 'TES5Edit'\nitm: 1\nudr: 2\nnav: 3",
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_map_with_a_detail_string_if_detail_is_monolingual() {
+            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into())
+                .with_detail(vec![MessageContent::new("message".into())])
+                .unwrap();
+            let yaml = emit(&data);
+
+            assert_eq!(
+                format!(
+                    "crc: 0xDEADBEEF\nutil: 'TES5Edit'\ndetail: '{}'",
+                    data.detail[0].text()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_map_with_a_detail_array_if_detail_is_multilingual() {
+            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into())
+                .with_detail(vec![
+                    MessageContent::new("english".into()).with_language("en".into()),
+                    MessageContent::new("french".into()).with_language("fr".into()),
+                ])
+                .unwrap();
+            let yaml = emit(&data);
+
+            assert_eq!(
+                format!(
+                    "crc: 0xDEADBEEF
+util: 'TES5Edit'
+detail:
+  - lang: {}
+    text: '{}'
+  - lang: {}
+    text: '{}'",
+                    data.detail[0].language(),
+                    data.detail[0].text(),
+                    data.detail[1].language(),
+                    data.detail[1].text()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_map_with_all_fields_set() {
+            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into())
+                .with_itm_count(1)
+                .with_deleted_reference_count(2)
+                .with_deleted_navmesh_count(3)
+                .with_detail(vec![
+                    MessageContent::new("english".into()).with_language("en".into()),
+                    MessageContent::new("french".into()).with_language("fr".into()),
+                ])
+                .unwrap();
+            let yaml = emit(&data);
+
+            assert_eq!(
+                format!(
+                    "crc: 0xDEADBEEF
+util: '{}'
+itm: {}
+udr: {}
+nav: {}
+detail:
+  - lang: {}
+    text: '{}'
+  - lang: {}
+    text: '{}'",
+                    data.cleaning_utility,
+                    data.itm_count,
+                    data.deleted_reference_count,
+                    data.deleted_navmesh_count,
+                    data.detail[0].language(),
+                    data.detail[0].text(),
+                    data.detail[1].language(),
+                    data.detail[1].text()
+                ),
+                yaml
+            );
+        }
     }
 }

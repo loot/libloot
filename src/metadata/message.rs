@@ -9,6 +9,7 @@ use super::{
         YamlObjectType, as_string_node, get_as_hash, get_required_string_value,
         get_strings_vec_value, parse_condition,
     },
+    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 /// Codes used to indicate the type of a message.
@@ -23,6 +24,16 @@ pub enum MessageType {
     /// An error message, used to indicate that an issue that requires user
     /// action is present.
     Error,
+}
+
+impl std::fmt::Display for MessageType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MessageType::Say => write!(f, "say"),
+            MessageType::Warn => write!(f, "warn"),
+            MessageType::Error => write!(f, "error"),
+        }
+    }
 }
 
 /// Represents a message's localised text content.
@@ -322,8 +333,69 @@ impl TryFrom<&MarkedYaml> for Message {
     }
 }
 
+impl EmitYaml for MessageContent {
+    fn is_scalar(&self) -> bool {
+        false
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        emitter.begin_map();
+
+        emitter.map_key("lang");
+        emitter.unquoted_str(&self.language);
+
+        emitter.map_key("text");
+        emitter.single_quoted_str(&self.text);
+
+        emitter.end_map();
+    }
+}
+
+pub(super) fn emit_message_contents(
+    slice: &[MessageContent],
+    emitter: &mut YamlEmitter,
+    key: &'static str,
+) {
+    match slice {
+        [] => {}
+        [detail] => {
+            emitter.map_key(key);
+            emitter.single_quoted_str(detail.text());
+        }
+        details => {
+            emitter.map_key(key);
+
+            details.emit_yaml(emitter);
+        }
+    }
+}
+
+impl EmitYaml for Message {
+    fn is_scalar(&self) -> bool {
+        false
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        emitter.begin_map();
+
+        emitter.map_key("type");
+        emitter.unquoted_str(&self.message_type.to_string());
+
+        emit_message_contents(&self.content, emitter, "content");
+
+        if let Some(condition) = &self.condition {
+            emitter.map_key("condition");
+            emitter.single_quoted_str(condition);
+        }
+
+        emitter.end_map();
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::metadata::emit;
+
     use super::*;
 
     mod select_message_content {
@@ -342,6 +414,111 @@ mod tests {
             let content = select_message_content(slice, "fr");
 
             assert_eq!(&slice[0], content.unwrap());
+        }
+    }
+
+    mod message_content {
+        use super::*;
+        mod emit_yaml {
+            use super::*;
+
+            #[test]
+            fn should_emit_map() {
+                let content = MessageContent::new("message".into()).with_language("fr".into());
+                let yaml = emit(&content);
+
+                assert_eq!(
+                    format!("lang: {}\ntext: '{}'", content.language, content.text),
+                    yaml
+                );
+            }
+        }
+    }
+
+    mod message {
+        use super::*;
+        mod emit_yaml {
+            use super::*;
+
+            #[test]
+            fn should_emit_say_message_type_correctly() {
+                let message = Message::new(MessageType::Say, "message".into());
+                let yaml = emit(&message);
+
+                assert_eq!(
+                    format!("type: say\ncontent: '{}'", message.content[0].text),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_warn_message_type_correctly() {
+                let message = Message::new(MessageType::Warn, "message".into());
+                let yaml = emit(&message);
+
+                assert_eq!(
+                    format!("type: warn\ncontent: '{}'", message.content[0].text),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_error_message_type_correctly() {
+                let message = Message::new(MessageType::Error, "message".into());
+                let yaml = emit(&message);
+
+                assert_eq!(
+                    format!("type: error\ncontent: '{}'", message.content[0].text),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_condition_if_it_is_not_empty() {
+                let message = Message::new(MessageType::Say, "message".into())
+                    .with_condition("condition1".into());
+                let yaml = emit(&message);
+
+                assert_eq!(
+                    format!(
+                        "type: {}\ncontent: '{}'\ncondition: '{}'",
+                        message.message_type,
+                        message.content[0].text,
+                        message.condition.unwrap()
+                    ),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_a_content_array_if_content_is_multilingual() {
+                let message = Message::multilingual(
+                    MessageType::Say,
+                    vec![
+                        MessageContent::new("english".into()).with_language("en".into()),
+                        MessageContent::new("french".into()).with_language("fr".into()),
+                    ],
+                )
+                .unwrap();
+                let yaml = emit(&message);
+
+                assert_eq!(
+                    format!(
+                        "type: {}
+content:
+  - lang: {}
+    text: '{}'
+  - lang: {}
+    text: '{}'",
+                        message.message_type,
+                        message.content[0].language(),
+                        message.content[0].text(),
+                        message.content[1].language(),
+                        message.content[1].text()
+                    ),
+                    yaml
+                );
+            }
         }
     }
 }

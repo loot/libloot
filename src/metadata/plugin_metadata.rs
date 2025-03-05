@@ -13,6 +13,7 @@ use super::{
     yaml::{
         YamlObjectType, get_as_hash, get_as_slice, get_required_string_value, get_string_value,
     },
+    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 pub(crate) const GHOST_FILE_EXTENSION: &str = ".ghost";
@@ -209,7 +210,9 @@ impl PluginMetadata {
 
     /// Serialises the plugin metadata as YAML.
     pub fn as_yaml(&self) -> String {
-        todo!()
+        let mut emitter = YamlEmitter::new();
+        self.emit_yaml(&mut emitter);
+        emitter.into_string()
     }
 }
 
@@ -352,4 +355,293 @@ fn get_vec<'a, T: TryFrom<&'a MarkedYaml, Error = impl Into<ParseMetadataError>>
         .iter()
         .map(|e| T::try_from(e).map_err(Into::into))
         .collect::<Result<Vec<T>, _>>()
+}
+
+impl EmitYaml for PluginMetadata {
+    fn is_scalar(&self) -> bool {
+        false
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        emitter.begin_map();
+
+        emitter.map_key("name");
+        emitter.single_quoted_str(self.name());
+
+        if !self.locations.is_empty() {
+            emitter.map_key("url");
+            self.locations.emit_yaml(emitter);
+        }
+
+        if let Some(group) = &self.group {
+            emitter.map_key("group");
+            emitter.single_quoted_str(group);
+        }
+
+        if !self.load_after.is_empty() {
+            emitter.map_key("after");
+            self.load_after.emit_yaml(emitter);
+        }
+
+        if !self.requirements.is_empty() {
+            emitter.map_key("req");
+            self.requirements.emit_yaml(emitter);
+        }
+
+        if !self.incompatibilities.is_empty() {
+            emitter.map_key("inc");
+            self.incompatibilities.emit_yaml(emitter);
+        }
+
+        if !self.messages.is_empty() {
+            emitter.map_key("msg");
+            self.messages.emit_yaml(emitter);
+        }
+
+        if !self.tags.is_empty() {
+            emitter.map_key("tag");
+            self.tags.emit_yaml(emitter);
+        }
+
+        if !self.dirty_info.is_empty() {
+            emitter.map_key("dirty");
+            self.dirty_info.emit_yaml(emitter);
+        }
+
+        if !self.clean_info.is_empty() {
+            emitter.map_key("clean");
+            self.clean_info.emit_yaml(emitter);
+        }
+
+        emitter.end_map();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod as_yaml {
+        use super::*;
+
+        #[test]
+        fn should_return_a_yaml_string_representation() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_load_after_files(vec![File::new("other.esp".into())]);
+            let yaml = plugin.as_yaml();
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nafter: ['{}']",
+                    plugin.name.string,
+                    plugin.load_after[0].name()
+                ),
+                yaml
+            );
+        }
+    }
+
+    mod emit_yaml {
+        use super::*;
+        use crate::metadata::{MessageType, TagSuggestion, emit};
+
+        #[test]
+        fn should_omit_group_if_not_set() {
+            let plugin = PluginMetadata::new("test.esp").unwrap();
+            let yaml = emit(&plugin);
+
+            assert_eq!(format!("name: '{}'", plugin.name.string), yaml);
+        }
+
+        #[test]
+        fn should_emit_group_if_set() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_group("group1");
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ngroup: '{}'",
+                    plugin.name.string,
+                    plugin.group.unwrap()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_a_single_scalar_load_after_file_in_flow_style() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_load_after_files(vec![File::new("other.esp".into())]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nafter: ['{}']",
+                    plugin.name.string,
+                    plugin.load_after[0].name()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_a_single_non_scalar_load_after_file_in_block_style() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_load_after_files(vec![
+                File::new("other.esp".into()).with_condition("condition1".into()),
+            ]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nafter:\n  - name: '{}'\n    condition: '{}'",
+                    plugin.name.string,
+                    plugin.load_after[0].name(),
+                    plugin.load_after[0].condition().unwrap(),
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_multiple_load_after_files_in_block_style() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_load_after_files(vec![
+                File::new("other1.esp".into()),
+                File::new("other2.esp".into()),
+            ]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nafter:\n  - '{}'\n  - '{}'",
+                    plugin.name.string,
+                    plugin.load_after[0].name(),
+                    plugin.load_after[1].name(),
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_a_single_scalar_requirements_in_flow_style() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_requirements(vec![File::new("other.esp".into())]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nreq: ['{}']",
+                    plugin.name.string,
+                    plugin.requirements[0].name()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_a_single_scalar_incompatibility_in_flow_style() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_incompatibilities(vec![File::new("other.esp".into())]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ninc: ['{}']",
+                    plugin.name.string,
+                    plugin.incompatibilities[0].name()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_messages() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_messages(vec![
+                Message::new(MessageType::Say, "content1".into()),
+                Message::new(MessageType::Say, "content2".into()),
+            ]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nmsg:\n  - type: {}\n    content: '{}'\n  - type: {}\n    content: '{}'",
+                    plugin.name.string,
+                    plugin.messages[0].message_type(),
+                    plugin.messages[0].content()[0].text(),
+                    plugin.messages[1].message_type(),
+                    plugin.messages[1].content()[0].text(),
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_a_single_scalar_tag_in_flow_style() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_tags(vec![Tag::new("Relev".into(), TagSuggestion::Addition)]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ntag: [{}]",
+                    plugin.name.string,
+                    plugin.tags[0].name()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_dirty_info() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_dirty_info(vec![PluginCleaningData::new(0xDEADBEEF, "utility".into())]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ndirty:\n  - crc: 0x{:8X}\n    util: '{}'",
+                    plugin.name(),
+                    plugin.dirty_info[0].crc(),
+                    plugin.dirty_info[0].cleaning_utility()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_clean_info() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_clean_info(vec![PluginCleaningData::new(0xDEADBEEF, "utility".into())]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nclean:\n  - crc: 0x{:8X}\n    util: '{}'",
+                    plugin.name(),
+                    plugin.clean_info[0].crc(),
+                    plugin.clean_info[0].cleaning_utility()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_a_single_scalar_location_in_flow_style() {
+            let mut plugin = PluginMetadata::new("test.esp").unwrap();
+            plugin.set_locations(vec![Location::new("https://www.example.com".into())]);
+            let yaml = emit(&plugin);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nurl: ['{}']",
+                    plugin.name(),
+                    plugin.locations[0].url()
+                ),
+                yaml
+            );
+        }
+    }
 }

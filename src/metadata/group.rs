@@ -4,6 +4,7 @@ use super::error::ParseMetadataError;
 use super::yaml::{
     YamlObjectType, get_as_hash, get_required_string_value, get_string_value, get_strings_vec_value,
 };
+use super::yaml_emit::{EmitYaml, YamlEmitter};
 
 /// Represents a group to which plugin metadata objects can belong.
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -87,5 +88,105 @@ impl TryFrom<&MarkedYaml> for Group {
             description: description.map(|d| d.1.to_string()),
             after_groups: after.iter().map(|a| a.to_string()).collect(),
         })
+    }
+}
+
+impl EmitYaml for Group {
+    fn is_scalar(&self) -> bool {
+        false
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        emitter.begin_map();
+
+        emitter.map_key("name");
+        emitter.single_quoted_str(&self.name);
+
+        if let Some(description) = &self.description {
+            emitter.map_key("description");
+            emitter.single_quoted_str(description);
+        }
+
+        if !self.after_groups.is_empty() {
+            emitter.map_key("after");
+            emitter.begin_array();
+
+            for after in &self.after_groups {
+                emitter.unquoted_str(after);
+            }
+
+            emitter.end_array();
+        }
+
+        emitter.end_map();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod emit_yaml {
+        use super::*;
+        use crate::metadata::emit;
+
+        #[test]
+        fn should_omit_description_and_after_keys_if_their_fields_are_empty() {
+            let group = Group::new("name".into());
+            let yaml = emit(&group);
+
+            assert_eq!(format!("name: '{}'", group.name), yaml);
+        }
+
+        #[test]
+        fn should_include_description_key_if_a_description_is_set() {
+            let group = Group::new("name".into()).with_description("desc".into());
+            let yaml = emit(&group);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ndescription: '{}'",
+                    group.name,
+                    group.description.unwrap()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_include_after_key_if_after_groups_is_not_empty() {
+            let group =
+                Group::new("name".into()).with_after_groups(vec!["after1".into(), "after2".into()]);
+
+            let yaml = emit(&group);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nafter:\n  - {}\n  - {}",
+                    group.name, group.after_groups[0], group.after_groups[1]
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_map_with_all_fields_set() {
+            let group = Group::new("name".into())
+                .with_description("desc".into())
+                .with_after_groups(vec!["after1".into(), "after2".into()]);
+
+            let yaml = emit(&group);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ndescription: '{}'\nafter:\n  - {}\n  - {}",
+                    group.name,
+                    group.description.unwrap(),
+                    group.after_groups[0],
+                    group.after_groups[1]
+                ),
+                yaml
+            );
+        }
     }
 }
