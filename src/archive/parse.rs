@@ -6,7 +6,10 @@ use std::{
 };
 
 use super::error::{ArchiveParsingError, ArchivePathParsingError};
-use crate::{logging, plugin::has_ascii_extension};
+use crate::{
+    logging::{self, format_details},
+    plugin::has_ascii_extension,
+};
 
 use super::{ba2, bsa};
 
@@ -25,7 +28,7 @@ pub fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTreeSet<u
                 logging::error!(
                     "Encountered an error while trying to read the Bethesda archive at \"{}\": {}",
                     archive_path.display(),
-                    e
+                    format_details(&e)
                 );
                 continue;
             }

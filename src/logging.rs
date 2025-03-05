@@ -95,6 +95,16 @@ macro_rules! trace {
 
 pub(crate) use {debug, error, info, log, trace, warning as warn};
 
+pub(crate) fn format_details<E: std::error::Error>(error: &E) -> String {
+    let mut details = error.to_string(); // The display string.
+    if let Some(source) = error.source() {
+        details += ": ";
+        details += &format_details(&source)
+    }
+
+    details
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

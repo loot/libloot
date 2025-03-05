@@ -14,7 +14,7 @@ use crate::{
         DatabaseLockPoisonError, GameHandleCreationError, LoadOrderError, LoadOrderStateError,
         LoadPluginsError, SortPluginsError,
     },
-    logging,
+    logging::{self, format_details},
     metadata::{
         Filename,
         plugin_metadata::{GHOST_FILE_EXTENSION, iends_with_ascii},
@@ -657,7 +657,7 @@ fn try_load_plugin(
             logging::error!(
                 "Caught error while trying to load \"{}\": {}",
                 plugin_path.display(),
-                e
+                format_details(&e)
             );
             None
         }
