@@ -35,7 +35,7 @@ $env:LIBLOOT_REVISION = git rev-parse --short HEAD
 cargo build --release
 ```
 
-There aren't many tests, but those that exist can be run using:
+There aren't many tests, but those that exist can be run by first extracting the [testing-plugins](https://github.com/Ortham/testing-plugins) archive to this readme's directory (so that there's a `testing-plugins` directory there), then running:
 
 ```
 cargo test

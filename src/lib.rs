@@ -6,6 +6,8 @@ mod logging;
 pub mod metadata;
 mod plugin;
 mod sorting;
+#[cfg(test)]
+mod tests;
 mod version;
 
 pub use database::Database;

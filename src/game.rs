@@ -753,3 +753,60 @@ impl GameCache {
         self.archive_paths.iter()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use rstest::rstest;
+    use rstest_reuse::{apply, template};
+
+    use crate::tests::Fixture;
+
+    #[template]
+    #[rstest]
+    fn all_game_types(
+        #[values(
+            GameType::TES4,
+            GameType::TES5,
+            GameType::FO3,
+            GameType::FONV,
+            GameType::FO4,
+            GameType::TES5SE,
+            GameType::FO4VR,
+            GameType::TES5VR,
+            GameType::TES3,
+            GameType::Starfield,
+            GameType::OpenMW
+        )]
+        game_type: GameType,
+    ) {
+    }
+
+    mod new {
+        use super::*;
+
+        #[apply(all_game_types)]
+        fn should_succeed_if_given_valid_game_path(game_type: GameType) {
+            let fixture = Fixture::new(game_type);
+
+            let game = Game::new(fixture.game_type, &fixture.game_path);
+
+            assert!(game.is_ok());
+        }
+    }
+
+    mod with_local_path {
+        use super::*;
+
+        #[apply(all_game_types)]
+        fn should_succeed_if_given_valid_paths(game_type: GameType) {
+            let fixture = Fixture::new(game_type);
+
+            let game =
+                Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path);
+
+            assert!(game.is_ok());
+        }
+    }
+}
