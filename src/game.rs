@@ -361,9 +361,9 @@ impl Game {
         plugin_paths: &[&Path],
         load_scope: LoadScope,
     ) -> Result<Vec<Plugin>, LoadPluginsError> {
-        validate_plugin_paths(self.game_type, plugin_paths)?;
-
         let data_path = data_path(self.game_type, &self.game_path);
+
+        validate_plugin_paths(self.game_type, &data_path, plugin_paths)?;
 
         let archive_paths =
             find_archives(self.game_type, self.additional_data_paths(), &data_path)?;
@@ -568,6 +568,7 @@ fn new_condition_evaluator_state(
 
 fn validate_plugin_paths(
     game_type: GameType,
+    data_path: &Path,
     plugin_paths: &[&Path],
 ) -> Result<(), PluginValidationError> {
     // Check that all plugin filenames are unique.
@@ -592,7 +593,10 @@ fn validate_plugin_paths(
 
     plugin_paths
         .par_iter()
-        .map(|path| validate_plugin_path_and_header(game_type, path))
+        .map(|path| {
+            let resolved_path = resolve_plugin_path(game_type, data_path, path);
+            validate_plugin_path_and_header(game_type, &resolved_path)
+        })
         .collect::<Result<(), PluginValidationError>>()
 }
 
