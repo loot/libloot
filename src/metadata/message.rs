@@ -310,7 +310,7 @@ impl TryFrom<&MarkedYaml> for Message {
         if !subs.is_empty() {
             for mc in &mut content {
                 for (index, sub) in subs.iter().enumerate() {
-                    let placeholder = format!("{}", index);
+                    let placeholder = format!("{{{}}}", index);
                     if !mc.text.contains(&placeholder) {
                         return Err(ParseMetadataError::new(
                             value.span.start,
