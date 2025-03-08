@@ -96,8 +96,8 @@ impl PluginMetadata {
     }
 
     /// Set the plugin's group.
-    pub fn set_group(&mut self, group: &str) {
-        self.group = Some(group.to_string())
+    pub fn set_group(&mut self, group: String) {
+        self.group = Some(group)
     }
 
     /// Unsets the plugin's group, so that it is implicitly a member of the
@@ -456,7 +456,7 @@ mod tests {
         #[test]
         fn should_emit_group_if_set() {
             let mut plugin = PluginMetadata::new("test.esp").unwrap();
-            plugin.set_group("group1");
+            plugin.set_group("group1".into());
             let yaml = emit(&plugin);
 
             assert_eq!(
