@@ -38,14 +38,14 @@ impl File {
     /// CommonMark.
     #[must_use]
     pub fn with_display_name(mut self, display_name: String) -> Self {
-        self.display_name = Some(display_name);
+        self.set_display_name(display_name);
         self
     }
 
     /// Set the condition string.
     #[must_use]
     pub fn with_condition(mut self, condition: String) -> Self {
-        self.condition = Some(condition);
+        self.set_condition(condition);
         self
     }
 
@@ -56,8 +56,7 @@ impl File {
         mut self,
         detail: Vec<MessageContent>,
     ) -> Result<Self, MultilingualMessageContentsError> {
-        validate_message_contents(&detail)?;
-        self.detail = detail;
+        self.set_detail(detail)?;
         Ok(self)
     }
 
@@ -71,6 +70,13 @@ impl File {
         self.display_name.as_deref()
     }
 
+    /// Set the name to be displayed for the file in messages, formatted using
+    /// CommonMark.
+    pub fn set_display_name(&mut self, display_name: String) -> &mut Self {
+        self.display_name = Some(display_name);
+        self
+    }
+
     /// Get the detail message content of the file.
     ///
     /// If this file causes an error message to be displayed, the detail message
@@ -80,9 +86,27 @@ impl File {
         &self.detail
     }
 
+    /// Set the detail message content, which may be appended to any messages
+    /// generated for this file. If multilingual, one language must be
+    /// [MessageContent::DEFAULT_LANGUAGE].
+    pub fn set_detail(
+        &mut self,
+        detail: Vec<MessageContent>,
+    ) -> Result<&mut Self, MultilingualMessageContentsError> {
+        validate_message_contents(&detail)?;
+        self.detail = detail;
+        Ok(self)
+    }
+
     /// Get the condition string.
     pub fn condition(&self) -> Option<&str> {
         self.condition.as_deref()
+    }
+
+    /// Set the condition string.
+    pub fn set_condition(&mut self, condition: String) -> &mut Self {
+        self.condition = Some(condition);
+        self
     }
 }
 

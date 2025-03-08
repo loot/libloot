@@ -38,21 +38,21 @@ impl PluginCleaningData {
     /// Set the number of Identical To Master records found in the plugin.
     #[must_use]
     pub fn with_itm_count(mut self, itm_count: u32) -> Self {
-        self.itm_count = itm_count;
+        self.set_itm_count(itm_count);
         self
     }
 
     /// Set the number of deleted references found in the plugin.
     #[must_use]
     pub fn with_deleted_reference_count(mut self, deleted_reference_count: u32) -> Self {
-        self.deleted_reference_count = deleted_reference_count;
+        self.set_deleted_reference_count(deleted_reference_count);
         self
     }
 
     /// Set the number of deleted navmeshes found in the plugin.
     #[must_use]
     pub fn with_deleted_navmesh_count(mut self, deleted_navmesh_count: u32) -> Self {
-        self.deleted_navmesh_count = deleted_navmesh_count;
+        self.set_deleted_navmesh_count(deleted_navmesh_count);
         self
     }
 
@@ -63,8 +63,7 @@ impl PluginCleaningData {
         mut self,
         detail: Vec<MessageContent>,
     ) -> Result<Self, MultilingualMessageContentsError> {
-        validate_message_contents(&detail)?;
-        self.detail = detail;
+        self.set_detail(detail)?;
         Ok(self)
     }
 
@@ -78,14 +77,32 @@ impl PluginCleaningData {
         self.itm_count
     }
 
+    /// Set the number of Identical To Master records found in the plugin.
+    pub fn set_itm_count(&mut self, itm_count: u32) -> &mut Self {
+        self.itm_count = itm_count;
+        self
+    }
+
     /// Get the number of deleted references found in the plugin.
     pub fn deleted_reference_count(&self) -> u32 {
         self.deleted_reference_count
     }
 
+    /// Set the number of deleted references found in the plugin.
+    pub fn set_deleted_reference_count(&mut self, deleted_reference_count: u32) -> &mut Self {
+        self.deleted_reference_count = deleted_reference_count;
+        self
+    }
+
     /// Get the number of deleted navmeshes found in the plugin.
     pub fn deleted_navmesh_count(&self) -> u32 {
         self.deleted_navmesh_count
+    }
+
+    /// Set the number of deleted navmeshes found in the plugin.
+    pub fn set_deleted_navmesh_count(&mut self, deleted_navmesh_count: u32) -> &mut Self {
+        self.deleted_navmesh_count = deleted_navmesh_count;
+        self
     }
 
     /// Get the cleaning utility that was used to check the plugin.
@@ -102,6 +119,18 @@ impl PluginCleaningData {
     /// edits or manual cleaning steps.
     pub fn detail(&self) -> &[MessageContent] {
         &self.detail
+    }
+
+    /// Set the detail message content, which may be appended to any messages
+    /// generated for this cleaning data. If multilingual, one language must be
+    /// [MessageContent::DEFAULT_LANGUAGE].
+    pub fn set_detail(
+        &mut self,
+        detail: Vec<MessageContent>,
+    ) -> Result<&mut Self, MultilingualMessageContentsError> {
+        validate_message_contents(&detail)?;
+        self.detail = detail;
+        Ok(self)
     }
 }
 

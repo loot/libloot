@@ -27,7 +27,7 @@ impl Location {
     /// Set a name for the URL, eg. the page or site name.
     #[must_use]
     pub fn with_name(mut self, name: String) -> Self {
-        self.name = Some(name);
+        self.set_name(name);
         self
     }
 
@@ -39,6 +39,12 @@ impl Location {
     /// Get the descriptive name of this location.
     pub fn name(&self) -> Option<&str> {
         self.name.as_deref()
+    }
+
+    /// Set a name for the URL, eg. the page or site name.
+    pub fn set_name(&mut self, name: String) -> &mut Self {
+        self.name = Some(name);
+        self
     }
 }
 

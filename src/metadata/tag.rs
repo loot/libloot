@@ -54,6 +54,12 @@ impl Tag {
     pub fn condition(&self) -> Option<&str> {
         self.condition.as_deref()
     }
+
+    /// Set the condition string.
+    pub fn set_condition(&mut self, condition: String) -> &mut Self {
+        self.condition = Some(condition);
+        self
+    }
 }
 
 impl TryFrom<&saphyr::MarkedYaml> for Tag {
