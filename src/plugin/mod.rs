@@ -16,7 +16,9 @@ use crate::{
     GameType,
     archive::{assets_in_archives, find_associated_archives},
     game::GameCache,
-    logging, regex,
+    logging,
+    metadata::plugin_metadata::trim_dot_ghost,
+    regex,
 };
 use error::{
     InvalidFilenameReason, LoadPluginError, PluginDataError, PluginValidationError,
@@ -409,7 +411,7 @@ pub(crate) fn plugins_metadata(
 fn name_string(path: &Path) -> Result<String, LoadPluginError> {
     match path.file_name() {
         Some(f) => match f.to_str() {
-            Some(f) => Ok(f.to_string()),
+            Some(f) => Ok(trim_dot_ghost(f).to_string()),
             None => Err(LoadPluginError::InvalidFilename(
                 InvalidFilenameReason::NonUnicode,
             )),
@@ -460,6 +462,7 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<fancy_regex:
             .iter()
             .flat_map(|captures| captures.iter())
             .flatten()
+            .skip(1) // Skip the first capture as that's the whole regex.
             .map(|m| m.as_str().trim())
             .find(|v| !v.is_empty())
             .map(|v| v.to_string());

@@ -222,7 +222,7 @@ impl MetadataDocument {
             emitter.end_array();
         }
 
-        if !self.groups.is_empty() {
+        if self.groups.len() > 1 {
             emitter.map_key("groups");
             self.groups.emit_yaml(&mut emitter);
         }
@@ -238,13 +238,20 @@ impl MetadataDocument {
             emitter.begin_array();
 
             for plugin in self.plugins() {
-                plugin.emit_yaml(&mut emitter);
+                if !plugin.has_name_only() {
+                    plugin.emit_yaml(&mut emitter);
+                }
             }
 
             emitter.end_array();
         }
 
-        std::fs::write(file_path, emitter.into_string())
+        let mut contents = emitter.into_string();
+        if contents.is_empty() {
+            contents = "{}".into();
+        }
+
+        std::fs::write(file_path, contents)
             .map_err(|e| WriteMetadataError::new(file_path.into(), e.into()))?;
 
         Ok(())
@@ -397,12 +404,27 @@ fn merge_hashes(
 }
 
 fn replace_prelude(masterlist: String, prelude: String) -> String {
+    let line_ending = detect_line_ending(&masterlist);
     if let Some((start, end)) = find_prelude_bounds(&masterlist) {
-        let prelude = indent_prelude(prelude);
+        let prelude = indent_prelude(prelude, line_ending);
 
         masterlist[..start].to_string() + &prelude + &masterlist[end..]
     } else {
         masterlist
+    }
+}
+
+fn detect_line_ending(masterlist: &str) -> &'static str {
+    if let Some(pos) = masterlist.rfind("\n") {
+        if pos == 0 {
+            "\n"
+        } else if masterlist.as_bytes()[pos - 1] == b'\r' {
+            "\r\n"
+        } else {
+            "\n"
+        }
+    } else {
+        "\n"
     }
 }
 
@@ -428,7 +450,7 @@ fn find_prelude_bounds(masterlist: &str) -> Option<(usize, usize)> {
 
         if let Some(c) = masterlist.as_bytes().get(pos) {
             if *c != b' ' && *c != b'#' && *c != b'\n' {
-                return Some((start, next_line_break_pos));
+                return Some((start, pos - 1));
             }
         }
     }
@@ -436,8 +458,9 @@ fn find_prelude_bounds(masterlist: &str) -> Option<(usize, usize)> {
     Some((start, masterlist.len()))
 }
 
-fn indent_prelude(prelude: String) -> String {
-    let prelude = ("\n  ".to_string() + &prelude.replace("\n", "\n  ")).replace("  \n", "\n");
+fn indent_prelude(prelude: String, line_ending: &str) -> String {
+    let prelude = ("\n  ".to_string() + &prelude.replace("\n", "\n  "))
+        .replace(&format!("  {}", line_ending), line_ending);
 
     if prelude.ends_with("\n  ") {
         prelude[..prelude.len() - 2].to_string()
@@ -543,6 +566,46 @@ plugins:
 
         let mut metadata_list = MetadataDocument::default();
         metadata_list.load(&path).unwrap();
+    }
+
+    #[test]
+    fn load_with_prelude_should_merge_docs_with_crlf_line_endings() {
+        let tmp_dir = tempdir().unwrap();
+
+        let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+        std::fs::write(&masterlist_path, "prelude:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from same file\r\nglobals:\r\n  - *ref\r\n").unwrap();
+
+        let prelude_path = tmp_dir.path().join("prelude.yaml");
+        std::fs::write(
+            &prelude_path,
+            "common:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from prelude\r\n",
+        )
+        .unwrap();
+
+        let mut metadata_list = MetadataDocument::default();
+        metadata_list
+            .load_with_prelude(&masterlist_path, &prelude_path)
+            .unwrap();
+    }
+
+    #[test]
+    fn load_with_prelude_should_merge_docs_with_lf_line_endings() {
+        let tmp_dir = tempdir().unwrap();
+
+        let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+        std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\nglobals:\n  - *ref\n").unwrap();
+
+        let prelude_path = tmp_dir.path().join("prelude.yaml");
+        std::fs::write(
+            &prelude_path,
+            "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n",
+        )
+        .unwrap();
+
+        let mut metadata_list = MetadataDocument::default();
+        metadata_list
+            .load_with_prelude(&masterlist_path, &prelude_path)
+            .unwrap();
     }
 
     #[test]

@@ -300,7 +300,12 @@ impl Game {
     /// relative to the game's plugins directory, while absolute paths are used
     /// as given.
     pub fn is_valid_plugin(&self, plugin_path: &Path) -> bool {
-        validate_plugin_path_and_header(self.game_type, plugin_path).is_ok()
+        let resolved_path = resolve_plugin_path(
+            self.game_type,
+            &data_path(self.game_type, &self.game_path),
+            plugin_path,
+        );
+        validate_plugin_path_and_header(self.game_type, &resolved_path).is_ok()
     }
 
     /// Fully parses plugins and loads their data.
@@ -527,6 +532,7 @@ impl Game {
     /// of active plugins is unchanged.
     pub fn set_load_order(&mut self, load_order: &[&str]) -> Result<(), LoadOrderError> {
         self.load_order.set_load_order(load_order)?;
+        self.load_order.save()?;
         Ok(())
     }
 }
