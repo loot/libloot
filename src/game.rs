@@ -154,7 +154,7 @@ impl Game {
     /// can be used to provide the local path instead.
     pub fn new(game_type: GameType, game_path: &Path) -> Result<Self, GameHandleCreationError> {
         logging::info!(
-            "Attempting to create a game handle for game type {} with game path {:?}",
+            "Attempting to create a game handle for game type \"{}\" with game path {:?}",
             game_type,
             game_path
         );
@@ -196,7 +196,7 @@ impl Game {
         game_local_path: &Path,
     ) -> Result<Self, GameHandleCreationError> {
         logging::info!(
-            "Attempting to create a game handle for game type {} with game path {:?} and game local path {:?}",
+            "Attempting to create a game handle for game type \"{}\" with game path {:?} and game local path {:?}",
             game_type,
             game_path,
             game_local_path
