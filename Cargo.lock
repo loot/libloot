@@ -589,6 +589,7 @@ dependencies = [
  "cxx-build",
  "delegate",
  "libloot",
+ "unicase",
 ]
 
 [[package]]

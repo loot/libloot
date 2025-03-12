@@ -28,7 +28,6 @@ along with LOOT.  If not, see
 #include <gtest/gtest.h>
 
 #include <array>
-#include <boost/algorithm/string.hpp>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -229,10 +228,9 @@ protected:
           std::string filename = it->path().filename().u8string();
           if (filename == nonPluginFile)
             continue;
-          if (boost::ends_with(filename, ".ghost"))
+          if (endsWith(filename, ".ghost"))
             filename = it->path().stem().u8string();
-          if (boost::ends_with(filename, ".esp") ||
-              boost::ends_with(filename, ".esm"))
+          if (endsWith(filename, ".esp") || endsWith(filename, ".esm"))
             loadOrder.emplace(std::filesystem::last_write_time(it->path()),
                               filename);
         }
@@ -500,6 +498,17 @@ private:
   static bool isLoadOrderTimestampBased(GameType gameType) {
     return gameType == GameType::tes3 || gameType == GameType::tes4 ||
            gameType == GameType::fo3 || gameType == GameType::fonv;
+  }
+
+  static bool endsWith(const std::string& str, const std::string& suffix) {
+    if (str.length() < suffix.length()) {
+      return false;
+    }
+
+    auto view = std::string_view(str);
+    view.remove_prefix(str.length() - suffix.length());
+
+    return view == suffix;
   }
 };
 }

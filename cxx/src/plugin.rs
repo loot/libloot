@@ -43,6 +43,10 @@ impl<'a> PluginRef<'a> {
         self.0.do_records_overlap(plugin.0).map_err(Into::into)
     }
 
+    pub fn boxed_clone(&self) -> Box<Self> {
+        Box::new(Self(self.0))
+    }
+
     delegate! {
         to self.0 {
             pub fn name(&self) -> &str;

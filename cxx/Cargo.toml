@@ -8,6 +8,7 @@ license = "GPL-3.0"
 cxx = { version = "1.0", features = ["c++17"] }
 delegate = "0.13.2"
 libloot = { path = ".." }
+unicase = "2.8.1"
 
 [build-dependencies]
 cxx-build = "1.0"

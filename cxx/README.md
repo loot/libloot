@@ -1,43 +1,68 @@
 # libloot-rs C++ wrapper
 
-This is an **imcomplete** and **experimental** wrapper around the Rust reimplementation of libloot that provides a C++ interface.
+This is an **imcomplete** and **experimental** wrapper around the Rust reimplementation of libloot that provides a C++ interface that's ABI-compatible with libloot v0.25.3.
 
 ## Current status
 
-- [x] Expose all API types, aside from `LogLevel` and error types
-- [x] Expose all getters and setters on metadata types
-- [x] Expose all other methods on `PluginMetadata`
-- [x] Expose creator functions (`new_*`) for all metadata types
-- [x] Expose `Group::DEFAULT_NAME` (using an accessor function)
-- [x] Expose `MessageContent::DEFAULT_LANGUAGE` (using an accessor function)
-- [x] Expose `select_message_content()`
-- [x] Expose `is_compatible()`
-- [x] Expose `libloot_revision()`
-- [x] Expose `libloot_version()`
-- [x] Expose `LIBLOOT_VERSION_*` constants (as unmangled extern C statics)
-- [ ] Expose `LogLevel`
-- [ ] Expose `set_logging_callback()`
-- [ ] Write tests to cover API usage patterns
-- [ ] Write a C++ layer that provides the same API as the C++ implementation of libloot
+- [x] `EdgeType`
+- [x] `GameType`
+- [x] `LogLevel`
+- [x] `MessageType`
+- [ ] `ConditionSyntaxError`
+- [ ] `CyclicInteractionError`
+- [ ] `FileAccessError`
+- [ ] `UndefinedGroupError`
+- [ ] `std::system_error` with esplugin `std::error_category`
+- [ ] `std::system_error` with libloadorder `std::error_category`
+- [ ] `std::system_error` with loot-condition-interpreter `std::error_category`
+- [x] `ConditionalMetadata`
+- [x] `File`
+- [x] `Filename`
+- [x] `Group`
+- [x] `Location`
+- [x] `MessageContent`
+- [x] `SelectMessageContent`
+- [x] `Message`
+- [x] `PluginCleaningData`
+- [x] `PluginMetadata`
+- [x] `Tag`
+- [x] `SetLoggingCallback`
+- [x] `IsCompatible`
+- [x] `CreateGameHandle`
+- [x] `DatabaseInterface`
+- [x] `GameInterface`
+- [x] `LIBLOOT_VERSION_MAJOR`
+- [x] `LIBLOOT_VERSION_MINOR`
+- [x] `LIBLOOT_VERSION_PATCH`
+- [x] `GetLiblootVersion`
+- [x] `GetLiblootRevision`
+- [x] `PluginInterface`
+- [x] `Vertex`
+
+The error types are defined but currently unused, causing behavioural differences when errors occur - see the implementation notes below for details.
 
 ## Building
 
-The wrapper is currently built as a static library using Cargo and cbindgen.
+The wrapper is currently built in two layers:
+
+- a static library built using Cargo, which provides a C++ interface
+- a shared library built using CMake, which wraps that C++ interface to provide another that is ABI-compatible with C++ libloot.
+
+To build the wrapper:
 
 ```
 cargo build --release
-cbindgen -o include/libloot.h
-```
-
-cbindgen is needed to create a header that contains the C FFI exports. It needs to be v0.28.0 or higher to support the Rust 2024 edition's unsafe attributes. The header needs to be included into C++ code separately from the CXX-generated header. While CXX does support including headers, it produces the wrong include path in the C++ it generates due to this crate being a member of a workspace, so the C++ side expects the header in a subdirectory that doesn't exist.
-
-There are also a small number of C++ tests that can be built and run using CMake:
-
-```
 cmake -B build .
 cmake --build build --config RelWithDebInfo
+```
+
+This also builds a copy of the public API tests from C++ libloot v0.25.3, which can be run using:
+
+```
 ctest --test-dir build --output-on-failure -V
 ```
+
+Some of the tests currently fail: they are all expecting the exception classes that aren't yet used.
 
 To package the build:
 

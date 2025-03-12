@@ -74,7 +74,7 @@ TEST(SetLoggingCallback, shouldAcceptAMemberFunction) {
   } catch (...) {
     EXPECT_EQ(
         "Attempting to create a game handle for game type \"The Elder Scrolls "
-        "IV: Oblivion\" with game path \"dummy\" and game local path \"\"",
+        "IV: Oblivion\" with game path \"dummy\"",
         testLogger.loggedMessages);
 
     SetLoggingCallback([](LogLevel, const char *) {});
@@ -94,7 +94,7 @@ TEST(SetLoggingCallback, shouldAcceptALambdaFunction) {
   } catch (...) {
     EXPECT_EQ(
         "Attempting to create a game handle for game type \"The Elder Scrolls "
-        "IV: Oblivion\" with game path \"dummy\" and game local path \"\"",
+        "IV: Oblivion\" with game path \"dummy\"",
         loggedMessages);
 
     SetLoggingCallback([](LogLevel, const char *) {});
@@ -116,7 +116,7 @@ TEST(SetLoggingCallback,
   } catch (...) {
     EXPECT_EQ(
         "Attempting to create a game handle for game type \"The Elder Scrolls "
-        "IV: Oblivion\" with game path \"dummy\" and game local path \"\"",
+        "IV: Oblivion\" with game path \"dummy\"",
         loggedMessages);
 
     SetLoggingCallback([](LogLevel, const char *) {});

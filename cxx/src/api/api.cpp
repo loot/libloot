@@ -1,0 +1,88 @@
+
+
+#include "loot/api.h"
+
+#include "api/game.h"
+#include "libloot-cxx/src/lib.rs.h"
+#include "rust/cxx.h"
+
+extern "C" {
+extern const unsigned int LIBLOOT_VERSION_MAJOR;
+
+extern const unsigned int LIBLOOT_VERSION_MINOR;
+
+extern const unsigned int LIBLOOT_VERSION_PATCH;
+
+extern const uint8_t LIBLOOT_LOG_LEVEL_TRACE;
+
+extern const uint8_t LIBLOOT_LOG_LEVEL_DEBUG;
+
+extern const uint8_t LIBLOOT_LOG_LEVEL_INFO;
+
+extern const uint8_t LIBLOOT_LOG_LEVEL_WARNING;
+
+extern const uint8_t LIBLOOT_LOG_LEVEL_ERROR;
+
+extern const uint8_t LIBLOOT_LOG_LEVEL_FATAL;
+
+void libloot_set_logging_callback(void (*callback)(uint8_t, const char*, void*),
+                                  void* context);
+}
+
+namespace {
+using loot::LogLevel;
+
+static std::function<void(LogLevel, const char*)> STORED_CALLBACK;
+
+LogLevel convert(uint8_t level) {
+  if (level == LIBLOOT_LOG_LEVEL_TRACE) {
+    return LogLevel::trace;
+  } else if (level == LIBLOOT_LOG_LEVEL_DEBUG) {
+    return LogLevel::debug;
+  } else if (level == LIBLOOT_LOG_LEVEL_INFO) {
+    return LogLevel::info;
+  } else if (level == LIBLOOT_LOG_LEVEL_WARNING) {
+    return LogLevel::warning;
+  } else if (level == LIBLOOT_LOG_LEVEL_ERROR) {
+    return LogLevel::error;
+  } else {
+    return LogLevel::fatal;
+  }
+}
+
+void logging_callback(uint8_t level, const char* message, void* context) {
+  auto callbackPtr =
+      static_cast<std::function<void(LogLevel, const char*)>*>(context);
+
+  (*callbackPtr)(convert(level), message);
+}
+}
+
+namespace loot {
+LOOT_API void SetLoggingCallback(
+    std::function<void(LogLevel, const char*)> callback) {
+  STORED_CALLBACK = callback;
+  libloot_set_logging_callback(logging_callback, &STORED_CALLBACK);
+}
+
+LOOT_API bool IsCompatible(const unsigned int versionMajor,
+                           const unsigned int versionMinor,
+                           const unsigned int versionPatch) {
+  return loot::rust::is_compatible(versionMajor, versionMinor, versionPatch);
+}
+
+LOOT_API std::unique_ptr<GameInterface> CreateGameHandle(
+    const GameType game,
+    const std::filesystem::path& gamePath,
+    const std::filesystem::path& gameLocalPath) {
+  return std::make_unique<Game>(game, gamePath, gameLocalPath);
+}
+
+LOOT_API std::string GetLiblootVersion() {
+  return std::string(loot::rust::libloot_version());
+}
+
+LOOT_API std::string GetLiblootRevision() {
+  return std::string(loot::rust::libloot_revision());
+}
+}

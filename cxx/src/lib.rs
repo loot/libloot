@@ -13,7 +13,11 @@ use metadata::{
     new_tag, select_message_content,
 };
 use plugin::{OptionalPluginRef, PluginRef};
-use std::ffi::{CString, c_char, c_uint};
+use std::{
+    ffi::{c_char, c_uchar, c_uint, c_void, CString},
+    sync::{atomic::AtomicPtr, Mutex},
+};
+use unicase::UniCase;
 
 use libloot::set_logging_callback;
 pub use libloot::{is_compatible, libloot_revision, libloot_version};
@@ -95,8 +99,16 @@ impl std::fmt::Display for UnsupportedEnumValueError {
 
 impl std::error::Error for UnsupportedEnumValueError {}
 
+fn compare_filenames(lhs: &str, rhs: &str) -> i8 {
+    match UniCase::new(lhs).cmp(&UniCase::new(rhs)) {
+        std::cmp::Ordering::Less => -1,
+        std::cmp::Ordering::Equal => 0,
+        std::cmp::Ordering::Greater => 1,
+    }
+}
+
 #[allow(clippy::needless_lifetimes)]
-#[cxx::bridge(namespace = "loot")]
+#[cxx::bridge(namespace = "loot::rust")]
 mod ffi {
 
     pub enum GameType {
@@ -149,6 +161,8 @@ mod ffi {
             contents: &[MessageContent],
             language: &str,
         ) -> Box<OptionalMessageContentRef>;
+
+        fn compare_filenames(lhs: &str, rhs: &str) -> i8;
     }
 
     extern "Rust" {
@@ -351,6 +365,8 @@ mod ffi {
         pub fn loads_archive(&self) -> bool;
 
         pub unsafe fn do_records_overlap<'a>(&self, plugin: &PluginRef<'a>) -> Result<bool>;
+
+        pub unsafe fn boxed_clone<'a>(&'a self) -> Box<PluginRef<'a>>;
     }
 
     extern "Rust" {
@@ -555,15 +571,57 @@ pub static LIBLOOT_VERSION_MINOR: c_uint = libloot::LIBLOOT_VERSION_MINOR;
 #[unsafe(no_mangle)]
 pub static LIBLOOT_VERSION_PATCH: c_uint = libloot::LIBLOOT_VERSION_PATCH;
 
-// TODO: Implement this properly.
+#[unsafe(no_mangle)]
+pub static LIBLOOT_LOG_LEVEL_TRACE: c_uchar = libloot::LogLevel::Trace as u8;
+
+#[unsafe(no_mangle)]
+pub static LIBLOOT_LOG_LEVEL_DEBUG: c_uchar = libloot::LogLevel::Debug as u8;
+
+#[unsafe(no_mangle)]
+pub static LIBLOOT_LOG_LEVEL_INFO: c_uchar = libloot::LogLevel::Info as u8;
+
+#[unsafe(no_mangle)]
+pub static LIBLOOT_LOG_LEVEL_WARNING: c_uchar = libloot::LogLevel::Warning as u8;
+
+#[unsafe(no_mangle)]
+pub static LIBLOOT_LOG_LEVEL_ERROR: c_uchar = libloot::LogLevel::Error as u8;
+
+#[unsafe(no_mangle)]
+pub static LIBLOOT_LOG_LEVEL_FATAL: c_uchar = libloot::LogLevel::Fatal as u8;
+
 #[unsafe(no_mangle)]
 unsafe extern "C" fn libloot_set_logging_callback(
-    callback: unsafe extern "C" fn(u8, *const c_char),
+    callback: unsafe extern "C" fn(u8, *const c_char, *mut c_void),
+    context: *mut c_void,
 ) {
+    let mutex = Mutex::new(AtomicPtr::new(context));
+
     set_logging_callback(move |level, message| {
-        let c_string = CString::new(message).unwrap();
+        let (level, c_string) = match CString::new(message) {
+            Ok(c) => (level, c),
+            Err(_) => {
+                let c_string = CString::new(format!(
+                    "Attempted to log a message containing a null byte: {}",
+                    message.replace('\0', "\\0")
+                ))
+                .unwrap_or_else(|_| {
+                    CString::from(c"Attempted to log a message containing a null byte")
+                });
+                (libloot::LogLevel::Error, c_string)
+            }
+        };
+
+        let mut context = match mutex.lock() {
+            Ok(c) => c,
+            Err(e) => {
+                // The stored value is an atomic, since it's atomic it can't have been left in an invalid state.
+                mutex.clear_poison();
+                e.into_inner()
+            }
+        };
+
         unsafe {
-            callback(level as u8, c_string.as_ptr());
+            callback(level as u8, c_string.as_ptr(), *context.get_mut());
         }
     });
 }
