@@ -24,10 +24,6 @@
 
 #include "loot/metadata/plugin_cleaning_data.h"
 
-#include "api/game/game.h"
-#include "api/helpers/crc.h"
-#include "api/helpers/logging.h"
-
 namespace loot {
 PluginCleaningData::PluginCleaningData(uint32_t crc,
                                        const std::string& utility) :

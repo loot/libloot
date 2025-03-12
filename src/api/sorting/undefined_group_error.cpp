@@ -23,8 +23,6 @@
     */
 #include "loot/exception/undefined_group_error.h"
 
-#include "api/sorting/plugin_graph.h"
-
 namespace loot {
 UndefinedGroupError::UndefinedGroupError(const std::string& groupName) :
       std::runtime_error("The group \"" + groupName + "\" does not exist"),

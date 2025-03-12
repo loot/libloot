@@ -24,9 +24,6 @@
 
 #include "loot/metadata/file.h"
 
-#include "api/helpers/text.h"
-#include "api/metadata/yaml/file.h"
-
 namespace loot {
 File::File(const std::string& name,
            const std::string& display,

@@ -24,14 +24,30 @@
 
 #include "loot/metadata/plugin_metadata.h"
 
-#include <boost/algorithm/string.hpp>
 #include <regex>
 
-#include "api/game/game.h"
-#include "api/helpers/collections.h"
-#include "api/helpers/logging.h"
 #include "api/helpers/text.h"
 #include "api/metadata/yaml/plugin_metadata.h"
+
+namespace {
+// Append second to first, skipping any elements that are already present in
+// first. Although this is O(U * M), both input vectors are expected to be
+// small (with tens of elements being an unusually large number).
+template<typename T>
+std::vector<T> mergeVectors(std::vector<T> first,
+                            const std::vector<T>& second) {
+  const auto initialSizeOfFirst = first.size();
+  for (const auto& element : second) {
+    const auto end = first.cbegin() + initialSizeOfFirst;
+
+    if (std::find(first.cbegin(), end, element) == end) {
+      first.push_back(element);
+    }
+  }
+
+  return first;
+}
+}
 
 namespace loot {
 PluginMetadata::PluginMetadata(const std::string& n) : name_(n) {

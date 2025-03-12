@@ -24,8 +24,6 @@
 
 #include "loot/metadata/tag.h"
 
-#include <boost/algorithm/string.hpp>
-
 namespace loot {
 Tag::Tag(const std::string& tag,
          const bool isAddition,

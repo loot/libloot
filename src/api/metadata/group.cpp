@@ -24,8 +24,6 @@
 
 #include "loot/metadata/group.h"
 
-#include "api/metadata/yaml/group.h"
-
 namespace loot {
 Group::Group(const std::string& name,
              const std::vector<std::string>& afterGroups,

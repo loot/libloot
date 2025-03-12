@@ -24,9 +24,6 @@
 
 #include "loot/metadata/message_content.h"
 
-#include <boost/algorithm/string.hpp>
-#include <optional>
-
 namespace loot {
 MessageContent::MessageContent(const std::string& text,
                                const std::string& language) :

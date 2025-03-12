@@ -24,9 +24,7 @@
 
 #include "loot/metadata/message.h"
 
-#include <boost/algorithm/string.hpp>
-
-#include "api/game/game.h"
+#include <stdexcept>
 
 namespace loot {
 Message::Message(const MessageType type,

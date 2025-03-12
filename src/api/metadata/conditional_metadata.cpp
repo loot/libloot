@@ -24,10 +24,6 @@
 
 #include "loot/metadata/conditional_metadata.h"
 
-#include "api/game/game.h"
-#include "api/helpers/logging.h"
-#include "api/metadata/condition_evaluator.h"
-
 namespace loot {
 ConditionalMetadata::ConditionalMetadata(const std::string& condition) :
     condition_(condition) {}

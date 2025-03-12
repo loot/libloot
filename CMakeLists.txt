@@ -279,7 +279,6 @@ set(LIBLOOT_SRC_API_H_FILES
     "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sort.h"
     "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_graph.h"
     "${CMAKE_SOURCE_DIR}/src/api/sorting/plugin_sorting_data.h"
-    "${CMAKE_SOURCE_DIR}/src/api/helpers/collections.h"
     "${CMAKE_SOURCE_DIR}/src/api/helpers/crc.h"
     "${CMAKE_SOURCE_DIR}/src/api/helpers/logging.h"
     "${CMAKE_SOURCE_DIR}/src/api/helpers/text.h")
