@@ -25,6 +25,7 @@
 #define LOOT_GAME_INTERFACE
 
 #include "loot/database_interface.h"
+#include "loot/enum/game_type.h"
 #include "loot/plugin_interface.h"
 
 namespace loot {

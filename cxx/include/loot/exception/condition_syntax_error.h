@@ -25,7 +25,7 @@
 #ifndef LOOT_EXCEPTION_CONDITION_SYNTAX_ERROR
 #define LOOT_EXCEPTION_CONDITION_SYNTAX_ERROR
 
-#include <stdexcept>
+#include <system_error>
 
 namespace loot {
 /**
