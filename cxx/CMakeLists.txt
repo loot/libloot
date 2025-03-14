@@ -41,6 +41,7 @@ set(LIBLOOT_SRC_API_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/api/convert.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/database.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/error_categories.cpp"
+    "${CMAKE_SOURCE_DIR}/src/api/exception.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/conditional_metadata.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/file.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/filename.cpp"
@@ -89,6 +90,7 @@ set(LIBLOOT_INCLUDE_H_FILES
 set(LIBLOOT_SRC_API_H_FILES
     "${CMAKE_SOURCE_DIR}/src/api/convert.h"
     "${CMAKE_SOURCE_DIR}/src/api/database.h"
+    "${CMAKE_SOURCE_DIR}/src/api/exception.h"
     "${CMAKE_SOURCE_DIR}/src/api/game.h"
     "${CMAKE_SOURCE_DIR}/src/api/plugin.h"
     )

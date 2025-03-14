@@ -10,6 +10,10 @@ delegate = "0.13.2"
 libloot = { path = ".." }
 unicase = "2.8.1"
 
+esplugin = "6.1.1"
+libloadorder = { git = "https://github.com/Ortham/libloadorder.git", rev = "6245dbc6824c4751daef5ab01dfe7b9497f5446f" }
+loot-condition-interpreter = { git = "https://github.com/loot/loot-condition-interpreter.git", rev = "f7d9947fa434037743ce81e2d409184ec0bfb693" }
+
 [build-dependencies]
 cxx-build = "1.0"
 

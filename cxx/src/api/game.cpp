@@ -2,6 +2,7 @@
 #include "api/game.h"
 
 #include "api/convert.h"
+#include "api/exception.h"
 
 namespace {
 loot::GameType convert(loot::rust::GameType gameType) {
@@ -66,12 +67,16 @@ rust::Box<loot::rust::Game> constructGame(
     const loot::GameType gameType,
     const std::filesystem::path& gamePath,
     const std::filesystem::path& localDataPath) {
-  if (localDataPath.empty()) {
-    return std::move(
-        loot::rust::new_game(convert(gameType), gamePath.u8string()));
-  } else {
-    return std::move(loot::rust::new_game_with_local_path(
-        convert(gameType), gamePath.u8string(), localDataPath.u8string()));
+  try {
+    if (localDataPath.empty()) {
+      return std::move(
+          loot::rust::new_game(convert(gameType), gamePath.u8string()));
+    } else {
+      return std::move(loot::rust::new_game_with_local_path(
+          convert(gameType), gamePath.u8string(), localDataPath.u8string()));
+    }
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(loot::mapError(e));
   }
 }
 
@@ -92,19 +97,30 @@ Game::Game(const GameType gameType,
     game_(constructGame(gameType, gamePath, localDataPath)),
     database_(game_->database()) {}
 
-GameType Game::GetType() const { return ::convert(game_->game_type()); }
+GameType Game::GetType() const {
+  try {
+    return ::convert(game_->game_type());
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
 
 const DatabaseInterface& Game::GetDatabase() const { return database_; }
 
 DatabaseInterface& Game::GetDatabase() { return database_; }
 
 std::vector<std::filesystem::path> Game::GetAdditionalDataPaths() const {
-  std::vector<std::filesystem::path> paths;
-  for (const auto& path_str : game_->additional_data_paths()) {
-    paths.push_back(std::filesystem::u8path(path_str.begin(), path_str.end()));
-  }
+  try {
+    std::vector<std::filesystem::path> paths;
+    for (const auto& path_str : game_->additional_data_paths()) {
+      paths.push_back(
+          std::filesystem::u8path(path_str.begin(), path_str.end()));
+    }
 
-  return paths;
+    return paths;
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 void Game::SetAdditionalDataPaths(
@@ -115,8 +131,12 @@ void Game::SetAdditionalDataPaths(
     path_strings.push_back(path.u8string());
     path_strs.push_back(path_strings.back());
   }
-
-  game_->set_additional_data_paths(::rust::Slice<const ::rust::Str>(path_strs));
+  try {
+    game_->set_additional_data_paths(
+        ::rust::Slice<const ::rust::Str>(path_strs));
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 bool Game::IsValidPlugin(const std::filesystem::path& pluginPath) const {
@@ -132,10 +152,14 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
     path_strs.push_back(path_strings.back());
   }
 
-  if (loadHeadersOnly) {
-    game_->load_plugin_headers(::rust::Slice<const ::rust::Str>(path_strs));
-  } else {
-    game_->load_plugins(::rust::Slice<const ::rust::Str>(path_strs));
+  try {
+    if (loadHeadersOnly) {
+      game_->load_plugin_headers(::rust::Slice<const ::rust::Str>(path_strs));
+    } else {
+      game_->load_plugins(::rust::Slice<const ::rust::Str>(path_strs));
+    }
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
   }
 
   for (const auto& path : pluginPaths) {
@@ -164,10 +188,14 @@ const PluginInterface* Game::GetPlugin(const std::string& pluginName) const {
     return it->second.get();
   }
 
-  auto plugin = std::make_shared<Plugin>(std::move(pluginOpt->as_ref()));
-  const auto result = plugins_.emplace(key, plugin);
+  try {
+    auto plugin = std::make_shared<Plugin>(std::move(pluginOpt->as_ref()));
+    const auto result = plugins_.emplace(key, plugin);
 
-  return result.first->second.get();
+    return result.first->second.get();
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 std::vector<const PluginInterface*> Game::GetLoadedPlugins() const {
@@ -188,23 +216,38 @@ std::vector<std::string> Game::SortPlugins(
     const std::vector<std::string>& pluginFilenames) {
   const auto strs = as_str_refs(pluginFilenames);
 
-  const auto results =
-      game_->sort_plugins(::rust::Slice(strs));
+  try {
+    const auto results = game_->sort_plugins(::rust::Slice(strs));
 
-  return convert<std::string>(results);
+    return convert<std::string>(results);
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 void Game::LoadCurrentLoadOrderState() {
-  game_->load_current_load_order_state();
+  try {
+    game_->load_current_load_order_state();
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 bool Game::IsLoadOrderAmbiguous() const {
-  return game_->is_load_order_ambiguous();
+  try {
+    return game_->is_load_order_ambiguous();
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 std::filesystem::path Game::GetActivePluginsFilePath() const {
-  const auto path_string = game_->active_plugins_file_path();
-  return std::filesystem::u8path(path_string.begin(), path_string.end());
+  try {
+    const auto path_string = game_->active_plugins_file_path();
+    return std::filesystem::u8path(path_string.begin(), path_string.end());
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 bool Game::IsPluginActive(const std::string& pluginName) const {
@@ -218,6 +261,10 @@ std::vector<std::string> Game::GetLoadOrder() const {
 void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
   const auto strs = as_str_refs(loadOrder);
 
-  game_->set_load_order(::rust::Slice(strs));
+  try {
+    game_->set_load_order(::rust::Slice(strs));
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 }

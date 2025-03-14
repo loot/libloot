@@ -4,6 +4,7 @@
 #include <typeinfo>
 
 #include "api/convert.h"
+#include "api/exception.h"
 
 namespace loot {
 Plugin::Plugin(::rust::Box<loot::rust::PluginRef> plugin) :
@@ -30,7 +31,11 @@ std::optional<std::string> Plugin::GetVersion() const {
 }
 
 std::vector<std::string> Plugin::GetMasters() const {
-  return convert<std::string>(plugin_->masters());
+  try {
+    return convert<std::string>(plugin_->masters());
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 std::vector<Tag> Plugin::GetBashTags() const {
@@ -64,15 +69,27 @@ bool Plugin::IsBlueprintPlugin() const {
 }
 
 bool Plugin::IsValidAsLightPlugin() const {
-  return plugin_->is_valid_as_light_plugin();
+  try {
+    return plugin_->is_valid_as_light_plugin();
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 bool Plugin::IsValidAsMediumPlugin() const {
-  return plugin_->is_valid_as_medium_plugin();
+  try {
+    return plugin_->is_valid_as_medium_plugin();
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 bool Plugin::IsValidAsUpdatePlugin() const {
-  return plugin_->is_valid_as_update_plugin();
+  try {
+    return plugin_->is_valid_as_update_plugin();
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 bool Plugin::IsEmpty() const { return plugin_->is_empty(); }
@@ -86,6 +103,8 @@ bool Plugin::DoRecordsOverlap(const PluginInterface& plugin) const {
     return plugin_->do_records_overlap(*otherPlugin.plugin_);
   } catch (std::bad_cast&) {
     throw std::invalid_argument("Tried to check if records overlapped with a different concrete type implementing PluginInterface");
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
   }
 }
 }

@@ -18,8 +18,8 @@ Currently complete:
 - [x] Metadata-related functionality (excluding writing YAML)
 - [x] Sorting functionality
 - [x] Unit tests
-- [ ] Integration tests
-- [ ] C++ FFI
+- [x] Integration tests
+- [x] C++ FFI
 - [ ] Python FFI
 
 The complete bits should match libloot commit [55b341fc6cbdccee52e42923c13a91eddb5ca97d](https://github.com/loot/libloot/commit/55b341fc6cbdccee52e42923c13a91eddb5ca97d), which is libloot v0.25.3 plus a few changes prompted by this translation.

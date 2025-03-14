@@ -1,10 +1,11 @@
 mod database;
+mod error_codes;
 mod game;
 mod metadata;
 mod plugin;
 
 use database::{Database, Vertex, new_vertex};
-use game::{Game, new_game, new_game_with_local_path};
+use game::{Game, NotValidUtf8, new_game, new_game_with_local_path};
 use metadata::{
     File, Filename, Group, Location, Message, MessageContent, OptionalMessageContentRef,
     OptionalPluginMetadata, PluginCleaningData, PluginMetadata, Tag, group_default_name,
@@ -14,32 +15,217 @@ use metadata::{
 };
 use plugin::{OptionalPluginRef, PluginRef};
 use std::{
-    ffi::{c_char, c_uchar, c_uint, c_void, CString},
-    sync::{atomic::AtomicPtr, Mutex},
+    error::Error,
+    ffi::{CString, c_char, c_uchar, c_uint, c_void},
+    sync::{Mutex, atomic::AtomicPtr},
 };
 use unicase::UniCase;
 
-use libloot::set_logging_callback;
+use libloot::{
+    error::{
+        ConditionEvaluationError, DatabaseLockPoisonError, GameHandleCreationError,
+        GroupsPathError, LoadOrderError, LoadOrderStateError, LoadPluginsError,
+        MetadataRetrievalError, PluginDataError, SortPluginsError,
+    },
+    metadata::error::{
+        LoadMetadataError, MultilingualMessageContentsError, RegexError, WriteMetadataError,
+    },
+    set_logging_callback,
+};
 pub use libloot::{is_compatible, libloot_revision, libloot_version};
 
 #[derive(Debug)]
-pub struct VerboseError(Box<dyn std::error::Error>);
+pub enum VerboseError {
+    CyclicInteractionError(Vec<libloot::Vertex>),
+    UndefinedGroupError(String),
+    EspluginError(u32, String),
+    LibloadorderError(u32, String),
+    LciError(i32, String),
+    FileAccessError(String),
+    InvalidArgument(String),
+    Other(Box<dyn std::error::Error>),
+}
 
 impl std::fmt::Display for VerboseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)?;
-        let mut error = self.0.as_ref();
-        while let Some(source) = error.source() {
-            write!(f, ": {}", source)?;
-            error = source;
+        match self {
+            Self::CyclicInteractionError(cycle) => {
+                write!(f, "CyclicInteractionError: ")?;
+                for vertex in cycle {
+                    let name = vertex.name().replace("\\", "\\\\").replace("-", "\\-");
+                    match vertex.out_edge_type() {
+                        Some(e) => write!(f, "{}--{}--", name, e)?,
+                        None => write!(f, "{}", name)?,
+                    }
+                }
+                Ok(())
+            }
+            Self::UndefinedGroupError(group) => {
+                write!(f, "UndefinedGroupError: {}", group)
+            }
+            Self::EspluginError(c, s) => {
+                write!(f, "EspluginError: {}: {}", c, s)
+            }
+            Self::LibloadorderError(c, s) => {
+                write!(f, "LibloadorderError: {}: {}", c, s)
+            }
+            Self::LciError(c, s) => {
+                write!(f, "LciError: {}: {}", c, s)
+            }
+            Self::FileAccessError(s) => write!(f, "FileAccessError: {}", s),
+            Self::InvalidArgument(s) => write!(f, "InvalidArgument: {}", s),
+            Self::Other(e) => {
+                write!(f, "{}", e)?;
+                let mut error = e.as_ref();
+                while let Some(source) = error.source() {
+                    write!(f, ": {}", source)?;
+                    error = source;
+                }
+                Ok(())
+            }
         }
-        Ok(())
     }
 }
 
-impl<E: std::error::Error + 'static> From<E> for VerboseError {
-    fn from(value: E) -> Self {
-        VerboseError(Box::new(value))
+impl From<GameHandleCreationError> for VerboseError {
+    fn from(value: GameHandleCreationError) -> Self {
+        match value {
+            GameHandleCreationError::LoadOrderError(e) => e.into(),
+            GameHandleCreationError::NotADirectory(_) => {
+                Self::InvalidArgument(value.to_string())
+            }
+            _ => Self::Other(Box::new(value)),
+        }
+    }
+}
+
+impl From<UnsupportedEnumValueError> for VerboseError {
+    fn from(value: UnsupportedEnumValueError) -> Self {
+        Self::Other(Box::new(value))
+    }
+}
+
+impl From<NotValidUtf8> for VerboseError {
+    fn from(value: NotValidUtf8) -> Self {
+        Self::Other(Box::new(value))
+    }
+}
+
+impl From<DatabaseLockPoisonError> for VerboseError {
+    fn from(value: DatabaseLockPoisonError) -> Self {
+        Self::Other(Box::new(value))
+    }
+}
+
+impl From<LoadPluginsError> for VerboseError {
+    fn from(value: LoadPluginsError) -> Self {
+        match value {
+            LoadPluginsError::PluginDataError(e) => e.into(),
+            LoadPluginsError::PluginValidationError(_) => {
+                Self::InvalidArgument(value.to_string())
+            }
+            _ => Self::Other(Box::new(value)),
+        }
+    }
+}
+
+impl From<SortPluginsError> for VerboseError {
+    fn from(value: SortPluginsError) -> Self {
+        match value {
+            SortPluginsError::MetadataRetrievalError(e) => e.into(),
+            SortPluginsError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
+            SortPluginsError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
+            SortPluginsError::PluginDataError(e) => e.into(),
+            _ => Self::Other(Box::new(value)),
+        }
+    }
+}
+
+impl From<LoadOrderStateError> for VerboseError {
+    fn from(value: LoadOrderStateError) -> Self {
+        match value {
+            LoadOrderStateError::LoadOrderError(e) => e.into(),
+            _ => Self::Other(Box::new(value)),
+        }
+    }
+}
+
+impl From<LoadOrderError> for VerboseError {
+    fn from(value: LoadOrderError) -> Self {
+        let error = value
+            .source()
+            .expect("LoadOrderError has source")
+            .downcast_ref::<loadorder::Error>()
+            .expect("LoadOrderError source is a loadorder::Error");
+        let error_code = error_codes::libloadorder::map_error(error);
+        Self::LibloadorderError(error_code, error.to_string())
+    }
+}
+
+impl From<LoadMetadataError> for VerboseError {
+    fn from(value: LoadMetadataError) -> Self {
+        Self::FileAccessError(value.to_string())
+    }
+}
+
+impl From<WriteMetadataError> for VerboseError {
+    fn from(value: WriteMetadataError) -> Self {
+        Self::FileAccessError(value.to_string())
+    }
+}
+
+impl From<ConditionEvaluationError> for VerboseError {
+    fn from(value: ConditionEvaluationError) -> Self {
+        let error = value
+            .source()
+            .expect("LoadOrderError has source")
+            .downcast_ref::<loot_condition_interpreter::Error>()
+            .expect("LoadOrderError source is a loot_condition_interpreter::Error");
+        let error_code = error_codes::lci::map_error(error);
+        Self::LciError(error_code, error.to_string())
+    }
+}
+
+impl From<GroupsPathError> for VerboseError {
+    fn from(value: GroupsPathError) -> Self {
+        match value {
+            GroupsPathError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
+            GroupsPathError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
+            _ => Self::Other(Box::new(value)),
+        }
+    }
+}
+
+impl From<MetadataRetrievalError> for VerboseError {
+    fn from(value: MetadataRetrievalError) -> Self {
+        match value {
+            MetadataRetrievalError::ConditionEvaluationError(e) => e.into(),
+            _ => Self::Other(Box::new(value)),
+        }
+    }
+}
+
+impl From<PluginDataError> for VerboseError {
+    fn from(value: PluginDataError) -> Self {
+        let error = value
+            .source()
+            .expect("LoadOrderError has source")
+            .downcast_ref::<esplugin::Error>()
+            .expect("LoadOrderError source is an esplugin::Error");
+        let error_code = error_codes::esplugin::map_error(error);
+        Self::EspluginError(error_code, error.to_string())
+    }
+}
+
+impl From<MultilingualMessageContentsError> for VerboseError {
+    fn from(value: MultilingualMessageContentsError) -> Self {
+        Self::Other(Box::new(value))
+    }
+}
+
+impl From<RegexError> for VerboseError {
+    fn from(value: RegexError) -> Self {
+        Self::Other(Box::new(value))
     }
 }
 

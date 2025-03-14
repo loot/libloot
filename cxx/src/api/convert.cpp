@@ -1,5 +1,7 @@
 #include "api/convert.h"
 
+#include "api/exception.h"
+
 namespace loot {
 // To public types
 /////////////////////
@@ -118,11 +120,15 @@ std::optional<loot::EdgeType> convert(uint8_t edgeType) {
 }
 
 loot::Vertex convert(const loot::rust::Vertex& vertex) {
-  const auto outEdgeType = convert(vertex.out_edge_type());
-  if (outEdgeType.has_value()) {
-    return loot::Vertex(std::string(vertex.name()), outEdgeType.value());
-  } else {
-    return loot::Vertex(std::string(vertex.name()));
+  try {
+    const auto outEdgeType = convert(vertex.out_edge_type());
+    if (outEdgeType.has_value()) {
+      return loot::Vertex(std::string(vertex.name()), outEdgeType.value());
+    } else {
+      return loot::Vertex(std::string(vertex.name()));
+    }
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
   }
 }
 
@@ -140,8 +146,14 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
 ::rust::Box<loot::rust::File> convert(const loot::File& file) {
   auto output = loot::rust::new_file(std::string(file.GetName()));
   output->set_display_name(file.GetDisplayName());
-  output->set_detail(
-      ::rust::Slice(convert<loot::rust::MessageContent>(file.GetDetail())));
+
+  try {
+    output->set_detail(
+        ::rust::Slice(convert<loot::rust::MessageContent>(file.GetDetail())));
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+
   output->set_condition(file.GetCondition());
 
   return output;
@@ -169,29 +181,44 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
 }
 
 ::rust::Box<loot::rust::Message> convert(const loot::Message& message) {
-  auto output = loot::rust::multilingual_message(
-      convert(message.GetType()),
-      ::rust::Slice(convert<loot::rust::MessageContent>(message.GetContent())));
-  output->set_condition(message.GetCondition());
+  try {
+    auto output = loot::rust::multilingual_message(
+        convert(message.GetType()),
+        ::rust::Slice(
+            convert<loot::rust::MessageContent>(message.GetContent())));
+    output->set_condition(message.GetCondition());
 
-  return output;
+    return output;
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 ::rust::Box<loot::rust::Tag> convert(const loot::Tag& tag) {
-  const auto suggestion = tag.IsAddition() ? loot::rust::TagSuggestion::Addition
-                                           : loot::rust::TagSuggestion::Removal;
-  auto output = loot::rust::new_tag(tag.GetName(), suggestion);
-  output->set_condition(tag.GetCondition());
+  try {
+    const auto suggestion = tag.IsAddition()
+                                ? loot::rust::TagSuggestion::Addition
+                                : loot::rust::TagSuggestion::Removal;
+    auto output = loot::rust::new_tag(tag.GetName(), suggestion);
+    output->set_condition(tag.GetCondition());
 
-  return output;
+    return output;
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 ::rust::Box<loot::rust::PluginCleaningData> convert(
     const loot::PluginCleaningData& data) {
   auto output = loot::rust::new_plugin_cleaning_data(data.GetCRC(),
                                                      data.GetCleaningUtility());
-  output->set_detail(
-      ::rust::Slice(convert<loot::rust::MessageContent>(data.GetDetail())));
+  try {
+    output->set_detail(
+        ::rust::Slice(convert<loot::rust::MessageContent>(data.GetDetail())));
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+
   output->set_itm_count(data.GetITMCount());
   output->set_deleted_reference_count(data.GetDeletedReferenceCount());
   output->set_deleted_navmesh_count(data.GetDeletedNavmeshCount());
@@ -208,29 +235,34 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
 
 ::rust::Box<loot::rust::PluginMetadata> convert(
     const loot::PluginMetadata& metadata) {
-  auto output = loot::rust::new_plugin_metadata(metadata.GetName());
+  try {
+    auto output = loot::rust::new_plugin_metadata(metadata.GetName());
 
-  if (metadata.GetGroup().has_value()) {
-    output->set_group(metadata.GetGroup().value());
+    if (metadata.GetGroup().has_value()) {
+      output->set_group(metadata.GetGroup().value());
+    }
+
+    output->set_load_after_files(
+        ::rust::Slice(convert<loot::rust::File>(metadata.GetLoadAfterFiles())));
+    output->set_requirements(
+        ::rust::Slice(convert<loot::rust::File>(metadata.GetRequirements())));
+    output->set_incompatibilities(::rust::Slice(
+        convert<loot::rust::File>(metadata.GetIncompatibilities())));
+    output->set_messages(
+        ::rust::Slice(convert<loot::rust::Message>(metadata.GetMessages())));
+    output->set_tags(
+        ::rust::Slice(convert<loot::rust::Tag>(metadata.GetTags())));
+    output->set_dirty_info(::rust::Slice(
+        convert<loot::rust::PluginCleaningData>(metadata.GetDirtyInfo())));
+    output->set_clean_info(::rust::Slice(
+        convert<loot::rust::PluginCleaningData>(metadata.GetCleanInfo())));
+    output->set_locations(
+        ::rust::Slice(convert<loot::rust::Location>(metadata.GetLocations())));
+
+    return output;
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
   }
-
-  output->set_load_after_files(
-      ::rust::Slice(convert<loot::rust::File>(metadata.GetLoadAfterFiles())));
-  output->set_requirements(
-      ::rust::Slice(convert<loot::rust::File>(metadata.GetRequirements())));
-  output->set_incompatibilities(::rust::Slice(
-      convert<loot::rust::File>(metadata.GetIncompatibilities())));
-  output->set_messages(
-      ::rust::Slice(convert<loot::rust::Message>(metadata.GetMessages())));
-  output->set_tags(
-      ::rust::Slice(convert<loot::rust::Tag>(metadata.GetTags())));
-  output->set_dirty_info(
-      ::rust::Slice(convert<loot::rust::PluginCleaningData>(metadata.GetDirtyInfo())));
-  output->set_clean_info(
-      ::rust::Slice(convert<loot::rust::PluginCleaningData>(metadata.GetCleanInfo())));
-  output->set_locations(::rust::Slice(convert<loot::rust::Location>(metadata.GetLocations())));
-
-  return output;
 }
 
 // Between containers

@@ -588,7 +588,10 @@ dependencies = [
  "cxx",
  "cxx-build",
  "delegate",
+ "esplugin",
+ "libloadorder",
  "libloot",
+ "loot-condition-interpreter",
  "unicase",
 ]
 
