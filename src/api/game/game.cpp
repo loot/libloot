@@ -325,7 +325,41 @@ std::vector<const PluginInterface*> Game::GetLoadedPlugins() const {
 
 std::vector<std::string> Game::SortPlugins(
     const std::vector<std::string>& pluginFilenames) {
-  return loot::SortPlugins(*this, pluginFilenames);
+  std::vector<const Plugin*> plugins;
+  for (const auto& pluginFilename : pluginFilenames) {
+    const auto plugin = cache_.GetPlugin(pluginFilename);
+    if (plugin == nullptr) {
+      throw std::invalid_argument("The plugin \"" + pluginFilename +
+                                  "\" has not been loaded.");
+    }
+
+    plugins.push_back(plugin);
+  }
+
+  auto pluginsSortingData = GetPluginsSortingData(database_, plugins);
+
+  const auto logger = getLogger();
+  if (logger) {
+    logger->debug("Current load order:");
+    for (const auto& plugin : pluginFilenames) {
+      logger->debug("\t{}", plugin);
+    }
+  }
+
+  const auto newLoadOrder =
+      loot::SortPlugins(std::move(pluginsSortingData),
+                  database_.GetGroups(false),
+                  database_.GetUserGroups(),
+                  loadOrderHandler_.GetEarlyLoadingPlugins());
+
+  if (logger) {
+    logger->debug("Calculated order:");
+    for (const auto& name : newLoadOrder) {
+      logger->debug("\t{}", name);
+    }
+  }
+
+  return newLoadOrder;
 }
 
 void Game::LoadCurrentLoadOrderState() {

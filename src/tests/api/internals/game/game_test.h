@@ -231,6 +231,8 @@ TEST_P(GameTest,
   EXPECT_NO_THROW(loadInstalledPlugins(game, true));
   if (GetParam() == GameType::starfield) {
     EXPECT_EQ(10, game.GetCache().GetPlugins().size());
+  } else if (supportsLightPlugins(GetParam())) {
+    EXPECT_EQ(12, game.GetCache().GetPlugins().size());
   } else {
     EXPECT_EQ(11, game.GetCache().GetPlugins().size());
   }
@@ -279,6 +281,8 @@ TEST_P(GameTest,
   EXPECT_NO_THROW(loadInstalledPlugins(game, false));
   if (GetParam() == GameType::starfield) {
     EXPECT_EQ(10, game.GetCache().GetPlugins().size());
+  } else if (supportsLightPlugins(GetParam())) {
+    EXPECT_EQ(12, game.GetCache().GetPlugins().size());
   } else {
     EXPECT_EQ(11, game.GetCache().GetPlugins().size());
   }
@@ -441,6 +445,70 @@ TEST_P(
   }
 }
 
+TEST_P(GameTest, sortPluginsWithNoLoadedPluginsShouldReturnAnEmptyList) {
+  Game game = Game(GetParam(), gamePath, localPath);
+
+  const auto sorted = game.SortPlugins(game.GetLoadOrder());
+
+  EXPECT_TRUE(sorted.empty());
+}
+
+TEST_P(GameTest, sortPluginsShouldOnlySortTheGivenPlugins) {
+  Game game = Game(GetParam(), gamePath, localPath);
+  loadInstalledPlugins(game, false);
+
+  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+  const auto sorted = game.SortPlugins(plugins);
+
+  EXPECT_EQ(plugins, sorted);
+}
+
+TEST_P(GameTest, sortingShouldNotMakeUnnecessaryChangesToAnExistingLoadOrder) {
+  Game game = Game(GetParam(), gamePath, localPath);
+  game.LoadCurrentLoadOrderState();
+
+  auto plugins = GetInstalledPlugins();
+  game.LoadPlugins({plugins.front()}, true);
+  plugins.erase(plugins.begin());
+  game.LoadPlugins(plugins, false);
+
+  std::vector<std::string> expectedSortedOrder;
+  if (GetParam() == GameType::openmw) {
+    // The existing load order for OpenMW doesn't have plugins loading after
+    // their masters, because the game doesn't enforce that, and the test
+    // setup cannot enforce the positions of inactive plugins.
+    expectedSortedOrder = {
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankMasterDependentEsp,
+        blankEsp,
+        blankPluginDependentEsp,
+        masterFile,
+        blankDifferentMasterDependentEsp,
+    };
+  } else {
+    expectedSortedOrder = getLoadOrder();
+  }
+
+  // Check stability by running the sort 100 times.
+  for (int i = 0; i < 100; i++) {
+    auto sorted = game.SortPlugins(game.GetLoadOrder());
+    ASSERT_EQ(expectedSortedOrder, sorted) << " for sort " << i;
+  }
+}
+
+TEST_P(GameTest, sortPluginsShouldThrowIfAGivenPluginIsNotLoaded) {
+  Game game = Game(GetParam(), gamePath, localPath);
+
+  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+
+  EXPECT_THROW(game.SortPlugins(plugins), std::invalid_argument);
+}
+
 TEST_P(GameTest, clearLoadedPluginsShouldClearThePluginsCache) {
   Game game = Game(GetParam(), gamePath, localPath);
 
@@ -453,21 +521,21 @@ TEST_P(GameTest, clearLoadedPluginsShouldClearThePluginsCache) {
   EXPECT_EQ(nullptr, game.GetPlugin(blankEsm));
 }
 
-TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasNotBeenLoaded) {
+TEST_P(GameTest, isPluginActiveShouldActivePluginAsActiveEvenIfNotLoaded) {
   Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
   EXPECT_TRUE(game.IsPluginActive(blankEsm));
 }
 
-TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItHasNotBeenLoaded) {
+TEST_P(GameTest, isPluginActiveShouldInactivePluginAsInactiveEvenIfNotLoaded) {
   Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
   EXPECT_FALSE(game.IsPluginActive(blankEsp));
 }
 
-TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItsHeaderHasBeenLoaded) {
+TEST_P(GameTest, isPluginActiveShouldActivePluginAsActiveWithHeaderLoaded) {
   Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
@@ -476,7 +544,7 @@ TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItsHeaderHasBeenLoaded) {
   EXPECT_TRUE(game.IsPluginActive(blankEsm));
 }
 
-TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItsHeaderHasBeenLoaded) {
+TEST_P(GameTest, isPluginActiveShouldInactivePluginAsInactiveWithHeaderLoaded) {
   Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
@@ -485,7 +553,7 @@ TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItsHeaderHasBeenLoaded) {
   EXPECT_FALSE(game.IsPluginActive(blankEsp));
 }
 
-TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasBeenFullyLoaded) {
+TEST_P(GameTest, isPluginActiveShouldActivePluginAsActiveWhenFullyLoaded) {
   Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 
@@ -494,7 +562,7 @@ TEST_P(GameTest, shouldShowBlankEsmAsActiveIfItHasBeenFullyLoaded) {
   EXPECT_TRUE(game.IsPluginActive(blankEsm));
 }
 
-TEST_P(GameTest, shouldShowBlankEspAsInactiveIfItHasBeenFullyLoaded) {
+TEST_P(GameTest, isPluginActiveShouldInactivePluginAsInactiveWhenFullyLoaded) {
   Game game = Game(GetParam(), gamePath, localPath);
   game.LoadCurrentLoadOrderState();
 

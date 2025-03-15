@@ -344,6 +344,21 @@ protected:
           blankDifferentEsp,
           blankMasterDependentEsp,
       };
+    } else if (supportsLightPlugins(gameType_)) {
+      return {
+          masterFile,
+          blankEsm,
+          blankDifferentEsm,
+          blankMasterDependentEsm,
+          blankDifferentMasterDependentEsm,
+          blankEsl,
+          blankEsp,
+          blankDifferentEsp,
+          blankMasterDependentEsp,
+          blankDifferentMasterDependentEsp,
+          blankPluginDependentEsp,
+          blankDifferentPluginDependentEsp,
+      };
     } else {
       return {
           masterFile,

@@ -66,10 +66,6 @@ protected:
 
     plugins.push_back(std::filesystem::u8path(nonAsciiEsm));
 
-    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-      plugins.push_back(blankEsl);
-    }
-
     game_.LoadCurrentLoadOrderState();
     game_.LoadPlugins(plugins, true);
   }

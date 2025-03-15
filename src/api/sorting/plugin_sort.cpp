@@ -369,44 +369,4 @@ std::vector<std::string> SortPlugins(
 
   return newMastersLoadOrder;
 }
-
-std::vector<std::string> SortPlugins(
-    const Game& game,
-    const std::vector<std::string>& loadOrder) {
-  std::vector<const Plugin*> plugins;
-  for (const auto& pluginFilename : loadOrder) {
-    const auto plugin = game.GetCache().GetPlugin(pluginFilename);
-    if (plugin == nullptr) {
-      throw std::invalid_argument("The plugin \"" + pluginFilename +
-                                  "\" has not been loaded.");
-    }
-
-    plugins.push_back(plugin);
-  }
-
-  auto pluginsSortingData = GetPluginsSortingData(game.GetDatabase(), plugins);
-
-  const auto logger = getLogger();
-  if (logger) {
-    logger->debug("Current load order:");
-    for (const auto& plugin : loadOrder) {
-      logger->debug("\t{}", plugin);
-    }
-  }
-
-  const auto newLoadOrder =
-      SortPlugins(std::move(pluginsSortingData),
-                  game.GetDatabase().GetGroups(false),
-                  game.GetDatabase().GetUserGroups(),
-                  game.GetLoadOrderHandler().GetEarlyLoadingPlugins());
-
-  if (logger) {
-    logger->debug("Calculated order:");
-    for (const auto& name : newLoadOrder) {
-      logger->debug("\t{}", name);
-    }
-  }
-
-  return newLoadOrder;
-}
 }

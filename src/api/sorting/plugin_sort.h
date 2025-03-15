@@ -32,14 +32,15 @@
 #include "api/sorting/plugin_sorting_data.h"
 
 namespace loot {
-std::vector<std::string> SortPlugins(
+std::vector<PluginSortingData> GetPluginsSortingData(
+    const DatabaseInterface& db,
+    const std::vector<const Plugin*>& loadOrder);
+
+    std::vector<std::string> SortPlugins(
     std::vector<PluginSortingData>&& pluginsSortingData,
     const std::vector<Group>& masterlistGroups,
     const std::vector<Group>& userGroups,
     const std::vector<std::string>& earlyLoadingPlugins);
-
-std::vector<std::string> SortPlugins(const Game& game,
-                                     const std::vector<std::string>& loadOrder);
 }
 
 #endif
