@@ -2,6 +2,25 @@
 Version History
 ***************
 
+0.25.5 - 2025-03-15
+===================
+
+Added
+-----
+
+- :cpp:any:`loot::SetLogLevel()`, which allows libloot to skip invoking the
+  logging callback for log messages with a severity lower than the set level.
+
+Fixed
+-----
+
+- The :cpp:any:`loot::GameInterface::LoadPlugins()` fix in v0.25.4 broke loading
+  plugins for Morrowind, OpenMW and Starfield when loading a plugin that
+  depended on another plugin that was not included in the input but which had
+  previously been loaded.
+- The public API's ``condition_syntax_error.h`` and ``game_interface.h`` headers
+  were missing includes for some of the headers that they rely on.
+
 0.25.4 - 2025-03-04
 ===================
 

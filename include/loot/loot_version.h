@@ -37,7 +37,7 @@ inline constexpr unsigned int LIBLOOT_VERSION_MAJOR = 0;
 inline constexpr unsigned int LIBLOOT_VERSION_MINOR = 25;
 
 /** @brief libloot's patch version number. */
-inline constexpr unsigned int LIBLOOT_VERSION_PATCH = 4;
+inline constexpr unsigned int LIBLOOT_VERSION_PATCH = 5;
 
 /**
  * @brief Get the library version.

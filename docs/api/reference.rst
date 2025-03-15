@@ -29,6 +29,8 @@ Functions
 
 .. doxygenfunction:: loot::SetLoggingCallback
 
+.. doxygenfunction:: loot::SetLogLevel
+
 .. doxygenfunction:: loot::IsCompatible
 
 .. doxygenfunction:: loot::CreateGameHandle
