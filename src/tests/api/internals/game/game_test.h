@@ -445,6 +445,42 @@ TEST_P(
   }
 }
 
+TEST_P(
+    GameTest,
+    loadPluginsShouldThrowIfAPluginHasAMasterThatIsNotInTheInputAndIsNotAlreadyLoadedAndGameIsMorrowindOrStarfield) {
+  Game game = Game(GetParam(), gamePath, localPath);
+
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::starfield) {
+    try {
+      game.LoadPlugins({blankMasterDependentEsm}, false);
+      FAIL();
+    } catch (const std::system_error& e) {
+      EXPECT_EQ(ESP_ERROR_PLUGIN_METADATA_NOT_FOUND, e.code().value());
+      EXPECT_EQ(esplugin_category(), e.code().category());
+    }
+  } else {
+    game.LoadPlugins({blankMasterDependentEsm}, false);
+
+    EXPECT_NE(nullptr, game.GetPlugin(blankMasterDependentEsm));
+  }
+}
+
+TEST_P(
+    GameTest,
+    loadPluginsShouldNotThrowIfAPluginHasAMasterThatIsNotInTheInputButIsAlreadyLoaded) {
+  Game game = Game(GetParam(), gamePath, localPath);
+
+  const auto pluginName =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+
+  game.LoadPlugins({pluginName}, true);
+
+  game.LoadPlugins({blankMasterDependentEsm}, false);
+
+  EXPECT_NE(nullptr, game.GetPlugin(blankMasterDependentEsm));
+}
+
 TEST_P(GameTest, sortPluginsWithNoLoadedPluginsShouldReturnAnEmptyList) {
   Game game = Game(GetParam(), gamePath, localPath);
 

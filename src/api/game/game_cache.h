@@ -37,6 +37,9 @@ public:
   const Plugin* GetPlugin(const std::string& pluginName) const;
   void AddPlugin(Plugin&& plugin);
 
+  std::vector<const Plugin*> GetPluginsWithReplacements(
+      const std::vector<Plugin>& newPlugins) const;
+
   std::set<std::filesystem::path> GetArchivePaths() const;
   void CacheArchivePaths(std::set<std::filesystem::path>&& paths);
 

@@ -353,21 +353,19 @@ TEST_P(PluginTest, loadingWholePluginShouldReadFields) {
       game_.GetType(), game_.GetCache(), game_.DataPath() / pluginName, false);
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
-    std::vector<Plugin> masters;
-    masters.push_back(Plugin(
-        game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false));
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata(masters);
+    Plugin master(
+        game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&master});
 
     EXPECT_NO_THROW(plugin.ResolveRecordIds(pluginsMetadata.get()));
 
     EXPECT_EQ(4, plugin.GetOverrideRecordCount());
   } else if (GetParam() == GameType::starfield) {
-    std::vector<Plugin> masters;
-    masters.push_back(Plugin(game_.GetType(),
-                             game_.GetCache(),
-                             game_.DataPath() / blankFullEsm,
-                             true));
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata(masters);
+    Plugin master(game_.GetType(),
+                  game_.GetCache(),
+                  game_.DataPath() / blankFullEsm,
+                  true);
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata({&master});
 
     EXPECT_NO_THROW(plugin.ResolveRecordIds(pluginsMetadata.get()));
 
@@ -709,7 +707,8 @@ TEST_P(
                            false));
 
   if (GetParam() == GameType::starfield) {
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata(plugins);
+    const auto pluginsMetadata =
+        Plugin::GetPluginsMetadata({&plugins[0], &plugins[1]});
     plugins[1].ResolveRecordIds(pluginsMetadata.get());
 
     plugins[0].ResolveRecordIds(nullptr);
@@ -782,7 +781,8 @@ TEST_P(PluginTest,
   if (GetParam() == GameType::starfield) {
     plugins[0].ResolveRecordIds(nullptr);
 
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata(plugins);
+    const auto pluginsMetadata =
+        Plugin::GetPluginsMetadata({&plugins[0], &plugins[1]});
     plugins[1].ResolveRecordIds(pluginsMetadata.get());
   }
 

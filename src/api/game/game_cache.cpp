@@ -56,6 +56,24 @@ void GameCache::AddPlugin(Plugin&& plugin) {
   }
 }
 
+std::vector<const Plugin*> GameCache::GetPluginsWithReplacements(
+    const std::vector<Plugin>& newPlugins) const {
+  std::unordered_map<std::string, const Plugin*> pluginsMap;
+  for (const auto& plugin : newPlugins) {
+    pluginsMap.emplace(NormalizeFilename(plugin.GetName()), &plugin);
+  }
+  for (const auto& [key, plugin] : plugins_) {
+    pluginsMap.emplace(key, plugin.get());
+  }
+
+  std::vector<const Plugin*> loadedPlugins;
+  for (const auto& [key, plugin] : pluginsMap) {
+    loadedPlugins.push_back(plugin);
+  }
+
+  return loadedPlugins;
+}
+
 std::set<std::filesystem::path> GameCache::GetArchivePaths() const {
   return archivePaths_;
 }
@@ -64,7 +82,5 @@ void GameCache::CacheArchivePaths(std::set<std::filesystem::path>&& paths) {
   archivePaths_ = std::move(paths);
 }
 
-void GameCache::ClearCachedPlugins() {
-  plugins_.clear();
-}
+void GameCache::ClearCachedPlugins() { plugins_.clear(); }
 }

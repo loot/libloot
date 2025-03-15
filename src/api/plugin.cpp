@@ -593,7 +593,7 @@ std::string Plugin::GetDescription() const {
 }
 
 std::unique_ptr<Vec_PluginMetadata, decltype(&esp_plugins_metadata_free)>
-Plugin::GetPluginsMetadata(const std::vector<Plugin>& plugins) {
+Plugin::GetPluginsMetadata(const std::vector<const Plugin*>& plugins) {
   if (plugins.empty()) {
     return std::unique_ptr<Vec_PluginMetadata,
                            decltype(&esp_plugins_metadata_free)>(
@@ -603,9 +603,9 @@ Plugin::GetPluginsMetadata(const std::vector<Plugin>& plugins) {
   std::vector<const ::Plugin*> esPlugins;
   esPlugins.reserve(plugins.size());
   for (const auto& plugin : plugins) {
-    const auto esPlugin = plugin.esPlugin.get();
+    const auto esPlugin = plugin->esPlugin.get();
     if (esPlugin != nullptr) {
-      esPlugins.push_back(plugin.esPlugin.get());
+      esPlugins.push_back(plugin->esPlugin.get());
     }
   }
 

@@ -293,7 +293,9 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
   if (!loadHeadersOnly &&
       (GetType() == GameType::tes3 || GetType() == GameType::openmw ||
        GetType() == GameType::starfield)) {
-    const auto pluginsMetadata = Plugin::GetPluginsMetadata(plugins);
+    const auto loadedPlugins = cache_.GetPluginsWithReplacements(plugins);
+
+    const auto pluginsMetadata = Plugin::GetPluginsMetadata(loadedPlugins);
     for (auto& plugin : plugins) {
       plugin.ResolveRecordIds(pluginsMetadata.get());
     }
@@ -306,9 +308,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
   conditionEvaluator_->RefreshLoadedPluginsState(GetLoadedPlugins());
 }
 
-void Game::ClearLoadedPlugins() {
-  cache_.ClearCachedPlugins();
-}
+void Game::ClearLoadedPlugins() { cache_.ClearCachedPlugins(); }
 
 const PluginInterface* Game::GetPlugin(const std::string& pluginName) const {
   return cache_.GetPlugin(pluginName);
@@ -348,9 +348,9 @@ std::vector<std::string> Game::SortPlugins(
 
   const auto newLoadOrder =
       loot::SortPlugins(std::move(pluginsSortingData),
-                  database_.GetGroups(false),
-                  database_.GetUserGroups(),
-                  loadOrderHandler_.GetEarlyLoadingPlugins());
+                        database_.GetGroups(false),
+                        database_.GetUserGroups(),
+                        loadOrderHandler_.GetEarlyLoadingPlugins());
 
   if (logger) {
     logger->debug("Calculated order:");
