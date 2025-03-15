@@ -28,7 +28,7 @@ along with LOOT.  If not, see
 #include "api/sorting/plugin_sort.h"
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/undefined_group_error.h"
-#include "tests/api/internals/sorting/plugin_graph_test.h"
+#include "tests/api/internals/plugin_test.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -94,14 +94,14 @@ protected:
         plugin, PluginMetadata(), PluginMetadata(), loadOrderIndex);
   }
 
-  plugingraph::TestPlugin* GetPlugin(const std::string& name) {
+  TestPlugin* GetPlugin(const std::string& name) {
     auto it = testPlugins_.find(name);
 
     if (it != testPlugins_.end()) {
       return it->second.get();
     }
 
-    const auto plugin = std::make_shared<plugingraph::TestPlugin>(name);
+    const auto plugin = std::make_shared<TestPlugin>(name);
 
     return testPlugins_.insert_or_assign(name, plugin).first->second.get();
   }
@@ -111,7 +111,7 @@ protected:
   const std::filesystem::path cccPath_;
 
 private:
-  std::map<std::string, std::shared_ptr<plugingraph::TestPlugin>> testPlugins_;
+  std::map<std::string, std::shared_ptr<TestPlugin>> testPlugins_;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -809,7 +809,7 @@ TEST_P(
 
   esp->AddMaster(blankFullEsm);
   blueprint->SetIsMaster(true);
-  blueprint->SetIsBlueprintMaster(true);
+  blueprint->SetIsBlueprintPlugin(true);
 
   std::vector<PluginSortingData> pluginsSortingData{
       CreatePluginSortingData(esp->GetName(), 0),
@@ -1099,7 +1099,7 @@ TEST_P(
 
   esm->SetIsMaster(true);
   blueprint->SetIsMaster(true);
-  blueprint->SetIsBlueprintMaster(true);
+  blueprint->SetIsBlueprintPlugin(true);
 
   std::vector<PluginSortingData> pluginsSortingData{
       CreatePluginSortingData(esm->GetName(), 0),
@@ -1128,7 +1128,7 @@ TEST_P(
 
   esm->SetIsMaster(true);
   blueprint->SetIsMaster(true);
-  blueprint->SetIsBlueprintMaster(true);
+  blueprint->SetIsBlueprintPlugin(true);
 
   std::vector<PluginSortingData> pluginsSortingData{
       CreatePluginSortingData(esm->GetName(), 0),

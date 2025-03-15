@@ -26,157 +26,70 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_SORTING_PLUGIN_SORTING_DATA_TEST
 
 #include "api/sorting/plugin_sorting_data.h"
-#include "tests/common_game_test_fixture.h"
+#include "tests/api/internals/plugin_test.h"
 
 namespace loot {
 namespace test {
-class PluginSortingDataTest : public CommonGameTestFixture,
-                              public testing::WithParamInterface<GameType> {
-protected:
-  PluginSortingDataTest() :
-      CommonGameTestFixture(GetParam()),
-      game_(GetParam(), gamePath, localPath),
-      blankEslEsp("Blank.esl.esp") {}
+TEST(PluginSortingData, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
+  TestPlugin nonMaster;
+  TestPlugin master;
+  master.SetIsMaster(true);
+  TestPlugin lightPlugin;
+  lightPlugin.SetIsLightPlugin(true);
+  TestPlugin lightMaster;
+  lightMaster.SetIsLightPlugin(true);
+  lightMaster.SetIsMaster(true);
 
-  void loadInstalledPlugins(Game &game, bool headersOnly) {
-    auto plugins = GetInstalledPlugins();
-
-    if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-      plugins.push_back(blankEsl);
-
-      if (std::filesystem::exists(dataPath / blankEslEsp)) {
-        plugins.push_back(blankEslEsp);
-      }
-    }
-
-    game.LoadCurrentLoadOrderState();
-    game.LoadPlugins(plugins, headersOnly);
-  }
-
-  std::vector<const PluginInterface *> getLoadedPlugins() {
-    std::vector<const PluginInterface *> loadedPluginInterfaces;
-    const auto loadedPlugins = game_.GetCache().GetPlugins();
-    std::transform(loadedPlugins.begin(),
-                   loadedPlugins.end(),
-                   std::back_inserter(loadedPluginInterfaces),
-                   [](const Plugin *plugin) { return plugin; });
-
-    return loadedPluginInterfaces;
-  }
-
-  Game game_;
-  const std::string blankEslEsp;
-};
-
-// Pass an empty first argument, as it's a prefix for the test instantation,
-// but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_SUITE_P(,
-                         PluginSortingDataTest,
-                         ::testing::Values(GameType::tes3,
-                                           GameType::tes4,
-                                           GameType::fo4,
-                                           GameType::starfield,
-                                           GameType::openmw));
-
-TEST_P(PluginSortingDataTest, lightFlaggedEspFilesShouldNotBeTreatedAsMasters) {
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    ASSERT_NO_THROW(
-        std::filesystem::copy(dataPath / blankEsl, dataPath / blankEslEsp));
-  }
-
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
-  const auto loadedPlugins = getLoadedPlugins();
-
-  auto esp = PluginSortingData(
-      dynamic_cast<const PluginSortingInterface *>(game_.GetPlugin(blankEsp)),
-      PluginMetadata(),
-      PluginMetadata(),
-      {});
+  auto esp =
+      PluginSortingData(&nonMaster, PluginMetadata(), PluginMetadata(), {});
   EXPECT_FALSE(esp.IsMaster());
 
-  auto master = PluginSortingData(
-      dynamic_cast<const PluginSortingInterface *>(game_.GetPlugin(blankEsm)),
-      PluginMetadata(),
-      PluginMetadata(),
-      {});
-  if (GetParam() == GameType::openmw) {
-    EXPECT_FALSE(master.IsMaster());
-  } else {
-    EXPECT_TRUE(master.IsMaster());
-  }
+  auto masterData =
+      PluginSortingData(&master, PluginMetadata(), PluginMetadata(), {});
+  EXPECT_TRUE(masterData.IsMaster());
 
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    auto lightMaster = PluginSortingData(
-        dynamic_cast<const PluginSortingInterface *>(game_.GetPlugin(blankEsl)),
-        PluginMetadata(),
-        PluginMetadata(),
-        {});
-    EXPECT_TRUE(lightMaster.IsMaster());
+  auto lightMasterData =
+      PluginSortingData(&lightMaster, PluginMetadata(), PluginMetadata(), {});
+  EXPECT_TRUE(lightMasterData.IsMaster());
 
-    auto lightPlugin =
-        PluginSortingData(dynamic_cast<const PluginSortingInterface *>(
-                              game_.GetPlugin(blankEslEsp)),
-                          PluginMetadata(),
-                          PluginMetadata(),
-                          {});
-    EXPECT_FALSE(lightPlugin.IsMaster());
-  }
+  auto lightPluginData =
+      PluginSortingData(&lightPlugin, PluginMetadata(), PluginMetadata(), {});
+  EXPECT_FALSE(lightPluginData.IsMaster());
 }
 
-TEST_P(PluginSortingDataTest,
-       overrideRecordCountShouldEqualSizeOfOverlapWithThePluginsMasters) {
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+TEST(PluginSortingData,
+     overrideRecordCountShouldEqualSizeOfOverlapWithThePluginsMasters) {
+  auto count = 4;
+  TestPlugin plugin;
+  plugin.SetOverrideRecordCount(count);
 
-  auto plugin = PluginSortingData(
-      dynamic_cast<const Plugin *>(game_.GetPlugin(blankMasterDependentEsm)),
-      PluginMetadata(),
-      PluginMetadata(),
-      {});
-  if (GetParam() == GameType::starfield) {
-    EXPECT_EQ(1, plugin.GetOverrideRecordCount());
-  } else {
-    EXPECT_EQ(4, plugin.GetOverrideRecordCount());
-  }
+  auto pluginData =
+      PluginSortingData(&plugin, PluginMetadata(), PluginMetadata(), {});
+
+  EXPECT_EQ(count, pluginData.GetOverrideRecordCount());
 }
 
-TEST_P(PluginSortingDataTest,
-       isBlueprintMasterShouldBeTrueIfPluginIsAMasterAndABlueprintPlugin) {
-  SetBlueprintFlag(dataPath / blankEsm);
-  SetBlueprintFlag(dataPath / blankEsp);
-
-  ASSERT_NO_THROW(loadInstalledPlugins(game_, false));
+TEST(PluginSortingData,
+     isBlueprintMasterShouldBeTrueIfPluginIsAMasterAndABlueprintPlugin) {
+  TestPlugin master;
+  TestPlugin blueprintPlugin;
+  blueprintPlugin.SetIsBlueprintPlugin(true);
+  TestPlugin blueprintMaster;
+  blueprintMaster.SetIsBlueprintPlugin(true);
+  blueprintMaster.SetIsMaster(true);
 
   auto plugin =
-      PluginSortingData(dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsm)),
-                        PluginMetadata(),
-                        PluginMetadata(),
-                        {});
-  if (GetParam() == GameType::starfield) {
-    EXPECT_TRUE(plugin.IsBlueprintMaster());
-  } else {
-    EXPECT_FALSE(plugin.IsBlueprintMaster());
-  }
+      PluginSortingData(&master, PluginMetadata(), PluginMetadata(), {});
 
-  plugin = PluginSortingData(
-      dynamic_cast<const Plugin *>(game_.GetPlugin(blankDifferentEsm)),
-      PluginMetadata(),
-      PluginMetadata(),
-      {});
-  EXPECT_FALSE(plugin.IsBlueprintMaster());
-
-  plugin =
-      PluginSortingData(dynamic_cast<const Plugin *>(game_.GetPlugin(blankEsp)),
-                        PluginMetadata(),
-                        PluginMetadata(),
-                        {});
   EXPECT_FALSE(plugin.IsBlueprintMaster());
 
   plugin = PluginSortingData(
-      dynamic_cast<const Plugin *>(game_.GetPlugin(blankDifferentEsp)),
-      PluginMetadata(),
-      PluginMetadata(),
-      {});
+      &blueprintPlugin, PluginMetadata(), PluginMetadata(), {});
   EXPECT_FALSE(plugin.IsBlueprintMaster());
+
+  plugin = PluginSortingData(
+      &blueprintMaster, PluginMetadata(), PluginMetadata(), {});
+  EXPECT_TRUE(plugin.IsBlueprintMaster());
 }
 }
 }

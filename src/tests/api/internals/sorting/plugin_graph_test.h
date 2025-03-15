@@ -30,103 +30,10 @@ along with LOOT.  If not, see
 #include "api/sorting/group_sort.h"
 #include "api/sorting/plugin_graph.h"
 #include "loot/exception/cyclic_interaction_error.h"
+#include "tests/api/internals/plugin_test.h"
 
 namespace loot {
 namespace test {
-namespace plugingraph {
-class TestPlugin : public PluginSortingInterface {
-public:
-  TestPlugin(const std::string& name) : name_(name) {}
-
-  std::string GetName() const override { return name_; }
-
-  std::optional<float> GetHeaderVersion() const override {
-    return std::optional<float>();
-  }
-
-  std::optional<std::string> GetVersion() const override {
-    return std::optional<std::string>();
-  }
-
-  std::vector<std::string> GetMasters() const override { return masters_; }
-
-  std::vector<Tag> GetBashTags() const override { return std::vector<Tag>(); }
-
-  std::optional<uint32_t> GetCRC() const override {
-    return std::optional<uint32_t>();
-  }
-
-  bool IsMaster() const override { return isMaster_; }
-
-  bool IsLightPlugin() const override { return false; }
-
-  bool IsMediumPlugin() const override { return false; }
-
-  bool IsUpdatePlugin() const override { return false; }
-
-  bool IsBlueprintPlugin() const override { return isBlueprintMaster_; }
-
-  bool IsValidAsLightPlugin() const override { return false; }
-
-  bool IsValidAsMediumPlugin() const override { return false; }
-
-  bool IsValidAsUpdatePlugin() const override { return false; }
-
-  bool IsEmpty() const override { return false; }
-
-  bool LoadsArchive() const override { return false; }
-
-  bool DoRecordsOverlap(const PluginInterface& plugin) const override {
-    const auto otherPlugin = dynamic_cast<const TestPlugin*>(&plugin);
-    return recordsOverlapWith.count(&plugin) != 0 ||
-           otherPlugin->recordsOverlapWith.count(this) != 0;
-  }
-
-  size_t GetOverrideRecordCount() const override {
-    return overrideRecordCount_;
-  }
-
-  size_t GetAssetCount() const override { return assetCount_; };
-
-  bool DoAssetsOverlap(const PluginSortingInterface& plugin) const override {
-    const auto otherPlugin = dynamic_cast<const TestPlugin*>(&plugin);
-    return assetsOverlapWith.count(&plugin) != 0 ||
-           otherPlugin->assetsOverlapWith.count(this) != 0;
-  }
-
-  void AddMaster(const std::string& master) { masters_.push_back(master); }
-
-  void SetIsMaster(bool isMaster) { isMaster_ = isMaster; }
-
-  void SetIsBlueprintMaster(bool isBlueprintMaster) {
-    isBlueprintMaster_ = isBlueprintMaster;
-  }
-
-  void AddOverlappingRecords(const PluginInterface& plugin) {
-    recordsOverlapWith.insert(&plugin);
-  }
-
-  void SetOverrideRecordCount(size_t overrideRecordCount) {
-    overrideRecordCount_ = overrideRecordCount;
-  }
-
-  void AddOverlappingAssets(const PluginSortingInterface& plugin) {
-    assetsOverlapWith.insert(&plugin);
-  }
-
-  void SetAssetCount(size_t assetCount) { assetCount_ = assetCount; }
-
-private:
-  std::string name_;
-  std::vector<std::string> masters_;
-  std::set<const PluginInterface*> recordsOverlapWith;
-  std::set<const PluginSortingInterface*> assetsOverlapWith;
-  size_t overrideRecordCount_{0};
-  size_t assetCount_{0};
-  bool isMaster_{false};
-  bool isBlueprintMaster_{false};
-};
-}
 
 class PluginGraphTest : public ::testing::Test {
 protected:
@@ -165,14 +72,14 @@ protected:
     return PluginSortingData(plugin, masterlistMetadata, userMetadata, {});
   }
 
-  plugingraph::TestPlugin* GetPlugin(const std::string& name) {
+  TestPlugin* GetPlugin(const std::string& name) {
     auto it = plugins.find(name);
 
     if (it != plugins.end()) {
       return it->second.get();
     }
 
-    const auto plugin = std::make_shared<plugingraph::TestPlugin>(name);
+    const auto plugin = std::make_shared<TestPlugin>(name);
 
     return plugins.insert_or_assign(name, plugin).first->second.get();
   }
@@ -180,7 +87,7 @@ protected:
   GroupGraph groupGraph;
 
 private:
-  std::map<std::string, std::shared_ptr<plugingraph::TestPlugin>> plugins;
+  std::map<std::string, std::shared_ptr<TestPlugin>> plugins;
 };
 
 TEST_F(PluginGraphTest, checkForCyclesShouldNotThrowIfThereIsNoCycle) {
@@ -1496,7 +1403,7 @@ TEST_F(
 }
 
 TEST_F(PluginGraphTest,
-    addGroupEdgesShouldStartSearchingFromTheRootGroupWithTheLongestPath) {
+       addGroupEdgesShouldStartSearchingFromTheRootGroupWithTheLongestPath) {
   std::vector<Group> masterlistGroups{Group("D"),
                                       Group("B", {"D"}),
                                       Group("C", {"B"}),
@@ -1562,14 +1469,16 @@ TEST_F(PluginGraphTest, addGroupEdgesDoesNotStartSearchingWithTheLongestPath) {
   EXPECT_NO_THROW(graph.CheckForCycles());
 }
 
-TEST_F(PluginGraphTest,
+TEST_F(
+    PluginGraphTest,
     addGroupEdgesShouldMarkVerticesAsUnfinishableIfAVertexInTheirSubtreeIsUnfinishable) {
   std::vector<Group> masterlistGroups{Group("A"),
                                       Group("B", {"A"}),
                                       Group("C", {"B"}),
                                       Group("D", {"C"}),
                                       Group()};
-  std::vector<Group> userGroups {Group("BU1", {"B"}), Group("BU2", {"BU1"}), Group("C", {"BU2"})};
+  std::vector<Group> userGroups{
+      Group("BU1", {"B"}), Group("BU2", {"BU1"}), Group("C", {"BU2"})};
   groupGraph = BuildGroupGraph(masterlistGroups, userGroups);
 
   PluginGraph graph;

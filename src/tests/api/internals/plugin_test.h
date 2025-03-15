@@ -146,37 +146,102 @@ private:
   }
 };
 
-class OtherPluginType final : public PluginSortingInterface {
+class TestPlugin : public PluginSortingInterface {
 public:
-  std::string GetName() const override { return ""; }
-  std::optional<float> GetHeaderVersion() const override { return 0.0f; }
+  TestPlugin() : name_("") {}
+
+  TestPlugin(const std::string& name) : name_(name) {}
+
+  std::string GetName() const override { return name_; }
+
+  std::optional<float> GetHeaderVersion() const override {
+    return std::optional<float>();
+  }
+
   std::optional<std::string> GetVersion() const override {
-    return std::nullopt;
+    return std::optional<std::string>();
   }
-  std::vector<std::string> GetMasters() const override {
-    return std::vector<std::string>();
-  }
+
+  std::vector<std::string> GetMasters() const override { return masters_; }
+
   std::vector<Tag> GetBashTags() const override { return std::vector<Tag>(); }
-  std::optional<uint32_t> GetCRC() const override { return std::nullopt; }
 
-  bool IsMaster() const override { return false; }
-  bool IsLightPlugin() const override { return false; }
-  bool IsMediumPlugin() const override { return false; }
-  bool IsUpdatePlugin() const override { return false; }
-  bool IsBlueprintPlugin() const override { return false; }
-  bool IsValidAsLightPlugin() const override { return false; }
-  bool IsValidAsMediumPlugin() const override { return false; }
-  bool IsValidAsUpdatePlugin() const override { return false; }
-  bool IsEmpty() const override { return false; }
-  bool LoadsArchive() const override { return false; }
-  bool DoRecordsOverlap(const PluginInterface&) const override { return true; }
-
-  size_t GetOverrideRecordCount() const override { return 0; };
-
-  size_t GetAssetCount() const override { return 0; };
-  bool DoAssetsOverlap(const PluginSortingInterface&) const override {
-    return true;
+  std::optional<uint32_t> GetCRC() const override {
+    return std::optional<uint32_t>();
   }
+
+  bool IsMaster() const override { return isMaster_; }
+
+  bool IsLightPlugin() const override { return isLightPlugin_; }
+
+  bool IsMediumPlugin() const override { return false; }
+
+  bool IsUpdatePlugin() const override { return false; }
+
+  bool IsBlueprintPlugin() const override { return isBlueprintPlugin_; }
+
+  bool IsValidAsLightPlugin() const override { return false; }
+
+  bool IsValidAsMediumPlugin() const override { return false; }
+
+  bool IsValidAsUpdatePlugin() const override { return false; }
+
+  bool IsEmpty() const override { return false; }
+
+  bool LoadsArchive() const override { return false; }
+
+  bool DoRecordsOverlap(const PluginInterface& plugin) const override {
+    const auto otherPlugin = dynamic_cast<const TestPlugin*>(&plugin);
+    return recordsOverlapWith.count(&plugin) != 0 ||
+           otherPlugin->recordsOverlapWith.count(this) != 0;
+  }
+
+  size_t GetOverrideRecordCount() const override {
+    return overrideRecordCount_;
+  }
+
+  size_t GetAssetCount() const override { return assetCount_; };
+
+  bool DoAssetsOverlap(const PluginSortingInterface& plugin) const override {
+    const auto otherPlugin = dynamic_cast<const TestPlugin*>(&plugin);
+    return assetsOverlapWith.count(&plugin) != 0 ||
+           otherPlugin->assetsOverlapWith.count(this) != 0;
+  }
+
+  void AddMaster(const std::string& master) { masters_.push_back(master); }
+
+  void SetIsMaster(bool isMaster) { isMaster_ = isMaster; }
+
+  void SetIsLightPlugin(bool isLightPlugin) { isLightPlugin_ = isLightPlugin; }
+
+  void SetIsBlueprintPlugin(bool isBlueprintPlugin) {
+    isBlueprintPlugin_ = isBlueprintPlugin;
+  }
+
+  void AddOverlappingRecords(const PluginInterface& plugin) {
+    recordsOverlapWith.insert(&plugin);
+  }
+
+  void SetOverrideRecordCount(size_t overrideRecordCount) {
+    overrideRecordCount_ = overrideRecordCount;
+  }
+
+  void AddOverlappingAssets(const PluginSortingInterface& plugin) {
+    assetsOverlapWith.insert(&plugin);
+  }
+
+  void SetAssetCount(size_t assetCount) { assetCount_ = assetCount; }
+
+private:
+  std::string name_;
+  std::vector<std::string> masters_;
+  std::set<const PluginInterface*> recordsOverlapWith;
+  std::set<const PluginSortingInterface*> assetsOverlapWith;
+  size_t overrideRecordCount_{0};
+  size_t assetCount_{0};
+  bool isMaster_{false};
+  bool isLightPlugin_{false};
+  bool isBlueprintPlugin_{false};
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -660,10 +725,9 @@ TEST_P(PluginTest,
        doRecordsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
   Plugin plugin1(
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsm, false);
-  OtherPluginType plugin2;
+  TestPlugin plugin2;
 
   EXPECT_FALSE(plugin1.DoRecordsOverlap(plugin2));
-  EXPECT_TRUE(plugin2.DoRecordsOverlap(plugin1));
 }
 
 TEST_P(PluginTest,
@@ -756,14 +820,13 @@ TEST_P(PluginTest,
        doAssetsOverlapShouldReturnFalseOrThrowIfTheArgumentIsNotAPluginObject) {
   Plugin plugin1(
       game_.GetType(), game_.GetCache(), game_.DataPath() / blankEsp, false);
-  OtherPluginType plugin2;
+  TestPlugin plugin2;
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_FALSE(plugin1.DoAssetsOverlap(plugin2));
   } else {
     EXPECT_THROW(plugin1.DoAssetsOverlap(plugin2), std::invalid_argument);
   }
-  EXPECT_TRUE(plugin2.DoAssetsOverlap(plugin1));
 }
 
 TEST_P(PluginTest,
