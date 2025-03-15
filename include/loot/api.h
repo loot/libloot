@@ -58,6 +58,15 @@ LOOT_API void SetLoggingCallback(
     std::function<void(LogLevel, const char*)> callback);
 
 /**
+ * @brief Set the log severity level.
+ * @details The default level setting is trace. This function has no effect if
+ *          no logging callback has been set.
+ * @param level
+ *        Messages of this severity level and higher will be logged.
+ */
+LOOT_API void SetLogLevel(LogLevel level);
+
+/**
  * @}
  * @name Version Functions
  * @{

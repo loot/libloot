@@ -33,6 +33,8 @@ std::shared_ptr<spdlog::logger> getLogger();
 
 std::shared_ptr<spdlog::logger> createLogger(
     std::function<void(LogLevel, const char*)> callback);
+
+void setLoggerLevel(LogLevel level);
 }
 
 #endif

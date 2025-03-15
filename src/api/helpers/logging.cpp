@@ -51,6 +51,26 @@ LogLevel mapFromSpdlog(spdlog::level::level_enum severity) {
   }
 }
 
+spdlog::level::level_enum mapToSpdlog(LogLevel severity) {
+  using spdlog::level::level_enum;
+  switch (severity) {
+    case LogLevel::trace:
+      return level_enum::trace;
+    case LogLevel::debug:
+      return level_enum::debug;
+    case LogLevel::info:
+      return level_enum::info;
+    case LogLevel::warning:
+      return level_enum::warn;
+    case LogLevel::error:
+      return level_enum::err;
+    case LogLevel::fatal:
+      return level_enum::critical;
+    default:
+      return level_enum::trace;
+  }
+}
+
 class SpdLoggingSink : public spdlog::sinks::base_sink<std::mutex> {
 public:
   explicit SpdLoggingSink(std::function<void(LogLevel, const char*)> callback) {
@@ -82,5 +102,12 @@ std::shared_ptr<spdlog::logger> createLogger(
   logger->set_level(spdlog::level::level_enum::trace);
 
   return logger;
+}
+
+void setLoggerLevel(LogLevel level) {
+  auto logger = getLogger();
+  if (logger) {
+    logger->set_level(mapToSpdlog(level));
+  }
 }
 }

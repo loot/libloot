@@ -122,5 +122,37 @@ TEST(SetLoggingCallback,
     SetLoggingCallback([](LogLevel, const char *) {});
   }
 }
+
+TEST(SetLogLevel, shouldOnlyRunTheCallbackForMessagesAtOrAboveTheGivenLevel) {
+  std::vector<std::pair<LogLevel, std::string>> loggedMessages;
+  auto callback = [&](LogLevel level, const char *string) {
+    loggedMessages.push_back(std::make_pair(level, std::string(string)));
+  };
+  SetLoggingCallback(callback);
+  SetLogLevel(LogLevel::fatal);
+
+  try {
+    CreateGameHandle(GameType::tes4, "dummy");
+    FAIL();
+  } catch (...) {
+    EXPECT_TRUE(loggedMessages.empty());
+  }
+
+  SetLogLevel(LogLevel::info);
+
+  try {
+    CreateGameHandle(GameType::tes4, "dummy");
+    FAIL();
+  } catch (...) {
+    ASSERT_EQ(1, loggedMessages.size());
+    EXPECT_EQ(LogLevel::info, loggedMessages[0].first);
+    EXPECT_EQ(
+        "Attempting to create a game handle for game type \"The Elder Scrolls "
+        "IV: Oblivion\" with game path \"dummy\" and game local path \"\"",
+        loggedMessages[0].second);
+
+    SetLoggingCallback([](LogLevel, const char *) {});
+  }
+}
 }
 }

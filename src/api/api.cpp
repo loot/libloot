@@ -90,6 +90,8 @@ LOOT_API void SetLoggingCallback(
   spdlog::register_logger(logger);
 }
 
+LOOT_API void SetLogLevel(LogLevel level) { setLoggerLevel(level); }
+
 LOOT_API bool IsCompatible(const unsigned int versionMajor,
                            const unsigned int versionMinor,
                            const unsigned int) {
