@@ -9,12 +9,13 @@ use loadorder::WritableLoadOrder;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::{
+    LogLevel,
     database::Database,
     error::{
         DatabaseLockPoisonError, GameHandleCreationError, LoadOrderError, LoadOrderStateError,
         LoadPluginsError, SortPluginsError,
     },
-    logging::{self, format_details},
+    logging::{self, format_details, is_log_enabled},
     metadata::{
         Filename,
         plugin_metadata::{GHOST_FILE_EXTENSION, iends_with_ascii},
@@ -330,7 +331,20 @@ impl Game {
             self.game_type,
             GameType::TES3 | GameType::OpenMW | GameType::Starfield
         ) {
-            let plugins_metadata = plugins_metadata(&plugins)?;
+            let mut loaded_plugins: HashMap<Filename, &Plugin> = self
+                .cache
+                .plugins()
+                .iter()
+                .map(|(k, v)| (k.clone(), v))
+                .collect();
+
+            for plugin in &plugins {
+                loaded_plugins.insert(Filename::new(plugin.name().to_string()), plugin);
+            }
+
+            let loaded_plugins: Vec<_> = loaded_plugins.into_values().collect();
+
+            let plugins_metadata = plugins_metadata(&loaded_plugins)?;
 
             for plugin in &mut plugins {
                 plugin.resolve_record_ids(&plugins_metadata)?;
@@ -393,7 +407,7 @@ impl Game {
         let mut database = self.database.write()?;
         update_loaded_plugin_state(
             database.condition_evaluator_state_mut(),
-            self.cache.plugins(),
+            self.cache.plugins_iter(),
         );
 
         Ok(())
@@ -412,7 +426,7 @@ impl Game {
 
     /// Get data for all loaded plugins.
     pub fn loaded_plugins(&self) -> Vec<&Plugin> {
-        self.cache.plugins().collect()
+        self.cache.plugins_iter().collect()
     }
 
     /// Calculates a new load order for the game's installed plugins (including
@@ -453,7 +467,7 @@ impl Game {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
-        if log::log_enabled!(log::Level::Debug) {
+        if is_log_enabled(LogLevel::Debug) {
             logging::debug!("Current load order:");
             for plugin_name in plugin_names {
                 logging::debug!("\t{}", plugin_name);
@@ -468,7 +482,7 @@ impl Game {
             self.load_order.game_settings().early_loading_plugins(),
         )?;
 
-        if log::log_enabled!(log::Level::Debug) {
+        if is_log_enabled(LogLevel::Debug) {
             logging::debug!("Sorted load order:");
             for plugin_name in &new_load_order {
                 logging::debug!("\t{}", plugin_name);
@@ -755,7 +769,11 @@ impl GameCache {
         self.plugins.clear();
     }
 
-    fn plugins(&self) -> impl Iterator<Item = &Plugin> {
+    fn plugins(&self) -> &HashMap<Filename, Plugin> {
+        &self.plugins
+    }
+
+    fn plugins_iter(&self) -> impl Iterator<Item = &Plugin> {
         self.plugins.values()
     }
 
@@ -763,7 +781,7 @@ impl GameCache {
         self.plugins.get(&Filename::new(plugin_name.to_string()))
     }
 
-    pub fn archives(&self) -> impl Iterator<Item = &PathBuf> {
+    pub fn archives_iter(&self) -> impl Iterator<Item = &PathBuf> {
         self.archive_paths.iter()
     }
 }
@@ -1624,6 +1642,33 @@ mod tests {
                 };
 
                 game.load_plugins(paths).unwrap();
+
+                assert!(game.plugin(BLANK_MASTER_DEPENDENT_ESM).is_some());
+            }
+
+            #[apply(all_game_types)]
+            fn should_not_error_if_loading_a_plugin_with_a_master_that_is_already_loaded_if_game_is_morrowind_or_starfield(
+                game_type: GameType,
+            ) {
+                let fixture = Fixture::new(game_type);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let master = if game_type == GameType::Starfield {
+                    BLANK_FULL_ESM
+                } else {
+                    BLANK_ESM
+                };
+
+                game.load_plugins(&[Path::new(master)]).unwrap();
+
+                game.load_plugins(&[Path::new(BLANK_MASTER_DEPENDENT_ESM)])
+                    .unwrap();
 
                 assert!(game.plugin(BLANK_MASTER_DEPENDENT_ESM).is_some());
             }

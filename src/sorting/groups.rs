@@ -3,7 +3,8 @@ use std::{cmp::Reverse, collections::HashMap};
 use petgraph::{Graph, algo::bellman_ford, graph::NodeIndex};
 
 use crate::{
-    EdgeType, Vertex, logging,
+    EdgeType, LogLevel, Vertex,
+    logging::{self, is_log_enabled},
     metadata::Group,
     sorting::{
         dfs::find_cycle,
@@ -75,7 +76,7 @@ fn add_groups<'a>(
     }
 
     for group in groups {
-        if log::log_enabled!(log::Level::Trace) {
+        if is_log_enabled(LogLevel::Trace) {
             logging::trace!(
                 "Group \"{}\" directly loads after groups \"{}\"",
                 group.name(),

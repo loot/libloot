@@ -1,6 +1,6 @@
 # libloot-rs C++ wrapper
 
-This is an **experimental** wrapper around the Rust reimplementation of libloot that provides a C++ interface that's ABI-compatible with libloot v0.25.3.
+This is an **experimental** wrapper around the Rust reimplementation of libloot that provides a C++ interface that's ABI-compatible with libloot v0.25.5.
 
 ## Building
 
@@ -17,7 +17,7 @@ cmake -B build .
 cmake --build build --config RelWithDebInfo
 ```
 
-This also builds a copy of the public API tests from C++ libloot v0.25.3, which can be run using:
+This also builds a copy of the public API tests from C++ libloot v0.25.5, which can be run using:
 
 ```
 ctest --test-dir build --output-on-failure -V

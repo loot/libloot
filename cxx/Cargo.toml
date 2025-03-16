@@ -1,6 +1,6 @@
 [package]
 name = "libloot-cxx"
-version = "0.25.3"
+version = "0.25.5"
 edition = "2024"
 license = "GPL-3.0"
 

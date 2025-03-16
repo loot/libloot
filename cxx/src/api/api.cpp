@@ -50,6 +50,25 @@ LogLevel convert(uint8_t level) {
   }
 }
 
+loot::rust::LogLevel convert(LogLevel level) {
+  switch (level) {
+    case LogLevel::trace:
+    return loot::rust::LogLevel::Trace;
+    case LogLevel::debug:
+    return loot::rust::LogLevel::Debug;
+    case LogLevel::info:
+    return loot::rust::LogLevel::Info;
+    case LogLevel::warning:
+    return loot::rust::LogLevel::Warning;
+    case LogLevel::error:
+    return loot::rust::LogLevel::Error;
+    case LogLevel::fatal:
+    return loot::rust::LogLevel::Fatal;
+  default:
+    return loot::rust::LogLevel::Trace;
+  }
+}
+
 void logging_callback(uint8_t level, const char* message, void* context) {
   auto callbackPtr =
       static_cast<std::function<void(LogLevel, const char*)>*>(context);
@@ -63,6 +82,10 @@ LOOT_API void SetLoggingCallback(
     std::function<void(LogLevel, const char*)> callback) {
   STORED_CALLBACK = callback;
   libloot_set_logging_callback(logging_callback, &STORED_CALLBACK);
+}
+
+LOOT_API void SetLogLevel(LogLevel level) {
+  loot::rust::set_log_level(convert(level));
 }
 
 LOOT_API bool IsCompatible(const unsigned int versionMajor,

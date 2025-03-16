@@ -95,7 +95,7 @@ fn find_associated_archives_with_arbitrary_suffixes(
     };
 
     game_cache
-        .archives()
+        .archives_iter()
         .filter(|path| {
             // Need to check if it starts with the given plugin's basename,
             // but case insensitively. This is hard to do accurately, so

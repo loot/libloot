@@ -2,8 +2,8 @@ use std::sync::{LazyLock, RwLock};
 
 type Callback = dyn Fn(LogLevel, &str) + Send + Sync;
 
-pub(crate) static LOGGER: LazyLock<RwLock<Box<Callback>>> =
-    LazyLock::new(|| RwLock::new(Box::new(|_, _| {})));
+pub(crate) static LOGGER: LazyLock<RwLock<Logger>> =
+    LazyLock::new(|| RwLock::new(Logger::new(Box::new(|_, _| {}))));
 
 /// Set the callback function that is called when logging.
 ///
@@ -16,9 +16,22 @@ where
     let boxed = Box::new(callback);
 
     match LOGGER.write() {
-        Ok(mut logger) => *logger = boxed,
+        Ok(mut logger) => logger.set_callback(boxed),
         Err(e) => {
-            *e.into_inner() = boxed;
+            e.into_inner().set_callback(boxed);
+            LOGGER.clear_poison();
+        }
+    }
+}
+
+// Set the log severity level.
+//
+// The default level setting is trace. This function has no effect if no logging callback has been set.
+pub fn set_log_level(level: LogLevel) {
+    match LOGGER.write() {
+        Ok(mut logger) => logger.set_level(level),
+        Err(e) => {
+            e.into_inner().set_level(level);
             LOGGER.clear_poison();
         }
     }
@@ -61,14 +74,52 @@ impl From<LogLevel> for log::Level {
     }
 }
 
+pub(crate) struct Logger {
+    callback: Box<Callback>,
+    level: LogLevel,
+}
+
+impl Logger {
+    fn new(callback: Box<Callback>) -> Self {
+        Self {
+            callback,
+            level: LogLevel::Trace,
+        }
+    }
+
+    pub(crate) fn log(&self, level: LogLevel, message: &str) {
+        if level >= self.level {
+            (self.callback)(level, message)
+        }
+    }
+
+    fn level(&self) -> LogLevel {
+        self.level
+    }
+
+    fn set_callback(&mut self, callback: Box<Callback>) {
+        self.callback = callback;
+    }
+
+    fn set_level(&mut self, level: LogLevel) {
+        self.level = level;
+    }
+}
+
 macro_rules! log {
     ($level:expr, $($arg:tt)+) => {
         // Log using the Rust log crate, as it's probably good to support that.
         log::log!(log::Level::from($level), $($arg)+);
 
         // Also log using the callback.
-        if let Ok(logger) = $crate::logging::LOGGER.read() {
-            logger($level, &std::fmt::format(format_args!($($arg)+)));
+        let message = std::fmt::format(format_args!($($arg)+));
+
+        match $crate::logging::LOGGER.read() {
+            Ok(logger) => logger.log($level, &message),
+            Err(e) => {
+                $crate::logging::LOGGER.clear_poison();
+                e.into_inner().log($level, &message);
+            }
         }
     };
 }
@@ -93,6 +144,22 @@ macro_rules! trace {
     ($($arg:tt)+) => { $crate::logging::log!(crate::LogLevel::Trace, $($arg)+) };
 }
 
+pub fn is_log_enabled(level: LogLevel) -> bool {
+    if log::log_enabled!(level.into()) {
+        return true;
+    }
+
+    let logger = match LOGGER.read() {
+        Ok(logger) => logger,
+        Err(e) => {
+            LOGGER.clear_poison();
+            e.into_inner()
+        }
+    };
+
+    level >= logger.level()
+}
+
 pub(crate) use {debug, error, info, log, trace, warning as warn};
 
 pub(crate) fn format_details<E: std::error::Error>(error: &E) -> String {
@@ -109,15 +176,15 @@ pub(crate) fn format_details<E: std::error::Error>(error: &E) -> String {
 mod tests {
     use super::*;
 
+    use std::sync::{Arc, LazyLock, Mutex};
+
+    // Since the callback is a global object, these tests need to be run in
+    // series so that one doesn't switch out the callback between another
+    // doing the same and trying to use it.
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+
     mod set_logging_callback {
         use super::*;
-
-        use std::sync::{Arc, LazyLock, Mutex};
-
-        // Since the callback is a global object, these tests need to be run in
-        // series so that one doesn't switch out the callback between another
-        // doing the same and trying to use it.
-        static TEST_LOCK: Mutex<()> = Mutex::new(());
 
         #[test]
         fn should_support_a_function() {
@@ -205,6 +272,51 @@ mod tests {
                 vec![(LogLevel::Error, "Test message".into())],
                 *MESSAGES.lock().unwrap()
             );
+        }
+    }
+
+    mod set_log_level {
+        use super::*;
+
+        #[test]
+        fn should_set_the_level_used_to_filter_messages_passed_to_the_callback() {
+            let _lock = TEST_LOCK.lock().unwrap();
+
+            static MESSAGES: LazyLock<Mutex<Vec<(LogLevel, String)>>> =
+                LazyLock::new(|| Mutex::new(Vec::new()));
+
+            fn callback(level: LogLevel, message: &str) {
+                if let Ok(mut messages) = MESSAGES.lock() {
+                    messages.push((level, message.to_string()));
+                }
+            }
+
+            set_logging_callback(callback);
+            set_log_level(LogLevel::Warning);
+
+            error!("Test error");
+            info!("Test info");
+
+            assert_eq!(
+                vec![(LogLevel::Error, "Test error".into())],
+                *MESSAGES.lock().unwrap()
+            );
+        }
+    }
+
+    mod is_log_enabled {
+        use super::*;
+
+        #[test]
+        fn should_return_true_iff_log_level_is_less_than_or_equal_to_given_level() {
+            set_log_level(LogLevel::Warning);
+
+            assert!(!is_log_enabled(LogLevel::Trace));
+            assert!(!is_log_enabled(LogLevel::Debug));
+            assert!(!is_log_enabled(LogLevel::Info));
+            assert!(is_log_enabled(LogLevel::Warning));
+            assert!(is_log_enabled(LogLevel::Error));
+            assert!(is_log_enabled(LogLevel::Fatal));
         }
     }
 }

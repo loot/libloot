@@ -3,7 +3,6 @@ use std::{
     rc::Rc,
 };
 
-use log::log_enabled;
 use petgraph::{
     Graph,
     graph::{EdgeReference, NodeIndex},
@@ -11,7 +10,8 @@ use petgraph::{
 };
 
 use crate::{
-    EdgeType, Plugin, logging,
+    EdgeType, LogLevel, Plugin,
+    logging::{self, is_log_enabled},
     metadata::{File, Group, PluginMetadata},
     plugin::error::PluginDataError,
     sorting::{
@@ -559,7 +559,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                         // Record the path as the start of the new load order.
                         // Don't need to add any edges because there's nothing for nextVertex
                         // to load after at this point.
-                        if log_enabled!(log::Level::Debug) {
+                        if is_log_enabled(LogLevel::Debug) {
                             logging::debug!(
                                 "The path ends with the first plugin checked, treating the following path as the start of the load order: {}",
                                 path_to_string(&self.inner, &path_from_next_node)
@@ -662,7 +662,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         new_load_order.insert(insert_position, node_index);
         processed_nodes.insert(node_index);
 
-        if log_enabled!(log::Level::Debug) {
+        if is_log_enabled(LogLevel::Debug) {
             if let Some(next_node_index) = new_load_order.get(insert_position + 1) {
                 logging::debug!(
                     "The plugin \"{}\" loads before \"{}\" in the new load order.",
@@ -993,6 +993,17 @@ fn get_plugins_in_groups<T: SortingPlugin>(
         plugins_in_groups.entry(group_name).or_default().push(node);
     }
 
+    if is_log_enabled(LogLevel::Debug) {
+        logging::debug!("Found the following plugins in groups:");
+        for (key, value) in &plugins_in_groups {
+            let plugin_names: Vec<_> = value
+                .iter()
+                .map(|i| format!("\"{}\"", graph[*i].name()))
+                .collect();
+            logging::debug!("\t{}: {}", key, plugin_names.join(", "));
+        }
+    }
+
     plugins_in_groups
 }
 
@@ -1099,22 +1110,23 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
 
         for to_plugin in to_plugins {
             if !self.plugins_graph.is_path_cached(from_plugin, *to_plugin) {
+                let involves_user_metadata = path_involves_user_metadata
+                    || self.plugins_graph[from_plugin].group_is_user_metadata
+                    || self.plugins_graph[*to_plugin].group_is_user_metadata;
+
+                let edge_type = if involves_user_metadata {
+                    EdgeType::UserGroup
+                } else {
+                    EdgeType::MasterlistGroup
+                };
+
                 if !self.plugins_graph.path_exists(*to_plugin, from_plugin) {
-                    let involves_user_metadata = path_involves_user_metadata
-                        || self.plugins_graph[from_plugin].group_is_user_metadata
-                        || self.plugins_graph[*to_plugin].group_is_user_metadata;
-
-                    let edge_type = if involves_user_metadata {
-                        EdgeType::UserGroup
-                    } else {
-                        EdgeType::MasterlistGroup
-                    };
-
                     self.plugins_graph
                         .add_edge(from_plugin, *to_plugin, edge_type);
                 } else {
                     logging::debug!(
-                        "Skipping group edge from \"{}\" to \"{}\" as it would create a cycle.",
+                        "Skipping a \"{}\" edge from \"{}\" to \"{}\" as it would create a cycle.",
+                        edge_type,
                         self.plugins_graph[from_plugin].name(),
                         self.plugins_graph[*to_plugin].name()
                     );
@@ -1153,10 +1165,30 @@ impl<'e, T: SortingPlugin> DfsVisitor<'e> for GroupsPathVisitor<'_, '_, '_, '_, 
     }
 
     fn visit_forward_or_cross_edge(&mut self, edge_ref: EdgeReference<'e, EdgeType>) {
-        // Mark the source vertex as unfinishable, because none of the plugins in
-        // in the path so far can have edges added to plugins past the target
-        // vertex.
-        self.unfinishable_nodes.insert(edge_ref.source());
+        // Mark the source vertex and all edges in the current stack as
+        // unfinishable, because none of the plugins in the path so far can have
+        // edges added to plugins past the target vertex.
+
+        logging::debug!(
+            "Found groups graph forward or cross \"{}\" edge going from \"{}\" to \"{}\"",
+            edge_ref.weight(),
+            self.groups_graph[edge_ref.source()],
+            self.groups_graph[edge_ref.target()]
+        );
+
+        let iter = self
+            .edge_stack
+            .iter()
+            .map(|e| e.0.source())
+            .chain(std::iter::once(edge_ref.source()));
+
+        for source in iter {
+            let inserted = self.unfinishable_nodes.insert(source);
+
+            if inserted {
+                logging::debug!("Treating \"{}\" as unfinishable", self.groups_graph[source]);
+            }
+        }
     }
 
     fn visit_back_edge(&mut self, _: EdgeReference<'e, EdgeType>) {}
@@ -1170,7 +1202,13 @@ impl<'e, T: SortingPlugin> DfsVisitor<'e> for GroupsPathVisitor<'_, '_, '_, '_, 
         if self.group_node_to_ignore_as_source != Some(node_index)
             && !self.unfinishable_nodes.contains(&node_index)
         {
-            self.finished_group_vertices.insert(node_index);
+            let inserted = self.finished_group_vertices.insert(node_index);
+            if inserted {
+                logging::debug!(
+                    "Recorded groups graph vertex \"{}\" as finished",
+                    self.groups_graph[node_index]
+                );
+            }
         }
 
         // Since this vertex has been fully explored, pop the edge stack to remove
@@ -2756,6 +2794,57 @@ mod tests {
                 assert!(graph.inner.contains_edge(a, b));
                 assert!(graph.inner.contains_edge(b, e));
                 assert!(graph.inner.contains_edge(e, c));
+                assert!(graph.inner.contains_edge(c, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_mark_nodes_as_unfinishable_if_a_node_in_their_subtree_is_unfinishable() {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A, PLUGIN_B, PLUGIN_B1, PLUGIN_B2, PLUGIN_C, PLUGIN_D,
+                ]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["C".into()]),
+                        Group::default(),
+                    ],
+                    &[
+                        Group::new("BU1".into()).with_after_groups(vec!["B".into()]),
+                        Group::new("BU2".into()).with_after_groups(vec!["BU1".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["BU2".into()]),
+                    ],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let b1 = graph.add_node(fixture.group_sorting_data(PLUGIN_B1, "BU1"));
+                let b2 = graph.add_node(fixture.group_sorting_data(PLUGIN_B2, "BU2"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> B.esp -----------------------> C.esp -> D.esp
+                //                          -> BU1.esp -> BU2.esp ->
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(a, c));
+                assert!(graph.inner.contains_edge(a, d));
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(b, d));
+                assert!(graph.inner.contains_edge(b, b1));
+                assert!(graph.inner.contains_edge(b, b2));
+                assert!(graph.inner.contains_edge(b1, b2));
+                assert!(graph.inner.contains_edge(b1, c));
+                assert!(graph.inner.contains_edge(b1, d));
+                assert!(graph.inner.contains_edge(b2, c));
+                assert!(graph.inner.contains_edge(b2, c));
                 assert!(graph.inner.contains_edge(c, d));
 
                 assert!(graph.check_for_cycles().is_ok());

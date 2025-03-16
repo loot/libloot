@@ -562,7 +562,7 @@ dependencies = [
 
 [[package]]
 name = "libloot"
-version = "0.25.3"
+version = "0.25.5"
 dependencies = [
  "crc32fast",
  "esplugin",
@@ -583,7 +583,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-cxx"
-version = "0.25.3"
+version = "0.25.5"
 dependencies = [
  "cxx",
  "cxx-build",

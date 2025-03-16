@@ -12,7 +12,7 @@ mod version;
 
 pub use database::Database;
 pub use game::{Game, GameType};
-pub use logging::{LogLevel, set_logging_callback};
+pub use logging::{LogLevel, set_log_level, set_logging_callback};
 pub use plugin::Plugin;
 pub use sorting::vertex::{EdgeType, Vertex};
 pub use version::{

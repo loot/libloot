@@ -19,7 +19,7 @@ namespace loot::rust {
 TEST(libloot_version, shouldReturnExpectedValue) {
   auto version = libloot_version();
 
-  EXPECT_EQ(version, "0.25.3");
+  EXPECT_EQ(version, "0.25.5");
 }
 
 TEST(libloot_revision, shouldReturnExpectedValue) {

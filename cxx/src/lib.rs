@@ -91,9 +91,7 @@ impl From<GameHandleCreationError> for VerboseError {
     fn from(value: GameHandleCreationError) -> Self {
         match value {
             GameHandleCreationError::LoadOrderError(e) => e.into(),
-            GameHandleCreationError::NotADirectory(_) => {
-                Self::InvalidArgument(value.to_string())
-            }
+            GameHandleCreationError::NotADirectory(_) => Self::InvalidArgument(value.to_string()),
             _ => Self::Other(Box::new(value)),
         }
     }
@@ -121,9 +119,7 @@ impl From<LoadPluginsError> for VerboseError {
     fn from(value: LoadPluginsError) -> Self {
         match value {
             LoadPluginsError::PluginDataError(e) => e.into(),
-            LoadPluginsError::PluginValidationError(_) => {
-                Self::InvalidArgument(value.to_string())
-            }
+            LoadPluginsError::PluginValidationError(_) => Self::InvalidArgument(value.to_string()),
             _ => Self::Other(Box::new(value)),
         }
     }
@@ -293,6 +289,27 @@ fn compare_filenames(lhs: &str, rhs: &str) -> i8 {
     }
 }
 
+fn set_log_level(level: ffi::LogLevel) -> Result<(), VerboseError> {
+    libloot::set_log_level(level.try_into()?);
+    Ok(())
+}
+
+impl TryFrom<ffi::LogLevel> for libloot::LogLevel {
+    type Error = UnsupportedEnumValueError;
+
+    fn try_from(value: ffi::LogLevel) -> Result<Self, UnsupportedEnumValueError> {
+        match value {
+            ffi::LogLevel::Trace => Ok(libloot::LogLevel::Trace),
+            ffi::LogLevel::Debug => Ok(libloot::LogLevel::Debug),
+            ffi::LogLevel::Info => Ok(libloot::LogLevel::Info),
+            ffi::LogLevel::Warning => Ok(libloot::LogLevel::Warning),
+            ffi::LogLevel::Error => Ok(libloot::LogLevel::Error),
+            ffi::LogLevel::Fatal => Ok(libloot::LogLevel::Fatal),
+            _ => Err(UnsupportedEnumValueError),
+        }
+    }
+}
+
 #[allow(clippy::needless_lifetimes)]
 #[cxx::bridge(namespace = "loot::rust")]
 mod ffi {
@@ -338,7 +355,18 @@ mod ffi {
         blueprintMaster,
     }
 
+    pub enum LogLevel {
+        Trace,
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Fatal,
+    }
+
     extern "Rust" {
+        fn set_log_level(level: LogLevel) -> Result<()>;
+
         fn is_compatible(major: u32, minor: u32, patch: u32) -> bool;
         fn libloot_version() -> String;
         fn libloot_revision() -> String;

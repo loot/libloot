@@ -356,7 +356,7 @@ pub(crate) fn has_ascii_extension(path: &Path, extension: &str) -> bool {
 }
 
 pub(crate) fn plugins_metadata(
-    plugins: &[Plugin],
+    plugins: &[&Plugin],
 ) -> Result<Vec<esplugin::PluginMetadata>, PluginDataError> {
     let esplugins: Vec<_> = plugins.iter().filter_map(|p| p.plugin.as_ref()).collect();
     Ok(esplugin::plugins_metadata(&esplugins)?)
@@ -646,7 +646,7 @@ mod tests {
                 )
                 .unwrap();
 
-                let metadata = plugins_metadata(&[master]).unwrap();
+                let metadata = plugins_metadata(&[&master]).unwrap();
 
                 plugin.resolve_record_ids(&metadata).unwrap();
 
@@ -660,7 +660,7 @@ mod tests {
                 )
                 .unwrap();
 
-                let metadata = plugins_metadata(&[master]).unwrap();
+                let metadata = plugins_metadata(&[&master]).unwrap();
 
                 plugin.resolve_record_ids(&metadata).unwrap();
 
@@ -947,7 +947,7 @@ mod tests {
                 )
                 .unwrap();
 
-                let metadata = plugins_metadata(&[master]).unwrap();
+                let metadata = plugins_metadata(&[&master]).unwrap();
 
                 plugin.resolve_record_ids(&metadata).unwrap();
             }
@@ -990,7 +990,7 @@ mod tests {
                 )
                 .unwrap();
 
-                let metadata = plugins_metadata(&[master]).unwrap();
+                let metadata = plugins_metadata(&[&master]).unwrap();
 
                 plugin.resolve_record_ids(&metadata).unwrap();
             }
@@ -1027,7 +1027,7 @@ mod tests {
                 )
                 .unwrap();
 
-                let metadata = plugins_metadata(&[master]).unwrap();
+                let metadata = plugins_metadata(&[&master]).unwrap();
 
                 plugin.resolve_record_ids(&metadata).unwrap();
             }
