@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use pyo3::{pyclass, pymethods};
 
 use crate::VerboseError;
@@ -5,7 +7,7 @@ use crate::VerboseError;
 #[pyclass(eq, frozen)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[repr(transparent)]
-pub struct Plugin(libloot::Plugin);
+pub struct Plugin(Arc<libloot::Plugin>);
 
 #[pymethods]
 impl Plugin {
@@ -78,18 +80,8 @@ impl Plugin {
     }
 }
 
-impl Plugin {
-    pub fn wrap(plugin: &libloot::Plugin) -> &Plugin {
-        let p = plugin as *const libloot::Plugin;
-        // SAFETY: Plugin is a transparent wrapper, so reinterpreting the pointer is safe.
-        unsafe {
-            let p = p as *const Plugin;
-            &*p
-        }
+impl From<Arc<libloot::Plugin>> for Plugin {
+    fn from(value: Arc<libloot::Plugin>) -> Self {
+        Self(value)
     }
-}
-
-pub fn wrap_plugins(mut vec: Vec<&libloot::Plugin>) -> Vec<&Plugin> {
-    // SAFETY: This is safe because Plugin is a transparent wrapper around the libloot type.
-    unsafe { Vec::from_raw_parts(vec.as_mut_ptr().cast(), vec.len(), vec.capacity()) }
 }

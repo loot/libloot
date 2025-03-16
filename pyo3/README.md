@@ -16,7 +16,7 @@ An **incomplete** and **experimental** Python wrapper around the libloot Rust im
 - [x] `GameType`
 - [ ] `LogLevel`
 - [x] `Database`
-- [ ] `Game`
+- [x] `Game`
 - [x] `Plugin`
 - [x] `Vertex`
 - [x] `File`

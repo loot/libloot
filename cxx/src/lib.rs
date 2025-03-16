@@ -13,7 +13,7 @@ use metadata::{
     new_location, new_message, new_message_content, new_plugin_cleaning_data, new_plugin_metadata,
     new_tag, select_message_content,
 };
-use plugin::{OptionalPluginRef, PluginRef};
+use plugin::{OptionalPlugin, Plugin};
 use std::{
     error::Error,
     ffi::{CString, c_char, c_uchar, c_uint, c_void},
@@ -407,10 +407,10 @@ mod ffi {
         pub fn clear_loaded_plugins(&mut self);
 
         // The plugin's lifetime is actually less than &Game's, it's only valid so long as the loaded plugin is not overwritten or cleared.
-        pub fn plugin(&self, plugin_name: &str) -> Box<OptionalPluginRef>;
+        pub fn plugin(&self, plugin_name: &str) -> Box<OptionalPlugin>;
 
         // The plugin's lifetime is actually less than &Game's, it's only valid so long as the loaded plugin is not overwritten or cleared.
-        pub unsafe fn loaded_plugins<'a>(&'a self) -> Vec<PluginRef<'a>>;
+        pub fn loaded_plugins(&self) -> Vec<Plugin>;
 
         pub fn sort_plugins(&self, plugin_names: &[&str]) -> Result<Vec<String>>;
 
@@ -541,19 +541,19 @@ mod ffi {
     }
 
     extern "Rust" {
-        type PluginRef<'a>;
+        type Plugin;
 
-        pub unsafe fn name<'a>(&'a self) -> &'a str;
+        pub fn name(&self) -> &str;
 
         // The None case is signalled by NaN.
         pub fn header_version(&self) -> f32;
 
         // The None case is signalled by an empty string (which is not a valid version).
-        pub unsafe fn version<'a>(&'a self) -> &'a str;
+        pub fn version(&self) -> &str;
 
         pub fn masters(&self) -> Result<Vec<String>>;
 
-        pub unsafe fn bash_tags<'a>(&'a self) -> &'a [String];
+        pub fn bash_tags(&self) -> &[String];
 
         // The None case is signalled by -1, all other values fit in u32.
         pub fn crc(&self) -> i64;
@@ -578,18 +578,18 @@ mod ffi {
 
         pub fn loads_archive(&self) -> bool;
 
-        pub unsafe fn do_records_overlap<'a>(&self, plugin: &PluginRef<'a>) -> Result<bool>;
+        pub fn do_records_overlap(&self, plugin: &Plugin) -> Result<bool>;
 
-        pub unsafe fn boxed_clone<'a>(&'a self) -> Box<PluginRef<'a>>;
+        pub fn boxed_clone(&self) -> Box<Plugin>;
     }
 
     extern "Rust" {
-        type OptionalPluginRef;
+        type OptionalPlugin;
 
         pub fn is_some(&self) -> bool;
 
         // Again, these lifetimes are wrong.
-        pub unsafe fn as_ref<'a>(&'a self) -> Result<Box<PluginRef<'a>>>;
+        pub unsafe fn as_ref<'a>(&'a self) -> Result<&'a Plugin>;
     }
 
     extern "Rust" {

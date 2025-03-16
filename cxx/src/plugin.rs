@@ -1,13 +1,15 @@
+use std::sync::Arc;
+
 use delegate::delegate;
 
-use crate::{EmptyOptionalError, OptionalRef, VerboseError};
+use crate::{Optional, VerboseError};
 
 #[derive(Debug)]
 #[repr(transparent)]
-pub struct PluginRef<'a>(&'a libloot::Plugin);
+pub struct Plugin(Arc<libloot::Plugin>);
 
-impl<'a> PluginRef<'a> {
-    pub fn new(plugin: &'a libloot::Plugin) -> Self {
+impl Plugin {
+    pub fn new(plugin: Arc<libloot::Plugin>) -> Self {
         Self(plugin)
     }
 
@@ -40,11 +42,11 @@ impl<'a> PluginRef<'a> {
     }
 
     pub fn do_records_overlap(&self, plugin: &Self) -> Result<bool, VerboseError> {
-        self.0.do_records_overlap(plugin.0).map_err(Into::into)
+        self.0.do_records_overlap(&plugin.0).map_err(Into::into)
     }
 
     pub fn boxed_clone(&self) -> Box<Self> {
-        Box::new(Self(self.0))
+        Box::new(Self(self.0.clone()))
     }
 
     delegate! {
@@ -70,23 +72,16 @@ impl<'a> PluginRef<'a> {
     }
 }
 
-impl<'a> From<&'a libloot::Plugin> for PluginRef<'a> {
-    fn from(value: &'a libloot::Plugin) -> Self {
-        PluginRef(value)
+impl From<Arc<libloot::Plugin>> for Plugin {
+    fn from(value: Arc<libloot::Plugin>) -> Self {
+        Plugin(value)
     }
 }
 
-pub type OptionalPluginRef = OptionalRef<libloot::Plugin>;
+pub type OptionalPlugin = Optional<Plugin>;
 
-impl OptionalRef<libloot::Plugin> {
-    /// # Safety
-    ///
-    /// This is safe as long as the pointer in the OptionalRef is still valid.
-    pub unsafe fn as_ref(&self) -> Result<Box<PluginRef<'_>>, EmptyOptionalError> {
-        if self.0.is_null() {
-            Err(EmptyOptionalError)
-        } else {
-            unsafe { Ok(Box::new(PluginRef::new(&*self.0))) }
-        }
+impl From<Option<Arc<libloot::Plugin>>> for Optional<Plugin> {
+    fn from(value: Option<Arc<libloot::Plugin>>) -> Self {
+        Self(value.map(Into::into))
     }
 }

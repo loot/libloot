@@ -3,8 +3,8 @@ use std::path::Path;
 use delegate::delegate;
 
 use crate::{
-    PluginRef, UnsupportedEnumValueError, VerboseError, database::Database, ffi::GameType,
-    plugin::OptionalPluginRef,
+    Plugin, UnsupportedEnumValueError, VerboseError, database::Database, ffi::GameType,
+    plugin::OptionalPlugin,
 };
 
 impl TryFrom<libloot::GameType> for GameType {
@@ -150,11 +150,11 @@ impl Game {
             .map_err(Into::into)
     }
 
-    pub fn plugin(&self, plugin_name: &str) -> Box<OptionalPluginRef> {
+    pub fn plugin(&self, plugin_name: &str) -> Box<OptionalPlugin> {
         Box::new(self.0.plugin(plugin_name).into())
     }
 
-    pub fn loaded_plugins(&self) -> Vec<PluginRef<'_>> {
+    pub fn loaded_plugins(&self) -> Vec<Plugin> {
         self.0
             .loaded_plugins()
             .into_iter()

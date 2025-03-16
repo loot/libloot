@@ -189,7 +189,7 @@ const PluginInterface* Game::GetPlugin(const std::string& pluginName) const {
   }
 
   try {
-    auto plugin = std::make_shared<Plugin>(std::move(pluginOpt->as_ref()));
+    auto plugin = std::make_shared<Plugin>(std::move(pluginOpt->as_ref().boxed_clone()));
     const auto result = plugins_.emplace(key, plugin);
 
     return result.first->second.get();

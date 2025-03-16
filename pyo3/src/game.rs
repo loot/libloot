@@ -120,15 +120,17 @@ impl Game {
         self.0.clear_loaded_plugins();
     }
 
-    // TODO: Game::plugin().
-    // fn plugin(&self, plugin_name: &str) -> Option<&Plugin> {
-    //     self.0.plugin(plugin_name).map(Plugin::wrap)
-    // }
+    fn plugin(&self, plugin_name: &str) -> Option<Plugin> {
+        self.0.plugin(plugin_name).map(Into::into)
+    }
 
-    // TODO: Game::loaded_plugins().
-    // fn loaded_plugins(&self) -> Vec<&Plugin> {
-    //     wrap_plugins(self.0.loaded_plugins())
-    // }
+    fn loaded_plugins(&self) -> Vec<Plugin> {
+        self.0
+            .loaded_plugins()
+            .into_iter()
+            .map(Into::into)
+            .collect()
+    }
 
     fn sort_plugins(&self, plugin_names: Vec<String>) -> Result<Vec<String>, VerboseError> {
         Ok(self.0.sort_plugins(&as_strs(&plugin_names))?)

@@ -7,7 +7,7 @@
 #include "api/exception.h"
 
 namespace loot {
-Plugin::Plugin(::rust::Box<loot::rust::PluginRef> plugin) :
+Plugin::Plugin(::rust::Box<loot::rust::Plugin> plugin) :
     plugin_(std::move(plugin)) {}
 
 std::string Plugin::GetName() const { return std::string(plugin_->name()); }

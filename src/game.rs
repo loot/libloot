@@ -335,7 +335,7 @@ impl Game {
                 .cache
                 .plugins()
                 .iter()
-                .map(|(k, v)| (k.clone(), v))
+                .map(|(k, v)| (k.clone(), v.as_ref()))
                 .collect();
 
             for plugin in &plugins {
@@ -420,13 +420,13 @@ impl Game {
     }
 
     /// Get data for a loaded plugin.
-    pub fn plugin(&self, plugin_name: &str) -> Option<&Plugin> {
-        self.cache.plugin(plugin_name)
+    pub fn plugin(&self, plugin_name: &str) -> Option<Arc<Plugin>> {
+        self.cache.plugin(plugin_name).cloned()
     }
 
     /// Get data for all loaded plugins.
-    pub fn loaded_plugins(&self) -> Vec<&Plugin> {
-        self.cache.plugins_iter().collect()
+    pub fn loaded_plugins(&self) -> Vec<Arc<Plugin>> {
+        self.cache.plugins_iter().cloned().collect()
     }
 
     /// Calculates a new load order for the game's installed plugins (including
@@ -444,7 +444,8 @@ impl Game {
         let plugins = plugin_names
             .iter()
             .map(|n| {
-                self.plugin(n)
+                self.cache
+                    .plugin(n)
                     .ok_or_else(|| SortPluginsError::PluginNotLoaded(n.to_string()))
             })
             .collect::<Result<Vec<_>, _>>()?;
@@ -458,7 +459,7 @@ impl Game {
                 let masterlist_metadata = database.plugin_metadata(p.name(), false, true)?;
                 let user_metadata = database.plugin_user_metadata(p.name(), true)?;
                 let plugin = PluginSortingData::new(
-                    p,
+                    p.as_ref(),
                     masterlist_metadata.as_ref(),
                     user_metadata.as_ref(),
                     i,
@@ -711,7 +712,7 @@ fn resolve_plugin_path(game_type: GameType, data_path: &Path, plugin_path: &Path
 
 fn update_loaded_plugin_state<'a>(
     state: &mut loot_condition_interpreter::State,
-    plugins: impl Iterator<Item = &'a Plugin>,
+    plugins: impl Iterator<Item = &'a Arc<Plugin>>,
 ) {
     let mut plugin_versions = Vec::new();
     let mut plugin_crcs = Vec::new();
@@ -748,7 +749,7 @@ fn update_loaded_plugin_state<'a>(
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) struct GameCache {
-    plugins: HashMap<Filename, Plugin>,
+    plugins: HashMap<Filename, Arc<Plugin>>,
     archive_paths: HashSet<PathBuf>,
 }
 
@@ -761,7 +762,7 @@ impl GameCache {
     fn insert_plugins(&mut self, plugins: Vec<Plugin>) {
         for plugin in plugins {
             self.plugins
-                .insert(Filename::new(plugin.name().to_string()), plugin);
+                .insert(Filename::new(plugin.name().to_string()), Arc::new(plugin));
         }
     }
 
@@ -769,15 +770,15 @@ impl GameCache {
         self.plugins.clear();
     }
 
-    fn plugins(&self) -> &HashMap<Filename, Plugin> {
+    fn plugins(&self) -> &HashMap<Filename, Arc<Plugin>> {
         &self.plugins
     }
 
-    fn plugins_iter(&self) -> impl Iterator<Item = &Plugin> {
+    fn plugins_iter(&self) -> impl Iterator<Item = &Arc<Plugin>> {
         self.plugins.values()
     }
 
-    fn plugin(&self, plugin_name: &str) -> Option<&Plugin> {
+    fn plugin(&self, plugin_name: &str) -> Option<&Arc<Plugin>> {
         self.plugins.get(&Filename::new(plugin_name.to_string()))
     }
 

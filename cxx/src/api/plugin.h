@@ -16,7 +16,7 @@ namespace loot {
 
 class Plugin final : public PluginInterface {
 public:
-  explicit Plugin(::rust::Box<loot::rust::PluginRef> plugin);
+  explicit Plugin(::rust::Box<loot::rust::Plugin> plugin);
 
   std::string GetName() const override;
   std::optional<float> GetHeaderVersion() const override;
@@ -39,7 +39,7 @@ public:
   bool DoRecordsOverlap(const PluginInterface& plugin) const override;
 
 private:
-  ::rust::Box<loot::rust::PluginRef> plugin_;
+  ::rust::Box<loot::rust::Plugin> plugin_;
 };
 }
 
