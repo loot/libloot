@@ -26,4 +26,4 @@ rstest_reuse = "0.7.0"
 tempfile = "3.17.1"
 
 [workspace]
-members = ["cxx"]
+members = ["cxx", "pyo3"]
