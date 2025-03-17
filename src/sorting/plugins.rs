@@ -1,13 +1,11 @@
-use std::{
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::rc::Rc;
 
 use petgraph::{
     Graph,
     graph::{EdgeReference, NodeIndex},
     visit::EdgeRef,
 };
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 use crate::{
     EdgeType, LogLevel, Plugin,
@@ -308,7 +306,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         // Keep a record of which vertices have already been fully explored to avoid
         // adding edges from their plugins more than once.
-        let mut finished_nodes = HashSet::new();
+        let mut finished_nodes = HashSet::default();
         // Now loop over the vertices in the groups graph.
         // The vertex sort order prioritises resolving potential cycles in
         // favour of earlier-loading groups. It does not guarantee that the
@@ -330,7 +328,12 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                 Some(default_group_node),
             );
 
-            depth_first_search(groups_graph, &mut HashMap::new(), group_node, &mut visitor);
+            depth_first_search(
+                groups_graph,
+                &mut HashMap::default(),
+                group_node,
+                &mut visitor,
+            );
         }
 
         // Now do one last DFS starting from the default group and not ignoring its
@@ -345,7 +348,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         depth_first_search(
             groups_graph,
-            &mut HashMap::new(),
+            &mut HashMap::default(),
             default_group_node,
             &mut visitor,
         );
@@ -496,7 +499,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         let mut new_load_order: Vec<NodeIndex> = Vec::new();
 
         // Holds nodes that have already been put into new_load_order.
-        let mut processed_nodes = HashSet::new();
+        let mut processed_nodes = HashSet::default();
 
         // First get the graph vertices and sort them into the current load order.
         let mut nodes: Vec<_> = self.node_indices().collect();
@@ -897,8 +900,8 @@ impl<'a, 'b, T: SortingPlugin> PathFinder<'a, 'b, T> {
             cache,
             from_node_index,
             to_node_index,
-            forward_parents: HashMap::new(),
-            reverse_children: HashMap::new(),
+            forward_parents: HashMap::default(),
+            reverse_children: HashMap::default(),
             intersection_node: None,
         }
     }
@@ -985,7 +988,7 @@ struct PathCacher<'a> {
 fn get_plugins_in_groups<T: SortingPlugin>(
     graph: &InnerPluginsGraph<T>,
 ) -> HashMap<String, Vec<NodeIndex>> {
-    let mut plugins_in_groups: HashMap<String, Vec<NodeIndex>> = HashMap::new();
+    let mut plugins_in_groups: HashMap<String, Vec<NodeIndex>> = HashMap::default();
 
     for node in graph.node_indices() {
         let group_name = graph[node].group.clone();
@@ -1066,7 +1069,7 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
             finished_group_vertices,
             group_node_to_ignore_as_source,
             edge_stack: Vec::new(),
-            unfinishable_nodes: HashSet::new(),
+            unfinishable_nodes: HashSet::default(),
         }
     }
 

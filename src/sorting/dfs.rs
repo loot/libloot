@@ -1,10 +1,11 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::VecDeque;
 
 use petgraph::{
     Graph,
     graph::{EdgeReference, NodeIndex},
     visit::EdgeRef,
 };
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 use crate::{EdgeType, Vertex, logging};
 
@@ -36,8 +37,10 @@ pub fn bidirectional_bfs<N, E>(
 ) -> bool {
     let mut forward_queue = VecDeque::from([from_index]);
     let mut reverse_queue = VecDeque::from([to_index]);
-    let mut forward_visited = HashSet::from([from_index]);
-    let mut reverse_visited = HashSet::from([to_index]);
+    let mut forward_visited = HashSet::default();
+    forward_visited.insert(from_index);
+    let mut reverse_visited = HashSet::default();
+    reverse_visited.insert(to_index);
 
     while let (Some(forward_current), Some(reverse_current)) =
         (forward_queue.pop_front(), reverse_queue.pop_front())
@@ -81,7 +84,7 @@ pub fn find_cycle<N>(
 ) -> Option<Vec<Vertex>> {
     let mut cycle_detector = CycleDetector::new(graph, node_mapper);
 
-    let mut colour_map = HashMap::new();
+    let mut colour_map = HashMap::default();
 
     for node_index in graph.node_indices() {
         depth_first_search(graph, &mut colour_map, node_index, &mut cycle_detector);

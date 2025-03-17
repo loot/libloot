@@ -1,4 +1,6 @@
-use std::{cmp::Reverse, collections::HashMap};
+use std::cmp::Reverse;
+
+use rustc_hash::FxHashMap as HashMap;
 
 use petgraph::{Graph, algo::bellman_ford, graph::NodeIndex};
 
@@ -29,7 +31,7 @@ pub fn build_groups_graph(
     let userlist_groups = sorted_by_name(userlist_groups);
 
     let mut graph = GroupsGraph::new();
-    let mut group_nodes: HashMap<&str, NodeIndex> = HashMap::new();
+    let mut group_nodes: HashMap<&str, NodeIndex> = HashMap::default();
 
     logging::trace!("Adding masterlist groups to groups graph...");
     add_groups(
@@ -206,7 +208,7 @@ pub fn sorted_group_nodes(graph: &GroupsGraph) -> Vec<NodeIndex> {
             if is_root_node(graph, n) {
                 let mut visitor = GroupsPathLengthVisitor::new();
 
-                depth_first_search(graph, &mut HashMap::new(), n, &mut visitor);
+                depth_first_search(graph, &mut HashMap::default(), n, &mut visitor);
 
                 (n, true, visitor.max_path_length())
             } else {
