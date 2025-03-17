@@ -33,3 +33,11 @@ members = ["cxx", "ffi-errors", "pyo3"]
 esplugin = "6.1.1"
 libloadorder = { git = "https://github.com/Ortham/libloadorder.git", rev = "6245dbc6824c4751daef5ab01dfe7b9497f5446f" }
 loot-condition-interpreter = { git = "https://github.com/loot/loot-condition-interpreter.git", rev = "f7d9947fa434037743ce81e2d409184ec0bfb693" }
+
+[profile.release]
+debug = "limited"
+
+[profile.rel-with-deb-info]
+inherits = "release"
+opt-level = 2
+debug = "limited"
