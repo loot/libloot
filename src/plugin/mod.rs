@@ -110,7 +110,9 @@ impl Plugin {
 
                 archive_paths = find_associated_archives(game_type, game_cache, plugin_path);
 
-                archive_assets = assets_in_archives(&archive_paths);
+                if load_scope == LoadScope::WholePlugin {
+                    archive_assets = assets_in_archives(&archive_paths);
+                }
 
                 Some(plugin)
             } else {
