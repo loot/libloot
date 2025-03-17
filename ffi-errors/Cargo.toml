@@ -1,0 +1,11 @@
+[package]
+name = "libloot-ffi-errors"
+version = "0.25.5"
+edition = "2024"
+
+[dependencies]
+libloot = { path = ".." }
+
+esplugin.workspace = true
+libloadorder.workspace = true
+loot-condition-interpreter.workspace = true

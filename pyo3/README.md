@@ -31,8 +31,7 @@ An **incomplete** and **experimental** Python wrapper around the libloot Rust im
 - [x] `MessageType`
 - [x] `TagSuggestion`
 - [x] `select_message_content()`
-- [ ] Error types
-    - All errors are currently raised as Python `ValueError` values that contain the full detail of the error.
+- [x] Error types
 
 ## Build
 
@@ -58,3 +57,10 @@ Then import it in Python:
 py
 > import loot
 ```
+
+## Usage notes
+
+- The Python exceptions that errors are mapped to are not the same as in the Rust or C++ interfaces:
+    - The API provides the custom `CyclicInteractionError`, `UndefinedGroupError`, `EspluginError` exception types.
+    - All other errors are raised as `ValueError` exceptions.
+    - There's no equivalent to the C++ interface's `FileAccessError` or `ConditionSyntaxError` classes or the libloadorder and loot-condition-interpreter system error categories.

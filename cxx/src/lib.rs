@@ -1,11 +1,11 @@
 mod database;
-mod error_codes;
 mod game;
 mod metadata;
 mod plugin;
 
 use database::{Database, Vertex, new_vertex};
 use game::{Game, NotValidUtf8, new_game, new_game_with_local_path};
+use libloot_ffi_errors::SystemError;
 use metadata::{
     File, Filename, Group, Location, Message, MessageContent, OptionalMessageContentRef,
     OptionalPluginMetadata, PluginCleaningData, PluginMetadata, Tag, group_default_name,
@@ -15,7 +15,6 @@ use metadata::{
 };
 use plugin::{OptionalPlugin, Plugin};
 use std::{
-    error::Error,
     ffi::{CString, c_char, c_uchar, c_uint, c_void},
     sync::{Mutex, atomic::AtomicPtr},
 };
@@ -38,8 +37,8 @@ pub use libloot::{is_compatible, libloot_revision, libloot_version};
 pub enum VerboseError {
     CyclicInteractionError(Vec<libloot::Vertex>),
     UndefinedGroupError(String),
-    EspluginError(u32, String),
-    LibloadorderError(u32, String),
+    EspluginError(i32, String),
+    LibloadorderError(i32, String),
     LciError(i32, String),
     FileAccessError(String),
     InvalidArgument(String),
@@ -148,13 +147,8 @@ impl From<LoadOrderStateError> for VerboseError {
 
 impl From<LoadOrderError> for VerboseError {
     fn from(value: LoadOrderError) -> Self {
-        let error = value
-            .source()
-            .expect("LoadOrderError has source")
-            .downcast_ref::<loadorder::Error>()
-            .expect("LoadOrderError source is a loadorder::Error");
-        let error_code = error_codes::libloadorder::map_error(error);
-        Self::LibloadorderError(error_code, error.to_string())
+        let error = SystemError::from(value);
+        Self::LibloadorderError(error.code(), error.message().to_string())
     }
 }
 
@@ -172,13 +166,8 @@ impl From<WriteMetadataError> for VerboseError {
 
 impl From<ConditionEvaluationError> for VerboseError {
     fn from(value: ConditionEvaluationError) -> Self {
-        let error = value
-            .source()
-            .expect("LoadOrderError has source")
-            .downcast_ref::<loot_condition_interpreter::Error>()
-            .expect("LoadOrderError source is a loot_condition_interpreter::Error");
-        let error_code = error_codes::lci::map_error(error);
-        Self::LciError(error_code, error.to_string())
+        let error = SystemError::from(value);
+        Self::LciError(error.code(), error.message().to_string())
     }
 }
 
@@ -203,13 +192,8 @@ impl From<MetadataRetrievalError> for VerboseError {
 
 impl From<PluginDataError> for VerboseError {
     fn from(value: PluginDataError) -> Self {
-        let error = value
-            .source()
-            .expect("LoadOrderError has source")
-            .downcast_ref::<esplugin::Error>()
-            .expect("LoadOrderError source is an esplugin::Error");
-        let error_code = error_codes::esplugin::map_error(error);
-        Self::EspluginError(error_code, error.to_string())
+        let error = SystemError::from(value);
+        Self::EspluginError(error.code(), error.message().to_string())
     }
 }
 

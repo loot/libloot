@@ -11,7 +11,7 @@ use pyo3::{
 };
 
 use crate::{
-    UnsupportedEnumValueError, VerboseError,
+    error::{UnsupportedEnumValueError, VerboseError},
     metadata::{Group, Message, NONE_REPR, PluginMetadata},
 };
 

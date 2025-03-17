@@ -600,11 +600,19 @@ dependencies = [
  "cxx",
  "cxx-build",
  "delegate",
+ "libloot",
+ "libloot-ffi-errors",
+ "unicase",
+]
+
+[[package]]
+name = "libloot-ffi-errors"
+version = "0.25.5"
+dependencies = [
  "esplugin",
  "libloadorder",
  "libloot",
  "loot-condition-interpreter",
- "unicase",
 ]
 
 [[package]]
@@ -612,6 +620,7 @@ name = "libloot_pyo3"
 version = "0.25.5"
 dependencies = [
  "libloot",
+ "libloot-ffi-errors",
  "pyo3",
 ]
 

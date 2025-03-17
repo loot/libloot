@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pyo3::{pyclass, pymethods};
 
-use crate::VerboseError;
+use crate::error::VerboseError;
 
 #[pyclass(eq, frozen)]
 #[derive(Clone, Debug, Eq, PartialEq)]

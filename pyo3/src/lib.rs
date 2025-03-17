@@ -1,4 +1,5 @@
 mod database;
+mod error;
 mod game;
 mod metadata;
 mod plugin;
@@ -10,7 +11,7 @@ use metadata::{
     TagSuggestion, select_message_content,
 };
 use plugin::Plugin;
-use pyo3::{exceptions::PyValueError, prelude::*};
+use pyo3::{create_exception, exceptions::PyException, prelude::*};
 
 #[pyfunction]
 fn is_compatible(major: u32, minor: u32, patch: u32) -> bool {
@@ -27,56 +28,13 @@ fn libloot_version() -> String {
     libloot::libloot_version()
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct UnsupportedEnumValueError;
-
-impl std::fmt::Display for UnsupportedEnumValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Enum value is unsupported")
-    }
-}
-
-impl std::error::Error for UnsupportedEnumValueError {}
-
-impl From<UnsupportedEnumValueError> for PyErr {
-    fn from(value: UnsupportedEnumValueError) -> Self {
-        PyValueError::new_err(value.to_string())
-    }
-}
-
-#[derive(Debug)]
-pub struct VerboseError(Box<dyn std::error::Error>);
-
-impl std::fmt::Display for VerboseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let e = &self.0;
-        write!(f, "{}", e)?;
-        let mut error = e.as_ref();
-        while let Some(source) = error.source() {
-            write!(f, ": {}", source)?;
-            error = source;
-        }
-        Ok(())
-    }
-}
-
-// impl std::error::Error for VerboseError {}
-
-impl<T: std::error::Error + 'static> From<T> for VerboseError {
-    fn from(value: T) -> Self {
-        VerboseError(Box::new(value))
-    }
-}
-
-impl From<VerboseError> for PyErr {
-    fn from(value: VerboseError) -> Self {
-        PyValueError::new_err(value.to_string())
-    }
-}
+create_exception!(loot, CyclicInteractionError, PyException);
+create_exception!(loot, UndefinedGroupError, PyException);
+create_exception!(loot, EspluginError, PyException);
 
 /// A Python module implemented in Rust.
 #[pymodule(name = "loot")]
-fn libloot_pyo3(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn libloot_pyo3(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("LIBLOOT_VERSION_MAJOR", libloot::LIBLOOT_VERSION_MAJOR)?;
     m.add("LIBLOOT_VERSION_MINOR", libloot::LIBLOOT_VERSION_MINOR)?;
     m.add("LIBLOOT_VERSION_PATCH", libloot::LIBLOOT_VERSION_PATCH)?;
@@ -103,6 +61,13 @@ fn libloot_pyo3(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<TagSuggestion>()?;
     m.add_class::<Location>()?;
     m.add_class::<PluginMetadata>()?;
+
+    m.add(
+        "CyclicInteractionError",
+        py.get_type::<CyclicInteractionError>(),
+    )?;
+    m.add("UndefinedGroupError", py.get_type::<UndefinedGroupError>())?;
+    m.add("EspluginError", py.get_type::<EspluginError>())?;
 
     Ok(())
 }

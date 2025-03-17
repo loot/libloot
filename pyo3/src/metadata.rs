@@ -5,7 +5,7 @@ use pyo3::{
     types::{PyAnyMethods, PyTypeMethods},
 };
 
-use crate::{UnsupportedEnumValueError, VerboseError};
+use crate::error::{UnsupportedEnumValueError, VerboseError};
 
 pub const NONE_REPR: &str = "None";
 

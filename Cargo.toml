@@ -6,10 +6,10 @@ license = "GPL-3.0"
 
 [dependencies]
 crc32fast = "1.4.2"
-esplugin = "6.1.1"
-libloadorder = { git = "https://github.com/Ortham/libloadorder.git", rev = "6245dbc6824c4751daef5ab01dfe7b9497f5446f" }
+esplugin.workspace = true
 log = { version = "0.4.26", features = ["std"] }
-loot-condition-interpreter = { git = "https://github.com/loot/loot-condition-interpreter.git", rev = "f7d9947fa434037743ce81e2d409184ec0bfb693" }
+libloadorder.workspace = true
+loot-condition-interpreter.workspace = true
 petgraph = "0.7.1"
 fancy-regex = "0.14.0"
 saphyr = "0.0.3"
@@ -26,4 +26,9 @@ rstest_reuse = "0.7.0"
 tempfile = "3.17.1"
 
 [workspace]
-members = ["cxx", "pyo3"]
+members = ["cxx", "ffi-errors", "pyo3"]
+
+[workspace.dependencies]
+esplugin = "6.1.1"
+libloadorder = { git = "https://github.com/Ortham/libloadorder.git", rev = "6245dbc6824c4751daef5ab01dfe7b9497f5446f" }
+loot-condition-interpreter = { git = "https://github.com/loot/loot-condition-interpreter.git", rev = "f7d9947fa434037743ce81e2d409184ec0bfb693" }
