@@ -4,7 +4,7 @@ use std::{
 };
 
 use delegate::delegate;
-use libloot::error::DatabaseLockPoisonError;
+use libloot::{WriteMode, error::DatabaseLockPoisonError};
 
 use crate::{
     UnsupportedEnumValueError, VerboseError,
@@ -54,10 +54,16 @@ impl Database {
         output_path: &str,
         overwrite: bool,
     ) -> Result<(), VerboseError> {
+        let write_mode = if overwrite {
+            WriteMode::CreateOrTruncate
+        } else {
+            WriteMode::Create
+        };
+
         self.0
             .read()
             .map_err(|_| DatabaseLockPoisonError)?
-            .write_user_metadata(Path::new(output_path), overwrite)
+            .write_user_metadata(Path::new(output_path), write_mode)
             .map_err(Into::into)
     }
 
@@ -66,10 +72,16 @@ impl Database {
         output_path: &str,
         overwrite: bool,
     ) -> Result<(), VerboseError> {
+        let write_mode = if overwrite {
+            WriteMode::CreateOrTruncate
+        } else {
+            WriteMode::Create
+        };
+
         self.0
             .read()
             .map_err(|_| DatabaseLockPoisonError)?
-            .write_minimal_list(Path::new(output_path), overwrite)
+            .write_minimal_list(Path::new(output_path), write_mode)
             .map_err(Into::into)
     }
 

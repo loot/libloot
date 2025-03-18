@@ -10,7 +10,7 @@ mod sorting;
 mod tests;
 mod version;
 
-pub use database::Database;
+pub use database::{Database, WriteMode};
 pub use game::{Game, GameType};
 pub use logging::{LogLevel, set_log_level, set_logging_callback};
 pub use plugin::Plugin;

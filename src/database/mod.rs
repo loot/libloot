@@ -20,6 +20,15 @@ use crate::{
 };
 pub use error::{ConditionEvaluationError, MetadataRetrievalError};
 
+/// Control behaviour when writing to files.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum WriteMode {
+    /// Create the file if it does not exist, otherwise error.
+    Create,
+    /// Create the file if it does not exist, otherwise replace its contents.
+    CreateOrTruncate,
+}
+
 /// The interface through which metadata can be accessed.
 #[derive(Debug)]
 pub struct Database {
@@ -85,9 +94,9 @@ impl Database {
     pub fn write_user_metadata(
         &self,
         output_path: &Path,
-        overwrite: bool,
+        mode: WriteMode,
     ) -> Result<(), WriteMetadataError> {
-        validate_write_path(output_path, overwrite)?;
+        validate_write_path(output_path, mode)?;
 
         self.userlist.save(output_path)
     }
@@ -100,9 +109,9 @@ impl Database {
     pub fn write_minimal_list(
         &self,
         output_path: &Path,
-        overwrite: bool,
+        mode: WriteMode,
     ) -> Result<(), WriteMetadataError> {
-        validate_write_path(output_path, overwrite)?;
+        validate_write_path(output_path, mode)?;
 
         let mut doc = MetadataDocument::default();
 
@@ -285,13 +294,13 @@ impl Database {
     }
 }
 
-fn validate_write_path(output_path: &Path, overwrite: bool) -> Result<(), WriteMetadataError> {
+fn validate_write_path(output_path: &Path, mode: WriteMode) -> Result<(), WriteMetadataError> {
     if !output_path.parent().map(|p| p.exists()).unwrap_or(false) {
         Err(WriteMetadataError::new(
             output_path.into(),
             WriteMetadataErrorReason::ParentDirectoryNotFound,
         ))
-    } else if !overwrite && output_path.exists() {
+    } else if mode == WriteMode::Create && output_path.exists() {
         Err(WriteMetadataError::new(
             output_path.into(),
             WriteMetadataErrorReason::PathAlreadyExists,
@@ -487,7 +496,7 @@ plugins:
 
             let output_path = fixture.inner.local_path.join("userlist.yaml");
             database
-                .write_user_metadata(&output_path, false)
+                .write_user_metadata(&output_path, WriteMode::Create)
                 .unwrap();
 
             let content = std::fs::read_to_string(output_path).unwrap();
@@ -503,7 +512,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, false)
+                    .write_user_metadata(&output_path, WriteMode::Create)
                     .is_ok()
             );
         }
@@ -516,7 +525,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, true)
+                    .write_user_metadata(&output_path, WriteMode::CreateOrTruncate)
                     .is_ok()
             );
         }
@@ -531,7 +540,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, true)
+                    .write_user_metadata(&output_path, WriteMode::CreateOrTruncate)
                     .is_ok()
             );
         }
@@ -544,7 +553,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, false)
+                    .write_user_metadata(&output_path, WriteMode::Create)
                     .is_err()
             );
         }
@@ -563,7 +572,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, true)
+                    .write_user_metadata(&output_path, WriteMode::CreateOrTruncate)
                     .is_err()
             );
         }
@@ -578,7 +587,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, false)
+                    .write_user_metadata(&output_path, WriteMode::Create)
                     .is_err()
             );
         }
@@ -599,7 +608,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, false)
+                    .write_minimal_list(&output_path, WriteMode::Create)
                     .is_ok()
             );
 
@@ -643,7 +652,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, false)
+                    .write_minimal_list(&output_path, WriteMode::Create)
                     .is_ok()
             );
         }
@@ -656,7 +665,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, true)
+                    .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
                     .is_ok()
             );
         }
@@ -671,7 +680,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, true)
+                    .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
                     .is_ok()
             );
         }
@@ -684,7 +693,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, false)
+                    .write_minimal_list(&output_path, WriteMode::Create)
                     .is_err()
             );
         }
@@ -703,7 +712,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, true)
+                    .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
                     .is_err()
             );
         }
@@ -718,7 +727,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, false)
+                    .write_minimal_list(&output_path, WriteMode::Create)
                     .is_err()
             );
         }
