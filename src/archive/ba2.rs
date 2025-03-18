@@ -31,8 +31,8 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
             version: to_u32(&value),
             archive_type: <[u8; 4]>::try_from(&value[4..8])
                 .expect("Bytes slice is large enough to hold a 4-byte array"),
-            file_count: to_u32(&value[12..]),
-            file_paths_offset: to_u64(&value[16..]),
+            file_count: to_u32(&value[8..]),
+            file_paths_offset: to_u64(&value[12..]),
         };
 
         // The header version is 1, 7 or 8 for Fallout 4 and 2 or 3 for Starfield.
