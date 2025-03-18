@@ -307,10 +307,14 @@ impl MetadataDocument {
     }
 
     pub fn set_plugin_metadata(&mut self, plugin_metadata: PluginMetadata) {
-        self.plugins.insert(
-            Filename::new(plugin_metadata.name().to_string()),
-            plugin_metadata,
-        );
+        if plugin_metadata.is_regex_plugin() {
+            self.regex_plugins.push(plugin_metadata);
+        } else {
+            self.plugins.insert(
+                Filename::new(plugin_metadata.name().to_string()),
+                plugin_metadata,
+            );
+        }
     }
 
     pub fn remove_plugin_metadata(&mut self, plugin_name: &str) {
