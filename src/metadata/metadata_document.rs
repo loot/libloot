@@ -237,7 +237,7 @@ impl MetadataDocument {
 
             emitter.begin_array();
 
-            for plugin in self.plugins() {
+            for plugin in self.plugins_iter() {
                 if !plugin.has_name_only() {
                     plugin.emit_yaml(&mut emitter);
                 }
@@ -269,7 +269,7 @@ impl MetadataDocument {
         &self.messages
     }
 
-    pub fn plugins(&self) -> impl Iterator<Item = &PluginMetadata> {
+    pub fn plugins_iter(&self) -> impl Iterator<Item = &PluginMetadata> {
         self.plugins.values().chain(self.regex_plugins.iter())
     }
 
@@ -477,9 +477,14 @@ fn indent_prelude(prelude: String, line_ending: &str) -> String {
 mod tests {
     use tempfile::tempdir;
 
+    use crate::metadata::File;
+
     use super::*;
 
-    const METADATA_LIST_YAML: &str = r#"bash_tags:
+    mod metadata_document {
+        use super::*;
+
+        const METADATA_LIST_YAML: &str = r#"bash_tags:
   - 'C.Climate'
   - 'Relev'
 
@@ -520,10 +525,9 @@ plugins:
         util: utility
     "#;
 
-    #[test]
-    fn load_should_resolve_aliases() {
-        let tmp_dir = tempdir().unwrap();
-        let yaml = r#"
+        #[test]
+        fn load_from_str_should_resolve_aliases() {
+            let yaml = r#"
         prelude:
           - &anchor
             type: say
@@ -533,17 +537,13 @@ plugins:
           - *anchor
         "#;
 
-        let path = tmp_dir.path().join("masterlist.yaml");
-        std::fs::write(&path, yaml).unwrap();
+            let mut metadata_list = MetadataDocument::default();
+            metadata_list.load_from_str(yaml).unwrap();
+        }
 
-        let mut metadata_list = MetadataDocument::default();
-        metadata_list.load(&path).unwrap();
-    }
-
-    #[test]
-    fn load_should_resolve_merge_keys() {
-        let tmp_dir = tempdir().unwrap();
-        let yaml = r#"
+        #[test]
+        fn load_from_str_should_resolve_merge_keys() {
+            let yaml = r#"
         prelude:
           - &anchor
             type: say
@@ -554,80 +554,527 @@ plugins:
             condition: file("test.esp")
         "#;
 
-        let path = tmp_dir.path().join("masterlist.yaml");
-        std::fs::write(&path, yaml).unwrap();
+            let mut metadata_list = MetadataDocument::default();
+            metadata_list.load_from_str(yaml).unwrap();
+        }
 
-        let mut metadata_list = MetadataDocument::default();
-        metadata_list.load(&path).unwrap();
-    }
+        #[test]
+        fn load_from_str_should_error_if_a_plugin_has_two_exact_entries() {
+            let yaml = r#"
+plugins:
+  - name: 'Blank.esm'
+    msg:
+      - type: warn
+        content: 'This is a warning.'
 
-    #[test]
-    fn load_should_deserialise_masterlist() {
-        let tmp_dir = tempdir().unwrap();
+  - name: 'Blank.esm'
+    msg:
+      - type: error
+        content: 'This plugin entry will cause a failure, as it is not the first exact entry.'
+        "#;
 
-        let path = tmp_dir.path().join("masterlist.yaml");
-        std::fs::write(&path, METADATA_LIST_YAML).unwrap();
+            let mut metadata_list = MetadataDocument::default();
+            assert!(metadata_list.load_from_str(yaml).is_err());
+        }
 
-        let mut metadata_list = MetadataDocument::default();
-        metadata_list.load(&path).unwrap();
-    }
+        #[test]
+        fn load_should_deserialise_masterlist() {
+            let tmp_dir = tempdir().unwrap();
 
-    #[test]
-    fn load_with_prelude_should_merge_docs_with_crlf_line_endings() {
-        let tmp_dir = tempdir().unwrap();
+            let path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&path, METADATA_LIST_YAML).unwrap();
 
-        let masterlist_path = tmp_dir.path().join("masterlist.yaml");
-        std::fs::write(&masterlist_path, "prelude:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from same file\r\nglobals:\r\n  - *ref\r\n").unwrap();
+            let mut metadata_list = MetadataDocument::default();
+            metadata_list.load(&path).unwrap();
 
-        let prelude_path = tmp_dir.path().join("prelude.yaml");
-        std::fs::write(
-            &prelude_path,
-            "common:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from prelude\r\n",
-        )
-        .unwrap();
+            let plugin_names: Vec<_> = metadata_list
+                .plugins_iter()
+                .map(PluginMetadata::name)
+                .collect();
+            assert!(plugin_names.contains(&"Blank.esm"));
+            assert!(plugin_names.contains(&"Blank.esp"));
+            assert!(plugin_names.contains(&"Blank.+\\.esp"));
+            assert!(plugin_names.contains(&"Blank.+(Different)?.*\\.esp"));
 
-        let mut metadata_list = MetadataDocument::default();
-        metadata_list
-            .load_with_prelude(&masterlist_path, &prelude_path)
+            assert_eq!(&["C.Climate", "Relev"], metadata_list.bash_tags());
+
+            let groups = metadata_list.groups();
+            assert_eq!(3, groups.len());
+
+            assert_eq!("default", groups[0].name());
+            assert!(groups[0].after_groups().is_empty());
+
+            assert_eq!("group1", groups[1].name());
+            assert_eq!(&["group2"], groups[1].after_groups());
+
+            assert_eq!("group2", groups[2].name());
+            assert_eq!(&["default"], groups[2].after_groups());
+        }
+
+        #[test]
+        fn load_should_error_if_an_invalid_metadata_file_is_given() {
+            let tmp_dir = tempdir().unwrap();
+            let path = tmp_dir.path().join("masterlist.yaml");
+            let yaml = r#"
+  - 'C.Climate'
+  - 'Relev'
+
+globals:
+  - type: say
+    content: 'A global message.'
+
+plugins:
+  - name: 'Blank.+\.esp'
+    after:
+      - 'Blank.esm'
+        "#;
+
+            std::fs::write(&path, yaml).unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            assert!(metadata_list.load(&path).is_err());
+        }
+
+        #[test]
+        fn load_should_error_if_the_given_path_does_not_exist() {
+            let mut metadata_list = MetadataDocument::default();
+            assert!(metadata_list.load(Path::new("missing")).is_err());
+        }
+
+        #[test]
+        fn load_with_prelude_should_merge_docs_with_crlf_line_endings() {
+            let tmp_dir = tempdir().unwrap();
+
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "prelude:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from same file\r\nglobals:\r\n  - *ref\r\n").unwrap();
+
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from prelude\r\n",
+            )
             .unwrap();
-    }
 
-    #[test]
-    fn load_with_prelude_should_merge_docs_with_lf_line_endings() {
-        let tmp_dir = tempdir().unwrap();
+            let mut metadata_list = MetadataDocument::default();
+            metadata_list
+                .load_with_prelude(&masterlist_path, &prelude_path)
+                .unwrap();
+        }
 
-        let masterlist_path = tmp_dir.path().join("masterlist.yaml");
-        std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\nglobals:\n  - *ref\n").unwrap();
+        #[test]
+        fn load_with_prelude_should_merge_docs_with_lf_line_endings() {
+            let tmp_dir = tempdir().unwrap();
 
-        let prelude_path = tmp_dir.path().join("prelude.yaml");
-        std::fs::write(
-            &prelude_path,
-            "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n",
-        )
-        .unwrap();
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\nglobals:\n  - *ref\n").unwrap();
 
-        let mut metadata_list = MetadataDocument::default();
-        metadata_list
-            .load_with_prelude(&masterlist_path, &prelude_path)
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n",
+            )
             .unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            metadata_list
+                .load_with_prelude(&masterlist_path, &prelude_path)
+                .unwrap();
+        }
+
+        #[test]
+        fn load_with_prelude_should_error_if_the_given_masterlist_path_does_not_exist() {
+            let tmp_dir = tempdir().unwrap();
+
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n",
+            )
+            .unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            assert!(
+                metadata_list
+                    .load_with_prelude(Path::new("missing"), &prelude_path)
+                    .is_err()
+            );
+        }
+
+        #[test]
+        fn load_with_prelude_should_error_if_the_given_prelude_path_does_not_exist() {
+            let tmp_dir = tempdir().unwrap();
+
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\nglobals:\n  - *ref\n").unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            assert!(
+                metadata_list
+                    .load_with_prelude(&masterlist_path, Path::new("missing"))
+                    .is_err()
+            );
+        }
+
+        #[test]
+        fn save_should_write_the_loaded_metadata() {
+            let tmp_dir = tempdir().unwrap();
+
+            let path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&path, METADATA_LIST_YAML).unwrap();
+
+            let mut metadata = MetadataDocument::default();
+            metadata.load(&path).unwrap();
+
+            let other_path = tmp_dir.path().join("other.yaml");
+            metadata.save(&other_path).unwrap();
+
+            let mut other_metadata = MetadataDocument::default();
+            other_metadata.load(&other_path).unwrap();
+
+            assert_eq!(metadata, other_metadata);
+        }
+
+        #[test]
+        fn clear_should_clear_all_loaded_data() {
+            let mut metadata = MetadataDocument::default();
+            metadata.load_from_str(METADATA_LIST_YAML).unwrap();
+
+            assert!(!metadata.messages().is_empty());
+            assert!(metadata.plugins_iter().next().is_some());
+            assert!(!metadata.bash_tags().is_empty());
+
+            metadata.clear();
+
+            assert!(metadata.messages().is_empty());
+            assert!(metadata.plugins_iter().next().is_none());
+            assert!(metadata.bash_tags().is_empty());
+        }
+
+        #[test]
+        fn set_groups_should_replace_existing_groups() {
+            let mut metadata = MetadataDocument::default();
+            metadata.load_from_str(METADATA_LIST_YAML).unwrap();
+
+            metadata.set_groups(vec![Group::new("group4".into())]);
+
+            let groups = metadata.groups();
+
+            assert_eq!("default", groups[0].name());
+            assert!(groups[0].after_groups().is_empty());
+
+            assert_eq!("group4", groups[1].name());
+            assert!(groups[1].after_groups().is_empty());
+        }
+
+        #[test]
+        fn find_plugin_should_return_none_if_the_given_plugin_has_no_metadata() {
+            let metadata = MetadataDocument::default();
+            assert!(metadata.find_plugin("Blank.esp").unwrap().is_none());
+        }
+
+        #[test]
+        fn find_plugin_should_return_the_metadata_object_if_one_exists() {
+            let mut metadata = MetadataDocument::default();
+            metadata.load_from_str(METADATA_LIST_YAML).unwrap();
+
+            let name = "Blank - Different.esp";
+            let plugin = metadata.find_plugin(name).unwrap().unwrap();
+
+            assert_eq!(name, plugin.name());
+            assert_eq!(&[File::new("Blank.esm".into())], plugin.load_after_files());
+            assert_eq!(&[File::new("Blank.esp".into())], plugin.incompatibilities());
+        }
+
+        #[test]
+        fn add_plugin_should_store_specific_plugin_metadata() {
+            let mut metadata = MetadataDocument::default();
+
+            let name = "Blank.esp";
+            let mut plugin = PluginMetadata::new(name).unwrap();
+            plugin.set_group("group1".into());
+            metadata.set_plugin_metadata(plugin);
+
+            let plugin = metadata.find_plugin(name).unwrap().unwrap();
+
+            assert_eq!(name, plugin.name());
+            assert_eq!("group1", plugin.group().unwrap());
+        }
+
+        #[test]
+        fn add_plugin_should_store_given_regex_plugin_metadata() {
+            let mut metadata = MetadataDocument::default();
+
+            let mut plugin = PluginMetadata::new(".+Dependent\\.esp").unwrap();
+            plugin.set_group("group1".into());
+            metadata.set_plugin_metadata(plugin);
+
+            let name = "Blank - Plugin Dependent.esp";
+            let plugin = metadata.find_plugin(name).unwrap().unwrap();
+
+            assert_eq!(name, plugin.name());
+            assert_eq!("group1", plugin.group().unwrap());
+        }
+
+        #[test]
+        fn remove_plugin_metadata_should_remove_the_given_plugin_specific_metadata() {
+            let mut metadata = MetadataDocument::default();
+            metadata.load_from_str(METADATA_LIST_YAML).unwrap();
+
+            let name = "Blank.esp";
+            assert!(metadata.find_plugin(name).unwrap().is_some());
+
+            metadata.remove_plugin_metadata(name);
+
+            assert!(metadata.find_plugin(name).unwrap().is_none());
+        }
+
+        #[test]
+        fn remove_plugin_metadata_should_not_remove_matching_regex_plugin_metadata() {
+            let mut metadata = MetadataDocument::default();
+            metadata.load_from_str(METADATA_LIST_YAML).unwrap();
+
+            let name = "Blank.+\\.esp";
+            assert!(metadata.find_plugin(name).unwrap().is_some());
+
+            metadata.remove_plugin_metadata(name);
+
+            assert!(metadata.find_plugin(name).unwrap().is_some());
+
+            metadata.remove_plugin_metadata("Blank - Different.esp");
+
+            assert!(metadata.find_plugin(name).unwrap().is_some());
+        }
     }
 
-    #[test]
-    fn save_should_write_the_loaded_metadata() {
-        let tmp_dir = tempdir().unwrap();
+    mod replace_prelude {
+        use super::*;
 
-        let path = tmp_dir.path().join("masterlist.yaml");
-        std::fs::write(&path, METADATA_LIST_YAML).unwrap();
+        #[test]
+        fn should_return_an_empty_string_if_given_empty_strings() {
+            let result = replace_prelude(String::new(), String::new());
 
-        let mut metadata = MetadataDocument::default();
-        metadata.load(&path).unwrap();
+            assert!(result.is_empty());
+        }
 
-        let other_path = tmp_dir.path().join("other.yaml");
-        metadata.save(&other_path).unwrap();
+        #[test]
+        fn should_not_change_a_masterlist_with_no_prelude() {
+            let prelude = "globals:
+  - type: note
+    content: A message.
+";
+            let masterlist = "plugins:
+  - name: a.esp
+";
 
-        let mut other_metadata = MetadataDocument::default();
-        other_metadata.load(&other_path).unwrap();
+            let result = replace_prelude(masterlist.into(), prelude.into());
 
-        assert_eq!(metadata, other_metadata);
+            assert_eq!(masterlist, result);
+        }
+
+        #[test]
+        fn should_not_change_a_flow_style_masterlist() {
+            let prelude = "globals: [{type: note, content: A message.}]";
+            let masterlist = "{prelude: {}, plugins: [{name: a.esp}]}";
+
+            let result = replace_prelude(masterlist.into(), prelude.into());
+
+            assert_eq!(masterlist, result);
+        }
+
+        #[test]
+        fn should_replace_a_prelude_at_the_start_of_the_masterlist() {
+            let prelude = "globals:
+  - type: note
+    content: A message.
+";
+            let masterlist = "prelude:
+  a: b
+
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude.into());
+
+            let expected_result = "prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result);
+        }
+
+        #[test]
+        fn should_change_a_masterlist_that_ends_with_a_prelude() {
+            let prelude = "globals:
+  - type: note
+    content: A message.
+";
+            let masterlist = "plugins:
+  - name: a.esp
+prelude:
+  a: b
+
+";
+
+            let result = replace_prelude(masterlist.into(), prelude.into());
+
+            let expected_result = "plugins:
+  - name: a.esp
+prelude:
+  globals:
+    - type: note
+      content: A message.
+";
+
+            assert_eq!(expected_result, result);
+        }
+
+        #[test]
+        fn should_replace_only_the_prelude_in_the_masterlist() {
+            let prelude = "
+
+globals:
+  - type: note
+    content: A message.
+
+";
+            let masterlist = "
+common:
+  key: value
+prelude:
+  a: b
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude.into());
+
+            let expected_result = "
+common:
+  key: value
+prelude:
+
+
+  globals:
+    - type: note
+      content: A message.
+
+
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result);
+        }
+
+        #[test]
+        fn should_succeed_given_block_style_prelude_and_masterlist() {
+            let prelude = "globals:
+  - type: note
+    content: A message.
+";
+            let masterlist = "prelude:
+  a: b
+
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude.into());
+
+            let expected_result = "prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result);
+        }
+
+        #[test]
+        fn should_succeed_given_a_flow_style_prelude_and_a_block_style_masterlist() {
+            let prelude = "globals: [{type: note, content: A message.}]";
+            let masterlist = "prelude:
+  a: b
+
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude.into());
+
+            let expected_result = "prelude:
+  globals: [{type: note, content: A message.}]
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result);
+        }
+
+        #[test]
+        fn should_not_stop_at_comments() {
+            let prelude = "globals:
+  - type: note
+    content: A message.
+";
+            let masterlist = "prelude:
+  a: b
+# Comment line
+  c: d
+
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude.into());
+
+            let expected_result = "prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result);
+        }
+
+        #[test]
+        fn should_not_stop_at_a_blank_line() {
+            let prelude = "globals:
+  - type: note
+    content: A message.
+";
+            let masterlist = "prelude:
+  a: b
+
+
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude.into());
+
+            let expected_result = "prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result);
+        }
     }
 }

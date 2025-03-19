@@ -17,7 +17,7 @@ Currently complete:
 - [x] Archive-related functionality
 - [x] Metadata-related functionality (excluding writing YAML)
 - [x] Sorting functionality
-- [ ] Unit tests
+- [x] Unit tests
 - [ ] Integration tests
 - [ ] C++ FFI
 - [ ] Python FFI
@@ -35,7 +35,7 @@ $env:LIBLOOT_REVISION = git rev-parse --short HEAD
 cargo build --release
 ```
 
-There aren't many tests, but those that exist can be run by first extracting the [testing-plugins](https://github.com/Ortham/testing-plugins) archive to this readme's directory (so that there's a `testing-plugins` directory there), then running:
+The tests include a complete port of libloot's tests, and can be run by first extracting the [testing-plugins](https://github.com/Ortham/testing-plugins) archive to this readme's directory (so that there's a `testing-plugins` directory there), then running:
 
 ```
 cargo test

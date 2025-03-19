@@ -164,8 +164,8 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         PluginsGraph::default()
     }
 
-    fn add_node(&mut self, plugin: PluginSortingData<'a, T>) {
-        self.inner.add_node(Rc::new(plugin));
+    fn add_node(&mut self, plugin: PluginSortingData<'a, T>) -> NodeIndex {
+        self.inner.add_node(Rc::new(plugin))
     }
 
     fn add_edge(&mut self, from: NodeIndex, to: NodeIndex, edge_type: EdgeType) {
@@ -1176,5 +1176,2569 @@ impl<'e, T: SortingPlugin> DfsVisitor<'e> for GroupsPathVisitor<'_, '_, '_, '_, 
         // Since this vertex has been fully explored, pop the edge stack to remove
         // the edge that has this vertex as its target.
         self.edge_stack.pop();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::sorting::{groups::build_groups_graph, test::TestPlugin};
+
+    const PLUGIN_A: &str = "A.esp";
+    const PLUGIN_B: &str = "B.esp";
+
+    struct Fixture {
+        groups_graph: GroupsGraph,
+        plugins: HashMap<String, (TestPlugin, usize)>,
+    }
+
+    impl Fixture {
+        fn with_plugins(plugin_names: &[&str]) -> Self {
+            let masterlist = &[
+                Group::new("A".into()),
+                Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                Group::new("C".into()),
+                Group::new("default".into()).with_after_groups(vec!["C".into()]),
+                Group::new("E".into()).with_after_groups(vec!["default".into()]),
+                Group::new("F".into()).with_after_groups(vec!["E".into()]),
+            ];
+            let userlist = &[Group::new("C".into()).with_after_groups(vec!["B".into()])];
+            let groups_graph = build_groups_graph(masterlist, userlist).unwrap();
+
+            Self {
+                groups_graph,
+                plugins: plugin_names
+                    .iter()
+                    .enumerate()
+                    .map(|(i, n)| (n.to_string(), (TestPlugin::new(n), i)))
+                    .collect(),
+            }
+        }
+
+        fn get_plugin(&self, name: &str) -> &(TestPlugin, usize) {
+            self.plugins.get(name).unwrap()
+        }
+
+        fn get_plugin_mut(&mut self, name: &str) -> &mut TestPlugin {
+            &mut self.plugins.get_mut(name).unwrap().0
+        }
+
+        fn sorting_data<'a>(&'a self, name: &str) -> PluginSortingData<'a, TestPlugin> {
+            let (plugin, index) = self.get_plugin(name);
+
+            PluginSortingData::new(plugin, None, None, *index).unwrap()
+        }
+
+        fn group_sorting_data<'a>(
+            &'a self,
+            name: &str,
+            group_name: &str,
+        ) -> PluginSortingData<'a, TestPlugin> {
+            let (plugin, index) = self.get_plugin(name);
+
+            let mut metadata = PluginMetadata::new(name).unwrap();
+            metadata.set_group(group_name.into());
+
+            PluginSortingData::new(plugin, Some(&metadata), None, *index).unwrap()
+        }
+
+        fn user_group_sorting_data<'a>(
+            &'a self,
+            name: &str,
+            group_name: &str,
+        ) -> PluginSortingData<'a, TestPlugin> {
+            let (plugin, index) = self.get_plugin(name);
+
+            let mut metadata = PluginMetadata::new(name).unwrap();
+            metadata.set_group(group_name.into());
+
+            PluginSortingData::new(plugin, None, Some(&metadata), *index).unwrap()
+        }
+    }
+
+    mod plugin_sorting_data {
+        use crate::tests::BLANK_ESM;
+
+        use super::*;
+
+        #[test]
+        fn is_blueprint_master_should_be_true_if_a_plugin_is_a_master_and_a_blueprint_plugin() {
+            let mut master = TestPlugin::new(BLANK_ESM);
+            master.is_master = true;
+            let mut blueprint_plugin = TestPlugin::new(BLANK_ESM);
+            blueprint_plugin.is_blueprint_plugin = true;
+            let mut blueprint_master = TestPlugin::new(BLANK_ESM);
+            blueprint_master.is_master = true;
+            blueprint_master.is_blueprint_plugin = true;
+
+            let plugin = PluginSortingData::new(&master, None, None, 0).unwrap();
+            assert!(!plugin.is_blueprint_master());
+
+            let plugin = PluginSortingData::new(&blueprint_plugin, None, None, 0).unwrap();
+            assert!(!plugin.is_blueprint_master());
+
+            let plugin = PluginSortingData::new(&blueprint_master, None, None, 0).unwrap();
+            assert!(plugin.is_blueprint_master());
+        }
+    }
+
+    mod plugins_graph {
+        use super::*;
+
+        use crate::Vertex;
+
+        const PLUGIN_C: &str = "C.esp";
+        const PLUGIN_D: &str = "D.esp";
+        const PLUGIN_E: &str = "E.esp";
+
+        fn edge_type(
+            graph: &PluginsGraph<'_, TestPlugin>,
+            from: NodeIndex,
+            to: NodeIndex,
+        ) -> EdgeType {
+            *graph
+                .inner
+                .edge_weight(graph.inner.find_edge(from, to).unwrap())
+                .unwrap()
+        }
+
+        mod check_for_cycles {
+            use super::*;
+
+            #[test]
+            fn should_succeed_if_there_is_no_cycle() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let mut graph = PluginsGraph::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_edge(a, b, EdgeType::Master);
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_error_if_there_is_a_cycle() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C]);
+
+                let mut graph = PluginsGraph::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_edge(a, b, EdgeType::Master);
+                graph.add_edge(b, a, EdgeType::Master);
+
+                let cycle = graph.check_for_cycles().unwrap_err().into_cycle();
+
+                assert_eq!(
+                    &[
+                        Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::Master),
+                        Vertex::new(PLUGIN_B.into()).with_out_edge_type(EdgeType::Master),
+                    ],
+                    cycle.as_slice()
+                );
+            }
+
+            #[test]
+            fn should_only_give_plugins_that_are_part_of_the_cycle() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C]);
+
+                let mut graph = PluginsGraph::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+                let c = graph.add_node(fixture.sorting_data(PLUGIN_C));
+
+                graph.add_edge(a, b, EdgeType::Master);
+                graph.add_edge(b, c, EdgeType::Master);
+                graph.add_edge(b, a, EdgeType::MasterFlag);
+
+                let cycle = graph.check_for_cycles().unwrap_err().into_cycle();
+
+                assert_eq!(
+                    &[
+                        Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::Master),
+                        Vertex::new(PLUGIN_B.into()).with_out_edge_type(EdgeType::MasterFlag),
+                    ],
+                    cycle.as_slice()
+                );
+            }
+        }
+
+        #[test]
+        fn topological_sort_should_return_empty_list_if_there_are_no_plugins() {
+            let graph = PluginsGraph::<TestPlugin>::new();
+            let sorted = graph.topological_sort().unwrap();
+
+            assert!(sorted.is_empty());
+        }
+
+        mod add_early_loading_plugin_edges {
+            use super::*;
+
+            #[test]
+            fn should_add_no_edges_if_there_are_no_early_loading_plugins() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+                let c = graph.add_node(fixture.sorting_data(PLUGIN_C));
+
+                graph.add_early_loading_plugin_edges(&[]);
+
+                assert!(!graph.inner.contains_edge(a, b));
+                assert!(!graph.inner.contains_edge(a, c));
+                assert!(!graph.inner.contains_edge(b, a));
+                assert!(!graph.inner.contains_edge(b, c));
+                assert!(!graph.inner.contains_edge(c, a));
+                assert!(!graph.inner.contains_edge(c, b));
+            }
+
+            #[test]
+            fn should_add_edges_between_consecutive_early_loaders_skipping_missing_plugins() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_C, PLUGIN_D]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let c = graph.add_node(fixture.sorting_data(PLUGIN_C));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+
+                graph.add_early_loading_plugin_edges(&[
+                    PLUGIN_A.into(),
+                    PLUGIN_B.into(),
+                    PLUGIN_C.into(),
+                    PLUGIN_D.into(),
+                ]);
+
+                assert!(graph.inner.contains_edge(a, c));
+                assert!(graph.inner.contains_edge(c, d));
+                assert!(!graph.inner.contains_edge(a, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_edges_from_only_the_last_installed_early_loader_to_all_non_early_loader_plugins()
+             {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_D, PLUGIN_E]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+                let e = graph.add_node(fixture.sorting_data(PLUGIN_E));
+
+                graph.add_early_loading_plugin_edges(&[
+                    PLUGIN_A.into(),
+                    PLUGIN_B.into(),
+                    PLUGIN_C.into(),
+                ]);
+
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(b, d));
+                assert!(graph.inner.contains_edge(b, e));
+                assert!(!graph.inner.contains_edge(a, d));
+                assert!(!graph.inner.contains_edge(a, e));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+        }
+
+        mod add_group_edges {
+            use super::*;
+
+            const PLUGIN_A1: &str = "A1.esp";
+            const PLUGIN_A2: &str = "A2.esp";
+            const PLUGIN_B1: &str = "B1.esp";
+            const PLUGIN_B2: &str = "B2.esp";
+            const PLUGIN_C1: &str = "C1.esp";
+            const PLUGIN_C2: &str = "C2.esp";
+            const PLUGIN_D1: &str = "D1.esp";
+            const PLUGIN_D2: &str = "D2.esp";
+            const PLUGIN_D3: &str = "D3.esp";
+            const PLUGIN_F: &str = "F.esp";
+
+            #[test]
+            fn should_add_user_group_edge_if_source_plugin_is_in_group_due_to_user_metadata() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.user_group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                assert_eq!(EdgeType::UserGroup, edge_type(&graph, a, b));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_user_group_edge_if_target_plugin_is_in_group_due_to_user_metadata() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.user_group_sorting_data(PLUGIN_B, "B"));
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                assert_eq!(EdgeType::UserGroup, edge_type(&graph, a, b));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_user_group_edge_if_group_path_starts_with_user_metadata() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_B, PLUGIN_D]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                assert_eq!(EdgeType::UserGroup, edge_type(&graph, b, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_user_group_edge_if_group_path_ends_with_user_metadata() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_C]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                assert_eq!(EdgeType::UserGroup, edge_type(&graph, a, c));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_user_group_edge_if_group_path_involves_user_metadata() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_D]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                assert_eq!(EdgeType::UserGroup, edge_type(&graph, a, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_masterlist_group_edge_if_no_user_metadata_is_involved() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                assert_eq!(EdgeType::MasterlistGroup, edge_type(&graph, a, b));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_edges_between_plugins_in_indirectly_connected_groups_when_an_intermediate_plugin_edge_is_skipped()
+             {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A1, PLUGIN_A2, PLUGIN_B1, PLUGIN_B2, PLUGIN_C1, PLUGIN_C2,
+                ]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a1 = graph.add_node(fixture.group_sorting_data(PLUGIN_A1, "A"));
+                let a2 = graph.add_node(fixture.group_sorting_data(PLUGIN_A2, "A"));
+                let b1 = graph.add_node(fixture.group_sorting_data(PLUGIN_B1, "B"));
+                let b2 = graph.add_node(fixture.group_sorting_data(PLUGIN_B2, "B"));
+                let c1 = graph.add_node(fixture.group_sorting_data(PLUGIN_C1, "C"));
+                let c2 = graph.add_node(fixture.group_sorting_data(PLUGIN_C2, "C"));
+
+                graph.add_edge(b1, a1, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be A2.esp -> B1.esp -> A1.esp -> B2.esp -> C1.esp
+                //                                                -> C2.esp
+                assert!(graph.inner.contains_edge(b1, a1));
+                assert!(graph.inner.contains_edge(a1, b2));
+                assert!(graph.inner.contains_edge(a2, b1));
+                assert!(graph.inner.contains_edge(a2, b2));
+                assert!(graph.inner.contains_edge(b1, c1));
+                assert!(graph.inner.contains_edge(b1, c2));
+                assert!(graph.inner.contains_edge(b2, c1));
+                assert!(graph.inner.contains_edge(b2, c2));
+                assert!(graph.inner.contains_edge(a1, c1));
+                assert!(graph.inner.contains_edge(a1, c2));
+                assert!(!graph.inner.contains_edge(c1, c2));
+                assert!(!graph.inner.contains_edge(c2, c1));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_edges_across_empty_groups() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_C]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be A.esp -> C.esp
+                assert!(graph.inner.contains_edge(a, c));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_edges_across_the_non_empty_default_group() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_D, PLUGIN_E]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be A.esp -> D.esp -> E.esp
+                //                 ---------->
+                assert!(graph.inner.contains_edge(a, d));
+                assert!(graph.inner.contains_edge(d, e));
+                assert!(graph.inner.contains_edge(a, e));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_skip_an_edge_that_would_cause_a_cycle() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_C]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+
+                graph.add_edge(c, a, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                assert!(graph.inner.contains_edge(c, a));
+                assert!(!graph.inner.contains_edge(a, c));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_skip_an_edge_that_would_cause_a_cycle_involving_other_non_default_groups() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+
+                graph.add_edge(c, a, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                assert!(graph.inner.contains_edge(c, a));
+                assert!(graph.inner.contains_edge(a, b));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_skip_only_edges_to_the_target_group_plugins_that_would_cause_a_cycle() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_C1, PLUGIN_C2]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let c1 = graph.add_node(fixture.group_sorting_data(PLUGIN_C1, "C"));
+                let c2 = graph.add_node(fixture.group_sorting_data(PLUGIN_C2, "C"));
+
+                graph.add_edge(c1, a, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be C1.esp -> A.esp -> C2.esp
+                assert!(graph.inner.contains_edge(c1, a));
+                assert!(graph.inner.contains_edge(a, c2));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_skip_only_edges_from_ancestors_to_the_target_group_plugins_that_would_cause_a_cycle()
+             {
+                let fixture =
+                    Fixture::with_plugins(&[PLUGIN_B, PLUGIN_C, PLUGIN_D1, PLUGIN_D2, PLUGIN_D3]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d1 = graph.add_node(fixture.sorting_data(PLUGIN_D1));
+                let d2 = graph.add_node(fixture.sorting_data(PLUGIN_D2));
+                let d3 = graph.add_node(fixture.sorting_data(PLUGIN_D3));
+
+                graph.add_edge(d1, b, EdgeType::Master);
+                graph.add_edge(d2, b, EdgeType::Master);
+                graph.add_edge(c, b, EdgeType::Master);
+                graph.add_edge(c, d2, EdgeType::Master);
+                graph.add_edge(c, d3, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be: C.esp -> D2.esp -> B.esp -> D3.esp
+                //                  -> D1.esp ->
+                //                  -------------------->
+                //                  ----------->
+                assert!(graph.inner.contains_edge(d1, b));
+                assert!(graph.inner.contains_edge(d2, b));
+                assert!(graph.inner.contains_edge(c, b));
+                assert!(graph.inner.contains_edge(c, d2));
+                assert!(graph.inner.contains_edge(c, d3));
+                assert!(graph.inner.contains_edge(b, d3));
+                assert!(graph.inner.contains_edge(c, d1));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_plugin_edges_across_a_successor_if_at_least_one_edge_to_the_successor_group_was_skipped_with_successive_depths()
+             {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A1, PLUGIN_A2, PLUGIN_B1, PLUGIN_B2, PLUGIN_C1, PLUGIN_C2,
+                ]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a1 = graph.add_node(fixture.group_sorting_data(PLUGIN_A1, "A"));
+                let a2 = graph.add_node(fixture.group_sorting_data(PLUGIN_A2, "A"));
+                let b1 = graph.add_node(fixture.group_sorting_data(PLUGIN_B1, "B"));
+                let b2 = graph.add_node(fixture.group_sorting_data(PLUGIN_B2, "B"));
+                let c1 = graph.add_node(fixture.group_sorting_data(PLUGIN_C1, "C"));
+                let c2 = graph.add_node(fixture.group_sorting_data(PLUGIN_C2, "C"));
+
+                graph.add_edge(b1, a1, EdgeType::Master);
+                graph.add_edge(c1, b2, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be A2.esp -> B1.esp -> A1.esp -> C1.esp -> B2.esp -> C2.esp
+                assert!(graph.inner.contains_edge(b1, a1));
+                assert!(graph.inner.contains_edge(c1, b2));
+                assert!(graph.inner.contains_edge(a1, b2));
+                assert!(graph.inner.contains_edge(a1, c1));
+                assert!(graph.inner.contains_edge(a1, c2));
+                assert!(graph.inner.contains_edge(a2, b1));
+                assert!(graph.inner.contains_edge(a2, b2));
+                assert!(graph.inner.contains_edge(b1, c1));
+                assert!(graph.inner.contains_edge(b1, c2));
+                assert!(graph.inner.contains_edge(b2, c2));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_plugin_edges_across_a_successor_if_at_least_one_edge_to_the_successor_group_was_skipped_with_successive_depths_and_a_different_order()
+             {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A1, PLUGIN_A2, PLUGIN_B1, PLUGIN_B2, PLUGIN_C1, PLUGIN_C2,
+                ]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a1 = graph.add_node(fixture.group_sorting_data(PLUGIN_A1, "A"));
+                let a2 = graph.add_node(fixture.group_sorting_data(PLUGIN_A2, "A"));
+                let b1 = graph.add_node(fixture.group_sorting_data(PLUGIN_B1, "B"));
+                let b2 = graph.add_node(fixture.group_sorting_data(PLUGIN_B2, "B"));
+                let c1 = graph.add_node(fixture.group_sorting_data(PLUGIN_C1, "C"));
+                let c2 = graph.add_node(fixture.group_sorting_data(PLUGIN_C2, "C"));
+
+                graph.add_edge(b1, a1, EdgeType::Master);
+                graph.add_edge(c1, b1, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be A2.esp -> C1.esp -> B1.esp -> A1.esp -> B2.esp -> C2.esp
+                assert!(graph.inner.contains_edge(b1, a1));
+                assert!(graph.inner.contains_edge(c1, b1));
+                assert!(graph.inner.contains_edge(a1, b2));
+                assert!(graph.inner.contains_edge(a1, c2));
+                assert!(graph.inner.contains_edge(a2, b1));
+                assert!(graph.inner.contains_edge(a2, b2));
+                assert!(graph.inner.contains_edge(a2, c1));
+                assert!(graph.inner.contains_edge(b1, c2));
+                assert!(graph.inner.contains_edge(b2, c2));
+                assert!(!graph.inner.contains_edge(b2, c1));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_edge_from_ancestor_to_successor_if_none_of_a_groups_plugins_can() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B1, PLUGIN_B2, PLUGIN_C]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b1 = graph.add_node(fixture.group_sorting_data(PLUGIN_B1, "B"));
+                let b2 = graph.add_node(fixture.group_sorting_data(PLUGIN_B2, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+
+                graph.add_edge(c, b1, EdgeType::Master);
+                graph.add_edge(c, b2, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be A.esp -> C1.esp -> B1.esp
+                //                           -> B2.esp
+                assert!(graph.inner.contains_edge(a, b1));
+                assert!(graph.inner.contains_edge(a, b2));
+                assert!(graph.inner.contains_edge(c, b1));
+                assert!(graph.inner.contains_edge(c, b2));
+                assert!(graph.inner.contains_edge(a, c));
+                assert!(!graph.inner.contains_edge(b1, b2));
+                assert!(!graph.inner.contains_edge(b2, b1));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_edge_from_ancestor_to_successor_if_none_of_a_groups_plugins_can_with_edges_across_the_skipped_group()
+             {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A1, PLUGIN_A2, PLUGIN_B1, PLUGIN_B2, PLUGIN_C1, PLUGIN_C2, PLUGIN_D1,
+                    PLUGIN_D2,
+                ]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a1 = graph.add_node(fixture.group_sorting_data(PLUGIN_A1, "A"));
+                let a2 = graph.add_node(fixture.group_sorting_data(PLUGIN_A2, "A"));
+                let b1 = graph.add_node(fixture.group_sorting_data(PLUGIN_B1, "B"));
+                let b2 = graph.add_node(fixture.group_sorting_data(PLUGIN_B2, "B"));
+                let c1 = graph.add_node(fixture.group_sorting_data(PLUGIN_C1, "C"));
+                let c2 = graph.add_node(fixture.group_sorting_data(PLUGIN_C2, "C"));
+                let d1 = graph.add_node(fixture.sorting_data(PLUGIN_D1));
+                let d2 = graph.add_node(fixture.sorting_data(PLUGIN_D2));
+
+                graph.add_edge(b1, a1, EdgeType::Master);
+                graph.add_edge(c1, b1, EdgeType::Master);
+                graph.add_edge(d1, c1, EdgeType::Master);
+                graph.add_edge(d2, c1, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be:
+                // A2.esp -> D1.esp -> C1.esp -> B1.esp -> A1.esp -> B2.esp -> C2.esp
+                //        -> D2.esp ->
+                assert!(graph.inner.contains_edge(b1, a1));
+                assert!(graph.inner.contains_edge(c1, b1));
+                assert!(graph.inner.contains_edge(d1, c1));
+                assert!(graph.inner.contains_edge(d2, c1));
+                assert!(graph.inner.contains_edge(a1, b2));
+                assert!(graph.inner.contains_edge(a2, b1));
+                assert!(graph.inner.contains_edge(a2, b2));
+                assert!(graph.inner.contains_edge(a1, c2));
+                assert!(graph.inner.contains_edge(b1, c2));
+                assert!(graph.inner.contains_edge(a2, c1));
+                assert!(graph.inner.contains_edge(a2, d1));
+                assert!(graph.inner.contains_edge(a2, d2));
+                assert!(!graph.inner.contains_edge(b2, c1));
+                assert!(!graph.inner.contains_edge(d1, d2));
+                assert!(!graph.inner.contains_edge(d2, d1));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_deprioritise_edges_from_default_group_plugins_with_default_last() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_B, PLUGIN_C, PLUGIN_D]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+
+                graph.add_edge(d, b, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be D.esp -> B.esp -> C.esp
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(d, b));
+                assert!(!graph.inner.contains_edge(c, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_deprioritise_edges_from_default_group_plugins_with_default_first() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_D, PLUGIN_E, PLUGIN_F]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+                let f = graph.add_node(fixture.group_sorting_data(PLUGIN_F, "F"));
+
+                graph.add_edge(f, d, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be E.esp -> F.esp -> D.esp
+                assert!(graph.inner.contains_edge(e, f));
+                assert!(graph.inner.contains_edge(f, d));
+                assert!(!graph.inner.contains_edge(d, e));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_deprioritise_edges_from_default_group_plugins_across_skipped_intermediate_groups()
+             {
+                let fixture = Fixture::with_plugins(&[PLUGIN_D, PLUGIN_E, PLUGIN_F]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+                let f = graph.add_node(fixture.group_sorting_data(PLUGIN_F, "F"));
+
+                graph.add_edge(e, d, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be E.esp -> D.esp -> F.esp
+                assert!(graph.inner.contains_edge(e, d));
+                assert!(graph.inner.contains_edge(d, f));
+                assert!(!graph.inner.contains_edge(f, e));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_deprioritise_edges_from_default_group_plugins_with_d1_first_d2_last() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_D1, PLUGIN_D2, PLUGIN_E, PLUGIN_F]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let d1 = graph.add_node(fixture.sorting_data(PLUGIN_D1));
+                let d2 = graph.add_node(fixture.sorting_data(PLUGIN_D2));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+                let f = graph.add_node(fixture.group_sorting_data(PLUGIN_F, "F"));
+
+                graph.add_edge(f, d2, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be D1.esp -> E.esp -> F.esp -> D2.esp
+                assert!(graph.inner.contains_edge(e, f));
+                assert!(graph.inner.contains_edge(f, d2));
+                assert!(graph.inner.contains_edge(d1, e));
+                assert!(!graph.inner.contains_edge(d2, d1));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_deprioritise_edges_from_default_group_plugins_with_no_ideal_result() {
+                let fixture =
+                    Fixture::with_plugins(&[PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E, PLUGIN_F]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+                let f = graph.add_node(fixture.group_sorting_data(PLUGIN_F, "F"));
+
+                graph.add_edge(d, b, EdgeType::Master);
+                graph.add_edge(f, d, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // No ideal result, expected is F.esp -> D.esp -> B.esp -> C.esp -> E.esp
+                assert!(graph.inner.contains_edge(f, d));
+                assert!(graph.inner.contains_edge(d, b));
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(c, e));
+                assert!(!graph.inner.contains_edge(e, f));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_deprioritise_edges_from_default_group_plugins_with_default_in_middle_and_d_bookends()
+             {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_B, PLUGIN_C, PLUGIN_D1, PLUGIN_D2, PLUGIN_E, PLUGIN_F,
+                ]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d1 = graph.add_node(fixture.sorting_data(PLUGIN_D1));
+                let d2 = graph.add_node(fixture.sorting_data(PLUGIN_D2));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+                let f = graph.add_node(fixture.group_sorting_data(PLUGIN_F, "F"));
+
+                graph.add_edge(d2, b, EdgeType::Master);
+                graph.add_edge(f, d1, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be D2.esp -> B.esp -> C.esp -> E.esp -> F.esp -> D1.esp
+                assert!(graph.inner.contains_edge(d2, b));
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(c, e));
+                assert!(graph.inner.contains_edge(e, f));
+                assert!(graph.inner.contains_edge(f, d1));
+                assert!(!graph.inner.contains_edge(d1, d2));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_deprioritise_edges_from_default_group_plugins_with_default_in_middle_and_d_throughout()
+             {
+                const PLUGIN_D4: &str = "D4.esp";
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_B, PLUGIN_C, PLUGIN_D1, PLUGIN_D2, PLUGIN_D3, PLUGIN_D4, PLUGIN_E,
+                    PLUGIN_F,
+                ]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d1 = graph.add_node(fixture.sorting_data(PLUGIN_D1));
+                let d2 = graph.add_node(fixture.sorting_data(PLUGIN_D2));
+                let d3 = graph.add_node(fixture.sorting_data(PLUGIN_D3));
+                let d4 = graph.add_node(fixture.sorting_data(PLUGIN_D4));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+                let f = graph.add_node(fixture.group_sorting_data(PLUGIN_F, "F"));
+
+                graph.add_edge(d2, b, EdgeType::Master);
+                graph.add_edge(d4, c, EdgeType::Master);
+                graph.add_edge(f, d1, EdgeType::Master);
+
+                graph.add_group_edges(&fixture.groups_graph).unwrap();
+
+                // Should be:
+                // D2.esp -> B.esp -> D4.esp -> C.esp -> D3.esp -> E.esp -> F.esp -> D1.esp
+                assert!(graph.inner.contains_edge(d2, b));
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(c, d3));
+                assert!(graph.inner.contains_edge(c, e));
+                assert!(graph.inner.contains_edge(d3, e));
+                assert!(graph.inner.contains_edge(e, f));
+                assert!(graph.inner.contains_edge(f, d1));
+                assert!(graph.inner.contains_edge(d4, c));
+                assert!(graph.inner.contains_edge(b, d4));
+                assert!(!graph.inner.contains_edge(d1, d2));
+                assert!(!graph.inner.contains_edge(d1, d3));
+                assert!(!graph.inner.contains_edge(d1, d4));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_handle_asymmetric_branches_in_the_groups_graph() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["A".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> B.esp -> C.esp
+                //                 -> D.esp
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(a, d));
+                assert!(!graph.inner.contains_edge(d, b));
+                assert!(!graph.inner.contains_edge(d, c));
+                assert!(!graph.inner.contains_edge(b, d));
+                assert!(!graph.inner.contains_edge(c, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_handle_asymmetric_branches_in_the_groups_graph_that_merge() {
+                let fixture =
+                    Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("E".into()).with_after_groups(vec!["C".into(), "D".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> B.esp -> C.esp -> E.esp
+                //                 -> D.esp ---------->
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(c, e));
+                assert!(graph.inner.contains_edge(a, d));
+                assert!(graph.inner.contains_edge(d, e));
+                assert!(!graph.inner.contains_edge(d, b));
+                assert!(!graph.inner.contains_edge(d, c));
+                assert!(!graph.inner.contains_edge(b, d));
+                assert!(!graph.inner.contains_edge(c, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_handle_branches_in_the_groups_graph_that_form_a_diamond_pattern() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["B".into(), "C".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> B.esp -> D.esp
+                //                 -> C.esp ->
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(b, d));
+                assert!(graph.inner.contains_edge(a, c));
+                assert!(graph.inner.contains_edge(c, d));
+                assert!(!graph.inner.contains_edge(b, c));
+                assert!(!graph.inner.contains_edge(c, b));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_edges_across_the_merge_point_of_branches_in_the_groups_graph() {
+                let fixture =
+                    Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["B".into(), "C".into()]),
+                        Group::new("E".into()).with_after_groups(vec!["D".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+
+                graph.add_edge(d, c, EdgeType::Master);
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> B.esp -> D.esp -> C.esp -> E.esp
+                assert!(graph.inner.contains_edge(d, c));
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(b, d));
+                assert!(graph.inner.contains_edge(d, e));
+                assert!(graph.inner.contains_edge(a, c));
+                assert!(graph.inner.contains_edge(c, e));
+                assert!(!graph.inner.contains_edge(b, c));
+                assert!(!graph.inner.contains_edge(c, b));
+                assert!(!graph.inner.contains_edge(c, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_handle_a_groups_graph_with_multiple_successive_branches() {
+                const PLUGIN_G: &str = "G.esp";
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E, PLUGIN_F, PLUGIN_G,
+                ]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["B".into(), "C".into()]),
+                        Group::new("E".into()).with_after_groups(vec!["D".into()]),
+                        Group::new("F".into()).with_after_groups(vec!["D".into()]),
+                        Group::new("G".into()).with_after_groups(vec!["E".into(), "F".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+                let f = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "F"));
+                let g = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "G"));
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be:
+                // A.esp -> B.esp -> D.esp -> E.esp -> G.esp
+                //       -> C.esp ->       -> F.esp ->
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(a, c));
+                assert!(graph.inner.contains_edge(b, d));
+                assert!(graph.inner.contains_edge(c, d));
+                assert!(graph.inner.contains_edge(d, e));
+                assert!(graph.inner.contains_edge(d, f));
+                assert!(graph.inner.contains_edge(e, g));
+                assert!(graph.inner.contains_edge(f, g));
+                assert!(!graph.inner.contains_edge(b, c));
+                assert!(!graph.inner.contains_edge(c, b));
+                assert!(!graph.inner.contains_edge(e, f));
+                assert!(!graph.inner.contains_edge(f, e));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_find_all_groups_in_all_paths_between_two_groups_when_ignoring_a_plugin() {
+                let fixture =
+                    Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["C".into()]),
+                        Group::default().with_after_groups(vec!["B".into(), "D".into()]),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+                let e = graph.add_node(fixture.sorting_data(PLUGIN_E));
+
+                graph.add_edge(e, a, EdgeType::Master);
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be:
+                // A.esp -> B.esp -> D.esp -> E.esp -> G.esp
+                //       -> C.esp ->       -> F.esp ->
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(c, d));
+
+                assert!(!graph.inner.contains_edge(a, e));
+                assert!(!graph.inner.contains_edge(b, e));
+                assert!(!graph.inner.contains_edge(c, e));
+                assert!(!graph.inner.contains_edge(d, e));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_handle_isolated_groups() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> B.esp
+                //           C.esp
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(!graph.inner.contains_edge(a, c));
+                assert!(!graph.inner.contains_edge(c, a));
+                assert!(!graph.inner.contains_edge(b, c));
+                assert!(!graph.inner.contains_edge(c, b));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_handle_disconnected_group_graphs() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()),
+                        Group::new("D".into()).with_after_groups(vec!["C".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> B.esp
+                //           C.esp -> D.esp
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(c, d));
+                assert!(!graph.inner.contains_edge(a, c));
+                assert!(!graph.inner.contains_edge(a, d));
+                assert!(!graph.inner.contains_edge(b, c));
+                assert!(!graph.inner.contains_edge(b, d));
+                assert!(!graph.inner.contains_edge(c, a));
+                assert!(!graph.inner.contains_edge(c, b));
+                assert!(!graph.inner.contains_edge(d, a));
+                assert!(!graph.inner.contains_edge(d, b));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_add_edges_across_the_merge_point_of_two_root_node_paths() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()),
+                        Group::new("C".into()).with_after_groups(vec!["A".into(), "B".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["C".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+
+                graph.add_edge(c, b, EdgeType::Master);
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> C.esp -> D.esp
+                //           B.esp ---------->
+                assert!(graph.inner.contains_edge(c, b));
+                assert!(graph.inner.contains_edge(a, c));
+                assert!(graph.inner.contains_edge(c, d));
+                assert!(graph.inner.contains_edge(b, d));
+                assert!(!graph.inner.contains_edge(a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_not_depend_on_group_definition_order_if_there_is_a_single_linear_path() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_B, PLUGIN_C, PLUGIN_D]);
+
+                let masterlists = &[
+                    [
+                        Group::new("B".into()),
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::default().with_after_groups(vec!["C".into()]),
+                    ],
+                    [
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::new("B".into()),
+                        Group::default().with_after_groups(vec!["C".into()]),
+                    ],
+                ];
+
+                for masterlist in masterlists {
+                    let groups_graph = build_groups_graph(masterlist, &[]).unwrap();
+
+                    let mut graph = PluginsGraph::<TestPlugin>::new();
+                    let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                    let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                    let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+
+                    graph.add_edge(d, b, EdgeType::Master);
+
+                    graph.add_group_edges(&groups_graph).unwrap();
+
+                    // Should be D.esp -> B.esp -> C.esp
+                    assert!(graph.inner.contains_edge(b, c));
+                    assert!(graph.inner.contains_edge(d, b));
+                    assert!(!graph.inner.contains_edge(c, d));
+
+                    assert!(graph.check_for_cycles().is_ok());
+                }
+            }
+
+            #[test]
+            fn should_not_depend_on_group_definition_order_if_there_are_multiple_roots() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D]);
+
+                let masterlists = &[
+                    [
+                        Group::new("A".into()),
+                        Group::new("B".into()),
+                        Group::new("C".into()).with_after_groups(vec!["A".into(), "B".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["C".into()]),
+                        Group::default(),
+                    ],
+                    [
+                        Group::new("B".into()),
+                        Group::new("A".into()),
+                        Group::new("C".into()).with_after_groups(vec!["A".into(), "B".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["C".into()]),
+                        Group::default(),
+                    ],
+                ];
+
+                for masterlist in masterlists {
+                    let groups_graph = build_groups_graph(masterlist, &[]).unwrap();
+
+                    let mut graph = PluginsGraph::<TestPlugin>::new();
+                    let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                    let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                    let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                    let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+
+                    graph.add_edge(d, a, EdgeType::Master);
+
+                    graph.add_group_edges(&groups_graph).unwrap();
+
+                    // Should be B.esp -> D.esp -> A.esp -> C.esp
+                    //           B.esp ------------------->
+                    assert!(graph.inner.contains_edge(d, a));
+                    assert!(graph.inner.contains_edge(a, c));
+                    assert!(graph.inner.contains_edge(b, c));
+                    assert!(graph.inner.contains_edge(b, d));
+                    assert!(!graph.inner.contains_edge(a, b));
+                    assert!(!graph.inner.contains_edge(b, a));
+                    assert!(!graph.inner.contains_edge(c, d));
+
+                    assert!(graph.check_for_cycles().is_ok());
+                }
+            }
+
+            #[test]
+            fn should_not_depend_on_branching_group_definition_order() {
+                let fixture =
+                    Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E]);
+
+                let masterlists = &[
+                    [
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["B".into(), "C".into()]),
+                        Group::new("E".into()).with_after_groups(vec!["D".into()]),
+                        Group::default(),
+                    ],
+                    [
+                        Group::new("A".into()),
+                        Group::new("C".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["B".into(), "C".into()]),
+                        Group::new("E".into()).with_after_groups(vec!["D".into()]),
+                        Group::default(),
+                    ],
+                ];
+
+                for masterlist in masterlists {
+                    let groups_graph = build_groups_graph(masterlist, &[]).unwrap();
+
+                    let mut graph = PluginsGraph::<TestPlugin>::new();
+                    let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                    let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                    let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                    let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+                    let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+
+                    graph.add_edge(e, c, EdgeType::Master);
+
+                    graph.add_group_edges(&groups_graph).unwrap();
+
+                    // Should be A.esp -> B.esp -> D.esp -> E.esp -> C.esp
+                    assert!(graph.inner.contains_edge(a, b));
+                    assert!(graph.inner.contains_edge(a, c));
+                    assert!(graph.inner.contains_edge(a, d));
+                    assert!(graph.inner.contains_edge(a, e));
+                    assert!(graph.inner.contains_edge(b, d));
+                    assert!(graph.inner.contains_edge(b, e));
+                    assert!(graph.inner.contains_edge(d, e));
+                    assert!(graph.inner.contains_edge(e, c));
+
+                    assert!(!graph.inner.contains_edge(b, c));
+                    assert!(!graph.inner.contains_edge(c, b));
+                    assert!(!graph.inner.contains_edge(c, d));
+                    assert!(!graph.inner.contains_edge(c, e));
+                    assert!(!graph.inner.contains_edge(d, c));
+
+                    assert!(graph.check_for_cycles().is_ok());
+                }
+            }
+
+            #[test]
+            fn should_not_depend_on_plugin_graph_node_order() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A1, PLUGIN_A2, PLUGIN_B, PLUGIN_C]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let a1 = (PLUGIN_A1, "A");
+                let a2 = (PLUGIN_A2, "A");
+                let b = (PLUGIN_B, "B");
+                let c = (PLUGIN_C, "C");
+
+                let variations = &[
+                    [a1, a2, b, c],
+                    [a1, a2, c, b],
+                    [a1, b, c, a2],
+                    [a1, b, a2, c],
+                    [a1, c, a2, b],
+                    [a1, c, b, a2],
+                    [a2, a1, b, c],
+                    [a2, a1, c, b],
+                    [a2, b, c, a1],
+                    [a2, b, a1, c],
+                    [a2, c, a1, b],
+                    [a2, c, b, a1],
+                    [b, a2, a1, c],
+                    [b, a2, c, a1],
+                    [b, a1, c, a2],
+                    [b, a1, a2, c],
+                    [b, c, a2, a1],
+                    [b, c, a1, a2],
+                    [c, a2, b, a1],
+                    [c, a2, a1, b],
+                    [c, b, a1, a2],
+                    [c, b, a2, a1],
+                    [c, a1, a2, b],
+                    [c, a1, b, a2],
+                ];
+
+                for plugins in variations {
+                    let mut graph = PluginsGraph::<TestPlugin>::new();
+
+                    for plugin in plugins {
+                        graph.add_node(fixture.group_sorting_data(plugin.0, plugin.1));
+                    }
+
+                    let a1 = graph.node_index_by_name(PLUGIN_A1).unwrap();
+                    let a2 = graph.node_index_by_name(PLUGIN_A2).unwrap();
+                    let b = graph.node_index_by_name(PLUGIN_B).unwrap();
+                    let c = graph.node_index_by_name(PLUGIN_C).unwrap();
+
+                    graph.add_edge(c, a1, EdgeType::Master);
+
+                    graph.add_group_edges(&groups_graph).unwrap();
+
+                    // Should be A2.esp -> C.esp -> A1.esp -> B.esp
+                    //           A2.esp -------------------->
+                    assert!(graph.inner.contains_edge(c, a1));
+                    assert!(graph.inner.contains_edge(a1, b));
+                    assert!(graph.inner.contains_edge(a2, b));
+                    assert!(graph.inner.contains_edge(a2, c));
+                    assert!(!graph.inner.contains_edge(a1, a2));
+                    assert!(!graph.inner.contains_edge(a2, a1));
+                    assert!(!graph.inner.contains_edge(b, c));
+
+                    assert!(graph.check_for_cycles().is_ok());
+                }
+            }
+
+            #[test]
+            fn should_start_searching_from_root_groups_before_going_in_lexicographical_order() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("D".into()),
+                        Group::new("A".into()).with_after_groups(vec!["D".into()]),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+
+                graph.add_edge(c, d, EdgeType::Master);
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be C.esp -> D.esp -> A.esp -> B.esp
+                // Processing groups lexicographically would give:
+                // A.esp -> B.esp -> C.esp -> D.esp
+                assert!(graph.inner.contains_edge(c, d));
+                assert!(graph.inner.contains_edge(d, a));
+                assert!(graph.inner.contains_edge(d, b));
+                assert!(graph.inner.contains_edge(a, b));
+
+                assert!(!graph.inner.contains_edge(a, c));
+                assert!(!graph.inner.contains_edge(a, d));
+                assert!(!graph.inner.contains_edge(b, a));
+                assert!(!graph.inner.contains_edge(b, c));
+                assert!(!graph.inner.contains_edge(b, d));
+                assert!(!graph.inner.contains_edge(d, c));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn should_start_searching_from_the_root_group_with_the_longest_path() {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E, PLUGIN_F,
+                ]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("D".into()),
+                        Group::new("B".into()).with_after_groups(vec!["D".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["B".into()]),
+                        Group::new("A".into()),
+                        Group::new("E".into()).with_after_groups(vec!["C".into(), "A".into()]),
+                        Group::new("F".into()).with_after_groups(vec!["E".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+                let f = graph.add_node(fixture.group_sorting_data(PLUGIN_F, "F"));
+
+                graph.add_edge(f, b, EdgeType::Master);
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be          D.esp -> B.esp -> C.esp -> E.esp
+                //  A.esp -> F.esp ----------> B.esp
+                //  A.esp -------------------------------------> E.esp
+                assert!(graph.inner.contains_edge(d, b));
+                assert!(graph.inner.contains_edge(b, c));
+                assert!(graph.inner.contains_edge(c, e));
+                assert!(graph.inner.contains_edge(a, f));
+                assert!(graph.inner.contains_edge(a, e));
+                assert!(graph.inner.contains_edge(f, b));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+
+            #[test]
+            fn does_not_start_searching_with_the_longest_path() {
+                let fixture =
+                    Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E]);
+
+                let groups_graph = build_groups_graph(
+                    &[
+                        Group::new("A".into()),
+                        Group::new("B".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("C".into()).with_after_groups(vec!["A".into()]),
+                        Group::new("D".into()).with_after_groups(vec!["C".into()]),
+                        Group::new("E".into()).with_after_groups(vec!["B".into(), "D".into()]),
+                        Group::default(),
+                    ],
+                    &[],
+                )
+                .unwrap();
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.group_sorting_data(PLUGIN_A, "A"));
+                let b = graph.add_node(fixture.group_sorting_data(PLUGIN_B, "B"));
+                let c = graph.add_node(fixture.group_sorting_data(PLUGIN_C, "C"));
+                let d = graph.add_node(fixture.group_sorting_data(PLUGIN_D, "D"));
+                let e = graph.add_node(fixture.group_sorting_data(PLUGIN_E, "E"));
+
+                graph.add_edge(e, c, EdgeType::Master);
+
+                graph.add_group_edges(&groups_graph).unwrap();
+
+                // Should be A.esp -> B.esp -> E.esp -> C.esp -> D.esp
+                assert!(graph.inner.contains_edge(a, b));
+                assert!(graph.inner.contains_edge(b, e));
+                assert!(graph.inner.contains_edge(e, c));
+                assert!(graph.inner.contains_edge(c, d));
+
+                assert!(graph.check_for_cycles().is_ok());
+            }
+        }
+
+        mod add_overlap_edges {
+            use super::*;
+
+            #[test]
+            fn should_not_add_edges_between_non_overlapping_plugins() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert!(!graph.inner.contains_edge(a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_not_add_edges_between_overlapping_plugins_with_equal_override_counts() {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.override_record_count = 1;
+                a.add_overlapping_records(PLUGIN_B);
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.override_record_count = 1;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert!(!graph.inner.contains_edge(a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_add_edge_between_overlapping_plugins_with_unequal_override_counts() {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.override_record_count = 2;
+                a.add_overlapping_records(PLUGIN_B);
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.override_record_count = 1;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert_eq!(EdgeType::RecordOverlap, edge_type(&graph, a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_not_add_edge_between_non_overlapping_plugins_with_unequal_override_counts() {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.override_record_count = 2;
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.override_record_count = 1;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert!(!graph.inner.contains_edge(a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_not_add_edge_between_plugins_with_asset_overlap_and_equal_asset_counts() {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.asset_count = 1;
+                a.add_overlapping_assets(PLUGIN_B);
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.asset_count = 1;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert!(!graph.inner.contains_edge(a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_not_add_edge_between_plugins_with_no_asset_overlap_and_unequal_asset_counts()
+            {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.asset_count = 2;
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.asset_count = 1;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert!(!graph.inner.contains_edge(a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_add_edge_between_plugins_with_asset_overlap_and_unequal_asset_counts() {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.asset_count = 2;
+                a.add_overlapping_assets(PLUGIN_B);
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.asset_count = 1;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert_eq!(EdgeType::AssetOverlap, edge_type(&graph, a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_add_edge_between_overlapping_plugins_with_asset_overlap_and_equal_override_count_and_unequal_asset_counts()
+             {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.asset_count = 2;
+                a.add_overlapping_records(PLUGIN_B);
+                a.add_overlapping_assets(PLUGIN_B);
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.asset_count = 1;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert_eq!(EdgeType::AssetOverlap, edge_type(&graph, a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_add_edge_between_plugins_with_asset_overlap_and_unequal_override_count_and_unequal_asset_counts()
+             {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.override_record_count = 1;
+                a.asset_count = 2;
+                a.add_overlapping_assets(PLUGIN_B);
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.override_record_count = 2;
+                b.asset_count = 1;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert_eq!(EdgeType::AssetOverlap, edge_type(&graph, a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+
+            #[test]
+            fn should_choose_record_overlap_over_asset_overlap() {
+                let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let a = fixture.get_plugin_mut(PLUGIN_A);
+                a.override_record_count = 2;
+                a.asset_count = 1;
+                a.add_overlapping_records(PLUGIN_B);
+                a.add_overlapping_assets(PLUGIN_B);
+
+                let b = fixture.get_plugin_mut(PLUGIN_B);
+                b.override_record_count = 1;
+                b.asset_count = 2;
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+
+                graph.add_overlap_edges().unwrap();
+
+                assert_eq!(EdgeType::RecordOverlap, edge_type(&graph, a, b));
+                assert!(!graph.inner.contains_edge(b, a));
+            }
+        }
+
+        mod add_tie_break_edges {
+            use super::*;
+
+            const PLUGIN_F: &str = "F.esp";
+            const PLUGIN_G: &str = "G.esp";
+            const PLUGIN_H: &str = "H.esp";
+            const PLUGIN_I: &str = "I.esp";
+            const PLUGIN_J: &str = "J.esp";
+
+            #[test]
+            fn should_not_error_on_a_graph_with_one_node() {
+                let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                graph.add_node(fixture.sorting_data(PLUGIN_A));
+
+                assert!(graph.add_tie_break_edges().is_ok());
+            }
+
+            #[test]
+            fn should_result_in_a_sort_order_equal_to_vertex_creation_order_if_there_are_no_other_edges()
+             {
+                let fixture =
+                    Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                graph.add_node(fixture.sorting_data(PLUGIN_A));
+                graph.add_node(fixture.sorting_data(PLUGIN_B));
+                graph.add_node(fixture.sorting_data(PLUGIN_C));
+                graph.add_node(fixture.sorting_data(PLUGIN_D));
+                graph.add_node(fixture.sorting_data(PLUGIN_E));
+
+                graph.add_tie_break_edges().unwrap();
+
+                let sorted = graph.topological_sort().unwrap();
+
+                assert!(graph.check_path_is_hamiltonian(&sorted).is_none());
+
+                let sorted_plugin_names: Vec<_> = sorted
+                    .into_iter()
+                    .map(|i| graph[i].name().to_string())
+                    .collect();
+
+                assert_eq!(
+                    &[PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E],
+                    sorted_plugin_names.as_slice()
+                );
+            }
+
+            #[test]
+            fn should_pin_paths_that_prevent_the_vertex_creation_order_from_being_used() {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E, PLUGIN_F, PLUGIN_G, PLUGIN_H,
+                    PLUGIN_I, PLUGIN_J,
+                ]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                graph.add_node(fixture.sorting_data(PLUGIN_A));
+                graph.add_node(fixture.sorting_data(PLUGIN_B));
+                graph.add_node(fixture.sorting_data(PLUGIN_C));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+                let e = graph.add_node(fixture.sorting_data(PLUGIN_E));
+                let f = graph.add_node(fixture.sorting_data(PLUGIN_F));
+                let g = graph.add_node(fixture.sorting_data(PLUGIN_G));
+                let h = graph.add_node(fixture.sorting_data(PLUGIN_H));
+                let i = graph.add_node(fixture.sorting_data(PLUGIN_I));
+                graph.add_node(fixture.sorting_data(PLUGIN_J));
+
+                // Add a path g -> h -> i -> f
+                graph.add_edge(g, h, EdgeType::RecordOverlap);
+                graph.add_edge(h, i, EdgeType::RecordOverlap);
+                graph.add_edge(i, f, EdgeType::RecordOverlap);
+
+                // Also add g -> d and i -> e
+                graph.add_edge(g, d, EdgeType::RecordOverlap);
+                graph.add_edge(i, e, EdgeType::RecordOverlap);
+
+                graph.add_tie_break_edges().unwrap();
+
+                let sorted = graph.topological_sort().unwrap();
+
+                assert!(graph.check_path_is_hamiltonian(&sorted).is_none());
+
+                let sorted_plugin_names: Vec<_> = sorted
+                    .into_iter()
+                    .map(|i| graph[i].name().to_string())
+                    .collect();
+
+                assert_eq!(
+                    &[
+                        PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_G, PLUGIN_D, PLUGIN_H, PLUGIN_I,
+                        PLUGIN_E, PLUGIN_F, PLUGIN_J
+                    ],
+                    sorted_plugin_names.as_slice()
+                );
+            }
+
+            #[test]
+            fn should_prefix_path_to_new_load_order_if_the_first_pair_of_nodes_cannot_be_used_in_creation_order()
+             {
+                let fixture = Fixture::with_plugins(&[
+                    PLUGIN_A, PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_E, PLUGIN_F, PLUGIN_G, PLUGIN_H,
+                    PLUGIN_I, PLUGIN_J,
+                ]);
+
+                let mut graph = PluginsGraph::<TestPlugin>::new();
+                let a = graph.add_node(fixture.sorting_data(PLUGIN_A));
+                let b = graph.add_node(fixture.sorting_data(PLUGIN_B));
+                let c = graph.add_node(fixture.sorting_data(PLUGIN_C));
+                let d = graph.add_node(fixture.sorting_data(PLUGIN_D));
+                graph.add_node(fixture.sorting_data(PLUGIN_E));
+                graph.add_node(fixture.sorting_data(PLUGIN_F));
+                graph.add_node(fixture.sorting_data(PLUGIN_G));
+                graph.add_node(fixture.sorting_data(PLUGIN_H));
+                graph.add_node(fixture.sorting_data(PLUGIN_I));
+                graph.add_node(fixture.sorting_data(PLUGIN_J));
+
+                // Add a path b -> c -> d -> a
+                graph.add_edge(b, c, EdgeType::RecordOverlap);
+                graph.add_edge(c, d, EdgeType::RecordOverlap);
+                graph.add_edge(d, a, EdgeType::RecordOverlap);
+
+                graph.add_tie_break_edges().unwrap();
+
+                let sorted = graph.topological_sort().unwrap();
+
+                assert!(graph.check_path_is_hamiltonian(&sorted).is_none());
+
+                let sorted_plugin_names: Vec<_> = sorted
+                    .into_iter()
+                    .map(|i| graph[i].name().to_string())
+                    .collect();
+
+                assert_eq!(
+                    &[
+                        PLUGIN_B, PLUGIN_C, PLUGIN_D, PLUGIN_A, PLUGIN_E, PLUGIN_F, PLUGIN_G,
+                        PLUGIN_H, PLUGIN_I, PLUGIN_J
+                    ],
+                    sorted_plugin_names.as_slice()
+                );
+            }
+        }
+    }
+
+    mod sort_plugins {
+        use crate::{Vertex, sorting::error::PluginGraphValidationError};
+
+        use super::*;
+
+        #[test]
+        fn should_not_change_the_result_if_given_its_own_output() {
+            let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let expected = &[PLUGIN_A, PLUGIN_B];
+
+            let sorted = sort_plugins(
+                vec![
+                    fixture.sorting_data(PLUGIN_B),
+                    fixture.sorting_data(PLUGIN_A),
+                ],
+                &fixture.groups_graph,
+                &[],
+            )
+            .unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+
+            let sorted = sort_plugins(
+                vec![
+                    fixture.sorting_data(PLUGIN_A),
+                    fixture.sorting_data(PLUGIN_B),
+                ],
+                &fixture.groups_graph,
+                &[],
+            )
+            .unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
+
+        #[test]
+        fn should_use_group_metadata_when_deciding_relative_plugin_positions() {
+            let fixture = Fixture::with_plugins(&[PLUGIN_B, PLUGIN_A]);
+
+            let data = vec![
+                fixture.group_sorting_data(PLUGIN_A, "A"),
+                fixture.group_sorting_data(PLUGIN_B, "B"),
+            ];
+
+            let expected = &[PLUGIN_A, PLUGIN_B];
+
+            let sorted = sort_plugins(data, &fixture.groups_graph, &[]).unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
+
+        #[test]
+        fn should_use_load_after_metadata_when_deciding_relative_plugin_positions() {
+            let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.masterlist_load_after = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            let expected = &[PLUGIN_B, PLUGIN_A];
+
+            let sorted = sort_plugins(data, &fixture.groups_graph, &[]).unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
+
+        #[test]
+        fn should_use_requirement_metadata_when_deciding_relative_plugin_positions() {
+            let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.masterlist_req = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            let expected = &[PLUGIN_B, PLUGIN_A];
+
+            let sorted = sort_plugins(data, &fixture.groups_graph, &[]).unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
+
+        #[test]
+        fn should_use_early_loader_positions_when_deciding_relative_plugin_positions() {
+            let fixture = Fixture::with_plugins(&[PLUGIN_B, PLUGIN_A]);
+
+            let data = vec![
+                fixture.sorting_data(PLUGIN_A),
+                fixture.sorting_data(PLUGIN_B),
+            ];
+
+            let expected = &[PLUGIN_A, PLUGIN_B];
+
+            let sorted = sort_plugins(data, &fixture.groups_graph, &[PLUGIN_A.into()]).unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
+
+        #[test]
+        fn should_error_if_a_plugin_has_a_group_that_does_not_exist() {
+            let fixture = Fixture::with_plugins(&[PLUGIN_A]);
+
+            let data = vec![fixture.group_sorting_data(PLUGIN_A, "missing")];
+
+            assert!(sort_plugins(data, &fixture.groups_graph, &[]).is_err());
+        }
+
+        #[test]
+        fn should_error_if_a_cyclic_interaction_is_encountered() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).add_master(PLUGIN_B);
+            fixture.get_plugin_mut(PLUGIN_B).add_master(PLUGIN_A);
+
+            let data = vec![
+                fixture.sorting_data(PLUGIN_A),
+                fixture.sorting_data(PLUGIN_B),
+            ];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::CycleFound(e)) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::Master),
+                            Vertex::new(PLUGIN_B.into()).with_out_edge_type(EdgeType::Master),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_master_edge_would_contradict_master_flags() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let a = fixture.get_plugin_mut(PLUGIN_A);
+            a.is_master = true;
+            a.add_master(PLUGIN_B);
+
+            let data = vec![
+                fixture.sorting_data(PLUGIN_A),
+                fixture.sorting_data(PLUGIN_B),
+            ];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into()).with_out_edge_type(EdgeType::Master),
+                            Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::MasterFlag),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_masterlist_load_after_contradicts_master_flags() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.masterlist_load_after = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::MasterlistLoadAfter),
+                            Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::MasterFlag),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_user_load_after_contradicts_master_flags() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.user_load_after = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::UserLoadAfter),
+                            Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::MasterFlag),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_masterlist_requirement_contradicts_master_flags() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.masterlist_req = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::MasterlistRequirement),
+                            Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::MasterFlag),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_user_requirement_contradicts_master_flags() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.user_req = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::UserRequirement),
+                            Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::MasterFlag),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_an_early_loader_contradicts_master_flags() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let data = vec![
+                fixture.sorting_data(PLUGIN_A),
+                fixture.sorting_data(PLUGIN_B),
+            ];
+
+            match sort_plugins(data, &fixture.groups_graph, &[PLUGIN_B.into()]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into()).with_out_edge_type(EdgeType::Hardcoded),
+                            Vertex::new(PLUGIN_A.into()).with_out_edge_type(EdgeType::MasterFlag),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_not_error_if_a_master_edge_would_put_a_blueprint_master_before_a_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let a = fixture.get_plugin_mut(PLUGIN_A);
+            a.is_master = true;
+            a.is_blueprint_plugin = true;
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.add_master(PLUGIN_A);
+
+            let data = vec![
+                fixture.sorting_data(PLUGIN_A),
+                fixture.sorting_data(PLUGIN_B),
+            ];
+
+            let expected = &[PLUGIN_B, PLUGIN_A];
+
+            let sorted = sort_plugins(data, &fixture.groups_graph, &[]).unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
+
+        #[test]
+        fn should_not_error_if_a_master_edge_would_put_a_blueprint_master_before_a_non_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let a = fixture.get_plugin_mut(PLUGIN_A);
+            a.is_master = true;
+            a.is_blueprint_plugin = true;
+
+            fixture.get_plugin_mut(PLUGIN_B).add_master(PLUGIN_A);
+
+            let data = vec![
+                fixture.sorting_data(PLUGIN_A),
+                fixture.sorting_data(PLUGIN_B),
+            ];
+
+            let expected = &[PLUGIN_B, PLUGIN_A];
+
+            let sorted = sort_plugins(data, &fixture.groups_graph, &[]).unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
+
+        #[test]
+        fn should_error_if_a_masterlist_load_after_would_put_a_blueprint_master_before_a_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.masterlist_load_after = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::MasterlistLoadAfter),
+                            Vertex::new(PLUGIN_A.into())
+                                .with_out_edge_type(EdgeType::BlueprintMaster),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_masterlist_load_after_would_put_a_blueprint_master_before_a_non_master()
+         {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.masterlist_load_after = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::MasterlistLoadAfter),
+                            Vertex::new(PLUGIN_A.into())
+                                .with_out_edge_type(EdgeType::BlueprintMaster),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_user_load_after_would_put_a_blueprint_master_before_a_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.user_load_after = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::UserLoadAfter),
+                            Vertex::new(PLUGIN_A.into())
+                                .with_out_edge_type(EdgeType::BlueprintMaster),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_user_load_after_would_put_a_blueprint_master_before_a_non_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.user_load_after = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::UserLoadAfter),
+                            Vertex::new(PLUGIN_A.into())
+                                .with_out_edge_type(EdgeType::BlueprintMaster),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_masterlist_requirement_would_put_a_blueprint_master_before_a_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.masterlist_req = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::MasterlistRequirement),
+                            Vertex::new(PLUGIN_A.into())
+                                .with_out_edge_type(EdgeType::BlueprintMaster),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_masterlist_requirement_would_put_a_blueprint_master_before_a_non_master()
+         {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.masterlist_req = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::MasterlistRequirement),
+                            Vertex::new(PLUGIN_A.into())
+                                .with_out_edge_type(EdgeType::BlueprintMaster),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_user_requirement_would_put_a_blueprint_master_before_a_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.user_req = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::UserRequirement),
+                            Vertex::new(PLUGIN_A.into())
+                                .with_out_edge_type(EdgeType::BlueprintMaster),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_error_if_a_user_requirement_would_put_a_blueprint_master_before_a_non_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let mut a = fixture.sorting_data(PLUGIN_A);
+            a.user_req = vec![PLUGIN_B.into()];
+
+            let data = vec![a, fixture.sorting_data(PLUGIN_B)];
+
+            match sort_plugins(data, &fixture.groups_graph, &[]) {
+                Err(SortingError::ValidationError(PluginGraphValidationError::CycleFound(e))) => {
+                    assert_eq!(
+                        &[
+                            Vertex::new(PLUGIN_B.into())
+                                .with_out_edge_type(EdgeType::UserRequirement),
+                            Vertex::new(PLUGIN_A.into())
+                                .with_out_edge_type(EdgeType::BlueprintMaster),
+                        ],
+                        e.into_cycle().as_slice()
+                    );
+                }
+                _ => panic!("Expected to find a cycle"),
+            }
+        }
+
+        #[test]
+        fn should_not_error_if_an_early_loader_would_put_a_blueprint_master_before_a_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            fixture.get_plugin_mut(PLUGIN_A).is_master = true;
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let data = vec![
+                fixture.sorting_data(PLUGIN_A),
+                fixture.sorting_data(PLUGIN_B),
+            ];
+
+            let expected = &[PLUGIN_A, PLUGIN_B];
+
+            let sorted = sort_plugins(data, &fixture.groups_graph, &[PLUGIN_B.into()]).unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
+
+        #[test]
+        fn should_not_error_if_an_early_loader_would_put_a_blueprint_master_before_a_non_master() {
+            let mut fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
+
+            let b = fixture.get_plugin_mut(PLUGIN_B);
+            b.is_master = true;
+            b.is_blueprint_plugin = true;
+
+            let data = vec![
+                fixture.sorting_data(PLUGIN_A),
+                fixture.sorting_data(PLUGIN_B),
+            ];
+
+            let expected = &[PLUGIN_A, PLUGIN_B];
+
+            let sorted = sort_plugins(data, &fixture.groups_graph, &[PLUGIN_B.into()]).unwrap();
+
+            assert_eq!(expected, sorted.as_slice());
+        }
     }
 }

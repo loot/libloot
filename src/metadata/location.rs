@@ -105,6 +105,53 @@ impl EmitYaml for Location {
 mod tests {
     use super::*;
 
+    mod try_from_yaml {
+        use crate::metadata::parse;
+
+        use super::*;
+
+        #[test]
+        fn should_only_set_name_if_decoding_from_scalar() {
+            let yaml = parse("https://www.example.com");
+
+            let location = Location::try_from(&yaml).unwrap();
+
+            assert_eq!("https://www.example.com", location.url());
+            assert!(location.name().is_none());
+        }
+
+        #[test]
+        fn should_error_if_given_a_list() {
+            let yaml = parse("[0, 1, 2]");
+
+            assert!(Location::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_link_is_missing() {
+            let yaml = parse("{name: example}");
+
+            assert!(Location::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_name_is_missing() {
+            let yaml = parse("{link: https://www.example.com}");
+
+            assert!(Location::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_set_all_fields() {
+            let yaml = parse("{link: https://www.example.com, name: example}");
+
+            let location = Location::try_from(&yaml).unwrap();
+
+            assert_eq!("https://www.example.com", location.url());
+            assert_eq!("example", location.name().unwrap());
+        }
+    }
+
     mod emit_yaml {
         use crate::metadata::emit;
 
@@ -112,7 +159,7 @@ mod tests {
 
         #[test]
         fn should_emit_url_only_if_there_is_no_name() {
-            let location = Location::new("http://www.example.com".into());
+            let location = Location::new("https://www.example.com".into());
             let yaml = emit(&location);
 
             assert_eq!(format!("'{}'", location.url), yaml);
@@ -121,7 +168,7 @@ mod tests {
         #[test]
         fn should_emit_map_if_there_is_a_name() {
             let location =
-                Location::new("http://www.example.com".into()).with_name("example".into());
+                Location::new("https://www.example.com".into()).with_name("example".into());
             let yaml = emit(&location);
 
             assert_eq!(

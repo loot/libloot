@@ -194,6 +194,131 @@ impl EmitYaml for File {
 mod tests {
     use super::*;
 
+    mod file_eq {
+        use super::*;
+
+        #[test]
+        fn should_be_case_insensitive_on_name() {
+            assert_eq!(File::new("name".into()), File::new("name".into()));
+            assert_eq!(File::new("name".into()), File::new("NAME".into()));
+            assert_ne!(File::new("name1".into()), File::new("name2".into()));
+        }
+    }
+
+    mod filename_eq {
+        use super::*;
+
+        #[test]
+        fn should_be_case_insensitive_on_name() {
+            assert_eq!(Filename::new("name".into()), Filename::new("name".into()));
+            assert_eq!(Filename::new("name".into()), Filename::new("NAME".into()));
+            assert_ne!(Filename::new("name1".into()), Filename::new("name2".into()));
+        }
+    }
+
+    mod try_from_yaml {
+        use crate::metadata::parse;
+
+        use super::*;
+
+        #[test]
+        fn should_only_set_name_if_decoding_from_scalar() {
+            let yaml = parse("name1");
+
+            let file = File::try_from(&yaml).unwrap();
+
+            assert_eq!("name1", file.name().as_str());
+            assert!(file.display_name().is_none());
+            assert!(file.condition().is_none());
+            assert!(file.detail().is_empty());
+        }
+
+        #[test]
+        fn should_error_if_given_a_list() {
+            let yaml = parse("[0, 1, 2]");
+
+            assert!(File::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_name_is_missing() {
+            let yaml = parse("{display: display1}");
+
+            assert!(File::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_given_an_invalid_condition() {
+            let yaml = parse("{name: name1, condition: invalid}");
+
+            assert!(File::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_set_all_given_fields() {
+            let yaml = parse(
+                "{name: name1, display: display1, condition: 'file(\"Foo.esp\")', detail: 'details'}",
+            );
+
+            let file = File::try_from(&yaml).unwrap();
+
+            assert_eq!("name1", file.name().as_str());
+            assert_eq!("display1", file.display_name().unwrap());
+            assert_eq!("file(\"Foo.esp\")", file.condition().unwrap());
+            assert_eq!(&[MessageContent::new("details".into())], file.detail());
+        }
+
+        #[test]
+        fn should_leave_optional_fields_empty_if_not_present() {
+            let yaml = parse("{name: name1}");
+
+            let file = File::try_from(&yaml).unwrap();
+
+            assert_eq!("name1", file.name().as_str());
+            assert!(file.display_name().is_none());
+            assert!(file.condition().is_none());
+            assert!(file.detail().is_empty());
+        }
+
+        #[test]
+        fn should_read_all_listed_detail_message_contents() {
+            let yaml = parse(
+                "{name: name1, detail: [{text: english, lang: en}, {text: french, lang: fr}]}",
+            );
+
+            let file = File::try_from(&yaml).unwrap();
+
+            assert_eq!(
+                &[
+                    MessageContent::new("english".into()),
+                    MessageContent::new("french".into()).with_language("fr".into())
+                ],
+                file.detail()
+            );
+        }
+
+        #[test]
+        fn should_not_error_if_one_detail_is_given_and_it_is_not_english() {
+            let yaml = parse("name: name1\ndetail:\n  - lang: fr\n    text: content1");
+
+            let file = File::try_from(&yaml).unwrap();
+
+            assert_eq!(
+                &[MessageContent::new("content1".into()).with_language("fr".into())],
+                file.detail()
+            );
+        }
+
+        #[test]
+        fn should_error_if_multiple_details_are_given_and_none_are_english() {
+            let yaml = parse(
+                "name: name1\ndetail:\n  - lang: de\n    text: content1\n  - lang: fr\n    text: content2",
+            );
+
+            assert!(File::try_from(&yaml).is_err());
+        }
+    }
+
     mod emit_yaml {
         use crate::metadata::emit;
 

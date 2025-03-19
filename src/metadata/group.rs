@@ -126,6 +126,48 @@ impl EmitYaml for Group {
 mod tests {
     use super::*;
 
+    mod try_from_yaml {
+        use crate::metadata::parse;
+
+        use super::*;
+
+        #[test]
+        fn should_error_if_given_a_list() {
+            let yaml = parse("[0, 1, 2]");
+
+            assert!(Group::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_name_is_missing() {
+            let yaml = parse("{description: text}");
+
+            assert!(Group::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_set_all_given_fields() {
+            let yaml = parse("{name: group1, description: text, after: [ other_group ]}");
+
+            let group = Group::try_from(&yaml).unwrap();
+
+            assert_eq!("group1", group.name());
+            assert_eq!("text", group.description().unwrap());
+            assert_eq!(&["other_group"], group.after_groups());
+        }
+
+        #[test]
+        fn should_leave_optional_fields_empty_if_not_present() {
+            let yaml = parse("{name: group1}");
+
+            let group = Group::try_from(&yaml).unwrap();
+
+            assert_eq!("group1", group.name());
+            assert!(group.description().is_none());
+            assert!(group.after_groups().is_empty());
+        }
+    }
+
     mod emit_yaml {
         use super::*;
         use crate::metadata::emit;

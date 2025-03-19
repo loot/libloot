@@ -106,3 +106,78 @@ fn filter_cleaning_data_on_conditions(
         })
         .collect::<Result<Vec<_>, _>>()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod evaluate_all_conditions {
+        use crate::{
+            metadata::{Message, MessageType, Tag, TagSuggestion},
+            tests::{BLANK_DIFFERENT_ESM, BLANK_ESM, BLANK_ESP, source_plugins_path},
+        };
+
+        use super::*;
+
+        #[test]
+        fn should_evaluate_all_conditions_on_metadata_in_plugin_metadata_object() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_group("group1".into());
+
+            let condition = "file(\"missing.esp\")".to_string();
+            let file1 = File::new(BLANK_ESP.into());
+            let file2 = File::new(BLANK_DIFFERENT_ESM.into()).with_condition(condition.clone());
+            let files = vec![file1.clone(), file2];
+            plugin.set_load_after_files(files.clone());
+            plugin.set_requirements(files.clone());
+            plugin.set_incompatibilities(files.clone());
+
+            let message1 = Message::new(MessageType::Say, "content1".into());
+            let message2 =
+                Message::new(MessageType::Say, "content2".into()).with_condition(condition.clone());
+            plugin.set_messages(vec![message1.clone(), message2]);
+
+            let tag1 = Tag::new("Delev".into(), TagSuggestion::Addition);
+            let tag2 =
+                Tag::new("Relev".into(), TagSuggestion::Addition).with_condition(condition.clone());
+            plugin.set_tags(vec![tag1.clone(), tag2]);
+
+            let info1 = PluginCleaningData::new(0x374E2A6F, "utility1".into());
+            let info2 = PluginCleaningData::new(0xDEADBEEF, "utility2".into());
+            plugin.set_dirty_info(vec![info1.clone(), info2.clone()]);
+            plugin.set_clean_info(vec![info1.clone(), info2.clone()]);
+
+            let state = loot_condition_interpreter::State::new(
+                loot_condition_interpreter::GameType::Oblivion,
+                source_plugins_path(crate::GameType::TES4),
+            );
+            let result = evaluate_all_conditions(plugin, &state).unwrap().unwrap();
+
+            let expected_files = &[file1];
+            let expected_info = &[info1];
+            assert_eq!("group1", result.group().unwrap());
+            assert_eq!(expected_files, result.load_after_files());
+            assert_eq!(expected_files, result.requirements());
+            assert_eq!(expected_files, result.incompatibilities());
+            assert_eq!(&[message1], result.messages());
+            assert_eq!(&[tag1], result.tags());
+            assert_eq!(expected_info, result.dirty_info());
+            assert_eq!(expected_info, result.clean_info());
+        }
+
+        #[test]
+        fn should_return_none_if_evaluated_plugin_metadata_has_name_only() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let file = File::new(BLANK_DIFFERENT_ESM.into())
+                .with_condition("file(\"missing.esp\")".into());
+            plugin.set_load_after_files(vec![file]);
+
+            let state = loot_condition_interpreter::State::new(
+                loot_condition_interpreter::GameType::Oblivion,
+                source_plugins_path(crate::GameType::TES4),
+            );
+            assert!(evaluate_all_conditions(plugin, &state).unwrap().is_none());
+        }
+    }
+}

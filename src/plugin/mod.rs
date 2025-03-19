@@ -14,7 +14,7 @@ use fancy_regex::Regex;
 
 use crate::{
     GameType,
-    archive::{assets_in_archives, find_associated_archives},
+    archive::{assets_in_archives, do_assets_overlap, find_associated_archives},
     game::GameCache,
     logging,
     metadata::plugin_metadata::trim_dot_ghost,
@@ -272,29 +272,7 @@ impl Plugin {
     }
 
     pub(crate) fn do_assets_overlap(&self, plugin: &Plugin) -> bool {
-        let mut assets_iter = self.archive_assets.iter();
-        let mut other_assets_iter = plugin.archive_assets.iter();
-
-        let mut assets = assets_iter.next();
-        let mut other_assets = other_assets_iter.next();
-        while let (Some((folder, files)), Some((other_folder, other_files))) =
-            (assets, other_assets)
-        {
-            if folder < other_folder {
-                assets = assets_iter.next();
-            } else if folder > other_folder {
-                other_assets = other_assets_iter.next();
-            } else if files.intersection(other_files).next().is_some() {
-                return true;
-            } else {
-                // The folder hashes are equal but they don't contain any of the same
-                // file hashes, move on to the next folder. It doesn't matter which
-                // iterator gets incremented.
-                assets = assets_iter.next();
-            }
-        }
-
-        false
+        do_assets_overlap(&self.archive_assets, &plugin.archive_assets)
     }
 
     pub(crate) fn resolve_record_ids(
@@ -479,4 +457,896 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<fancy_regex:
     }
 
     Ok(None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod plugin {
+        use std::io::Seek;
+        use std::io::Write;
+
+        use rstest_reuse::apply;
+        use tempfile::tempdir;
+
+        use crate::tests::{
+            BLANK_ESL, BLANK_ESM, BLANK_ESP, BLANK_FULL_ESM, BLANK_MASTER_DEPENDENT_ESM,
+            BLANK_MASTER_DEPENDENT_ESP, BLANK_MEDIUM_ESM, BLANK_OVERRIDE_ESP, NON_ASCII_ESM,
+            all_game_types, source_plugins_path,
+        };
+
+        use super::*;
+
+        fn blank_esm(game_type: GameType) -> &'static str {
+            if game_type == GameType::Starfield {
+                BLANK_FULL_ESM
+            } else {
+                BLANK_ESM
+            }
+        }
+
+        fn blank_master_dependent_esm(game_type: GameType) -> &'static str {
+            if game_type == GameType::Starfield {
+                "Blank - Override.full.esm"
+            } else {
+                BLANK_MASTER_DEPENDENT_ESM
+            }
+        }
+
+        #[apply(all_game_types)]
+        fn new_should_trim_ghost_extension_unless_game_is_openmw(game_type: GameType) {
+            let tmp_dir = tempdir().unwrap();
+            let source_path = source_plugins_path(game_type).join(BLANK_ESP);
+            let ghosted_path = tmp_dir.path().join(BLANK_ESP.to_owned() + ".ghost");
+
+            std::fs::copy(source_path, &ghosted_path).unwrap();
+
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &ghosted_path,
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            if game_type == GameType::OpenMW {
+                assert_eq!(BLANK_ESP.to_owned() + ".ghost", plugin.name());
+            } else {
+                assert_eq!(BLANK_ESP, plugin.name());
+            }
+        }
+
+        #[test]
+        fn new_should_handle_non_ascii_filenames_correctly() {
+            let tmp_dir = tempdir().unwrap();
+            let source_path = source_plugins_path(GameType::TES4).join(BLANK_ESM);
+            let path = tmp_dir.path().join(NON_ASCII_ESM);
+
+            std::fs::copy(source_path, &path).unwrap();
+        }
+
+        #[apply(all_game_types)]
+        fn new_with_header_only_scope_should_read_header_data_only(game_type: GameType) {
+            let plugin_name = blank_master_dependent_esm(game_type);
+            let path = source_plugins_path(game_type).join(plugin_name);
+
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            let expected_masters = vec![blank_esm(game_type)];
+
+            assert_eq!(plugin_name, plugin.name());
+            assert_eq!(expected_masters, plugin.masters().unwrap());
+            assert_eq!(game_type != GameType::OpenMW, plugin.is_master());
+            assert!(!plugin.is_empty());
+            assert!(plugin.version().is_none());
+
+            match game_type {
+                GameType::TES3 | GameType::OpenMW => {
+                    assert_eq!(1.2, plugin.header_version().unwrap())
+                }
+                GameType::TES4 => assert_eq!(0.8, plugin.header_version().unwrap()),
+                GameType::Starfield => assert_eq!(0.96, plugin.header_version().unwrap()),
+                _ => assert_eq!(0.94, plugin.header_version().unwrap()),
+            }
+
+            assert!(plugin.crc().is_none());
+            assert!(!plugin.do_assets_overlap(&plugin));
+            assert_eq!(0, plugin.asset_count());
+            assert!(!plugin.do_records_overlap(&plugin).unwrap());
+            assert_eq!(0, plugin.override_record_count().unwrap());
+        }
+
+        #[apply(all_game_types)]
+        fn new_with_header_only_scope_should_read_version_from_header_description(
+            game_type: GameType,
+        ) {
+            let path = source_plugins_path(game_type).join(blank_esm(game_type));
+
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            assert_eq!("5.0", plugin.version().unwrap());
+        }
+
+        #[apply(all_game_types)]
+        fn new_with_header_only_scope_should_not_read_assets(game_type: GameType) {
+            let path = source_plugins_path(game_type).join(blank_esm(game_type));
+
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            assert!(!plugin.do_assets_overlap(&plugin));
+            assert_eq!(0, plugin.asset_count());
+        }
+
+        #[apply(all_game_types)]
+        fn new_with_whole_plugin_scope_should_read_records(game_type: GameType) {
+            let plugin_name = blank_master_dependent_esm(game_type);
+            let path = source_plugins_path(game_type).join(plugin_name);
+
+            let mut plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::WholePlugin,
+            )
+            .unwrap();
+
+            let expected_masters = vec![blank_esm(game_type)];
+
+            assert_eq!(plugin_name, plugin.name());
+            assert_eq!(expected_masters, plugin.masters().unwrap());
+            assert_eq!(game_type != GameType::OpenMW, plugin.is_master());
+            assert!(!plugin.is_empty());
+            assert!(plugin.version().is_none());
+
+            match game_type {
+                GameType::TES3 | GameType::OpenMW => {
+                    assert_eq!(1.2, plugin.header_version().unwrap())
+                }
+                GameType::TES4 => assert_eq!(0.8, plugin.header_version().unwrap()),
+                GameType::Starfield => assert_eq!(0.96, plugin.header_version().unwrap()),
+                _ => assert_eq!(0.94, plugin.header_version().unwrap()),
+            }
+
+            let expected_crc = match game_type {
+                GameType::TES3 | GameType::OpenMW => 3317676987,
+                GameType::Starfield => 1422425298,
+                GameType::TES4 => 3759349588,
+                _ => 3000242590,
+            };
+
+            assert_eq!(expected_crc, plugin.crc().unwrap());
+            assert!(!plugin.do_assets_overlap(&plugin));
+            assert_eq!(0, plugin.asset_count());
+
+            if matches!(game_type, GameType::TES3 | GameType::OpenMW) {
+                let master = Plugin::new(
+                    game_type,
+                    &GameCache::default(),
+                    &source_plugins_path(game_type).join(BLANK_ESM),
+                    LoadScope::WholePlugin,
+                )
+                .unwrap();
+
+                let metadata = plugins_metadata(&[master]).unwrap();
+
+                plugin.resolve_record_ids(&metadata).unwrap();
+
+                assert_eq!(4, plugin.override_record_count().unwrap());
+            } else if game_type == GameType::Starfield {
+                let master = Plugin::new(
+                    game_type,
+                    &GameCache::default(),
+                    &source_plugins_path(game_type).join(BLANK_FULL_ESM),
+                    LoadScope::WholePlugin,
+                )
+                .unwrap();
+
+                let metadata = plugins_metadata(&[master]).unwrap();
+
+                plugin.resolve_record_ids(&metadata).unwrap();
+
+                assert_eq!(1, plugin.override_record_count().unwrap());
+            } else {
+                assert_eq!(4, plugin.override_record_count().unwrap());
+            }
+            assert!(plugin.do_records_overlap(&plugin).unwrap());
+        }
+
+        #[apply(all_game_types)]
+        fn new_with_whole_plugin_scope_should_read_assets(game_type: GameType) {
+            let data_path = source_plugins_path(game_type);
+            let path = data_path.join(BLANK_ESP);
+
+            let mut cache = GameCache::default();
+            cache.set_archive_paths(vec![
+                data_path.join("Blank.bsa"),
+                data_path.join("Blank - Main.ba2"),
+            ]);
+
+            let plugin = Plugin::new(game_type, &cache, &path, LoadScope::WholePlugin).unwrap();
+
+            if matches!(
+                game_type,
+                GameType::TES3 | GameType::OpenMW | GameType::Starfield
+            ) {
+                // The Starfield test data doesn't include a BA2 file.
+                assert!(!plugin.loads_archive());
+                assert_eq!(0, plugin.asset_count());
+                assert!(!plugin.do_assets_overlap(&plugin));
+            } else {
+                assert!(plugin.loads_archive());
+                assert_eq!(1, plugin.asset_count());
+                assert!(plugin.do_assets_overlap(&plugin));
+            }
+        }
+
+        #[apply(all_game_types)]
+        fn new_with_whole_plugin_scope_should_succeed_for_openmw_plugins(game_type: GameType) {
+            let tmp_dir = tempdir().unwrap();
+
+            let data_path = source_plugins_path(game_type);
+            let omwgame = tmp_dir.path().join("Blank.omwgame");
+            let omwaddon = tmp_dir.path().join("Blank.omwaddon");
+            let omwscripts = tmp_dir.path().join("Blank.omwscripts");
+
+            std::fs::copy(data_path.join(blank_esm(game_type)), &omwgame).unwrap();
+            std::fs::copy(data_path.join(BLANK_ESP), &omwaddon).unwrap();
+            let _ = File::create(&omwscripts).unwrap();
+
+            assert!(
+                Plugin::new(
+                    game_type,
+                    &GameCache::default(),
+                    &omwgame,
+                    LoadScope::WholePlugin
+                )
+                .is_ok()
+            );
+            assert!(
+                Plugin::new(
+                    game_type,
+                    &GameCache::default(),
+                    &omwaddon,
+                    LoadScope::WholePlugin
+                )
+                .is_ok()
+            );
+
+            assert_eq!(
+                game_type == GameType::OpenMW,
+                Plugin::new(
+                    game_type,
+                    &GameCache::default(),
+                    &omwscripts,
+                    LoadScope::WholePlugin
+                )
+                .is_ok()
+            );
+        }
+
+        #[test]
+        fn new_should_error_if_plugin_does_not_exist() {
+            let path = Path::new("missing.esp");
+            assert!(!path.exists());
+
+            assert!(
+                Plugin::new(
+                    GameType::TES4,
+                    &GameCache::default(),
+                    path,
+                    LoadScope::HeaderOnly
+                )
+                .is_err()
+            );
+        }
+
+        #[apply(all_game_types)]
+        fn is_master_should_be_false_for_a_non_master_plugin(game_type: GameType) {
+            let path = source_plugins_path(game_type).join(BLANK_ESP);
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            assert!(!plugin.is_master());
+        }
+
+        #[apply(all_game_types)]
+        fn is_light_plugin_should_be_true_for_a_plugin_with_esl_extension_for_fo4_and_later(
+            game_type: GameType,
+        ) {
+            let tmp_dir = tempdir().unwrap();
+            let data_path = source_plugins_path(game_type);
+
+            let light_path = tmp_dir.path().join(BLANK_ESL);
+            std::fs::copy(data_path.join(BLANK_ESP), &light_path).unwrap();
+
+            let master = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &data_path.join(blank_esm(game_type)),
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &data_path.join(BLANK_ESP),
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+            let light = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &light_path,
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            assert!(!master.is_light_plugin());
+            assert!(!plugin.is_light_plugin());
+
+            if matches!(
+                game_type,
+                GameType::FO4
+                    | GameType::FO4VR
+                    | GameType::TES5SE
+                    | GameType::TES5VR
+                    | GameType::Starfield
+            ) {
+                assert!(light.is_light_plugin());
+            } else {
+                assert!(!light.is_light_plugin());
+            }
+        }
+
+        #[apply(all_game_types)]
+        fn is_medium_plugin_should_be_true_for_a_medium_flagged_plugin_for_starfield(
+            game_type: GameType,
+        ) {
+            let tmp_dir = tempdir().unwrap();
+
+            let data_path = source_plugins_path(game_type);
+            let path = tmp_dir.path().join(BLANK_MEDIUM_ESM);
+            if game_type == GameType::Starfield {
+                std::fs::copy(data_path.join(BLANK_MEDIUM_ESM), &path).unwrap();
+            } else {
+                std::fs::copy(data_path.join(BLANK_ESM), &path).unwrap();
+
+                let mut file = std::fs::File::options().write(true).open(&path).unwrap();
+                file.seek(std::io::SeekFrom::Start(9)).unwrap();
+                file.write_all(&[0x4]).unwrap();
+            }
+
+            let master = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &data_path.join(blank_esm(game_type)),
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            assert!(!master.is_medium_plugin());
+            assert_eq!(game_type == GameType::Starfield, plugin.is_medium_plugin());
+        }
+
+        #[apply(all_game_types)]
+        fn is_update_plugin_should_be_true_for_an_update_plugin_for_starfield(game_type: GameType) {
+            let tmp_dir = tempdir().unwrap();
+
+            let source_name = if game_type == GameType::Starfield {
+                BLANK_OVERRIDE_ESP
+            } else {
+                BLANK_MASTER_DEPENDENT_ESP
+            };
+            let data_path = source_plugins_path(game_type);
+            let path = tmp_dir.path().join("Blank - Update.esp");
+            std::fs::copy(data_path.join(source_name), &path).unwrap();
+
+            let mut file = std::fs::File::options().write(true).open(&path).unwrap();
+            file.seek(std::io::SeekFrom::Start(9)).unwrap();
+            file.write_all(&[0x2]).unwrap();
+
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &source_plugins_path(game_type).join(BLANK_ESP),
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+            let update = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            assert!(!plugin.is_update_plugin());
+            assert_eq!(game_type == GameType::Starfield, update.is_update_plugin());
+        }
+
+        #[apply(all_game_types)]
+        fn is_blueprint_plugin_should_be_true_for_a_blueprint_plugin_for_starfield(
+            game_type: GameType,
+        ) {
+            let blueprint_plugin_name = if game_type == GameType::Starfield {
+                BLANK_OVERRIDE_ESP
+            } else {
+                BLANK_MASTER_DEPENDENT_ESP
+            };
+            let data_path = source_plugins_path(game_type);
+
+            let plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &source_plugins_path(game_type).join(BLANK_ESP),
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+            let update = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &data_path.join(blueprint_plugin_name),
+                LoadScope::HeaderOnly,
+            )
+            .unwrap();
+
+            assert!(!plugin.is_update_plugin());
+            assert_eq!(game_type == GameType::Starfield, update.is_update_plugin());
+        }
+
+        #[apply(all_game_types)]
+        fn is_valid_as_light_plugin_should_be_true_only_for_a_skyrim_fallout4_or_starfield_plugin_with_new_formids_in_the_valid_range(
+            game_type: GameType,
+        ) {
+            let path = source_plugins_path(game_type).join(BLANK_ESP);
+            let mut plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::WholePlugin,
+            )
+            .unwrap();
+
+            if game_type == GameType::Starfield {
+                let master = Plugin::new(
+                    game_type,
+                    &GameCache::default(),
+                    &source_plugins_path(game_type).join(BLANK_FULL_ESM),
+                    LoadScope::WholePlugin,
+                )
+                .unwrap();
+
+                let metadata = plugins_metadata(&[master]).unwrap();
+
+                plugin.resolve_record_ids(&metadata).unwrap();
+            }
+
+            let result = plugin.is_valid_as_light_plugin().unwrap();
+
+            if matches!(
+                game_type,
+                GameType::FO4
+                    | GameType::FO4VR
+                    | GameType::TES5SE
+                    | GameType::TES5VR
+                    | GameType::Starfield
+            ) {
+                assert!(result);
+            } else {
+                assert!(!result);
+            }
+        }
+
+        #[apply(all_game_types)]
+        fn is_valid_as_medium_plugin_should_be_true_only_for_a_starfield_plugin_with_new_formids_in_the_valid_range(
+            game_type: GameType,
+        ) {
+            let path = source_plugins_path(game_type).join(BLANK_ESP);
+            let mut plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::WholePlugin,
+            )
+            .unwrap();
+
+            if game_type == GameType::Starfield {
+                let master = Plugin::new(
+                    game_type,
+                    &GameCache::default(),
+                    &source_plugins_path(game_type).join(BLANK_FULL_ESM),
+                    LoadScope::WholePlugin,
+                )
+                .unwrap();
+
+                let metadata = plugins_metadata(&[master]).unwrap();
+
+                plugin.resolve_record_ids(&metadata).unwrap();
+            }
+
+            let result = plugin.is_valid_as_medium_plugin().unwrap();
+
+            if game_type == GameType::Starfield {
+                assert!(result);
+            } else {
+                assert!(!result);
+            }
+        }
+
+        #[apply(all_game_types)]
+        fn is_valid_as_update_plugin_should_be_true_only_for_a_starfield_plugin_with_no_new_records(
+            game_type: GameType,
+        ) {
+            let plugin_name = blank_master_dependent_esm(game_type);
+            let path = source_plugins_path(game_type).join(plugin_name);
+            let mut plugin = Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &path,
+                LoadScope::WholePlugin,
+            )
+            .unwrap();
+
+            if game_type == GameType::Starfield {
+                let master = Plugin::new(
+                    game_type,
+                    &GameCache::default(),
+                    &source_plugins_path(game_type).join(BLANK_FULL_ESM),
+                    LoadScope::WholePlugin,
+                )
+                .unwrap();
+
+                let metadata = plugins_metadata(&[master]).unwrap();
+
+                plugin.resolve_record_ids(&metadata).unwrap();
+            }
+
+            let result = plugin.is_valid_as_update_plugin().unwrap();
+
+            if game_type == GameType::Starfield {
+                assert!(result);
+            } else {
+                assert!(!result);
+            }
+        }
+    }
+
+    mod has_plugin_file_extension {
+        use rstest_reuse::apply;
+
+        use crate::tests::all_game_types;
+
+        use super::*;
+
+        #[apply(all_game_types)]
+        fn should_be_true_if_file_ends_in_dot_esp_or_dot_esm(game_type: GameType) {
+            assert!(has_plugin_file_extension(game_type, Path::new("file.esp")));
+            assert!(has_plugin_file_extension(game_type, Path::new("file.esm")));
+            assert!(!has_plugin_file_extension(game_type, Path::new("file.bsa")));
+        }
+
+        #[apply(all_game_types)]
+        fn should_be_true_if_file_ends_in_dot_esl_and_game_is_fo4_or_later(game_type: GameType) {
+            let result = has_plugin_file_extension(game_type, Path::new("file.esl"));
+            if matches!(
+                game_type,
+                GameType::FO4
+                    | GameType::TES5SE
+                    | GameType::FO4VR
+                    | GameType::TES5VR
+                    | GameType::Starfield
+            ) {
+                assert!(result);
+            } else {
+                assert!(!result);
+            }
+        }
+
+        #[apply(all_game_types)]
+        fn should_trim_ghost_extension_unless_game_is_openmw(game_type: GameType) {
+            if game_type == GameType::OpenMW {
+                assert!(!has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.esp.ghost")
+                ));
+                assert!(!has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.esm.ghost")
+                ));
+            } else {
+                assert!(has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.esp.ghost")
+                ));
+                assert!(has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.esm.ghost")
+                ));
+            }
+            assert!(!has_plugin_file_extension(
+                game_type,
+                Path::new("file.bsa.ghost")
+            ));
+        }
+
+        #[apply(all_game_types)]
+        fn should_recognise_openmw_plugin_extensions(game_type: GameType) {
+            if game_type == GameType::OpenMW {
+                assert!(has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.omwgame")
+                ));
+                assert!(has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.omwaddon")
+                ));
+                assert!(has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.omwscripts")
+                ));
+            } else {
+                assert!(!has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.omwgame")
+                ));
+                assert!(!has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.omwaddon")
+                ));
+                assert!(!has_plugin_file_extension(
+                    game_type,
+                    Path::new("file.omwscripts")
+                ));
+            }
+        }
+    }
+
+    #[test]
+    fn extract_bash_tags_should_extract_tags_from_plugin_description_text() {
+        let text = "Unofficial Skyrim Special Edition Patch
+
+A comprehensive bugfixing mod for The Elder Scrolls V: Skyrim - Special Edition
+
+Version: 4.1.4
+
+Requires Skyrim Special Edition 1.5.39 or greater.
+
+{{BASH:C.Climate,C.Encounter,C.ImageSpace,C.Light,C.Location,C.Music,C.Name,C.Owner,C.Water,Delev,Graphics,Invent,Names,Relev,Sound,Stats}}";
+
+        let tags = extract_bash_tags(text);
+
+        assert_eq!(
+            vec![
+                "C.Climate".to_string(),
+                "C.Encounter".into(),
+                "C.ImageSpace".into(),
+                "C.Light".into(),
+                "C.Location".into(),
+                "C.Music".into(),
+                "C.Name".into(),
+                "C.Owner".into(),
+                "C.Water".into(),
+                "Delev".into(),
+                "Graphics".into(),
+                "Invent".into(),
+                "Names".into(),
+                "Relev".into(),
+                "Sound".into(),
+                "Stats".into(),
+            ],
+            tags
+        );
+    }
+
+    mod extract_version {
+        use crate::plugin::extract_version;
+
+        #[test]
+        fn should_extract_a_version_containing_a_single_digit() {
+            assert_eq!("5", extract_version("5").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_extract_a_version_containing_multiple_digits() {
+            assert_eq!("10", extract_version("10").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_extract_a_version_containing_multiple_numbers() {
+            assert_eq!(
+                "10.11.12.13",
+                extract_version("10.11.12.13").unwrap().unwrap()
+            );
+        }
+
+        #[test]
+        fn should_extract_a_semantic_version() {
+            assert_eq!(
+                "1.0.0-x.7.z.92",
+                extract_version("1.0.0-x.7.z.92+exp.sha.5114f85")
+                    .unwrap()
+                    .unwrap()
+            );
+        }
+
+        #[test]
+        fn should_extract_a_pseudosem_extended_version_stopping_at_the_first_space_separator() {
+            assert_eq!(
+                "01.0.0_alpha:1-2",
+                extract_version("01.0.0_alpha:1-2 3").unwrap().unwrap()
+            );
+        }
+
+        #[test]
+        fn should_extract_a_version_substring() {
+            assert_eq!("5.0", extract_version("v5.0").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_return_none_if_the_string_contains_no_version() {
+            assert!(
+                extract_version("The quick brown fox jumped over the lazy dog.")
+                    .unwrap()
+                    .is_none()
+            );
+        }
+
+        #[test]
+        fn should_extract_a_timestamp_with_forwardslash_date_separators() {
+            // Found in a Bashed Patch. Though the timestamp isn't useful to
+            // LOOT, it is semantically a version, and extracting it is far
+            // easier than trying to skip it and the number of records changed.
+            assert_eq!(
+                "10/09/2016 13:15:18",
+                extract_version("Updated: 10/09/2016 13:15:18\r\n\r\nRecords Changed: 43")
+                    .unwrap()
+                    .unwrap()
+            );
+        }
+
+        #[test]
+        fn should_not_extract_trailing_periods() {
+            // Found in <https://www.nexusmods.com/fallout4/mods/2955/>.
+            assert_eq!("0.2", extract_version("Version 0.2.").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_extract_a_version_following_text_and_a_version_colon_string() {
+            // Found in <https://www.nexusmods.com/skyrim/mods/71214/>.
+            assert_eq!(
+                "3.0.0",
+                extract_version("Legendary Edition\r\n\r\nVersion: 3.0.0")
+                    .unwrap()
+                    .unwrap()
+            );
+        }
+
+        #[test]
+        fn should_ignore_numbers_containing_commas() {
+            // Found in <https://www.nexusmods.com/oblivion/mods/5296/>.
+            assert_eq!(
+                "3.5.3",
+                extract_version("fixing over 2,300 bugs so far! Version: 3.5.3")
+                    .unwrap()
+                    .unwrap()
+            );
+        }
+
+        #[test]
+        fn should_extract_a_version_before_text() {
+            // Found in <https://www.nexusmods.com/fallout3/mods/19122/>.
+            assert_eq!(
+                "2.1",
+                extract_version("Version: 2.1 The Unofficial Fallout 3 Patch")
+                    .unwrap()
+                    .unwrap()
+            );
+        }
+
+        #[test]
+        fn should_extract_a_version_with_a_preceding_v() {
+            // Found in <https://www.nexusmods.com/oblivion/mods/22795/>.
+            assert_eq!(
+                "2.11",
+                extract_version("V2.11\r\n\r\n{{BASH:Invent}}")
+                    .unwrap()
+                    .unwrap()
+            );
+        }
+
+        #[test]
+        fn should_extract_a_version_preceded_by_colon_period_whitespace() {
+            // Found in <https://www.nexusmods.com/oblivion/mods/45570>.
+            assert_eq!("1.09", extract_version("Version:. 1.09").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_extract_a_version_with_letters_immediately_after_numbers() {
+            // Found in <https://www.nexusmods.com/skyrim/mods/19>.
+            assert_eq!("2.1.3b", extract_version("comprehensive bugfixing mod for The Elder Scrolls V: Skyrim\r\n\r\nVersion: 2.1.3b\r\n\r\n").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_extract_a_version_with_period_and_no_preceding_identifier() {
+            // Found in <https://www.nexusmods.com/skyrim/mods/3863>.
+            assert_eq!("5.1", extract_version("SkyUI 5.1").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_not_extract_a_single_digit_in_a_sentence() {
+            // Found in <https://www.nexusmods.com/skyrim/mods/4708>.
+            assert!(
+                extract_version(
+                    "Adds 8 variants of Triss Merigold's outfit from \"The Witcher 2\""
+                )
+                .unwrap()
+                .is_none()
+            );
+        }
+
+        #[test]
+        fn should_prefer_version_prefixed_numbers_over_versions_in_sentence() {
+            // Found in <https://www.nexusmods.com/skyrim/mods/47327>
+            assert_eq!("2.0.0", extract_version("Requires Skyrim patch 1.9.32.0.8 or greater.\nRequires Unofficial Skyrim Legendary Edition Patch 3.0.0 or greater.\nVersion 2.0.0").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_extract_a_version_that_is_a_single_digit_preceded_by_v() {
+            // Found in <https://www.nexusmods.com/skyrim/mods/19733>
+            assert_eq!(
+                "8",
+                extract_version("Immersive Armors v8 Main Plugin")
+                    .unwrap()
+                    .unwrap()
+            );
+        }
+
+        #[test]
+        fn should_prefer_version_prefixed_numbers_over_v_prefixed_number() {
+            // Found in <https://www.nexusmods.com/skyrim/mods/43773>
+            assert_eq!("1.0", extract_version("Compatibility patch for AOS v2.5 and True Storms v1.5 (or later),\nPatch Version: 1.0").unwrap().unwrap());
+        }
+
+        #[test]
+        fn should_extract_a_version_that_is_a_single_digit_after_version_colon_space() {
+            // Found in <https://www.nexusmods.com/oblivion/mods/14720>
+            assert_eq!(
+                "2",
+                extract_version("Version: 2 {{BASH:C.Water}}")
+                    .unwrap()
+                    .unwrap()
+            );
+        }
+    }
 }

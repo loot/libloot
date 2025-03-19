@@ -419,7 +419,379 @@ impl EmitYaml for PluginMetadata {
 
 #[cfg(test)]
 mod tests {
+    use crate::{
+        metadata::{MessageType, TagSuggestion},
+        tests::{BLANK_DIFFERENT_ESM, BLANK_DIFFERENT_ESP, BLANK_ESM, BLANK_ESP},
+    };
+
     use super::*;
+
+    mod name_matches {
+        use super::*;
+
+        #[test]
+        fn should_use_case_insensitive_comparison_for_non_regex_names() {
+            let plugin = PluginMetadata::new("BLANK.ESM").unwrap();
+
+            assert!(plugin.name_matches("blank.esm"));
+            assert!(!plugin.name_matches("other.esm"));
+        }
+
+        #[test]
+        fn should_treat_given_plugin_name_as_literal() {
+            let plugin = PluginMetadata::new("Blank.esm").unwrap();
+
+            assert!(!plugin.name_matches(".+"));
+        }
+
+        #[test]
+        fn should_use_case_insensitive_regex_matching_for_a_regex_name() {
+            let plugin = PluginMetadata::new("Blank.ES(m|p)").unwrap();
+
+            assert!(plugin.name_matches("blank.esm"));
+        }
+    }
+
+    mod merge_metadata {
+        use super::*;
+
+        #[test]
+        fn should_not_change_name() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let plugin2 = PluginMetadata::new(BLANK_DIFFERENT_ESM).unwrap();
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(BLANK_ESM, plugin1.name());
+        }
+
+        #[test]
+        fn should_not_use_other_group_if_current_group_is_set() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin1.set_group("group1".into());
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin2.set_group("group2".into());
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!("group1", plugin1.group().unwrap());
+
+            plugin2.unset_group();
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!("group1", plugin1.group().unwrap());
+        }
+
+        #[test]
+        fn should_use_other_group_if_current_group_is_none() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin2.set_group("group2".into());
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!("group2", plugin1.group().unwrap());
+        }
+
+        #[test]
+        fn should_merge_load_after_files() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let file1 = File::new(BLANK_DIFFERENT_ESM.into());
+            let file2 = File::new(BLANK_ESP.into());
+            let file3 = File::new(BLANK_DIFFERENT_ESP.into());
+            plugin1.set_load_after_files(vec![file1.clone(), file2.clone()]);
+            plugin2.set_load_after_files(vec![file1.clone(), file3.clone()]);
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(
+                &[file1.clone(), file2.clone(), file3.clone()],
+                plugin1.load_after_files()
+            );
+        }
+
+        #[test]
+        fn should_merge_requirements() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let file1 = File::new(BLANK_DIFFERENT_ESM.into());
+            let file2 = File::new(BLANK_ESP.into());
+            let file3 = File::new(BLANK_DIFFERENT_ESP.into());
+            plugin1.set_requirements(vec![file1.clone(), file2.clone()]);
+            plugin2.set_requirements(vec![file1.clone(), file3.clone()]);
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(
+                &[file1.clone(), file2.clone(), file3.clone()],
+                plugin1.requirements()
+            );
+        }
+
+        #[test]
+        fn should_merge_incompatibilities() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let file1 = File::new(BLANK_DIFFERENT_ESM.into());
+            let file2 = File::new(BLANK_ESP.into());
+            let file3 = File::new(BLANK_DIFFERENT_ESP.into());
+            plugin1.set_incompatibilities(vec![file1.clone(), file2.clone()]);
+            plugin2.set_incompatibilities(vec![file1.clone(), file3.clone()]);
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(
+                &[file1.clone(), file2.clone(), file3.clone()],
+                plugin1.incompatibilities()
+            );
+        }
+
+        #[test]
+        fn should_merge_messages() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let message1 = Message::new(MessageType::Say, "content1".into());
+            let message2 = Message::new(MessageType::Say, "content2".into());
+            let message3 = Message::new(MessageType::Say, "content3".into());
+            plugin1.set_messages(vec![message1.clone(), message2.clone()]);
+            plugin2.set_messages(vec![message1.clone(), message3.clone()]);
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(
+                &[
+                    message1.clone(),
+                    message2.clone(),
+                    message1.clone(),
+                    message3.clone()
+                ],
+                plugin1.messages()
+            );
+        }
+
+        #[test]
+        fn should_merge_tags() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let tag1 = Tag::new("Relev".into(), TagSuggestion::Addition);
+            let tag2 = Tag::new("Delev".into(), TagSuggestion::Addition);
+            let tag3 = Tag::new("Relev".into(), TagSuggestion::Removal);
+            plugin1.set_tags(vec![tag1.clone(), tag2.clone()]);
+            plugin2.set_tags(vec![tag1.clone(), tag3.clone()]);
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(&[tag1.clone(), tag2.clone(), tag3.clone()], plugin1.tags());
+        }
+
+        #[test]
+        fn should_merge_dirty_info() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let data1 = PluginCleaningData::new(0x12345678, "util1".into());
+            let data2 = PluginCleaningData::new(0xDEADBEEF, "util2".into());
+            let data3 = PluginCleaningData::new(0xFEEDCAFE, "util3".into());
+            plugin1.set_dirty_info(vec![data1.clone(), data2.clone()]);
+            plugin2.set_dirty_info(vec![data1.clone(), data3.clone()]);
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(
+                &[data1.clone(), data2.clone(), data3.clone()],
+                plugin1.dirty_info()
+            );
+        }
+
+        #[test]
+        fn should_merge_clean_info() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let data1 = PluginCleaningData::new(0x12345678, "util1".into());
+            let data2 = PluginCleaningData::new(0xDEADBEEF, "util2".into());
+            let data3 = PluginCleaningData::new(0xFEEDCAFE, "util3".into());
+            plugin1.set_clean_info(vec![data1.clone(), data2.clone()]);
+            plugin2.set_clean_info(vec![data1.clone(), data3.clone()]);
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(
+                &[data1.clone(), data2.clone(), data3.clone()],
+                plugin1.clean_info()
+            );
+        }
+
+        #[test]
+        fn should_merge_locations() {
+            let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
+            let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            let location1 = Location::new("url1".into());
+            let location2 = Location::new("url2".into());
+            let location3 = Location::new("url3".into());
+            plugin1.set_locations(vec![location1.clone(), location2.clone()]);
+            plugin2.set_locations(vec![location1.clone(), location3.clone()]);
+
+            plugin1.merge_metadata(&plugin2);
+
+            assert_eq!(
+                &[location1.clone(), location2.clone(), location3.clone()],
+                plugin1.locations()
+            );
+        }
+    }
+
+    #[test]
+    fn unset_group_should_set_group_to_none() {
+        let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+
+        plugin.set_group("group1".into());
+        plugin.unset_group();
+
+        assert!(plugin.group().is_none());
+    }
+
+    mod has_name_only {
+        use super::*;
+
+        #[test]
+        fn should_be_true_if_only_a_name_is_set() {
+            assert!(PluginMetadata::new(BLANK_ESM).unwrap().has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_a_group_is_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_group("group1".into());
+
+            assert!(!plugin.has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_load_after_files_are_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_load_after_files(vec![File::new(BLANK_DIFFERENT_ESM.into())]);
+
+            assert!(!plugin.has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_requirements_are_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_requirements(vec![File::new(BLANK_DIFFERENT_ESM.into())]);
+
+            assert!(!plugin.has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_incompatibilities_are_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_incompatibilities(vec![File::new(BLANK_DIFFERENT_ESM.into())]);
+
+            assert!(!plugin.has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_messages_are_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_messages(vec![Message::new(MessageType::Say, "content1".into())]);
+
+            assert!(!plugin.has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_tags_are_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_tags(vec![Tag::new("Relev".into(), TagSuggestion::Addition)]);
+
+            assert!(!plugin.has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_dirty_info_is_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_dirty_info(vec![PluginCleaningData::new(0x12345678, "util1".into())]);
+
+            assert!(!plugin.has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_clean_info_is_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_clean_info(vec![PluginCleaningData::new(0x12345678, "util1".into())]);
+
+            assert!(!plugin.has_name_only());
+        }
+
+        #[test]
+        fn should_be_false_if_locations_are_set() {
+            let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+            plugin.set_locations(vec![Location::new("url1".into())]);
+
+            assert!(!plugin.has_name_only());
+        }
+    }
+
+    mod is_regex_plugin {
+        use super::*;
+
+        #[test]
+        fn should_be_false_for_an_empty_name() {
+            let plugin = PluginMetadata::new("").unwrap();
+
+            assert!(!plugin.is_regex_plugin());
+        }
+
+        #[test]
+        fn should_be_false_for_an_exact_plugin_name() {
+            let plugin = PluginMetadata::new(BLANK_ESM).unwrap();
+
+            assert!(!plugin.is_regex_plugin());
+        }
+
+        #[test]
+        fn should_be_true_if_the_plugin_name_contains_a_colon() {
+            let plugin = PluginMetadata::new("Blank:.esm").unwrap();
+
+            assert!(plugin.is_regex_plugin());
+        }
+
+        #[test]
+        fn should_be_true_if_the_plugin_name_contains_a_backslash() {
+            let plugin = PluginMetadata::new("Blank\\.esm").unwrap();
+
+            assert!(plugin.is_regex_plugin());
+        }
+
+        #[test]
+        fn should_be_true_if_the_plugin_name_contains_an_asterisk() {
+            let plugin = PluginMetadata::new("Blank*.esm").unwrap();
+
+            assert!(plugin.is_regex_plugin());
+        }
+
+        #[test]
+        fn should_be_true_if_the_plugin_name_contains_a_question_mark() {
+            let plugin = PluginMetadata::new("Blank?.esm").unwrap();
+
+            assert!(plugin.is_regex_plugin());
+        }
+
+        #[test]
+        fn should_be_true_if_the_plugin_name_contains_a_vertical_bar() {
+            let plugin = PluginMetadata::new("Blank|.esm").unwrap();
+
+            assert!(plugin.is_regex_plugin());
+        }
+    }
 
     mod as_yaml {
         use super::*;
@@ -438,6 +810,119 @@ mod tests {
                 ),
                 yaml
             );
+        }
+    }
+
+    mod try_from_yaml {
+        use crate::metadata::parse;
+
+        use super::*;
+
+        #[test]
+        fn should_error_if_given_a_scalar() {
+            let yaml = parse("name1");
+
+            assert!(PluginMetadata::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_given_a_list() {
+            let yaml = parse("[0, 1, 2]");
+
+            assert!(PluginMetadata::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_store_all_given_data() {
+            let yaml = parse(
+                "
+                name: 'Blank.esp'
+                after:
+                  - 'Blank.esm'
+                req:
+                  - 'Blank - Different.esm'
+                inc:
+                  - 'Blank - Different.esp'
+                msg:
+                  - type: say
+                    content: 'content'
+                tag:
+                  - Relev
+                dirty:
+                  - crc: 0x5
+                    util: 'utility'
+                clean:
+                  - crc: 0x6
+                    util: 'utility'
+                url:
+                  - 'https://www.example.com'",
+            );
+
+            let plugin = PluginMetadata::try_from(&yaml).unwrap();
+
+            assert_eq!(BLANK_ESP, plugin.name());
+            assert_eq!(&[File::new(BLANK_ESM.into())], plugin.load_after_files());
+            assert_eq!(
+                &[File::new(BLANK_DIFFERENT_ESM.into())],
+                plugin.requirements()
+            );
+            assert_eq!(
+                &[File::new(BLANK_DIFFERENT_ESP.into())],
+                plugin.incompatibilities()
+            );
+            assert_eq!(
+                &[Message::new(MessageType::Say, "content".into())],
+                plugin.messages()
+            );
+            assert_eq!(
+                &[Tag::new("Relev".into(), TagSuggestion::Addition)],
+                plugin.tags()
+            );
+            assert_eq!(
+                &[PluginCleaningData::new(0x5, "utility".into())],
+                plugin.dirty_info()
+            );
+            assert_eq!(
+                &[PluginCleaningData::new(0x6, "utility".into())],
+                plugin.clean_info()
+            );
+            assert_eq!(
+                &[Location::new("https://www.example.com".into())],
+                plugin.locations()
+            );
+        }
+
+        #[test]
+        fn should_not_error_if_regex_metadata_contains_dirty_or_clean_info() {
+            let yaml = parse(
+                "
+                name: 'Blank\\.esp'
+                dirty:
+                  - crc: 0x5
+                    util: 'utility'
+                clean:
+                  - crc: 0x6
+                    util: 'utility'",
+            );
+
+            let plugin = PluginMetadata::try_from(&yaml).unwrap();
+
+            assert_eq!("Blank\\.esp", plugin.name());
+            assert_eq!(
+                &[PluginCleaningData::new(0x5, "utility".into())],
+                plugin.dirty_info()
+            );
+            assert_eq!(
+                &[PluginCleaningData::new(0x6, "utility".into())],
+                plugin.clean_info()
+            );
+        }
+
+        #[test]
+        fn should_error_if_regex_name_is_invalid() {
+            let yaml = parse("{name: 'RagnvaldBook(Farengar(+Ragnvald)?)?\\.esp'}");
+
+            assert!(PluginMetadata::try_from(&yaml).is_err());
         }
     }
 

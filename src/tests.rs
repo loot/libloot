@@ -5,25 +5,28 @@ use std::{
 };
 
 use crate::GameType;
+use rstest_reuse::template;
 use tempfile::TempDir;
 
-const BLANK_ESM: &str = "Blank.esm";
-const BLANK_DIFFERENT_ESM: &str = "Blank - Different.esm";
-const BLANK_MASTER_DEPENDENT_ESM: &str = "Blank - Master Dependent.esm";
+pub const BLANK_ESM: &str = "Blank.esm";
+pub const BLANK_DIFFERENT_ESM: &str = "Blank - Different.esm";
+pub const BLANK_MASTER_DEPENDENT_ESM: &str = "Blank - Master Dependent.esm";
 const BLANK_DIFFERENT_MASTER_DEPENDENT_ESM: &str = "Blank - Different Master Dependent.esm";
-const BLANK_ESP: &str = "Blank.esp";
-const BLANK_DIFFERENT_ESP: &str = "Blank - Different.esp";
-const BLANK_MASTER_DEPENDENT_ESP: &str = "Blank - Master Dependent.esp";
+pub const BLANK_ESP: &str = "Blank.esp";
+pub const BLANK_DIFFERENT_ESP: &str = "Blank - Different.esp";
+pub const BLANK_MASTER_DEPENDENT_ESP: &str = "Blank - Master Dependent.esp";
 const BLANK_DIFFERENT_MASTER_DEPENDENT_ESP: &str = "Blank - Different Master Dependent.esp";
 const BLANK_PLUGIN_DEPENDENT_ESP: &str = "Blank - Plugin Dependent.esp";
 const BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP: &str = "Blank - Different Plugin Dependent.esp";
 
-const BLANK_FULL_ESM: &str = "Blank.full.esm";
-const BLANK_MEDIUM_ESM: &str = "Blank.medium.esm";
-const BLANK_ESL: &str = "Blank.esl";
-const NON_PLUGIN_FILE: &str = "NotAPlugin.esm";
+pub const BLANK_FULL_ESM: &str = "Blank.full.esm";
+pub const BLANK_MEDIUM_ESM: &str = "Blank.medium.esm";
+pub const BLANK_OVERRIDE_ESP: &str = "Blank - Override.esp";
+pub const BLANK_ESL: &str = "Blank.esl";
+pub const NON_PLUGIN_FILE: &str = "NotAPlugin.esm";
+pub const NON_ASCII_ESM: &str = "non\u{00C1}scii.esm";
 
-fn source_plugins_path(game_type: GameType) -> PathBuf {
+pub fn source_plugins_path(game_type: GameType) -> PathBuf {
     match game_type {
         GameType::TES3 | GameType::OpenMW => absolute("./testing-plugins/Morrowind/Data Files"),
         GameType::TES4 => absolute("./testing-plugins/Oblivion/Data"),
@@ -48,7 +51,7 @@ fn master_file(game_type: GameType) -> &'static str {
     }
 }
 
-fn copy_file(source_dir: &Path, dest_dir: &Path, filename: &str) {
+pub fn copy_file(source_dir: &Path, dest_dir: &Path, filename: &str) {
     copy(source_dir.join(filename), dest_dir.join(filename)).unwrap();
 }
 
@@ -70,7 +73,7 @@ fn is_load_order_timestamp_based(game_type: GameType) -> bool {
     )
 }
 
-fn initial_load_order(game_type: GameType) -> Vec<(&'static str, bool)> {
+pub fn initial_load_order(game_type: GameType) -> Vec<(&'static str, bool)> {
     if game_type == GameType::Starfield {
         vec![
             (master_file(game_type), true),
@@ -155,6 +158,14 @@ fn set_load_order(
     }
 }
 
+fn data_path(game_type: GameType, game_path: &Path) -> PathBuf {
+    match game_type {
+        GameType::OpenMW => game_path.join("resources/vfs"),
+        GameType::TES3 => game_path.join("Data Files"),
+        _ => game_path.join("Data"),
+    }
+}
+
 pub struct Fixture {
     _temp_dir: TempDir,
     pub game_type: GameType,
@@ -171,11 +182,7 @@ impl Fixture {
         let root_path = temp_dir.path();
         let game_path = root_path.join("games/game");
         let local_path = root_path.join("local/game");
-        let data_path = match game_type {
-            GameType::OpenMW => game_path.join("resources/vfs"),
-            GameType::TES3 => game_path.join("Data Files"),
-            _ => game_path.join("Data"),
-        };
+        let data_path = data_path(game_type, &game_path);
 
         create_dir_all(&data_path).unwrap();
         create_dir_all(&local_path).unwrap();
@@ -208,7 +215,7 @@ impl Fixture {
             )
             .unwrap();
             copy(
-                source_plugins_path.join("Blank - Override.esp"),
+                source_plugins_path.join(BLANK_OVERRIDE_ESP),
                 data_path.join(BLANK_MASTER_DEPENDENT_ESP),
             )
             .unwrap();
@@ -281,5 +288,69 @@ impl Fixture {
             game_path,
             local_path,
         }
+    }
+
+    pub fn data_path(&self) -> PathBuf {
+        data_path(self.game_type, &self.game_path)
+    }
+}
+
+#[template]
+#[rstest::rstest]
+pub fn all_game_types(
+    #[values(
+        GameType::TES4,
+        GameType::TES5,
+        GameType::FO3,
+        GameType::FONV,
+        GameType::FO4,
+        GameType::TES5SE,
+        GameType::FO4VR,
+        GameType::TES5VR,
+        GameType::TES3,
+        GameType::Starfield,
+        GameType::OpenMW
+    )]
+    game_type: GameType,
+) {
+}
+
+mod unicase {
+    #[test]
+    fn eq_should_be_case_insensitive() {
+        assert!(unicase::eq("i", "I"));
+        assert!(!unicase::eq("i", "\u{0130}"));
+        assert!(!unicase::eq("i", "\u{0131}"));
+        assert!(!unicase::eq("i", "\u{0307}"));
+        assert!(!unicase::eq("i", "\u{03a1}"));
+        assert!(!unicase::eq("i", "\u{03c1}"));
+        assert!(!unicase::eq("i", "\u{03f1}"));
+
+        assert!(!unicase::eq("I", "\u{0130}"));
+        assert!(!unicase::eq("I", "\u{0131}"));
+        assert!(!unicase::eq("I", "\u{0307}"));
+        assert!(!unicase::eq("I", "\u{03a1}"));
+        assert!(!unicase::eq("I", "\u{03c1}"));
+        assert!(!unicase::eq("I", "\u{03f1}"));
+
+        assert!(!unicase::eq("\u{0130}", "\u{0131}"));
+        assert!(!unicase::eq("\u{0130}", "\u{0307}"));
+        assert!(!unicase::eq("\u{0130}", "\u{03a1}"));
+        assert!(!unicase::eq("\u{0130}", "\u{03c1}"));
+        assert!(!unicase::eq("\u{0130}", "\u{03f1}"));
+
+        assert!(!unicase::eq("\u{0131}", "\u{0307}"));
+        assert!(!unicase::eq("\u{0131}", "\u{03a1}"));
+        assert!(!unicase::eq("\u{0131}", "\u{03c1}"));
+        assert!(!unicase::eq("\u{0131}", "\u{03f1}"));
+
+        assert!(!unicase::eq("\u{0307}", "\u{03a1}"));
+        assert!(!unicase::eq("\u{0307}", "\u{03c1}"));
+        assert!(!unicase::eq("\u{0307}", "\u{03f1}"));
+
+        assert!(unicase::eq("\u{03a1}", "\u{03c1}"));
+        assert!(unicase::eq("\u{03a1}", "\u{03f1}"));
+
+        assert!(unicase::eq("\u{03c1}", "\u{03f1}"));
     }
 }

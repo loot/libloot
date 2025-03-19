@@ -739,7 +739,7 @@ pub(crate) struct GameCache {
 }
 
 impl GameCache {
-    fn set_archive_paths(&mut self, archive_paths: Vec<PathBuf>) {
+    pub fn set_archive_paths(&mut self, archive_paths: Vec<PathBuf>) {
         self.archive_paths.clear();
         self.archive_paths.extend(archive_paths);
     }
@@ -772,55 +772,1320 @@ impl GameCache {
 mod tests {
     use super::*;
 
-    use rstest::rstest;
-    use rstest_reuse::{apply, template};
+    use rstest_reuse::apply;
 
-    use crate::tests::Fixture;
+    use crate::tests::{Fixture, all_game_types};
 
-    #[template]
-    #[rstest]
-    fn all_game_types(
-        #[values(
-            GameType::TES4,
-            GameType::TES5,
-            GameType::FO3,
-            GameType::FONV,
-            GameType::FO4,
-            GameType::TES5SE,
-            GameType::FO4VR,
-            GameType::TES5VR,
-            GameType::TES3,
-            GameType::Starfield,
-            GameType::OpenMW
-        )]
-        game_type: GameType,
-    ) {
-    }
+    mod game {
+        use std::path::Component;
 
-    mod new {
+        use crate::tests::BLANK_ESM;
+
         use super::*;
 
-        #[apply(all_game_types)]
-        fn should_succeed_if_given_valid_game_path(game_type: GameType) {
-            let fixture = Fixture::new(game_type);
+        #[cfg(windows)]
+        fn symlink_dir(original: &Path, link: &Path) {
+            std::os::windows::fs::symlink_dir(original, link).unwrap();
+        }
 
-            let game = Game::new(fixture.game_type, &fixture.game_path);
+        #[cfg(unix)]
+        fn symlink_dir(original: &Path, link: &Path) {
+            std::os::unix::fs::symlink(original, link).unwrap();
+        }
 
-            assert!(game.is_ok());
+        #[cfg(windows)]
+        fn junction_link(original: &Path, link: &Path) {
+            use std::ffi::{OsStr, OsString};
+
+            // The paths may contain forward slashes, which cmd doesn't accept,
+            // so replace them.
+            let original = OsString::from(original.to_str().unwrap().replace("/", "\\"));
+            let link = OsString::from(link.to_str().unwrap().replace("/", "\\"));
+
+            let status = std::process::Command::new("cmd")
+                .args([
+                    OsStr::new("/C"),
+                    OsStr::new("mklink"),
+                    OsStr::new("/J"),
+                    link.as_os_str(),
+                    original.as_os_str(),
+                ])
+                .status()
+                .unwrap();
+
+            assert!(status.success());
+        }
+
+        fn make_relative(path: &Path) -> PathBuf {
+            if path.is_relative() {
+                return path.to_path_buf();
+            }
+
+            let base = std::env::current_dir().unwrap();
+            assert!(base.is_absolute());
+
+            let mut path_iter = path.components();
+            let mut base_iter = base.components();
+
+            let mut relative_components = Vec::new();
+            loop {
+                match (path_iter.next(), base_iter.next()) {
+                    (None, None) => break,
+                    (None, _) => relative_components.push(Component::ParentDir),
+                    (Some(p), None) => {
+                        relative_components.push(p);
+                        relative_components.extend(path_iter);
+                        break;
+                    }
+                    (Some(p), Some(b)) => {
+                        if relative_components.is_empty() && p == b {
+                            continue;
+                        }
+
+                        relative_components.push(Component::ParentDir);
+                        for _ in base_iter {
+                            relative_components.push(Component::ParentDir);
+                        }
+
+                        relative_components.push(p);
+                        relative_components.extend(path_iter);
+                        break;
+                    }
+                }
+            }
+
+            relative_components
+                .into_iter()
+                .map(|c| c.as_os_str())
+                .collect()
+        }
+
+        mod new {
+            use super::*;
+
+            #[cfg(windows)]
+            #[apply(all_game_types)]
+            fn should_succeed_if_given_valid_game_path(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                assert!(Game::new(fixture.game_type, &fixture.game_path).is_ok());
+            }
+
+            #[cfg(not(windows))]
+            #[apply(all_game_types)]
+            fn should_succeed_for_morrowind_if_given_valid_game_path(game_type: GameType) {
+                if matches!(game_type, GameType::TES3 | GameType::OpenMW) {
+                    assert!(Game::new(fixture.game_type, &fixture.game_path).is_ok());
+                } else {
+                    assert!(Game::new(fixture.game_type, &fixture.game_path).is_err());
+                }
+            }
+
+            #[test]
+            fn should_succeed_if_given_a_relative_game_path() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game_path = make_relative(&fixture.game_path);
+                assert!(game_path.is_relative());
+
+                assert!(Game::new(fixture.game_type, &game_path).is_ok());
+            }
+
+            #[test]
+            fn should_succeed_if_given_an_absolute_game_path() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                assert!(fixture.game_path.is_absolute());
+                assert!(Game::new(fixture.game_type, &fixture.game_path).is_ok());
+            }
+
+            #[test]
+            fn should_succeed_if_given_a_symlink_path() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game_path = fixture.game_path.with_extension("symlink");
+                symlink_dir(&fixture.game_path, &game_path);
+                assert!(game_path.is_symlink());
+
+                assert!(Game::new(fixture.game_type, &game_path).is_ok());
+            }
+
+            #[cfg(windows)]
+            #[test]
+            fn should_succeed_if_given_a_junction_link_path() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game_path = fixture.game_path.with_extension("junction");
+                junction_link(&fixture.game_path, &game_path);
+
+                assert!(Game::new(fixture.game_type, &game_path).is_ok());
+            }
+
+            #[test]
+            fn should_error_if_given_a_game_path_that_does_not_exist() {
+                let game_path = Path::new("missing");
+                match Game::new(GameType::TES4, game_path) {
+                    Err(GameHandleCreationError::NotADirectory(p)) => {
+                        assert_eq!(game_path, p)
+                    }
+                    _ => panic!("Expected a not-a-directory error"),
+                }
+            }
+        }
+
+        mod with_local_path {
+            use super::*;
+
+            #[apply(all_game_types)]
+            fn should_succeed_if_given_valid_paths(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                );
+
+                assert!(game.is_ok());
+            }
+
+            #[test]
+            fn should_succeed_if_given_relative_paths() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game_path = make_relative(&fixture.game_path);
+                assert!(game_path.is_relative());
+
+                let local_path = make_relative(&fixture.local_path);
+                assert!(local_path.is_relative());
+
+                let game = Game::with_local_path(fixture.game_type, &game_path, &local_path);
+
+                assert!(game.is_ok());
+            }
+
+            #[test]
+            fn should_succeed_if_given_absolute_paths() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                assert!(fixture.game_path.is_absolute());
+                assert!(fixture.local_path.is_absolute());
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                );
+
+                assert!(game.is_ok());
+            }
+
+            #[test]
+            fn should_succeed_if_given_symlink_paths() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game_path = fixture.game_path.with_extension("symlink");
+                symlink_dir(&fixture.game_path, &game_path);
+                assert!(game_path.is_symlink());
+
+                let local_path = fixture.local_path.with_extension("symlink");
+                symlink_dir(&fixture.local_path, &local_path);
+                assert!(local_path.is_symlink());
+
+                let game = Game::with_local_path(fixture.game_type, &game_path, &local_path);
+
+                assert!(game.is_ok());
+            }
+
+            #[cfg(windows)]
+            #[test]
+            fn should_succeed_if_given_junction_link_paths() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game_path = fixture.game_path.with_extension("junction");
+                junction_link(&fixture.game_path, &game_path);
+
+                let local_path = fixture.local_path.with_extension("junction");
+                junction_link(&fixture.local_path, &local_path);
+
+                let game = Game::with_local_path(fixture.game_type, &game_path, &local_path);
+
+                assert!(game.is_ok());
+            }
+
+            #[test]
+            fn should_error_if_given_a_game_path_that_does_not_exist() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game_path = Path::new("missing");
+                let game = Game::with_local_path(fixture.game_type, game_path, &fixture.local_path);
+
+                match game {
+                    Err(GameHandleCreationError::NotADirectory(p)) => {
+                        assert_eq!(game_path, p)
+                    }
+                    _ => panic!("Expected a not-a-directory error"),
+                }
+            }
+
+            #[test]
+            fn should_succeed_if_given_a_local_path_that_does_not_exist() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let local_path = Path::new("missing");
+                let game = Game::with_local_path(fixture.game_type, &fixture.game_path, local_path);
+
+                assert!(game.is_ok());
+            }
+
+            #[test]
+            fn should_error_if_given_a_local_path_that_is_not_a_directory() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let local_path = Path::new("README.md");
+                assert!(local_path.exists());
+
+                let game = Game::with_local_path(fixture.game_type, &fixture.game_path, local_path);
+
+                match game {
+                    Err(GameHandleCreationError::NotADirectory(p)) => {
+                        assert_eq!(local_path, p)
+                    }
+                    _ => panic!("Expected a not-a-directory error"),
+                }
+            }
+
+            #[apply(all_game_types)]
+            fn should_set_default_additional_data_paths(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                match game_type {
+                    GameType::FO4 => {
+                        std::fs::File::create(fixture.game_path.join("appxmanifest.xml")).unwrap();
+                    }
+                    GameType::OpenMW => {
+                        let contents = format!(
+                            "data-local=\"{}\"\nconfig=\"{}\"",
+                            fixture.local_path.join("data").display(),
+                            fixture.local_path.display()
+                        );
+                        std::fs::write(fixture.game_path.join("openmw.cfg"), contents).unwrap();
+                    }
+                    _ => {}
+                }
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                match game_type {
+                    GameType::FO4 => {
+                        let base_path = fixture.game_path.join("../..");
+                        assert_eq!(
+                            &[
+                                base_path
+                                    .join("Fallout 4- Automatron (PC)")
+                                    .join("Content")
+                                    .join("Data"),
+                                base_path
+                                    .join("Fallout 4- Nuka-World (PC)")
+                                    .join("Content")
+                                    .join("Data"),
+                                base_path
+                                    .join("Fallout 4- Wasteland Workshop (PC)")
+                                    .join("Content")
+                                    .join("Data"),
+                                base_path
+                                    .join("Fallout 4- High Resolution Texture Pack")
+                                    .join("Content")
+                                    .join("Data"),
+                                base_path
+                                    .join("Fallout 4- Vault-Tec Workshop (PC)")
+                                    .join("Content")
+                                    .join("Data"),
+                                base_path
+                                    .join("Fallout 4- Far Harbor (PC)")
+                                    .join("Content")
+                                    .join("Data"),
+                                base_path
+                                    .join("Fallout 4- Contraptions Workshop (PC)")
+                                    .join("Content")
+                                    .join("Data")
+                            ],
+                            game.additional_data_paths()
+                        );
+                    }
+                    GameType::Starfield => {
+                        assert_eq!(1, game.additional_data_paths().len());
+
+                        let expected_suffix = Path::new("Documents")
+                            .join("My Games")
+                            .join("Starfield")
+                            .join("Data");
+
+                        assert!(game.additional_data_paths()[0].ends_with(expected_suffix));
+                    }
+                    GameType::OpenMW => {
+                        assert_eq!(
+                            &[fixture.local_path.join("data")],
+                            game.additional_data_paths()
+                        );
+                    }
+                    _ => assert!(game.additional_data_paths().is_empty()),
+                }
+            }
+
+            mod set_additional_data_paths {
+                use std::time::{Duration, SystemTime};
+
+                use crate::{
+                    metadata::{File, PluginMetadata},
+                    tests::{BLANK_ESM, BLANK_ESP},
+                };
+
+                use super::*;
+
+                #[test]
+                fn should_clear_the_condition_cache() {
+                    let fixture = Fixture::new(GameType::TES4);
+
+                    let mut game = Game::with_local_path(
+                        fixture.game_type,
+                        &fixture.game_path,
+                        &fixture.local_path,
+                    )
+                    .unwrap();
+
+                    let mut metadata = PluginMetadata::new(BLANK_ESM).unwrap();
+                    metadata.set_load_after_files(vec![
+                        File::new("plugin.esp".into())
+                            .with_condition("file(\"plugin.esp\")".into()),
+                    ]);
+                    game.database()
+                        .write()
+                        .unwrap()
+                        .set_plugin_user_metadata(metadata);
+
+                    let evaluated_metadata = game
+                        .database()
+                        .read()
+                        .unwrap()
+                        .plugin_user_metadata(BLANK_ESM, true)
+                        .unwrap();
+                    assert!(evaluated_metadata.is_none());
+
+                    std::fs::File::create(fixture.data_path().join("plugin.esp")).unwrap();
+
+                    game.set_additional_data_paths(&[Path::new("")]).unwrap();
+
+                    let evaluated_metadata = game
+                        .database()
+                        .read()
+                        .unwrap()
+                        .plugin_user_metadata(BLANK_ESM, true)
+                        .unwrap()
+                        .unwrap();
+                    assert!(!evaluated_metadata.load_after_files().is_empty());
+                }
+
+                #[test]
+                fn should_update_where_load_order_plugins_are_found() {
+                    let fixture = Fixture::new(GameType::TES4);
+
+                    let mut game = Game::with_local_path(
+                        fixture.game_type,
+                        &fixture.game_path,
+                        &fixture.local_path,
+                    )
+                    .unwrap();
+
+                    game.load_current_load_order_state().unwrap();
+
+                    let mut load_order: Vec<_> =
+                        game.load_order().iter().map(|s| s.to_string()).collect();
+
+                    let filename = "plugin.esp";
+                    let data_file_path = fixture
+                        .game_path
+                        .parent()
+                        .unwrap()
+                        .join("Data")
+                        .join(filename);
+
+                    std::fs::create_dir_all(data_file_path.parent().unwrap()).unwrap();
+                    std::fs::copy(fixture.data_path().join(BLANK_ESP), &data_file_path).unwrap();
+
+                    std::fs::File::options()
+                        .write(true)
+                        .open(&data_file_path)
+                        .unwrap()
+                        .set_modified(SystemTime::now() + Duration::from_secs(3600))
+                        .unwrap();
+
+                    game.set_additional_data_paths(&[data_file_path.parent().unwrap()])
+                        .unwrap();
+                    game.load_current_load_order_state().unwrap();
+
+                    load_order.push(filename.to_string());
+
+                    assert_eq!(load_order, game.load_order());
+                }
+            }
+        }
+
+        mod is_valid_plugin {
+            use super::*;
+
+            use crate::tests::{
+                BLANK_ESM, BLANK_MASTER_DEPENDENT_ESM, NON_ASCII_ESM, NON_PLUGIN_FILE,
+            };
+
+            #[apply(all_game_types)]
+            fn should_return_true_for_a_valid_non_ascii_plugin(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                std::fs::copy(
+                    fixture.data_path().join(BLANK_ESM),
+                    fixture.data_path().join(NON_ASCII_ESM),
+                )
+                .unwrap();
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                assert!(game.is_valid_plugin(Path::new(NON_ASCII_ESM)));
+            }
+
+            #[apply(all_game_types)]
+            fn should_return_true_for_an_omwscripts_plugin(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let plugin = fixture.data_path().join("empty.omwscripts");
+                let _ = std::fs::File::create(&plugin).unwrap();
+
+                if game_type == GameType::OpenMW {
+                    assert!(game.is_valid_plugin(&plugin));
+                } else {
+                    assert!(!game.is_valid_plugin(&plugin));
+                }
+            }
+
+            #[apply(all_game_types)]
+            fn should_return_false_for_a_non_plugin_file(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                assert!(!game.is_valid_plugin(Path::new(NON_PLUGIN_FILE)));
+            }
+
+            #[apply(all_game_types)]
+            fn should_return_false_for_an_empty_file(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let empty_file_path = fixture.data_path().join("empty.esp");
+                let _ = std::fs::File::create(&empty_file_path).unwrap();
+
+                assert!(!game.is_valid_plugin(&empty_file_path));
+            }
+
+            #[apply(all_game_types)]
+            fn should_try_ghosted_path_if_given_plugin_does_not_exist_unless_game_is_openmw(
+                game_type: GameType,
+            ) {
+                let fixture = Fixture::new(game_type);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let path = fixture.data_path().join(BLANK_MASTER_DEPENDENT_ESM);
+
+                if game_type == GameType::OpenMW {
+                    std::fs::rename(
+                        &path,
+                        path.with_file_name(format!("{}.ghost", BLANK_MASTER_DEPENDENT_ESM)),
+                    )
+                    .unwrap();
+
+                    assert!(!game.is_valid_plugin(&path));
+                } else {
+                    assert!(!path.exists());
+
+                    assert!(game.is_valid_plugin(&path));
+                }
+            }
+
+            #[test]
+            fn should_resolve_relative_paths_relative_to_the_data_path() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let path = Path::new("..")
+                    .join(fixture.data_path().file_name().unwrap())
+                    .join(BLANK_ESM);
+
+                assert!(game.is_valid_plugin(&path));
+            }
+
+            #[test]
+            fn should_use_absolute_paths_as_given() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let path = fixture.data_path().join(BLANK_ESM);
+
+                assert!(game.is_valid_plugin(&path));
+            }
+        }
+
+        mod load_plugin_headers {
+            use crate::tests::{BLANK_DIFFERENT_ESM, BLANK_ESM, BLANK_ESP, NON_PLUGIN_FILE};
+
+            use super::*;
+
+            #[apply(all_game_types)]
+            fn should_load_the_headers_of_the_given_plugins(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                assert!(game.plugin(BLANK_ESM).is_none());
+                assert!(game.plugin(BLANK_DIFFERENT_ESM).is_none());
+                assert!(game.plugin(BLANK_ESP).is_none());
+
+                game.load_plugin_headers(&[Path::new(BLANK_ESM), Path::new(BLANK_ESP)])
+                    .unwrap();
+
+                let plugin = game.plugin(BLANK_ESM).unwrap();
+                assert_eq!("5.0", plugin.version().unwrap());
+                assert!(plugin.crc().is_none());
+
+                assert!(game.plugin(BLANK_DIFFERENT_ESM).is_none());
+                assert!(game.plugin(BLANK_ESP).is_some());
+            }
+
+            #[test]
+            fn should_not_modify_loaded_plugins_storage_if_given_a_non_plugin() {
+                let fixture = Fixture::new(GameType::TES3);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                game.load_plugin_headers(&[Path::new(BLANK_ESM)]).unwrap();
+                assert!(game.plugin(BLANK_ESM).is_some());
+
+                assert!(
+                    game.load_plugin_headers(&[Path::new(NON_PLUGIN_FILE)])
+                        .is_err()
+                );
+
+                assert!(game.plugin(BLANK_ESM).is_some());
+                assert!(game.plugin(NON_PLUGIN_FILE).is_none());
+            }
+
+            #[test]
+            fn should_not_clear_the_plugins_cache() {
+                let fixture = Fixture::new(GameType::TES3);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                game.load_plugin_headers(&[Path::new(BLANK_ESM)]).unwrap();
+                assert!(game.plugin(BLANK_ESM).is_some());
+
+                game.load_plugin_headers(&[Path::new(BLANK_ESP)]).unwrap();
+
+                assert!(game.plugin(BLANK_ESM).is_some());
+                assert!(game.plugin(BLANK_ESP).is_some());
+            }
+
+            #[test]
+            fn should_replace_an_existing_cache_entry_for_the_same_plugin() {
+                let fixture = Fixture::new(GameType::TES3);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                game.load_plugin_headers(&[Path::new(BLANK_ESM)]).unwrap();
+                let plugin1: *const str = game.plugin(BLANK_ESM).unwrap().name();
+                let plugin2: *const str = game.plugin(BLANK_ESM).unwrap().name();
+
+                assert_eq!(plugin1, plugin2);
+
+                game.load_plugin_headers(&[Path::new(BLANK_ESM)]).unwrap();
+
+                let plugin3: *const str = game.plugin(BLANK_ESM).unwrap().name();
+
+                assert_ne!(plugin2, plugin3);
+            }
+        }
+
+        mod load_plugins {
+            use std::error::Error;
+
+            use crate::tests::{
+                BLANK_DIFFERENT_ESM, BLANK_ESM, BLANK_ESP, BLANK_FULL_ESM,
+                BLANK_MASTER_DEPENDENT_ESM,
+            };
+
+            use super::*;
+
+            #[apply(all_game_types)]
+            fn should_fully_load_the_given_plugins(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                assert!(game.plugin(BLANK_ESM).is_none());
+                assert!(game.plugin(BLANK_DIFFERENT_ESM).is_none());
+                assert!(game.plugin(BLANK_ESP).is_none());
+
+                game.load_plugins(&[Path::new(BLANK_ESM), Path::new(BLANK_ESP)])
+                    .unwrap();
+
+                let plugin = game.plugin(BLANK_ESM).unwrap();
+                assert_eq!("5.0", plugin.version().unwrap());
+                assert!(plugin.crc().is_some());
+
+                assert!(game.plugin(BLANK_DIFFERENT_ESM).is_none());
+                assert!(game.plugin(BLANK_ESP).is_some());
+            }
+
+            #[test]
+            fn should_not_clear_the_plugins_cache() {
+                let fixture = Fixture::new(GameType::TES3);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                game.load_plugin_headers(&[Path::new(BLANK_ESM)]).unwrap();
+                assert!(game.plugin(BLANK_ESM).is_some());
+
+                game.load_plugin_headers(&[Path::new(BLANK_ESP)]).unwrap();
+
+                assert!(game.plugin(BLANK_ESM).is_some());
+                assert!(game.plugin(BLANK_ESP).is_some());
+            }
+
+            #[test]
+            fn should_replace_an_existing_cache_entry_for_the_same_plugin() {
+                let fixture = Fixture::new(GameType::TES3);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                game.load_plugins(&[Path::new(BLANK_ESM)]).unwrap();
+                let plugin1: *const str = game.plugin(BLANK_ESM).unwrap().name();
+                let plugin2: *const str = game.plugin(BLANK_ESM).unwrap().name();
+
+                assert_eq!(plugin1, plugin2);
+
+                game.load_plugins(&[Path::new(BLANK_ESM)]).unwrap();
+
+                let plugin3: *const str = game.plugin(BLANK_ESM).unwrap().name();
+
+                assert_ne!(plugin2, plugin3);
+            }
+
+            #[apply(all_game_types)]
+            fn should_error_if_loading_a_plugin_with_a_master_that_is_not_loaded_if_game_is_morrowind_or_starfield(
+                game_type: GameType,
+            ) {
+                let fixture = Fixture::new(game_type);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let paths = &[Path::new(BLANK_MASTER_DEPENDENT_ESM)];
+
+                if matches!(
+                    game_type,
+                    GameType::TES3 | GameType::OpenMW | GameType::Starfield
+                ) {
+                    match game.load_plugins(paths) {
+                        Err(LoadPluginsError::PluginDataError(e)) => {
+                            let source = e.source().unwrap();
+                            match source.downcast_ref::<esplugin::Error>().unwrap() {
+                                esplugin::Error::PluginMetadataNotFound(p) => {
+                                    if game_type == GameType::Starfield {
+                                        assert_eq!(BLANK_FULL_ESM, p)
+                                    } else {
+                                        assert_eq!(BLANK_ESM, p)
+                                    };
+                                }
+                                _ => panic!("Unexpected esplugin error: {e}"),
+                            }
+                        }
+                        _ => panic!("Expected an error due to esplugin metadata not found"),
+                    }
+                } else {
+                    game.load_plugins(paths).unwrap();
+
+                    assert!(game.plugin(BLANK_MASTER_DEPENDENT_ESM).is_some());
+                }
+            }
+
+            #[apply(all_game_types)]
+            fn should_not_error_if_loading_a_plugin_with_a_master_that_is_also_being_loaded_if_game_is_morrowind_or_starfield(
+                game_type: GameType,
+            ) {
+                let fixture = Fixture::new(game_type);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let paths: &[&Path] = if game_type == GameType::Starfield {
+                    &[
+                        Path::new(BLANK_MASTER_DEPENDENT_ESM),
+                        Path::new(BLANK_FULL_ESM),
+                    ]
+                } else {
+                    &[Path::new(BLANK_MASTER_DEPENDENT_ESM), Path::new(BLANK_ESM)]
+                };
+
+                game.load_plugins(paths).unwrap();
+
+                assert!(game.plugin(BLANK_MASTER_DEPENDENT_ESM).is_some());
+            }
+        }
+
+        mod load_plugins_common {
+            use crate::tests::{BLANK_ESM, BLANK_MASTER_DEPENDENT_ESM};
+
+            use super::*;
+
+            #[apply(all_game_types)]
+            fn should_find_archives_in_additional_data_paths(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
+                let extension = if matches!(
+                    game_type,
+                    GameType::FO4 | GameType::FO4VR | GameType::Starfield
+                ) {
+                    ".ba2"
+                } else {
+                    ".bsa"
+                };
+
+                let path1 = fixture
+                    .game_path
+                    .join("sub1")
+                    .join("archive")
+                    .with_extension(extension);
+                let path2 = fixture
+                    .game_path
+                    .join("sub2")
+                    .join("archive")
+                    .with_extension(extension);
+                std::fs::create_dir(path1.parent().unwrap()).unwrap();
+                std::fs::create_dir(path2.parent().unwrap()).unwrap();
+                std::fs::File::create(&path1).unwrap();
+                std::fs::File::create(&path2).unwrap();
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                game.set_additional_data_paths(&[path1.parent().unwrap(), path2.parent().unwrap()])
+                    .unwrap();
+
+                game.load_plugins_common(&[], LoadScope::HeaderOnly)
+                    .unwrap();
+
+                assert_eq!(HashSet::from([path1, path2]), game.cache.archive_paths);
+            }
+
+            #[test]
+            fn should_clear_the_archive_cache_before_finding_archives() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                std::fs::File::create(fixture.data_path().join("Blank.bsa")).unwrap();
+
+                game.load_plugins_common(&[], LoadScope::HeaderOnly)
+                    .unwrap();
+                game.load_plugins_common(&[], LoadScope::HeaderOnly)
+                    .unwrap();
+
+                assert_eq!(1, game.cache.archive_paths.len());
+            }
+
+            #[test]
+            fn should_not_error_if_an_installed_filename_has_non_windows_1252_encodable_characters()
+            {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let filename =
+                    "\u{2551}\u{00BB}\u{00C1}\u{2510}\u{2557}\u{00FE}\u{00C3}\u{00CE}.txt";
+                std::fs::File::create(fixture.data_path().join(filename)).unwrap();
+
+                assert!(game.load_plugins_common(&[], LoadScope::HeaderOnly).is_ok());
+            }
+
+            #[test]
+            fn should_error_given_duplicate_filenames() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let paths = &[
+                    Path::new("a").join(BLANK_ESM),
+                    Path::new("b").join(BLANK_ESM),
+                ];
+
+                match game.load_plugins_common(&[&paths[0], &paths[1]], LoadScope::HeaderOnly) {
+                    Err(LoadPluginsError::PluginValidationError(e)) => {
+                        assert_eq!(
+                            format!(
+                                "the path \"{}\" has a filename that is not unique",
+                                paths[1].display()
+                            ),
+                            e.to_string()
+                        );
+                    }
+                    _ => panic!("Expected an error due to duplicate filenames"),
+                }
+            }
+
+            #[test]
+            fn should_resolve_relative_paths_relative_to_the_data_path() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let path = Path::new("..")
+                    .join(fixture.data_path().file_name().unwrap())
+                    .join(BLANK_ESM);
+
+                let plugins = game
+                    .load_plugins_common(&[&path], LoadScope::HeaderOnly)
+                    .unwrap();
+
+                assert_eq!(1, plugins.len());
+                assert_eq!(BLANK_ESM, plugins[0].name());
+            }
+
+            #[test]
+            fn should_use_absolute_paths_as_given() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let path = fixture.data_path().join(BLANK_ESM);
+
+                let plugins = game
+                    .load_plugins_common(&[&path], LoadScope::HeaderOnly)
+                    .unwrap();
+
+                assert_eq!(1, plugins.len());
+                assert_eq!(BLANK_ESM, plugins[0].name());
+            }
+
+            #[test]
+            fn should_trim_ghost_extensions_from_loaded_plugin_names() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                let path = fixture
+                    .data_path()
+                    .join(format!("{}.ghost", BLANK_MASTER_DEPENDENT_ESM));
+
+                let plugins = game
+                    .load_plugins_common(&[&path], LoadScope::HeaderOnly)
+                    .unwrap();
+
+                assert_eq!(1, plugins.len());
+                assert_eq!(BLANK_MASTER_DEPENDENT_ESM, plugins[0].name());
+            }
+        }
+
+        #[test]
+        fn clear_loaded_plugins_should_clear_the_plugins_cache() {
+            let fixture = Fixture::new(GameType::TES4);
+
+            let mut game =
+                Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path)
+                    .unwrap();
+
+            game.load_plugin_headers(&[Path::new(BLANK_ESM)]).unwrap();
+
+            assert!(!game.cache.plugins.is_empty());
+
+            game.clear_loaded_plugins();
+
+            assert!(game.cache.plugins.is_empty());
+        }
+
+        mod sort_plugins {
+            use crate::tests::{BLANK_DIFFERENT_ESP, BLANK_ESP, initial_load_order};
+
+            use super::*;
+
+            fn load_all_installed_plugins(game: &mut Game, fixture: &Fixture) {
+                let load_order = initial_load_order(fixture.game_type);
+
+                let plugins: Vec<_> = load_order.iter().map(|(n, _)| Path::new(n)).collect();
+
+                game.load_current_load_order_state().unwrap();
+                game.load_plugins(&plugins).unwrap();
+            }
+
+            #[test]
+            fn should_return_an_empty_list_if_given_an_empty_list() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                assert!(game.sort_plugins(&[]).unwrap().is_empty());
+            }
+
+            #[test]
+            fn should_only_sort_the_given_plugins() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                load_all_installed_plugins(&mut game, &fixture);
+
+                let input = &[BLANK_ESP, BLANK_DIFFERENT_ESP];
+                let sorted = game.sort_plugins(input).unwrap();
+
+                assert_eq!(input, sorted.as_slice());
+            }
+
+            #[test]
+            fn should_error_if_a_given_plugin_is_not_loaded() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                assert!(game.sort_plugins(&[BLANK_ESP]).is_err());
+            }
+        }
+
+        mod is_plugin_active {
+            use crate::tests::BLANK_ESP;
+
+            use super::*;
+
+            #[test]
+            fn should_be_independent_of_plugins_being_loaded() {
+                let fixture = Fixture::new(GameType::TES4);
+
+                let mut game = Game::with_local_path(
+                    fixture.game_type,
+                    &fixture.game_path,
+                    &fixture.local_path,
+                )
+                .unwrap();
+
+                game.load_current_load_order_state().unwrap();
+
+                assert!(game.is_plugin_active(BLANK_ESM));
+                assert!(!game.is_plugin_active(BLANK_ESP));
+
+                let paths = &[Path::new(BLANK_ESM), Path::new(BLANK_ESP)];
+                game.load_plugin_headers(paths).unwrap();
+
+                assert!(game.is_plugin_active(BLANK_ESM));
+                assert!(!game.is_plugin_active(BLANK_ESP));
+
+                game.load_plugins(paths).unwrap();
+
+                assert!(game.is_plugin_active(BLANK_ESM));
+                assert!(!game.is_plugin_active(BLANK_ESP));
+            }
+        }
+
+        #[test]
+        fn set_load_order_should_persist_the_given_load_order() {
+            let fixture = Fixture::new(GameType::TES4);
+
+            let mut game =
+                Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path)
+                    .unwrap();
+
+            game.load_current_load_order_state().unwrap();
+
+            let mut load_order: Vec<_> = game.load_order().iter().map(|s| s.to_string()).collect();
+            load_order.swap(7, 10);
+            let load_order: Vec<_> = load_order.iter().map(|s| s.as_str()).collect();
+
+            game.set_load_order(&load_order).unwrap();
+
+            let mut game =
+                Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path)
+                    .unwrap();
+
+            game.load_current_load_order_state().unwrap();
+
+            assert_eq!(load_order, game.load_order());
+        }
+
+        #[test]
+        fn should_support_loading_plugins_and_metadata_in_parallel() {
+            let fixture = Fixture::new(GameType::TES3);
+
+            let mut game =
+                Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path)
+                    .unwrap();
+
+            let masterlist_path = fixture.local_path.join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "bash_tags: [Relev]").unwrap();
+
+            std::thread::scope(|s| {
+                let database = game.database();
+                s.spawn(move || {
+                    if let Ok(mut database) = database.write() {
+                        database.load_masterlist(&masterlist_path).unwrap();
+                    }
+                });
+                s.spawn(|| {
+                    game.load_plugins(&[]).unwrap();
+                });
+            });
         }
     }
 
-    mod with_local_path {
+    mod game_cache {
         use super::*;
 
-        #[apply(all_game_types)]
-        fn should_succeed_if_given_valid_paths(game_type: GameType) {
-            let fixture = Fixture::new(game_type);
+        use crate::tests::{BLANK_ESM, source_plugins_path};
 
-            let game =
-                Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path);
+        mod insert_plugins {
 
-            assert!(game.is_ok());
+            use super::*;
+
+            #[test]
+            fn should_add_plugins_not_already_cached() {
+                let mut cache = GameCache::default();
+
+                cache.insert_plugins(vec![
+                    Plugin::new(
+                        GameType::TES4,
+                        &cache,
+                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        LoadScope::HeaderOnly,
+                    )
+                    .unwrap(),
+                ]);
+
+                assert_eq!(BLANK_ESM, cache.plugin(BLANK_ESM).unwrap().name());
+            }
+
+            #[test]
+            fn should_replace_plugins_that_are_already_cached() {
+                let mut cache = GameCache::default();
+
+                cache.insert_plugins(vec![
+                    Plugin::new(
+                        GameType::TES4,
+                        &cache,
+                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        LoadScope::HeaderOnly,
+                    )
+                    .unwrap(),
+                ]);
+
+                assert!(cache.plugin(BLANK_ESM).unwrap().crc().is_none());
+
+                cache.insert_plugins(vec![
+                    Plugin::new(
+                        GameType::TES4,
+                        &cache,
+                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        LoadScope::WholePlugin,
+                    )
+                    .unwrap(),
+                ]);
+
+                assert!(cache.plugin(BLANK_ESM).unwrap().crc().is_some());
+            }
+        }
+
+        mod plugin {
+            use super::*;
+
+            #[test]
+            fn should_be_case_insensitive() {
+                let mut cache = GameCache::default();
+
+                cache.insert_plugins(vec![
+                    Plugin::new(
+                        GameType::TES4,
+                        &cache,
+                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        LoadScope::HeaderOnly,
+                    )
+                    .unwrap(),
+                ]);
+
+                assert_eq!("Blank.esm", cache.plugin("blank.esm").unwrap().name());
+            }
+
+            #[test]
+            fn should_return_none_if_the_plugin_is_not_cached() {
+                let cache = GameCache::default();
+
+                assert!(cache.plugin(BLANK_ESM).is_none());
+            }
+        }
+
+        mod clear_plugins {
+            use super::*;
+
+            #[test]
+            fn should_clear_any_cached_plugins() {
+                let mut cache = GameCache::default();
+
+                cache.insert_plugins(vec![
+                    Plugin::new(
+                        GameType::TES4,
+                        &cache,
+                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        LoadScope::HeaderOnly,
+                    )
+                    .unwrap(),
+                ]);
+
+                assert!(!cache.plugins.is_empty());
+
+                cache.clear_plugins();
+
+                assert!(cache.plugins.is_empty());
+            }
         }
     }
 }

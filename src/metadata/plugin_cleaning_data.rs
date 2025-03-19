@@ -190,6 +190,108 @@ impl EmitYaml for PluginCleaningData {
 mod tests {
     use super::*;
 
+    mod try_from_yaml {
+        use crate::metadata::parse;
+
+        use super::*;
+
+        #[test]
+        fn should_error_if_given_a_scalar() {
+            let yaml = parse("0x12345678");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_given_a_list() {
+            let yaml = parse("[0, 1, 2]");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_crc_is_missing() {
+            let yaml = parse("{util: cleaner}");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_util_is_missing() {
+            let yaml = parse("{crc: 0x12345678}");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_set_all_given_fields() {
+            let yaml =
+                parse("{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: 30}");
+
+            let data = PluginCleaningData::try_from(&yaml).unwrap();
+
+            assert_eq!(0x12345678, data.crc());
+            assert_eq!("cleaner", data.cleaning_utility());
+            assert_eq!(&[MessageContent::new("info".into())], data.detail());
+            assert_eq!(2, data.itm_count());
+            assert_eq!(10, data.deleted_reference_count());
+            assert_eq!(30, data.deleted_navmesh_count());
+        }
+
+        #[test]
+        fn should_leave_optional_fields_at_defaults_if_not_present() {
+            let yaml = parse("{crc: 0x12345678, util: cleaner}");
+
+            let data = PluginCleaningData::try_from(&yaml).unwrap();
+
+            assert_eq!(0x12345678, data.crc());
+            assert_eq!("cleaner", data.cleaning_utility());
+            assert!(data.detail().is_empty());
+            assert_eq!(0, data.itm_count());
+            assert_eq!(0, data.deleted_reference_count());
+            assert_eq!(0, data.deleted_navmesh_count());
+        }
+
+        #[test]
+        fn should_read_all_listed_detail_message_contents() {
+            let yaml = parse(
+                "{crc: 0x12345678, util: cleaner, detail: [{text: english, lang: en}, {text: french, lang: fr}]}",
+            );
+
+            let data = PluginCleaningData::try_from(&yaml).unwrap();
+
+            assert_eq!(
+                &[
+                    MessageContent::new("english".into()),
+                    MessageContent::new("french".into()).with_language("fr".into())
+                ],
+                data.detail()
+            );
+        }
+
+        #[test]
+        fn should_not_error_if_one_detail_is_given_and_it_is_not_english() {
+            let yaml =
+                parse("crc: 0x12345678\nutil: cleaner\ndetail:\n  - lang: fr\n    text: content1");
+
+            let data = PluginCleaningData::try_from(&yaml).unwrap();
+
+            assert_eq!(
+                &[MessageContent::new("content1".into()).with_language("fr".into())],
+                data.detail()
+            );
+        }
+
+        #[test]
+        fn should_error_if_multiple_details_are_given_and_none_are_english() {
+            let yaml = parse(
+                "crc: 0x12345678\nutil: cleaner\ndetail:\n  - lang: de\n    text: content1\n  - lang: fr\n    text: content2",
+            );
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+        }
+    }
+
     mod emit_yaml {
         use crate::metadata::emit;
 

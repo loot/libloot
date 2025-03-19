@@ -453,14 +453,128 @@ mod tests {
         #[test]
         fn should_return_the_only_element_of_a_single_element_slice() {
             let slice = &[MessageContent::new("test".into()).with_language("de".into())];
-            let content = select_message_content(slice, "fr");
+            let content = select_message_content(slice, "fr").unwrap();
 
-            assert_eq!(&slice[0], content.unwrap());
+            assert_eq!(&slice[0], content);
+        }
+
+        #[test]
+        fn should_return_element_with_exactly_matching_locale_code() {
+            let slice = &[
+                MessageContent::new("test1".into()).with_language("en".into()),
+                MessageContent::new("test2".into()).with_language("de".into()),
+                MessageContent::new("test3".into()).with_language("pt".into()),
+                MessageContent::new("test4".into()).with_language("pt_PT".into()),
+                MessageContent::new("test5".into()).with_language("pt_BR".into()),
+            ];
+
+            let content = select_message_content(slice, "pt_BR").unwrap();
+
+            assert_eq!(&slice[4], content);
+        }
+
+        #[test]
+        fn should_return_element_with_matching_language_code_if_exactly_matching_local_code_is_not_present()
+         {
+            let slice = &[
+                MessageContent::new("test1".into()).with_language("en".into()),
+                MessageContent::new("test2".into()).with_language("de".into()),
+                MessageContent::new("test3".into()).with_language("pt".into()),
+                MessageContent::new("test4".into()).with_language("pt_PT".into()),
+            ];
+
+            let content = select_message_content(slice, "pt_BR").unwrap();
+
+            assert_eq!(&slice[2], content);
+        }
+
+        #[test]
+        fn should_return_element_with_en_language_code_if_no_matching_language_code_is_present() {
+            let slice = &[
+                MessageContent::new("test1".into()).with_language("en".into()),
+                MessageContent::new("test2".into()).with_language("de".into()),
+                MessageContent::new("test3".into()).with_language("pt_PT".into()),
+            ];
+
+            let content = select_message_content(slice, "pt_BR").unwrap();
+
+            assert_eq!(&slice[0], content);
+        }
+
+        #[test]
+        fn should_return_element_with_exactly_matching_language_code_if_language_code_is_given() {
+            let slice = &[
+                MessageContent::new("test1".into()).with_language("en".into()),
+                MessageContent::new("test2".into()).with_language("de".into()),
+                MessageContent::new("test3".into()).with_language("pt_BR".into()),
+                MessageContent::new("test4".into()).with_language("pt".into()),
+            ];
+
+            let content = select_message_content(slice, "pt").unwrap();
+
+            assert_eq!(&slice[3], content);
+        }
+
+        #[test]
+        fn should_return_first_element_with_matching_language_code_if_language_code_is_given_and_no_exact_match_is_present()
+         {
+            let slice = &[
+                MessageContent::new("test1".into()).with_language("en".into()),
+                MessageContent::new("test2".into()).with_language("de".into()),
+                MessageContent::new("test3".into()).with_language("pt_PT".into()),
+                MessageContent::new("test4".into()).with_language("pt_BR".into()),
+            ];
+
+            let content = select_message_content(slice, "pt").unwrap();
+
+            assert_eq!(&slice[2], content);
+        }
+
+        #[test]
+        fn should_return_none_if_there_is_no_match_and_no_english_text() {
+            let slice = &[
+                MessageContent::new("test2".into()).with_language("de".into()),
+                MessageContent::new("test3".into()).with_language("pt_PT".into()),
+                MessageContent::new("test4".into()).with_language("pt_BR".into()),
+            ];
+
+            assert!(select_message_content(slice, "fr").is_none());
         }
     }
 
     mod message_content {
         use super::*;
+
+        mod try_from_yaml {
+            use crate::metadata::parse;
+
+            use super::*;
+
+            #[test]
+            fn should_error_if_given_a_scalar() {
+                let yaml = parse("content");
+
+                assert!(MessageContent::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_error_if_given_a_list() {
+                let yaml = parse("[0, 1, 2]");
+
+                assert!(MessageContent::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_set_all_given_fields() {
+                let yaml = parse("{text: content, lang: fr}");
+
+                let content = MessageContent::try_from(&yaml).unwrap();
+
+                assert_eq!("content", content.text());
+                assert_eq!("fr", content.language());
+            }
+        }
+
         mod emit_yaml {
             use super::*;
 
@@ -479,6 +593,182 @@ mod tests {
 
     mod message {
         use super::*;
+
+        mod try_from_yaml {
+            use crate::metadata::parse;
+
+            use super::*;
+
+            #[test]
+            fn should_error_if_given_a_scalar() {
+                let yaml = parse("content");
+
+                assert!(Message::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_error_if_given_a_list() {
+                let yaml = parse("[0, 1, 2]");
+
+                assert!(Message::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_error_if_content_is_missing() {
+                let yaml = parse("{type: say}");
+
+                assert!(Message::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_error_if_given_an_invalid_condition() {
+                let yaml = parse("{type: say, content: text, condition: invalid}");
+
+                assert!(Message::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_set_all_given_fields() {
+                let yaml = parse("{type: say, content: text, condition: 'file(\"Foo.esp\")'}");
+
+                let message = Message::try_from(&yaml).unwrap();
+
+                assert_eq!(MessageType::Say, message.message_type());
+                assert_eq!(&[MessageContent::new("text".into())], message.content());
+                assert_eq!("file(\"Foo.esp\")", message.condition().unwrap());
+            }
+
+            #[test]
+            fn should_leave_optional_fields_empty_if_not_present() {
+                let yaml = parse("{type: say, content: text}");
+
+                let message = Message::try_from(&yaml).unwrap();
+
+                assert_eq!(MessageType::Say, message.message_type());
+                assert_eq!(&[MessageContent::new("text".into())], message.content());
+                assert!(message.condition().is_none());
+            }
+
+            #[test]
+            fn should_set_say_warn_and_error_message_types() {
+                let yaml = parse("{type: say, content: text}");
+
+                let message = Message::try_from(&yaml).unwrap();
+                assert_eq!(MessageType::Say, message.message_type());
+
+                let yaml = parse("{type: warn, content: text}");
+
+                let message = Message::try_from(&yaml).unwrap();
+                assert_eq!(MessageType::Warn, message.message_type());
+
+                let yaml = parse("{type: error, content: text}");
+
+                let message = Message::try_from(&yaml).unwrap();
+                assert_eq!(MessageType::Error, message.message_type());
+            }
+
+            #[test]
+            fn should_use_say_if_message_type_is_unrecognised() {
+                let yaml = parse("{type: info, content: text}");
+
+                let message = Message::try_from(&yaml).unwrap();
+                assert_eq!(MessageType::Say, message.message_type());
+            }
+
+            #[test]
+            fn should_read_all_listed_message_contents() {
+                let yaml = parse(
+                    "{type: say, content: [{text: english, lang: en}, {text: french, lang: fr}]}",
+                );
+
+                let message = Message::try_from(&yaml).unwrap();
+
+                assert_eq!(
+                    &[
+                        MessageContent::new("english".into()),
+                        MessageContent::new("french".into()).with_language("fr".into())
+                    ],
+                    message.content()
+                );
+            }
+
+            #[test]
+            fn should_not_error_if_one_content_object_is_given_and_it_is_not_english() {
+                let yaml = parse("type: say\ncontent:\n  - lang: fr\n    text: content1");
+
+                let message = Message::try_from(&yaml).unwrap();
+
+                assert_eq!(
+                    &[MessageContent::new("content1".into()).with_language("fr".into())],
+                    message.content()
+                );
+            }
+
+            #[test]
+            fn should_error_if_multiple_contents_are_given_and_none_are_english() {
+                let yaml = parse(
+                    "type: say\ncontent:\n  - lang: de\n    text: content1\n  - lang: fr\n    text: content2",
+                );
+
+                assert!(Message::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_apply_substitutions_when_there_is_only_one_content_string() {
+                let yaml = parse("type: say\ncontent: con{0}tent1\nsubs:\n  - sub1");
+
+                let message = Message::try_from(&yaml).unwrap();
+
+                assert_eq!("consub1tent1", message.content()[0].text());
+            }
+
+            #[test]
+            fn should_apply_substitutions_to_all_content_strings() {
+                let yaml = parse(
+                    "type: say\ncontent:\n  - lang: en\n    text: content1 {0}\n  - lang: fr\n    text: content2 {0}\nsubs:\n  - sub",
+                );
+
+                let message = Message::try_from(&yaml).unwrap();
+
+                assert_eq!("content1 sub", message.content()[0].text());
+                assert_eq!("content2 sub", message.content()[1].text());
+            }
+
+            #[test]
+            fn should_error_if_the_message_has_more_substitutions_than_expected() {
+                let yaml = parse("{type: say, content: 'content1', subs: [sub1]}");
+
+                assert!(Message::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_error_if_the_content_string_expects_more_substitutions_than_exist() {
+                let yaml = parse("{type: say, content: '{0} {1}', subs: [sub1]}");
+
+                assert!(Message::try_from(&yaml).is_err());
+            }
+
+            #[test]
+            fn should_ignore_substution_syntax_if_no_substitutions_exist() {
+                let yaml = parse("{type: say, content: 'content {0}'}");
+
+                let message = Message::try_from(&yaml).unwrap();
+
+                assert_eq!("content {0}", message.content()[0].text());
+            }
+
+            #[test]
+            fn should_accept_percentage_placeholder_syntax() {
+                let yaml = parse(
+                    "{type: say, content: 'content %1% %2% %3% %4% %5% %6% %7% %8% %9% %10% %11%', subs: [a, b, c, d, e, f, g, h, i, j, k]}",
+                );
+
+                let message = Message::try_from(&yaml).unwrap();
+
+                assert_eq!("content a b c d e f g h i j k", message.content()[0].text());
+            }
+        }
+
         mod emit_yaml {
             use super::*;
 
