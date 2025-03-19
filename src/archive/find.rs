@@ -122,6 +122,10 @@ fn find_associated_archives_with_arbitrary_suffixes(
 
 #[cfg(windows)]
 fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
+    if lhs == rhs {
+        return true;
+    }
+
     // See <https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499->
     // Or windows::Win32::Foundation::ERROR_SHARING_VIOLATION in the "windows" crate.
     const ERROR_SHARING_VIOLATION: i32 = 32;
@@ -133,8 +137,7 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
     };
 
     let result = match OpenOptions::new().read(true).share_mode(0).open(rhs) {
-        Ok(f) => {
-            dbg!(f);
+        Ok(_) => {
             false
         }
         Err(e) => {
@@ -153,6 +156,10 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
 
 #[cfg(not(windows))]
 fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
+    if lhs == rhs {
+        return true;
+    }
+
     use std::fs::unix::fs::MetadataExt;
 
     let lhs_metadata = match lhs.metadata() {
