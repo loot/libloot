@@ -1,7 +1,7 @@
 use fancy_regex::Regex;
 use saphyr::MarkedYaml;
 
-use crate::{logging, regex};
+use crate::logging;
 
 use super::{
     error::{MetadataParsingErrorReason, ParseMetadataError, RegexError},
@@ -227,7 +227,7 @@ impl PluginName {
         let name = trim_dot_ghost(name).to_string();
 
         if is_regex_name(&name) {
-            let regex = regex(&format!("^{}$", &name))?;
+            let regex = Regex::new(&format!("(?i)^{}$", &name))?;
             Ok(Self {
                 string: name,
                 regex: Some(regex),

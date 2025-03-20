@@ -18,7 +18,6 @@ use crate::{
     game::GameCache,
     logging,
     metadata::plugin_metadata::trim_dot_ghost,
-    regex,
 };
 use error::{
     InvalidFilenameReason, LoadPluginError, PluginDataError, PluginValidationError,
@@ -26,26 +25,30 @@ use error::{
 };
 
 static VERSION_REGEXES: LazyLock<Box<[Regex]>> = LazyLock::new(|| {
-    /* The string below matches the range of version strings supported by
-    Pseudosem v1.0.1, excluding space separators, as they make version
-    extraction from inside sentences very tricky and have not been
-    seen "in the wild". */
+    // The string below matches the range of version strings supported by
+    // Pseudosem v1.0.1, excluding space separators, as they make version
+    // extraction from inside sentences very tricky and have not been seen "in
+    // the wild". The second non-capturing group prevents version numbers
+    // followed by a comma from matching.
     let pseudosem_regex_str = r"(\d+(?:\.\d+)+(?:[-._:]?[A-Za-z0-9]+)*)(?!,)";
 
+    /* There are a few different version formats that can appear in strings
+    together, and in order to extract the correct one, they must be searched
+    for in order of priority. */
     Box::new([
         /* The string below matches timestamps that use forwardslashes for date
         separators. However, Pseudosem v1.0.1 will only compare the first
         two digits as it does not recognise forwardslashes as separators. */
-        regex(r"(\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2})")
+        Regex::new(r"(?i)(\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2})")
             .expect("Hardcoded version timestamp regex should be valid"),
-        regex(&(String::from(r"version:?\s") + pseudosem_regex_str))
+        Regex::new(&format!(r"(?i)version:?\s{}", pseudosem_regex_str))
             .expect("Hardcoded version-prefixed pseudosem version regex should be valid"),
-        regex(&(String::from(r"(?:^|v|\s)") + pseudosem_regex_str))
+        Regex::new(&format!(r"(?i)(?:^|v|\s){}", pseudosem_regex_str))
             .expect("Hardcoded pseudosem version regex should be valid"),
         /* The string below matches a number containing one or more
         digits found at the start of the search string or preceded by
         'v' or 'version:. */
-        regex(r"(?:^|v|version:\s*)(\d+)")
+        Regex::new(r"(?i)(?:^|v|version:\s*)(\d+)")
             .expect("Hardcoded prefixed version number regex should be valid"),
     ])
 });
