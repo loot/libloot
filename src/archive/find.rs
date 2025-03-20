@@ -1,7 +1,4 @@
-use std::{
-    fs::OpenOptions,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use crate::{GameType, game::GameCache, plugin::has_ascii_extension};
 
@@ -136,32 +133,39 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
         return true;
     }
 
-    // See <https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499->
-    // Or windows::Win32::Foundation::ERROR_SHARING_VIOLATION in the "windows" crate.
-    const ERROR_SHARING_VIOLATION: i32 = 32;
-    use std::os::windows::fs::OpenOptionsExt;
+    use std::fs::File;
+    use std::os::windows::io::AsRawHandle;
+    use windows::Win32::{
+        Foundation::HANDLE,
+        Storage::FileSystem::{BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle},
+    };
 
-    let lhs_file = match OpenOptions::new().read(true).share_mode(0).open(lhs) {
+    let lhs_file = match File::open(lhs) {
         Ok(f) => f,
         Err(_) => return false,
     };
 
-    let result = match OpenOptions::new().read(true).share_mode(0).open(rhs) {
-        Ok(_) => {
-            false
-        }
-        Err(e) => {
-            if let Some(error_code) = e.raw_os_error() {
-                error_code == ERROR_SHARING_VIOLATION
-            } else {
-                false
-            }
-        }
+    let rhs_file = match File::open(rhs) {
+        Ok(f) => f,
+        Err(_) => return false,
     };
 
-    drop(lhs_file);
+    let mut lhs_info = BY_HANDLE_FILE_INFORMATION::default();
+    let mut rhs_info = BY_HANDLE_FILE_INFORMATION::default();
+    // SAFETY: This is safe because the file handles and the info struct pointers are all valid until this function exits.
+    unsafe {
+        if GetFileInformationByHandle(HANDLE(lhs_file.as_raw_handle()), &mut lhs_info).is_err() {
+            return false;
+        }
 
-    result
+        if GetFileInformationByHandle(HANDLE(rhs_file.as_raw_handle()), &mut rhs_info).is_err() {
+            return false;
+        }
+    }
+
+    lhs_info.dwVolumeSerialNumber == rhs_info.dwVolumeSerialNumber
+        && lhs_info.nFileIndexHigh == rhs_info.nFileIndexHigh
+        && lhs_info.nFileIndexLow == rhs_info.nFileIndexLow
 }
 
 #[cfg(not(windows))]
