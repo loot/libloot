@@ -85,7 +85,7 @@ impl Plugin {
         plugin_path: &Path,
         load_scope: LoadScope,
     ) -> Result<Self, LoadPluginError> {
-        let name = name_string(plugin_path)?;
+        let name = name_string(game_type, plugin_path)?;
 
         let (parse_options, crc) = if load_scope == LoadScope::HeaderOnly {
             (ParseOptions::header_only(), None)
@@ -410,9 +410,10 @@ pub(crate) fn plugins_metadata(
     Ok(esplugin::plugins_metadata(&esplugins)?)
 }
 
-fn name_string(path: &Path) -> Result<String, LoadPluginError> {
+fn name_string(game_type: GameType, path: &Path) -> Result<String, LoadPluginError> {
     match path.file_name() {
         Some(f) => match f.to_str() {
+            Some(f) if game_type == GameType::OpenMW => Ok(f.to_string()),
             Some(f) => Ok(trim_dot_ghost(f).to_string()),
             None => Err(LoadPluginError::InvalidFilename(
                 InvalidFilenameReason::NonUnicode,

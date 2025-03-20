@@ -29,9 +29,9 @@ pub fn find_associated_archives(
         // basename.
         GameType::TES4 => {
             if has_ascii_extension(plugin_path, "esp") {
-                Vec::new()
-            } else {
                 find_associated_archives_with_arbitrary_suffixes(plugin_path, game_cache)
+            } else {
+                Vec::new()
             }
         },
 
@@ -92,6 +92,10 @@ fn find_associated_archives_with_arbitrary_suffixes(
         Some(s) => s.len(),
         None => return Vec::new(),
     };
+    let plugin_extension = match plugin_path.extension() {
+        Some(e) => e,
+        None => return Vec::new(),
+    };
 
     game_cache
         .archives()
@@ -106,13 +110,19 @@ fn find_associated_archives_with_arbitrary_suffixes(
             };
 
             // Can't just slice the archive filename to the same length as the plugin file stem directly because that might not slice on a character boundary, so truncate the byte slice and then check it's still valid UTF-8.
+            if archive_filename.len() < plugin_stem_len {
+                return false;
+            }
+
             let filename =
                 match std::str::from_utf8(&archive_filename.as_bytes()[..plugin_stem_len]) {
                     Ok(f) => f,
                     Err(_) => return false,
                 };
 
-            let archive_plugin_path = plugin_path.with_file_name(filename);
+            let archive_plugin_path = plugin_path
+                .with_file_name(filename)
+                .with_extension(plugin_extension);
 
             are_file_paths_equivalent(&archive_plugin_path, plugin_path)
         })
