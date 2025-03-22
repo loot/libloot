@@ -12,3 +12,4 @@ crate-type = ["cdylib"]
 libloot = { path = ".." }
 libloot-ffi-errors = { path = "../ffi-errors" }
 pyo3 = "0.24.0"
+pyo3-log = "0.12.2"

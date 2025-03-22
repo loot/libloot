@@ -35,6 +35,8 @@ create_exception!(loot, EspluginError, PyException);
 /// A Python module implemented in Rust.
 #[pymodule(name = "loot")]
 fn libloot_pyo3(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    pyo3_log::init();
+
     m.add("LIBLOOT_VERSION_MAJOR", libloot::LIBLOOT_VERSION_MAJOR)?;
     m.add("LIBLOOT_VERSION_MINOR", libloot::LIBLOOT_VERSION_MINOR)?;
     m.add("LIBLOOT_VERSION_PATCH", libloot::LIBLOOT_VERSION_PATCH)?;
