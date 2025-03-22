@@ -691,11 +691,14 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
             .map_err(|e| SortingError::CycleInvolving(self[e.node_id()].name().to_string()))
     }
 
-    fn is_hamiltonian_path(&mut self, path: &[NodeIndex]) -> Option<(NodeIndex, NodeIndex)> {
+    /// Returns the first pair of consecutive nodes that don't have an edge joining them.
+    fn check_path_is_hamiltonian(&mut self, path: &[NodeIndex]) -> Option<(NodeIndex, NodeIndex)> {
+        use std::ops::Not;
+
         logging::trace!("Checking uniqueness of path through plugin graph...");
 
         path.windows(2).find_map(|slice| match slice {
-            [a, b] => self.inner.contains_edge(*a, *b).then_some((*a, *b)),
+            [a, b] => self.inner.contains_edge(*a, *b).not().then_some((*a, *b)),
             _ => None,
         })
     }
@@ -848,7 +851,7 @@ fn sort_plugins_partition<T: SortingPlugin>(
 
     let sorted_nodes = graph.topological_sort()?;
 
-    if let Some((first, second)) = graph.is_hamiltonian_path(&sorted_nodes) {
+    if let Some((first, second)) = graph.check_path_is_hamiltonian(&sorted_nodes) {
         logging::error!(
             "The path is not unique. No edge exists between {} and {}",
             graph[first].name(),
