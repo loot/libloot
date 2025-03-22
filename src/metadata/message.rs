@@ -1,4 +1,9 @@
+use std::{borrow::Cow, sync::LazyLock};
+
+use fancy_regex::{Captures, Regex};
 use saphyr::{MarkedYaml, YamlData};
+
+use crate::logging;
 
 use super::{
     error::{
@@ -308,9 +313,39 @@ impl TryFrom<&MarkedYaml> for Message {
         let subs = get_strings_vec_value(hash, "subs", YamlObjectType::Message)?;
 
         if !subs.is_empty() {
+            static FMT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+                Regex::new(r"{(\d+)}").expect("hardcoded fmt placeholder regex should be valid")
+            });
+
             for mc in &mut content {
+                if mc.text.contains("%1%") {
+                    static BOOST_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+                        Regex::new(r"%(\d+)%")
+                            .expect("hardcoded Boost placeholder regex should be valid")
+                    });
+
+                    let result = BOOST_REGEX.replace_all(&mc.text, |captures: &Captures| {
+                        match captures[1].parse::<u32>() {
+                            Ok(i) if i > 0 => format!("{{{}}}", i - 1),
+                            Ok(_) => {
+                                logging::warn!("Found zero-indexed placeholder using Boost syntax in string \"{}\"", mc.text);
+                                captures[0].to_string()
+                            },
+                            Err(e) => {
+                                logging::error!("Unexpected failure to parse Boost placeholder index \"{}\": {}", &captures[1], e);
+                                captures[0].to_string()
+                            }
+                        }
+                    });
+
+                    if let Cow::Owned(text) = result {
+                        mc.text = text;
+                    }
+                }
+
                 for (index, sub) in subs.iter().enumerate() {
                     let placeholder = format!("{{{}}}", index);
+
                     if !mc.text.contains(&placeholder) {
                         return Err(ParseMetadataError::new(
                             value.span.start,
@@ -319,6 +354,13 @@ impl TryFrom<&MarkedYaml> for Message {
                     }
 
                     mc.text = mc.text.replace(&placeholder, sub);
+                }
+
+                if let Ok(Some(m)) = FMT_REGEX.find(&mc.text) {
+                    return Err(ParseMetadataError::new(
+                        value.span.start,
+                        MetadataParsingErrorReason::MissingSubstitution(m.as_str().to_string()),
+                    ));
                 }
             }
         }

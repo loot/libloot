@@ -260,43 +260,29 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
             return;
         }
 
-        let mut early_loading_plugin_indices: HashMap<&str, NodeIndex> = HashMap::new();
+        let mut early_loader_indices = Vec::new();
         let mut other_plugin_indices = Vec::new();
         for node_index in self.node_indices() {
             let plugin = &self[node_index];
-            if let Some(p) = early_loading_plugins
+            if let Some(i) = early_loading_plugins
                 .iter()
-                .find(|e| unicase::eq(e.as_str(), plugin.name()))
+                .position(|e| unicase::eq(e.as_str(), plugin.name()))
             {
-                early_loading_plugin_indices.insert(p.as_str(), node_index);
+                early_loader_indices.push((i, node_index));
             } else {
                 other_plugin_indices.push(node_index);
             }
         }
 
-        if early_loading_plugin_indices.is_empty() {
-            return;
-        }
+        early_loader_indices.sort_by_key(|e| e.0);
 
-        let mut last_early_loading_plugin_index = None;
-        for window in early_loading_plugins.windows(2) {
-            if let [from, to] = window {
-                let from_index = early_loading_plugin_indices.get(from.as_str());
-                let to_index = early_loading_plugin_indices.get(to.as_str());
-
-                if to_index.is_some() {
-                    last_early_loading_plugin_index = to_index;
-                } else if from_index.is_some() {
-                    last_early_loading_plugin_index = from_index;
-                }
-
-                if let (Some(from_index), Some(to_index)) = (from_index, to_index) {
-                    self.add_edge(*from_index, *to_index, EdgeType::Hardcoded);
-                }
+        for window in early_loader_indices.windows(2) {
+            if let [(_, from_index), (_, to_index)] = window {
+                self.add_edge(*from_index, *to_index, EdgeType::Hardcoded);
             }
         }
 
-        if let Some(from_index) = last_early_loading_plugin_index {
+        if let Some((_, from_index)) = early_loader_indices.last() {
             for to_index in other_plugin_indices {
                 self.add_edge(*from_index, to_index, EdgeType::Hardcoded);
             }

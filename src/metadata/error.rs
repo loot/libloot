@@ -129,6 +129,7 @@ pub(super) enum MetadataParsingErrorReason {
     UnexpectedType(ExpectedType, YamlObjectType),
     UnexpectedValueType(&'static str, ExpectedType, YamlObjectType),
     MissingPlaceholder(String, usize),
+    MissingSubstitution(String),
     NonU32Number(i64),
     DuplicateEntry(String, YamlObjectType),
     Other(Box<saphyr::ScanError>),
@@ -163,6 +164,11 @@ impl std::fmt::Display for MetadataParsingErrorReason {
                 f,
                 "failed to substitute \"{}\" into message, no placeholder {{{}}} was found",
                 sub, placeholder_index
+            ),
+            Self::MissingSubstitution(placeholder) => write!(
+                f,
+                "failed to substitute a value into message, no substitution was given for the placeholder \"{}\"",
+                placeholder
             ),
             Self::NonU32Number(i) => {
                 write!(f, "{} is not valid as a 32-bit unsigned integer", i)
