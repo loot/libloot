@@ -109,7 +109,7 @@ pub fn depth_first_search<'a, N>(
     start_node_index: NodeIndex,
     visitor: &mut impl DfsVisitor<'a>,
 ) {
-    let mut stack = vec![(start_node_index, graph.edges(start_node_index))];
+    let mut stack = vec![(start_node_index, edges(graph, start_node_index))];
 
     colour_map.insert(start_node_index, Colour::Grey);
     visitor.discover_node(start_node_index);
@@ -125,7 +125,7 @@ pub fn depth_first_search<'a, N>(
                     colour_map.insert(target, Colour::Grey);
                     visitor.discover_node(target);
 
-                    stack.push((target, graph.edges(target)));
+                    stack.push((target, edges(graph, target)));
                 }
                 Colour::Grey => visitor.visit_back_edge(edge),
                 Colour::Black => visitor.visit_forward_or_cross_edge(edge),
@@ -137,6 +137,20 @@ pub fn depth_first_search<'a, N>(
             stack.pop();
         }
     }
+}
+
+fn edges<N>(
+    graph: &Graph<N, EdgeType>,
+    node_index: NodeIndex,
+) -> impl Iterator<Item = EdgeReference<'_, EdgeType>> {
+    // Petgraph produces edges in the reverse of the order that neighbouring
+    // nodes were added to the graph, but for backwards compatibility we want
+    // the opposite order.
+    // Unfortunately Petgraph's Edges iterator doesn't impl DoubleEndedIterator
+    // (though it probably could), so this needs to buffer the edges.
+    let mut edges: Vec<_> = graph.edges(node_index).collect();
+    edges.reverse();
+    edges.into_iter()
 }
 
 #[derive(Clone, Debug)]
