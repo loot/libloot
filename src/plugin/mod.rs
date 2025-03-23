@@ -415,9 +415,9 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<fancy_regex:
         // The string below matches the range of version strings supported by
         // Pseudosem v1.0.1, excluding space separators, as they make version
         // extraction from inside sentences very tricky and have not been seen "in
-        // the wild". The second non-capturing group prevents version numbers
+        // the wild". The last non-capturing group prevents version numbers
         // followed by a comma from matching.
-        let pseudosem_regex_str = r"(\d+(?:\.\d+)+(?:[-._:]?[A-Za-z0-9]+)*)(?!,)";
+        let pseudosem_regex_str = r"(\d+(?:\.\d+)+(?:[-._:]?[A-Za-z0-9]+)*)(?:[^,]|$)";
 
         /* There are a few different version formats that can appear in strings
         together, and in order to extract the correct one, they must be searched

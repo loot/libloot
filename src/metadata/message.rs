@@ -326,7 +326,7 @@ impl TryFrom<&MarkedYaml> for Message {
 
         if !subs.is_empty() {
             static FMT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-                Regex::new(r"{(\d+)}").expect("hardcoded fmt placeholder regex should be valid")
+                Regex::new(r"\{(\d+)\}").expect("hardcoded fmt placeholder regex should be valid")
             });
 
             for mc in &mut content {
