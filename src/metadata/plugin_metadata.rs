@@ -1,4 +1,6 @@
-use fancy_regex::Regex;
+use std::sync::LazyLock;
+
+use fancy_regex::{Captures, Regex};
 use saphyr::MarkedYaml;
 
 use crate::logging;
@@ -227,7 +229,23 @@ impl PluginName {
         let name = trim_dot_ghost(name).to_string();
 
         if is_regex_name(&name) {
-            let regex = Regex::new(&format!("(?i)^{}$", &name))?;
+            // Many regexes are written with capturing groups as that's the
+            // simplest way to write them, but in plugin metadata they could all
+            // be non-capturing groups.
+            // Over the Skyrim SE masterlist, using non-capturing groups saves
+            // about 15 MB of memory at runtime, which is ~ 25% of the memory
+            // used by the regex matching caches.
+            static CAPTURING_GROUP_START_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+                Regex::new(r"(^|[^\\])\(([^?])")
+                    .expect("capturing group start regex should be valid")
+            });
+
+            let regex_name = CAPTURING_GROUP_START_REGEX
+                .replace_all(&name, |captures: &Captures| {
+                    format!("{}(?:{}", &captures[1], &captures[2])
+                });
+
+            let regex = Regex::new(&format!("(?i)^{}$", &regex_name))?;
             Ok(Self {
                 string: name,
                 regex: Some(regex),
