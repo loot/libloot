@@ -31,6 +31,17 @@ impl<T: ?Sized> OptionalRef<T> {
     pub fn is_some(&self) -> bool {
         !self.0.is_null()
     }
+
+    /// # Safety
+    ///
+    /// This is safe as long as the pointer in the OptionalRef is still valid.
+    pub unsafe fn as_ref(&self) -> Result<&T, EmptyOptionalError> {
+        if self.0.is_null() {
+            Err(EmptyOptionalError)
+        } else {
+            unsafe { Ok(&*self.0) }
+        }
+    }
 }
 
 impl<T> From<Option<&T>> for OptionalRef<T> {

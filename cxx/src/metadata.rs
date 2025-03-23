@@ -1,9 +1,45 @@
 use delegate::delegate;
 
 use crate::{
-    EmptyOptionalError, Optional, OptionalRef, UnsupportedEnumValueError, VerboseError,
+    Optional, OptionalRef, UnsupportedEnumValueError, VerboseError,
     ffi::{MessageType, TagSuggestion},
 };
+
+/// # Safety
+///
+/// Only implement this on structs that are #[repr(transparent)] and that have a
+/// single field.
+unsafe trait TransparentWrapper {
+    type Wrapped;
+
+    fn wrap_ref(value: &Self::Wrapped) -> &Self
+    where
+        Self: Sized,
+    {
+        let v = value as *const Self::Wrapped;
+        // SAFETY: Reinterpreting the pointer of a transparent wrapper to the type it wraps is safe.
+        unsafe {
+            let v = v as *const Self;
+            &*v
+        }
+    }
+
+    fn wrap_slice(slice: &[Self::Wrapped]) -> &[Self]
+    where
+        Self: Sized,
+    {
+        // SAFETY: This is safe because a transparent wrapper is the same in memory as the type it wraps.
+        unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
+    }
+
+    fn unwrap_slice(slice: &[Self]) -> &[Self::Wrapped]
+    where
+        Self: Sized,
+    {
+        // SAFETY: This is safe because a transparent wrapper is the same in memory as the type it wraps.
+        unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
+    }
+}
 
 impl From<libloot::metadata::MessageType> for MessageType {
     fn from(value: libloot::metadata::MessageType) -> Self {
@@ -56,6 +92,11 @@ impl MessageContent {
     }
 }
 
+// SAFETY: MessageContent has #[repr(transparent)]
+unsafe impl TransparentWrapper for MessageContent {
+    type Wrapped = libloot::metadata::MessageContent;
+}
+
 impl From<MessageContent> for libloot::metadata::MessageContent {
     fn from(value: MessageContent) -> Self {
         value.0
@@ -68,48 +109,16 @@ impl From<Box<MessageContent>> for libloot::metadata::MessageContent {
     }
 }
 
-fn wrap_message_content_ref(unwrapped: &libloot::metadata::MessageContent) -> &MessageContent {
-    let v = unwrapped as *const libloot::metadata::MessageContent;
-    // SAFETY: MessageContent is a transparent wrapper, so reinterpreting the pointer is safe.
-    unsafe {
-        let v = v as *const MessageContent;
-        &*v
-    }
-}
-
-fn wrap_message_contents(slice: &[libloot::metadata::MessageContent]) -> &[MessageContent] {
-    // SAFETY: This is safe because MessageContent is a transparent wrapper around the libloot type.
-    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
-}
-
-fn unwrap_message_contents(slice: &[MessageContent]) -> &[libloot::metadata::MessageContent] {
-    // SAFETY: This is safe because MessageContent is a transparent wrapper around the libloot type.
-    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
-}
-
 pub type OptionalMessageContentRef = OptionalRef<MessageContent>;
-
-impl OptionalRef<MessageContent> {
-    /// # Safety
-    ///
-    /// This is safe as long as the pointer in the OptionalRef is still valid.
-    pub unsafe fn as_ref(&self) -> Result<&MessageContent, EmptyOptionalError> {
-        if self.0.is_null() {
-            Err(EmptyOptionalError)
-        } else {
-            unsafe { Ok(&*self.0) }
-        }
-    }
-}
 
 pub fn select_message_content(
     contents: &[MessageContent],
     language: &str,
 ) -> Box<OptionalMessageContentRef> {
     let option =
-        libloot::metadata::select_message_content(unwrap_message_contents(contents), language);
+        libloot::metadata::select_message_content(MessageContent::unwrap_slice(contents), language);
 
-    Box::new(option.map(wrap_message_content_ref).into())
+    Box::new(option.map(MessageContent::wrap_ref).into())
 }
 
 #[derive(Clone, Debug)]
@@ -143,7 +152,7 @@ impl Message {
     }
 
     pub fn content(&self) -> &[MessageContent] {
-        wrap_message_contents(self.0.content())
+        MessageContent::wrap_slice(self.0.content())
     }
 
     pub fn boxed_clone(&self) -> Box<Self> {
@@ -160,6 +169,11 @@ impl Message {
     }
 }
 
+// SAFETY: Message has #[repr(transparent)]
+unsafe impl TransparentWrapper for Message {
+    type Wrapped = libloot::metadata::Message;
+}
+
 impl From<libloot::metadata::Message> for Message {
     fn from(value: libloot::metadata::Message) -> Self {
         Self(value)
@@ -170,11 +184,6 @@ impl From<Box<Message>> for libloot::metadata::Message {
     fn from(value: Box<Message>) -> Self {
         value.0
     }
-}
-
-fn wrap_messages(slice: &[libloot::metadata::Message]) -> &[Message] {
-    // SAFETY: This is safe because Message is a transparent wrapper around the libloot type.
-    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
 }
 
 #[derive(Clone, Debug)]
@@ -251,35 +260,35 @@ impl PluginMetadata {
     }
 
     pub fn load_after_files(&self) -> &[File] {
-        wrap_files(self.0.load_after_files())
+        File::wrap_slice(self.0.load_after_files())
     }
 
     pub fn requirements(&self) -> &[File] {
-        wrap_files(self.0.requirements())
+        File::wrap_slice(self.0.requirements())
     }
 
     pub fn incompatibilities(&self) -> &[File] {
-        wrap_files(self.0.incompatibilities())
+        File::wrap_slice(self.0.incompatibilities())
     }
 
     pub fn messages(&self) -> &[Message] {
-        wrap_messages(self.0.messages())
+        Message::wrap_slice(self.0.messages())
     }
 
     pub fn tags(&self) -> &[Tag] {
-        wrap_tags(self.0.tags())
+        Tag::wrap_slice(self.0.tags())
     }
 
     pub fn dirty_info(&self) -> &[PluginCleaningData] {
-        wrap_cleaning_data(self.0.dirty_info())
+        PluginCleaningData::wrap_slice(self.0.dirty_info())
     }
 
     pub fn clean_info(&self) -> &[PluginCleaningData] {
-        wrap_cleaning_data(self.0.clean_info())
+        PluginCleaningData::wrap_slice(self.0.clean_info())
     }
 
     pub fn locations(&self) -> &[Location] {
-        wrap_locations(self.0.locations())
+        Location::wrap_slice(self.0.locations())
     }
 
     pub fn set_load_after_files(&mut self, files: &[Box<File>]) {
@@ -371,12 +380,7 @@ pub fn new_file(name: String) -> Box<File> {
 
 impl File {
     pub fn filename(&self) -> &Filename {
-        let f = self.0.name() as *const libloot::metadata::Filename;
-        // SAFETY: Filename is a transparent wrapper, so reinterpreting the pointer is safe.
-        unsafe {
-            let f = f as *const Filename;
-            &*f
-        }
+        Filename::wrap_ref(self.0.name())
     }
 
     pub fn display_name(&self) -> &str {
@@ -388,7 +392,7 @@ impl File {
     }
 
     pub fn detail(&self) -> &[MessageContent] {
-        wrap_message_contents(self.0.detail())
+        MessageContent::wrap_slice(self.0.detail())
     }
 
     pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<(), VerboseError> {
@@ -409,15 +413,15 @@ impl File {
     }
 }
 
+// SAFETY: File has #[repr(transparent)]
+unsafe impl TransparentWrapper for File {
+    type Wrapped = libloot::metadata::File;
+}
+
 impl From<Box<File>> for libloot::metadata::File {
     fn from(value: Box<File>) -> Self {
         value.0
     }
-}
-
-fn wrap_files(slice: &[libloot::metadata::File]) -> &[File] {
-    // SAFETY: This is safe because File is a transparent wrapper around the libloot type.
-    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
 }
 
 #[derive(Clone, Debug)]
@@ -438,6 +442,11 @@ impl Filename {
             pub fn as_str(&self) -> &str;
         }
     }
+}
+
+// SAFETY: Filename has #[repr(transparent)]
+unsafe impl TransparentWrapper for Filename {
+    type Wrapped = libloot::metadata::Filename;
 }
 
 #[derive(Clone, Debug)]
@@ -471,15 +480,15 @@ impl Tag {
     }
 }
 
+// SAFETY: Tag has #[repr(transparent)]
+unsafe impl TransparentWrapper for Tag {
+    type Wrapped = libloot::metadata::Tag;
+}
+
 impl From<Box<Tag>> for libloot::metadata::Tag {
     fn from(value: Box<Tag>) -> Self {
         value.0
     }
-}
-
-fn wrap_tags(slice: &[libloot::metadata::Tag]) -> &[Tag] {
-    // SAFETY: This is safe because Tag is a transparent wrapper around the libloot type.
-    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
 }
 
 impl TryFrom<TagSuggestion> for libloot::metadata::TagSuggestion {
@@ -506,7 +515,7 @@ pub fn new_plugin_cleaning_data(crc: u32, cleaning_utility: String) -> Box<Plugi
 
 impl PluginCleaningData {
     pub fn detail(&self) -> &[MessageContent] {
-        wrap_message_contents(self.0.detail())
+        MessageContent::wrap_slice(self.0.detail())
     }
 
     pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<(), VerboseError> {
@@ -539,15 +548,15 @@ impl PluginCleaningData {
     }
 }
 
+// SAFETY: PluginCleaningData has #[repr(transparent)]
+unsafe impl TransparentWrapper for PluginCleaningData {
+    type Wrapped = libloot::metadata::PluginCleaningData;
+}
+
 impl From<Box<PluginCleaningData>> for libloot::metadata::PluginCleaningData {
     fn from(value: Box<PluginCleaningData>) -> Self {
         value.0
     }
-}
-
-fn wrap_cleaning_data(slice: &[libloot::metadata::PluginCleaningData]) -> &[PluginCleaningData] {
-    // SAFETY: This is safe because PluginCleaningData is a transparent wrapper around the libloot type.
-    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
 }
 
 #[derive(Clone, Debug)]
@@ -576,15 +585,15 @@ impl Location {
     }
 }
 
+// SAFETY: Location has #[repr(transparent)]
+unsafe impl TransparentWrapper for Location {
+    type Wrapped = libloot::metadata::Location;
+}
+
 impl From<Box<Location>> for libloot::metadata::Location {
     fn from(value: Box<Location>) -> Self {
         value.0
     }
-}
-
-fn wrap_locations(slice: &[libloot::metadata::Location]) -> &[Location] {
-    // SAFETY: This is safe because Location is a transparent wrapper around the libloot type.
-    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len()) }
 }
 
 pub fn to_vec_of_unwrapped<T: Clone, U: From<Box<T>>>(slice: &[Box<T>]) -> Vec<U> {
