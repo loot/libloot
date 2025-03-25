@@ -1,5 +1,7 @@
 pub trait EmitYaml {
-    fn is_scalar(&self) -> bool;
+    fn is_scalar(&self) -> bool {
+        false
+    }
 
     fn emit_yaml(&self, emitter: &mut YamlEmitter);
 }
@@ -277,10 +279,6 @@ fn double_quote(value: &str) -> String {
 }
 
 impl<T: EmitYaml> EmitYaml for &[T] {
-    fn is_scalar(&self) -> bool {
-        false
-    }
-
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         match self {
             [] => {}
@@ -305,10 +303,6 @@ impl<T: EmitYaml> EmitYaml for &[T] {
 }
 
 impl<T: EmitYaml> EmitYaml for Vec<T> {
-    fn is_scalar(&self) -> bool {
-        false
-    }
-
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         self.as_slice().emit_yaml(emitter);
     }

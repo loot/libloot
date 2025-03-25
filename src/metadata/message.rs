@@ -10,11 +10,11 @@ use super::{
         ExpectedType, MetadataParsingErrorReason, MultilingualMessageContentsError,
         ParseMetadataError,
     },
+    yaml::{EmitYaml, YamlEmitter},
     yaml::{
         YamlObjectType, as_string_node, get_as_hash, get_required_string_value,
         get_strings_vec_value, parse_condition,
     },
-    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 /// Codes used to indicate the type of a message.
@@ -388,10 +388,6 @@ impl TryFrom<&MarkedYaml> for Message {
 }
 
 impl EmitYaml for MessageContent {
-    fn is_scalar(&self) -> bool {
-        false
-    }
-
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 
@@ -425,10 +421,6 @@ pub(super) fn emit_message_contents(
 }
 
 impl EmitYaml for Message {
-    fn is_scalar(&self) -> bool {
-        false
-    }
-
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 

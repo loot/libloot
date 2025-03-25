@@ -12,10 +12,10 @@ use super::{
     message::Message,
     plugin_cleaning_data::PluginCleaningData,
     tag::Tag,
+    yaml::{EmitYaml, YamlEmitter},
     yaml::{
         YamlObjectType, get_as_hash, get_as_slice, get_required_string_value, get_string_value,
     },
-    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 pub(crate) const GHOST_FILE_EXTENSION: &str = ".ghost";
@@ -376,10 +376,6 @@ fn get_vec<'a, T: TryFrom<&'a MarkedYaml, Error = impl Into<ParseMetadataError>>
 }
 
 impl EmitYaml for PluginMetadata {
-    fn is_scalar(&self) -> bool {
-        false
-    }
-
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 

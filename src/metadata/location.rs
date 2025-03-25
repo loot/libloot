@@ -3,9 +3,9 @@ use saphyr::{MarkedYaml, YamlData};
 use super::error::ExpectedType;
 use super::error::ParseMetadataError;
 
+use super::yaml::EmitYaml;
+use super::yaml::YamlEmitter;
 use super::yaml::{YamlObjectType, get_required_string_value};
-use super::yaml_emit::EmitYaml;
-use super::yaml_emit::YamlEmitter;
 
 /// Represents a URL at which the parent plugin can be found.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]

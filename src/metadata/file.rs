@@ -7,11 +7,11 @@ use super::{
         MessageContent, emit_message_contents, parse_message_contents_yaml,
         validate_message_contents,
     },
+    yaml::{EmitYaml, YamlEmitter},
     yaml::{
         YamlObjectType, as_string_node, get_required_string_value, get_string_value,
         parse_condition,
     },
-    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 /// Represents a file in a game's Data folder, including files in

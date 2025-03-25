@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
 use loot_condition_interpreter::Expression;
-use saphyr::{AnnotatedArray, AnnotatedHash, MarkedYaml, Marker, Yaml, YamlData};
+use saphyr::{AnnotatedHash, MarkedYaml, Marker, Yaml, YamlData};
 
-use super::error::{ExpectedType, MetadataParsingErrorReason, ParseMetadataError};
+use super::super::error::{ExpectedType, MetadataParsingErrorReason, ParseMetadataError};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum YamlObjectType {
@@ -42,22 +42,16 @@ pub fn to_yaml(yaml: &MarkedYaml) -> Yaml {
         saphyr::YamlData::Integer(v) => Yaml::Integer(*v),
         saphyr::YamlData::String(v) => Yaml::String(v.clone()),
         saphyr::YamlData::Boolean(v) => Yaml::Boolean(*v),
-        saphyr::YamlData::Array(v) => Yaml::Array(to_array(v)),
-        saphyr::YamlData::Hash(v) => Yaml::Hash(to_hash(v)),
+        saphyr::YamlData::Array(v) => Yaml::Array(v.iter().map(to_yaml).collect()),
+        saphyr::YamlData::Hash(v) => Yaml::Hash(
+            v.iter()
+                .map(|(key, value)| (to_yaml(key), to_yaml(value)))
+                .collect(),
+        ),
         saphyr::YamlData::Alias(v) => Yaml::Alias(*v),
         saphyr::YamlData::Null => Yaml::Null,
         saphyr::YamlData::BadValue => Yaml::BadValue,
     }
-}
-
-fn to_array(array: &AnnotatedArray<MarkedYaml>) -> saphyr::Array {
-    array.iter().map(to_yaml).collect()
-}
-
-fn to_hash(hash: &AnnotatedHash<MarkedYaml>) -> saphyr::Hash {
-    hash.iter()
-        .map(|(key, value)| (to_yaml(key), to_yaml(value)))
-        .collect()
 }
 
 pub fn as_string_node(value: &str) -> MarkedYaml {

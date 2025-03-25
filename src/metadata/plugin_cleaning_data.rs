@@ -6,8 +6,8 @@ use super::{
         MessageContent, emit_message_contents, parse_message_contents_yaml,
         validate_message_contents,
     },
+    yaml::{EmitYaml, YamlEmitter},
     yaml::{YamlObjectType, as_string_node, get_as_hash, get_required_string_value, get_u32_value},
-    yaml_emit::{EmitYaml, YamlEmitter},
 };
 
 /// Represents data identifying the plugin under which it is stored as dirty or
@@ -181,10 +181,6 @@ impl TryFrom<&MarkedYaml> for PluginCleaningData {
 }
 
 impl EmitYaml for PluginCleaningData {
-    fn is_scalar(&self) -> bool {
-        false
-    }
-
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 

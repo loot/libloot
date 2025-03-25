@@ -2,9 +2,9 @@ use saphyr::YamlData;
 
 use super::error::ExpectedType;
 use super::error::ParseMetadataError;
+use super::yaml::EmitYaml;
+use super::yaml::YamlEmitter;
 use super::yaml::{YamlObjectType, get_required_string_value, parse_condition};
-use super::yaml_emit::EmitYaml;
-use super::yaml_emit::YamlEmitter;
 
 /// Represents whether a Bash Tag suggestion is for addition or removal.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]

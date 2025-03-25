@@ -9,7 +9,6 @@ mod plugin_cleaning_data;
 pub(crate) mod plugin_metadata;
 mod tag;
 mod yaml;
-mod yaml_emit;
 
 pub use file::{File, Filename};
 pub use group::Group;
@@ -20,8 +19,8 @@ pub use plugin_metadata::PluginMetadata;
 pub use tag::{Tag, TagSuggestion};
 
 #[cfg(test)]
-fn emit<T: yaml_emit::EmitYaml>(metadata: &T) -> String {
-    let mut emitter = yaml_emit::YamlEmitter::new();
+fn emit<T: yaml::EmitYaml>(metadata: &T) -> String {
+    let mut emitter = yaml::YamlEmitter::new();
     metadata.emit_yaml(&mut emitter);
 
     emitter.into_string()

@@ -1,10 +1,10 @@
 use saphyr::MarkedYaml;
 
 use super::error::ParseMetadataError;
+use super::yaml::{EmitYaml, YamlEmitter};
 use super::yaml::{
     YamlObjectType, get_as_hash, get_required_string_value, get_string_value, get_strings_vec_value,
 };
-use super::yaml_emit::{EmitYaml, YamlEmitter};
 
 /// Represents a group to which plugin metadata objects can belong.
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -104,10 +104,6 @@ impl TryFrom<&MarkedYaml> for Group {
 }
 
 impl EmitYaml for Group {
-    fn is_scalar(&self) -> bool {
-        false
-    }
-
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 
