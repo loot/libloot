@@ -27,8 +27,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(libloot-cxx STATIC IMPORTED)
 # TODO: Define the Rust libloot library path here for Linux builds.
 if(MSVC)
-    set_target_properties(libloot-cxx PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/../target/release/libloot_cxx.lib")
+    set(LIBLOOT_CXX_FILENAME "libloot_cxx.lib")
 endif()
+
+set_target_properties(libloot-cxx PROPERTIES
+    IMPORTED_CONFIGURATIONS "Release;Debug"
+    IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/../target/release/${LIBLOOT_CXX_FILENAME}"
+    IMPORTED_LOCATION_DEBUG "${CMAKE_SOURCE_DIR}/../target/debug/${LIBLOOT_CXX_FILENAME}")
 target_include_directories(libloot-cxx INTERFACE "${CMAKE_SOURCE_DIR}/../target/cxxbridge")
 
 
@@ -56,8 +61,7 @@ set(LIBLOOT_SRC_API_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/api/plugin.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/sorting/cyclic_interaction_error.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/sorting/undefined_group_error.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/vertex.cpp"
-    )
+    "${CMAKE_SOURCE_DIR}/src/api/vertex.cpp")
 
 set(LIBLOOT_INCLUDE_H_FILES
     "${CMAKE_SOURCE_DIR}/include/loot/api.h"
@@ -92,8 +96,7 @@ set(LIBLOOT_SRC_API_H_FILES
     "${CMAKE_SOURCE_DIR}/src/api/database.h"
     "${CMAKE_SOURCE_DIR}/src/api/exception.h"
     "${CMAKE_SOURCE_DIR}/src/api/game.h"
-    "${CMAKE_SOURCE_DIR}/src/api/plugin.h"
-    )
+    "${CMAKE_SOURCE_DIR}/src/api/plugin.h")
 
 source_group(TREE "${CMAKE_SOURCE_DIR}/src/api"
     PREFIX "Source Files"

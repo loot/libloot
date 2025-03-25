@@ -1,0 +1,6 @@
+# Config for building the CXX wrapper against the debug MSVC runtime, so that it
+# can be used from Debug builds of C++ code.
+# From <https://github.com/dtolnay/cxx/issues/880#issuecomment-2521375384>
+[env]
+CFLAGS = "/MDd"
+CXXFLAGS = "/MDd"

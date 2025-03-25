@@ -17,6 +17,14 @@ cmake -B build .
 cmake --build build --config RelWithDebInfo
 ```
 
+Debug builds need a little extra config to get the static and shared libraries to use the same C runtime library on Windows.
+
+```
+cargo build --config ../.cargo/msvcd-config.toml
+cmake -B build .
+cmake --build build --config Debug
+```
+
 This also builds a copy of the public API tests from C++ libloot v0.25.5, which can be run using:
 
 ```
