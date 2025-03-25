@@ -178,10 +178,16 @@ fn is_yaml_whitespace(c: char) -> bool {
     c == ' ' || c == '\t'
 }
 
+fn is_yaml_line_break(c: char) -> bool {
+    c == '\x0A' || c == '\x0D'
+}
+
 fn is_flow_indicator(c: char) -> bool {
     matches!(c, '[' | ']' | '{' | '}' | ',')
 }
 
+/// This disallows multi-line unquoted strings, which YAML does allow in some
+/// contexts, but there's no expectation of such strings coming out of libloot.
 fn can_emit_unquoted(value: &str, style: YamlStyle) -> bool {
     // <https://yaml.org/spec/1.2.2/#733-plain-style>
     if value.is_empty()
@@ -230,11 +236,13 @@ fn can_emit_unquoted(value: &str, style: YamlStyle) -> bool {
         return false;
     }
 
-    if style == YamlStyle::Flow {
-        !value.contains(is_flow_indicator)
-    } else {
-        true
+    if style == YamlStyle::Flow && value.contains(is_flow_indicator) {
+        return false;
     }
+
+    value
+        .chars()
+        .all(|c| is_printable(c) && !is_yaml_line_break(c) && c != '\u{FEFF}')
 }
 
 fn single_quote(value: &str) -> String {
@@ -245,7 +253,7 @@ fn single_quote(value: &str) -> String {
 
 fn double_quote(value: &str) -> String {
     // <https://yaml.org/spec/1.2.2/#731-double-quoted-style>
-    value
+    let escaped: String = value
         .chars()
         .map(|c| {
             if is_printable(c) {
@@ -275,7 +283,9 @@ fn double_quote(value: &str) -> String {
                 }
             }
         })
-        .collect()
+        .collect();
+
+    format!("\"{}\"", escaped)
 }
 
 impl<T: EmitYaml> EmitYaml for &[T] {
@@ -305,5 +315,71 @@ impl<T: EmitYaml> EmitYaml for &[T] {
 impl<T: EmitYaml> EmitYaml for Vec<T> {
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         self.as_slice().emit_yaml(emitter);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod yaml_emitter {
+        use super::*;
+
+        mod unquoted_str {
+            use super::*;
+
+            #[test]
+            fn unquoted_str_should_emit_string_as_given() {
+                let value = "hello world";
+                let mut emitter = YamlEmitter::new();
+                emitter.unquoted_str(value);
+
+                assert_eq!(value, emitter.into_string());
+            }
+
+            #[test]
+            fn unquoted_str_should_fall_back_to_single_quoting_string_if_it_cannot_be_emitted_unquoted()
+             {
+                let value = " hello world";
+                let mut emitter = YamlEmitter::new();
+                emitter.unquoted_str(value);
+
+                assert_eq!(format!("'{}'", value), emitter.into_string());
+            }
+
+            #[test]
+            fn unquoted_str_should_fall_back_to_double_quoting_string_if_it_cannot_be_unquoted_or_single_quoted()
+             {
+                let value = "\x1B[1mhello world\x1B[0m";
+                let mut emitter = YamlEmitter::new();
+                emitter.unquoted_str(value);
+
+                assert_eq!("\"\\e[1mhello world\\e[0m\"", emitter.into_string());
+            }
+        }
+
+        mod single_quoted_str {
+            use super::*;
+
+            #[test]
+            fn single_quoted_str_should_emit_string_wrapped_in_single_quotes_and_with_single_quotes_doubled()
+             {
+                let value = "hello 'world'";
+                let mut emitter = YamlEmitter::new();
+                emitter.single_quoted_str(value);
+
+                assert_eq!("'hello ''world'''", emitter.into_string());
+            }
+
+            #[test]
+            fn single_quoted_str_should_fall_back_to_double_quoting_string_if_it_contains_non_printable_characters()
+             {
+                let value = "\x1B[1mhello world\x1B[0m";
+                let mut emitter = YamlEmitter::new();
+                emitter.single_quoted_str(value);
+
+                assert_eq!("\"\\e[1mhello world\\e[0m\"", emitter.into_string());
+            }
+        }
     }
 }
