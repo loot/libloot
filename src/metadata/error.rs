@@ -347,12 +347,13 @@ impl std::fmt::Display for YamlMergeKeyError {
         let yaml = to_yaml(&self.value);
 
         if saphyr::YamlEmitter::new(&mut output).dump(&yaml).is_ok() {
+            // The emitter starts the dumped YAML with ---\n, so strip that.
             write!(
                 f,
                 "invalid YAML merge key value at line {} column {}: {}",
                 self.value.span.start.line(),
                 self.value.span.start.col(),
-                output
+                output.get(4..).unwrap_or_default()
             )
         } else {
             write!(

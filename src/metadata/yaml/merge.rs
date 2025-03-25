@@ -72,3 +72,49 @@ fn merge_hashes(
     }
     hash1
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod process_merge_keys {
+        use crate::metadata::parse;
+
+        use super::*;
+
+        #[test]
+        fn should_error_if_merge_key_value_has_a_single_value_that_is_not_a_hash() {
+            let yaml = parse(
+                "
+- &anchor1 test
+- <<: *anchor1
+  value: test-value-2",
+            );
+
+            let error_message = process_merge_keys(yaml).unwrap_err().to_string();
+
+            assert_eq!(
+                "invalid YAML merge key value at line 3 column 6: test",
+                error_message
+            );
+        }
+
+        #[test]
+        fn should_error_if_merge_key_value_is_an_array_of_non_hash_values() {
+            let yaml = parse(
+                "
+- &anchor1 {key: test-key}
+- &anchor2 test
+- <<: [*anchor1, *anchor2]
+  value: test-value-2",
+            );
+
+            let error_message = process_merge_keys(yaml).unwrap_err().to_string();
+
+            assert_eq!(
+                "invalid YAML merge key value at line 4 column 17: test",
+                error_message
+            );
+        }
+    }
+}
