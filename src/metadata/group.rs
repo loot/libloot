@@ -154,6 +154,17 @@ mod tests {
         }
 
         #[test]
+        fn should_error_if_after_is_not_an_array_of_strings() {
+            let yaml = parse("{name: group1, after: other_group}");
+
+            assert!(Group::try_from(&yaml).is_err());
+
+            let yaml = parse("{name: group1, after: [0, 1]}");
+
+            assert!(Group::try_from(&yaml).is_err());
+        }
+
+        #[test]
         fn should_set_all_given_fields() {
             let yaml = parse("{name: group1, description: text, after: [ other_group ]}");
 

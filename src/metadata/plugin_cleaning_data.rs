@@ -249,6 +249,36 @@ mod tests {
         }
 
         #[test]
+        fn should_error_if_a_count_is_not_a_number() {
+            let yaml = parse("{crc: 0x12345678, util: cleaner, itm: true}");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+
+            let yaml = parse("{crc: 0x12345678, util: cleaner, udr: true}");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+
+            let yaml = parse("{crc: 0x12345678, util: cleaner, nav: true}");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_a_count_does_not_fit_in_a_u32() {
+            let yaml = parse("{crc: 0x12345678, util: cleaner, itm: -1}");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+
+            let yaml = parse("{crc: 0x12345678, util: cleaner, udr: -2}");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+
+            let yaml = parse("{crc: 0x12345678, util: cleaner, nav: -3}");
+
+            assert!(PluginCleaningData::try_from(&yaml).is_err());
+        }
+
+        #[test]
         fn should_set_all_given_fields() {
             let yaml =
                 parse("{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: 30}");

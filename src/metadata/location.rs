@@ -141,6 +141,20 @@ mod tests {
         }
 
         #[test]
+        fn should_error_if_link_is_not_a_string() {
+            let yaml = parse("{link: [https://www.example.com], name: example}");
+
+            assert!(Location::try_from(&yaml).is_err());
+        }
+
+        #[test]
+        fn should_error_if_name_is_not_a_string() {
+            let yaml = parse("{link: https://www.example.com, name: [example]}");
+
+            assert!(Location::try_from(&yaml).is_err());
+        }
+
+        #[test]
         fn should_error_if_name_is_missing() {
             let yaml = parse("{link: https://www.example.com}");
 

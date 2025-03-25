@@ -938,6 +938,13 @@ mod tests {
 
             assert!(PluginMetadata::try_from(&yaml).is_err());
         }
+
+        #[test]
+        fn should_error_if_a_field_that_should_be_an_array_is_not() {
+            let yaml = parse("{name: 'Blank.esp', after: Blank.esm}");
+
+            assert!(PluginMetadata::try_from(&yaml).is_err());
+        }
     }
 
     mod emit_yaml {
