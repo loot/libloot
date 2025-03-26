@@ -32,7 +32,7 @@ members = ["cxx", "ffi-errors", "pyo3"]
 [workspace.dependencies]
 esplugin = "6.1.1"
 libloadorder = "18.3.0"
-loot-condition-interpreter = { git = "https://github.com/loot/loot-condition-interpreter.git", rev = "f7d9947fa434037743ce81e2d409184ec0bfb693" }
+loot-condition-interpreter = "5.3.1"
 
 [profile.release]
 debug = "limited"
