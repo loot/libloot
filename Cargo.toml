@@ -31,7 +31,7 @@ members = ["cxx", "ffi-errors", "pyo3"]
 
 [workspace.dependencies]
 esplugin = "6.1.1"
-libloadorder = { git = "https://github.com/Ortham/libloadorder.git", rev = "6245dbc6824c4751daef5ab01dfe7b9497f5446f" }
+libloadorder = "18.3.0"
 loot-condition-interpreter = { git = "https://github.com/loot/loot-condition-interpreter.git", rev = "f7d9947fa434037743ce81e2d409184ec0bfb693" }
 
 [profile.release]
