@@ -1,0 +1,193 @@
+name: CI
+
+on:
+  push:
+    # Don't run this workflow when a tag is pushed.
+    branches:
+      - '*'
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  CMAKE_CONFIG: RelWithDebInfo
+
+jobs:
+  rustfmt:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check formatting
+        run: |
+          cargo fmt -- --version
+          cargo fmt --all -- --check
+
+  clippy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run clippy
+        run: |
+          cargo clippy -- --version
+          cargo clippy --all --all-targets -- -Dwarnings
+
+  build:
+    strategy:
+      matrix:
+        target:
+          - os: windows-2019
+            platform: Win32
+            triple: i686-pc-windows-msvc
+            architecture: x86
+
+          - os: windows-2019
+            platform: x64
+            triple: x86_64-pc-windows-msvc
+            architecture: x64
+
+          - os: ubuntu-24.04
+            platform: x86_64
+            triple: x86_64-unknown-linux-gnu
+            architecture: x64
+
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: ${{ matrix.target.architecture }}
+
+      - name: pip cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-maturin
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Rust i686-pc-windows-msvc target
+        run: rustup target add i686-pc-windows-msvc
+        if: matrix.target.platform == 'Win32'
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Prepare test resources
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://github.com/Ortham/testing-plugins/archive/refs/tags/1.6.2.zip -OutFile testing-plugins-1.6.2.zip
+          Expand-Archive testing-plugins-1.6.2.zip .
+          Move-Item testing-plugins-1.6.2 testing-plugins
+          Remove-Item testing-plugins-1.6.2.zip
+
+      - name: Set LIBLOOT_REVISION
+        shell: bash
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build and run tests with code coverage
+        run: cargo llvm-cov --lcov --output-path lcov.info --target ${{ matrix.target.triple }}
+
+      - name: Upload code coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        if: github.event_name == 'push'
+
+      - name: Build the Python wrapper
+        shell: bash
+        working-directory: pyo3
+        run: |
+          python -m venv .venv
+
+          if [[ "${{ runner.os }}" == "Windows" ]]
+          then
+            ./.venv/Scripts/activate
+          else
+            . .venv/bin/activate
+          fi
+
+          pip install maturin
+
+          maturin build --target ${{ matrix.target.triple }} --release
+
+      - name: Build the CXX wrapper layer
+        working-directory: cxx
+        run: cargo build --release --target ${{ matrix.target.triple }}
+
+      - name: Get descriptive libloot version
+        id: get-libloot-version
+        shell: bash
+        run: |
+          GIT_DESCRIBE=$(git describe --tags --long --always --abbrev=7)
+          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
+          LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
+          echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
+
+      - name: Build the C++ wrapper (Linux)
+        working-directory: cxx
+        run: |
+          cmake \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_CONFIG }} \
+            -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" \
+            -DRUST_TARGET="${{ matrix.target.triple }}" \
+            -B build
+          cmake --build build --parallel
+        if: runner.os == 'Linux'
+
+      - name: Build the C++ wrapper (Windows)
+        working-directory: cxx
+        run: |
+          cmake -G "Visual Studio 16 2019" `
+            -A ${{ matrix.target.platform }} `
+            -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" `
+            -DRUST_TARGET="${{ matrix.target.triple }}" `
+            -B build
+          cmake --build build --parallel --config ${{ env.CMAKE_CONFIG }}
+        if: runner.os == 'Windows'
+
+      - name: Run the C++ wrapper tests
+        working-directory: cxx
+        run: ctest --test-dir build --build-config ${{ env.CMAKE_CONFIG }} --output-on-failure --parallel
+
+      - name: Package the C++ wrapper
+        working-directory: cxx/build
+        run: cpack -C ${{ env.CMAKE_CONFIG }}
+
+      - name: Get archive name
+        id: archive-name
+        shell: bash
+        run: |
+          VERSION="${{ steps.get-libloot-version.outputs.version }}"
+
+          if [[ "${{ runner.os }}" == "Windows" ]]
+          then
+            EXTENSION=7z
+            if [[ "${{ matrix.target.platform }}" == "Win32" ]]
+            then
+              PLATFORM=win32
+            else
+              PLATFORM=win64
+            fi
+          else
+            EXTENSION=tar.xz
+            PLATFORM=Linux
+          fi
+
+          echo "filename=libloot-${VERSION}-${PLATFORM}.${EXTENSION}" >> $GITHUB_OUTPUT
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.archive-name.outputs.filename }}
+          path: cxx/build/package/${{ steps.archive-name.outputs.filename }}
+        if: github.event_name == 'push'

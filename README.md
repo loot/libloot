@@ -14,7 +14,6 @@ If this experiment is successful it will probably end up being merged into the l
 
 ## Outstanding issues
 
-- There is no CI.
 - It relies on some unreleased improvements to the Rust APIs of libloadorder and loot-condition-interpreter.
 - It uses more memory than the C++ implementation, and I haven't finished investigating why or if there's anything I can/should do about that.
 - I'm not very confident about the YAML emitter I've written, it needs more test cases and probably another review against the spec.
