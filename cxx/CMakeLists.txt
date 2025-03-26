@@ -25,17 +25,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ##############################
 
 add_library(libloot-cxx STATIC IMPORTED)
+
 if(MSVC)
     set(LIBLOOT_CXX_FILENAME "libloot_cxx.lib")
 else()
     set(LIBLOOT_CXX_FILENAME "liblibloot_cxx.a")
 endif()
 
+if(DEFINED RUST_TARGET)
+    set(TARGET_PATH "${CMAKE_SOURCE_DIR}/../target/${RUST_TARGET}")
+else()
+    set(TARGET_PATH "${CMAKE_SOURCE_DIR}/../target")
+endif()
+
 set_target_properties(libloot-cxx PROPERTIES
     IMPORTED_CONFIGURATIONS "Release;Debug"
-    IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/../target/release/${LIBLOOT_CXX_FILENAME}"
-    IMPORTED_LOCATION_DEBUG "${CMAKE_SOURCE_DIR}/../target/debug/${LIBLOOT_CXX_FILENAME}")
-target_include_directories(libloot-cxx INTERFACE "${CMAKE_SOURCE_DIR}/../target/cxxbridge")
+    IMPORTED_LOCATION "${TARGET_PATH}/release/${LIBLOOT_CXX_FILENAME}"
+    IMPORTED_LOCATION_DEBUG "${TARGET_PATH}/debug/${LIBLOOT_CXX_FILENAME}")
+target_include_directories(libloot-cxx INTERFACE "${TARGET_PATH}/cxxbridge")
 
 
 ##############################
