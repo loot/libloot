@@ -25,9 +25,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ##############################
 
 add_library(libloot-cxx STATIC IMPORTED)
-# TODO: Define the Rust libloot library path here for Linux builds.
 if(MSVC)
     set(LIBLOOT_CXX_FILENAME "libloot_cxx.lib")
+else()
+    set(LIBLOOT_CXX_FILENAME "liblibloot_cxx.a")
 endif()
 
 set_target_properties(libloot-cxx PROPERTIES
@@ -145,20 +146,11 @@ target_include_directories(loot SYSTEM PRIVATE
     ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_compile_definitions(loot PRIVATE
-        UNICODE _UNICODE LOOT_EXPORT YAML_CPP_STATIC_DEFINE)
+    target_compile_definitions(loot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
 
     set(LOOT_LIBS ntdll ws2_32 bcrypt)
 
-    if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-        set(LOOT_LIBS ${LOOT_LIBS} tbb_static)
-    endif()
-
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
-else()
-    set(LOOT_LIBS ICU::data ICU::uc pthread TBB::tbb)
-
-    target_link_libraries(loot PUBLIC ${LOOT_LIBS})
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -282,6 +274,8 @@ install(FILES
 ########################################
 
 if(NOT DEFINED CPACK_PACKAGE_VERSION)
+    find_package(Git)
+
     if(GIT_FOUND)
         execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --long --always --abbrev=7
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

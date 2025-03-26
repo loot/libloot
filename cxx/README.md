@@ -2,39 +2,63 @@
 
 This is an **experimental** wrapper around the Rust reimplementation of libloot that provides a C++ interface that's ABI-compatible with libloot v0.25.5.
 
-## Building
-
 The wrapper has two layers:
 
 - a static library built using Cargo, which provides a C++ interface
 - a shared library built using CMake, which wraps that C++ interface to provide another that is ABI-compatible with C++ libloot.
 
-To build the wrapper:
+## Building
+
+### Windows
+
+To build a release build with debug info:
 
 ```
 cargo build --release
 cmake -B build .
-cmake --build build --config RelWithDebInfo
+cmake --build build --parallel --config RelWithDebInfo
 ```
 
-Debug builds need a little extra config to get the static and shared libraries to use the same C runtime library on Windows.
+Debug builds need a little extra config to get the static and shared libraries to use the same C runtime library on Windows:
 
 ```
 cargo build --config ../.cargo/msvcd-config.toml
 cmake -B build .
-cmake --build build --config Debug
+cmake --build build --parallel --config Debug
 ```
 
-This also builds a copy of the public API tests from C++ libloot v0.25.5, which can be run using:
+### Linux
+
+To build a release build with debug info:
 
 ```
-ctest --test-dir build --output-on-failure -V
+cargo build --release
+cmake -B build . -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build build --parallel
+```
+
+to build a debug build:
+
+```
+cargo build
+cmake -B build . -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --parallel
+```
+
+### Tests & Packaging
+
+The build process also builds a copy of the public API tests from C++ libloot v0.25.5 by default. To skip building the tests, pass `-DLIBLOOT_BUILD_TESTS=OFF` when first running CMake.
+
+If built, the tests can be run using:
+
+```
+ctest --test-dir build --output-on-failure --parallel -V
 ```
 
 To package the build:
 
 ```
-cpack --config build/CPackConfig.cmake
+cpack --config build/CPackConfig.cmake -C RelWithDebInfo
 ```
 
 This repository (and so the created package) doesn't currently include any of libloot's documentation, besides the API documentation included in the Rust source code.

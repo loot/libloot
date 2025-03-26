@@ -14,7 +14,6 @@ If this experiment is successful it will probably end up being merged into the l
 
 ## Outstanding issues
 
-- I haven't yet attempted to build it on Linux.
 - There is no CI.
 - It relies on some unreleased improvements to the Rust APIs of libloadorder and loot-condition-interpreter.
 - It uses more memory than the C++ implementation, and I haven't finished investigating why or if there's anything I can/should do about that.
@@ -25,18 +24,50 @@ If this experiment is successful it will probably end up being merged into the l
 
 Make sure you have [Rust](https://www.rust-lang.org/) installed.
 
-To build the library, set the `LIBLOOT_REVISION` env var and then run Cargo. Using PowerShell:
+To build the library, set the `LIBLOOT_REVISION` env var and then run Cargo.
+
+Using PowerShell:
 
 ```powershell
 $env:LIBLOOT_REVISION = git rev-parse --short HEAD
 cargo build --release
 ```
 
-The tests include a complete port of libloot's tests, and can be run by first extracting the [testing-plugins](https://github.com/Ortham/testing-plugins) archive to this readme's directory (so that there's a `testing-plugins` directory there), then running:
+Using a POSIX shell:
+
+```sh
+export LIBLOOT_REVISION=$(git rev-parse --short HEAD)
+cargo build --release
+```
+
+`LIBLOOT_REVISION` is used to embed the commit hash into the build, if it's not defined then `unknown` will be used instead.
+
+### Tests
+
+The tests include a complete port of libloot's tests, and can be run by first extracting the [testing-plugins](https://github.com/Ortham/testing-plugins) archive to this readme's directory (so that there's a `testing-plugins` directory there).
+
+To do that using `curl` and `tar` in a POSIX shell:
+
+```sh
+curl -sSfL https://github.com/Ortham/testing-plugins/archive/refs/tags/1.6.2.tar.gz | tar -xz --strip=1 --one-top-level=testing-plugins
+```
+
+To do that in PowerShell:
+
+```powershell
+Invoke-WebRequest https://github.com/Ortham/testing-plugins/archive/refs/tags/1.6.2.zip -OutFile testing-plugins-1.6.2.zip
+Expand-Archive testing-plugins-1.6.2.zip .
+Move-Item testing-plugins-1.6.2 testing-plugins
+Remove-Item testing-plugins-1.6.2.zip
+```
+
+The tests can then be run using:
 
 ```
 cargo test
 ```
+
+### API documentation
 
 The public API has doc comments copied from libloot, and the API documentation can be built and viewed using:
 

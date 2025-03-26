@@ -4,26 +4,32 @@ An **experimental** Python wrapper around the libloot Rust implementation, built
 
 ## Build
 
-To build, first set up a Python venv and install [maturin](https://github.com/PyO3/maturin):
+To build, first set up a Python virtual environment and install [maturin](https://github.com/PyO3/maturin):
 
-```
+```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install maturin
+```
+
+or in a POSIX shell:
+
+```sh
+python -m venv .venv
+. .venv/bin/activate
+pip install maturin
+```
+
+Then build the library in the virtual environment:
+
+```
 maturin develop
 ```
 
-Then build the library:
+The library can then be imported in Python:
 
 ```
-.\.venv\Scripts\activate
-maturin develop
-```
-
-Then import it in Python:
-
-```
-py
+python
 > import loot
 ```
 

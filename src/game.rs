@@ -893,6 +893,8 @@ mod tests {
             #[cfg(not(windows))]
             #[apply(all_game_types)]
             fn should_succeed_for_morrowind_if_given_valid_game_path(game_type: GameType) {
+                let fixture = Fixture::new(game_type);
+
                 if matches!(game_type, GameType::TES3 | GameType::OpenMW) {
                     assert!(Game::new(fixture.game_type, &fixture.game_path).is_ok());
                 } else {
@@ -902,7 +904,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_a_relative_game_path() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::TES3);
 
                 let game_path = make_relative(&fixture.game_path);
                 assert!(game_path.is_relative());
@@ -912,7 +914,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_an_absolute_game_path() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::TES3);
 
                 assert!(fixture.game_path.is_absolute());
                 assert!(Game::new(fixture.game_type, &fixture.game_path).is_ok());
@@ -920,7 +922,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_a_symlink_path() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::TES3);
 
                 let game_path = fixture.game_path.with_extension("symlink");
                 symlink_dir(&fixture.game_path, &game_path);
@@ -932,7 +934,7 @@ mod tests {
             #[cfg(windows)]
             #[test]
             fn should_succeed_if_given_a_junction_link_path() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::TES3);
 
                 let game_path = fixture.game_path.with_extension("junction");
                 junction_link(&fixture.game_path, &game_path);
@@ -943,7 +945,7 @@ mod tests {
             #[test]
             fn should_error_if_given_a_game_path_that_does_not_exist() {
                 let game_path = Path::new("missing");
-                match Game::new(GameType::TES4, game_path) {
+                match Game::new(GameType::TES3, game_path) {
                     Err(GameHandleCreationError::NotADirectory(p)) => {
                         assert_eq!(game_path, p)
                     }

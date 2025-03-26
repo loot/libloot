@@ -69,11 +69,10 @@ rust::Box<loot::rust::Game> constructGame(
     const std::filesystem::path& localDataPath) {
   try {
     if (localDataPath.empty()) {
-      return std::move(
-          loot::rust::new_game(convert(gameType), gamePath.u8string()));
+      return loot::rust::new_game(convert(gameType), gamePath.u8string());
     } else {
-      return std::move(loot::rust::new_game_with_local_path(
-          convert(gameType), gamePath.u8string(), localDataPath.u8string()));
+      return loot::rust::new_game_with_local_path(
+          convert(gameType), gamePath.u8string(), localDataPath.u8string());
     }
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(loot::mapError(e));

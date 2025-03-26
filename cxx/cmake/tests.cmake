@@ -121,10 +121,10 @@ target_compile_definitions(libloot_internals_tests PRIVATE
     if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
         target_compile_definitions(libloot_tests PRIVATE LOOT_STATIC)
     endif()
-endif()
 
-target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
-target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
+    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
+    target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(libloot_internals_tests PRIVATE "-Wall" "-Wextra")

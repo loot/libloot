@@ -174,7 +174,7 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
         return true;
     }
 
-    use std::fs::unix::fs::MetadataExt;
+    use std::os::unix::fs::MetadataExt;
 
     let lhs_metadata = match lhs.metadata() {
         Ok(m) => m,
@@ -474,7 +474,7 @@ mod tests {
         #[test]
         #[cfg(not(windows))]
         fn should_be_false_if_given_case_insensitively_equal_paths_that_exist() {
-            let tmp_dir = tempdir();
+            let tmp_dir = tempdir().unwrap();
             let file_path1 = tmp_dir.path().join("test");
             let file_path2 = tmp_dir.path().join("TEST");
 
@@ -483,7 +483,7 @@ mod tests {
 
             assert!(file_path1.exists());
             assert!(file_path2.exists());
-            assert!(!are_file_paths_equivalent(file_path1, file_path2));
+            assert!(!are_file_paths_equivalent(&file_path1, &file_path2));
         }
     }
 }

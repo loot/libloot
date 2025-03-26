@@ -24,6 +24,7 @@
 
 #include "loot/metadata/plugin_metadata.h"
 
+#include <cstring>
 #include <regex>
 #include <stdexcept>
 
