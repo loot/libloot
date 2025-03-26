@@ -179,6 +179,20 @@ impl Fixture {
             .prefix("libloot-t\u{00E9}st-")
             .tempdir()
             .unwrap();
+
+        Self::with_tempdir(game_type, temp_dir)
+    }
+
+    pub fn in_path(game_type: GameType, in_path: &Path) -> Fixture {
+        let temp_dir = tempfile::Builder::new()
+            .prefix("libloot-t\u{00E9}st-")
+            .tempdir_in(in_path)
+            .unwrap();
+
+        Self::with_tempdir(game_type, temp_dir)
+    }
+
+    fn with_tempdir(game_type: GameType, temp_dir: TempDir) -> Fixture {
         let root_path = temp_dir.path();
         let game_path = root_path.join("games/game");
         let local_path = root_path.join("local/game");

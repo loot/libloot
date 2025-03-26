@@ -904,7 +904,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_a_relative_game_path() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::in_path(GameType::TES3, Path::new("target"));
 
                 let game_path = make_relative(&fixture.game_path);
                 assert!(game_path.is_relative());
@@ -972,7 +972,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_relative_paths() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::in_path(GameType::TES3, Path::new("target"));
 
                 let game_path = make_relative(&fixture.game_path);
                 assert!(game_path.is_relative());
