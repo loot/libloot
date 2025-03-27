@@ -377,10 +377,14 @@ fn get_vec<'a, T: TryFrom<&'a MarkedYaml, Error = impl Into<ParseMetadataError>>
     hash: &'a saphyr::AnnotatedHash<MarkedYaml>,
     key: &'static str,
 ) -> Result<Vec<T>, ParseMetadataError> {
-    get_as_slice(hash, key, YamlObjectType::PluginMetadata)?
+    let mut vec = get_as_slice(hash, key, YamlObjectType::PluginMetadata)?
         .iter()
         .map(|e| T::try_from(e).map_err(Into::into))
-        .collect::<Result<Vec<T>, _>>()
+        .collect::<Result<Vec<T>, _>>()?;
+
+    vec.shrink_to_fit();
+
+    Ok(vec)
 }
 
 impl EmitYaml for PluginMetadata {

@@ -263,7 +263,7 @@ pub(crate) fn parse_message_contents_yaml(
     key: &'static str,
     parent_yaml_type: YamlObjectType,
 ) -> Result<Vec<MessageContent>, ParseMetadataError> {
-    let contents = match &value.data {
+    let mut contents = match &value.data {
         YamlData::String(s) => {
             vec![MessageContent::new(s.clone())]
         }
@@ -280,6 +280,8 @@ pub(crate) fn parse_message_contents_yaml(
             ));
         }
     };
+
+    contents.shrink_to_fit();
 
     if validate_message_contents(&contents).is_err() {
         Err(ParseMetadataError::new(
