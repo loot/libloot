@@ -145,7 +145,7 @@ impl TryFrom<&MarkedYaml> for File {
     fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
         match &value.data {
             YamlData::String(s) => Ok(File {
-                name: Filename(UniCase::new(s.to_string())),
+                name: Filename::new(s.clone()),
                 display_name: None,
                 detail: Vec::new(),
                 condition: None,
@@ -168,7 +168,7 @@ impl TryFrom<&MarkedYaml> for File {
                 let condition = parse_condition(h, YamlObjectType::File)?;
 
                 Ok(File {
-                    name: Filename(UniCase::new(name.to_string())),
+                    name: Filename::new(name.to_string()),
                     display_name: display_name.map(|(_, s)| s.to_string()),
                     detail,
                     condition,

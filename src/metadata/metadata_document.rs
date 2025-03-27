@@ -124,15 +124,14 @@ impl MetadataDocument {
                 regex_plugins.push(plugin);
             } else {
                 let filename = Filename::new(plugin.name().to_string());
-                if plugins.contains_key(&filename) {
+                if let Some(old) = plugins.insert(filename, plugin) {
                     return Err(ParseMetadataError::duplicate_entry(
                         plugin_yaml.span.start,
-                        plugin.name().to_string(),
+                        old.name().to_string(),
                         YamlObjectType::PluginMetadata,
                     )
                     .into());
-                }
-                plugins.insert(filename, plugin);
+                };
             }
         }
 

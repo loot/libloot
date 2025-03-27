@@ -190,7 +190,7 @@ impl PluginMetadata {
     /// Returns `true` if the plugin name contains any of the characters `:\*?|`
     /// and `false` otherwise.
     pub fn is_regex_plugin(&self) -> bool {
-        self.name.regex.is_some()
+        self.name.is_regex()
     }
 
     /// Check if the given plugin name matches this plugin metadata object's
@@ -201,13 +201,7 @@ impl PluginMetadata {
     /// case-insensitively. The given plugin name must be literal, i.e. not a
     /// regular expression.
     pub fn name_matches(&self, other_name: &str) -> bool {
-        if let Some(regex) = &self.name.regex {
-            regex.is_match(other_name).inspect_err(|e| {
-                logging::error!("Encountered an error while trying to match the regex {} to the string {}: {}", regex.as_str(), other_name, e);
-            }).unwrap_or(false)
-        } else {
-            unicase::eq(self.name.string.as_str(), other_name)
-        }
+        self.name.matches(other_name)
     }
 
     /// Serialises the plugin metadata as YAML.
@@ -256,6 +250,20 @@ impl PluginName {
                 regex: None,
             })
         }
+    }
+
+    fn matches(&self, other_name: &str) -> bool {
+        if let Some(regex) = &self.regex {
+            regex.is_match(other_name).inspect_err(|e| {
+                logging::error!("Encountered an error while trying to match the regex {} to the string {}: {}", regex.as_str(), other_name, e);
+            }).unwrap_or(false)
+        } else {
+            unicase::eq(self.string.as_str(), other_name)
+        }
+    }
+
+    fn is_regex(&self) -> bool {
+        self.regex.is_some()
     }
 }
 

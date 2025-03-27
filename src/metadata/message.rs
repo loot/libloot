@@ -173,10 +173,7 @@ impl Message {
     pub fn new(message_type: MessageType, content: String) -> Self {
         Self {
             message_type,
-            content: vec![MessageContent {
-                text: content,
-                language: MessageContent::DEFAULT_LANGUAGE.to_string(),
-            }],
+            content: vec![MessageContent::new(content)],
             condition: None,
         }
     }
@@ -268,10 +265,7 @@ pub(crate) fn parse_message_contents_yaml(
 ) -> Result<Vec<MessageContent>, ParseMetadataError> {
     let contents = match &value.data {
         YamlData::String(s) => {
-            vec![MessageContent {
-                text: s.to_string(),
-                language: MessageContent::DEFAULT_LANGUAGE.to_string(),
-            }]
+            vec![MessageContent::new(s.clone())]
         }
         YamlData::Array(a) => a
             .iter()
