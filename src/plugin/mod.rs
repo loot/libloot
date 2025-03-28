@@ -10,7 +10,7 @@ use std::{
 };
 
 use esplugin::ParseOptions;
-use fancy_regex::Regex;
+use fancy_regex::{Error as RegexImplError, Regex};
 
 use crate::{
     GameType,
@@ -410,7 +410,7 @@ fn extract_bash_tags(description: &str) -> Vec<String> {
     Vec::new()
 }
 
-fn extract_version(description: &str) -> Result<Option<String>, Box<fancy_regex::Error>> {
+fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplError>> {
     static VERSION_REGEXES: LazyLock<Box<[Regex]>> = LazyLock::new(|| {
         // The string below matches the range of version strings supported by
         // Pseudosem v1.0.1, excluding space separators, as they make version

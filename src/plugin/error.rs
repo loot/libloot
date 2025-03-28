@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use fancy_regex::Error as RegexImplError;
+
 /// Represents an error that occurred while reading a parsed plugin's data.
 #[derive(Debug)]
 pub struct PluginDataError(esplugin::Error);
@@ -28,7 +30,7 @@ pub(crate) enum LoadPluginError {
     InvalidFilename(InvalidFilenameReason),
     IoError(std::io::Error),
     ParsingError(esplugin::Error),
-    RegexError(Box<fancy_regex::Error>),
+    RegexError(Box<RegexImplError>),
 }
 
 impl std::fmt::Display for LoadPluginError {
@@ -65,8 +67,8 @@ impl From<esplugin::Error> for LoadPluginError {
     }
 }
 
-impl From<Box<fancy_regex::Error>> for LoadPluginError {
-    fn from(value: Box<fancy_regex::Error>) -> Self {
+impl From<Box<RegexImplError>> for LoadPluginError {
+    fn from(value: Box<RegexImplError>) -> Self {
         LoadPluginError::RegexError(value)
     }
 }

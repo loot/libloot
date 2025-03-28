@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-use fancy_regex::{Captures, Regex};
+use fancy_regex::{Captures, Error as RegexImplError, Regex};
 use saphyr::MarkedYaml;
 
 use crate::logging;
@@ -219,7 +219,7 @@ struct PluginName {
 }
 
 impl PluginName {
-    fn new(name: &str) -> Result<Self, Box<fancy_regex::Error>> {
+    fn new(name: &str) -> Result<Self, Box<RegexImplError>> {
         let name = trim_dot_ghost(name).to_string();
 
         if is_regex_name(&name) {

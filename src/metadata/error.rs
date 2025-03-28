@@ -1,6 +1,7 @@
 //! Holds all error types related to LOOT metadata.
 use std::path::PathBuf;
 
+use fancy_regex::Error as RegexImplError;
 use saphyr::Marker;
 
 use crate::metadata::MessageContent;
@@ -124,7 +125,7 @@ impl From<saphyr::ScanError> for ParseMetadataError {
 pub(super) enum MetadataParsingErrorReason {
     InvalidCondition(Box<(String, loot_condition_interpreter::Error)>),
     MissingKey(&'static str, YamlObjectType),
-    InvalidRegex(Box<fancy_regex::Error>),
+    InvalidRegex(Box<RegexImplError>),
     InvalidMultilingualMessageContents,
     UnexpectedType(ExpectedType, YamlObjectType),
     UnexpectedValueType(&'static str, ExpectedType, YamlObjectType),
@@ -209,7 +210,7 @@ impl std::fmt::Display for ExpectedType {
 /// Represents an error encountered while parsing and compiling a regex plugin
 /// name.
 #[derive(Clone, Debug)]
-pub struct RegexError(Box<fancy_regex::Error>);
+pub struct RegexError(Box<RegexImplError>);
 
 impl std::fmt::Display for RegexError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -223,8 +224,8 @@ impl std::error::Error for RegexError {
     }
 }
 
-impl From<Box<fancy_regex::Error>> for RegexError {
-    fn from(value: Box<fancy_regex::Error>) -> Self {
+impl From<Box<RegexImplError>> for RegexError {
+    fn from(value: Box<RegexImplError>) -> Self {
         Self(value)
     }
 }
