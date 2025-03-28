@@ -15,6 +15,7 @@ use fancy_regex::{Error as RegexImplError, Regex};
 use crate::{
     GameType,
     archive::{assets_in_archives, do_assets_overlap, find_associated_archives},
+    case_insensitive_regex,
     game::GameCache,
     logging,
     metadata::plugin_metadata::trim_dot_ghost,
@@ -426,16 +427,16 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplErr
             /* The string below matches timestamps that use forwardslashes for date
             separators. However, Pseudosem v1.0.1 will only compare the first
             two digits as it does not recognise forwardslashes as separators. */
-            Regex::new(r"(?i)(\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2})")
+            case_insensitive_regex(r"(\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2})")
                 .expect("Hardcoded version timestamp regex should be valid"),
-            Regex::new(&format!(r"(?i)version:?\s{}", pseudosem_regex_str))
+            case_insensitive_regex(&format!(r"version:?\s{}", pseudosem_regex_str))
                 .expect("Hardcoded version-prefixed pseudosem version regex should be valid"),
-            Regex::new(&format!(r"(?i)(?:^|v|\s){}", pseudosem_regex_str))
+            case_insensitive_regex(&format!(r"(?:^|v|\s){}", pseudosem_regex_str))
                 .expect("Hardcoded pseudosem version regex should be valid"),
             /* The string below matches a number containing one or more
             digits found at the start of the search string or preceded by
             'v' or 'version:. */
-            Regex::new(r"(?i)(?:^|v|version:\s*)(\d+)")
+            case_insensitive_regex(r"(?:^|v|version:\s*)(\d+)")
                 .expect("Hardcoded prefixed version number regex should be valid"),
         ])
     });

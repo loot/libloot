@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use fancy_regex::{Captures, Error as RegexImplError, Regex};
 use saphyr::MarkedYaml;
 
-use crate::logging;
+use crate::{case_insensitive_regex, logging};
 
 use super::{
     error::{MetadataParsingErrorReason, ParseMetadataError, RegexError},
@@ -239,7 +239,7 @@ impl PluginName {
                     format!("{}(?:{}", &captures[1], &captures[2])
                 });
 
-            let regex = Regex::new(&format!("(?i)^{}$", &regex_name))?;
+            let regex = case_insensitive_regex(&format!("^{}$", &regex_name))?;
             Ok(Self {
                 string: name,
                 regex: Some(regex),
