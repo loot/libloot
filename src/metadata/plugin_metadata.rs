@@ -1,6 +1,6 @@
-use std::sync::LazyLock;
+use std::borrow::Cow;
 
-use fancy_regex::{Captures, Error as RegexImplError, Regex};
+use fancy_regex::{Error as RegexImplError, Regex};
 use saphyr::MarkedYaml;
 
 use crate::{case_insensitive_regex, logging};
@@ -223,23 +223,10 @@ impl PluginName {
         let name = trim_dot_ghost(name).to_string();
 
         if is_regex_name(&name) {
-            // Many regexes are written with capturing groups as that's the
-            // simplest way to write them, but in plugin metadata they could all
-            // be non-capturing groups.
-            // Over the Skyrim SE masterlist, using non-capturing groups saves
-            // about 15 MB of memory at runtime, which is ~ 25% of the memory
-            // used by the regex matching caches.
-            static CAPTURING_GROUP_START_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-                Regex::new(r"(^|[^\\])\(([^?])")
-                    .expect("capturing group start regex should be valid")
-            });
+            let non_capturing_name = replace_capturing_groups(&name);
 
-            let regex_name = CAPTURING_GROUP_START_REGEX
-                .replace_all(&name, |captures: &Captures| {
-                    format!("{}(?:{}", &captures[1], &captures[2])
-                });
+            let regex = case_insensitive_regex(&format!("^{}$", &non_capturing_name))?;
 
-            let regex = case_insensitive_regex(&format!("^{}$", &regex_name))?;
             Ok(Self {
                 string: name,
                 regex: Some(regex),
@@ -322,6 +309,43 @@ fn merge_vecs<T: Clone + PartialEq>(target: &mut Vec<T>, source: &[T]) {
         if !target[..initial_target_len].contains(element) {
             target.push(element.clone())
         }
+    }
+}
+
+fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
+    let mut output = String::new();
+    let mut prefix_length = 0;
+    let mut remainder = regex_string;
+    while let Some(pos) = remainder.find('(') {
+        let (before, after) = match remainder.split_at_checked(pos + 1) {
+            Some(t) => t,
+            None => break,
+        };
+
+        if after.starts_with('?') || (before.ends_with("\\(") && !before.ends_with("\\\\(")) {
+            if output.is_empty() {
+                // No need to copy the string yet.
+                prefix_length += before.len();
+            } else {
+                output.push_str(before);
+            }
+        } else {
+            if output.is_empty() {
+                output.push_str(&regex_string[..prefix_length]);
+            }
+
+            output.push_str(before);
+            output.push_str("?:");
+        }
+
+        remainder = after;
+    }
+
+    if output.is_empty() {
+        Cow::Borrowed(regex_string)
+    } else {
+        output.push_str(remainder);
+        Cow::Owned(output)
     }
 }
 
@@ -1160,6 +1184,55 @@ mod tests {
                 ),
                 yaml
             );
+        }
+    }
+
+    mod replace_capturing_groups {
+        use super::*;
+
+        #[test]
+        fn should_replace_capturing_groups_with_non_capturing_groups() {
+            let input = r"(a)?\((b)\)((?x)|\\(d))(?:e)\(";
+
+            let output = replace_capturing_groups(input);
+
+            assert_eq!(r"(?:a)?\((?:b)\)(?:(?x)|\\(?:d))(?:e)\(", output);
+        }
+
+        #[test]
+        fn should_not_clone_string_if_no_opening_parentheses_are_found() {
+            let input = "no parentheses";
+
+            match replace_capturing_groups(input) {
+                Cow::Borrowed(output) => assert_eq!(input, output),
+                Cow::Owned(output) => panic!("Expected borrowed output, got {}", output),
+            }
+        }
+
+        #[test]
+        fn should_not_clone_string_if_no_capturing_groups_are_found() {
+            let input = "no paren(?:thes)es";
+
+            match replace_capturing_groups(input) {
+                Cow::Borrowed(output) => assert_eq!(input, output),
+                Cow::Owned(output) => panic!("Expected borrowed output, got {}", output),
+            }
+
+            let input = "no paren(?:th(?:e)s)es";
+
+            match replace_capturing_groups(input) {
+                Cow::Borrowed(output) => assert_eq!(input, output),
+                Cow::Owned(output) => panic!("Expected borrowed output, got {}", output),
+            }
+        }
+
+        #[test]
+        fn should_clone_non_capturing_prefix_correctly() {
+            let input = r"(?:a)?\(?:(b)\)((?x)|\\(d))(?:e)\(";
+
+            let output = replace_capturing_groups(input);
+
+            assert_eq!(r"(?:a)?\(?:(?:b)\)(?:(?x)|\\(?:d))(?:e)\(", output);
         }
     }
 }
