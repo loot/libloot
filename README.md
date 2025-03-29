@@ -15,7 +15,6 @@ If this experiment is successful it will probably end up being merged into the l
 ## Outstanding issues
 
 - It uses more memory than the C++ implementation, and I haven't finished investigating why or if there's anything I can/should do about that.
-- I'm not very confident about the YAML emitter I've written, it needs more test cases and probably another review against the spec.
 - The `saphyr` and `saphyr-parser` dependencies that are used to parse metadata YAML have some rough edges, and compared to the other dependencies they are relatively new, unpopular libraries that are maintained by people I've not heard of before, so they may be relatively risky dependencies.
 
 ## Build
