@@ -10,7 +10,7 @@ use std::{
 };
 
 use esplugin::ParseOptions;
-use fancy_regex::{Error as RegexImplError, Regex};
+use regress::{Error as RegexImplError, Regex};
 
 use crate::{
     GameType,
@@ -444,16 +444,22 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplErr
     Ok(None)
 }
 
+#[expect(
+    clippy::unnecessary_wraps,
+    reason = "For compatibility with the fancy-regex version"
+)]
 fn find_captured_text(regex: &Regex, text: &str) -> Result<Option<String>, Box<RegexImplError>> {
     let captured_text = regex
-        .captures(text)?
-        .iter()
-        .flat_map(|captures| captures.iter())
-        .flatten()
-        .skip(1) // Skip the first capture as that's the whole regex.
-        .map(|m| m.as_str().trim())
-        .find(|v| !v.is_empty())
-        .map(str::to_owned);
+        .find(text)
+        .and_then(|m| m.group(1))
+        .and_then(|r| {
+            if let Some(s) = text.get(r.clone()) {
+                Some(s.trim().to_owned())
+            } else {
+                logging::error!("Matched version regex capturing group range was out of bounds, got range {r:?} for string {text}");
+                None
+            }
+        });
 
     Ok(captured_text)
 }
