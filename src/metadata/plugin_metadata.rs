@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 
-use fancy_regex::{Error as RegexImplError, Regex};
+use regress::{Error as RegexImplError, Regex};
 use saphyr::MarkedYaml;
 
-use crate::{Database, case_insensitive_regex, error::ConditionEvaluationError, logging};
+use crate::{Database, case_insensitive_regex, error::ConditionEvaluationError};
 
 use super::{
     error::{MetadataParsingErrorReason, ParseMetadataError, RegexError},
@@ -388,17 +388,7 @@ fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
 }
 
 fn is_regex_match(regex: &Regex, string: &str) -> bool {
-    regex
-        .is_match(string)
-        .inspect_err(|e| {
-            logging::error!(
-                "Encountered an error while trying to match the regex {} to the string {}: {}",
-                regex.as_str(),
-                string,
-                e
-            );
-        })
-        .unwrap_or(false)
+    regex.find(string).is_some()
 }
 
 impl TryFromYaml for PluginMetadata {

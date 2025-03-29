@@ -10,7 +10,7 @@ use std::{
 };
 
 use esplugin::ParseOptions;
-use fancy_regex::{Error as RegexImplError, Regex};
+use regress::Regex;
 
 use crate::{
     GameType,
@@ -80,7 +80,7 @@ impl Plugin {
 
                 if let Some(description) = plugin.description()? {
                     tags = extract_bash_tags(&description).into_boxed_slice();
-                    version = extract_version(&description)?;
+                    version = extract_version(&description);
                 }
 
                 archive_paths =
@@ -399,7 +399,7 @@ fn extract_bash_tags(description: &str) -> Vec<String> {
     Vec::new()
 }
 
-fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplError>> {
+fn extract_version(description: &str) -> Option<String> {
     #[expect(
         clippy::expect_used,
         reason = "Only panics if a hardcoded regex string is invalid"
@@ -434,28 +434,28 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplErr
     });
 
     for regex in &*VERSION_REGEXES {
-        let version = find_captured_text(regex, description)?;
+        let version = find_captured_text(regex, description);
 
         if version.is_some() {
-            return Ok(version);
+            return version;
         }
     }
 
-    Ok(None)
+    None
 }
 
-fn find_captured_text(regex: &Regex, text: &str) -> Result<Option<String>, Box<RegexImplError>> {
-    let captured_text = regex
-        .captures(text)?
-        .iter()
-        .flat_map(|captures| captures.iter())
-        .flatten()
-        .skip(1) // Skip the first capture as that's the whole regex.
-        .map(|m| m.as_str().trim())
-        .find(|v| !v.is_empty())
-        .map(str::to_owned);
-
-    Ok(captured_text)
+fn find_captured_text(regex: &Regex, text: &str) -> Option<String> {
+    regex
+        .find(text)
+        .and_then(|m| m.group(1))
+        .and_then(|r| {
+            if let Some(s) = text.get(r.clone()) {
+                Some(s.trim().to_owned())
+            } else {
+                logging::error!("Matched version regex capturing group range was out of bounds, got range {r:?} for string {text}");
+                None
+            }
+        })
 }
 
 #[cfg(test)]
@@ -1185,29 +1185,24 @@ Requires Skyrim Special Edition 1.5.39 or greater.
 
         #[test]
         fn should_extract_a_version_containing_a_single_digit() {
-            assert_eq!("5", extract_version("5").unwrap().unwrap());
+            assert_eq!("5", extract_version("5").unwrap());
         }
 
         #[test]
         fn should_extract_a_version_containing_multiple_digits() {
-            assert_eq!("10", extract_version("10").unwrap().unwrap());
+            assert_eq!("10", extract_version("10").unwrap());
         }
 
         #[test]
         fn should_extract_a_version_containing_multiple_numbers() {
-            assert_eq!(
-                "10.11.12.13",
-                extract_version("10.11.12.13").unwrap().unwrap()
-            );
+            assert_eq!("10.11.12.13", extract_version("10.11.12.13").unwrap());
         }
 
         #[test]
         fn should_extract_a_semantic_version() {
             assert_eq!(
                 "1.0.0-x.7.z.92",
-                extract_version("1.0.0-x.7.z.92+exp.sha.5114f85")
-                    .unwrap()
-                    .unwrap()
+                extract_version("1.0.0-x.7.z.92+exp.sha.5114f85").unwrap()
             );
         }
 
@@ -1215,22 +1210,18 @@ Requires Skyrim Special Edition 1.5.39 or greater.
         fn should_extract_a_pseudosem_extended_version_stopping_at_the_first_space_separator() {
             assert_eq!(
                 "01.0.0_alpha:1-2",
-                extract_version("01.0.0_alpha:1-2 3").unwrap().unwrap()
+                extract_version("01.0.0_alpha:1-2 3").unwrap()
             );
         }
 
         #[test]
         fn should_extract_a_version_substring() {
-            assert_eq!("5.0", extract_version("v5.0").unwrap().unwrap());
+            assert_eq!("5.0", extract_version("v5.0").unwrap());
         }
 
         #[test]
         fn should_return_none_if_the_string_contains_no_version() {
-            assert!(
-                extract_version("The quick brown fox jumped over the lazy dog.")
-                    .unwrap()
-                    .is_none()
-            );
+            assert!(extract_version("The quick brown fox jumped over the lazy dog.").is_none());
         }
 
         #[test]
@@ -1240,16 +1231,14 @@ Requires Skyrim Special Edition 1.5.39 or greater.
             // easier than trying to skip it and the number of records changed.
             assert_eq!(
                 "10/09/2016 13:15:18",
-                extract_version("Updated: 10/09/2016 13:15:18\r\n\r\nRecords Changed: 43")
-                    .unwrap()
-                    .unwrap()
+                extract_version("Updated: 10/09/2016 13:15:18\r\n\r\nRecords Changed: 43").unwrap()
             );
         }
 
         #[test]
         fn should_not_extract_trailing_periods() {
             // Found in <https://www.nexusmods.com/fallout4/mods/2955/>.
-            assert_eq!("0.2", extract_version("Version 0.2.").unwrap().unwrap());
+            assert_eq!("0.2", extract_version("Version 0.2.").unwrap());
         }
 
         #[test]
@@ -1257,9 +1246,7 @@ Requires Skyrim Special Edition 1.5.39 or greater.
             // Found in <https://www.nexusmods.com/skyrim/mods/71214/>.
             assert_eq!(
                 "3.0.0",
-                extract_version("Legendary Edition\r\n\r\nVersion: 3.0.0")
-                    .unwrap()
-                    .unwrap()
+                extract_version("Legendary Edition\r\n\r\nVersion: 3.0.0").unwrap()
             );
         }
 
@@ -1268,9 +1255,7 @@ Requires Skyrim Special Edition 1.5.39 or greater.
             // Found in <https://www.nexusmods.com/oblivion/mods/5296/>.
             assert_eq!(
                 "3.5.3",
-                extract_version("fixing over 2,300 bugs so far! Version: 3.5.3")
-                    .unwrap()
-                    .unwrap()
+                extract_version("fixing over 2,300 bugs so far! Version: 3.5.3").unwrap()
             );
         }
 
@@ -1279,9 +1264,7 @@ Requires Skyrim Special Edition 1.5.39 or greater.
             // Found in <https://www.nexusmods.com/fallout3/mods/19122/>.
             assert_eq!(
                 "2.1",
-                extract_version("Version: 2.1 The Unofficial Fallout 3 Patch")
-                    .unwrap()
-                    .unwrap()
+                extract_version("Version: 2.1 The Unofficial Fallout 3 Patch").unwrap()
             );
         }
 
@@ -1290,28 +1273,26 @@ Requires Skyrim Special Edition 1.5.39 or greater.
             // Found in <https://www.nexusmods.com/oblivion/mods/22795/>.
             assert_eq!(
                 "2.11",
-                extract_version("V2.11\r\n\r\n{{BASH:Invent}}")
-                    .unwrap()
-                    .unwrap()
+                extract_version("V2.11\r\n\r\n{{BASH:Invent}}").unwrap()
             );
         }
 
         #[test]
         fn should_extract_a_version_preceded_by_colon_period_whitespace() {
             // Found in <https://www.nexusmods.com/oblivion/mods/45570>.
-            assert_eq!("1.09", extract_version("Version:. 1.09").unwrap().unwrap());
+            assert_eq!("1.09", extract_version("Version:. 1.09").unwrap());
         }
 
         #[test]
         fn should_extract_a_version_with_letters_immediately_after_numbers() {
             // Found in <https://www.nexusmods.com/skyrim/mods/19>.
-            assert_eq!("2.1.3b", extract_version("comprehensive bugfixing mod for The Elder Scrolls V: Skyrim\r\n\r\nVersion: 2.1.3b\r\n\r\n").unwrap().unwrap());
+            assert_eq!("2.1.3b", extract_version("comprehensive bugfixing mod for The Elder Scrolls V: Skyrim\r\n\r\nVersion: 2.1.3b\r\n\r\n").unwrap());
         }
 
         #[test]
         fn should_extract_a_version_with_period_and_no_preceding_identifier() {
             // Found in <https://www.nexusmods.com/skyrim/mods/3863>.
-            assert_eq!("5.1", extract_version("SkyUI 5.1").unwrap().unwrap());
+            assert_eq!("5.1", extract_version("SkyUI 5.1").unwrap());
         }
 
         #[test]
@@ -1321,7 +1302,6 @@ Requires Skyrim Special Edition 1.5.39 or greater.
                 extract_version(
                     "Adds 8 variants of Triss Merigold's outfit from \"The Witcher 2\""
                 )
-                .unwrap()
                 .is_none()
             );
         }
@@ -1329,7 +1309,7 @@ Requires Skyrim Special Edition 1.5.39 or greater.
         #[test]
         fn should_prefer_version_prefixed_numbers_over_versions_in_sentence() {
             // Found in <https://www.nexusmods.com/skyrim/mods/47327>
-            assert_eq!("2.0.0", extract_version("Requires Skyrim patch 1.9.32.0.8 or greater.\nRequires Unofficial Skyrim Legendary Edition Patch 3.0.0 or greater.\nVersion 2.0.0").unwrap().unwrap());
+            assert_eq!("2.0.0", extract_version("Requires Skyrim patch 1.9.32.0.8 or greater.\nRequires Unofficial Skyrim Legendary Edition Patch 3.0.0 or greater.\nVersion 2.0.0").unwrap());
         }
 
         #[test]
@@ -1337,27 +1317,20 @@ Requires Skyrim Special Edition 1.5.39 or greater.
             // Found in <https://www.nexusmods.com/skyrim/mods/19733>
             assert_eq!(
                 "8",
-                extract_version("Immersive Armors v8 Main Plugin")
-                    .unwrap()
-                    .unwrap()
+                extract_version("Immersive Armors v8 Main Plugin").unwrap()
             );
         }
 
         #[test]
         fn should_prefer_version_prefixed_numbers_over_v_prefixed_number() {
             // Found in <https://www.nexusmods.com/skyrim/mods/43773>
-            assert_eq!("1.0", extract_version("Compatibility patch for AOS v2.5 and True Storms v1.5 (or later),\nPatch Version: 1.0").unwrap().unwrap());
+            assert_eq!("1.0", extract_version("Compatibility patch for AOS v2.5 and True Storms v1.5 (or later),\nPatch Version: 1.0").unwrap());
         }
 
         #[test]
         fn should_extract_a_version_that_is_a_single_digit_after_version_colon_space() {
             // Found in <https://www.nexusmods.com/oblivion/mods/14720>
-            assert_eq!(
-                "2",
-                extract_version("Version: 2 {{BASH:C.Water}}")
-                    .unwrap()
-                    .unwrap()
-            );
+            assert_eq!("2", extract_version("Version: 2 {{BASH:C.Water}}").unwrap());
         }
     }
 }

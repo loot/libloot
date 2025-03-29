@@ -155,7 +155,7 @@ Removed
   - ``\c<letter>`` control code escape sequences, use ``\x<hex>`` instead
   - The ``\0`` null escape sequence, - use ``\x00`` instead
   - The ``[:d:]``, ``[:w:]`` and ``[:s:]`` character classes,
-    use ``[:digit:]``, ``[:alnum:]`` and ``[:space:]`` instead respectively.
+    use ``\d``, ``\w`` and ``\s`` instead respectively.
   - ``\<number>`` backreferences
   - ``(?=<subpattern>)`` and ``(?!<subpattern>)`` positive and negative lookahead
 
