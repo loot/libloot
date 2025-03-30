@@ -12,9 +12,9 @@ use super::{
     message::Message,
     plugin_cleaning_data::PluginCleaningData,
     tag::Tag,
-    yaml::{EmitYaml, YamlEmitter},
     yaml::{
-        YamlObjectType, get_as_hash, get_as_slice, get_required_string_value, get_string_value,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_as_hash, get_as_slice,
+        get_required_string_value, get_string_value,
     },
 };
 
@@ -349,10 +349,8 @@ fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
     }
 }
 
-impl TryFrom<&MarkedYaml> for PluginMetadata {
-    type Error = ParseMetadataError;
-
-    fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
+impl TryFromYaml for PluginMetadata {
+    fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         let hash = get_as_hash(value, YamlObjectType::PluginMetadata)?;
 
         let name = get_required_string_value(
@@ -397,13 +395,13 @@ impl TryFrom<&MarkedYaml> for PluginMetadata {
     }
 }
 
-fn get_vec<'a, T: TryFrom<&'a MarkedYaml, Error = impl Into<ParseMetadataError>>>(
-    hash: &'a saphyr::AnnotatedHash<MarkedYaml>,
+fn get_vec<T: TryFromYaml>(
+    hash: &saphyr::AnnotatedHash<MarkedYaml>,
     key: &'static str,
 ) -> Result<Vec<T>, ParseMetadataError> {
     let mut vec = get_as_slice(hash, key, YamlObjectType::PluginMetadata)?
         .iter()
-        .map(|e| T::try_from(e).map_err(Into::into))
+        .map(|e| T::try_from_yaml(e))
         .collect::<Result<Vec<T>, _>>()?;
 
     vec.shrink_to_fit();
@@ -872,14 +870,14 @@ mod tests {
         fn should_error_if_given_a_scalar() {
             let yaml = parse("name1");
 
-            assert!(PluginMetadata::try_from(&yaml).is_err());
+            assert!(PluginMetadata::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_given_a_list() {
             let yaml = parse("[0, 1, 2]");
 
-            assert!(PluginMetadata::try_from(&yaml).is_err());
+            assert!(PluginMetadata::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
@@ -908,7 +906,7 @@ mod tests {
                   - 'https://www.example.com'",
             );
 
-            let plugin = PluginMetadata::try_from(&yaml).unwrap();
+            let plugin = PluginMetadata::try_from_yaml(&yaml).unwrap();
 
             assert_eq!(BLANK_ESP, plugin.name());
             assert_eq!(&[File::new(BLANK_ESM.into())], plugin.load_after_files());
@@ -955,7 +953,7 @@ mod tests {
                     util: 'utility'",
             );
 
-            let plugin = PluginMetadata::try_from(&yaml).unwrap();
+            let plugin = PluginMetadata::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("Blank\\.esp", plugin.name());
             assert_eq!(
@@ -972,14 +970,14 @@ mod tests {
         fn should_error_if_regex_name_is_invalid() {
             let yaml = parse("{name: 'RagnvaldBook(Farengar(+Ragnvald)?)?\\.esp'}");
 
-            assert!(PluginMetadata::try_from(&yaml).is_err());
+            assert!(PluginMetadata::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_a_field_that_should_be_an_array_is_not() {
             let yaml = parse("{name: 'Blank.esp', after: Blank.esm}");
 
-            assert!(PluginMetadata::try_from(&yaml).is_err());
+            assert!(PluginMetadata::try_from_yaml(&yaml).is_err());
         }
     }
 

@@ -7,10 +7,9 @@ use super::{
         MessageContent, emit_message_contents, parse_message_contents_yaml,
         validate_message_contents,
     },
-    yaml::{EmitYaml, YamlEmitter},
     yaml::{
-        YamlObjectType, as_string_node, get_required_string_value, get_string_value,
-        parse_condition,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_string_node,
+        get_required_string_value, get_string_value, parse_condition,
     },
 };
 
@@ -139,10 +138,8 @@ impl std::fmt::Display for Filename {
     }
 }
 
-impl TryFrom<&MarkedYaml> for File {
-    type Error = ParseMetadataError;
-
-    fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
+impl TryFromYaml for File {
+    fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         match &value.data {
             YamlData::String(s) => Ok(File {
                 name: Filename::new(s.clone()),
@@ -249,7 +246,7 @@ mod tests {
         fn should_only_set_name_if_decoding_from_scalar() {
             let yaml = parse("name1");
 
-            let file = File::try_from(&yaml).unwrap();
+            let file = File::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("name1", file.name().as_str());
             assert!(file.display_name().is_none());
@@ -261,21 +258,21 @@ mod tests {
         fn should_error_if_given_a_list() {
             let yaml = parse("[0, 1, 2]");
 
-            assert!(File::try_from(&yaml).is_err());
+            assert!(File::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_name_is_missing() {
             let yaml = parse("{display: display1}");
 
-            assert!(File::try_from(&yaml).is_err());
+            assert!(File::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_given_an_invalid_condition() {
             let yaml = parse("{name: name1, condition: invalid}");
 
-            assert!(File::try_from(&yaml).is_err());
+            assert!(File::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
@@ -284,7 +281,7 @@ mod tests {
                 "{name: name1, display: display1, condition: 'file(\"Foo.esp\")', detail: 'details'}",
             );
 
-            let file = File::try_from(&yaml).unwrap();
+            let file = File::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("name1", file.name().as_str());
             assert_eq!("display1", file.display_name().unwrap());
@@ -296,7 +293,7 @@ mod tests {
         fn should_leave_optional_fields_empty_if_not_present() {
             let yaml = parse("{name: name1}");
 
-            let file = File::try_from(&yaml).unwrap();
+            let file = File::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("name1", file.name().as_str());
             assert!(file.display_name().is_none());
@@ -310,7 +307,7 @@ mod tests {
                 "{name: name1, detail: [{text: english, lang: en}, {text: french, lang: fr}]}",
             );
 
-            let file = File::try_from(&yaml).unwrap();
+            let file = File::try_from_yaml(&yaml).unwrap();
 
             assert_eq!(
                 &[
@@ -325,7 +322,7 @@ mod tests {
         fn should_not_error_if_one_detail_is_given_and_it_is_not_english() {
             let yaml = parse("name: name1\ndetail:\n  - lang: fr\n    text: content1");
 
-            let file = File::try_from(&yaml).unwrap();
+            let file = File::try_from_yaml(&yaml).unwrap();
 
             assert_eq!(
                 &[MessageContent::new("content1".into()).with_language("fr".into())],
@@ -339,7 +336,7 @@ mod tests {
                 "name: name1\ndetail:\n  - lang: de\n    text: content1\n  - lang: fr\n    text: content2",
             );
 
-            assert!(File::try_from(&yaml).is_err());
+            assert!(File::try_from_yaml(&yaml).is_err());
         }
     }
 

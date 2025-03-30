@@ -1,9 +1,11 @@
 use saphyr::MarkedYaml;
 
-use super::error::ParseMetadataError;
-use super::yaml::{EmitYaml, YamlEmitter};
-use super::yaml::{
-    YamlObjectType, get_as_hash, get_required_string_value, get_string_value, get_strings_vec_value,
+use super::{
+    error::ParseMetadataError,
+    yaml::{
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_as_hash, get_required_string_value,
+        get_string_value, get_strings_vec_value,
+    },
 };
 
 /// Represents a group to which plugin metadata objects can belong.
@@ -82,10 +84,8 @@ impl std::default::Default for Group {
     }
 }
 
-impl TryFrom<&MarkedYaml> for Group {
-    type Error = ParseMetadataError;
-
-    fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
+impl TryFromYaml for Group {
+    fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         let hash = get_as_hash(value, YamlObjectType::Group)?;
 
         let name =
@@ -143,32 +143,32 @@ mod tests {
         fn should_error_if_given_a_list() {
             let yaml = parse("[0, 1, 2]");
 
-            assert!(Group::try_from(&yaml).is_err());
+            assert!(Group::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_name_is_missing() {
             let yaml = parse("{description: text}");
 
-            assert!(Group::try_from(&yaml).is_err());
+            assert!(Group::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_after_is_not_an_array_of_strings() {
             let yaml = parse("{name: group1, after: other_group}");
 
-            assert!(Group::try_from(&yaml).is_err());
+            assert!(Group::try_from_yaml(&yaml).is_err());
 
             let yaml = parse("{name: group1, after: [0, 1]}");
 
-            assert!(Group::try_from(&yaml).is_err());
+            assert!(Group::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_set_all_given_fields() {
             let yaml = parse("{name: group1, description: text, after: [ other_group ]}");
 
-            let group = Group::try_from(&yaml).unwrap();
+            let group = Group::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("group1", group.name());
             assert_eq!("text", group.description().unwrap());
@@ -179,7 +179,7 @@ mod tests {
         fn should_leave_optional_fields_empty_if_not_present() {
             let yaml = parse("{name: group1}");
 
-            let group = Group::try_from(&yaml).unwrap();
+            let group = Group::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("group1", group.name());
             assert!(group.description().is_none());

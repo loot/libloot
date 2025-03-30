@@ -6,8 +6,10 @@ use super::{
         MessageContent, emit_message_contents, parse_message_contents_yaml,
         validate_message_contents,
     },
-    yaml::{EmitYaml, YamlEmitter},
-    yaml::{YamlObjectType, as_string_node, get_as_hash, get_required_string_value, get_u32_value},
+    yaml::{
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_string_node, get_as_hash,
+        get_required_string_value, get_u32_value,
+    },
 };
 
 /// Represents data identifying the plugin under which it is stored as dirty or
@@ -134,10 +136,8 @@ impl PluginCleaningData {
     }
 }
 
-impl TryFrom<&MarkedYaml> for PluginCleaningData {
-    type Error = ParseMetadataError;
-
-    fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
+impl TryFromYaml for PluginCleaningData {
+    fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         let hash = get_as_hash(value, YamlObjectType::PluginCleaningData)?;
 
         let crc = match get_u32_value(hash, "crc", YamlObjectType::PluginCleaningData)? {
@@ -224,58 +224,58 @@ mod tests {
         fn should_error_if_given_a_scalar() {
             let yaml = parse("0x12345678");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_given_a_list() {
             let yaml = parse("[0, 1, 2]");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_crc_is_missing() {
             let yaml = parse("{util: cleaner}");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_util_is_missing() {
             let yaml = parse("{crc: 0x12345678}");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_a_count_is_not_a_number() {
             let yaml = parse("{crc: 0x12345678, util: cleaner, itm: true}");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
 
             let yaml = parse("{crc: 0x12345678, util: cleaner, udr: true}");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
 
             let yaml = parse("{crc: 0x12345678, util: cleaner, nav: true}");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_a_count_does_not_fit_in_a_u32() {
             let yaml = parse("{crc: 0x12345678, util: cleaner, itm: -1}");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
 
             let yaml = parse("{crc: 0x12345678, util: cleaner, udr: -2}");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
 
             let yaml = parse("{crc: 0x12345678, util: cleaner, nav: -3}");
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
@@ -283,7 +283,7 @@ mod tests {
             let yaml =
                 parse("{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: 30}");
 
-            let data = PluginCleaningData::try_from(&yaml).unwrap();
+            let data = PluginCleaningData::try_from_yaml(&yaml).unwrap();
 
             assert_eq!(0x12345678, data.crc());
             assert_eq!("cleaner", data.cleaning_utility());
@@ -297,7 +297,7 @@ mod tests {
         fn should_leave_optional_fields_at_defaults_if_not_present() {
             let yaml = parse("{crc: 0x12345678, util: cleaner}");
 
-            let data = PluginCleaningData::try_from(&yaml).unwrap();
+            let data = PluginCleaningData::try_from_yaml(&yaml).unwrap();
 
             assert_eq!(0x12345678, data.crc());
             assert_eq!("cleaner", data.cleaning_utility());
@@ -313,7 +313,7 @@ mod tests {
                 "{crc: 0x12345678, util: cleaner, detail: [{text: english, lang: en}, {text: french, lang: fr}]}",
             );
 
-            let data = PluginCleaningData::try_from(&yaml).unwrap();
+            let data = PluginCleaningData::try_from_yaml(&yaml).unwrap();
 
             assert_eq!(
                 &[
@@ -329,7 +329,7 @@ mod tests {
             let yaml =
                 parse("crc: 0x12345678\nutil: cleaner\ndetail:\n  - lang: fr\n    text: content1");
 
-            let data = PluginCleaningData::try_from(&yaml).unwrap();
+            let data = PluginCleaningData::try_from_yaml(&yaml).unwrap();
 
             assert_eq!(
                 &[MessageContent::new("content1".into()).with_language("fr".into())],
@@ -343,7 +343,7 @@ mod tests {
                 "crc: 0x12345678\nutil: cleaner\ndetail:\n  - lang: de\n    text: content1\n  - lang: fr\n    text: content2",
             );
 
-            assert!(PluginCleaningData::try_from(&yaml).is_err());
+            assert!(PluginCleaningData::try_from_yaml(&yaml).is_err());
         }
     }
 

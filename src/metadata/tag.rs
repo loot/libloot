@@ -1,10 +1,12 @@
-use saphyr::YamlData;
+use saphyr::{MarkedYaml, YamlData};
 
-use super::error::ExpectedType;
-use super::error::ParseMetadataError;
-use super::yaml::EmitYaml;
-use super::yaml::YamlEmitter;
-use super::yaml::{YamlObjectType, get_required_string_value, parse_condition};
+use super::{
+    error::{ExpectedType, ParseMetadataError},
+    yaml::{
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_required_string_value,
+        parse_condition,
+    },
+};
 
 /// Represents whether a Bash Tag suggestion is for addition or removal.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -62,10 +64,8 @@ impl Tag {
     }
 }
 
-impl TryFrom<&saphyr::MarkedYaml> for Tag {
-    type Error = ParseMetadataError;
-
-    fn try_from(value: &saphyr::MarkedYaml) -> Result<Self, Self::Error> {
+impl TryFromYaml for Tag {
+    fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         match &value.data {
             YamlData::String(s) => {
                 let (name, suggestion) = name_and_suggestion(s);
@@ -146,7 +146,7 @@ mod tests {
         fn should_only_set_name_and_suggestion_if_decoding_from_scalar() {
             let yaml = parse("Relev");
 
-            let tag = Tag::try_from(&yaml).unwrap();
+            let tag = Tag::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("Relev", tag.name());
             assert!(tag.is_addition());
@@ -157,7 +157,7 @@ mod tests {
         fn should_only_set_name_and_suggestion_if_decoding_from_scalar_with_leading_hyphen() {
             let yaml = parse("-Relev");
 
-            let tag = Tag::try_from(&yaml).unwrap();
+            let tag = Tag::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("Relev", tag.name());
             assert!(!tag.is_addition());
@@ -168,28 +168,28 @@ mod tests {
         fn should_error_if_given_a_list() {
             let yaml = parse("[0, 1, 2]");
 
-            assert!(Tag::try_from(&yaml).is_err());
+            assert!(Tag::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_name_is_missing() {
             let yaml = parse("{condition: 'file(\"Foo.esp\")'}");
 
-            assert!(Tag::try_from(&yaml).is_err());
+            assert!(Tag::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_given_an_invalid_condition() {
             let yaml = parse("{name: Relev, condition: invalid}");
 
-            assert!(Tag::try_from(&yaml).is_err());
+            assert!(Tag::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_set_all_fields() {
             let yaml = parse("{name: Relev, condition: 'file(\"Foo.esp\")'}");
 
-            let tag = Tag::try_from(&yaml).unwrap();
+            let tag = Tag::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("Relev", tag.name());
             assert!(tag.is_addition());
@@ -200,7 +200,7 @@ mod tests {
         fn should_leave_optional_fields_empty_if_not_present() {
             let yaml = parse("{name: Relev}");
 
-            let tag = Tag::try_from(&yaml).unwrap();
+            let tag = Tag::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("Relev", tag.name());
             assert!(tag.is_addition());

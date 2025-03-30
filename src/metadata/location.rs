@@ -1,11 +1,9 @@
 use saphyr::{MarkedYaml, YamlData};
 
-use super::error::ExpectedType;
-use super::error::ParseMetadataError;
-
-use super::yaml::EmitYaml;
-use super::yaml::YamlEmitter;
-use super::yaml::{YamlObjectType, get_required_string_value};
+use super::{
+    error::{ExpectedType, ParseMetadataError},
+    yaml::{EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_required_string_value},
+};
 
 /// Represents a URL at which the parent plugin can be found.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -48,10 +46,8 @@ impl Location {
     }
 }
 
-impl TryFrom<&MarkedYaml> for Location {
-    type Error = ParseMetadataError;
-
-    fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
+impl TryFromYaml for Location {
+    fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         match &value.data {
             YamlData::String(s) => Ok(Location {
                 url: s.clone(),
@@ -120,7 +116,7 @@ mod tests {
         fn should_only_set_name_if_decoding_from_scalar() {
             let yaml = parse("https://www.example.com");
 
-            let location = Location::try_from(&yaml).unwrap();
+            let location = Location::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("https://www.example.com", location.url());
             assert!(location.name().is_none());
@@ -130,42 +126,42 @@ mod tests {
         fn should_error_if_given_a_list() {
             let yaml = parse("[0, 1, 2]");
 
-            assert!(Location::try_from(&yaml).is_err());
+            assert!(Location::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_link_is_missing() {
             let yaml = parse("{name: example}");
 
-            assert!(Location::try_from(&yaml).is_err());
+            assert!(Location::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_link_is_not_a_string() {
             let yaml = parse("{link: [https://www.example.com], name: example}");
 
-            assert!(Location::try_from(&yaml).is_err());
+            assert!(Location::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_name_is_not_a_string() {
             let yaml = parse("{link: https://www.example.com, name: [example]}");
 
-            assert!(Location::try_from(&yaml).is_err());
+            assert!(Location::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_error_if_name_is_missing() {
             let yaml = parse("{link: https://www.example.com}");
 
-            assert!(Location::try_from(&yaml).is_err());
+            assert!(Location::try_from_yaml(&yaml).is_err());
         }
 
         #[test]
         fn should_set_all_fields() {
             let yaml = parse("{link: https://www.example.com, name: example}");
 
-            let location = Location::try_from(&yaml).unwrap();
+            let location = Location::try_from_yaml(&yaml).unwrap();
 
             assert_eq!("https://www.example.com", location.url());
             assert_eq!("example", location.name().unwrap());

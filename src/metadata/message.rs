@@ -10,10 +10,9 @@ use super::{
         ExpectedType, MetadataParsingErrorReason, MultilingualMessageContentsError,
         ParseMetadataError,
     },
-    yaml::{EmitYaml, YamlEmitter},
     yaml::{
-        YamlObjectType, as_string_node, get_as_hash, get_required_string_value,
-        get_strings_vec_value, parse_condition,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_string_node, get_as_hash,
+        get_required_string_value, get_strings_vec_value, parse_condition,
     },
 };
 
@@ -239,10 +238,8 @@ pub(crate) fn validate_message_contents(
     Ok(())
 }
 
-impl TryFrom<&MarkedYaml> for MessageContent {
-    type Error = ParseMetadataError;
-
-    fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
+impl TryFromYaml for MessageContent {
+    fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         let hash = get_as_hash(value, YamlObjectType::MessageContent)?;
 
         let text =
@@ -269,7 +266,7 @@ pub(crate) fn parse_message_contents_yaml(
         }
         YamlData::Array(a) => a
             .iter()
-            .map(MessageContent::try_from)
+            .map(MessageContent::try_from_yaml)
             .collect::<Result<Vec<MessageContent>, _>>()?,
         _ => {
             return Err(ParseMetadataError::unexpected_value_type(
@@ -293,10 +290,8 @@ pub(crate) fn parse_message_contents_yaml(
     }
 }
 
-impl TryFrom<&MarkedYaml> for Message {
-    type Error = ParseMetadataError;
-
-    fn try_from(value: &MarkedYaml) -> Result<Self, Self::Error> {
+impl TryFromYaml for Message {
+    fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         let hash = get_as_hash(value, YamlObjectType::Message)?;
 
         let message_type =
@@ -554,21 +549,21 @@ mod tests {
             fn should_error_if_given_a_scalar() {
                 let yaml = parse("content");
 
-                assert!(MessageContent::try_from(&yaml).is_err());
+                assert!(MessageContent::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_error_if_given_a_list() {
                 let yaml = parse("[0, 1, 2]");
 
-                assert!(MessageContent::try_from(&yaml).is_err());
+                assert!(MessageContent::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_set_all_given_fields() {
                 let yaml = parse("{text: content, lang: fr}");
 
-                let content = MessageContent::try_from(&yaml).unwrap();
+                let content = MessageContent::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!("content", content.text());
                 assert_eq!("fr", content.language());
@@ -603,35 +598,35 @@ mod tests {
             fn should_error_if_given_a_scalar() {
                 let yaml = parse("content");
 
-                assert!(Message::try_from(&yaml).is_err());
+                assert!(Message::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_error_if_given_a_list() {
                 let yaml = parse("[0, 1, 2]");
 
-                assert!(Message::try_from(&yaml).is_err());
+                assert!(Message::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_error_if_content_is_missing() {
                 let yaml = parse("{type: say}");
 
-                assert!(Message::try_from(&yaml).is_err());
+                assert!(Message::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_error_if_given_an_invalid_condition() {
                 let yaml = parse("{type: say, content: text, condition: invalid}");
 
-                assert!(Message::try_from(&yaml).is_err());
+                assert!(Message::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_set_all_given_fields() {
                 let yaml = parse("{type: say, content: text, condition: 'file(\"Foo.esp\")'}");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!(MessageType::Say, message.message_type());
                 assert_eq!(&[MessageContent::new("text".into())], message.content());
@@ -642,7 +637,7 @@ mod tests {
             fn should_leave_optional_fields_empty_if_not_present() {
                 let yaml = parse("{type: say, content: text}");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!(MessageType::Say, message.message_type());
                 assert_eq!(&[MessageContent::new("text".into())], message.content());
@@ -653,17 +648,17 @@ mod tests {
             fn should_set_say_warn_and_error_message_types() {
                 let yaml = parse("{type: say, content: text}");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
                 assert_eq!(MessageType::Say, message.message_type());
 
                 let yaml = parse("{type: warn, content: text}");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
                 assert_eq!(MessageType::Warn, message.message_type());
 
                 let yaml = parse("{type: error, content: text}");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
                 assert_eq!(MessageType::Error, message.message_type());
             }
 
@@ -671,7 +666,7 @@ mod tests {
             fn should_use_say_if_message_type_is_unrecognised() {
                 let yaml = parse("{type: info, content: text}");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
                 assert_eq!(MessageType::Say, message.message_type());
             }
 
@@ -681,7 +676,7 @@ mod tests {
                     "{type: say, content: [{text: english, lang: en}, {text: french, lang: fr}]}",
                 );
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!(
                     &[
@@ -696,7 +691,7 @@ mod tests {
             fn should_not_error_if_one_content_object_is_given_and_it_is_not_english() {
                 let yaml = parse("type: say\ncontent:\n  - lang: fr\n    text: content1");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!(
                     &[MessageContent::new("content1".into()).with_language("fr".into())],
@@ -710,14 +705,14 @@ mod tests {
                     "type: say\ncontent:\n  - lang: de\n    text: content1\n  - lang: fr\n    text: content2",
                 );
 
-                assert!(Message::try_from(&yaml).is_err());
+                assert!(Message::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_apply_substitutions_when_there_is_only_one_content_string() {
                 let yaml = parse("type: say\ncontent: con{0}tent1\nsubs:\n  - sub1");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!("consub1tent1", message.content()[0].text());
             }
@@ -728,7 +723,7 @@ mod tests {
                     "type: say\ncontent:\n  - lang: en\n    text: content1 {0}\n  - lang: fr\n    text: content2 {0}\nsubs:\n  - sub",
                 );
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!("content1 sub", message.content()[0].text());
                 assert_eq!("content2 sub", message.content()[1].text());
@@ -738,21 +733,21 @@ mod tests {
             fn should_error_if_the_message_has_more_substitutions_than_expected() {
                 let yaml = parse("{type: say, content: 'content1', subs: [sub1]}");
 
-                assert!(Message::try_from(&yaml).is_err());
+                assert!(Message::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_error_if_the_content_string_expects_more_substitutions_than_exist() {
                 let yaml = parse("{type: say, content: '{0} {1}', subs: [sub1]}");
 
-                assert!(Message::try_from(&yaml).is_err());
+                assert!(Message::try_from_yaml(&yaml).is_err());
             }
 
             #[test]
             fn should_ignore_substution_syntax_if_no_substitutions_exist() {
                 let yaml = parse("{type: say, content: 'content {0}'}");
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!("content {0}", message.content()[0].text());
             }
@@ -763,7 +758,7 @@ mod tests {
                     "{type: say, content: 'content %1% %2% %3% %4% %5% %6% %7% %8% %9% %10% %11%', subs: [a, b, c, d, e, f, g, h, i, j, k]}",
                 );
 
-                let message = Message::try_from(&yaml).unwrap();
+                let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!("content a b c d e f g h i j k", message.content()[0].text());
             }
