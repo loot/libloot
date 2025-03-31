@@ -30,6 +30,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "api/game/load_order_handler.h"
@@ -53,7 +54,7 @@ class Plugin final : public PluginSortingInterface {
 public:
   explicit Plugin(const GameType gameType,
                   const GameCache& gameCache,
-                  std::filesystem::path pluginPath,
+                  const std::filesystem::path& pluginPath,
                   const bool headerOnly);
 
   void ResolveRecordIds(Vec_PluginMetadata* pluginsMetadata) const;
@@ -116,7 +117,7 @@ private:
 
 std::string GetArchiveFileExtension(const GameType gameType);
 
-bool hasPluginFileExtension(std::string filename, GameType gameType);
+bool hasPluginFileExtension(std::string_view filename, GameType gameType);
 
 bool equivalent(const std::filesystem::path& path1,
                 const std::filesystem::path& path2);

@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <libloadorder.hpp>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/enum/game_type.h"
@@ -61,7 +62,7 @@ public:
       const std::vector<std::filesystem::path>& dataPaths) const;
 
 private:
-  void HandleError(const std::string& operation, unsigned int returnCode) const;
+  void HandleError(std::string_view operation, unsigned int returnCode) const;
 
   std::unique_ptr<std::remove_pointer<lo_game_handle>::type,
                   decltype(&lo_destroy_handle)>

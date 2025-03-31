@@ -37,17 +37,20 @@
 #include "loot/exception/file_access_error.h"
 
 namespace loot {
+// Intentionally takes a copy of the first parameter.
 std::filesystem::path ReplaceExtension(std::filesystem::path path,
-                                       const std::string& newExtension) {
+                                       std::string_view newExtension) {
   return path.replace_extension(std::filesystem::u8path(newExtension));
 }
 
+// Intentionally takes a copy of the first parameter.
 std::filesystem::path GetSuffixedArchivePath(std::filesystem::path pluginPath,
-                                             const std::string& suffix,
-                                             const std::string& newExtension) {
+                                             std::string_view suffix,
+                                             std::string_view newExtension) {
   // replace_extension() with no argument just removes the existing extension.
   pluginPath.replace_extension();
-  pluginPath += suffix + newExtension;
+  pluginPath += suffix;
+  pluginPath += newExtension;
   return pluginPath;
 }
 
@@ -89,7 +92,7 @@ std::vector<std::filesystem::path> FindAssociatedArchive(
 
 std::vector<std::filesystem::path> FindAssociatedArchivesWithSuffixes(
     const std::filesystem::path& pluginPath,
-    const std::string& archiveExtension,
+    std::string_view archiveExtension,
     const std::vector<std::string>& supportedSuffixes) {
   std::vector<std::filesystem::path> paths;
 
@@ -181,14 +184,12 @@ std::vector<std::filesystem::path> FindAssociatedArchives(
   }
 }
 
-void HandleEspluginError(unsigned int returnCode,
-                         const std::string& operation) {
+void HandleEspluginError(unsigned int returnCode, std::string_view operation) {
   if (returnCode == ESP_OK) {
     return;
   }
 
-  auto err = "esplugin failed to " + operation +
-             ". Error code: " + std::to_string(returnCode);
+  auto err = fmt::format("esplugin failed to {}. Error code: {}", operation, returnCode);
 
   const char* e = nullptr;
   esp_get_error_message(&e);
@@ -207,8 +208,8 @@ void HandleEspluginError(unsigned int returnCode,
 }
 
 void HandleEspluginError(unsigned int returnCode,
-                         const std::string& message,
-                         const std::string& args...) {
+                         std::string_view message,
+                         std::string_view args...) {
   if (returnCode == ESP_OK) {
     return;
   }
@@ -228,7 +229,7 @@ void HandleEspluginError(unsigned int returnCode,
 
 Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
-               std::filesystem::path pluginPath,
+               const std::filesystem::path& pluginPath,
                const bool headerOnly) :
     name_(gameType == GameType::openmw
               ? pluginPath.filename().u8string()
@@ -655,7 +656,7 @@ unsigned int Plugin::GetEspluginGameId(GameType gameType) {
   }
 }
 
-bool hasPluginFileExtension(std::string filename, GameType gameType) {
+bool hasPluginFileExtension(std::string_view filename, GameType gameType) {
   if (gameType != GameType::openmw &&
       boost::iends_with(filename, GHOST_FILE_EXTENSION)) {
     filename =

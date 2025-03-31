@@ -26,6 +26,7 @@
 #define LOOT_API_GAME_GAME_CACHE
 
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 #include "api/plugin.h"
@@ -34,7 +35,7 @@ namespace loot {
 class GameCache {
 public:
   std::vector<const Plugin*> GetPlugins() const;
-  const Plugin* GetPlugin(const std::string& pluginName) const;
+  const Plugin* GetPlugin(std::string_view pluginName) const;
   void AddPlugin(Plugin&& plugin);
 
   std::vector<const Plugin*> GetPluginsWithReplacements(

@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -51,7 +52,7 @@ namespace loot {
 // YAML's block style (at least up to the end of the prelude in the
 // latter). This is true for all official files.
 std::string ReplaceMetadataListPrelude(const std::string& prelude,
-                                       const std::string& masterlist);
+                                       std::string&& masterlist);
 
 class MetadataList {
 public:

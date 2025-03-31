@@ -50,10 +50,9 @@ std::vector<T> mergeVectors(std::vector<T> first,
 }
 
 namespace loot {
-PluginMetadata::PluginMetadata(const std::string& n) : name_(n) {
-  // If the name passed ends in '.ghost', that should be trimmed.
-  name_ = TrimDotGhostExtension(n);
-
+// If the name passed ends in '.ghost', that should be trimmed.
+PluginMetadata::PluginMetadata(const std::string& n) :
+    name_(TrimDotGhostExtension(std::string(n))) {
   if (IsRegexPlugin()) {
     nameRegex_ = std::regex(name_, std::regex::ECMAScript | std::regex::icase);
   }

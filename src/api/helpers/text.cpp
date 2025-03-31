@@ -55,7 +55,7 @@ constexpr const char* pseudosemVersionRegex =
    'v' or 'version:. */
 constexpr const char* digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))";
 
-std::vector<Tag> ExtractBashTags(const std::string& description) {
+std::vector<Tag> ExtractBashTags(std::string_view description) {
   std::vector<Tag> tags;
 
   static constexpr const char* BASH_TAGS_OPENER = "{{BASH:";
@@ -87,7 +87,7 @@ std::vector<Tag> ExtractBashTags(const std::string& description) {
   return tags;
 }
 
-std::optional<std::string> ExtractVersion(const std::string& text) {
+std::optional<std::string> ExtractVersion(std::string_view text) {
   using std::regex;
 
   /* There are a few different version formats that can appear in strings
@@ -102,9 +102,9 @@ std::optional<std::string> ExtractVersion(const std::string& text) {
       regex(digitsVersionRegex, regex::ECMAScript | regex::icase),
   });
 
-  std::smatch what;
+  std::match_results<std::string_view::iterator> what;
   for (const auto& versionRegex : versionRegexes) {
-    if (std::regex_search(text, what, versionRegex)) {
+    if (std::regex_search(text.begin(), text.end(), what, versionRegex)) {
       for (auto it = next(begin(what)); it != end(what); ++it) {
         if (it->str().empty())
           continue;
@@ -135,9 +135,9 @@ int narrow(size_t value) {
   return castValue;
 }
 
-std::wstring ToWinWide(const std::string& str) {
+std::wstring ToWinWide(std::string_view str) {
   const size_t len = MultiByteToWideChar(
-      CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), 0, 0);
+      CP_UTF8, 0, str.data(), static_cast<int>(str.length()), 0, 0);
 
   if (len == 0) {
     return std::wstring();
@@ -146,7 +146,7 @@ std::wstring ToWinWide(const std::string& str) {
   std::wstring wstr(len, 0);
   MultiByteToWideChar(CP_UTF8,
                       0,
-                      str.c_str(),
+                      str.data(),
                       narrow(str.length()),
                       wstr.data(),
                       narrow(wstr.length()));
@@ -180,7 +180,7 @@ std::string FromWinWide(const std::wstring& wstr) {
 }
 #endif
 
-ComparableFilename ToComparableFilename(const std::string filename) {
+ComparableFilename ToComparableFilename(std::string_view filename) {
 #ifdef _WIN32
   return ToWinWide(filename);
 #else
@@ -188,7 +188,7 @@ ComparableFilename ToComparableFilename(const std::string filename) {
 #endif
 }
 
-int CompareFilenames(const std::string& lhs, const std::string& rhs) {
+int CompareFilenames(std::string_view lhs, std::string_view rhs) {
   return CompareFilenames(ToComparableFilename(lhs), ToComparableFilename(rhs));
 }
 
@@ -216,7 +216,7 @@ int CompareFilenames(const ComparableFilename& lhs,
 #endif
 }
 
-std::string NormalizeFilename(const std::string& filename) {
+std::string NormalizeFilename(std::string_view filename) {
 #ifdef _WIN32
   auto wideString = ToWinWide(filename);
 
@@ -235,7 +235,7 @@ std::string NormalizeFilename(const std::string& filename) {
 #endif
 }
 
-std::string TrimDotGhostExtension(const std::string& filename) {
+std::string TrimDotGhostExtension(std::string&& filename) {
   // If the name passed ends in '.ghost', that should be trimmed.
   if (boost::iends_with(filename, GHOST_FILE_EXTENSION)) {
     return filename.substr(0, filename.length() - GHOST_FILE_EXTENSION_LENGTH);

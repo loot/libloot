@@ -48,8 +48,8 @@ std::vector<PluginSortingData> GetPluginsSortingData(
     const auto userMetadata = db.GetPluginUserMetadata(pluginFilename, true)
                                   .value_or(PluginMetadata(pluginFilename));
 
-    const auto pluginSortingData = PluginSortingData(
-        plugin, masterlistMetadata, userMetadata, i);
+    const auto pluginSortingData =
+        PluginSortingData(plugin, masterlistMetadata, userMetadata, i);
 
     pluginsSortingData.push_back(pluginSortingData);
     i += 1;
@@ -77,7 +77,7 @@ void ValidatePluginGroups(const std::vector<PluginSortingData>& plugins,
 
 bool IsInRange(const std::vector<PluginSortingData>::const_iterator& begin,
                const std::vector<PluginSortingData>::const_iterator& end,
-               const std::string& name) {
+               std::string_view name) {
   return std::any_of(begin, end, [&](const PluginSortingData& plugin) {
     return CompareFilenames(plugin.GetName(), name) == 0;
   });
@@ -91,10 +91,10 @@ void ValidateSpecificAndHardcodedEdges(
     const std::vector<std::string>& hardcodedPlugins) {
   const auto logger = getLogger();
 
-  const auto isNonMaster = [&](const std::string& name) {
+  const auto isNonMaster = [&](std::string_view name) {
     return IsInRange(firstNonMaster, end, name);
   };
-  const auto isBlueprintMaster = [&](const std::string& name) {
+  const auto isBlueprintMaster = [&](std::string_view name) {
     return IsInRange(firstBlueprintMaster, firstNonMaster, name);
   };
 

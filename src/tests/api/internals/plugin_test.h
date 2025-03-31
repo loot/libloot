@@ -150,7 +150,7 @@ class TestPlugin : public PluginSortingInterface {
 public:
   TestPlugin() : name_("") {}
 
-  TestPlugin(const std::string& name) : name_(name) {}
+  TestPlugin(std::string_view name) : name_(name) {}
 
   std::string GetName() const override { return name_; }
 
@@ -208,7 +208,7 @@ public:
            otherPlugin->assetsOverlapWith.count(this) != 0;
   }
 
-  void AddMaster(const std::string& master) { masters_.push_back(master); }
+  void AddMaster(std::string_view master) { masters_.push_back(std::string(master)); }
 
   void SetIsMaster(bool isMaster) { isMaster_ = isMaster; }
 

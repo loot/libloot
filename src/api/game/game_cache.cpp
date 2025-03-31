@@ -36,7 +36,7 @@ std::vector<const Plugin*> GameCache::GetPlugins() const {
   return output;
 }
 
-const Plugin* GameCache::GetPlugin(const std::string& pluginName) const {
+const Plugin* GameCache::GetPlugin(std::string_view pluginName) const {
   const auto it = plugins_.find(NormalizeFilename(pluginName));
   if (it != end(plugins_))
     return it->second.get();

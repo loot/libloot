@@ -27,6 +27,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/metadata/tag.h"
@@ -47,17 +48,17 @@ typedef std::wstring ComparableFilename;
 typedef icu::UnicodeString ComparableFilename;
 #endif
 
-std::vector<Tag> ExtractBashTags(const std::string& description);
+std::vector<Tag> ExtractBashTags(std::string_view description);
 
-std::optional<std::string> ExtractVersion(const std::string& text);
+std::optional<std::string> ExtractVersion(std::string_view text);
 
-ComparableFilename ToComparableFilename(const std::string filename);
+ComparableFilename ToComparableFilename(std::string_view filename);
 
 // Compare strings as if they're filenames, respecting filesystem case
 // insensitivity on Windows. Returns -1 if lhs < rhs, 0 if lhs == rhs, and 1 if
 // lhs > rhs. The comparison may give different results on Linux, but is still
 // locale-invariant.
-int CompareFilenames(const std::string& lhs, const std::string& rhs);
+int CompareFilenames(std::string_view lhs, std::string_view rhs);
 
 int CompareFilenames(const ComparableFilename& lhs,
                      const ComparableFilename& rhs);
@@ -68,9 +69,9 @@ int CompareFilenames(const ComparableFilename& lhs,
 // different but hopefully still consistent enough with the behaviour on Windows
 // that the normalized filenames distinguish characters in a similar way to the
 // Windows filesystem.
-std::string NormalizeFilename(const std::string& filename);
+std::string NormalizeFilename(std::string_view filename);
 
-std::string TrimDotGhostExtension(const std::string& filename);
+std::string TrimDotGhostExtension(std::string&& filename);
 }
 
 #endif

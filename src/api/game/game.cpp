@@ -139,7 +139,7 @@ std::filesystem::path ResolvePluginPath(
 
 std::vector<std::filesystem::path> FindArchives(
     const std::filesystem::path& parentPath,
-    const std::string& archiveFileExtension) {
+    std::string_view archiveFileExtension) {
   if (!std::filesystem::is_directory(parentPath)) {
     return {};
   }

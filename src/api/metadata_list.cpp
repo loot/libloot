@@ -56,7 +56,7 @@ std::string read_to_string(const std::filesystem::path& filePath) {
 }
 
 std::optional<std::pair<size_t, size_t>> FindPreludeBounds(
-    const std::string& masterlist) {
+    std::string_view masterlist) {
   size_t startOfPrelude = std::string::npos;
   size_t endOfPrelude = std::string::npos;
 
@@ -118,7 +118,7 @@ std::string IndentPrelude(const std::string& prelude) {
 }
 
 std::string ReplaceMetadataListPrelude(const std::string& prelude,
-                                       const std::string& masterlist) {
+                                       std::string&& masterlist) {
   auto preludeBounds = FindPreludeBounds(masterlist);
 
   if (!preludeBounds.has_value()) {
@@ -163,11 +163,8 @@ void MetadataList::LoadWithPrelude(const std::filesystem::path& filePath,
   // retained.
   // As such, replacing the prelude needs to happen before parsing,
   // which means reading the files and performing string manipulation.
-  auto prelude_content = read_to_string(preludePath);
-  auto masterlist_content = read_to_string(filePath);
-
-  masterlist_content =
-      ReplaceMetadataListPrelude(prelude_content, masterlist_content);
+  auto masterlist_content = ReplaceMetadataListPrelude(
+      read_to_string(preludePath), read_to_string(filePath));
 
   auto stream = std::istringstream(masterlist_content);
   this->Load(stream, filePath);

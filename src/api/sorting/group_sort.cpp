@@ -171,7 +171,7 @@ GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
   return graph;
 }
 
-vertex_t GetVertexByName(const GroupGraph& graph, const std::string& name) {
+vertex_t GetVertexByName(const GroupGraph& graph, std::string_view name) {
   for (const auto& vertex :
        boost::make_iterator_range(boost::vertices(graph))) {
     if (graph[vertex] == name) {
@@ -184,12 +184,12 @@ vertex_t GetVertexByName(const GroupGraph& graph, const std::string& name) {
     logger->error("Can't find group with name \"{}\"", name);
   }
 
-  throw std::invalid_argument("Can't find group with name \"" + name + "\"");
+  throw std::invalid_argument("Can't find group with name \"" + std::string(name) + "\"");
 }
 
 std::vector<Vertex> GetGroupsPath(const GroupGraph& graph,
-                                  const std::string& fromGroupName,
-                                  const std::string& toGroupName) {
+                                  std::string_view fromGroupName,
+                                  std::string_view toGroupName) {
   auto logger = getLogger();
 
   auto fromVertex = GetVertexByName(graph, fromGroupName);

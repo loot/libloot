@@ -30,6 +30,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "loot/enum/game_type.h"
 #include "loot/metadata/plugin_cleaning_data.h"
@@ -56,7 +57,7 @@ public:
 
 private:
   bool Evaluate(const PluginCleaningData& cleaningData,
-                const std::string& pluginName);
+                std::string_view pluginName);
 
   std::unique_ptr<lci_state, decltype(&lci_state_destroy)> lciState_;
 };

@@ -33,6 +33,7 @@
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/topological_sort.hpp>
 #include <queue>
+#include <string_view>
 
 #include "api/helpers/logging.h"
 #include "api/helpers/text.h"
@@ -918,11 +919,11 @@ void PluginGraph::AddHardcodedPluginEdges(
   // Build the vertex map for implicitly active plugins and record the vertices
   // for other plugins.
   for (const auto& vertex : boost::make_iterator_range(GetVertices())) {
-    const auto pluginName = GetPlugin(vertex).GetName();
+    const auto& pluginName = GetPlugin(vertex).GetName();
     const auto it =
         std::find_if(hardcodedPlugins.begin(),
                      hardcodedPlugins.end(),
-                     [&](const std::string& name) {
+                     [&](std::string_view name) {
                        return CompareFilenames(name, pluginName) == 0;
                      });
 

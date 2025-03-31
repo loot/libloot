@@ -32,18 +32,18 @@
 #include "loot/exception/error_categories.h"
 
 namespace loot {
-void HandleError(const std::string operation, int returnCode) {
+void HandleError(std::string_view operation, int returnCode) {
   if (returnCode == LCI_OK) {
     return;
   }
 
   const char* message = nullptr;
-  std::string err = "Failed to " + operation + ". ";
+  std::string err;
   lci_get_error_message(&message);
   if (message == nullptr) {
-    err += "Error code: " + std::to_string(returnCode);
+    err = fmt::format("Failed to {}. Error code: {}", operation, returnCode);
   } else {
-    err += "Details: " + std::string(message);
+    err = fmt::format("Failed to {}. Details: {}", operation, message);
   }
 
   auto logger = getLogger();
@@ -260,12 +260,12 @@ void ConditionEvaluator::SetAdditionalDataPaths(
 }
 
 bool ConditionEvaluator::Evaluate(const PluginCleaningData& cleaningData,
-                                  const std::string& pluginName) {
+                                  std::string_view pluginName) {
   if (pluginName.empty())
     return false;
 
-  return Evaluate("checksum(\"" + pluginName + "\", " +
-                  CrcToString(cleaningData.GetCRC()) + ")");
+  return Evaluate(fmt::format(
+      "checksum(\"{}\", {})", pluginName, CrcToString(cleaningData.GetCRC())));
 }
 
 void ParseCondition(const std::string& condition) {

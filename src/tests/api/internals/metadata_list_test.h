@@ -452,7 +452,7 @@ TEST(ReplaceMetadataListPrelude, shouldReturnAnEmptyStringIfGivenEmptyStrings) {
   std::string prelude = "";
   std::string masterlist = "";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::string(masterlist));
 
   EXPECT_EQ(masterlist, result);
 }
@@ -466,7 +466,7 @@ TEST(ReplaceMetadataListPrelude, shouldNotChangeAMasterlistWithNoPrelude) {
   - name: a.esp
 )";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::string(masterlist));
 
   EXPECT_EQ(masterlist, result);
 }
@@ -484,7 +484,7 @@ plugins:
   - name: a.esp
 )";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::move(masterlist));
 
   auto expectedResult = R"(prelude:
   globals:
@@ -510,7 +510,7 @@ prelude:
 
 )";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::move(masterlist));
 
   auto expectedResult = R"(plugins:
   - name: a.esp
@@ -540,7 +540,7 @@ plugins:
   - name: a.esp
 )";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::move(masterlist));
 
   auto expectedResult = R"(
 common:
@@ -573,7 +573,7 @@ plugins:
   - name: a.esp
 )";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::move(masterlist));
 
   auto expectedResult = R"(prelude:
   globals:
@@ -597,7 +597,7 @@ plugins:
   - name: a.esp
 )";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::move(masterlist));
 
   auto expectedResult = R"(prelude:
   globals: [{type: note, content: A message.}]
@@ -612,7 +612,7 @@ TEST(ReplaceMetadataListPrelude, doesNotChangeAFlowStyleMasterlist) {
   std::string prelude = "globals: [{type: note, content: A message.}]";
   std::string masterlist = "{prelude: {}, plugins: [{name: a.esp}]}";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::string(masterlist));
 
   EXPECT_EQ(masterlist, result);
 }
@@ -631,7 +631,7 @@ plugins:
   - name: a.esp
 )";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::move(masterlist));
 
   auto expectedResult = R"(prelude:
   globals:
@@ -658,7 +658,7 @@ plugins:
   - name: a.esp
 )";
 
-  auto result = ReplaceMetadataListPrelude(prelude, masterlist);
+  auto result = ReplaceMetadataListPrelude(prelude, std::move(masterlist));
 
   auto expectedResult = R"(prelude:
   globals:

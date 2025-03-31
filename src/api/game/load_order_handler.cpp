@@ -210,7 +210,8 @@ std::filesystem::path LoadOrderHandler::GetActivePluginsFilePath() const {
   return filePath;
 }
 
-std::vector<std::filesystem::path> LoadOrderHandler::GetAdditionalDataPaths() const {
+std::vector<std::filesystem::path> LoadOrderHandler::GetAdditionalDataPaths()
+    const {
   const auto logger = getLogger();
   if (logger) {
     logger->trace("Getting additional data paths.");
@@ -219,7 +220,8 @@ std::vector<std::filesystem::path> LoadOrderHandler::GetAdditionalDataPaths() co
   char** pathArr = nullptr;
   size_t pathArrSize = 0;
 
-  const unsigned int ret = lo_get_additional_plugins_directories(gh_.get(), &pathArr, &pathArrSize);
+  const unsigned int ret =
+      lo_get_additional_plugins_directories(gh_.get(), &pathArr, &pathArrSize);
 
   HandleError("get additional data paths", ret);
 
@@ -288,7 +290,7 @@ void LoadOrderHandler::SetAdditionalDataPaths(
   }
 }
 
-void LoadOrderHandler::HandleError(const std::string& operation,
+void LoadOrderHandler::HandleError(std::string_view operation,
                                    unsigned int returnCode) const {
   if (returnCode == LIBLO_OK || returnCode == LIBLO_WARN_LO_MISMATCH) {
     return;
@@ -298,10 +300,10 @@ void LoadOrderHandler::HandleError(const std::string& operation,
   std::string err;
   lo_get_error_message(&e);
   if (e == nullptr) {
-    err = "libloadorder failed to " + operation +
-          ". Details could not be fetched.";
+    err = fmt::format(
+        "libloadorder failed to {}. Details could not be fetched.", operation);
   } else {
-    err = "libloadorder failed to " + operation + ". Details: " + e;
+    err = fmt::format("libloadorder failed to {}. Details: {}", operation, e);
   }
 
   auto logger = getLogger();

@@ -27,6 +27,7 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -45,7 +46,7 @@ GroupGraph BuildGroupGraph(const std::vector<Group>& masterlistGroups,
                            const std::vector<Group>& userGroups);
 
 std::vector<Vertex> GetGroupsPath(const GroupGraph& groupGraph,
-                                  const std::string& fromGroupName,
-                                  const std::string& toGroupName);
+                                  std::string_view fromGroupName,
+                                  std::string_view toGroupName);
 }
 #endif

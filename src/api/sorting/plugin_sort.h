@@ -26,6 +26,7 @@
 #define LOOT_API_SORTING_PLUGIN_SORT
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "api/game/game.h"
