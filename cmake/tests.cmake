@@ -43,7 +43,6 @@ set(LIBLOOT_SRC_TESTS_INTERNALS_H_FILES
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/game/load_order_handler_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/crc_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/text_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/helpers/yaml_set_helpers_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/condition_evaluator_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/conditional_metadata_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/file_test.h"
