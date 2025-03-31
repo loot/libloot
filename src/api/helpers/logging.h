@@ -24,6 +24,8 @@
 #ifndef LOOT_API_HELPERS_LOGGING
 #define LOOT_API_HELPERS_LOGGING
 
+#include <string_view>
+
 #include <spdlog/spdlog.h>
 
 #include "loot/enum/log_level.h"
@@ -32,7 +34,7 @@ namespace loot {
 std::shared_ptr<spdlog::logger> getLogger();
 
 std::shared_ptr<spdlog::logger> createLogger(
-    std::function<void(LogLevel, const char*)> callback);
+    std::function<void(LogLevel, std::string_view)> callback);
 
 void setLoggerLevel(LogLevel level);
 }

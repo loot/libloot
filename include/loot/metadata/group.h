@@ -39,7 +39,7 @@ public:
   /**
    * The name of the group to which all plugins belong by default.
    */
-  static constexpr const char* DEFAULT_NAME = "default";
+  static constexpr std::string_view DEFAULT_NAME = "default";
 
   /**
    * Construct a Group with the name "default" and an empty set of groups to

@@ -83,7 +83,7 @@ std::filesystem::path ResolvePath(const std::filesystem::path& path) {
 }
 
 LOOT_API void SetLoggingCallback(
-    std::function<void(LogLevel, const char*)> callback) {
+    std::function<void(LogLevel, std::string_view)> callback) {
   const auto logger = createLogger(callback);
 
   spdlog::drop(logger->name());

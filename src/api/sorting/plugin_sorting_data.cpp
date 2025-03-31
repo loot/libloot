@@ -39,7 +39,7 @@ PluginSortingData::PluginSortingData(const PluginSortingInterface* plugin,
     name_(plugin == nullptr ? std::string() : plugin->GetName()),
     isMaster_(plugin != nullptr && plugin->IsMaster()),
     group_(userMetadata.GetGroup().value_or(
-        masterlistMetadata.GetGroup().value_or(Group::DEFAULT_NAME))),
+        masterlistMetadata.GetGroup().value_or(std::string(Group::DEFAULT_NAME)))),
     masterlistLoadAfter_(masterlistMetadata.GetLoadAfterFiles()),
     userLoadAfter_(userMetadata.GetLoadAfterFiles()),
     masterlistReq_(masterlistMetadata.GetRequirements()),

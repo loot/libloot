@@ -76,7 +76,7 @@ spdlog::level::level_enum mapToSpdlog(LogLevel severity) {
 
 class SpdLoggingSink : public spdlog::sinks::base_sink<std::mutex> {
 public:
-  explicit SpdLoggingSink(std::function<void(LogLevel, const char*)> callback) {
+  explicit SpdLoggingSink(std::function<void(LogLevel, std::string_view)> callback) {
     this->callback = callback;
   }
 
@@ -91,7 +91,7 @@ protected:
   void flush_() override {}
 
 private:
-  std::function<void(LogLevel, const char*)> callback;
+  std::function<void(LogLevel, std::string_view)> callback;
 };
 }
 
@@ -99,7 +99,7 @@ namespace loot {
 std::shared_ptr<spdlog::logger> getLogger() { return spdlog::get(std::string(LOGGER_NAME)); }
 
 std::shared_ptr<spdlog::logger> createLogger(
-    std::function<void(LogLevel, const char*)> callback) {
+    std::function<void(LogLevel, std::string_view)> callback) {
   auto sink = std::make_shared<SpdLoggingSink>(callback);
   auto logger = std::make_shared<spdlog::logger>(std::string(LOGGER_NAME), sink);
   logger->set_level(spdlog::level::level_enum::trace);

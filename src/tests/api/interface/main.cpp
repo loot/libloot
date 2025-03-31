@@ -37,12 +37,12 @@ int main(int argc, char **argv) {
 
 namespace loot {
 namespace test {
-void testLoggingCallback(LogLevel, const char *) {
+void testLoggingCallback(LogLevel, std::string_view) {
   // Do nothing.
 }
 
 struct TestLogger {
-  void callback(LogLevel, const char *message) {
+  void callback(LogLevel, std::string_view message) {
     loggedMessages += std::string(message);
   }
 
@@ -56,7 +56,7 @@ TEST(SetLoggingCallback, shouldAcceptAFreeFunction) {
     CreateGameHandle(GameType::tes4, "dummy");
     FAIL();
   } catch (...) {
-    SetLoggingCallback([](LogLevel, const char *) {});
+    SetLoggingCallback([](LogLevel, std::string_view) {});
   }
 }
 
@@ -77,13 +77,13 @@ TEST(SetLoggingCallback, shouldAcceptAMemberFunction) {
         "IV: Oblivion\" with game path \"dummy\" and game local path \"\"",
         testLogger.loggedMessages);
 
-    SetLoggingCallback([](LogLevel, const char *) {});
+    SetLoggingCallback([](LogLevel, std::string_view) {});
   }
 }
 
 TEST(SetLoggingCallback, shouldAcceptALambdaFunction) {
   std::string loggedMessages;
-  auto callback = [&](LogLevel, const char *string) {
+  auto callback = [&](LogLevel, std::string_view string) {
     loggedMessages += std::string(string);
   };
   SetLoggingCallback(callback);
@@ -97,7 +97,7 @@ TEST(SetLoggingCallback, shouldAcceptALambdaFunction) {
         "IV: Oblivion\" with game path \"dummy\" and game local path \"\"",
         loggedMessages);
 
-    SetLoggingCallback([](LogLevel, const char *) {});
+    SetLoggingCallback([](LogLevel, std::string_view) {});
   }
 }
 
@@ -105,7 +105,7 @@ TEST(SetLoggingCallback,
      shouldNotBreakLoggingIfPassedLambdaFunctionGoesOutOfScope) {
   std::string loggedMessages;
   {
-    SetLoggingCallback([&](LogLevel, const char *string) {
+    SetLoggingCallback([&](LogLevel, std::string_view string) {
       loggedMessages += std::string(string);
     });
   }
@@ -119,13 +119,13 @@ TEST(SetLoggingCallback,
         "IV: Oblivion\" with game path \"dummy\" and game local path \"\"",
         loggedMessages);
 
-    SetLoggingCallback([](LogLevel, const char *) {});
+    SetLoggingCallback([](LogLevel, std::string_view) {});
   }
 }
 
 TEST(SetLogLevel, shouldOnlyRunTheCallbackForMessagesAtOrAboveTheGivenLevel) {
   std::vector<std::pair<LogLevel, std::string>> loggedMessages;
-  auto callback = [&](LogLevel level, const char *string) {
+  auto callback = [&](LogLevel level, std::string_view string) {
     loggedMessages.push_back(std::make_pair(level, std::string(string)));
   };
   SetLoggingCallback(callback);
@@ -151,7 +151,7 @@ TEST(SetLogLevel, shouldOnlyRunTheCallbackForMessagesAtOrAboveTheGivenLevel) {
         "IV: Oblivion\" with game path \"dummy\" and game local path \"\"",
         loggedMessages[0].second);
 
-    SetLoggingCallback([](LogLevel, const char *) {});
+    SetLoggingCallback([](LogLevel, std::string_view) {});
   }
 }
 }

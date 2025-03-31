@@ -41,7 +41,7 @@ public:
    * The code for the default language assumed for message content, which is
    * "en" (English).
    */
-  static constexpr const char* DEFAULT_LANGUAGE = "en";
+  static constexpr std::string_view DEFAULT_LANGUAGE = "en";
 
   /**
    * Construct a MessageContent object with an empty English message string.
