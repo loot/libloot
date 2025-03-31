@@ -24,8 +24,8 @@
 #include "loot/exception/undefined_group_error.h"
 
 namespace loot {
-UndefinedGroupError::UndefinedGroupError(const std::string& groupName) :
-      std::runtime_error("The group \"" + groupName + "\" does not exist"),
+UndefinedGroupError::UndefinedGroupError(std::string_view groupName) :
+      std::runtime_error("The group \"" + std::string(groupName) + "\" does not exist"),
       groupName_(groupName) {}
 
 std::string UndefinedGroupError::GetGroupName() const { return groupName_; }

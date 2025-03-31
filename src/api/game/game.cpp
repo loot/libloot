@@ -312,7 +312,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
 void Game::ClearLoadedPlugins() { cache_.ClearCachedPlugins(); }
 
 std::shared_ptr<const PluginInterface> Game::GetPlugin(
-    const std::string& pluginName) const {
+    std::string_view pluginName) const {
   return cache_.GetPlugin(pluginName);
 }
 
@@ -380,7 +380,7 @@ std::filesystem::path Game::GetActivePluginsFilePath() const {
 }
 
 bool Game::IsPluginActive(const std::string& pluginName) const {
-  return loadOrderHandler_.IsPluginActive(pluginName);
+  return loadOrderHandler_.IsPluginActive(std::string(pluginName));
 }
 
 std::vector<std::string> Game::GetLoadOrder() const {

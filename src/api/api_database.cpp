@@ -203,8 +203,8 @@ void ApiDatabase::SetUserGroups(const std::vector<Group>& groups) {
 }
 
 std::vector<Vertex> ApiDatabase::GetGroupsPath(
-    const std::string& fromGroupName,
-    const std::string& toGroupName) const {
+    std::string_view fromGroupName,
+    std::string_view toGroupName) const {
   auto masterlistGroups = GetGroups(false);
   auto userGroups = GetUserGroups();
 
@@ -214,7 +214,7 @@ std::vector<Vertex> ApiDatabase::GetGroupsPath(
 }
 
 std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(
-    const std::string& plugin,
+    std::string_view plugin,
     bool includeUserMetadata,
     bool evaluateConditions) const {
   auto metadata = masterlist_.FindPlugin(plugin);
@@ -237,7 +237,7 @@ std::optional<PluginMetadata> ApiDatabase::GetPluginMetadata(
 }
 
 std::optional<PluginMetadata> ApiDatabase::GetPluginUserMetadata(
-    const std::string& plugin,
+    std::string_view plugin,
     bool evaluateConditions) const {
   auto metadata = userlist_.FindPlugin(plugin);
 
@@ -253,7 +253,7 @@ void ApiDatabase::SetPluginUserMetadata(const PluginMetadata& pluginMetadata) {
   userlist_.AddPlugin(pluginMetadata);
 }
 
-void ApiDatabase::DiscardPluginUserMetadata(const std::string& plugin) {
+void ApiDatabase::DiscardPluginUserMetadata(std::string_view plugin) {
   userlist_.ErasePlugin(plugin);
 }
 

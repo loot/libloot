@@ -25,6 +25,7 @@
 #define LOOT_METADATA_LOCATION
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/api_decorator.h"
@@ -49,8 +50,8 @@ public:
    *         A name for the URL, eg. the page or site name.
    * @return A Location object.
    */
-  LOOT_API explicit Location(const std::string& url,
-                             const std::string& name = "");
+  LOOT_API explicit Location(std::string_view url,
+                             std::string_view name = "");
 
   /**
    * Get the object's URL.

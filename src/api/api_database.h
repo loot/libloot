@@ -64,21 +64,21 @@ struct ApiDatabase final : public DatabaseInterface {
   std::vector<Group> GetUserGroups() const override;
   void SetUserGroups(const std::vector<Group>& groups) override;
   std::vector<Vertex> GetGroupsPath(
-      const std::string& fromGroupName,
-      const std::string& toGroupName) const override;
+      std::string_view fromGroupName,
+      std::string_view toGroupName) const override;
 
   std::optional<PluginMetadata> GetPluginMetadata(
-      const std::string& plugin,
+      std::string_view plugin,
       bool includeUserMetadata = true,
       bool evaluateConditions = false) const override;
 
   std::optional<PluginMetadata> GetPluginUserMetadata(
-      const std::string& plugin,
+      std::string_view plugin,
       bool evaluateConditions = false) const override;
 
   void SetPluginUserMetadata(const PluginMetadata& pluginMetadata) override;
 
-  void DiscardPluginUserMetadata(const std::string& plugin) override;
+  void DiscardPluginUserMetadata(std::string_view plugin) override;
 
   void DiscardAllUserMetadata() override;
 

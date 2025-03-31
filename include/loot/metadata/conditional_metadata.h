@@ -25,6 +25,7 @@
 #define LOOT_METADATA_CONDITIONAL_METADATA
 
 #include <string>
+#include <string_view>
 
 #include "loot/api_decorator.h"
 
@@ -48,7 +49,7 @@ public:
    *         documentation.
    * @return A ConditionalMetadata object.
    */
-  LOOT_API explicit ConditionalMetadata(const std::string& condition);
+  LOOT_API explicit ConditionalMetadata(std::string_view condition);
 
   /**
    * Check if the condition string is non-empty.

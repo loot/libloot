@@ -27,6 +27,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #include "loot/api_decorator.h"
 #include "loot/metadata/message.h"
@@ -57,7 +58,7 @@ public:
    * @return A PluginCleaningData object.
    */
   LOOT_API explicit PluginCleaningData(uint32_t crc,
-                                       const std::string& utility);
+                                       std::string_view utility);
 
   /**
    * Construct a PluginCleaningData object with the given values.
@@ -78,7 +79,7 @@ public:
    */
   LOOT_API explicit PluginCleaningData(
       uint32_t crc,
-      const std::string& utility,
+      std::string_view utility,
       const std::vector<MessageContent>& detail,
       unsigned int itm,
       unsigned int ref,

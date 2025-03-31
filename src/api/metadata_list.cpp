@@ -320,7 +320,7 @@ void MetadataList::SetGroups(const std::vector<Group>& groups) {
 
 // Merges multiple matching regex entries if any are found.
 std::optional<PluginMetadata> MetadataList::FindPlugin(
-    const std::string& pluginName) const {
+    std::string_view pluginName) const {
   PluginMetadata match(pluginName);
 
   const auto it = plugins_.find(Filename(pluginName));
@@ -359,7 +359,7 @@ void MetadataList::AddPlugin(const PluginMetadata& plugin) {
 
 // Doesn't erase matching regex entries, because they might also
 // be required for other plugins.
-void MetadataList::ErasePlugin(const std::string& pluginName) {
+void MetadataList::ErasePlugin(std::string_view pluginName) {
   const auto it = plugins_.find(Filename(pluginName));
 
   if (it != plugins_.end()) {

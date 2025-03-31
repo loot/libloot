@@ -27,6 +27,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/exception/cyclic_interaction_error.h"
@@ -175,8 +176,8 @@ public:
    *          exists.
    */
   virtual std::vector<Vertex> GetGroupsPath(
-      const std::string& fromGroupName,
-      const std::string& toGroupName) const = 0;
+      std::string_view fromGroupName,
+      std::string_view toGroupName) const = 0;
 
   /**
    * @}
@@ -200,7 +201,7 @@ public:
    *          otherwise an optional containing no value.
    */
   virtual std::optional<PluginMetadata> GetPluginMetadata(
-      const std::string& plugin,
+      std::string_view plugin,
       bool includeUserMetadata = true,
       bool evaluateConditions = false) const = 0;
 
@@ -216,7 +217,7 @@ public:
    *          that metadata, otherwise an optional containing no value.
    */
   virtual std::optional<PluginMetadata> GetPluginUserMetadata(
-      const std::string& plugin,
+      std::string_view plugin,
       bool evaluateConditions = false) const = 0;
 
   /**
@@ -235,7 +236,7 @@ public:
    *        The filename of the plugin for which all user-added metadata
    *        should be deleted.
    */
-  virtual void DiscardPluginUserMetadata(const std::string& plugin) = 0;
+  virtual void DiscardPluginUserMetadata(std::string_view plugin) = 0;
 
   /**
    * @brief Discards all loaded user metadata for all plugins, and any

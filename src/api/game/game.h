@@ -73,7 +73,7 @@ public:
   void ClearLoadedPlugins() override;
 
   std::shared_ptr<const PluginInterface> GetPlugin(
-      const std::string& pluginName) const override;
+      std::string_view pluginName) const override;
 
   std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
       const override;

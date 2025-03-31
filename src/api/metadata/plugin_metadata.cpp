@@ -51,7 +51,7 @@ std::vector<T> mergeVectors(std::vector<T> first,
 
 namespace loot {
 // If the name passed ends in '.ghost', that should be trimmed.
-PluginMetadata::PluginMetadata(const std::string& n) :
+PluginMetadata::PluginMetadata(std::string_view n) :
     name_(TrimDotGhostExtension(std::string(n))) {
   if (IsRegexPlugin()) {
     nameRegex_ = std::regex(name_, std::regex::ECMAScript | std::regex::icase);
@@ -116,7 +116,7 @@ std::vector<Location> PluginMetadata::GetLocations() const {
   return locations_;
 }
 
-void PluginMetadata::SetGroup(const std::string& group) { group_ = group; }
+void PluginMetadata::SetGroup(std::string_view group) { group_ = group; }
 
 void PluginMetadata::UnsetGroup() { group_ = std::nullopt; }
 
@@ -164,13 +164,13 @@ bool PluginMetadata::IsRegexPlugin() const {
   return strpbrk(name_.c_str(), ":\\*?|") != nullptr;
 }
 
-bool PluginMetadata::NameMatches(const std::string& pluginName) const {
+bool PluginMetadata::NameMatches(std::string_view pluginName) const {
   if (IsRegexPlugin()) {
     if (!nameRegex_.has_value()) {
       throw std::runtime_error("Regex plugin does not have regex object");
     }
 
-    return std::regex_match(pluginName, nameRegex_.value());
+    return std::regex_match(pluginName.begin(), pluginName.end(), nameRegex_.value());
   }
 
   return CompareFilenames(name_, pluginName) == 0;

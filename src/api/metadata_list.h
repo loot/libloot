@@ -70,12 +70,12 @@ public:
   void SetGroups(const std::vector<Group>& groups);
 
   // Merges multiple matching regex entries if any are found.
-  std::optional<PluginMetadata> FindPlugin(const std::string& pluginName) const;
+  std::optional<PluginMetadata> FindPlugin(std::string_view pluginName) const;
   void AddPlugin(const PluginMetadata& plugin);
 
   // Doesn't erase matching regex entries, because they might also
   // be required for other plugins.
-  void ErasePlugin(const std::string& pluginName);
+  void ErasePlugin(std::string_view pluginName);
 
   void AppendMessage(const Message& message);
 

@@ -25,6 +25,7 @@
 #define LOOT_METADATA_FILE
 
 #include <string>
+#include <string_view>
 
 #include "loot/api_decorator.h"
 #include "loot/metadata/conditional_metadata.h"
@@ -58,9 +59,9 @@ public:
    *         English.
    * @return A File object.
    */
-  LOOT_API explicit File(const std::string& name,
-                         const std::string& display = "",
-                         const std::string& condition = "",
+  LOOT_API explicit File(std::string_view name,
+                         std::string_view display = "",
+                         std::string_view condition = "",
                          const std::vector<MessageContent>& detail = {});
 
   /**

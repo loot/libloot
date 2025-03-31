@@ -26,6 +26,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/api_decorator.h"
@@ -57,8 +58,8 @@ public:
    * @return A MessageContent object.
    */
   LOOT_API explicit MessageContent(
-      const std::string& text,
-      const std::string& language = DEFAULT_LANGUAGE);
+      std::string_view text,
+      std::string_view language = DEFAULT_LANGUAGE);
 
   /**
    * Get the message text.
@@ -144,7 +145,7 @@ LOOT_API bool operator>=(const MessageContent& lhs, const MessageContent& rhs);
  */
 LOOT_API std::optional<MessageContent> SelectMessageContent(
     const std::vector<MessageContent> content,
-    const std::string& language);
+    std::string_view language);
 }
 
 #endif

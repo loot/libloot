@@ -142,7 +142,7 @@ public:
    *          a case-insensitively equal filename is loaded.
    */
   virtual std::shared_ptr<const PluginInterface> GetPlugin(
-      const std::string& pluginName) const = 0;
+      std::string_view pluginName) const = 0;
 
   /**
    * @brief Get a set of const references to all loaded plugins' PluginInterface

@@ -203,7 +203,7 @@ std::filesystem::path LoadOrderHandler::GetActivePluginsFilePath() const {
 
   HandleError("get active plugins file path", ret);
 
-  const auto filePath = std::filesystem::u8path(std::string(filePathCString));
+  const auto filePath = std::filesystem::u8path(std::string_view(filePathCString));
 
   lo_free_string(filePathCString);
 
@@ -227,7 +227,7 @@ std::vector<std::filesystem::path> LoadOrderHandler::GetAdditionalDataPaths()
 
   std::vector<std::filesystem::path> loadOrder;
   for (size_t i = 0; i < pathArrSize; i += 1) {
-    loadOrder.push_back(std::filesystem::u8path(std::string(pathArr[i])));
+    loadOrder.push_back(std::filesystem::u8path(std::string_view(pathArr[i])));
   }
   lo_free_string_array(pathArr, pathArrSize);
 

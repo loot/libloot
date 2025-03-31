@@ -25,9 +25,9 @@
 #include "loot/metadata/file.h"
 
 namespace loot {
-File::File(const std::string& name,
-           const std::string& display,
-           const std::string& condition,
+File::File(std::string_view name,
+           std::string_view display,
+           std::string_view condition,
            const std::vector<MessageContent>& detail) :
     ConditionalMetadata(condition),
     name_(Filename(name)),
