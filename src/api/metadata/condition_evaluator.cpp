@@ -203,7 +203,7 @@ void ConditionEvaluator::RefreshActivePluginsState(
 }
 
 void ConditionEvaluator::RefreshLoadedPluginsState(
-    const std::vector<const PluginInterface*>& plugins) {
+    const std::vector<std::shared_ptr<const PluginInterface>>& plugins) {
   ClearConditionCache();
 
   std::vector<std::string> pluginNames;

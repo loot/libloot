@@ -311,12 +311,14 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
 
 void Game::ClearLoadedPlugins() { cache_.ClearCachedPlugins(); }
 
-const PluginInterface* Game::GetPlugin(const std::string& pluginName) const {
+std::shared_ptr<const PluginInterface> Game::GetPlugin(
+    const std::string& pluginName) const {
   return cache_.GetPlugin(pluginName);
 }
 
-std::vector<const PluginInterface*> Game::GetLoadedPlugins() const {
-  std::vector<const PluginInterface*> interfacePointers;
+std::vector<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
+    const {
+  std::vector<std::shared_ptr<const PluginInterface>> interfacePointers;
   for (const auto plugin : cache_.GetPlugins()) {
     interfacePointers.push_back(plugin);
   }
@@ -334,7 +336,7 @@ std::vector<std::string> Game::SortPlugins(
                                   "\" has not been loaded.");
     }
 
-    plugins.push_back(plugin);
+    plugins.push_back(plugin.get());
   }
 
   auto pluginsSortingData = GetPluginsSortingData(database_, plugins);

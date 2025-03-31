@@ -594,7 +594,8 @@ std::string Plugin::GetDescription() const {
 }
 
 std::unique_ptr<Vec_PluginMetadata, decltype(&esp_plugins_metadata_free)>
-Plugin::GetPluginsMetadata(const std::vector<const Plugin*>& plugins) {
+Plugin::GetPluginsMetadata(
+    const std::vector<const Plugin*>& plugins) {
   if (plugins.empty()) {
     return std::unique_ptr<Vec_PluginMetadata,
                            decltype(&esp_plugins_metadata_free)>(

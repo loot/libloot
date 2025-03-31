@@ -50,7 +50,7 @@ public:
   void RefreshActivePluginsState(
       const std::vector<std::string>& activePluginNames);
   void RefreshLoadedPluginsState(
-      const std::vector<const PluginInterface*>& plugins);
+      const std::vector<std::shared_ptr<const PluginInterface>>& plugins);
 
   void SetAdditionalDataPaths(
       const std::vector<std::filesystem::path>& dataPaths);

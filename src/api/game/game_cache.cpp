@@ -27,19 +27,20 @@
 #include "api/helpers/text.h"
 
 namespace loot {
-std::vector<const Plugin*> GameCache::GetPlugins() const {
-  std::vector<const Plugin*> output(plugins_.size());
+std::vector<std::shared_ptr<const Plugin>> GameCache::GetPlugins() const {
+  std::vector<std::shared_ptr<const Plugin>> output(plugins_.size());
   std::transform(
       begin(plugins_), end(plugins_), begin(output), [](const auto& pair) {
-        return pair.second.get();
+        return pair.second;
       });
   return output;
 }
 
-const Plugin* GameCache::GetPlugin(std::string_view pluginName) const {
+std::shared_ptr<const Plugin> GameCache::GetPlugin(
+    std::string_view pluginName) const {
   const auto it = plugins_.find(NormalizeFilename(pluginName));
   if (it != end(plugins_))
-    return it->second.get();
+    return it->second;
 
   return nullptr;
 }

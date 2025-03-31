@@ -34,8 +34,8 @@
 namespace loot {
 class GameCache {
 public:
-  std::vector<const Plugin*> GetPlugins() const;
-  const Plugin* GetPlugin(std::string_view pluginName) const;
+  std::vector<std::shared_ptr<const Plugin>> GetPlugins() const;
+  std::shared_ptr<const Plugin> GetPlugin(std::string_view pluginName) const;
   void AddPlugin(Plugin&& plugin);
 
   std::vector<const Plugin*> GetPluginsWithReplacements(
