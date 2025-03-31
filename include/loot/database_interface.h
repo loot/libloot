@@ -46,26 +46,41 @@ public:
    */
 
   /**
-   * @brief Loads the masterlist, userlist and masterlist prelude from the
-   *        paths specified.
+   * @brief Loads the masterlist from the path specified.
    * @details Can be called multiple times, each time replacing the
    *          previously-loaded data.
    * @param masterlist_path
    *        The relative or absolute path to the masterlist file that should be
    *        loaded.
-   * @param userlist_path
-   *        The relative or absolute path to the userlist file that should be
-   *        loaded, or an empty path. If an empty path, no userlist will be
+   */
+  virtual void LoadMasterlist(
+      const std::filesystem::path& masterlistPath) = 0;
+
+  /**
+   * @brief Loads the masterlist and masterlist prelude from the paths
+            specified.
+   * @details Can be called multiple times, each time replacing the
+   *          previously-loaded data.
+   * @param masterlist_path
+   *        The relative or absolute path to the masterlist file that should be
    *        loaded.
    * @param masterlist_prelude_path
    *        The relative or absolute path to the masterlist prelude file that
-   *        should be loaded. If an empty path, no masterlist prelude will be
+   *        should be loaded.
+   */
+  virtual void LoadMasterlistWithPrelude(
+      const std::filesystem::path& masterlistPath,
+      const std::filesystem::path& masterlistPreludePath) = 0;
+
+  /**
+   * @brief Loads the userlist from the path specified.
+   * @details Can be called multiple times, each time replacing the
+   *          previously-loaded data.
+   * @param userlist_path
+   *        The relative or absolute path to the userlist file that should be
    *        loaded.
    */
-  virtual void LoadLists(
-      const std::filesystem::path& masterlist_path,
-      const std::filesystem::path& userlist_path = "",
-      const std::filesystem::path& masterlist_prelude_path = "") = 0;
+  virtual void LoadUserlist(const std::filesystem::path& userlistPath) = 0;
 
   /**
    * Writes a metadata file containing all loaded user-added metadata.

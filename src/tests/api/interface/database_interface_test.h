@@ -121,58 +121,42 @@ INSTANTIATE_TEST_SUITE_P(,
                                            GameType::tes5se));
 
 TEST_P(DatabaseInterfaceTest,
-       loadListsShouldSucceedEvenIfGameHandleIsDiscarded) {
+       loadMasterlistShouldSucceedEvenIfGameHandleIsDiscarded) {
   handle_ = CreateGameHandle(GetParam(), gamePath, localPath);
 
   ASSERT_NO_THROW(GenerateMasterlist());
 
-  EXPECT_NO_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""));
-}
-
-TEST_P(DatabaseInterfaceTest, loadListsShouldThrowIfNoMasterlistIsPresent) {
-  EXPECT_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""),
-               FileAccessError);
-}
-
-TEST_P(
-    DatabaseInterfaceTest,
-    loadListsShouldThrowIfAMasterlistIsPresentButAUserlistDoesNotExistAtTheGivenPath) {
-  ASSERT_NO_THROW(GenerateMasterlist());
-  EXPECT_THROW(handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_),
-               FileAccessError);
-}
-
-TEST_P(
-    DatabaseInterfaceTest,
-    loadListsShouldSucceedIfTheMasterlistIsPresentAndTheUserlistPathIsAnEmptyString) {
-  ASSERT_NO_THROW(GenerateMasterlist());
-
-  EXPECT_NO_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""));
+  EXPECT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 }
 
 TEST_P(DatabaseInterfaceTest,
-       loadListsShouldSucceedIfTheMasterlistAndUserlistAreBothPresent) {
-  ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(std::filesystem::copy(masterlistPath, userlistPath_));
+       loadMasterlistShouldThrowIfNoMasterlistIsPresent) {
+  EXPECT_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath),
+               FileAccessError);
+}
 
-  EXPECT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+TEST_P(DatabaseInterfaceTest,
+       loadMasterlistShouldSucceedIfTheMasterlistIsPresent) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+
+  EXPECT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
-    loadListsShouldThrowIfAMasterlistIsPresentButAPreludeDoesNotExistAtTheGivenPath) {
+    loadMasterlistWithPreludeShouldThrowIfAMasterlistIsPresentButAPreludeDoesNotExistAtTheGivenPath) {
   ASSERT_NO_THROW(GenerateMasterlist());
 
   auto preludePath = localPath / "prelude.yaml";
 
-  EXPECT_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, "", preludePath),
-      FileAccessError);
+  EXPECT_THROW(handle_->GetDatabase().LoadMasterlistWithPrelude(masterlistPath,
+                                                                preludePath),
+               FileAccessError);
 }
 
-TEST_P(DatabaseInterfaceTest,
-       loadListsShouldSucceedIfTheMasterlistAndPreludeAreBothPresent) {
+TEST_P(
+    DatabaseInterfaceTest,
+    loadMasterlistWithPreludeShouldSucceedIfTheMasterlistAndPreludeAreBothPresent) {
   using std::endl;
 
   std::ofstream out(masterlistPath);
@@ -192,14 +176,28 @@ TEST_P(DatabaseInterfaceTest,
       << "    type: say" << endl
       << "    content: Loaded from prelude" << endl;
 
-  EXPECT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, "", preludePath));
+  EXPECT_NO_THROW(handle_->GetDatabase().LoadMasterlistWithPrelude(
+      masterlistPath, preludePath));
 
   auto messages = handle_->GetDatabase().GetGeneralMessages();
   ASSERT_EQ(1, messages.size());
   EXPECT_EQ(MessageType::say, messages[0].GetType());
   ASSERT_EQ(1, messages[0].GetContent().size());
   EXPECT_EQ("Loaded from prelude", messages[0].GetContent()[0].GetText());
+}
+
+TEST_P(DatabaseInterfaceTest,
+       loadUserlistShouldThrowIfAUserlistDoesNotExistAtTheGivenPath) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  EXPECT_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_),
+               FileAccessError);
+}
+
+TEST_P(DatabaseInterfaceTest, loadUserlistShouldSucceedIfTheUserlistIsPresent) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(std::filesystem::copy(masterlistPath, userlistPath_));
+
+  EXPECT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 }
 
 TEST_P(
@@ -251,7 +249,7 @@ TEST_P(DatabaseInterfaceTest,
 TEST_P(DatabaseInterfaceTest,
        writeUserMetadataShouldShouldNotWriteMasterlistMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 
   EXPECT_NO_THROW(
       handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, true));
@@ -267,8 +265,8 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
   masterlist << "bash_tags:\n  []\nglobals:\n  []\nplugins:\n  []";
   masterlist.close();
 
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   EXPECT_NO_THROW(
       handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, true));
@@ -281,8 +279,8 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
 
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto groups = handle_->GetDatabase().GetGroups();
 
@@ -317,8 +315,8 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
 
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto groups = handle_->GetDatabase().GetGroups(false);
 
@@ -350,8 +348,8 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
 
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto groups = handle_->GetDatabase().GetUserGroups();
 
@@ -373,8 +371,8 @@ TEST_P(
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
 
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   handle_->GetDatabase().SetUserGroups(std::vector<Group>({
       Group("group4"),
@@ -396,8 +394,8 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
 
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto path = handle_->GetDatabase().GetGroupsPath("group1", "group3");
 
@@ -413,8 +411,8 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
 
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto tags = handle_->GetDatabase().GetKnownBashTags();
 
@@ -431,8 +429,8 @@ TEST_P(DatabaseInterfaceTest,
        getGeneralMessagesShouldGetGeneralMessagesFromTheMasterlistAndUserlist) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto messages = handle_->GetDatabase().GetGeneralMessages();
 
@@ -449,7 +447,7 @@ TEST_P(
     DatabaseInterfaceTest,
     getGeneralMessagesShouldReturnOnlyValidMessagesIfConditionsAreEvaluated) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 
   auto messages = handle_->GetDatabase().GetGeneralMessages(true);
 
@@ -466,8 +464,8 @@ TEST_P(
     getPluginMetadataShouldReturnMergedMasterAndUserMetadataForTheGivenPluginIfIncludeUserMetadataIsTrue) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
       handle_->GetDatabase().GetPluginMetadata(blankEsm, true).value();
@@ -483,8 +481,8 @@ TEST_P(DatabaseInterfaceTest,
        getPluginMetadataShouldPreferUserMetadataWhenMergingMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
       handle_->GetDatabase().GetPluginMetadata(blankEsm, true).value();
@@ -505,8 +503,8 @@ TEST_P(
     getPluginMetadataShouldReturnOnlyMasterlistMetadataForTheGivenPluginIfIncludeUserMetadataIsFalse) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
       handle_->GetDatabase().GetPluginMetadata(blankEsm, false).value();
@@ -521,7 +519,7 @@ TEST_P(
     DatabaseInterfaceTest,
     getPluginMetadataShouldReturnOnlyValidMetadataForTheGivenPluginIfConditionsAreEvaluated) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 
   auto metadata =
       handle_->GetDatabase().GetPluginMetadata(blankEsm, false, true).value();
@@ -534,8 +532,8 @@ TEST_P(
     getPluginUserMetadataShouldReturnAnEmptyPluginMetadataObjectIfThePluginHasNoUserMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   EXPECT_FALSE(handle_->GetDatabase().GetPluginUserMetadata(blankDifferentEsm));
 }
@@ -544,8 +542,8 @@ TEST_P(DatabaseInterfaceTest,
        getPluginUserMetadataShouldReturnOnlyUserMetadataForTheGivenPlugin) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
       handle_->GetDatabase().GetPluginUserMetadata(blankEsm).value();
@@ -561,8 +559,8 @@ TEST_P(
     getPluginUserMetadataShouldReturnOnlyValidMetadataForTheGivenPluginIfConditionsAreEvaluated) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
       handle_->GetDatabase().GetPluginMetadata(blankEsm, false, true).value();
@@ -575,8 +573,8 @@ TEST_P(
     setPluginUserMetadataShouldReplaceExistingUserMetadataWithTheGivenMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   PluginMetadata newMetadata(blankDifferentEsp);
   newMetadata.SetRequirements(std::vector<File>({File(masterFile)}));
@@ -597,8 +595,8 @@ TEST_P(DatabaseInterfaceTest,
        setPluginUserMetadataShouldNotAffectExistingMasterlistMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   PluginMetadata newMetadata(blankEsm);
   newMetadata.SetRequirements(std::vector<File>({File(masterFile)}));
@@ -617,8 +615,8 @@ TEST_P(DatabaseInterfaceTest,
        discardPluginUserMetadataShouldDiscardAllUserMetadataForTheGivenPlugin) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
 
@@ -630,8 +628,8 @@ TEST_P(
     discardPluginUserMetadataShouldNotDiscardMasterlistMetadataForTheGivenPlugin) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
 
@@ -647,8 +645,8 @@ TEST_P(DatabaseInterfaceTest,
        discardPluginUserMetadataShouldNotDiscardUserMetadataForOtherPlugins) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
 
@@ -662,8 +660,8 @@ TEST_P(DatabaseInterfaceTest,
        discardPluginUserMetadataShouldNotDiscardGeneralMessages) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
 
@@ -682,8 +680,8 @@ TEST_P(DatabaseInterfaceTest,
        discardPluginUserMetadataShouldNotDiscardKnownBashTags) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
 
@@ -703,8 +701,8 @@ TEST_P(
     discardAllUserMetadataShouldDiscardAllUserMetadataAndNoMasterlistMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().LoadLists(masterlistPath, userlistPath_));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   handle_->GetDatabase().DiscardAllUserMetadata();
 
@@ -792,7 +790,7 @@ TEST_P(DatabaseInterfaceTest,
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldWriteOnlyBashTagsAndDirtyInfo) {
   ASSERT_NO_THROW(GenerateMasterlist());
-  ASSERT_NO_THROW(handle_->GetDatabase().LoadLists(masterlistPath, ""));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 
   EXPECT_NO_THROW(
       handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, true));

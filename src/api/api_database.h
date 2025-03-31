@@ -39,10 +39,15 @@ namespace loot {
 struct ApiDatabase final : public DatabaseInterface {
   explicit ApiDatabase(std::shared_ptr<ConditionEvaluator> conditionEvaluator);
 
-  void LoadLists(
-      const std::filesystem::path& masterlist_path,
-      const std::filesystem::path& userlist_path = "",
-      const std::filesystem::path& masterlist_prelude_path = "") override;
+  void LoadMasterlist(
+      const std::filesystem::path& masterlistPath) override;
+
+  void LoadMasterlistWithPrelude(
+      const std::filesystem::path& masterlistPath,
+      const std::filesystem::path& masterlistPreludePath) override;
+
+  void LoadUserlist(
+      const std::filesystem::path& userlistPath) override;
 
   void WriteUserMetadata(const std::filesystem::path& outputFile,
                          const bool overwrite) const override;

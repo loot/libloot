@@ -84,43 +84,51 @@ ApiDatabase::ApiDatabase(
 // Database Loading Functions
 ///////////////////////////////////
 
-void ApiDatabase::LoadLists(
-    const std::filesystem::path& masterlistPath,
-    const std::filesystem::path& userlistPath,
-    const std::filesystem::path& masterlistPreludePath) {
+void ApiDatabase::LoadMasterlist(const std::filesystem::path& masterlistPath) {
   MetadataList temp;
-  MetadataList userTemp;
 
-  if (!masterlistPath.empty()) {
-    if (std::filesystem::exists(masterlistPath)) {
-      if (!masterlistPreludePath.empty()) {
-        if (std::filesystem::exists(masterlistPreludePath)) {
-          temp.LoadWithPrelude(masterlistPath, masterlistPreludePath);
-        } else {
-          throw FileAccessError(
-              "The given masterlist prelude path does not exist: " +
-              masterlistPreludePath.u8string());
-        }
-      } else {
-        temp.Load(masterlistPath);
-      }
-    } else {
-      throw FileAccessError("The given masterlist path does not exist: " +
-                            masterlistPath.u8string());
-    }
-  }
-
-  if (!userlistPath.empty()) {
-    if (std::filesystem::exists(userlistPath)) {
-      userTemp.Load(userlistPath);
-    } else {
-      throw FileAccessError("The given userlist path does not exist: " +
-                            userlistPath.u8string());
-    }
+  if (std::filesystem::exists(masterlistPath)) {
+    temp.Load(masterlistPath);
+  } else {
+    throw FileAccessError("The given masterlist path does not exist: " +
+                          masterlistPath.u8string());
   }
 
   masterlist_ = temp;
-  userlist_ = userTemp;
+}
+
+void ApiDatabase::LoadMasterlistWithPrelude(
+    const std::filesystem::path& masterlistPath,
+    const std::filesystem::path& masterlistPreludePath) {
+  MetadataList temp;
+
+  if (std::filesystem::exists(masterlistPath)) {
+    if (std::filesystem::exists(masterlistPreludePath)) {
+      temp.LoadWithPrelude(masterlistPath, masterlistPreludePath);
+    } else {
+      throw FileAccessError(
+          "The given masterlist prelude path does not exist: " +
+          masterlistPreludePath.u8string());
+    }
+  } else {
+    throw FileAccessError("The given masterlist path does not exist: " +
+                          masterlistPath.u8string());
+  }
+
+  masterlist_ = temp;
+}
+
+void ApiDatabase::LoadUserlist(const std::filesystem::path& userlistPath) {
+  MetadataList temp;
+
+  if (std::filesystem::exists(userlistPath)) {
+    temp.Load(userlistPath);
+  } else {
+    throw FileAccessError("The given userlist path does not exist: " +
+                          userlistPath.u8string());
+  }
+
+  userlist_ = temp;
 }
 
 void ApiDatabase::WriteUserMetadata(const std::filesystem::path& outputFile,
