@@ -625,9 +625,9 @@ Plugin::GetPluginsMetadata(const std::vector<const Plugin*>& plugins) {
 std::string GetArchiveFileExtension(const GameType gameType) {
   if (gameType == GameType::fo4 || gameType == GameType::fo4vr ||
       gameType == GameType::starfield)
-    return BA2_FILE_EXTENSION;
+    return std::string(BA2_FILE_EXTENSION);
   else
-    return BSA_FILE_EXTENSION;
+    return std::string(BSA_FILE_EXTENSION);
 }
 
 unsigned int Plugin::GetEspluginGameId(GameType gameType) {
@@ -660,7 +660,7 @@ bool hasPluginFileExtension(std::string_view filename, GameType gameType) {
   if (gameType != GameType::openmw &&
       boost::iends_with(filename, GHOST_FILE_EXTENSION)) {
     filename =
-        filename.substr(0, filename.length() - GHOST_FILE_EXTENSION_LENGTH);
+        filename.substr(0, filename.length() - GHOST_FILE_EXTENSION.length());
   }
 
   if (boost::iends_with(filename, ".esp") ||

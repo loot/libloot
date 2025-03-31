@@ -37,14 +37,14 @@ namespace loot {
 /* The string below matches timestamps that use forwardslashes for date
    separators. However, Pseudosem v1.0.1 will only compare the first
    two digits as it does not recognise forwardslashes as separators. */
-constexpr const char* dateRegex =
+constexpr std::string_view dateRegex =
     R"((\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2}))";
 
 /* The string below matches the range of version strings supported by
    Pseudosem v1.0.1, excluding space separators, as they make version
    extraction from inside sentences very tricky and have not been
    seen "in the wild". */
-constexpr const char* pseudosemVersionRegex =
+constexpr std::string_view pseudosemVersionRegex =
     R"((\d+(?:\.\d+)+(?:[-._:]?[A-Za-z0-9]+)*))"
     // The string below prevents version numbers followed by a comma from
     // matching.
@@ -53,21 +53,19 @@ constexpr const char* pseudosemVersionRegex =
 /* The string below matches a number containing one or more
    digits found at the start of the search string or preceded by
    'v' or 'version:. */
-constexpr const char* digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))";
+constexpr std::string_view digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))";
 
 std::vector<Tag> ExtractBashTags(std::string_view description) {
   std::vector<Tag> tags;
 
-  static constexpr const char* BASH_TAGS_OPENER = "{{BASH:";
-  static constexpr std::size_t BASH_TAGS_OPENER_LENGTH =
-      std::char_traits<char>::length(BASH_TAGS_OPENER);
+  static constexpr std::string_view BASH_TAGS_OPENER = "{{BASH:";
 
   size_t startPos = description.find("{{BASH:");
   if (startPos == std::string::npos ||
-      startPos + BASH_TAGS_OPENER_LENGTH >= description.length()) {
+      startPos + BASH_TAGS_OPENER.length() >= description.length()) {
     return tags;
   }
-  startPos += BASH_TAGS_OPENER_LENGTH;
+  startPos += BASH_TAGS_OPENER.length();
 
   const size_t endPos = description.find("}}", startPos);
   if (endPos == std::string::npos) {
@@ -94,12 +92,15 @@ std::optional<std::string> ExtractVersion(std::string_view text) {
    together, and in order to extract the correct one, they must be searched
    for in order of priority. */
   static const std::vector<regex> versionRegexes({
-      regex(dateRegex, regex::ECMAScript | regex::icase),
-      regex(std::string(R"(version:?\s)") + pseudosemVersionRegex,
+      regex(
+          dateRegex.begin(), dateRegex.end(), regex::ECMAScript | regex::icase),
+      regex(R"(version:?\s)" + std::string(pseudosemVersionRegex),
             regex::ECMAScript | regex::icase),
-      regex(std::string(R"((?:^|v|\s))") + pseudosemVersionRegex,
+      regex(R"((?:^|v|\s))" + std::string(pseudosemVersionRegex),
             regex::ECMAScript | regex::icase),
-      regex(digitsVersionRegex, regex::ECMAScript | regex::icase),
+      regex(digitsVersionRegex.begin(),
+            digitsVersionRegex.end(),
+            regex::ECMAScript | regex::icase),
   });
 
   std::match_results<std::string_view::iterator> what;
@@ -198,8 +199,7 @@ int CompareFilenames(const ComparableFilename& lhs,
   // Use CompareStringOrdinal as that will perform case conversion
   // using the operating system uppercase table information, which (I think)
   // will give results that match the filesystem, and is not locale-dependent.
-  int result = CompareStringOrdinal(
-      lhs.c_str(), -1, rhs.c_str(), -1, true);
+  int result = CompareStringOrdinal(lhs.c_str(), -1, rhs.c_str(), -1, true);
   switch (result) {
     case CSTR_LESS_THAN:
       return -1;
@@ -238,7 +238,7 @@ std::string NormalizeFilename(std::string_view filename) {
 std::string TrimDotGhostExtension(std::string&& filename) {
   // If the name passed ends in '.ghost', that should be trimmed.
   if (boost::iends_with(filename, GHOST_FILE_EXTENSION)) {
-    return filename.substr(0, filename.length() - GHOST_FILE_EXTENSION_LENGTH);
+    return filename.substr(0, filename.length() - GHOST_FILE_EXTENSION.length());
   }
 
   return filename;

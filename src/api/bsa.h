@@ -31,8 +31,8 @@
 #include <vector>
 
 namespace loot {
-inline constexpr const char* BSA_FILE_EXTENSION = ".bsa";
-inline constexpr const char* BA2_FILE_EXTENSION = ".ba2";
+inline constexpr std::string_view BSA_FILE_EXTENSION = ".bsa";
+inline constexpr std::string_view BA2_FILE_EXTENSION = ".ba2";
 
 std::map<uint64_t, std::set<uint64_t>> GetAssetsInBethesdaArchive(
     const std::filesystem::path& archivePath);

@@ -38,9 +38,7 @@
 #endif
 
 namespace loot {
-inline constexpr const char* GHOST_FILE_EXTENSION = ".ghost";
-inline constexpr std::size_t GHOST_FILE_EXTENSION_LENGTH =
-    std::char_traits<char>::length(GHOST_FILE_EXTENSION);
+inline constexpr std::string_view GHOST_FILE_EXTENSION = ".ghost";
 
 #ifdef _WIN32
 typedef std::wstring ComparableFilename;

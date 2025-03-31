@@ -56,19 +56,19 @@ using loot::GameType;
 // game's install path. These directories have fixed paths relative to the
 // game install path (renaming them causes the game launch to fail, or not
 // find the DLC files).
-constexpr const char* MS_FO4_AUTOMATRON_DATA_PATH =
+constexpr std::string_view MS_FO4_AUTOMATRON_DATA_PATH =
     "../../Fallout 4- Automatron (PC)/Content/Data";
-constexpr const char* MS_FO4_CONTRAPTIONS_DATA_PATH =
+constexpr std::string_view MS_FO4_CONTRAPTIONS_DATA_PATH =
     "../../Fallout 4- Contraptions Workshop (PC)/Content/Data";
-constexpr const char* MS_FO4_FAR_HARBOR_DATA_PATH =
+constexpr std::string_view MS_FO4_FAR_HARBOR_DATA_PATH =
     "../../Fallout 4- Far Harbor (PC)/Content/Data";
-constexpr const char* MS_FO4_TEXTURE_PACK_DATA_PATH =
+constexpr std::string_view MS_FO4_TEXTURE_PACK_DATA_PATH =
     "../../Fallout 4- High Resolution Texture Pack/Content/Data";
-constexpr const char* MS_FO4_NUKA_WORLD_DATA_PATH =
+constexpr std::string_view MS_FO4_NUKA_WORLD_DATA_PATH =
     "../../Fallout 4- Nuka-World (PC)/Content/Data";
-constexpr const char* MS_FO4_VAULT_TEC_DATA_PATH =
+constexpr std::string_view MS_FO4_VAULT_TEC_DATA_PATH =
     "../../Fallout 4- Vault-Tec Workshop (PC)/Content/Data";
-constexpr const char* MS_FO4_WASTELAND_DATA_PATH =
+constexpr std::string_view MS_FO4_WASTELAND_DATA_PATH =
     "../../Fallout 4- Wasteland Workshop (PC)/Content/Data";
 
 bool IsMicrosoftStoreInstall(const GameType gameType,

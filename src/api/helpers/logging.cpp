@@ -24,12 +24,14 @@
 
 #include "api/helpers/logging.h"
 
+#include <string_view>
+
 #include <spdlog/sinks/base_sink.h>
 
 namespace {
 using loot::LogLevel;
 
-constexpr const char* LOGGER_NAME = "loot_api_logger";
+constexpr std::string_view LOGGER_NAME = "loot_api_logger";
 
 LogLevel mapFromSpdlog(spdlog::level::level_enum severity) {
   using spdlog::level::level_enum;
@@ -93,12 +95,12 @@ private:
 }
 
 namespace loot {
-std::shared_ptr<spdlog::logger> getLogger() { return spdlog::get(LOGGER_NAME); }
+std::shared_ptr<spdlog::logger> getLogger() { return spdlog::get(std::string(LOGGER_NAME)); }
 
 std::shared_ptr<spdlog::logger> createLogger(
     std::function<void(LogLevel, const char*)> callback) {
   auto sink = std::make_shared<SpdLoggingSink>(callback);
-  auto logger = std::make_shared<spdlog::logger>(LOGGER_NAME, sink);
+  auto logger = std::make_shared<spdlog::logger>(std::string(LOGGER_NAME), sink);
   logger->set_level(spdlog::level::level_enum::trace);
 
   return logger;
