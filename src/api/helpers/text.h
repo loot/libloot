@@ -46,7 +46,7 @@ typedef std::wstring ComparableFilename;
 typedef icu::UnicodeString ComparableFilename;
 #endif
 
-std::vector<Tag> ExtractBashTags(std::string_view description);
+std::vector<std::string> ExtractBashTags(std::string_view description);
 
 std::optional<std::string> ExtractVersion(std::string_view text);
 

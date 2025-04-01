@@ -80,7 +80,7 @@ public:
    * @return A set of Bash Tags. The order of elements in the set holds no
    *         semantics.
    */
-  virtual std::vector<Tag> GetBashTags() const = 0;
+  virtual std::vector<std::string> GetBashTags() const = 0;
 
   /**
    * Get the plugin's CRC-32 checksum.

@@ -57,21 +57,19 @@ constexpr std::string_view pseudosemVersionRegex =
    'v' or 'version:. */
 constexpr std::string_view digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))"sv;
 
-std::vector<Tag> ExtractBashTags(std::string_view description) {
-  std::vector<Tag> tags;
-
+std::vector<std::string> ExtractBashTags(std::string_view description) {
   static constexpr std::string_view BASH_TAGS_OPENER = "{{BASH:"sv;
 
   size_t startPos = description.find("{{BASH:");
   if (startPos == std::string::npos ||
       startPos + BASH_TAGS_OPENER.length() >= description.length()) {
-    return tags;
+    return {};
   }
   startPos += BASH_TAGS_OPENER.length();
 
   const size_t endPos = description.find("}}", startPos);
   if (endPos == std::string::npos) {
-    return tags;
+    return {};
   }
 
   auto commaSeparatedTags = description.substr(startPos, endPos - startPos);
@@ -81,10 +79,9 @@ std::vector<Tag> ExtractBashTags(std::string_view description) {
 
   for (auto& tag : bashTags) {
     boost::trim(tag);
-    tags.push_back(Tag(tag));
   }
 
-  return tags;
+  return bashTags;
 }
 
 std::optional<std::string> ExtractVersion(std::string_view text) {

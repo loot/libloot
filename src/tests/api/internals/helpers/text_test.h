@@ -46,23 +46,23 @@ Requires Skyrim Special Edition 1.5.39 or greater.
 
   auto tags = ExtractBashTags(description);
 
-  std::vector<Tag> expectedTags({
-      Tag("C.Climate"),
-      Tag("C.Encounter"),
-      Tag("C.ImageSpace"),
-      Tag("C.Light"),
-      Tag("C.Location"),
-      Tag("C.Music"),
-      Tag("C.Name"),
-      Tag("C.Owner"),
-      Tag("C.Water"),
-      Tag("Delev"),
-      Tag("Graphics"),
-      Tag("Invent"),
-      Tag("Names"),
-      Tag("Relev"),
-      Tag("Sound"),
-      Tag("Stats"),
+  std::vector<std::string> expectedTags({
+      "C.Climate",
+      "C.Encounter",
+      "C.ImageSpace",
+      "C.Light",
+      "C.Location",
+      "C.Music",
+      "C.Name",
+      "C.Owner",
+      "C.Water",
+      "Delev",
+      "Graphics",
+      "Invent",
+      "Names",
+      "Relev",
+      "Sound",
+      "Stats",
   });
 
   EXPECT_EQ(expectedTags, tags);

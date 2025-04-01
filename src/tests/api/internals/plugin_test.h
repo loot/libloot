@@ -164,7 +164,7 @@ public:
 
   std::vector<std::string> GetMasters() const override { return masters_; }
 
-  std::vector<Tag> GetBashTags() const override { return std::vector<Tag>(); }
+  std::vector<std::string> GetBashTags() const override { return {}; }
 
   std::optional<uint32_t> GetCRC() const override {
     return std::optional<uint32_t>();

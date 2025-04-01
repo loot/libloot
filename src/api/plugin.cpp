@@ -340,7 +340,7 @@ std::vector<std::string> Plugin::GetMasters() const {
   return mastersVec;
 }
 
-std::vector<Tag> Plugin::GetBashTags() const { return tags_; }
+std::vector<std::string> Plugin::GetBashTags() const { return tags_; }
 
 std::optional<uint32_t> Plugin::GetCRC() const { return crc_; }
 

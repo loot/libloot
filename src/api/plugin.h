@@ -63,7 +63,7 @@ public:
   std::optional<float> GetHeaderVersion() const override;
   std::optional<std::string> GetVersion() const override;
   std::vector<std::string> GetMasters() const override;
-  std::vector<Tag> GetBashTags() const override;
+  std::vector<std::string> GetBashTags() const override;
   std::optional<uint32_t> GetCRC() const override;
 
   bool IsMaster() const override;
@@ -110,7 +110,7 @@ private:
                          // header?
   std::optional<std::string> version_;  // Obtained from description field.
   std::optional<uint32_t> crc_;
-  std::vector<Tag> tags_;
+  std::vector<std::string> tags_;
   std::vector<std::filesystem::path> archivePaths_;
   std::map<uint64_t, std::set<uint64_t>> archiveAssets_;
 };
