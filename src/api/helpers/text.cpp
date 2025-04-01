@@ -34,31 +34,33 @@
 #endif
 
 namespace loot {
+using std::string_view_literals::operator""sv;
+
 /* The string below matches timestamps that use forwardslashes for date
    separators. However, Pseudosem v1.0.1 will only compare the first
    two digits as it does not recognise forwardslashes as separators. */
 constexpr std::string_view dateRegex =
-    R"((\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2}))";
+    R"((\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2}))"sv;
 
 /* The string below matches the range of version strings supported by
    Pseudosem v1.0.1, excluding space separators, as they make version
    extraction from inside sentences very tricky and have not been
    seen "in the wild". */
 constexpr std::string_view pseudosemVersionRegex =
-    R"((\d+(?:\.\d+)+(?:[-._:]?[A-Za-z0-9]+)*))"
+    R"((\d+(?:\.\d+)+(?:[-._:]?[A-Za-z0-9]+)*))"sv
     // The string below prevents version numbers followed by a comma from
     // matching.
-    R"((?!,))";
+    R"((?!,))"sv;
 
 /* The string below matches a number containing one or more
    digits found at the start of the search string or preceded by
    'v' or 'version:. */
-constexpr std::string_view digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))";
+constexpr std::string_view digitsVersionRegex = R"((?:^|v|version:\s*)(\d+))"sv;
 
 std::vector<Tag> ExtractBashTags(std::string_view description) {
   std::vector<Tag> tags;
 
-  static constexpr std::string_view BASH_TAGS_OPENER = "{{BASH:";
+  static constexpr std::string_view BASH_TAGS_OPENER = "{{BASH:"sv;
 
   size_t startPos = description.find("{{BASH:");
   if (startPos == std::string::npos ||

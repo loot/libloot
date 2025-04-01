@@ -29,9 +29,10 @@
 #include <spdlog/sinks/base_sink.h>
 
 namespace {
+using std::string_view_literals::operator""sv;
 using loot::LogLevel;
 
-constexpr std::string_view LOGGER_NAME = "loot_api_logger";
+constexpr std::string_view LOGGER_NAME = "loot_api_logger"sv;
 
 LogLevel mapFromSpdlog(spdlog::level::level_enum severity) {
   using spdlog::level::level_enum;

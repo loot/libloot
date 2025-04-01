@@ -50,6 +50,7 @@
 using std::filesystem::u8path;
 
 namespace {
+using std::string_view_literals::operator""sv;
 using loot::GameType;
 
 // The Microsoft Store installs Fallout 4 DLCs to directories outside of the
@@ -57,19 +58,19 @@ using loot::GameType;
 // game install path (renaming them causes the game launch to fail, or not
 // find the DLC files).
 constexpr std::string_view MS_FO4_AUTOMATRON_DATA_PATH =
-    "../../Fallout 4- Automatron (PC)/Content/Data";
+    "../../Fallout 4- Automatron (PC)/Content/Data"sv;
 constexpr std::string_view MS_FO4_CONTRAPTIONS_DATA_PATH =
-    "../../Fallout 4- Contraptions Workshop (PC)/Content/Data";
+    "../../Fallout 4- Contraptions Workshop (PC)/Content/Data"sv;
 constexpr std::string_view MS_FO4_FAR_HARBOR_DATA_PATH =
-    "../../Fallout 4- Far Harbor (PC)/Content/Data";
+    "../../Fallout 4- Far Harbor (PC)/Content/Data"sv;
 constexpr std::string_view MS_FO4_TEXTURE_PACK_DATA_PATH =
-    "../../Fallout 4- High Resolution Texture Pack/Content/Data";
+    "../../Fallout 4- High Resolution Texture Pack/Content/Data"sv;
 constexpr std::string_view MS_FO4_NUKA_WORLD_DATA_PATH =
-    "../../Fallout 4- Nuka-World (PC)/Content/Data";
+    "../../Fallout 4- Nuka-World (PC)/Content/Data"sv;
 constexpr std::string_view MS_FO4_VAULT_TEC_DATA_PATH =
-    "../../Fallout 4- Vault-Tec Workshop (PC)/Content/Data";
+    "../../Fallout 4- Vault-Tec Workshop (PC)/Content/Data"sv;
 constexpr std::string_view MS_FO4_WASTELAND_DATA_PATH =
-    "../../Fallout 4- Wasteland Workshop (PC)/Content/Data";
+    "../../Fallout 4- Wasteland Workshop (PC)/Content/Data"sv;
 
 bool IsMicrosoftStoreInstall(const GameType gameType,
                              const std::filesystem::path& gamePath) {

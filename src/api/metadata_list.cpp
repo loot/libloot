@@ -38,8 +38,10 @@
 #include "loot/exception/file_access_error.h"
 
 namespace loot {
-constexpr std::string_view PRELUDE_ON_FIRST_LINE = "prelude:";
-constexpr std::string_view PRELUDE_ON_NEW_LINE = "\nprelude:";
+using std::string_view_literals::operator""sv;
+
+constexpr std::string_view PRELUDE_ON_FIRST_LINE = "prelude:"sv;
+constexpr std::string_view PRELUDE_ON_NEW_LINE = "\nprelude:"sv;
 
 std::string read_to_string(const std::filesystem::path& filePath) {
   std::ifstream in(filePath);
