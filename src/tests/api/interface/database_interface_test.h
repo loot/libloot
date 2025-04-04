@@ -274,6 +274,14 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
   EXPECT_FALSE(GetFileContent(minimalOutputPath_).empty());
 }
 
+TEST_P(DatabaseInterfaceTest, evaluateShouldReturnTrueIfTheConditionIsTrue) {
+    EXPECT_TRUE(handle_->GetDatabase().Evaluate("file(\"Blank.esp\")"));
+}
+
+TEST_P(DatabaseInterfaceTest, evaluateShouldReturnFalseIfTheConditionIsFalse) {
+  EXPECT_FALSE(handle_->GetDatabase().Evaluate("file(\"missing.esp\")"));
+}
+
 TEST_P(DatabaseInterfaceTest,
        getGroupsShouldReturnAllGroupsListedInTheLoadedMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());

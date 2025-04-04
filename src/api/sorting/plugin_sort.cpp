@@ -31,6 +31,29 @@
 #include "api/sorting/plugin_graph.h"
 #include "loot/exception/undefined_group_error.h"
 
+namespace {
+std::vector<loot::File> FilterFilesByConstraint(
+    const loot::DatabaseInterface& db,
+    std::vector<loot::File>&& files) {
+  std::vector<loot::File> filtered;
+  for (auto&& file : files) {
+    if (db.Evaluate(file.GetConstraint())) {
+      filtered.push_back(std::move(file));
+    }
+  }
+
+  return filtered;
+}
+
+void FilterByConstraint(const loot::DatabaseInterface& db,
+                        loot::PluginMetadata& metadata) {
+  metadata.SetLoadAfterFiles(
+      FilterFilesByConstraint(db, metadata.GetLoadAfterFiles()));
+  metadata.SetRequirements(
+      FilterFilesByConstraint(db, metadata.GetRequirements()));
+}
+}
+
 namespace loot {
 std::vector<PluginSortingData> GetPluginsSortingData(
     const DatabaseInterface& db,
@@ -42,11 +65,15 @@ std::vector<PluginSortingData> GetPluginsSortingData(
   for (const auto& plugin : loadOrder) {
     const auto pluginFilename = plugin->GetName();
 
-    const auto masterlistMetadata =
+    auto masterlistMetadata =
         db.GetPluginMetadata(pluginFilename, false, true)
             .value_or(PluginMetadata(pluginFilename));
-    const auto userMetadata = db.GetPluginUserMetadata(pluginFilename, true)
+    auto userMetadata = db.GetPluginUserMetadata(pluginFilename, true)
                                   .value_or(PluginMetadata(pluginFilename));
+
+    // Only use constained metadata when the constraints are true.
+    FilterByConstraint(db, masterlistMetadata);
+    FilterByConstraint(db, userMetadata);
 
     const auto pluginSortingData =
         PluginSortingData(plugin, masterlistMetadata, userMetadata, i);

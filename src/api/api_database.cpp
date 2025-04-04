@@ -143,6 +143,10 @@ void ApiDatabase::WriteUserMetadata(const std::filesystem::path& outputFile,
   userlist_.Save(outputFile);
 }
 
+bool ApiDatabase::Evaluate(const std::string& condition) const {
+  return conditionEvaluator_->Evaluate(condition);
+}
+
 //////////////////////////
 // DB Access Functions
 //////////////////////////

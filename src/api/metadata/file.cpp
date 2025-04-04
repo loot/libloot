@@ -28,11 +28,13 @@ namespace loot {
 File::File(std::string_view name,
            std::string_view display,
            std::string_view condition,
-           const std::vector<MessageContent>& detail) :
+           const std::vector<MessageContent>& detail,
+           std::string_view constraint) :
     ConditionalMetadata(condition),
     name_(Filename(name)),
     display_(display),
-    detail_(detail) {}
+    detail_(detail),
+    constraint_(constraint) {}
 
 Filename File::GetName() const { return name_; }
 
@@ -40,9 +42,12 @@ std::string File::GetDisplayName() const { return display_; }
 
 std::vector<MessageContent> File::GetDetail() const { return detail_; }
 
+std::string File::GetConstraint() const { return constraint_; }
+
 bool operator==(const File& lhs, const File& rhs) {
   return lhs.GetDisplayName() == rhs.GetDisplayName() &&
          lhs.GetCondition() == rhs.GetCondition() &&
+         lhs.GetConstraint() == rhs.GetConstraint() &&
          lhs.GetName() == rhs.GetName() && lhs.GetDetail() == rhs.GetDetail();
 }
 
@@ -62,6 +67,14 @@ bool operator<(const File& lhs, const File& rhs) {
   }
 
   if (rhs.GetCondition() < lhs.GetCondition()) {
+    return false;
+  }
+
+  if (lhs.GetConstraint() < rhs.GetConstraint()) {
+    return true;
+  }
+
+  if (rhs.GetConstraint() < lhs.GetConstraint()) {
     return false;
   }
 
