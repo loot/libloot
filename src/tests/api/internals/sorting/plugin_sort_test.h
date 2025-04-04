@@ -33,6 +33,55 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
+class GetPluginsSortingDataTest : public CommonGameTestFixture {
+protected:
+  GetPluginsSortingDataTest() : CommonGameTestFixture(GameType::tes4) {}
+};
+
+TEST_F(GetPluginsSortingDataTest, shouldFilterOutFilesWithFalseConstraints) {
+  Game game(GameType::tes4, gamePath, localPath);
+
+  game.LoadPlugins({blankEsp}, true);
+
+  const auto plugin = game.GetPlugin(blankEsp);
+
+  const auto trueConstraint = "file(\"Blank.esm\")";
+  const auto falseConstraint = "file(\"missing.esp\")";
+
+  std::filesystem::path masterlistPath = localPath / "masterlist.yaml";
+  std::ofstream out(masterlistPath);
+  out << "{plugins: [{name: Blank.esp, after: [{name: A.esp, constraint: '"
+      << trueConstraint << "'}, {name: B.esp, constraint: '" << falseConstraint
+      << "'}], req: [{name: C.esp, constraint: '" << trueConstraint
+      << "'}, {name: D.esp, constraint: '" << falseConstraint << "'}]}]}";
+  out.close();
+
+  game.GetDatabase().LoadMasterlist(masterlistPath);
+
+  PluginMetadata userMetadata(blankEsp);
+  userMetadata.SetLoadAfterFiles(
+      {File(blankEsm, "", "", {}, trueConstraint),
+       File(blankDifferentEsm, "", "", {}, falseConstraint)});
+  userMetadata.SetRequirements(
+      {File(blankDifferentEsp, "", "", {}, trueConstraint),
+       File(blankMasterDependentEsm, "", "", {}, falseConstraint)});
+
+  game.GetDatabase().SetPluginUserMetadata(userMetadata);
+
+  const auto pluginsSortingData = GetPluginsSortingData(
+      game.GetDatabase(), {reinterpret_cast<const Plugin*>(plugin.get())});
+
+  ASSERT_EQ(1, pluginsSortingData.size());
+  EXPECT_EQ(std::vector<File>{File("A.esp", "", "", {}, trueConstraint)},
+            pluginsSortingData[0].GetMasterlistLoadAfterFiles());
+  EXPECT_EQ(std::vector<File>{File("C.esp", "", "", {}, trueConstraint)},
+            pluginsSortingData[0].GetMasterlistRequirements());
+  EXPECT_EQ(std::vector<File>{userMetadata.GetLoadAfterFiles()[0]},
+            pluginsSortingData[0].GetUserLoadAfterFiles());
+  EXPECT_EQ(std::vector<File>{userMetadata.GetRequirements()[0]},
+            pluginsSortingData[0].GetUserRequirements());
+}
+
 class SortPluginsTest : public ::testing::Test {
 protected:
   PluginSortingData CreatePluginSortingData(const std::string& name,

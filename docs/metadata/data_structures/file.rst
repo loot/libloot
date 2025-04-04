@@ -28,10 +28,16 @@ Map Form
 
   A condition string that is evaluated to determine whether this file data should be used: if it evaluates to true, the data is used, otherwise it is ignored. See :doc:`../conditions` for details.
 
+.. describe:: constraint
+
+  A condition string that must also evaluate to true for the file's existence to be recognised. See :doc:`../conditions` for details.
+
+  When a constraint is set, it's best to also set a ``display`` value that describes the constraint so that it is visible to users if a message is displayed for the file.
+
 Scalar Form
 -----------
 
-The scalar form is simply the value of the map form's ``name`` key. Using the scalar form is equivalent to using the map form with undefined ``display`` and ``condition`` keys.
+The scalar form is simply the value of the map form's ``name`` key. Using the scalar form is equivalent to using the map form with undefined ``display``, ``detail``, ``condition`` and ``constraint`` keys.
 
 Equality
 --------

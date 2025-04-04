@@ -107,6 +107,12 @@ public:
   virtual void WriteMinimalList(const std::filesystem::path& outputFile,
                                 const bool overwrite) const = 0;
 
+  /** 
+   * @brief Evaluate the given condition string.
+   * @param condition A condition string.
+   */
+  virtual bool Evaluate(const std::string& condition) const = 0;
+
   /**
    * @}
    * @name Non-plugin Data Access

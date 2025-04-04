@@ -55,6 +55,8 @@ struct ApiDatabase final : public DatabaseInterface {
   void WriteMinimalList(const std::filesystem::path& outputFile,
                         const bool overwrite) const override;
 
+  bool Evaluate(const std::string& condition) const override;
+
   std::vector<std::string> GetKnownBashTags() const override;
 
   std::vector<Message> GetGeneralMessages(

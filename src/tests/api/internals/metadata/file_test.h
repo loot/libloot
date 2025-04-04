@@ -38,19 +38,21 @@ TEST(File, defaultConstructorShouldInitialiseEmptyStrings) {
   EXPECT_EQ("", std::string(file.GetName()));
   EXPECT_EQ("", file.GetDisplayName());
   EXPECT_EQ("", file.GetCondition());
+  EXPECT_EQ("", file.GetConstraint());
 }
 
 TEST(File, stringsConstructorShouldStoreGivenStrings) {
   std::vector<MessageContent> detail = {MessageContent("text", "en")};
-  File file("name", "display", "condition", detail);
+  File file("name", "display", "condition", detail, "constraint");
 
   EXPECT_EQ("name", std::string(file.GetName()));
   EXPECT_EQ("display", file.GetDisplayName());
   EXPECT_EQ("condition", file.GetCondition());
   EXPECT_EQ(detail, file.GetDetail());
+  EXPECT_EQ("constraint", file.GetConstraint());
 }
 
-TEST(File, equalityShouldBeCaseInsensitiveOnNameAndDisplay) {
+TEST(File, equalityShouldBeCaseInsensitiveOnName) {
   File file1("name", "display", "condition");
   File file2("name", "display", "condition");
 
@@ -67,7 +69,7 @@ TEST(File, equalityShouldBeCaseInsensitiveOnNameAndDisplay) {
   EXPECT_FALSE(file1 == file2);
 }
 
-TEST(File, equalityShouldBeCaseSensitiveOnDisplayAndCondition) {
+TEST(File, equalityShouldBeCaseSensitiveOnDisplayAndConditionAndConstraint) {
   File file1("name", "display", "condition");
   File file2("name", "display", "condition");
 
@@ -83,6 +85,11 @@ TEST(File, equalityShouldBeCaseSensitiveOnDisplayAndCondition) {
 
   EXPECT_FALSE(file1 == file2);
 
+  file1 = File("name", "display", "condition", {}, "constraint");
+  file2 = File("name", "display", "condition", {}, "Constraint");
+
+  EXPECT_FALSE(file1 == file2);
+
   file1 = File("name", "display1", "condition");
   file2 = File("name", "display2", "condition");
 
@@ -90,6 +97,11 @@ TEST(File, equalityShouldBeCaseSensitiveOnDisplayAndCondition) {
 
   file1 = File("name", "display", "condition1");
   file2 = File("name", "display", "condition2");
+
+  EXPECT_FALSE(file1 == file2);
+
+  file1 = File("name", "display", "condition", {}, "constraint1");
+  file2 = File("name", "display", "condition", {}, "constraint2");
 
   EXPECT_FALSE(file1 == file2);
 }
@@ -133,6 +145,11 @@ TEST(File, inequalityShouldBeTheInverseOfEquality) {
 
   EXPECT_TRUE(file1 != file2);
 
+  file1 = File("name", "display", "condition", {}, "constraint");
+  file2 = File("name", "display", "condition", {}, "Constraint");
+
+  EXPECT_TRUE(file1 != file2);
+
   file1 = File("name", "display1", "condition");
   file2 = File("name", "display2", "condition");
 
@@ -145,6 +162,11 @@ TEST(File, inequalityShouldBeTheInverseOfEquality) {
 
   file1 = File("", "", "", {MessageContent("text", "en")});
   file2 = File("", "", "", {MessageContent("Text", "en")});
+
+  EXPECT_TRUE(file1 != file2);
+
+  file1 = File("name", "display", "condition", {}, "constraint1");
+  file2 = File("name", "display", "condition", {}, "constraint2");
 
   EXPECT_TRUE(file1 != file2);
 }
@@ -172,7 +194,7 @@ TEST(File,
 
 TEST(
     File,
-    lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForDisplayAndCondition) {
+    lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForDisplayAndConditionAndConstraint) {
   File file1("name", "display", "condition");
   File file2("name", "display", "condition");
 
@@ -191,6 +213,12 @@ TEST(
   EXPECT_TRUE(file2 < file1);
   EXPECT_FALSE(file1 < file2);
 
+  file1 = File("name", "display", "condition", {}, "constraint");
+  file2 = File("name", "display", "condition", {}, "Constraint");
+
+  EXPECT_TRUE(file2 < file1);
+  EXPECT_FALSE(file1 < file2);
+
   file1 = File("name", "display1");
   file2 = File("name", "display2");
 
@@ -199,6 +227,12 @@ TEST(
 
   file1 = File("name", "display", "condition1");
   file2 = File("name", "display", "condition2");
+
+  EXPECT_TRUE(file1 < file2);
+  EXPECT_FALSE(file2 < file1);
+
+  file1 = File("name", "display", "condition", {}, "constraint1");
+  file2 = File("name", "display", "condition", {}, "constraint2");
 
   EXPECT_TRUE(file1 < file2);
   EXPECT_FALSE(file2 < file1);
@@ -349,13 +383,17 @@ TEST(File, getDisplayNameShouldReturnDisplayString) {
 }
 
 TEST(File, emittingAsYamlShouldSingleQuoteValues) {
-  File file(
-      "name1", "display1", "condition1", {MessageContent("english", "en")});
+  File file("name1",
+            "display1",
+            "condition1",
+            {MessageContent("english", "en")},
+            "constraint1");
   YAML::Emitter emitter;
   emitter << file;
   std::string expected = "name: '" + std::string(file.GetName()) +
                          "'\ncondition: '" + file.GetCondition() +
                          "'\ndisplay: '" + file.GetDisplayName() +
+                         "'\nconstraint: '" + file.GetConstraint() +
                          "'\ndetail: '" + file.GetDetail()[0].GetText() + "'";
 
   EXPECT_EQ(expected, emitter.c_str());
@@ -369,7 +407,7 @@ TEST(File, emittingAsYamlShouldOutputAsAScalarIfOnlyTheNameStringIsNotEmpty) {
   EXPECT_EQ("'" + std::string(file.GetName()) + "'", emitter.c_str());
 }
 
-TEST(File, emittingAsYamlShouldOmitAnEmptyConditionString) {
+TEST(File, emittingAsYamlShouldOmitEmptyConditionAndConstraintStrings) {
   File file("name1", "display1");
   YAML::Emitter emitter;
   emitter << file;
@@ -402,7 +440,7 @@ TEST(
 TEST(File, encodingAsYamlShouldStoreDataCorrectly) {
   auto detail = {MessageContent("english", "en"),
                  MessageContent("french", "fr")};
-  File file("name1", "display1", "condition1", detail);
+  File file("name1", "display1", "condition1", detail, "constraint1");
   YAML::Node node;
   node = file;
 
@@ -410,6 +448,7 @@ TEST(File, encodingAsYamlShouldStoreDataCorrectly) {
   EXPECT_EQ(file.GetDisplayName(), node["display"].as<std::string>());
   EXPECT_EQ(file.GetCondition(), node["condition"].as<std::string>());
   EXPECT_EQ(file.GetDetail(), node["detail"].as<std::vector<MessageContent>>());
+  EXPECT_EQ(file.GetConstraint(), node["constraint"].as<std::string>());
 }
 
 TEST(File, encodingAsYamlShouldOmitEmptyFields) {
@@ -426,7 +465,7 @@ TEST(File, encodingAsYamlShouldOmitEmptyFields) {
 TEST(File, decodingFromYamlShouldSetDataCorrectly) {
   YAML::Node node = YAML::Load(
       "{name: name1, display: display1, condition: 'file(\"Foo.esp\")', "
-      "detail: 'details'}");
+      "detail: 'details', constraint: 'file(\"Bar.esp\")'}");
   File file = node.as<File>();
 
   std::vector<MessageContent> expectedDetail = {
@@ -436,6 +475,7 @@ TEST(File, decodingFromYamlShouldSetDataCorrectly) {
   EXPECT_EQ(node["display"].as<std::string>(), file.GetDisplayName());
   EXPECT_EQ(node["condition"].as<std::string>(), file.GetCondition());
   EXPECT_EQ(expectedDetail, file.GetDetail());
+  EXPECT_EQ(node["constraint"].as<std::string>(), file.GetConstraint());
 }
 
 TEST(File,
@@ -447,6 +487,7 @@ TEST(File,
   EXPECT_EQ(node["display"].as<std::string>(), file.GetDisplayName());
   EXPECT_TRUE(file.GetCondition().empty());
   EXPECT_TRUE(file.GetDetail().empty());
+  EXPECT_TRUE(file.GetConstraint().empty());
 }
 
 TEST(File, decodingFromYamlWithAListOfMessageContentDetailsShouldReadThemAll) {
@@ -493,6 +534,7 @@ TEST(File, decodingFromYamlScalarShouldLeaveDisplayNameAndConditionEmpty) {
   EXPECT_TRUE(file.GetDisplayName().empty());
   EXPECT_TRUE(file.GetCondition().empty());
   EXPECT_TRUE(file.GetDetail().empty());
+  EXPECT_TRUE(file.GetConstraint().empty());
 }
 
 TEST(File, decodingFromYamlShouldThrowIfAnInvalidMapIsGiven) {

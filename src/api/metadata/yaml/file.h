@@ -38,7 +38,7 @@
 namespace loot {
 inline bool emitAsScalar(const File& file) {
   return !file.IsConditional() && file.GetDetail().empty() &&
-         file.GetDisplayName().empty();
+         file.GetDisplayName().empty() && file.GetConstraint().empty();
 }
 }
 
@@ -49,8 +49,13 @@ struct convert<loot::File> {
     Node node;
     node["name"] = std::string(rhs.GetName());
 
-    if (rhs.IsConditional())
+    if (rhs.IsConditional()) {
       node["condition"] = rhs.GetCondition();
+    }
+
+    if (!rhs.GetConstraint().empty()) {
+      node["constraint"] = rhs.GetConstraint();
+    }
 
     if (!rhs.GetDisplayName().empty()) {
       node["display"] = rhs.GetDisplayName();
@@ -64,23 +69,32 @@ struct convert<loot::File> {
   }
 
   static bool decode(const Node& node, loot::File& rhs) {
-    if (!node.IsMap() && !node.IsScalar())
+    if (!node.IsMap() && !node.IsScalar()) {
       throw RepresentationException(
           node.Mark(), "bad conversion: 'file' object must be a map or scalar");
+    }
 
     if (node.IsMap()) {
-      if (!node["name"])
+      if (!node["name"]) {
         throw RepresentationException(
             node.Mark(),
             "bad conversion: 'name' key missing from 'file' map object");
+      }
 
       std::string name = node["name"].as<std::string>();
-      std::string condition, display;
+      std::string condition, constraint, display;
       std::vector<loot::MessageContent> detail;
-      if (node["condition"])
+      if (node["condition"]) {
         condition = node["condition"].as<std::string>();
-      if (node["display"])
+      }
+
+      if (node["constraint"]) {
+        constraint = node["constraint"].as<std::string>();
+      }
+
+      if (node["display"]) {
         display = node["display"].as<std::string>();
+      }
 
       if (node["detail"]) {
         if (node["detail"].IsSequence()) {
@@ -94,28 +108,32 @@ struct convert<loot::File> {
       // Check now that at least one item in info is English if there are
       // multiple items.
       if (detail.size() > 1) {
-        bool found = false;
-        for (const auto& mc : detail) {
-          if (mc.GetLanguage() == loot::MessageContent::DEFAULT_LANGUAGE)
-            found = true;
-        }
-        if (!found)
+        const auto found = std::any_of(
+            detail.begin(), detail.end(), [](const loot::MessageContent& mc) {
+              return mc.GetLanguage() == loot::MessageContent::DEFAULT_LANGUAGE;
+            });
+
+        if (!found) {
           throw RepresentationException(node.Mark(),
                                         "bad conversion: multilingual messages "
                                         "must contain an English info string");
+        }
       }
 
-      rhs = loot::File(name, display, condition, detail);
-    } else
-      rhs = loot::File(node.as<std::string>());
+      // Test condition syntax.
+      try {
+        loot::ParseCondition(condition);
+        loot::ParseCondition(constraint);
+      } catch (const std::exception& e) {
+        throw RepresentationException(
+            node.Mark(),
+            std::string("bad conversion: invalid condition syntax: ") +
+                e.what());
+      }
 
-    // Test condition syntax.
-    try {
-      loot::ParseCondition(rhs.GetCondition());
-    } catch (const std::exception& e) {
-      throw RepresentationException(
-          node.Mark(),
-          std::string("bad conversion: invalid condition syntax: ") + e.what());
+      rhs = loot::File(name, display, condition, detail, constraint);
+    } else {
+      rhs = loot::File(node.as<std::string>());
     }
 
     return true;
@@ -129,13 +147,20 @@ inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
         << std::string(rhs.GetName());
 
-    if (rhs.IsConditional())
+    if (rhs.IsConditional()) {
       out << Key << "condition" << Value << YAML::SingleQuoted
           << rhs.GetCondition();
+    }
 
-    if (!rhs.GetDisplayName().empty())
+    if (!rhs.GetDisplayName().empty()) {
       out << Key << "display" << Value << YAML::SingleQuoted
           << rhs.GetDisplayName();
+    }
+
+    if (!rhs.GetConstraint().empty()) {
+      out << Key << "constraint" << Value << YAML::SingleQuoted
+          << rhs.GetConstraint();
+    }
 
     if (rhs.GetDetail().size() == 1) {
       out << Key << "detail" << Value << YAML::SingleQuoted
