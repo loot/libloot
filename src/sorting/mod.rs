@@ -44,7 +44,6 @@ mod test {
         }
     }
 
-    #[cfg(test)]
     impl SortingPlugin for TestPlugin {
         fn name(&self) -> &str {
             &self.name
