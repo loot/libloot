@@ -78,7 +78,7 @@ impl MetadataDocument {
         let prelude = std::fs::read_to_string(prelude_path)
             .map_err(|e| LoadMetadataError::from_io_error(masterlist_path.into(), e))?;
 
-        let masterlist = replace_prelude(masterlist, prelude);
+        let masterlist = replace_prelude(masterlist, &prelude);
 
         self.load_from_str(&masterlist)
             .map_err(|e| LoadMetadataError::new(masterlist_path.into(), e))?;
@@ -337,7 +337,7 @@ impl std::default::Default for MetadataDocument {
     }
 }
 
-fn replace_prelude(masterlist: String, prelude: String) -> String {
+fn replace_prelude(masterlist: String, prelude: &str) -> String {
     let line_ending = detect_line_ending(&masterlist);
     if let Some((start, end)) = find_prelude_bounds(&masterlist) {
         let prelude = indent_prelude(prelude, line_ending);
@@ -392,7 +392,7 @@ fn find_prelude_bounds(masterlist: &str) -> Option<(usize, usize)> {
     Some((start, masterlist.len()))
 }
 
-fn indent_prelude(prelude: String, line_ending: &str) -> String {
+fn indent_prelude(prelude: &str, line_ending: &str) -> String {
     let prelude = ("\n  ".to_string() + &prelude.replace("\n", "\n  "))
         .replace(&format!("  {}", line_ending), line_ending);
 
@@ -781,7 +781,7 @@ plugins:
 
         #[test]
         fn should_return_an_empty_string_if_given_empty_strings() {
-            let result = replace_prelude(String::new(), String::new());
+            let result = replace_prelude(String::new(), "");
 
             assert!(result.is_empty());
         }
@@ -796,7 +796,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             assert_eq!(masterlist, result);
         }
@@ -806,7 +806,7 @@ plugins:
             let prelude = "globals: [{type: note, content: A message.}]";
             let masterlist = "{prelude: {}, plugins: [{name: a.esp}]}";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             assert_eq!(masterlist, result);
         }
@@ -824,7 +824,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             let expected_result = "prelude:
   globals:
@@ -851,7 +851,7 @@ prelude:
 
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             let expected_result = "plugins:
   - name: a.esp
@@ -882,7 +882,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             let expected_result = "
 common:
@@ -915,7 +915,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             let expected_result = "prelude:
   globals:
@@ -939,7 +939,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             let expected_result = "prelude:
   globals: [{type: note, content: A message.}]
@@ -965,7 +965,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             let expected_result = "prelude:
   globals:
@@ -993,7 +993,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude.into());
+            let result = replace_prelude(masterlist.into(), prelude);
 
             let expected_result = "prelude:
   globals:
