@@ -47,7 +47,7 @@ impl PluginMetadata {
 
     /// Get the plugin name.
     pub fn name(&self) -> &str {
-        &self.name.string
+        self.name.as_str()
     }
 
     /// Get the plugin's group.
@@ -252,11 +252,15 @@ impl PluginName {
     fn is_regex(&self) -> bool {
         self.regex.is_some()
     }
+
+    fn as_str(&self) -> &str {
+        &self.string
+    }
 }
 
 impl std::cmp::PartialEq for PluginName {
     fn eq(&self, other: &Self) -> bool {
-        self.string == other.string
+        self.as_str() == other.as_str()
     }
 }
 
@@ -270,13 +274,13 @@ impl std::cmp::PartialOrd for PluginName {
 
 impl std::cmp::Ord for PluginName {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.string.cmp(&other.string)
+        self.as_str().cmp(other.as_str())
     }
 }
 
 impl std::hash::Hash for PluginName {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.string.hash(state);
+        self.as_str().hash(state);
     }
 }
 
@@ -853,7 +857,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\nafter: ['{}']",
-                    plugin.name.string,
+                    plugin.name(),
                     plugin.load_after[0].name()
                 ),
                 yaml
@@ -990,7 +994,7 @@ mod tests {
             let plugin = PluginMetadata::new("test.esp").unwrap();
             let yaml = emit(&plugin);
 
-            assert_eq!(format!("name: '{}'", plugin.name.string), yaml);
+            assert_eq!(format!("name: '{}'", plugin.name()), yaml);
         }
 
         #[test]
@@ -1002,8 +1006,8 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\ngroup: '{}'",
-                    plugin.name.string,
-                    plugin.group.unwrap()
+                    plugin.name(),
+                    plugin.group.as_ref().unwrap()
                 ),
                 yaml
             );
@@ -1018,7 +1022,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\nafter: ['{}']",
-                    plugin.name.string,
+                    plugin.name(),
                     plugin.load_after[0].name()
                 ),
                 yaml
@@ -1036,7 +1040,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\nafter:\n  - name: '{}'\n    condition: '{}'",
-                    plugin.name.string,
+                    plugin.name(),
                     plugin.load_after[0].name(),
                     plugin.load_after[0].condition().unwrap(),
                 ),
@@ -1056,7 +1060,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\nafter:\n  - '{}'\n  - '{}'",
-                    plugin.name.string,
+                    plugin.name(),
                     plugin.load_after[0].name(),
                     plugin.load_after[1].name(),
                 ),
@@ -1073,7 +1077,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\nreq: ['{}']",
-                    plugin.name.string,
+                    plugin.name(),
                     plugin.requirements[0].name()
                 ),
                 yaml
@@ -1089,7 +1093,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\ninc: ['{}']",
-                    plugin.name.string,
+                    plugin.name(),
                     plugin.incompatibilities[0].name()
                 ),
                 yaml
@@ -1108,7 +1112,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\nmsg:\n  - type: {}\n    content: '{}'\n  - type: {}\n    content: '{}'",
-                    plugin.name.string,
+                    plugin.name(),
                     plugin.messages[0].message_type(),
                     plugin.messages[0].content()[0].text(),
                     plugin.messages[1].message_type(),
@@ -1127,7 +1131,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "name: '{}'\ntag: [{}]",
-                    plugin.name.string,
+                    plugin.name(),
                     plugin.tags[0].name()
                 ),
                 yaml
