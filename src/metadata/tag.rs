@@ -38,7 +38,7 @@ impl Tag {
     /// Set the condition string.
     #[must_use]
     pub fn with_condition(mut self, condition: String) -> Self {
-        self.condition = Some(condition);
+        self.set_condition(condition);
         self
     }
 
