@@ -131,7 +131,7 @@ impl MetadataDocument {
                         YamlObjectType::PluginMetadata,
                     )
                     .into());
-                };
+                }
             }
         }
 
