@@ -110,19 +110,45 @@ impl File {
 }
 
 /// Represents a case-insensitive filename.
-#[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct Filename(UniCase<String>);
+#[derive(Clone, Debug, Default)]
+pub struct Filename(String);
 
 impl Filename {
     /// Construct a Filename using the given string.
     #[must_use]
     pub fn new(s: String) -> Self {
-        Filename(UniCase::new(s))
+        Filename(s)
     }
 
     /// Get this Filename as a string.
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl PartialEq for Filename {
+    fn eq(&self, other: &Self) -> bool {
+        unicase::eq(&self.0, &other.0)
+    }
+}
+
+impl Eq for Filename {}
+
+impl PartialOrd for Filename {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Filename {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        UniCase::new(&self.0).cmp(&UniCase::new(&other.0))
+    }
+}
+
+impl std::hash::Hash for Filename {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        UniCase::new(&self.0).hash(state);
     }
 }
 
