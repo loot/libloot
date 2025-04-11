@@ -51,14 +51,14 @@ fn merge_into_hash(
     value: MarkedYaml,
 ) -> Result<saphyr::AnnotatedHash<MarkedYaml>, YamlMergeKeyError> {
     match value.data {
-        YamlData::<MarkedYaml>::Array(a) => a.into_iter().try_fold(hash, |acc, e| {
+        YamlData::Array(a) => a.into_iter().try_fold(hash, |acc, e| {
             if let YamlData::Hash(h) = e.data {
                 Ok(merge_hashes(acc, h))
             } else {
                 Err(YamlMergeKeyError::new(e))
             }
         }),
-        YamlData::<MarkedYaml>::Hash(h) => Ok(merge_hashes(hash, h)),
+        YamlData::Hash(h) => Ok(merge_hashes(hash, h)),
         _ => Err(YamlMergeKeyError::new(value)),
     }
 }

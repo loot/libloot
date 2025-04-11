@@ -618,7 +618,7 @@ fn validate_plugin_paths(
             let resolved_path = resolve_plugin_path(game_type, data_path, path);
             validate_plugin_path_and_header(game_type, &resolved_path)
         })
-        .collect::<Result<(), PluginValidationError>>()
+        .collect()
 }
 
 fn find_archives(

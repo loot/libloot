@@ -85,7 +85,7 @@ fn filter_files_on_conditions(
     files
         .iter()
         .filter_map(|file| filter_map_on_condition(file, file.condition(), state))
-        .collect::<Result<Vec<_>, _>>()
+        .collect()
 }
 
 fn filter_cleaning_data_on_conditions(
@@ -104,7 +104,7 @@ fn filter_cleaning_data_on_conditions(
 
             filter_map_on_condition(i, Some(condition.as_str()), state)
         })
-        .collect::<Result<Vec<_>, _>>()
+        .collect()
 }
 
 #[cfg(test)]

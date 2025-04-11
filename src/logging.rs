@@ -213,7 +213,7 @@ mod tests {
         fn should_support_a_closure_with_captured_state() {
             let _lock = TEST_LOCK.lock().unwrap();
 
-            let messages = Arc::new(Mutex::new(Vec::<(LogLevel, String)>::new()));
+            let messages = Arc::new(Mutex::new(Vec::new()));
             let cloned_messages = messages.clone();
             let callback = move |level, message: &str| {
                 if let Ok(mut messages) = cloned_messages.lock() {
@@ -238,7 +238,7 @@ mod tests {
             let callback = |_, _: &str| {};
             set_logging_callback(callback);
 
-            let messages = Arc::new(Mutex::new(Vec::<(LogLevel, String)>::new()));
+            let messages = Arc::new(Mutex::new(Vec::new()));
             let cloned_messages = messages.clone();
             let callback = move |level, message: &str| {
                 if let Ok(mut messages) = cloned_messages.lock() {

@@ -375,14 +375,14 @@ impl TryFromYaml for PluginMetadata {
 
         let group = get_string_value(hash, "group", YamlObjectType::PluginMetadata)?;
 
-        let load_after = get_vec::<File>(hash, "after")?;
-        let requirements = get_vec::<File>(hash, "req")?;
-        let incompatibilities = get_vec::<File>(hash, "inc")?;
-        let messages = get_vec::<Message>(hash, "msg")?;
-        let tags = get_vec::<Tag>(hash, "tag")?;
-        let dirty_info = get_vec::<PluginCleaningData>(hash, "dirty")?;
-        let clean_info = get_vec::<PluginCleaningData>(hash, "clean")?;
-        let locations = get_vec::<Location>(hash, "url")?;
+        let load_after = get_vec(hash, "after")?;
+        let requirements = get_vec(hash, "req")?;
+        let incompatibilities = get_vec(hash, "inc")?;
+        let messages = get_vec(hash, "msg")?;
+        let tags = get_vec(hash, "tag")?;
+        let dirty_info = get_vec(hash, "dirty")?;
+        let clean_info = get_vec(hash, "clean")?;
+        let locations = get_vec(hash, "url")?;
 
         Ok(PluginMetadata {
             name,
