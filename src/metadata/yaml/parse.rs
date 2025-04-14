@@ -110,7 +110,7 @@ pub fn get_strings_vec_value<'a>(
                         ExpectedType::String,
                     )),
                 })
-                .collect::<Result<Vec<_>, _>>(),
+                .collect(),
             None => Err(ParseMetadataError::unexpected_value_type(
                 n.span.start,
                 key,
@@ -180,14 +180,14 @@ pub fn get_as_slice<'a>(
 pub fn parse_condition(
     hash: &saphyr::AnnotatedHash<MarkedYaml>,
     yaml_type: YamlObjectType,
-) -> Result<Option<String>, ParseMetadataError> {
+) -> Result<Option<Box<str>>, ParseMetadataError> {
     match get_string_value(hash, "condition", yaml_type)? {
         Some((marker, s)) => {
             let s = s.to_string();
             if let Err(e) = Expression::from_str(&s) {
                 return Err(ParseMetadataError::invalid_condition(marker, s, e));
             }
-            Ok(Some(s))
+            Ok(Some(s.into_boxed_str()))
         }
         None => Ok(None),
     }

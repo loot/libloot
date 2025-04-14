@@ -19,9 +19,9 @@ pub enum TagSuggestion {
 /// Represents a Bash Tag suggestion for a plugin.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Tag {
-    name: String,
+    name: Box<str>,
     suggestion: TagSuggestion,
-    condition: Option<String>,
+    condition: Option<Box<str>>,
 }
 
 impl Tag {
@@ -29,7 +29,7 @@ impl Tag {
     #[must_use]
     pub fn new(name: String, suggestion: TagSuggestion) -> Self {
         Self {
-            name,
+            name: name.into_boxed_str(),
             suggestion,
             condition: None,
         }
@@ -59,7 +59,7 @@ impl Tag {
 
     /// Set the condition string.
     pub fn set_condition(&mut self, condition: String) -> &mut Self {
-        self.condition = Some(condition);
+        self.condition = Some(condition.into_boxed_str());
         self
     }
 }
@@ -97,11 +97,11 @@ impl TryFromYaml for Tag {
     }
 }
 
-fn name_and_suggestion(value: &str) -> (String, TagSuggestion) {
+fn name_and_suggestion(value: &str) -> (Box<str>, TagSuggestion) {
     if let Some(name) = value.strip_prefix("-") {
-        (name.to_string(), TagSuggestion::Removal)
+        (name.into(), TagSuggestion::Removal)
     } else {
-        (value.to_string(), TagSuggestion::Addition)
+        (value.into(), TagSuggestion::Addition)
     }
 }
 

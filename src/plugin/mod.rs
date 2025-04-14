@@ -48,8 +48,8 @@ pub struct Plugin {
     game_type: GameType,
     crc: Option<u32>,
     version: Option<String>,
-    tags: Vec<String>,
-    archive_paths: Vec<PathBuf>,
+    tags: Box<[String]>,
+    archive_paths: Box<[PathBuf]>,
     archive_assets: BTreeMap<u64, BTreeSet<u64>>,
 }
 
@@ -70,8 +70,8 @@ impl Plugin {
         };
 
         let mut version = None;
-        let mut tags = Vec::new();
-        let mut archive_paths = Vec::new();
+        let mut tags = Box::default();
+        let mut archive_paths = Box::default();
         let mut archive_assets = BTreeMap::new();
         let plugin =
             if game_type != GameType::OpenMW || !has_ascii_extension(plugin_path, "omwscripts") {
@@ -79,11 +79,12 @@ impl Plugin {
                 plugin.parse_file(parse_options)?;
 
                 if let Some(description) = plugin.description()? {
-                    tags = extract_bash_tags(&description);
+                    tags = extract_bash_tags(&description).into_boxed_slice();
                     version = extract_version(&description)?;
                 }
 
-                archive_paths = find_associated_archives(game_type, game_cache, plugin_path);
+                archive_paths =
+                    find_associated_archives(game_type, game_cache, plugin_path).into_boxed_slice();
 
                 if load_scope == LoadScope::WholePlugin {
                     archive_assets = assets_in_archives(&archive_paths);

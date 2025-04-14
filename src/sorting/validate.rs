@@ -16,14 +16,14 @@ pub fn validate_plugin_groups<T: SortingPlugin>(
     plugins_sorting_data: &[PluginSortingData<'_, T>],
     groups_graph: &GroupsGraph,
 ) -> Result<(), UndefinedGroupError> {
-    let group_names: HashSet<&String> = groups_graph
+    let group_names: HashSet<&str> = groups_graph
         .node_indices()
-        .map(|i| &groups_graph[i])
+        .map(|i| groups_graph[i].as_ref())
         .collect();
 
     for plugin in plugins_sorting_data {
-        if !group_names.contains(&plugin.group) {
-            return Err(UndefinedGroupError::new(plugin.group.clone()));
+        if !group_names.contains(plugin.group.as_ref()) {
+            return Err(UndefinedGroupError::new(plugin.group.clone().into_string()));
         }
     }
 

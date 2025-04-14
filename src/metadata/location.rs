@@ -8,8 +8,8 @@ use super::{
 /// Represents a URL at which the parent plugin can be found.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Location {
-    url: String,
-    name: Option<String>,
+    url: Box<str>,
+    name: Option<Box<str>>,
 }
 
 impl Location {
@@ -17,7 +17,7 @@ impl Location {
     #[must_use]
     pub fn new(url: String) -> Self {
         Location {
-            url,
+            url: url.into_boxed_str(),
             ..Default::default()
         }
     }
@@ -41,7 +41,7 @@ impl Location {
 
     /// Set a name for the URL, eg. the page or site name.
     pub fn set_name(&mut self, name: String) -> &mut Self {
-        self.name = Some(name);
+        self.name = Some(name.into_boxed_str());
         self
     }
 }
@@ -50,7 +50,7 @@ impl TryFromYaml for Location {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         match &value.data {
             YamlData::String(s) => Ok(Location {
-                url: s.clone(),
+                url: s.clone().into_boxed_str(),
                 name: None,
             }),
             YamlData::Hash(h) => {
@@ -68,8 +68,8 @@ impl TryFromYaml for Location {
                 )?;
 
                 Ok(Location {
-                    url: link.to_string(),
-                    name: Some(name.to_string()),
+                    url: link.into(),
+                    name: Some(name.into()),
                 })
             }
             _ => Err(ParseMetadataError::unexpected_type(

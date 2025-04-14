@@ -21,7 +21,7 @@ use super::{
     error::GroupsPathError,
 };
 
-pub type GroupsGraph = Graph<String, EdgeType>;
+pub type GroupsGraph = Graph<Box<str>, EdgeType>;
 
 pub fn build_groups_graph(
     masterlist_groups: &[Group],
@@ -49,7 +49,7 @@ pub fn build_groups_graph(
         EdgeType::UserLoadAfter,
     )?;
 
-    if let Some(cycle) = find_cycle(&graph, |node| node.clone()) {
+    if let Some(cycle) = find_cycle(&graph, |node| node.clone().into_string()) {
         Err(CyclicInteractionError::new(cycle).into())
     } else {
         Ok(graph)
@@ -72,7 +72,7 @@ fn add_groups<'a>(
     for group in groups {
         let key = group.name();
         if !group_nodes.contains_key(key) {
-            let node_index = graph.add_node(group.name().to_string());
+            let node_index = graph.add_node(group.name().into());
             group_nodes.insert(key, node_index);
         }
     }
@@ -114,7 +114,7 @@ pub fn find_path(
     from_group_name: &str,
     to_group_name: &str,
 ) -> Result<Vec<Vertex>, GroupsPathError> {
-    let float_graph: Graph<&String, f32> = graph.map(
+    let float_graph: Graph<&Box<str>, f32> = graph.map(
         |_, n| n,
         |_, e| {
             if *e == EdgeType::UserLoadAfter {
@@ -132,7 +132,7 @@ pub fn find_path(
     let paths =
         bellman_ford(&float_graph, from_vertex).map_err(|_| PathfindingError::NegativeCycle)?;
 
-    let mut path = vec![Vertex::new(graph[to_vertex].clone())];
+    let mut path = vec![Vertex::new(graph[to_vertex].clone().into_string())];
     let mut current = to_vertex;
     while current != from_vertex {
         let preceding_vertex = match paths.predecessors.get(current.index()) {
@@ -147,7 +147,10 @@ pub fn find_path(
                 return Ok(Vec::new());
             }
             _ => {
-                return Err(PathfindingError::PrecedingNodeNotFound(graph[current].clone()).into());
+                return Err(PathfindingError::PrecedingNodeNotFound(
+                    graph[current].clone().into_string(),
+                )
+                .into());
             }
         };
 
@@ -164,14 +167,15 @@ pub fn find_path(
             Some(e) => e,
             None => {
                 return Err(PathfindingError::EdgeNotFound {
-                    from_group: graph[*preceding_vertex].clone(),
-                    to_group: graph[current].clone(),
+                    from_group: graph[*preceding_vertex].clone().into_string(),
+                    to_group: graph[current].clone().into_string(),
                 }
                 .into());
             }
         };
 
-        let vertex = Vertex::new(graph[*preceding_vertex].clone()).with_out_edge_type(graph[edge]);
+        let vertex = Vertex::new(graph[*preceding_vertex].clone().into_string())
+            .with_out_edge_type(graph[edge]);
         path.push(vertex);
 
         current = *preceding_vertex;
@@ -183,13 +187,15 @@ pub fn find_path(
 }
 
 fn find_node_by_weight(
-    graph: &Graph<String, EdgeType>,
+    graph: &Graph<Box<str>, EdgeType>,
     weight: &str,
 ) -> Result<NodeIndex, UndefinedGroupError> {
-    match graph
-        .node_indices()
-        .find(|i| graph.node_weight(*i).map(|w| *w == weight).unwrap_or(false))
-    {
+    match graph.node_indices().find(|i| {
+        graph
+            .node_weight(*i)
+            .map(|w| w.as_ref() == weight)
+            .unwrap_or(false)
+    }) {
         Some(n) => Ok(n),
         None => {
             logging::error!("Can't find group with name {}", weight);
@@ -267,7 +273,7 @@ impl<'a> DfsVisitor<'a> for GroupsPathLengthVisitor {
 pub fn get_default_group_node(graph: &GroupsGraph) -> Result<NodeIndex, UndefinedGroupError> {
     graph
         .node_indices()
-        .find(|n| graph[*n] == Group::DEFAULT_NAME)
+        .find(|n| graph[*n].as_ref() == Group::DEFAULT_NAME)
         .ok_or_else(|| UndefinedGroupError::new(Group::DEFAULT_NAME.to_string()))
 }
 

@@ -18,9 +18,9 @@ use super::{
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct File {
     name: Filename,
-    display_name: Option<String>,
-    detail: Vec<MessageContent>,
-    condition: Option<String>,
+    display_name: Option<Box<str>>,
+    detail: Box<[MessageContent]>,
+    condition: Option<Box<str>>,
 }
 
 impl File {
@@ -72,7 +72,7 @@ impl File {
     /// Set the name to be displayed for the file in messages, formatted using
     /// CommonMark.
     pub fn set_display_name(&mut self, display_name: String) -> &mut Self {
-        self.display_name = Some(display_name);
+        self.display_name = Some(display_name.into_boxed_str());
         self
     }
 
@@ -93,7 +93,7 @@ impl File {
         detail: Vec<MessageContent>,
     ) -> Result<&mut Self, MultilingualMessageContentsError> {
         validate_message_contents(&detail)?;
-        self.detail = detail;
+        self.detail = detail.into_boxed_slice();
         Ok(self)
     }
 
@@ -104,20 +104,20 @@ impl File {
 
     /// Set the condition string.
     pub fn set_condition(&mut self, condition: String) -> &mut Self {
-        self.condition = Some(condition);
+        self.condition = Some(condition.into_boxed_str());
         self
     }
 }
 
 /// Represents a case-insensitive filename.
 #[derive(Clone, Debug, Default)]
-pub struct Filename(String);
+pub struct Filename(Box<str>);
 
 impl Filename {
     /// Construct a Filename using the given string.
     #[must_use]
     pub fn new(s: String) -> Self {
-        Filename(s)
+        Filename(s.into())
     }
 
     /// Get this Filename as a string.
@@ -170,7 +170,7 @@ impl TryFromYaml for File {
             YamlData::String(s) => Ok(File {
                 name: Filename::new(s.clone()),
                 display_name: None,
-                detail: Vec::new(),
+                detail: Box::default(),
                 condition: None,
             }),
             YamlData::Hash(h) => {
@@ -185,14 +185,14 @@ impl TryFromYaml for File {
                         "detail",
                         YamlObjectType::PluginCleaningData,
                     )?,
-                    None => Vec::new(),
+                    None => Box::default(),
                 };
 
                 let condition = parse_condition(h, YamlObjectType::File)?;
 
                 Ok(File {
                     name: Filename::new(name.to_string()),
-                    display_name: display_name.map(|(_, s)| s.to_string()),
+                    display_name: display_name.map(|(_, s)| s.into()),
                     detail,
                     condition,
                 })

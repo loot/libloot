@@ -11,9 +11,9 @@ use super::{
 /// Represents a group to which plugin metadata objects can belong.
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Group {
-    name: String,
-    description: Option<String>,
-    after_groups: Vec<String>,
+    name: Box<str>,
+    description: Option<Box<str>>,
+    after_groups: Box<[String]>,
 }
 
 impl Group {
@@ -21,7 +21,7 @@ impl Group {
     #[must_use]
     pub fn new(name: String) -> Self {
         Self {
-            name,
+            name: name.into_boxed_str(),
             ..Default::default()
         }
     }
@@ -55,7 +55,7 @@ impl Group {
 
     /// Set a description for the group.
     pub fn set_description(&mut self, description: String) -> &mut Self {
-        self.description = Some(description);
+        self.description = Some(description.into_boxed_str());
         self
     }
 
@@ -66,7 +66,7 @@ impl Group {
 
     /// Set the names of the groups that this group loads after.
     pub fn set_after_groups(&mut self, after_groups: Vec<String>) -> &mut Self {
-        self.after_groups = after_groups;
+        self.after_groups = after_groups.into_boxed_slice();
         self
     }
 }
@@ -77,7 +77,7 @@ impl std::default::Default for Group {
     #[must_use]
     fn default() -> Self {
         Self {
-            name: Group::DEFAULT_NAME.to_string(),
+            name: Group::DEFAULT_NAME.into(),
             description: Default::default(),
             after_groups: Default::default(),
         }
@@ -96,8 +96,8 @@ impl TryFromYaml for Group {
         let after = get_strings_vec_value(hash, "after", YamlObjectType::Group)?;
 
         Ok(Group {
-            name: name.to_string(),
-            description: description.map(|d| d.1.to_string()),
+            name: name.into(),
+            description: description.map(|d| d.1.into()),
             after_groups: after.iter().map(|a| a.to_string()).collect(),
         })
     }

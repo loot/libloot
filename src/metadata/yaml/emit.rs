@@ -331,6 +331,12 @@ impl<T: EmitYaml> EmitYaml for Vec<T> {
     }
 }
 
+impl<T: EmitYaml> EmitYaml for Box<[T]> {
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        self.as_ref().emit_yaml(emitter);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -24,15 +24,15 @@ pub(crate) const GHOST_FILE_EXTENSION: &str = ".ghost";
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct PluginMetadata {
     name: PluginName,
-    group: Option<String>,
-    load_after: Vec<File>,
-    requirements: Vec<File>,
-    incompatibilities: Vec<File>,
-    messages: Vec<Message>,
-    tags: Vec<Tag>,
-    dirty_info: Vec<PluginCleaningData>,
-    clean_info: Vec<PluginCleaningData>,
-    locations: Vec<Location>,
+    group: Option<Box<str>>,
+    load_after: Box<[File]>,
+    requirements: Box<[File]>,
+    incompatibilities: Box<[File]>,
+    messages: Box<[Message]>,
+    tags: Box<[Tag]>,
+    dirty_info: Box<[PluginCleaningData]>,
+    clean_info: Box<[PluginCleaningData]>,
+    locations: Box<[Location]>,
 }
 
 impl PluginMetadata {
@@ -99,7 +99,7 @@ impl PluginMetadata {
 
     /// Set the plugin's group.
     pub fn set_group(&mut self, group: String) {
-        self.group = Some(group)
+        self.group = Some(group.into_boxed_str())
     }
 
     /// Unsets the plugin's group, so that it is implicitly a member of the
@@ -110,42 +110,42 @@ impl PluginMetadata {
 
     /// Get the plugins that the plugin must load after.
     pub fn set_load_after_files(&mut self, files: Vec<File>) {
-        self.load_after = files;
+        self.load_after = files.into_boxed_slice();
     }
 
     /// Get the files that the plugin requires to be installed.
     pub fn set_requirements(&mut self, files: Vec<File>) {
-        self.requirements = files;
+        self.requirements = files.into_boxed_slice();
     }
 
     /// Get the files that the plugin is incompatible with.
     pub fn set_incompatibilities(&mut self, files: Vec<File>) {
-        self.incompatibilities = files;
+        self.incompatibilities = files.into_boxed_slice();
     }
 
     /// Get the plugin's messages.
     pub fn set_messages(&mut self, messages: Vec<Message>) {
-        self.messages = messages;
+        self.messages = messages.into_boxed_slice();
     }
 
     /// Get the plugin's Bash Tag suggestions.
     pub fn set_tags(&mut self, tags: Vec<Tag>) {
-        self.tags = tags;
+        self.tags = tags.into_boxed_slice();
     }
 
     /// Get the plugin's dirty plugin information.
     pub fn set_dirty_info(&mut self, dirty_info: Vec<PluginCleaningData>) {
-        self.dirty_info = dirty_info;
+        self.dirty_info = dirty_info.into_boxed_slice();
     }
 
     /// Get the plugin's clean plugin information.
     pub fn set_clean_info(&mut self, clean_info: Vec<PluginCleaningData>) {
-        self.clean_info = clean_info;
+        self.clean_info = clean_info.into_boxed_slice();
     }
 
     /// Get the locations at which this plugin can be found.
     pub fn set_locations(&mut self, locations: Vec<Location>) {
-        self.locations = locations;
+        self.locations = locations.into_boxed_slice();
     }
 
     /// Merge metadata from the given [PluginMetadata] object into this object.
@@ -162,14 +162,21 @@ impl PluginMetadata {
             self.group = plugin.group.clone();
         }
 
-        merge_vecs(&mut self.load_after, &plugin.load_after);
-        merge_vecs(&mut self.requirements, &plugin.requirements);
-        merge_vecs(&mut self.incompatibilities, &plugin.incompatibilities);
-        merge_vecs(&mut self.tags, &plugin.tags);
-        self.messages.extend(plugin.messages.iter().cloned());
-        merge_vecs(&mut self.dirty_info, &plugin.dirty_info);
-        merge_vecs(&mut self.clean_info, &plugin.clean_info);
-        merge_vecs(&mut self.locations, &plugin.locations);
+        merge_slices(&mut self.load_after, &plugin.load_after);
+        merge_slices(&mut self.requirements, &plugin.requirements);
+        merge_slices(&mut self.incompatibilities, &plugin.incompatibilities);
+        merge_slices(&mut self.tags, &plugin.tags);
+
+        self.messages = self
+            .messages
+            .iter()
+            .chain(plugin.messages.iter())
+            .cloned()
+            .collect();
+
+        merge_slices(&mut self.dirty_info, &plugin.dirty_info);
+        merge_slices(&mut self.clean_info, &plugin.clean_info);
+        merge_slices(&mut self.locations, &plugin.locations);
     }
 
     /// Check if no plugin metadata is set.
@@ -214,13 +221,13 @@ impl PluginMetadata {
 
 #[derive(Clone, Debug, Default)]
 struct PluginName {
-    string: String,
+    string: Box<str>,
     regex: Option<Regex>,
 }
 
 impl PluginName {
     fn new(name: &str) -> Result<Self, Box<RegexImplError>> {
-        let name = trim_dot_ghost(name).to_string();
+        let name: Box<str> = trim_dot_ghost(name).into();
 
         if is_regex_name(&name) {
             let non_capturing_name = replace_capturing_groups(&name);
@@ -245,7 +252,7 @@ impl PluginName {
                 logging::error!("Encountered an error while trying to match the regex {} to the string {}: {}", regex.as_str(), other_name, e);
             }).unwrap_or(false)
         } else {
-            unicase::eq(self.string.as_str(), other_name)
+            unicase::eq(self.string.as_ref(), other_name)
         }
     }
 
@@ -307,13 +314,15 @@ fn is_regex_name(name: &str) -> bool {
     name.contains(|c| ":\\*?|".chars().any(|n| c == n))
 }
 
-fn merge_vecs<T: Clone + PartialEq>(target: &mut Vec<T>, source: &[T]) {
-    let initial_target_len = target.len();
+fn merge_slices<T: Clone + PartialEq>(target: &mut Box<[T]>, source: &[T]) {
+    let mut vec = target.to_vec();
     for element in source {
-        if !target[..initial_target_len].contains(element) {
-            target.push(element.clone())
+        if !target.contains(element) {
+            vec.push(element.clone())
         }
     }
+
+    *target = vec.into_boxed_slice()
 }
 
 fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
@@ -375,18 +384,18 @@ impl TryFromYaml for PluginMetadata {
 
         let group = get_string_value(hash, "group", YamlObjectType::PluginMetadata)?;
 
-        let load_after = get_vec(hash, "after")?;
-        let requirements = get_vec(hash, "req")?;
-        let incompatibilities = get_vec(hash, "inc")?;
-        let messages = get_vec(hash, "msg")?;
-        let tags = get_vec(hash, "tag")?;
-        let dirty_info = get_vec(hash, "dirty")?;
-        let clean_info = get_vec(hash, "clean")?;
-        let locations = get_vec(hash, "url")?;
+        let load_after = get_boxed_slice(hash, "after")?;
+        let requirements = get_boxed_slice(hash, "req")?;
+        let incompatibilities = get_boxed_slice(hash, "inc")?;
+        let messages = get_boxed_slice(hash, "msg")?;
+        let tags = get_boxed_slice(hash, "tag")?;
+        let dirty_info = get_boxed_slice(hash, "dirty")?;
+        let clean_info = get_boxed_slice(hash, "clean")?;
+        let locations = get_boxed_slice(hash, "url")?;
 
         Ok(PluginMetadata {
             name,
-            group: group.map(|g| g.1.to_string()),
+            group: group.map(|g| g.1.into()),
             load_after,
             requirements,
             incompatibilities,
@@ -399,18 +408,14 @@ impl TryFromYaml for PluginMetadata {
     }
 }
 
-fn get_vec<T: TryFromYaml>(
+fn get_boxed_slice<T: TryFromYaml>(
     hash: &saphyr::AnnotatedHash<MarkedYaml>,
     key: &'static str,
-) -> Result<Vec<T>, ParseMetadataError> {
-    let mut vec = get_as_slice(hash, key, YamlObjectType::PluginMetadata)?
+) -> Result<Box<[T]>, ParseMetadataError> {
+    get_as_slice(hash, key, YamlObjectType::PluginMetadata)?
         .iter()
         .map(|e| T::try_from_yaml(e))
-        .collect::<Result<Vec<T>, _>>()?;
-
-    vec.shrink_to_fit();
-
-    Ok(vec)
+        .collect()
 }
 
 impl EmitYaml for PluginMetadata {

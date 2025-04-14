@@ -43,8 +43,8 @@ impl std::fmt::Display for MessageType {
 /// Represents a message's localised text content.
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct MessageContent {
-    text: String,
-    language: String,
+    text: Box<str>,
+    language: Box<str>,
 }
 
 impl MessageContent {
@@ -56,7 +56,7 @@ impl MessageContent {
     #[must_use]
     pub fn new(text: String) -> Self {
         MessageContent {
-            text,
+            text: text.into_boxed_str(),
             ..Default::default()
         }
     }
@@ -80,7 +80,7 @@ impl MessageContent {
 
     /// Set the language code to the given value.
     pub fn set_language(&mut self, language: String) -> &mut Self {
-        self.language = language;
+        self.language = language.into_boxed_str();
         self
     }
 }
@@ -128,10 +128,10 @@ pub fn select_message_content<'a>(
         let mut english = None;
 
         for mc in content {
-            if mc.language == language {
+            if mc.language.as_ref() == language {
                 return Some(mc);
             } else if matched.is_none() {
-                if language_code.is_some_and(|c| c == mc.language) {
+                if language_code.is_some_and(|c| c == mc.language.as_ref()) {
                     matched = Some(mc);
                 } else if language_code.is_none() {
                     if let Some((content_language_code, _)) = mc.language.split_once('_') {
@@ -141,7 +141,7 @@ pub fn select_message_content<'a>(
                     }
                 }
 
-                if mc.language == MessageContent::DEFAULT_LANGUAGE {
+                if mc.language.as_ref() == MessageContent::DEFAULT_LANGUAGE {
                     english = Some(mc);
                 }
             }
@@ -161,8 +161,8 @@ pub fn select_message_content<'a>(
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Message {
     message_type: MessageType,
-    content: Vec<MessageContent>,
-    condition: Option<String>,
+    content: Box<[MessageContent]>,
+    condition: Option<Box<str>>,
 }
 
 impl Message {
@@ -172,7 +172,7 @@ impl Message {
     pub fn new(message_type: MessageType, content: String) -> Self {
         Self {
             message_type,
-            content: vec![MessageContent::new(content)],
+            content: Box::new([MessageContent::new(content)]),
             condition: None,
         }
     }
@@ -188,7 +188,7 @@ impl Message {
 
         Ok(Self {
             message_type,
-            content,
+            content: content.into_boxed_slice(),
             condition: None,
         })
     }
@@ -217,7 +217,7 @@ impl Message {
 
     /// Set the condition string.
     pub fn set_condition(&mut self, condition: String) -> &mut Self {
-        self.condition = Some(condition);
+        self.condition = Some(condition.into_boxed_str());
         self
     }
 }
@@ -228,7 +228,7 @@ pub(crate) fn validate_message_contents(
     if contents.len() > 1 {
         let english_string_exists = contents
             .iter()
-            .any(|c| c.language == MessageContent::DEFAULT_LANGUAGE);
+            .any(|c| c.language.as_ref() == MessageContent::DEFAULT_LANGUAGE);
 
         if !english_string_exists {
             return Err(MultilingualMessageContentsError {});
@@ -249,8 +249,8 @@ impl TryFromYaml for MessageContent {
             get_required_string_value(value.span.start, hash, "lang", YamlObjectType::Message)?;
 
         Ok(MessageContent {
-            text: text.to_string(),
-            language: language.to_string(),
+            text: text.into(),
+            language: language.into(),
         })
     }
 }
@@ -259,15 +259,13 @@ pub(crate) fn parse_message_contents_yaml(
     value: &MarkedYaml,
     key: &'static str,
     parent_yaml_type: YamlObjectType,
-) -> Result<Vec<MessageContent>, ParseMetadataError> {
-    let mut contents = match &value.data {
-        YamlData::String(s) => {
-            vec![MessageContent::new(s.clone())]
-        }
+) -> Result<Box<[MessageContent]>, ParseMetadataError> {
+    let contents = match &value.data {
+        YamlData::String(s) => Box::new([MessageContent::new(s.clone())]),
         YamlData::Array(a) => a
             .iter()
             .map(MessageContent::try_from_yaml)
-            .collect::<Result<Vec<MessageContent>, _>>()?,
+            .collect::<Result<Box<[_]>, _>>()?,
         _ => {
             return Err(ParseMetadataError::unexpected_value_type(
                 value.span.start,
@@ -277,8 +275,6 @@ pub(crate) fn parse_message_contents_yaml(
             ));
         }
     };
-
-    contents.shrink_to_fit();
 
     if validate_message_contents(&contents).is_err() {
         Err(ParseMetadataError::new(
@@ -342,7 +338,7 @@ impl TryFromYaml for Message {
                     });
 
                     if let Cow::Owned(text) = result {
-                        mc.text = text;
+                        mc.text = text.into_boxed_str();
                     }
                 }
 
@@ -356,7 +352,7 @@ impl TryFromYaml for Message {
                         ));
                     }
 
-                    mc.text = mc.text.replace(&placeholder, sub);
+                    mc.text = mc.text.replace(&placeholder, sub).into_boxed_str();
                 }
 
                 if let Ok(Some(m)) = FMT_REGEX.find(&mc.text) {

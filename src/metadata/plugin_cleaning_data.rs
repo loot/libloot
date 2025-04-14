@@ -20,8 +20,8 @@ pub struct PluginCleaningData {
     itm_count: u32,
     deleted_reference_count: u32,
     deleted_navmesh_count: u32,
-    cleaning_utility: String,
-    detail: Vec<MessageContent>,
+    cleaning_utility: Box<str>,
+    detail: Box<[MessageContent]>,
 }
 
 impl PluginCleaningData {
@@ -32,7 +32,7 @@ impl PluginCleaningData {
     pub fn new(crc: u32, cleaning_utility: String) -> Self {
         Self {
             crc,
-            cleaning_utility,
+            cleaning_utility: cleaning_utility.into_boxed_str(),
             ..Default::default()
         }
     }
@@ -131,7 +131,7 @@ impl PluginCleaningData {
         detail: Vec<MessageContent>,
     ) -> Result<&mut Self, MultilingualMessageContentsError> {
         validate_message_contents(&detail)?;
-        self.detail = detail;
+        self.detail = detail.into_boxed_slice();
         Ok(self)
     }
 }
@@ -166,7 +166,7 @@ impl TryFromYaml for PluginCleaningData {
             Some(n) => {
                 parse_message_contents_yaml(n, "detail", YamlObjectType::PluginCleaningData)?
             }
-            None => Vec::new(),
+            None => Box::default(),
         };
 
         Ok(PluginCleaningData {
@@ -174,7 +174,7 @@ impl TryFromYaml for PluginCleaningData {
             itm_count: itm,
             deleted_reference_count: udr,
             deleted_navmesh_count: nav,
-            cleaning_utility: util.to_string(),
+            cleaning_utility: util.into(),
             detail,
         })
     }

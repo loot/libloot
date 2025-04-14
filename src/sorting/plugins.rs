@@ -32,12 +32,12 @@ pub struct PluginSortingData<'a, T: SortingPlugin> {
 
     load_order_index: usize,
 
-    pub(super) group: String,
+    pub(super) group: Box<str>,
     group_is_user_metadata: bool,
-    pub(super) masterlist_load_after: Vec<String>,
-    pub(super) user_load_after: Vec<String>,
-    pub(super) masterlist_req: Vec<String>,
-    pub(super) user_req: Vec<String>,
+    pub(super) masterlist_load_after: Box<[String]>,
+    pub(super) user_load_after: Box<[String]>,
+    pub(super) masterlist_req: Box<[String]>,
+    pub(super) user_req: Box<[String]>,
 }
 
 impl<'a, T: SortingPlugin> PluginSortingData<'a, T> {
@@ -58,7 +58,7 @@ impl<'a, T: SortingPlugin> PluginSortingData<'a, T> {
                 .and_then(|m| m.group())
                 .or_else(|| masterlist_metadata.and_then(|m| m.group()))
                 .unwrap_or(Group::DEFAULT_NAME)
-                .to_string(),
+                .into(),
             group_is_user_metadata: user_metadata.and_then(|m| m.group()).is_some(),
             masterlist_load_after: masterlist_metadata
                 .map(|m| to_filenames(m.load_after_files()))
@@ -141,7 +141,7 @@ impl SortingPlugin for Plugin {
     }
 }
 
-fn to_filenames(files: &[File]) -> Vec<String> {
+fn to_filenames(files: &[File]) -> Box<[String]> {
     files
         .iter()
         .map(|f| f.name().as_str().to_string())
@@ -987,8 +987,8 @@ struct PathCacher<'a> {
 
 fn get_plugins_in_groups<T: SortingPlugin>(
     graph: &InnerPluginsGraph<T>,
-) -> HashMap<String, Vec<NodeIndex>> {
-    let mut plugins_in_groups: HashMap<String, Vec<NodeIndex>> = HashMap::default();
+) -> HashMap<Box<str>, Vec<NodeIndex>> {
+    let mut plugins_in_groups: HashMap<Box<str>, Vec<NodeIndex>> = HashMap::default();
 
     for node in graph.node_indices() {
         let group_name = graph[node].group.clone();
@@ -1047,7 +1047,7 @@ type GroupNodeIndex = NodeIndex;
 struct GroupsPathVisitor<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> {
     plugins_graph: &'a mut PluginsGraph<'b, T>,
     groups_graph: &'e GroupsGraph,
-    groups_plugins: &'c HashMap<String, Vec<PluginNodeIndex>>,
+    groups_plugins: &'c HashMap<Box<str>, Vec<PluginNodeIndex>>,
     finished_group_vertices: &'d mut HashSet<GroupNodeIndex>,
     group_node_to_ignore_as_source: Option<GroupNodeIndex>,
     edge_stack: Vec<(EdgeReference<'e, EdgeType>, &'c [PluginNodeIndex])>,
@@ -1058,7 +1058,7 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
     fn new(
         plugins_graph: &'a mut PluginsGraph<'b, T>,
         groups_graph: &'e GroupsGraph,
-        groups_plugins: &'c HashMap<String, Vec<PluginNodeIndex>>,
+        groups_plugins: &'c HashMap<Box<str>, Vec<PluginNodeIndex>>,
         finished_group_vertices: &'d mut HashSet<GroupNodeIndex>,
         group_node_to_ignore_as_source: Option<GroupNodeIndex>,
     ) -> Self {
@@ -1080,7 +1080,7 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
 
     fn find_plugins_in_group(&self, node_index: GroupNodeIndex) -> &'c [PluginNodeIndex] {
         self.groups_plugins
-            .get(&self.groups_graph[node_index])
+            .get(self.groups_graph[node_index].as_ref())
             .map(|v| v.as_slice())
             .unwrap_or_default()
     }
@@ -3269,7 +3269,7 @@ mod tests {
             let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.masterlist_load_after = vec![PLUGIN_B.into()];
+            a.masterlist_load_after = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3285,7 +3285,7 @@ mod tests {
             let fixture = Fixture::with_plugins(&[PLUGIN_A, PLUGIN_B]);
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.masterlist_req = vec![PLUGIN_B.into()];
+            a.masterlist_req = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3381,7 +3381,7 @@ mod tests {
             fixture.get_plugin_mut(PLUGIN_A).is_master = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.masterlist_load_after = vec![PLUGIN_B.into()];
+            a.masterlist_load_after = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3407,7 +3407,7 @@ mod tests {
             fixture.get_plugin_mut(PLUGIN_A).is_master = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.user_load_after = vec![PLUGIN_B.into()];
+            a.user_load_after = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3433,7 +3433,7 @@ mod tests {
             fixture.get_plugin_mut(PLUGIN_A).is_master = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.masterlist_req = vec![PLUGIN_B.into()];
+            a.masterlist_req = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3459,7 +3459,7 @@ mod tests {
             fixture.get_plugin_mut(PLUGIN_A).is_master = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.user_req = vec![PLUGIN_B.into()];
+            a.user_req = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3560,7 +3560,7 @@ mod tests {
             b.is_blueprint_plugin = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.masterlist_load_after = vec![PLUGIN_B.into()];
+            a.masterlist_load_after = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3590,7 +3590,7 @@ mod tests {
             b.is_blueprint_plugin = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.masterlist_load_after = vec![PLUGIN_B.into()];
+            a.masterlist_load_after = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3621,7 +3621,7 @@ mod tests {
             b.is_blueprint_plugin = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.user_load_after = vec![PLUGIN_B.into()];
+            a.user_load_after = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3650,7 +3650,7 @@ mod tests {
             b.is_blueprint_plugin = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.user_load_after = vec![PLUGIN_B.into()];
+            a.user_load_after = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3681,7 +3681,7 @@ mod tests {
             b.is_blueprint_plugin = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.masterlist_req = vec![PLUGIN_B.into()];
+            a.masterlist_req = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3711,7 +3711,7 @@ mod tests {
             b.is_blueprint_plugin = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.masterlist_req = vec![PLUGIN_B.into()];
+            a.masterlist_req = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3742,7 +3742,7 @@ mod tests {
             b.is_blueprint_plugin = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.user_req = vec![PLUGIN_B.into()];
+            a.user_req = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
@@ -3771,7 +3771,7 @@ mod tests {
             b.is_blueprint_plugin = true;
 
             let mut a = fixture.sorting_data(PLUGIN_A);
-            a.user_req = vec![PLUGIN_B.into()];
+            a.user_req = Box::new([PLUGIN_B.into()]);
 
             let data = vec![a, fixture.sorting_data(PLUGIN_B)];
 
