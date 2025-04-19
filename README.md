@@ -57,6 +57,7 @@ Parameter | Values | Default |Description
 `ESPLUGIN_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
 `LIBLOADORDER_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
 `LOOT_CONDITION_INTERPRETER_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
+`FETCHCONTENT_SOURCE_DIR_YAML-CPP` | A path | Unset | The path to an existing yaml-cpp source folder to build yaml-cpp from. Note that libloot relies on [a fork of yaml-cpp](https://github.com/loot/yaml-cpp) to support YAML merge keys in metadata files. If unset, CMake will download the source from GitHub when the libloot build is configured.
 
 You may also need to set `CMAKE_PREFIX_PATH` if CMake cannot find Boost.
 

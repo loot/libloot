@@ -179,8 +179,7 @@ set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
 FetchContent_Declare(
     yaml-cpp
     URL "https://github.com/loot/yaml-cpp/archive/0.8.0+merge-key-support.2.tar.gz"
-    URL_HASH "SHA256=e91779044cd4025ec10ed31986031031ef22ebce90a64cc8f85e7c7e95a1abc6"
-    FIND_PACKAGE_ARGS)
+    URL_HASH "SHA256=e91779044cd4025ec10ed31986031031ef22ebce90a64cc8f85e7c7e95a1abc6")
 
 # Set BUILD_SHARED_LIBS=OFF to prevent fmt and spdlog from being built as shared
 # libraries.
