@@ -2,6 +2,56 @@
 Version History
 ***************
 
+0.26.0 - 2025-04-19
+===================
+
+Added
+-----
+
+- :cpp:any:`loot::DatabaseInterface::Evaluate()`, which evaluates the given
+  condition string.
+- :cpp:any:`loot::File::GetConstraint()`, which returns the file's constraint
+  string or an empty string if the file has no constraint.
+
+Changed
+-------
+
+- ``Database::LoadLists()`` has been split into
+  :cpp:any:`loot::DatabaseInterface::LoadMasterlist()`,
+  :cpp:any:`loot::DatabaseInterface::LoadMasterlistWithPrelude()` and
+  :cpp:any:`loot::DatabaseInterface::LoadUserlist()`.
+- :cpp:any:`loot::GameInterface::GetPlugin()` and
+  :cpp:any:`loot::GameInterface::GetLoadedPlugins()` now return a plugins as
+  ``std::shared_ptr<const PluginInterface>`` instead of
+  ``const PluginInterface*``.
+- :cpp:any:`loot::PluginInterface::GetBashTags()` now returns a
+  ``std::vector<std::string>`` instead of a ``std::vector<Tag>``, as only the
+  Tag objects' name values were relevant.
+- The callback that is passed to :cpp:any:`loot::SetLoggingCallback()` now takes
+  a ``std::string_view`` instead of a ``const char*`` as its second parameter.
+- :cpp:any:`loot::Group::DEFAULT_NAME` and
+  :cpp:any:`loot::MessageContent::DEFAULT_LANGUAGE` are now ``std::string_view``
+  instead of ``const char*``.
+- API functions that take string arguments now take them as ``std::string_view``
+  instead of ``const std::string&``, with the exception of
+  :cpp:any:`loot::GameInterface::IsPluginActive()` and
+  :cpp:any:`loot::DatabaseInterface::Evaluate()`.
+- The :cpp:any:`loot::File` constructor has been updated to allow a constraint
+  value to be provided.
+- libloot now supports v0.26 of the metadata syntax.
+- The ``/Zc:__cplusplus`` compiler flag is now set when building libloot using
+  MSVC.
+- The yaml-cpp dependency can no longer be found using CMake's ``find_package``.
+  It's now possible to point libloot to an existing yaml-cpp source directory
+  by setting the ``FETCHCONTENT_SOURCE_DIR_YAML-CPP`` CMake variable, so offline
+  builds are still possible.
+- Updated esplugin to v6.1.2.
+- Updated fmt to v11.1.4.
+- Updated libloadorder to v18.3.0.
+- Updated loot-condition-interpreter to v5.3.0.
+- Updated spdlog to v1.15.2.
+- Updated yaml-cpp to v0.8.0+merge-key-support.2.
+
 0.25.5 - 2025-03-15
 ===================
 
