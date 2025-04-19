@@ -55,11 +55,11 @@ fn merge_into_mapping<'a, 'b>(
             if let YamlData::Mapping(h) = e.data {
                 Ok(merge_mappings(acc, h))
             } else {
-                Err(YamlMergeKeyError::new(e))
+                Err(YamlMergeKeyError::new(&e))
             }
         }),
         YamlData::Mapping(h) => Ok(merge_mappings(mapping, h)),
-        _ => Err(YamlMergeKeyError::new(value)),
+        _ => Err(YamlMergeKeyError::new(&value)),
     }
 }
 

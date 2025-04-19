@@ -116,8 +116,11 @@ impl Database {
         let mut doc = MetadataDocument::default();
 
         for plugin in self.masterlist.plugins_iter() {
-            let mut minimal_plugin = PluginMetadata::new(plugin.name())
-                .expect("Regex plugin name from existing PluginMetadata object is valid");
+            let Ok(mut minimal_plugin) = PluginMetadata::new(plugin.name()) else {
+                // This should never happen because the regex plugin name from
+                // an existing PluginMetadata object should be valid.
+                continue;
+            };
             minimal_plugin.set_tags(plugin.tags().to_vec());
             minimal_plugin.set_dirty_info(plugin.dirty_info().to_vec());
 
@@ -300,7 +303,7 @@ impl Database {
 }
 
 fn validate_write_path(output_path: &Path, mode: WriteMode) -> Result<(), WriteMetadataError> {
-    if !output_path.parent().map(|p| p.exists()).unwrap_or(false) {
+    if !output_path.parent().is_some_and(Path::exists) {
         Err(WriteMetadataError::new(
             output_path.into(),
             WriteMetadataErrorReason::ParentDirectoryNotFound,
@@ -975,7 +978,7 @@ plugins:
                     .plugin_metadata(BLANK_ESM, true, false)
                     .unwrap()
                     .is_none()
-            )
+            );
         }
 
         #[test]
@@ -990,7 +993,7 @@ plugins:
                     .plugin_metadata(BLANK_ESM, true, false)
                     .unwrap()
                     .is_none()
-            )
+            );
         }
 
         #[test]
@@ -1079,7 +1082,7 @@ plugins:
                     .plugin_user_metadata(BLANK_ESM, false)
                     .unwrap()
                     .is_none()
-            )
+            );
         }
 
         #[test]
@@ -1094,7 +1097,7 @@ plugins:
                     .plugin_user_metadata(BLANK_ESM, false)
                     .unwrap()
                     .is_none()
-            )
+            );
         }
 
         #[test]

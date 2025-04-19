@@ -77,9 +77,10 @@ pub(super) fn read_assets<T: BufRead + Seek>(
 
         let file_path_bytes = trim_slashes(&file_path_bytes);
 
-        let (folder_hash, file_hash) = rsplit_on(file_path_bytes, b'\\')
-            .map(|(folder_path, file_path)| (hash(&folder_path), hash(&file_path)))
-            .unwrap_or_else(|| (0, hash(&file_path_bytes)));
+        let (folder_hash, file_hash) = rsplit_on(file_path_bytes, b'\\').map_or_else(
+            || (0, hash(&file_path_bytes)),
+            |(folder_path, file_path)| (hash(&folder_path), hash(&file_path)),
+        );
 
         let file_hashes: &mut BTreeSet<u64> = assets.entry(folder_hash).or_default();
 

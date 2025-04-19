@@ -132,9 +132,10 @@ mod tests {
             plugin.set_group("group1".into());
 
             let condition = "file(\"missing.esp\")".to_string();
-            let file1 = File::new(BLANK_ESP.into());
-            let file2 = File::new(BLANK_DIFFERENT_ESM.into()).with_condition(condition.clone());
-            let files = vec![file1.clone(), file2];
+            let files = vec![
+                File::new(BLANK_ESP.into()),
+                File::new(BLANK_DIFFERENT_ESM.into()).with_condition(condition.clone()),
+            ];
             plugin.set_load_after_files(files.clone());
             plugin.set_requirements(files.clone());
             plugin.set_incompatibilities(files.clone());
@@ -149,8 +150,8 @@ mod tests {
                 Tag::new("Relev".into(), TagSuggestion::Addition).with_condition(condition.clone());
             plugin.set_tags(vec![tag1.clone(), tag2]);
 
-            let info1 = PluginCleaningData::new(0x374E2A6F, "utility1".into());
-            let info2 = PluginCleaningData::new(0xDEADBEEF, "utility2".into());
+            let info1 = PluginCleaningData::new(0x374E_2A6F, "utility1".into());
+            let info2 = PluginCleaningData::new(0xDEAD_BEEF, "utility2".into());
             plugin.set_dirty_info(vec![info1.clone(), info2.clone()]);
             plugin.set_clean_info(vec![info1.clone(), info2.clone()]);
 
@@ -160,7 +161,7 @@ mod tests {
             );
             let result = evaluate_all_conditions(plugin, &state).unwrap().unwrap();
 
-            let expected_files = &[file1];
+            let expected_files = &[files[0].clone()];
             let expected_info = &[info1];
             assert_eq!("group1", result.group().unwrap());
             assert_eq!(expected_files, result.load_after_files());

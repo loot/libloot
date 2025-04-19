@@ -1,3 +1,9 @@
+#![deny(clippy::pedantic)]
+// Allow a few clippy pedantic lints.
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::missing_errors_doc)]
+
 mod archive;
 mod database;
 pub mod error;

@@ -103,8 +103,8 @@ fn add_groups<'a>(
 }
 
 fn sorted_clone(strings: &[String]) -> Vec<&str> {
-    let mut strings: Vec<_> = strings.iter().map(|s| s.as_str()).collect();
-    strings.sort();
+    let mut strings: Vec<_> = strings.iter().map(String::as_str).collect();
+    strings.sort_unstable();
 
     strings
 }
@@ -119,7 +119,7 @@ pub fn find_path(
         |_, e| {
             if *e == EdgeType::UserLoadAfter {
                 // A very small number so that user edges are practically always preferred.
-                -1000000.0
+                -1_000_000.0
             } else {
                 1.0
             }
@@ -163,15 +163,12 @@ pub fn find_path(
             return Ok(Vec::new());
         }
 
-        let edge = match graph.find_edge(*preceding_vertex, current) {
-            Some(e) => e,
-            None => {
-                return Err(PathfindingError::EdgeNotFound {
-                    from_group: graph[*preceding_vertex].clone().into_string(),
-                    to_group: graph[current].clone().into_string(),
-                }
-                .into());
+        let Some(edge) = graph.find_edge(*preceding_vertex, current) else {
+            return Err(PathfindingError::EdgeNotFound {
+                from_group: graph[*preceding_vertex].clone().into_string(),
+                to_group: graph[current].clone().into_string(),
             }
+            .into());
         };
 
         let vertex = Vertex::new(graph[*preceding_vertex].clone().into_string())
@@ -190,17 +187,14 @@ fn find_node_by_weight(
     graph: &Graph<Box<str>, EdgeType>,
     weight: &str,
 ) -> Result<NodeIndex, UndefinedGroupError> {
-    match graph.node_indices().find(|i| {
-        graph
-            .node_weight(*i)
-            .map(|w| w.as_ref() == weight)
-            .unwrap_or(false)
-    }) {
-        Some(n) => Ok(n),
-        None => {
-            logging::error!("Can't find group with name {}", weight);
-            Err(UndefinedGroupError::new(weight.to_string()))
-        }
+    if let Some(n) = graph
+        .node_indices()
+        .find(|i| graph.node_weight(*i).is_some_and(|w| w.as_ref() == weight))
+    {
+        Ok(n)
+    } else {
+        logging::error!("Can't find group with name {}", weight);
+        Err(UndefinedGroupError::new(weight.to_string()))
     }
 }
 
@@ -243,7 +237,7 @@ struct GroupsPathLengthVisitor {
 
 impl GroupsPathLengthVisitor {
     fn new() -> Self {
-        Default::default()
+        GroupsPathLengthVisitor::default()
     }
 
     fn max_path_length(&self) -> usize {
@@ -261,7 +255,7 @@ impl<'a> DfsVisitor<'a> for GroupsPathLengthVisitor {
     fn discover_node(&mut self, _: NodeIndex) {
         self.current_path_length += 1;
         if self.current_path_length > self.max_path_length {
-            self.max_path_length = self.current_path_length
+            self.max_path_length = self.current_path_length;
         }
     }
 
@@ -290,7 +284,7 @@ mod tests {
 
             match build_groups_graph(groups, &[]) {
                 Err(BuildGroupsGraphError::UndefinedGroup(e)) => {
-                    assert_eq!("a", e.into_group_name())
+                    assert_eq!("a", e.into_group_name());
                 }
                 _ => panic!("Expected an undefined group error"),
             }
@@ -303,7 +297,7 @@ mod tests {
 
             match build_groups_graph(masterlist, userlist) {
                 Err(BuildGroupsGraphError::UndefinedGroup(e)) => {
-                    assert_eq!("a", e.into_group_name())
+                    assert_eq!("a", e.into_group_name());
                 }
                 _ => panic!("Expected an undefined group error"),
             }

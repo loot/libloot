@@ -141,7 +141,7 @@ mod tests {
             let path = Path::new("./testing-plugins/Oblivion/Data/Blank.bsa");
             let assets = get_assets_in_archive(path).unwrap();
 
-            let files_count: usize = assets.values().map(|v| v.len()).sum();
+            let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
             let expected_key = 0;
             assert_eq!(1, assets.len());
@@ -149,7 +149,7 @@ mod tests {
             assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
             assert_eq!(1, assets.get(&expected_key).unwrap().len());
             assert_eq!(
-                0x4670B6836C077365,
+                0x4670_B683_6C07_7365,
                 *assets.get(&expected_key).unwrap().first().unwrap()
             );
         }
@@ -159,15 +159,15 @@ mod tests {
             let path = Path::new("./testing-plugins/Skyrim/Data/Blank.bsa");
             let assets = get_assets_in_archive(path).unwrap();
 
-            let files_count: usize = assets.values().map(|v| v.len()).sum();
+            let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
-            let expected_key = 0x2E01002E;
+            let expected_key = 0x2E01_002E;
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
             assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
             assert_eq!(1, assets.get(&expected_key).unwrap().len());
             assert_eq!(
-                0x4670B6836C077365,
+                0x4670_B683_6C07_7365,
                 *assets.get(&expected_key).unwrap().first().unwrap()
             );
         }
@@ -177,15 +177,15 @@ mod tests {
             let path = Path::new("./testing-plugins/SkyrimSE/Data/Blank.bsa");
             let assets = get_assets_in_archive(path).unwrap();
 
-            let files_count: usize = assets.values().map(|v| v.len()).sum();
+            let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
-            let expected_key = 0xB68102C964176E73;
+            let expected_key = 0xB681_02C9_6417_6E73;
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
             assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
             assert_eq!(1, assets.get(&expected_key).unwrap().len());
             assert_eq!(
-                0x4670B6836C077365,
+                0x4670_B683_6C07_7365,
                 *assets.get(&expected_key).unwrap().first().unwrap()
             );
         }
@@ -195,7 +195,7 @@ mod tests {
             let path = Path::new("./testing-plugins/Fallout 4/Data/Blank - Main.ba2");
             let assets = get_assets_in_archive(path).unwrap();
 
-            let files_count: usize = assets.values().map(|v| v.len()).sum();
+            let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
             let expected_key = hash("dev\\git\\testing-plugins".as_bytes());
             let expected_file_hash = hash("license.txt".as_bytes());
@@ -214,7 +214,7 @@ mod tests {
             let path = Path::new("./testing-plugins/Fallout 4/Data/Blank - Textures.ba2");
             let assets = get_assets_in_archive(path).unwrap();
 
-            let files_count: usize = assets.values().map(|v| v.len()).sum();
+            let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
             let expected_key = hash("dev\\git\\testing-plugins".as_bytes());
             let expected_file_hash = hash("blank.dds".as_bytes());
@@ -260,15 +260,15 @@ mod tests {
 
             let assets = assets_in_archives(&paths);
 
-            let files_count: usize = assets.values().map(|v| v.len()).sum();
+            let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
 
             let (key, value) = assets.first_key_value().unwrap();
-            assert_eq!(0x2E01002E, *key);
+            assert_eq!(0x2E01_002E, *key);
             assert_eq!(1, value.len());
-            assert_eq!(0x4670B6836C077365, *value.first().unwrap());
+            assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
         }
 
         #[test]
@@ -281,22 +281,22 @@ mod tests {
 
             let assets = assets_in_archives(&paths);
 
-            let files_count: usize = assets.values().map(|v| v.len()).sum();
+            let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
             assert_eq!(3, assets.len());
             assert_eq!(3, files_count);
 
             let value = assets.get(&0).unwrap();
             assert_eq!(1, value.len());
-            assert_eq!(0x4670B6836C077365, *value.first().unwrap());
+            assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
 
-            let value = assets.get(&0x2E01002E).unwrap();
+            let value = assets.get(&0x2E01_002E).unwrap();
             assert_eq!(1, value.len());
-            assert_eq!(0x4670B6836C077365, *value.first().unwrap());
+            assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
 
-            let value = assets.get(&0xB68102C964176E73).unwrap();
+            let value = assets.get(&0xB681_02C9_6417_6E73).unwrap();
             assert_eq!(1, value.len());
-            assert_eq!(0x4670B6836C077365, *value.first().unwrap());
+            assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
         }
     }
 }

@@ -123,7 +123,9 @@ impl Plugin {
     /// and OpenMW) or if the `HEDR` subrecord could not be found, of if the
     /// version field's value was `NaN`.
     pub fn header_version(&self) -> Option<f32> {
-        self.plugin.as_ref().and_then(|p| p.header_version())
+        self.plugin
+            .as_ref()
+            .and_then(esplugin::Plugin::header_version)
     }
 
     /// Get the plugin's version number from its description field.
@@ -140,8 +142,7 @@ impl Plugin {
     pub fn masters(&self) -> Result<Vec<String>, PluginDataError> {
         self.plugin
             .as_ref()
-            .map(|p| p.masters().map_err(Into::into))
-            .unwrap_or_else(|| Ok(Vec::new()))
+            .map_or_else(|| Ok(Vec::new()), |p| p.masters().map_err(Into::into))
     }
 
     /// Get any Bash Tags found in the plugin's description field.
@@ -174,8 +175,7 @@ impl Plugin {
         } else {
             self.plugin
                 .as_ref()
-                .map(|p| p.is_master_file())
-                .unwrap_or(false)
+                .is_some_and(esplugin::Plugin::is_master_file)
         }
     }
 
@@ -183,56 +183,49 @@ impl Plugin {
     pub fn is_light_plugin(&self) -> bool {
         self.plugin
             .as_ref()
-            .map(|p| p.is_light_plugin())
-            .unwrap_or(false)
+            .is_some_and(esplugin::Plugin::is_light_plugin)
     }
 
     /// Check if the plugin is a medium plugin.
     pub fn is_medium_plugin(&self) -> bool {
         self.plugin
             .as_ref()
-            .map(|p| p.is_medium_plugin())
-            .unwrap_or(false)
+            .is_some_and(esplugin::Plugin::is_medium_plugin)
     }
 
     /// Check if the plugin is an update plugin.
     pub fn is_update_plugin(&self) -> bool {
         self.plugin
             .as_ref()
-            .map(|p| p.is_update_plugin())
-            .unwrap_or(false)
+            .is_some_and(esplugin::Plugin::is_update_plugin)
     }
 
     /// Check if the plugin is a blueprint plugin.
     pub fn is_blueprint_plugin(&self) -> bool {
         self.plugin
             .as_ref()
-            .map(|p| p.is_blueprint_plugin())
-            .unwrap_or(false)
+            .is_some_and(esplugin::Plugin::is_blueprint_plugin)
     }
 
     /// Check if the plugin is or would be valid as a light plugin.
     pub fn is_valid_as_light_plugin(&self) -> Result<bool, PluginDataError> {
-        self.plugin
-            .as_ref()
-            .map(|p| p.is_valid_as_light_plugin().map_err(Into::into))
-            .unwrap_or(Ok(false))
+        self.plugin.as_ref().map_or(Ok(false), |p| {
+            p.is_valid_as_light_plugin().map_err(Into::into)
+        })
     }
 
     /// Check if the plugin is or would be valid as a medium plugin.
     pub fn is_valid_as_medium_plugin(&self) -> Result<bool, PluginDataError> {
-        self.plugin
-            .as_ref()
-            .map(|p| p.is_valid_as_medium_plugin().map_err(Into::into))
-            .unwrap_or(Ok(false))
+        self.plugin.as_ref().map_or(Ok(false), |p| {
+            p.is_valid_as_medium_plugin().map_err(Into::into)
+        })
     }
 
     /// Check if the plugin is or would be valid as an update plugin.
     pub fn is_valid_as_update_plugin(&self) -> Result<bool, PluginDataError> {
-        self.plugin
-            .as_ref()
-            .map(|p| p.is_valid_as_update_plugin().map_err(Into::into))
-            .unwrap_or(Ok(false))
+        self.plugin.as_ref().map_or(Ok(false), |p| {
+            p.is_valid_as_update_plugin().map_err(Into::into)
+        })
     }
 
     /// Check if the plugin contains any records other than its `TES3`/`TES4`
@@ -240,7 +233,7 @@ impl Plugin {
     pub fn is_empty(&self) -> bool {
         self.plugin
             .as_ref()
-            .and_then(|p| p.record_and_group_count())
+            .and_then(esplugin::Plugin::record_and_group_count)
             .unwrap_or(0)
             == 0
     }
@@ -265,8 +258,7 @@ impl Plugin {
     pub(crate) fn override_record_count(&self) -> Result<usize, PluginDataError> {
         self.plugin
             .as_ref()
-            .map(|p| p.count_override_records().map_err(Into::into))
-            .unwrap_or(Ok(0))
+            .map_or(Ok(0), |p| p.count_override_records().map_err(Into::into))
     }
 
     pub(crate) fn asset_count(&self) -> usize {
@@ -353,8 +345,7 @@ fn has_plugin_file_extension(game_type: GameType, plugin_path: &Path) -> bool {
 
 pub(crate) fn has_ascii_extension(path: &Path, extension: &str) -> bool {
     path.extension()
-        .map(|e| e.eq_ignore_ascii_case(extension))
-        .unwrap_or(false)
+        .is_some_and(|e| e.eq_ignore_ascii_case(extension))
 }
 
 pub(crate) fn plugins_metadata(
@@ -404,7 +395,7 @@ fn extract_bash_tags(description: &str) -> Vec<String> {
 
         if let Some(end_pos) = description[start_pos..].find("}}") {
             return description[start_pos..start_pos + end_pos]
-                .split(",")
+                .split(',')
                 .map(|s| s.trim().to_string())
                 .collect();
         }
@@ -430,9 +421,9 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplErr
             two digits as it does not recognise forwardslashes as separators. */
             case_insensitive_regex(r"(\d{1,2}/\d{1,2}/\d{1,4} \d{1,2}:\d{1,2}:\d{1,2})")
                 .expect("Hardcoded version timestamp regex should be valid"),
-            case_insensitive_regex(&format!(r"version:?\s{}", pseudosem_regex_str))
+            case_insensitive_regex(&format!(r"version:?\s{pseudosem_regex_str}"))
                 .expect("Hardcoded version-prefixed pseudosem version regex should be valid"),
-            case_insensitive_regex(&format!(r"(?:^|v|\s){}", pseudosem_regex_str))
+            case_insensitive_regex(&format!(r"(?:^|v|\s){pseudosem_regex_str}"))
                 .expect("Hardcoded pseudosem version regex should be valid"),
             /* The string below matches a number containing one or more
             digits found at the start of the search string or preceded by
@@ -451,7 +442,7 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplErr
             .skip(1) // Skip the first capture as that's the whole regex.
             .map(|m| m.as_str().trim())
             .find(|v| !v.is_empty())
-            .map(|v| v.to_string());
+            .map(str::to_owned);
 
         if version.is_some() {
             return Ok(version);
@@ -549,9 +540,10 @@ mod tests {
             assert!(!plugin.is_empty());
             assert!(plugin.version().is_none());
 
+            #[expect(clippy::float_cmp, reason = "float values should be exactly equal")]
             match game_type {
                 GameType::TES3 | GameType::OpenMW => {
-                    assert_eq!(1.2, plugin.header_version().unwrap())
+                    assert_eq!(1.2, plugin.header_version().unwrap());
                 }
                 GameType::TES4 => assert_eq!(0.8, plugin.header_version().unwrap()),
                 GameType::Starfield => assert_eq!(0.96, plugin.header_version().unwrap()),
@@ -619,9 +611,10 @@ mod tests {
             assert!(!plugin.is_empty());
             assert!(plugin.version().is_none());
 
+            #[expect(clippy::float_cmp, reason = "float values should be exactly equal")]
             match game_type {
                 GameType::TES3 | GameType::OpenMW => {
-                    assert_eq!(1.2, plugin.header_version().unwrap())
+                    assert_eq!(1.2, plugin.header_version().unwrap());
                 }
                 GameType::TES4 => assert_eq!(0.8, plugin.header_version().unwrap()),
                 GameType::Starfield => assert_eq!(0.96, plugin.header_version().unwrap()),
@@ -629,10 +622,10 @@ mod tests {
             }
 
             let expected_crc = match game_type {
-                GameType::TES3 | GameType::OpenMW => 3317676987,
-                GameType::Starfield => 1422425298,
-                GameType::TES4 => 3759349588,
-                _ => 3000242590,
+                GameType::TES3 | GameType::OpenMW => 3_317_676_987,
+                GameType::Starfield => 1_422_425_298,
+                GameType::TES4 => 3_759_349_588,
+                _ => 3_000_242_590,
             };
 
             assert_eq!(expected_crc, plugin.crc().unwrap());

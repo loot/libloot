@@ -173,13 +173,10 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
             }
         };
 
-        let file_records_buffer = match file_records_buffer.get(file_records_offset..) {
-            Some(s) => s,
-            None => {
-                return Err(ArchiveParsingError::InvalidFileRecordsOffset(
-                    file_records_offset,
-                ));
-            }
+        let Some(file_records_buffer) = file_records_buffer.get(file_records_offset..) else {
+            return Err(ArchiveParsingError::InvalidFileRecordsOffset(
+                file_records_offset,
+            ));
         };
 
         let file_hashes: &mut BTreeSet<u64> = entry.or_default();

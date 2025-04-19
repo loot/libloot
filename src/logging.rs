@@ -68,8 +68,7 @@ impl From<LogLevel> for log::Level {
             LogLevel::Debug => log::Level::Debug,
             LogLevel::Info => log::Level::Info,
             LogLevel::Warning => log::Level::Warn,
-            LogLevel::Error => log::Level::Error,
-            LogLevel::Fatal => log::Level::Error,
+            LogLevel::Error | LogLevel::Fatal => log::Level::Error,
         }
     }
 }
@@ -89,7 +88,7 @@ impl Logger {
 
     pub(crate) fn log(&self, level: LogLevel, message: &str) {
         if level >= self.level {
-            (self.callback)(level, message)
+            (self.callback)(level, message);
         }
     }
 
@@ -166,7 +165,7 @@ pub(crate) fn format_details<E: std::error::Error>(error: &E) -> String {
     let mut details = error.to_string(); // The display string.
     if let Some(source) = error.source() {
         details += ": ";
-        details += &format_details(&source)
+        details += &format_details(&source);
     }
 
     details
@@ -188,8 +187,6 @@ mod tests {
 
         #[test]
         fn should_support_a_function() {
-            let _lock = TEST_LOCK.lock().unwrap();
-
             static MESSAGES: LazyLock<Mutex<Vec<(LogLevel, String)>>> =
                 LazyLock::new(|| Mutex::new(Vec::new()));
 
@@ -198,6 +195,8 @@ mod tests {
                     messages.push((level, message.to_string()));
                 }
             }
+
+            let _lock = TEST_LOCK.lock().unwrap();
 
             set_logging_callback(callback);
 
@@ -233,6 +232,15 @@ mod tests {
 
         #[test]
         fn set_logging_callback_should_be_callable_multiple_times() {
+            static MESSAGES: LazyLock<Mutex<Vec<(LogLevel, String)>>> =
+                LazyLock::new(|| Mutex::new(Vec::new()));
+
+            fn callback_fn(level: LogLevel, message: &str) {
+                if let Ok(mut messages) = MESSAGES.lock() {
+                    messages.push((level, message.to_string()));
+                }
+            }
+
             let _lock = TEST_LOCK.lock().unwrap();
 
             let callback = |_, _: &str| {};
@@ -255,15 +263,6 @@ mod tests {
                 *messages.lock().unwrap()
             );
 
-            static MESSAGES: LazyLock<Mutex<Vec<(LogLevel, String)>>> =
-                LazyLock::new(|| Mutex::new(Vec::new()));
-
-            fn callback_fn(level: LogLevel, message: &str) {
-                if let Ok(mut messages) = MESSAGES.lock() {
-                    messages.push((level, message.to_string()));
-                }
-            }
-
             set_logging_callback(callback_fn);
 
             error!("Test message");
@@ -280,8 +279,6 @@ mod tests {
 
         #[test]
         fn should_set_the_level_used_to_filter_messages_passed_to_the_callback() {
-            let _lock = TEST_LOCK.lock().unwrap();
-
             static MESSAGES: LazyLock<Mutex<Vec<(LogLevel, String)>>> =
                 LazyLock::new(|| Mutex::new(Vec::new()));
 
@@ -290,6 +287,8 @@ mod tests {
                     messages.push((level, message.to_string()));
                 }
             }
+
+            let _lock = TEST_LOCK.lock().unwrap();
 
             set_logging_callback(callback);
             set_log_level(LogLevel::Warning);

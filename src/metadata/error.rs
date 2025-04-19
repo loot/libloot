@@ -142,42 +142,34 @@ impl std::fmt::Display for MetadataParsingErrorReason {
             Self::InvalidCondition(b) => {
                 write!(f, "the condition string \"{}\" is invalid", b.0)
             }
-            Self::MissingKey(key, yaml_object_type) => write!(
-                f,
-                "\"{}\" key in \"{}\" map is missing",
-                key, yaml_object_type
-            ),
+            Self::MissingKey(key, yaml_object_type) => {
+                write!(f, "\"{key}\" key in \"{yaml_object_type}\" map is missing")
+            }
             Self::InvalidRegex(_) => {
                 write!(f, "invalid regex in \"name\" key")
             }
             Self::InvalidMultilingualMessageContents => MultilingualMessageContentsError.fmt(f),
-            Self::UnexpectedType(expected_type, yaml_object_type) => write!(
-                f,
-                "\"{}\" object must be {}",
-                yaml_object_type, expected_type
-            ),
+            Self::UnexpectedType(expected_type, yaml_object_type) => {
+                write!(f, "\"{yaml_object_type}\" object must be {expected_type}")
+            }
             Self::UnexpectedValueType(key, expected_type, yaml_object_type) => write!(
                 f,
-                "\"{}\" key in \"{}\" map must be {}",
-                key, yaml_object_type, expected_type
+                "\"{key}\" key in \"{yaml_object_type}\" map must be {expected_type}"
             ),
             Self::MissingPlaceholder(sub, placeholder_index) => write!(
                 f,
-                "failed to substitute \"{}\" into message, no placeholder {{{}}} was found",
-                sub, placeholder_index
+                "failed to substitute \"{sub}\" into message, no placeholder {{{placeholder_index}}} was found"
             ),
             Self::MissingSubstitution(placeholder) => write!(
                 f,
-                "failed to substitute a value into message, no substitution was given for the placeholder \"{}\"",
-                placeholder
+                "failed to substitute a value into message, no substitution was given for the placeholder \"{placeholder}\""
             ),
             Self::NonU32Number(i) => {
-                write!(f, "{} is not valid as a 32-bit unsigned integer", i)
+                write!(f, "{i} is not valid as a 32-bit unsigned integer")
             }
             Self::DuplicateEntry(id, yaml_object_type) => write!(
                 f,
-                "more than one entry exists for {} \"{}\"",
-                yaml_object_type, id
+                "more than one entry exists for {yaml_object_type} \"{id}\""
             ),
             Self::Other(m) => m.fmt(f),
         }
@@ -239,15 +231,12 @@ pub struct LoadMetadataError {
 
 impl LoadMetadataError {
     pub(super) fn new(path: PathBuf, reason: MetadataDocumentParsingError) -> Self {
-        Self {
-            path: path.to_path_buf(),
-            reason,
-        }
+        Self { path, reason }
     }
 
     pub(super) fn from_io_error(path: PathBuf, error: std::io::Error) -> Self {
         Self {
-            path: path.to_path_buf(),
+            path,
             reason: MetadataDocumentParsingError::IoError(error),
         }
     }
@@ -281,7 +270,7 @@ impl std::fmt::Display for MetadataDocumentParsingError {
         match self {
             Self::PathNotFound => write!(f, "path not found"),
             Self::NoDocuments => write!(f, "no YAML document found"),
-            Self::MoreThanOneDocument(n) => write!(f, "expected 1 YAML document, found {}", n),
+            Self::MoreThanOneDocument(n) => write!(f, "expected 1 YAML document, found {n}"),
             Self::IoError(_) => write!(f, "an I/O error occurred"),
             Self::MetadataParsingError(_) => write!(f, "a metadata parsing error occurred"),
             Self::YamlMergeKeyError(_) => {
@@ -294,9 +283,7 @@ impl std::fmt::Display for MetadataDocumentParsingError {
 impl std::error::Error for MetadataDocumentParsingError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::PathNotFound => None,
-            Self::NoDocuments => None,
-            Self::MoreThanOneDocument(_) => None,
+            Self::PathNotFound | Self::NoDocuments | Self::MoreThanOneDocument(_) => None,
             Self::IoError(e) => Some(e),
             Self::MetadataParsingError(e) => Some(e),
             Self::YamlMergeKeyError(e) => Some(e),
@@ -335,10 +322,10 @@ pub(super) struct YamlMergeKeyError {
 }
 
 impl YamlMergeKeyError {
-    pub(super) fn new(value: saphyr::MarkedYaml) -> Self {
+    pub(super) fn new(value: &saphyr::MarkedYaml) -> Self {
         let mut yaml = String::new();
 
-        let unmarked_yaml = to_unmarked_yaml(&value);
+        let unmarked_yaml = to_unmarked_yaml(value);
 
         if saphyr::YamlEmitter::new(&mut yaml)
             .dump(&unmarked_yaml)
@@ -350,7 +337,7 @@ impl YamlMergeKeyError {
                 yaml = yaml.split_off(index);
             }
         } else {
-            yaml = format!("{:?}", yaml);
+            yaml = format!("{yaml:?}");
         }
 
         YamlMergeKeyError {

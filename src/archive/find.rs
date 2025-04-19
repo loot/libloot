@@ -62,9 +62,8 @@ fn find_associated_archives_with_suffixes(
     archive_extension: &str,
     supported_suffixes: &[&str],
 ) -> Vec<PathBuf> {
-    let file_stem = match plugin_path.file_stem() {
-        Some(s) => s,
-        None => return Vec::new(),
+    let Some(file_stem) = plugin_path.file_stem() else {
+        return Vec::new();
     };
 
     supported_suffixes
@@ -89,9 +88,8 @@ fn find_associated_archives_with_arbitrary_suffixes(
         Some(s) => s.len(),
         None => return Vec::new(),
     };
-    let plugin_extension = match plugin_path.extension() {
-        Some(e) => e,
-        None => return Vec::new(),
+    let Some(plugin_extension) = plugin_path.extension() else {
+        return Vec::new();
     };
 
     game_cache
@@ -101,9 +99,8 @@ fn find_associated_archives_with_arbitrary_suffixes(
             // but case insensitively. This is hard to do accurately, so
             // instead check if the plugin with the same length basename and
             // and the given plugin's file extension is equivalent.
-            let archive_filename = match path.file_name().and_then(|s| s.to_str()) {
-                Some(f) => f,
-                None => return false,
+            let Some(archive_filename) = path.file_name().and_then(|s| s.to_str()) else {
+                return false;
             };
 
             // Can't just slice the archive filename to the same length as the plugin file stem directly because that might not slice on a character boundary, so truncate the byte slice and then check it's still valid UTF-8.
@@ -111,11 +108,10 @@ fn find_associated_archives_with_arbitrary_suffixes(
                 return false;
             }
 
-            let filename =
-                match std::str::from_utf8(&archive_filename.as_bytes()[..plugin_stem_len]) {
-                    Ok(f) => f,
-                    Err(_) => return false,
-                };
+            let Ok(filename) = std::str::from_utf8(&archive_filename.as_bytes()[..plugin_stem_len])
+            else {
+                return false;
+            };
 
             let archive_plugin_path = plugin_path
                 .with_file_name(filename)
@@ -129,10 +125,6 @@ fn find_associated_archives_with_arbitrary_suffixes(
 
 #[cfg(windows)]
 fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
-    if lhs == rhs {
-        return true;
-    }
-
     use std::fs::File;
     use std::os::windows::io::AsRawHandle;
     use windows::Win32::{
@@ -140,14 +132,16 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
         Storage::FileSystem::{BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle},
     };
 
-    let lhs_file = match File::open(lhs) {
-        Ok(f) => f,
-        Err(_) => return false,
+    if lhs == rhs {
+        return true;
+    }
+
+    let Ok(lhs_file) = File::open(lhs) else {
+        return false;
     };
 
-    let rhs_file = match File::open(rhs) {
-        Ok(f) => f,
-        Err(_) => return false,
+    let Ok(rhs_file) = File::open(rhs) else {
+        return false;
     };
 
     let mut lhs_info = BY_HANDLE_FILE_INFORMATION::default();
@@ -170,20 +164,18 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
 
 #[cfg(not(windows))]
 fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
+    use std::os::unix::fs::MetadataExt;
+
     if lhs == rhs {
         return true;
     }
 
-    use std::os::unix::fs::MetadataExt;
-
-    let lhs_metadata = match lhs.metadata() {
-        Ok(m) => m,
-        _ => return false,
+    let Ok(lhs_metadata) = lhs.metadata() else {
+        return false;
     };
 
-    let rhs_metadata = match rhs.metadata() {
-        Ok(m) => m,
-        _ => return false,
+    let Ok(rhs_metadata) = rhs.metadata() else {
+        return false;
     };
 
     lhs_metadata.dev() == rhs_metadata.dev() && lhs_metadata.ino() == rhs_metadata.ino()

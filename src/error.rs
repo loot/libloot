@@ -209,10 +209,10 @@ impl std::fmt::Display for SortPluginsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::DatabaseLockPoisoned => DatabaseLockPoisonError.fmt(f),
-            Self::PluginNotLoaded(n) => write!(f, "the plugin \"{}\" has not been loaded", n),
-            Self::UndefinedGroup(g) => write!(f, "the group \"{}\" does not exist", g),
+            Self::PluginNotLoaded(n) => write!(f, "the plugin \"{n}\" has not been loaded"),
+            Self::UndefinedGroup(g) => write!(f, "the group \"{g}\" does not exist"),
             Self::CycleFound(c) => write!(f, "found a cycle: {}", display_cycle(c)),
-            Self::CycleFoundInvolving(n) => write!(f, "found a cycle involving \"{}\"", n),
+            Self::CycleFoundInvolving(n) => write!(f, "found a cycle involving \"{n}\""),
             Self::PluginDataError(_) => write!(f, "failed to read loaded plugin data"),
             Self::MetadataRetrievalError(_) => write!(f, "failed to retrieve plugin metadata"),
             Self::PathfindingError(_) => write!(f, "failed to find a path in the plugins graph"),

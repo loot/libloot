@@ -416,16 +416,16 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                         // Assets don't overlap or both plugins load the same number of
                         // assets, don't add an edge.
                         continue;
-                    } else {
-                        outer_plugin_loads_first = plugin_asset_count > other_plugin_asset_count;
-                        edge_type = EdgeType::AssetOverlap;
                     }
+
+                    outer_plugin_loads_first = plugin_asset_count > other_plugin_asset_count;
+                    edge_type = EdgeType::AssetOverlap;
                 } else {
                     // Records overlap and override different numbers of records.
                     // Load this plugin first if it overrides more records.
                     outer_plugin_loads_first =
                         plugin.override_record_count > other_plugin.override_record_count;
-                    edge_type = EdgeType::RecordOverlap
+                    edge_type = EdgeType::RecordOverlap;
                 }
 
                 let (from_index, to_index) = if outer_plugin_loads_first {
@@ -435,15 +435,15 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                 };
 
                 if !self.is_path_cached(from_index, to_index) {
-                    if !self.path_exists(to_index, from_index) {
-                        self.add_edge(from_index, to_index, edge_type);
-                    } else {
+                    if self.path_exists(to_index, from_index) {
                         logging::debug!(
                             "Skipping {} edge from \"{}\" to \"{}\" as it would create a cycle.",
                             edge_type,
                             self[from_index].name(),
                             self[to_index].name()
                         );
+                    } else {
+                        self.add_edge(from_index, to_index, edge_type);
                     }
                 }
             }
@@ -653,7 +653,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         // Insert position is just after the found vertex, and a forward iterator
         // points to the element one after the element pointed to by the
         // corresponding reverse iterator.
-        let insert_position = previous_node_position.map(|i| i + 1).unwrap_or(range_start);
+        let insert_position = previous_node_position.map_or(range_start, |i| i + 1);
 
         // Add an edge going from this vertex to the next one in the "new load
         // order" path, in case there isn't already one.
@@ -711,10 +711,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     }
 
     fn is_path_cached(&self, from: NodeIndex, to: NodeIndex) -> bool {
-        self.paths_cache
-            .get(&from)
-            .map(|s| s.contains(&to))
-            .unwrap_or(false)
+        self.paths_cache.get(&from).is_some_and(|s| s.contains(&to))
     }
 
     fn node_index_by_name(&self, name: &str) -> Option<NodeIndex> {
@@ -751,8 +748,8 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 impl<T: SortingPlugin> std::default::Default for PluginsGraph<'_, T> {
     fn default() -> Self {
         Self {
-            inner: Default::default(),
-            paths_cache: Default::default(),
+            inner: Graph::default(),
+            paths_cache: HashMap::default(),
         }
     }
 }
@@ -974,7 +971,7 @@ impl<T: SortingPlugin> BidirBfsVisitor for PathFinder<'_, '_, T> {
     }
 
     fn visit_intersection_node(&mut self, node: NodeIndex) {
-        self.intersection_node = Some(node)
+        self.intersection_node = Some(node);
     }
 }
 
@@ -1081,7 +1078,7 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
     fn find_plugins_in_group(&self, node_index: GroupNodeIndex) -> &'c [PluginNodeIndex] {
         self.groups_plugins
             .get(self.groups_graph[node_index].as_ref())
-            .map(|v| v.as_slice())
+            .map(Vec::as_slice)
             .unwrap_or_default()
     }
 
@@ -1123,16 +1120,16 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
                     EdgeType::MasterlistGroup
                 };
 
-                if !self.plugins_graph.path_exists(*to_plugin, from_plugin) {
-                    self.plugins_graph
-                        .add_edge(from_plugin, *to_plugin, edge_type);
-                } else {
+                if self.plugins_graph.path_exists(*to_plugin, from_plugin) {
                     logging::debug!(
                         "Skipping a \"{}\" edge from \"{}\" to \"{}\" as it would create a cycle.",
                         edge_type,
                         self.plugins_graph[from_plugin].name(),
                         self.plugins_graph[*to_plugin].name()
                     );
+                } else {
+                    self.plugins_graph
+                        .add_edge(from_plugin, *to_plugin, edge_type);
                 }
             }
         }
@@ -1222,6 +1219,7 @@ impl<'e, T: SortingPlugin> DfsVisitor<'e> for GroupsPathVisitor<'_, '_, '_, '_, 
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::many_single_char_names)]
     use super::*;
 
     use crate::sorting::{groups::build_groups_graph, test::TestPlugin};
@@ -1252,7 +1250,7 @@ mod tests {
                 plugins: plugin_names
                     .iter()
                     .enumerate()
-                    .map(|(i, n)| (n.to_string(), (TestPlugin::new(n), i)))
+                    .map(|(i, n)| ((*n).to_owned(), (TestPlugin::new(n), i)))
                     .collect(),
             }
         }

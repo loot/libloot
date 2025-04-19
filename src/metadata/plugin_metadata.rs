@@ -99,13 +99,13 @@ impl PluginMetadata {
 
     /// Set the plugin's group.
     pub fn set_group(&mut self, group: String) {
-        self.group = Some(group.into_boxed_str())
+        self.group = Some(group.into_boxed_str());
     }
 
     /// Unsets the plugin's group, so that it is implicitly a member of the
     /// default group.
     pub fn unset_group(&mut self) {
-        self.group = None
+        self.group = None;
     }
 
     /// Get the plugins that the plugin must load after.
@@ -159,7 +159,7 @@ impl PluginMetadata {
         }
 
         if self.group.is_none() && plugin.group.is_some() {
-            self.group = plugin.group.clone();
+            self.group.clone_from(&plugin.group);
         }
 
         merge_slices(&mut self.load_after, &plugin.load_after);
@@ -344,11 +344,11 @@ fn merge_slices<T: Clone + PartialEq>(target: &mut Box<[T]>, source: &[T]) {
     let mut vec = target.to_vec();
     for element in source {
         if !target.contains(element) {
-            vec.push(element.clone())
+            vec.push(element.clone());
         }
     }
 
-    *target = vec.into_boxed_slice()
+    *target = vec.into_boxed_slice();
 }
 
 fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
@@ -356,9 +356,8 @@ fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
     let mut prefix_length = 0;
     let mut remainder = regex_string;
     while let Some(pos) = remainder.find('(') {
-        let (before, after) = match remainder.split_at_checked(pos + 1) {
-            Some(t) => t,
-            None => break,
+        let Some((before, after)) = remainder.split_at_checked(pos + 1) else {
+            break;
         };
 
         if after.starts_with('?') || (before.ends_with("\\(") && !before.ends_with("\\\\(")) {
@@ -679,9 +678,9 @@ mod tests {
             let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
             let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
 
-            let data1 = PluginCleaningData::new(0x12345678, "util1".into());
-            let data2 = PluginCleaningData::new(0xDEADBEEF, "util2".into());
-            let data3 = PluginCleaningData::new(0xFEEDCAFE, "util3".into());
+            let data1 = PluginCleaningData::new(0x1234_5678, "util1".into());
+            let data2 = PluginCleaningData::new(0xDEAD_BEEF, "util2".into());
+            let data3 = PluginCleaningData::new(0xFEED_CAFE, "util3".into());
             plugin1.set_dirty_info(vec![data1.clone(), data2.clone()]);
             plugin2.set_dirty_info(vec![data1.clone(), data3.clone()]);
 
@@ -698,9 +697,9 @@ mod tests {
             let mut plugin1 = PluginMetadata::new(BLANK_ESM).unwrap();
             let mut plugin2 = PluginMetadata::new(BLANK_ESM).unwrap();
 
-            let data1 = PluginCleaningData::new(0x12345678, "util1".into());
-            let data2 = PluginCleaningData::new(0xDEADBEEF, "util2".into());
-            let data3 = PluginCleaningData::new(0xFEEDCAFE, "util3".into());
+            let data1 = PluginCleaningData::new(0x1234_5678, "util1".into());
+            let data2 = PluginCleaningData::new(0xDEAD_BEEF, "util2".into());
+            let data3 = PluginCleaningData::new(0xFEED_CAFE, "util3".into());
             plugin1.set_clean_info(vec![data1.clone(), data2.clone()]);
             plugin2.set_clean_info(vec![data1.clone(), data3.clone()]);
 
@@ -801,7 +800,7 @@ mod tests {
         #[test]
         fn should_be_false_if_dirty_info_is_set() {
             let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
-            plugin.set_dirty_info(vec![PluginCleaningData::new(0x12345678, "util1".into())]);
+            plugin.set_dirty_info(vec![PluginCleaningData::new(0x1234_5678, "util1".into())]);
 
             assert!(!plugin.has_name_only());
         }
@@ -809,7 +808,7 @@ mod tests {
         #[test]
         fn should_be_false_if_clean_info_is_set() {
             let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
-            plugin.set_clean_info(vec![PluginCleaningData::new(0x12345678, "util1".into())]);
+            plugin.set_clean_info(vec![PluginCleaningData::new(0x1234_5678, "util1".into())]);
 
             assert!(!plugin.has_name_only());
         }
@@ -1172,7 +1171,7 @@ mod tests {
         #[test]
         fn should_emit_dirty_info() {
             let mut plugin = PluginMetadata::new("test.esp").unwrap();
-            plugin.set_dirty_info(vec![PluginCleaningData::new(0xDEADBEEF, "utility".into())]);
+            plugin.set_dirty_info(vec![PluginCleaningData::new(0xDEAD_BEEF, "utility".into())]);
             let yaml = emit(&plugin);
 
             assert_eq!(
@@ -1189,7 +1188,7 @@ mod tests {
         #[test]
         fn should_emit_clean_info() {
             let mut plugin = PluginMetadata::new("test.esp").unwrap();
-            plugin.set_clean_info(vec![PluginCleaningData::new(0xDEADBEEF, "utility".into())]);
+            plugin.set_clean_info(vec![PluginCleaningData::new(0xDEAD_BEEF, "utility".into())]);
             let yaml = emit(&plugin);
 
             assert_eq!(
@@ -1238,7 +1237,7 @@ mod tests {
 
             match replace_capturing_groups(input) {
                 Cow::Borrowed(output) => assert_eq!(input, output),
-                Cow::Owned(output) => panic!("Expected borrowed output, got {}", output),
+                Cow::Owned(output) => panic!("Expected borrowed output, got {output}"),
             }
         }
 
@@ -1248,14 +1247,14 @@ mod tests {
 
             match replace_capturing_groups(input) {
                 Cow::Borrowed(output) => assert_eq!(input, output),
-                Cow::Owned(output) => panic!("Expected borrowed output, got {}", output),
+                Cow::Owned(output) => panic!("Expected borrowed output, got {output}"),
             }
 
             let input = "no paren(?:th(?:e)s)es";
 
             match replace_capturing_groups(input) {
                 Cow::Borrowed(output) => assert_eq!(input, output),
-                Cow::Owned(output) => panic!("Expected borrowed output, got {}", output),
+                Cow::Owned(output) => panic!("Expected borrowed output, got {output}"),
             }
         }
 

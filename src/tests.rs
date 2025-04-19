@@ -119,8 +119,7 @@ fn set_load_order(
     use std::io::Write;
 
     match game_type {
-        GameType::TES3 => {}
-        GameType::OpenMW => {}
+        GameType::TES3 | GameType::OpenMW => {}
         _ => {
             let mut file = File::create(local_path.join("Plugins.txt")).unwrap();
             for (plugin, is_active) in load_order {
@@ -140,7 +139,7 @@ fn set_load_order(
     if is_load_order_timestamp_based(game_type) {
         let mut mod_time = SystemTime::now();
         for (plugin, _) in load_order {
-            let ghosted_path = data_path.join(plugin.to_string() + ".ghost");
+            let ghosted_path = data_path.join(format!("{plugin}.ghost"));
             let file = if ghosted_path.exists() {
                 File::options().write(true).open(ghosted_path)
             } else {

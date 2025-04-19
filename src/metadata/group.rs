@@ -78,8 +78,8 @@ impl std::default::Default for Group {
     fn default() -> Self {
         Self {
             name: Group::DEFAULT_NAME.into(),
-            description: Default::default(),
-            after_groups: Default::default(),
+            description: Option::default(),
+            after_groups: Box::default(),
         }
     }
 }
@@ -98,7 +98,7 @@ impl TryFromYaml for Group {
         Ok(Group {
             name: name.into(),
             description: description.map(|d| d.1.into()),
-            after_groups: after.iter().map(|a| a.to_string()).collect(),
+            after_groups: after.into_iter().map(str::to_owned).collect(),
         })
     }
 }

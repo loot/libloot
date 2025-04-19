@@ -91,7 +91,7 @@ impl std::default::Default for MessageContent {
     #[must_use]
     fn default() -> Self {
         Self {
-            text: Default::default(),
+            text: Box::default(),
             language: MessageContent::DEFAULT_LANGUAGE.into(),
         }
     }
@@ -343,12 +343,15 @@ impl TryFromYaml for Message {
                 }
 
                 for (index, sub) in subs.iter().enumerate() {
-                    let placeholder = format!("{{{}}}", index);
+                    let placeholder = format!("{{{index}}}");
 
                     if !mc.text.contains(&placeholder) {
                         return Err(ParseMetadataError::new(
                             value.span.start,
-                            MetadataParsingErrorReason::MissingPlaceholder(sub.to_string(), index),
+                            MetadataParsingErrorReason::MissingPlaceholder(
+                                (*sub).to_owned(),
+                                index,
+                            ),
                         ));
                     }
 

@@ -140,15 +140,12 @@ impl TryFromYaml for PluginCleaningData {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         let mapping = as_mapping(value, YamlObjectType::PluginCleaningData)?;
 
-        let crc = match get_u32_value(mapping, "crc", YamlObjectType::PluginCleaningData)? {
-            Some(n) => n,
-            None => {
-                return Err(ParseMetadataError::missing_key(
-                    value.span.start,
-                    "crc",
-                    YamlObjectType::PluginCleaningData,
-                ));
-            }
+        let Some(crc) = get_u32_value(mapping, "crc", YamlObjectType::PluginCleaningData)? else {
+            return Err(ParseMetadataError::missing_key(
+                value.span.start,
+                "crc",
+                YamlObjectType::PluginCleaningData,
+            ));
         };
 
         let util = get_required_string_value(
@@ -285,7 +282,7 @@ mod tests {
 
             let data = PluginCleaningData::try_from_yaml(&yaml).unwrap();
 
-            assert_eq!(0x12345678, data.crc());
+            assert_eq!(0x1234_5678, data.crc());
             assert_eq!("cleaner", data.cleaning_utility());
             assert_eq!(&[MessageContent::new("info".into())], data.detail());
             assert_eq!(2, data.itm_count());
@@ -299,7 +296,7 @@ mod tests {
 
             let data = PluginCleaningData::try_from_yaml(&yaml).unwrap();
 
-            assert_eq!(0x12345678, data.crc());
+            assert_eq!(0x1234_5678, data.crc());
             assert_eq!("cleaner", data.cleaning_utility());
             assert!(data.detail().is_empty());
             assert_eq!(0, data.itm_count());
@@ -354,7 +351,7 @@ mod tests {
 
         #[test]
         fn should_omit_zero_counts() {
-            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into());
+            let data = PluginCleaningData::new(0xDEAD_BEEF, "TES5Edit".into());
             let yaml = emit(&data);
 
             assert_eq!("crc: 0xDEADBEEF\nutil: 'TES5Edit'", yaml);
@@ -362,7 +359,7 @@ mod tests {
 
         #[test]
         fn should_emit_non_zero_counts() {
-            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into())
+            let data = PluginCleaningData::new(0xDEAD_BEEF, "TES5Edit".into())
                 .with_itm_count(1)
                 .with_deleted_reference_count(2)
                 .with_deleted_navmesh_count(3);
@@ -376,7 +373,7 @@ mod tests {
 
         #[test]
         fn should_emit_map_with_a_detail_string_if_detail_is_monolingual() {
-            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into())
+            let data = PluginCleaningData::new(0xDEAD_BEEF, "TES5Edit".into())
                 .with_detail(vec![MessageContent::new("message".into())])
                 .unwrap();
             let yaml = emit(&data);
@@ -392,7 +389,7 @@ mod tests {
 
         #[test]
         fn should_emit_map_with_a_detail_array_if_detail_is_multilingual() {
-            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into())
+            let data = PluginCleaningData::new(0xDEAD_BEEF, "TES5Edit".into())
                 .with_detail(vec![
                     MessageContent::new("english".into()).with_language("en".into()),
                     MessageContent::new("french".into()).with_language("fr".into()),
@@ -420,7 +417,7 @@ detail:
 
         #[test]
         fn should_emit_map_with_all_fields_set() {
-            let data = PluginCleaningData::new(0xDEADBEEF, "TES5Edit".into())
+            let data = PluginCleaningData::new(0xDEAD_BEEF, "TES5Edit".into())
                 .with_itm_count(1)
                 .with_deleted_reference_count(2)
                 .with_deleted_navmesh_count(3)

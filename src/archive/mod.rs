@@ -61,9 +61,9 @@ mod tests {
             let path = PathBuf::from("./testing-plugins/Skyrim/Data/Blank.bsa");
             let assets2 = assets_in_archives(&[path]);
 
-            assert_eq!(assets1.get(&0), assets2.get(&0x2E01002E));
+            assert_eq!(assets1.get(&0), assets2.get(&0x2E01_002E));
 
-            assert!(!do_assets_overlap(&assets1, &assets2))
+            assert!(!do_assets_overlap(&assets1, &assets2));
         }
     }
 }

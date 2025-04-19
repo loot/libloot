@@ -446,7 +446,7 @@ impl Game {
             .map(|n| {
                 self.cache
                     .plugin(n)
-                    .ok_or_else(|| SortPluginsError::PluginNotLoaded(n.to_string()))
+                    .ok_or_else(|| SortPluginsError::PluginNotLoaded((*n).to_owned()))
             })
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -646,7 +646,7 @@ fn find_archives_in_path(
     }
 
     let paths = std::fs::read_dir(parent_path)?
-        .filter_map(|e| e.ok())
+        .filter_map(Result::ok)
         .filter(|e| {
             e.file_type().map(|f| f.is_file()).unwrap_or(false)
                 && iends_with_ascii(&e.file_name().to_string_lossy(), archive_file_extension)
@@ -838,8 +838,8 @@ mod tests {
 
             // The paths may contain forward slashes, which cmd doesn't accept,
             // so replace them.
-            let original = OsString::from(original.to_str().unwrap().replace("/", "\\"));
-            let link = OsString::from(link.to_str().unwrap().replace("/", "\\"));
+            let original = OsString::from(original.to_str().unwrap().replace('/', "\\"));
+            let link = OsString::from(link.to_str().unwrap().replace('/', "\\"));
 
             let status = std::process::Command::new("cmd")
                 .args([
@@ -895,7 +895,7 @@ mod tests {
 
             relative_components
                 .into_iter()
-                .map(|c| c.as_os_str())
+                .map(Component::as_os_str)
                 .collect()
         }
 
@@ -966,9 +966,7 @@ mod tests {
             fn should_error_if_given_a_game_path_that_does_not_exist() {
                 let game_path = Path::new("missing");
                 match Game::new(GameType::TES3, game_path) {
-                    Err(GameHandleCreationError::NotADirectory(p)) => {
-                        assert_eq!(game_path, p)
-                    }
+                    Err(GameHandleCreationError::NotADirectory(p)) => assert_eq!(game_path, p),
                     _ => panic!("Expected a not-a-directory error"),
                 }
             }
@@ -1062,9 +1060,7 @@ mod tests {
                 let game = Game::with_local_path(fixture.game_type, game_path, &fixture.local_path);
 
                 match game {
-                    Err(GameHandleCreationError::NotADirectory(p)) => {
-                        assert_eq!(game_path, p)
-                    }
+                    Err(GameHandleCreationError::NotADirectory(p)) => assert_eq!(game_path, p),
                     _ => panic!("Expected a not-a-directory error"),
                 }
             }
@@ -1089,9 +1085,7 @@ mod tests {
                 let game = Game::with_local_path(fixture.game_type, &fixture.game_path, local_path);
 
                 match game {
-                    Err(GameHandleCreationError::NotADirectory(p)) => {
-                        assert_eq!(local_path, p)
-                    }
+                    Err(GameHandleCreationError::NotADirectory(p)) => assert_eq!(local_path, p),
                     _ => panic!("Expected a not-a-directory error"),
                 }
             }
@@ -1246,7 +1240,7 @@ mod tests {
                     game.load_current_load_order_state().unwrap();
 
                     let mut load_order: Vec<_> =
-                        game.load_order().iter().map(|s| s.to_string()).collect();
+                        game.load_order().iter().map(ToString::to_string).collect();
 
                     let filename = "plugin.esp";
                     let data_file_path = fixture
@@ -1374,7 +1368,7 @@ mod tests {
                 if game_type == GameType::OpenMW {
                     std::fs::rename(
                         &path,
-                        path.with_file_name(format!("{}.ghost", BLANK_MASTER_DEPENDENT_ESM)),
+                        path.with_file_name(format!("{BLANK_MASTER_DEPENDENT_ESM}.ghost")),
                     )
                     .unwrap();
 
@@ -1625,10 +1619,10 @@ mod tests {
                             match source.downcast_ref::<esplugin::Error>().unwrap() {
                                 esplugin::Error::PluginMetadataNotFound(p) => {
                                     if game_type == GameType::Starfield {
-                                        assert_eq!(BLANK_FULL_ESM, p)
+                                        assert_eq!(BLANK_FULL_ESM, p);
                                     } else {
-                                        assert_eq!(BLANK_ESM, p)
-                                    };
+                                        assert_eq!(BLANK_ESM, p);
+                                    }
                                 }
                                 _ => panic!("Unexpected esplugin error: {e}"),
                             }
@@ -1873,7 +1867,7 @@ mod tests {
 
                 let path = fixture
                     .data_path()
-                    .join(format!("{}.ghost", BLANK_MASTER_DEPENDENT_ESM));
+                    .join(format!("{BLANK_MASTER_DEPENDENT_ESM}.ghost"));
 
                 let plugins = game
                     .load_plugins_common(&[&path], LoadScope::HeaderOnly)
@@ -2007,9 +2001,10 @@ mod tests {
 
             game.load_current_load_order_state().unwrap();
 
-            let mut load_order: Vec<_> = game.load_order().iter().map(|s| s.to_string()).collect();
+            let mut load_order: Vec<_> =
+                game.load_order().iter().map(ToString::to_string).collect();
             load_order.swap(7, 10);
-            let load_order: Vec<_> = load_order.iter().map(|s| s.as_str()).collect();
+            let load_order: Vec<_> = load_order.iter().map(String::as_str).collect();
 
             game.set_load_order(&load_order).unwrap();
 

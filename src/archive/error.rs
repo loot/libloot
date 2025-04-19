@@ -53,27 +53,26 @@ impl std::fmt::Display for ArchiveParsingError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::IoError(_) => write!(f, "an I/O error occurred"),
-            Self::UnsupportedHeaderVersion(v) => write!(f, "unsupported archive version {}", v),
-            Self::UnsupportedHeaderArchiveType(a) => write!(f, "unsupported archive type {:?}", a),
-            Self::UnsupportedArchiveTypeId(t) => write!(f, "unsupported archive type ID {:?}", t),
-            Self::InvalidRecordsOffset(o) => write!(f, "invalid records offset {}", o),
+            Self::UnsupportedHeaderVersion(v) => write!(f, "unsupported archive version {v}"),
+            Self::UnsupportedHeaderArchiveType(a) => write!(f, "unsupported archive type {a:?}"),
+            Self::UnsupportedArchiveTypeId(t) => write!(f, "unsupported archive type ID {t:?}"),
+            Self::InvalidRecordsOffset(o) => write!(f, "invalid records offset {o}"),
             Self::InvalidFolderNameLengthOffset(o) => {
-                write!(f, "invalid folder name length offset {}", o)
+                write!(f, "invalid folder name length offset {o}")
             }
-            Self::InvalidFileRecordsOffset(o) => write!(f, "invalid file records offset {}", o),
+            Self::InvalidFileRecordsOffset(o) => write!(f, "invalid file records offset {o}"),
             Self::UsesBigEndianNumbers => {
                 write!(f, "archive uses big-endian numbers, which is unsupported")
             }
             Self::FolderHashCollision(h) => {
-                write!(f, "unexpected collision for folder name hash {:x}", h)
+                write!(f, "unexpected collision for folder name hash {h:x}")
             }
             Self::HashCollision {
                 folder_hash,
                 file_hash,
             } => write!(
                 f,
-                "unexpected collision for file name hash {:x} in set for folder name hash {:x}",
-                file_hash, folder_hash
+                "unexpected collision for file name hash {file_hash:x} in set for folder name hash {folder_hash:x}"
             ),
         }
     }

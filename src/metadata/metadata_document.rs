@@ -104,16 +104,13 @@ impl MetadataDocument {
         }
         let doc = process_merge_keys(doc)?;
 
-        let doc = match doc.data {
-            YamlData::Mapping(h) => h,
-            _ => {
-                return Err(ParseMetadataError::unexpected_type(
-                    doc.span.start,
-                    YamlObjectType::MetadataDocument,
-                    ExpectedType::Map,
-                )
-                .into());
-            }
+        let YamlData::Mapping(doc) = doc.data else {
+            return Err(ParseMetadataError::unexpected_type(
+                doc.span.start,
+                YamlObjectType::MetadataDocument,
+                ExpectedType::Map,
+            )
+            .into());
         };
 
         let mut plugins: HashMap<Filename, PluginMetadata> = HashMap::new();
@@ -292,12 +289,12 @@ impl MetadataDocument {
         // Ensure that the default group is present.
         let default_group_exists = groups.iter().any(|g| g.name() == Group::DEFAULT_NAME);
 
-        if !default_group_exists {
+        if default_group_exists {
+            self.groups = groups;
+        } else {
             self.groups.clear();
             self.groups.push(Group::default());
             self.groups.extend(groups);
-        } else {
-            self.groups = groups;
         }
     }
 
@@ -328,11 +325,11 @@ impl MetadataDocument {
 impl std::default::Default for MetadataDocument {
     fn default() -> Self {
         Self {
-            bash_tags: Default::default(),
+            bash_tags: Vec::default(),
             groups: vec![Group::default()],
-            messages: Default::default(),
-            plugins: Default::default(),
-            regex_plugins: Default::default(),
+            messages: Vec::default(),
+            plugins: HashMap::default(),
+            regex_plugins: Vec::default(),
         }
     }
 }
@@ -349,7 +346,7 @@ fn replace_prelude(masterlist: String, prelude: &str) -> String {
 }
 
 fn detect_line_ending(masterlist: &str) -> &'static str {
-    if let Some(pos) = masterlist.rfind("\n") {
+    if let Some(pos) = masterlist.rfind('\n') {
         if pos == 0 {
             "\n"
         } else if masterlist.as_bytes()[pos - 1] == b'\r' {
@@ -393,8 +390,8 @@ fn find_prelude_bounds(masterlist: &str) -> Option<(usize, usize)> {
 }
 
 fn indent_prelude(prelude: &str, line_ending: &str) -> String {
-    let prelude = ("\n  ".to_string() + &prelude.replace("\n", "\n  "))
-        .replace(&format!("  {}", line_ending), line_ending);
+    let prelude = ("\n  ".to_string() + &prelude.replace('\n', "\n  "))
+        .replace(&format!("  {line_ending}"), line_ending);
 
     if prelude.ends_with("\n  ") {
         prelude[..prelude.len() - 2].to_string()
@@ -459,7 +456,7 @@ plugins:
 
         #[test]
         fn load_from_str_should_resolve_aliases() {
-            let yaml = r#"
+            let yaml = r"
         prelude:
           - &anchor
             type: say
@@ -467,7 +464,7 @@ plugins:
 
         globals:
           - *anchor
-        "#;
+        ";
 
             let mut metadata_list = MetadataDocument::default();
             metadata_list.load_from_str(yaml).unwrap();
@@ -492,7 +489,7 @@ plugins:
 
         #[test]
         fn load_from_str_should_error_if_a_plugin_has_two_exact_entries() {
-            let yaml = r#"
+            let yaml = r"
 plugins:
   - name: 'Blank.esm'
     msg:
@@ -503,7 +500,7 @@ plugins:
     msg:
       - type: error
         content: 'This plugin entry will cause a failure, as it is not the first exact entry.'
-        "#;
+        ";
 
             let mut metadata_list = MetadataDocument::default();
             assert!(metadata_list.load_from_str(yaml).is_err());
@@ -547,7 +544,7 @@ plugins:
         fn load_should_error_if_an_invalid_metadata_file_is_given() {
             let tmp_dir = tempdir().unwrap();
             let path = tmp_dir.path().join("masterlist.yaml");
-            let yaml = r#"
+            let yaml = r"
   - 'C.Climate'
   - 'Relev'
 
@@ -559,7 +556,7 @@ plugins:
   - name: 'Blank.+\.esp'
     after:
       - 'Blank.esm'
-        "#;
+        ";
 
             std::fs::write(&path, yaml).unwrap();
 

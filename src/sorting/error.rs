@@ -43,7 +43,7 @@ impl CyclicInteractionError {
 impl Display for CyclicInteractionError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let cycle = display_cycle(&self.cycle);
-        write!(f, "cyclic interaction detected: {}", cycle)
+        write!(f, "cyclic interaction detected: {cycle}")
     }
 }
 
@@ -75,7 +75,7 @@ pub enum GroupsPathError {
 impl Display for GroupsPathError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::UndefinedGroup(g) => write!(f, "the group \"{}\" does not exist", g),
+            Self::UndefinedGroup(g) => write!(f, "the group \"{g}\" does not exist"),
             Self::CycleFound(c) => write!(f, "found a cycle: {}", display_cycle(c)),
             Self::PathfindingError(_) => write!(f, "failed to find a path in the groups graph"),
         }
@@ -168,21 +168,18 @@ impl Display for PathfindingError {
             ),
             Self::PrecedingNodeNotFound(n) => write!(
                 f,
-                "unexpectedly could not find the node before \"{}\" in the path that was found",
-                n
+                "unexpectedly could not find the node before \"{n}\" in the path that was found",
             ),
             Self::FollowingNodeNotFound(n) => write!(
                 f,
-                "unexpectedly could not find the node after \"{}\" in the path that was found",
-                n
+                "unexpectedly could not find the node after \"{n}\" in the path that was found",
             ),
             Self::EdgeNotFound {
                 from_group,
                 to_group,
             } => write!(
                 f,
-                "unexpectedly could not find the edge going from \"{}\" to \"{}\"",
-                from_group, to_group
+                "unexpectedly could not find the edge going from \"{from_group}\" to \"{to_group}\"",
             ),
         }
     }
@@ -242,7 +239,7 @@ impl Display for SortingError {
             Self::ValidationError(_) => write!(f, "plugin graph validation failed"),
             Self::UndefinedGroup(_) => write!(f, "found an undefined group"),
             Self::CycleFound(_) => write!(f, "found a cycle"),
-            Self::CycleInvolving(n) => write!(f, "found a cycle involving \"{}\"", n),
+            Self::CycleInvolving(n) => write!(f, "found a cycle involving \"{n}\""),
             Self::PluginDataError(_) => write!(f, "failed to read plugin data"),
             Self::PathfindingError(_) => write!(f, "failed to find a path in the plugins graph"),
         }

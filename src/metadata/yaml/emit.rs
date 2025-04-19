@@ -106,7 +106,7 @@ impl YamlEmitter {
             _ => self.scope.push(YamlBlock::Map),
         }
 
-        self.write(&format!("{}:", key));
+        self.write(&format!("{key}:"));
     }
 
     pub fn begin_array(&mut self) {
@@ -298,7 +298,7 @@ fn double_quote(value: &str) -> String {
         })
         .collect();
 
-    format!("\"{}\"", escaped)
+    format!("\"{escaped}\"")
 }
 
 impl<T: EmitYaml> EmitYaml for &[T] {
@@ -315,7 +315,7 @@ impl<T: EmitYaml> EmitYaml for &[T] {
             elements => {
                 emitter.begin_array();
 
-                for element in elements.iter() {
+                for element in *elements {
                     element.emit_yaml(emitter);
                 }
 
