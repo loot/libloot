@@ -3,7 +3,7 @@ use std::{
     path::Path,
 };
 
-use saphyr::{MarkedYaml, YamlData};
+use saphyr::{LoadableYamlNode, MarkedYaml, YamlData};
 
 use crate::logging;
 
@@ -105,7 +105,7 @@ impl MetadataDocument {
         let doc = process_merge_keys(doc)?;
 
         let doc = match doc.data {
-            YamlData::Hash(h) => h,
+            YamlData::Mapping(h) => h,
             _ => {
                 return Err(ParseMetadataError::unexpected_type(
                     doc.span.start,

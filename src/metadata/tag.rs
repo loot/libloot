@@ -1,4 +1,4 @@
-use saphyr::{MarkedYaml, YamlData};
+use saphyr::{MarkedYaml, Scalar, YamlData};
 
 use super::{
     error::{ExpectedType, ParseMetadataError},
@@ -67,7 +67,7 @@ impl Tag {
 impl TryFromYaml for Tag {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         match &value.data {
-            YamlData::String(s) => {
+            YamlData::Value(Scalar::String(s)) => {
                 let (name, suggestion) = name_and_suggestion(s);
                 Ok(Tag {
                     name,
@@ -75,7 +75,7 @@ impl TryFromYaml for Tag {
                     condition: None,
                 })
             }
-            YamlData::Hash(h) => {
+            YamlData::Mapping(h) => {
                 let name =
                     get_required_string_value(value.span.start, h, "name", YamlObjectType::Tag)?;
 

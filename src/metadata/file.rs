@@ -1,4 +1,4 @@
-use saphyr::{MarkedYaml, YamlData};
+use saphyr::{MarkedYaml, Scalar, YamlData};
 use unicase::UniCase;
 
 use super::{
@@ -167,13 +167,13 @@ impl std::fmt::Display for Filename {
 impl TryFromYaml for File {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         match &value.data {
-            YamlData::String(s) => Ok(File {
-                name: Filename::new(s.clone()),
+            YamlData::Value(Scalar::String(s)) => Ok(File {
+                name: Filename::new(s.to_string()),
                 display_name: None,
                 detail: Box::default(),
                 condition: None,
             }),
-            YamlData::Hash(h) => {
+            YamlData::Mapping(h) => {
                 let name =
                     get_required_string_value(value.span.start, h, "name", YamlObjectType::File)?;
 

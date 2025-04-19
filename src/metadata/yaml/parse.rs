@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use loot_condition_interpreter::Expression;
-use saphyr::{AnnotatedHash, MarkedYaml, Marker, Yaml, YamlData};
+use saphyr::{AnnotatedMapping, MarkedYaml, Marker, Scalar, Yaml, YamlData};
 
 use super::super::error::{ExpectedType, MetadataParsingErrorReason, ParseMetadataError};
 
@@ -36,37 +36,38 @@ impl std::fmt::Display for YamlObjectType {
     }
 }
 
-pub fn to_yaml(yaml: &MarkedYaml) -> Yaml {
+pub fn to_unmarked_yaml<'a>(yaml: &MarkedYaml<'a>) -> Yaml<'a> {
     match &yaml.data {
-        saphyr::YamlData::Real(v) => Yaml::Real(v.clone()),
-        saphyr::YamlData::Integer(v) => Yaml::Integer(*v),
-        saphyr::YamlData::String(v) => Yaml::String(v.clone()),
-        saphyr::YamlData::Boolean(v) => Yaml::Boolean(*v),
-        saphyr::YamlData::Array(v) => Yaml::Array(v.iter().map(to_yaml).collect()),
-        saphyr::YamlData::Hash(v) => Yaml::Hash(
+        YamlData::Value(Scalar::FloatingPoint(v)) => Yaml::Value(Scalar::FloatingPoint(*v)),
+        YamlData::Value(Scalar::Integer(v)) => Yaml::Value(Scalar::Integer(*v)),
+        YamlData::Value(Scalar::String(v)) => Yaml::Value(Scalar::String(v.clone())),
+        YamlData::Value(Scalar::Boolean(v)) => Yaml::Value(Scalar::Boolean(*v)),
+        YamlData::Value(Scalar::Null) => Yaml::Value(Scalar::Null),
+        YamlData::Sequence(v) => Yaml::Sequence(v.iter().map(to_unmarked_yaml).collect()),
+        YamlData::Mapping(v) => Yaml::Mapping(
             v.iter()
-                .map(|(key, value)| (to_yaml(key), to_yaml(value)))
+                .map(|(key, value)| (to_unmarked_yaml(key), to_unmarked_yaml(value)))
                 .collect(),
         ),
-        saphyr::YamlData::Alias(v) => Yaml::Alias(*v),
-        saphyr::YamlData::Null => Yaml::Null,
-        saphyr::YamlData::BadValue => Yaml::BadValue,
+        YamlData::Alias(v) => Yaml::Alias(*v),
+        YamlData::BadValue => Yaml::BadValue,
+        YamlData::Representation(v, s, t) => Yaml::Representation(v.clone(), *s, t.clone()),
     }
 }
 
 pub fn as_string_node(value: &str) -> MarkedYaml {
     MarkedYaml {
         span: saphyr_parser::Span::default(),
-        data: YamlData::String(value.into()),
+        data: YamlData::Value(Scalar::String(value.into())),
     }
 }
 
 pub fn get_string_value<'a>(
-    hash: &'a AnnotatedHash<MarkedYaml>,
+    mapping: &'a AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<Option<(Marker, &'a str)>, ParseMetadataError> {
-    match hash.get(&as_string_node(key)) {
+    match mapping.get(&as_string_node(key)) {
         Some(n) => match n.data.as_str() {
             Some(s) => Ok(Some((n.span.start, s))),
             None => Err(ParseMetadataError::unexpected_value_type(
@@ -82,22 +83,22 @@ pub fn get_string_value<'a>(
 
 pub fn get_required_string_value<'a>(
     marker: Marker,
-    hash: &'a AnnotatedHash<MarkedYaml>,
+    mapping: &'a AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<&'a str, ParseMetadataError> {
-    match get_string_value(hash, key, yaml_type)? {
+    match get_string_value(mapping, key, yaml_type)? {
         Some(n) => Ok(n.1),
         None => Err(ParseMetadataError::missing_key(marker, key, yaml_type)),
     }
 }
 
 pub fn get_strings_vec_value<'a>(
-    hash: &'a AnnotatedHash<MarkedYaml>,
+    mapping: &'a AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<Vec<&'a str>, ParseMetadataError> {
-    match hash.get(&as_string_node(key)) {
+    match mapping.get(&as_string_node(key)) {
         Some(n) => match n.data.as_vec() {
             Some(n) => n
                 .iter()
@@ -122,11 +123,11 @@ pub fn get_strings_vec_value<'a>(
     }
 }
 
-pub fn get_as_hash(
-    value: &MarkedYaml,
+pub fn as_mapping<'a, 'b>(
+    value: &'a MarkedYaml<'b>,
     yaml_type: YamlObjectType,
-) -> Result<&AnnotatedHash<MarkedYaml>, ParseMetadataError> {
-    match value.data.as_hash() {
+) -> Result<&'a AnnotatedMapping<'a, MarkedYaml<'b>>, ParseMetadataError> {
+    match value.data.as_mapping() {
         Some(h) => Ok(h),
         None => Err(ParseMetadataError::unexpected_type(
             value.span.start,
@@ -137,12 +138,12 @@ pub fn get_as_hash(
 }
 
 pub fn get_u32_value(
-    hash: &AnnotatedHash<MarkedYaml>,
+    mapping: &AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<Option<u32>, ParseMetadataError> {
-    match hash.get(&as_string_node(key)) {
-        Some(n) => match n.data.as_i64() {
+    match mapping.get(&as_string_node(key)) {
+        Some(n) => match n.data.as_integer() {
             Some(i) => i.try_into().map(Some).map_err(|_| {
                 ParseMetadataError::new(n.span.start, MetadataParsingErrorReason::NonU32Number(i))
             }),
@@ -158,11 +159,11 @@ pub fn get_u32_value(
 }
 
 pub fn get_as_slice<'a>(
-    hash: &'a saphyr::AnnotatedHash<MarkedYaml>,
+    mapping: &'a saphyr::AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
-) -> Result<&'a [MarkedYaml], ParseMetadataError> {
-    if let Some(value) = hash.get(&as_string_node(key)) {
+) -> Result<&'a [MarkedYaml<'a>], ParseMetadataError> {
+    if let Some(value) = mapping.get(&as_string_node(key)) {
         match value.data.as_vec() {
             Some(n) => Ok(n.as_slice()),
             None => Err(ParseMetadataError::unexpected_value_type(
@@ -178,10 +179,10 @@ pub fn get_as_slice<'a>(
 }
 
 pub fn parse_condition(
-    hash: &saphyr::AnnotatedHash<MarkedYaml>,
+    mapping: &saphyr::AnnotatedMapping<MarkedYaml>,
     yaml_type: YamlObjectType,
 ) -> Result<Option<Box<str>>, ParseMetadataError> {
-    match get_string_value(hash, "condition", yaml_type)? {
+    match get_string_value(mapping, "condition", yaml_type)? {
         Some((marker, s)) => {
             let s = s.to_string();
             if let Err(e) = Expression::from_str(&s) {

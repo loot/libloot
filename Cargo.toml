@@ -11,8 +11,8 @@ log = { version = "0.4.26", features = ["std"] }
 petgraph = "0.8.1"
 rayon = "1.10.0"
 rustc-hash = "2.1.1"
-saphyr = "0.0.3"
-saphyr-parser = "0.0.3"
+saphyr = "0.0.4"
+saphyr-parser = "0.0.4"
 unicase = "2.8.1"
 
 esplugin.workspace = true

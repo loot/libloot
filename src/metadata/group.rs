@@ -3,7 +3,7 @@ use saphyr::MarkedYaml;
 use super::{
     error::ParseMetadataError,
     yaml::{
-        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_as_hash, get_required_string_value,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, get_required_string_value,
         get_string_value, get_strings_vec_value,
     },
 };
@@ -86,14 +86,14 @@ impl std::default::Default for Group {
 
 impl TryFromYaml for Group {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
-        let hash = get_as_hash(value, YamlObjectType::Group)?;
+        let mapping = as_mapping(value, YamlObjectType::Group)?;
 
         let name =
-            get_required_string_value(value.span.start, hash, "name", YamlObjectType::Group)?;
+            get_required_string_value(value.span.start, mapping, "name", YamlObjectType::Group)?;
 
-        let description = get_string_value(hash, "description", YamlObjectType::Group)?;
+        let description = get_string_value(mapping, "description", YamlObjectType::Group)?;
 
-        let after = get_strings_vec_value(hash, "after", YamlObjectType::Group)?;
+        let after = get_strings_vec_value(mapping, "after", YamlObjectType::Group)?;
 
         Ok(Group {
             name: name.into(),

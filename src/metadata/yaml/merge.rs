@@ -10,12 +10,12 @@ static MERGE_KEY: LazyLock<MarkedYaml> = LazyLock::new(|| as_string_node("<<"));
 
 pub fn process_merge_keys(mut yaml: MarkedYaml) -> Result<MarkedYaml, YamlMergeKeyError> {
     match yaml.data {
-        YamlData::Array(a) => {
-            yaml.data = merge_array_elements(a).map(YamlData::Array)?;
+        YamlData::Sequence(a) => {
+            yaml.data = merge_array_elements(a).map(YamlData::Sequence)?;
             Ok(yaml)
         }
-        YamlData::Hash(h) => {
-            yaml.data = merge_hash_keys(h).map(YamlData::Hash)?;
+        YamlData::Mapping(h) => {
+            yaml.data = merge_mapping_keys(h).map(YamlData::Mapping)?;
             Ok(yaml)
         }
         _ => Ok(yaml),
@@ -23,15 +23,15 @@ pub fn process_merge_keys(mut yaml: MarkedYaml) -> Result<MarkedYaml, YamlMergeK
 }
 
 fn merge_array_elements(
-    array: saphyr::AnnotatedArray<MarkedYaml>,
-) -> Result<saphyr::AnnotatedArray<MarkedYaml>, YamlMergeKeyError> {
+    array: saphyr::AnnotatedSequence<MarkedYaml>,
+) -> Result<saphyr::AnnotatedSequence<MarkedYaml>, YamlMergeKeyError> {
     array.into_iter().map(process_merge_keys).collect()
 }
 
-fn merge_hash_keys(
-    hash: saphyr::AnnotatedHash<MarkedYaml>,
-) -> Result<saphyr::AnnotatedHash<MarkedYaml>, YamlMergeKeyError> {
-    let mut hash: saphyr::AnnotatedHash<MarkedYaml> = hash
+fn merge_mapping_keys<'a, 'b>(
+    mapping: saphyr::AnnotatedMapping<'a, MarkedYaml<'b>>,
+) -> Result<saphyr::AnnotatedMapping<'a, MarkedYaml<'b>>, YamlMergeKeyError> {
+    let mut mapping: saphyr::AnnotatedMapping<MarkedYaml> = mapping
         .into_iter()
         .map(|(key, value)| {
             process_merge_keys(key)
@@ -39,38 +39,38 @@ fn merge_hash_keys(
         })
         .collect::<Result<_, _>>()?;
 
-    if let Some(value) = hash.remove(&MERGE_KEY) {
-        merge_into_hash(hash, value)
+    if let Some(value) = mapping.remove(&MERGE_KEY) {
+        merge_into_mapping(mapping, value)
     } else {
-        Ok(hash)
+        Ok(mapping)
     }
 }
 
-fn merge_into_hash(
-    hash: saphyr::AnnotatedHash<MarkedYaml>,
-    value: MarkedYaml,
-) -> Result<saphyr::AnnotatedHash<MarkedYaml>, YamlMergeKeyError> {
+fn merge_into_mapping<'a, 'b>(
+    mapping: saphyr::AnnotatedMapping<'a, MarkedYaml<'b>>,
+    value: MarkedYaml<'b>,
+) -> Result<saphyr::AnnotatedMapping<'a, MarkedYaml<'b>>, YamlMergeKeyError> {
     match value.data {
-        YamlData::Array(a) => a.into_iter().try_fold(hash, |acc, e| {
-            if let YamlData::Hash(h) = e.data {
-                Ok(merge_hashes(acc, h))
+        YamlData::Sequence(a) => a.into_iter().try_fold(mapping, |acc, e| {
+            if let YamlData::Mapping(h) = e.data {
+                Ok(merge_mappings(acc, h))
             } else {
                 Err(YamlMergeKeyError::new(e))
             }
         }),
-        YamlData::Hash(h) => Ok(merge_hashes(hash, h)),
+        YamlData::Mapping(h) => Ok(merge_mappings(mapping, h)),
         _ => Err(YamlMergeKeyError::new(value)),
     }
 }
 
-fn merge_hashes(
-    mut hash1: saphyr::AnnotatedHash<MarkedYaml>,
-    hash2: saphyr::AnnotatedHash<MarkedYaml>,
-) -> saphyr::AnnotatedHash<MarkedYaml> {
-    for (key, value) in hash2 {
-        hash1.entry(key).or_insert(value);
+fn merge_mappings<'a, 'b>(
+    mut mapping1: saphyr::AnnotatedMapping<'a, MarkedYaml<'b>>,
+    mapping2: saphyr::AnnotatedMapping<MarkedYaml<'b>>,
+) -> saphyr::AnnotatedMapping<'a, MarkedYaml<'b>> {
+    for (key, value) in mapping2 {
+        mapping1.entry(key).or_insert(value);
     }
-    hash1
+    mapping1
 }
 
 #[cfg(test)]

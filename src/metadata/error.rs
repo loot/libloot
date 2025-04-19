@@ -6,7 +6,7 @@ use saphyr::Marker;
 
 use crate::metadata::MessageContent;
 
-use super::yaml::{YamlObjectType, to_yaml};
+use super::yaml::{YamlObjectType, to_unmarked_yaml};
 
 /// Represents an error that occurred when validating a collection of
 /// [MessageContent] objects.
@@ -328,43 +328,47 @@ impl From<saphyr::ScanError> for MetadataDocumentParsingError {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct YamlMergeKeyError {
-    value: Box<saphyr::MarkedYaml>,
+    start: Marker,
+    yaml: String,
 }
 
 impl YamlMergeKeyError {
     pub(super) fn new(value: saphyr::MarkedYaml) -> Self {
+        let mut yaml = String::new();
+
+        let unmarked_yaml = to_unmarked_yaml(&value);
+
+        if saphyr::YamlEmitter::new(&mut yaml)
+            .dump(&unmarked_yaml)
+            .is_ok()
+        {
+            // The emitter starts the dumped YAML with ---\n, so strip that.
+            let index = 4;
+            if yaml.is_char_boundary(index) {
+                yaml = yaml.split_off(index);
+            }
+        } else {
+            yaml = format!("{:?}", yaml);
+        }
+
         YamlMergeKeyError {
-            value: Box::new(value),
+            start: value.span.start,
+            yaml,
         }
     }
 }
 
 impl std::fmt::Display for YamlMergeKeyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut output = String::new();
-
-        let yaml = to_yaml(&self.value);
-
-        if saphyr::YamlEmitter::new(&mut output).dump(&yaml).is_ok() {
-            // The emitter starts the dumped YAML with ---\n, so strip that.
-            write!(
-                f,
-                "invalid YAML merge key value at line {} column {}: {}",
-                self.value.span.start.line(),
-                self.value.span.start.col(),
-                output.get(4..).unwrap_or_default()
-            )
-        } else {
-            write!(
-                f,
-                "invalid YAML merge key value at line {} column {}: {:?}",
-                self.value.span.start.line(),
-                self.value.span.start.col(),
-                self.value
-            )
-        }
+        write!(
+            f,
+            "invalid YAML merge key value at line {} column {}: {}",
+            self.start.line(),
+            self.start.col(),
+            self.yaml
+        )
     }
 }
 

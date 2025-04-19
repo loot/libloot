@@ -28,6 +28,8 @@ fn emit<T: yaml::EmitYaml>(metadata: &T) -> String {
 
 #[cfg(test)]
 fn parse(yaml: &str) -> saphyr::MarkedYaml {
+    use saphyr::LoadableYamlNode;
+
     saphyr::MarkedYaml::load_from_str(yaml)
         .unwrap()
         .pop()

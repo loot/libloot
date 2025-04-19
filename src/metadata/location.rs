@@ -1,4 +1,4 @@
-use saphyr::{MarkedYaml, YamlData};
+use saphyr::{MarkedYaml, Scalar, YamlData};
 
 use super::{
     error::{ExpectedType, ParseMetadataError},
@@ -49,11 +49,11 @@ impl Location {
 impl TryFromYaml for Location {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
         match &value.data {
-            YamlData::String(s) => Ok(Location {
-                url: s.clone().into_boxed_str(),
+            YamlData::Value(Scalar::String(s)) => Ok(Location {
+                url: s.to_string().into_boxed_str(),
                 name: None,
             }),
-            YamlData::Hash(h) => {
+            YamlData::Mapping(h) => {
                 let link = get_required_string_value(
                     value.span.start,
                     h,

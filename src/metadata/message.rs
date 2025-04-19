@@ -1,7 +1,7 @@
 use std::{borrow::Cow, sync::LazyLock};
 
 use fancy_regex::{Captures, Regex};
-use saphyr::{MarkedYaml, YamlData};
+use saphyr::{MarkedYaml, Scalar, YamlData};
 
 use crate::logging;
 
@@ -11,7 +11,7 @@ use super::{
         ParseMetadataError,
     },
     yaml::{
-        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_string_node, get_as_hash,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, as_string_node,
         get_required_string_value, get_strings_vec_value, parse_condition,
     },
 };
@@ -240,13 +240,13 @@ pub(crate) fn validate_message_contents(
 
 impl TryFromYaml for MessageContent {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
-        let hash = get_as_hash(value, YamlObjectType::MessageContent)?;
+        let mapping = as_mapping(value, YamlObjectType::MessageContent)?;
 
         let text =
-            get_required_string_value(value.span.start, hash, "text", YamlObjectType::Message)?;
+            get_required_string_value(value.span.start, mapping, "text", YamlObjectType::Message)?;
 
         let language =
-            get_required_string_value(value.span.start, hash, "lang", YamlObjectType::Message)?;
+            get_required_string_value(value.span.start, mapping, "lang", YamlObjectType::Message)?;
 
         Ok(MessageContent {
             text: text.into(),
@@ -261,8 +261,8 @@ pub(crate) fn parse_message_contents_yaml(
     parent_yaml_type: YamlObjectType,
 ) -> Result<Box<[MessageContent]>, ParseMetadataError> {
     let contents = match &value.data {
-        YamlData::String(s) => Box::new([MessageContent::new(s.clone())]),
-        YamlData::Array(a) => a
+        YamlData::Value(Scalar::String(s)) => Box::new([MessageContent::new(s.to_string())]),
+        YamlData::Sequence(a) => a
             .iter()
             .map(MessageContent::try_from_yaml)
             .collect::<Result<Box<[_]>, _>>()?,
@@ -288,17 +288,17 @@ pub(crate) fn parse_message_contents_yaml(
 
 impl TryFromYaml for Message {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
-        let hash = get_as_hash(value, YamlObjectType::Message)?;
+        let mapping = as_mapping(value, YamlObjectType::Message)?;
 
         let message_type =
-            get_required_string_value(value.span.start, hash, "type", YamlObjectType::Message)?;
+            get_required_string_value(value.span.start, mapping, "type", YamlObjectType::Message)?;
         let message_type = match message_type {
             "warn" => MessageType::Warn,
             "error" => MessageType::Error,
             _ => MessageType::Say,
         };
 
-        let mut content = match hash.get(&as_string_node("content")) {
+        let mut content = match mapping.get(&as_string_node("content")) {
             Some(n) => parse_message_contents_yaml(n, "content", YamlObjectType::Message)?,
             None => {
                 return Err(ParseMetadataError::missing_key(
@@ -309,7 +309,7 @@ impl TryFromYaml for Message {
             }
         };
 
-        let subs = get_strings_vec_value(hash, "subs", YamlObjectType::Message)?;
+        let subs = get_strings_vec_value(mapping, "subs", YamlObjectType::Message)?;
 
         if !subs.is_empty() {
             static FMT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -364,7 +364,7 @@ impl TryFromYaml for Message {
             }
         }
 
-        let condition = parse_condition(hash, YamlObjectType::Message)?;
+        let condition = parse_condition(mapping, YamlObjectType::Message)?;
 
         Ok(Message {
             message_type,

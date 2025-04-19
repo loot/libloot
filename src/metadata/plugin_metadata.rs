@@ -13,7 +13,7 @@ use super::{
     plugin_cleaning_data::PluginCleaningData,
     tag::Tag,
     yaml::{
-        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_as_hash, get_as_slice,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, get_as_slice,
         get_required_string_value, get_string_value,
     },
 };
@@ -364,11 +364,11 @@ fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
 
 impl TryFromYaml for PluginMetadata {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
-        let hash = get_as_hash(value, YamlObjectType::PluginMetadata)?;
+        let mapping = as_mapping(value, YamlObjectType::PluginMetadata)?;
 
         let name = get_required_string_value(
             value.span.start,
-            hash,
+            mapping,
             "name",
             YamlObjectType::PluginMetadata,
         )?;
@@ -382,16 +382,16 @@ impl TryFromYaml for PluginMetadata {
             }
         };
 
-        let group = get_string_value(hash, "group", YamlObjectType::PluginMetadata)?;
+        let group = get_string_value(mapping, "group", YamlObjectType::PluginMetadata)?;
 
-        let load_after = get_boxed_slice(hash, "after")?;
-        let requirements = get_boxed_slice(hash, "req")?;
-        let incompatibilities = get_boxed_slice(hash, "inc")?;
-        let messages = get_boxed_slice(hash, "msg")?;
-        let tags = get_boxed_slice(hash, "tag")?;
-        let dirty_info = get_boxed_slice(hash, "dirty")?;
-        let clean_info = get_boxed_slice(hash, "clean")?;
-        let locations = get_boxed_slice(hash, "url")?;
+        let load_after = get_boxed_slice(mapping, "after")?;
+        let requirements = get_boxed_slice(mapping, "req")?;
+        let incompatibilities = get_boxed_slice(mapping, "inc")?;
+        let messages = get_boxed_slice(mapping, "msg")?;
+        let tags = get_boxed_slice(mapping, "tag")?;
+        let dirty_info = get_boxed_slice(mapping, "dirty")?;
+        let clean_info = get_boxed_slice(mapping, "clean")?;
+        let locations = get_boxed_slice(mapping, "url")?;
 
         Ok(PluginMetadata {
             name,
@@ -409,10 +409,10 @@ impl TryFromYaml for PluginMetadata {
 }
 
 fn get_boxed_slice<T: TryFromYaml>(
-    hash: &saphyr::AnnotatedHash<MarkedYaml>,
+    mapping: &saphyr::AnnotatedMapping<MarkedYaml>,
     key: &'static str,
 ) -> Result<Box<[T]>, ParseMetadataError> {
-    get_as_slice(hash, key, YamlObjectType::PluginMetadata)?
+    get_as_slice(mapping, key, YamlObjectType::PluginMetadata)?
         .iter()
         .map(|e| T::try_from_yaml(e))
         .collect()

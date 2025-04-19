@@ -7,7 +7,7 @@ use super::{
         validate_message_contents,
     },
     yaml::{
-        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_string_node, get_as_hash,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, as_string_node,
         get_required_string_value, get_u32_value,
     },
 };
@@ -138,9 +138,9 @@ impl PluginCleaningData {
 
 impl TryFromYaml for PluginCleaningData {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError> {
-        let hash = get_as_hash(value, YamlObjectType::PluginCleaningData)?;
+        let mapping = as_mapping(value, YamlObjectType::PluginCleaningData)?;
 
-        let crc = match get_u32_value(hash, "crc", YamlObjectType::PluginCleaningData)? {
+        let crc = match get_u32_value(mapping, "crc", YamlObjectType::PluginCleaningData)? {
             Some(n) => n,
             None => {
                 return Err(ParseMetadataError::missing_key(
@@ -153,16 +153,16 @@ impl TryFromYaml for PluginCleaningData {
 
         let util = get_required_string_value(
             value.span.start,
-            hash,
+            mapping,
             "util",
             YamlObjectType::PluginCleaningData,
         )?;
 
-        let itm = get_u32_value(hash, "itm", YamlObjectType::PluginCleaningData)?.unwrap_or(0);
-        let udr = get_u32_value(hash, "udr", YamlObjectType::PluginCleaningData)?.unwrap_or(0);
-        let nav = get_u32_value(hash, "nav", YamlObjectType::PluginCleaningData)?.unwrap_or(0);
+        let itm = get_u32_value(mapping, "itm", YamlObjectType::PluginCleaningData)?.unwrap_or(0);
+        let udr = get_u32_value(mapping, "udr", YamlObjectType::PluginCleaningData)?.unwrap_or(0);
+        let nav = get_u32_value(mapping, "nav", YamlObjectType::PluginCleaningData)?.unwrap_or(0);
 
-        let detail = match hash.get(&as_string_node("detail")) {
+        let detail = match mapping.get(&as_string_node("detail")) {
             Some(n) => {
                 parse_message_contents_yaml(n, "detail", YamlObjectType::PluginCleaningData)?
             }
