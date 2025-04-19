@@ -180,7 +180,7 @@ std::unordered_map<std::string, std::vector<vertex_t>> GetGroupsPlugins(
   const auto logger = getLogger();
   if (logger && logger->should_log(spdlog::level::debug)) {
     logger->debug("Found the following plugins in groups:");
-    for (const auto [key, value] : groupsPlugins) {
+    for (const auto& [key, value] : groupsPlugins) {
       std::vector<std::string> pluginNames;
       for (const auto vertex : value) {
         pluginNames.push_back("\"" + graph.GetPlugin(vertex).GetName() + "\"");
