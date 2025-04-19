@@ -4,6 +4,41 @@ Version History
 
 The version history of the metadata syntax is given below.
 
+0.26 - 2025-04-19
+=================
+
+Added
+-----
+
+- The ``File`` data structure now has a ``constraint`` key that takes a
+  condition string that must evaluate to true for the file's existence to be
+  recognised.
+- The ``file_size(file_path path, file_size size)`` condition function, which
+  returns true if the given file's size matches the given number of bytes, and
+  false otherwise (including if the file doesn't exist).
+- The ``filename_version(regular_expression path, version given_version, comparison_operator comparator)``
+  condition function, which takes a regex path with a single capture group, a
+  version string and a comparison operator and returns true if there is a path
+  that matches the regex path and the value captured by the regex is a version
+  string for which the comparison against the given version is true. Unlike the
+  other version functions, it always returns false if it cannot find a version
+  to compare against the given version, irrespective of the given comparison
+  operator.
+- The ``description_contains(file_path path, regular_expression regex)``
+  condition function, which takes a path and a regex and returns true if the
+  given path is a plugin with a description that contains text that matches the
+  given regex, and false otherwise (including if the path does not exist, is not
+  a plugin, or has no description).
+- The ``is_executable(file_path path)`` condition function, which returns true
+  if the given path is a Windows executable (PE) file.
+
+Changed
+-------
+
+- Line breaks are now accepted as whitespace when parsing condition strings, so
+  long expressions can be split over multiple lines.
+
+
 0.21 - 2023-08-30
 =================
 
