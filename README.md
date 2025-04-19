@@ -60,6 +60,8 @@ Parameter | Values | Default |Description
 
 You may also need to set `CMAKE_PREFIX_PATH` if CMake cannot find Boost.
 
+libloot relies on [a fork of yaml-cpp](https://github.com/loot/yaml-cpp) to support YAML merge keys in metadata files. To avoid accidentally linking against an installed copy of the original instead of the fork, libloot's build process does not support using `find_package` to locate an existing build of yaml-cpp (unlike its other C++ dependencies), and will instead attempt to download the fork and build it from source. To skip the download step (e.g. for offline builds), libloot can be pointed towards an existing copy of the fork's source using the `FETCH_CONTENT_SOURCE_DIR_YAML-CPP=<path>` CMake variable.
+
 ## Building The Documentation
 
 The documentation is built using [Doxygen](http://www.stack.nl/~dimitri/doxygen/), [Breathe](https://breathe.readthedocs.io/en/latest/) and [Sphinx](http://www.sphinx-doc.org/en/stable/). Install Doxygen and Python and make sure they're accessible from your `PATH`, then run:
