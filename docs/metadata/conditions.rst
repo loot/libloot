@@ -16,6 +16,14 @@ Omitting optional parentheses (see below), their `EBNF`_ grammar is:
 
 .. _EBNF: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_Form
 
+Spaces, tabs, carriage returns and line feeds (i.e. line breaks) can be used on either side of:
+
+- ``logical_and``, as defined above
+- ``logical_or``, as defined above
+- ``logical_not``, as defined above
+- parentheses around conditions and expressions
+- commas separating function arguments
+
 Types
 =====
 
@@ -26,6 +34,10 @@ Types
 .. describe:: file_path
 
   A double-quoted file path.
+
+.. describe:: file_size
+
+  A string of decimal digits representing an unsigned integer number of bytes.
 
 .. describe:: regular_expression
 
@@ -82,6 +94,11 @@ There are several conditions that can be tested for using the functions detailed
 
   Returns true if a file matching ``regex`` is found, and false otherwise.
 
+.. describe:: file_size(file_path path, file_size size)
+
+  Returns true if the file at the given ``path`` has the given ``size``, and
+  false otherwise.
+
 .. describe:: readable(filesystem_path path)
 
   Returns true if ``path`` is a readable directory or file, and false otherwise.
@@ -107,6 +124,11 @@ There are several conditions that can be tested for using the functions detailed
 .. describe:: is_master(file_path path)
 
   Returns true if ``path`` is an installed master plugin, and false otherwise. This returns false for all OpenMW plugins, as OpenMW does not force master plugins to load before others.
+
+.. describe:: is_executable(file_path path)
+
+  Returns true if ``path`` is a Windows executable (PE) file, and false
+  otherwise.
 
 .. describe:: checksum(file_path path, checksum expected_checksum)
 
@@ -150,6 +172,28 @@ There are several conditions that can be tested for using the functions detailed
 
   The supported version syntax and precedence rules are detailed in the section
   below.
+
+.. describe:: filename_version(regular_expression path, version given_version, comparison_operator comparator)
+
+  The regex in ``path`` must contain a single capturing group.
+
+  Returns true if a file matching ``path`` is found for which the boolean
+  expression::
+
+    actual_version comparator given_version
+
+  (where ``actual_version`` is the value captured by the regex) holds true, and
+  false otherwise.
+
+  Unlike the other version functions, it always returns false if it cannot find
+  a version to compare against the given version, irrespective of the given
+  comparison operator.
+
+.. describe:: description_contains(file_path path, regular_expression regex)
+
+  Returns true if ``path`` is a plugin file with a description that contains
+  text that matches ``regex``, and false otherwise (including if the path does
+  not exist, is not a plugin, or has no description).
 
 Version Syntax & Comparison Rules
 ---------------------------------
