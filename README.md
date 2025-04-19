@@ -57,10 +57,9 @@ Parameter | Values | Default |Description
 `ESPLUGIN_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
 `LIBLOADORDER_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
 `LOOT_CONDITION_INTERPRETER_URL` | A URL | A GitHub release archive URL | The URL to get a source code archive from. This can be used to supply a local path if the archive has already been downloaded (e.g. for offline builds).
+`FETCHCONTENT_SOURCE_DIR_YAML-CPP` | A path | Unset | The path to an existing yaml-cpp source folder to build yaml-cpp from. Note that libloot relies on [a fork of yaml-cpp](https://github.com/loot/yaml-cpp) to support YAML merge keys in metadata files. If unset, CMake will download the source from GitHub when the libloot build is configured.
 
 You may also need to set `CMAKE_PREFIX_PATH` if CMake cannot find Boost.
-
-libloot relies on [a fork of yaml-cpp](https://github.com/loot/yaml-cpp) to support YAML merge keys in metadata files. To avoid accidentally linking against an installed copy of the original instead of the fork, libloot's build process does not support using `find_package` to locate an existing build of yaml-cpp (unlike its other C++ dependencies), and will instead attempt to download the fork and build it from source. To skip the download step (e.g. for offline builds), libloot can be pointed towards an existing copy of the fork's source using the `FETCH_CONTENT_SOURCE_DIR_YAML-CPP=<path>` CMake variable.
 
 ## Building The Documentation
 
