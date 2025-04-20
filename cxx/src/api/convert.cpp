@@ -156,7 +156,10 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
 
 ::rust::Box<loot::rust::File> convert(const loot::File& file) {
   auto output = loot::rust::new_file(std::string(file.GetName()));
-  output->set_display_name(file.GetDisplayName());
+
+  if (!file.GetDisplayName().empty()) {
+    output->set_display_name(file.GetDisplayName());
+  }
 
   try {
     output->set_detail(
@@ -165,9 +168,13 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
     std::rethrow_exception(mapError(e));
   }
 
-  output->set_condition(file.GetCondition());
+  if (file.IsConditional()) {
+    output->set_condition(file.GetCondition());
+  }
 
-  output->set_constraint(file.GetConstraint());
+    if (!file.GetConstraint().empty()) {
+    output->set_constraint(file.GetConstraint());
+  }
 
   return output;
 }
@@ -199,7 +206,10 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
         convert(message.GetType()),
         ::rust::Slice(
             convert<loot::rust::MessageContent>(message.GetContent())));
-    output->set_condition(message.GetCondition());
+
+    if (message.IsConditional()) {
+      output->set_condition(message.GetCondition());
+    }
 
     return output;
   } catch (const ::rust::Error& e) {
@@ -213,7 +223,10 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
                                 ? loot::rust::TagSuggestion::Addition
                                 : loot::rust::TagSuggestion::Removal;
     auto output = loot::rust::new_tag(tag.GetName(), suggestion);
-    output->set_condition(tag.GetCondition());
+
+    if (tag.IsConditional()) {
+      output->set_condition(tag.GetCondition());
+    }
 
     return output;
   } catch (const ::rust::Error& e) {
@@ -241,7 +254,10 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
 
 ::rust::Box<loot::rust::Location> convert(const loot::Location& location) {
   auto output = loot::rust::new_location(location.GetURL());
-  output->set_name(location.GetName());
+
+  if (!location.GetName().empty()) {
+    output->set_name(location.GetName());
+  }
 
   return output;
 }
