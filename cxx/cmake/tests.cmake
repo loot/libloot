@@ -36,7 +36,16 @@ set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_INITIAL})
 set(LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/tests/api/internals/main.cpp")
 
-# set(LIBLOOT_SRC_TESTS_INTERNALS_H_FILES )
+set(LIBLOOT_SRC_TESTS_INTERNALS_H_FILES
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/conditional_metadata_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/file_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/group_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/location_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/message_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/message_content_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/plugin_cleaning_data_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/plugin_metadata_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/metadata/tag_test.h")
 
 set(LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/tests/api/interface/main.cpp")
@@ -52,9 +61,9 @@ source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/internals"
     PREFIX "Source Files"
     FILES ${LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES})
 
-# source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/internals"
-#     PREFIX "Header Files"
-#     FILES ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES})
+source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/internals"
+    PREFIX "Header Files"
+    FILES ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES})
 
 source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
     PREFIX "Source Files"
@@ -68,7 +77,7 @@ source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
 set(LIBLOOT_INTERNALS_TESTS_ALL_SOURCES
     ${LIBLOOT_ALL_SOURCES}
     ${LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES}
-    # ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES}
+    ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES}
     "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
     "${CMAKE_SOURCE_DIR}/src/tests/test_helpers.h"
     "${CMAKE_SOURCE_DIR}/src/tests/printers.h")
