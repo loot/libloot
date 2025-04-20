@@ -27,6 +27,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/exception/cyclic_interaction_error.h"
@@ -46,26 +47,41 @@ public:
    */
 
   /**
-   * @brief Loads the masterlist, userlist and masterlist prelude from the
-   *        paths specified.
+   * @brief Loads the masterlist from the path specified.
    * @details Can be called multiple times, each time replacing the
    *          previously-loaded data.
    * @param masterlist_path
    *        The relative or absolute path to the masterlist file that should be
    *        loaded.
-   * @param userlist_path
-   *        The relative or absolute path to the userlist file that should be
-   *        loaded, or an empty path. If an empty path, no userlist will be
+   */
+  virtual void LoadMasterlist(
+      const std::filesystem::path& masterlistPath) = 0;
+
+  /**
+   * @brief Loads the masterlist and masterlist prelude from the paths
+            specified.
+   * @details Can be called multiple times, each time replacing the
+   *          previously-loaded data.
+   * @param masterlist_path
+   *        The relative or absolute path to the masterlist file that should be
    *        loaded.
    * @param masterlist_prelude_path
    *        The relative or absolute path to the masterlist prelude file that
-   *        should be loaded. If an empty path, no masterlist prelude will be
+   *        should be loaded.
+   */
+  virtual void LoadMasterlistWithPrelude(
+      const std::filesystem::path& masterlistPath,
+      const std::filesystem::path& masterlistPreludePath) = 0;
+
+  /**
+   * @brief Loads the userlist from the path specified.
+   * @details Can be called multiple times, each time replacing the
+   *          previously-loaded data.
+   * @param userlist_path
+   *        The relative or absolute path to the userlist file that should be
    *        loaded.
    */
-  virtual void LoadLists(
-      const std::filesystem::path& masterlist_path,
-      const std::filesystem::path& userlist_path = "",
-      const std::filesystem::path& masterlist_prelude_path = "") = 0;
+  virtual void LoadUserlist(const std::filesystem::path& userlistPath) = 0;
 
   /**
    * Writes a metadata file containing all loaded user-added metadata.
@@ -90,6 +106,12 @@ public:
    */
   virtual void WriteMinimalList(const std::filesystem::path& outputFile,
                                 const bool overwrite) const = 0;
+
+  /** 
+   * @brief Evaluate the given condition string.
+   * @param condition A condition string.
+   */
+  virtual bool Evaluate(const std::string& condition) const = 0;
 
   /**
    * @}
@@ -160,8 +182,8 @@ public:
    *          exists.
    */
   virtual std::vector<Vertex> GetGroupsPath(
-      const std::string& fromGroupName,
-      const std::string& toGroupName) const = 0;
+      std::string_view fromGroupName,
+      std::string_view toGroupName) const = 0;
 
   /**
    * @}
@@ -185,7 +207,7 @@ public:
    *          otherwise an optional containing no value.
    */
   virtual std::optional<PluginMetadata> GetPluginMetadata(
-      const std::string& plugin,
+      std::string_view plugin,
       bool includeUserMetadata = true,
       bool evaluateConditions = false) const = 0;
 
@@ -201,7 +223,7 @@ public:
    *          that metadata, otherwise an optional containing no value.
    */
   virtual std::optional<PluginMetadata> GetPluginUserMetadata(
-      const std::string& plugin,
+      std::string_view plugin,
       bool evaluateConditions = false) const = 0;
 
   /**
@@ -220,7 +242,7 @@ public:
    *        The filename of the plugin for which all user-added metadata
    *        should be deleted.
    */
-  virtual void DiscardPluginUserMetadata(const std::string& plugin) = 0;
+  virtual void DiscardPluginUserMetadata(std::string_view plugin) = 0;
 
   /**
    * @brief Discards all loaded user metadata for all plugins, and any

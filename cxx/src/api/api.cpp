@@ -32,7 +32,7 @@ void libloot_set_logging_callback(void (*callback)(uint8_t, const char*, void*),
 namespace {
 using loot::LogLevel;
 
-static std::function<void(LogLevel, const char*)> STORED_CALLBACK;
+static std::function<void(LogLevel, std::string_view)> STORED_CALLBACK;
 
 LogLevel convert(uint8_t level) {
   if (level == LIBLOOT_LOG_LEVEL_TRACE) {
@@ -53,25 +53,25 @@ LogLevel convert(uint8_t level) {
 loot::rust::LogLevel convert(LogLevel level) {
   switch (level) {
     case LogLevel::trace:
-    return loot::rust::LogLevel::Trace;
+      return loot::rust::LogLevel::Trace;
     case LogLevel::debug:
-    return loot::rust::LogLevel::Debug;
+      return loot::rust::LogLevel::Debug;
     case LogLevel::info:
-    return loot::rust::LogLevel::Info;
+      return loot::rust::LogLevel::Info;
     case LogLevel::warning:
-    return loot::rust::LogLevel::Warning;
+      return loot::rust::LogLevel::Warning;
     case LogLevel::error:
-    return loot::rust::LogLevel::Error;
+      return loot::rust::LogLevel::Error;
     case LogLevel::fatal:
-    return loot::rust::LogLevel::Fatal;
-  default:
-    return loot::rust::LogLevel::Trace;
+      return loot::rust::LogLevel::Fatal;
+    default:
+      return loot::rust::LogLevel::Trace;
   }
 }
 
 void logging_callback(uint8_t level, const char* message, void* context) {
   auto callbackPtr =
-      static_cast<std::function<void(LogLevel, const char*)>*>(context);
+      static_cast<std::function<void(LogLevel, std::string_view)>*>(context);
 
   (*callbackPtr)(convert(level), message);
 }
@@ -79,7 +79,7 @@ void logging_callback(uint8_t level, const char* message, void* context) {
 
 namespace loot {
 LOOT_API void SetLoggingCallback(
-    std::function<void(LogLevel, const char*)> callback) {
+    std::function<void(LogLevel, std::string_view)> callback) {
   STORED_CALLBACK = callback;
   libloot_set_logging_callback(logging_callback, &STORED_CALLBACK);
 }

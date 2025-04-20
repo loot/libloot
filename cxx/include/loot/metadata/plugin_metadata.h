@@ -30,6 +30,7 @@
 #include <regex>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/api_decorator.h"
@@ -58,7 +59,7 @@ public:
    *         The filename of the plugin that the object is constructed for.
    * @return A PluginMetadata object.
    */
-  LOOT_API explicit PluginMetadata(const std::string& name);
+  LOOT_API explicit PluginMetadata(std::string_view name);
 
   /**
    * Merge metadata from the given PluginMetadata object into this object.
@@ -138,7 +139,7 @@ public:
    * @param group
    *        The name of the group this plugin belongs to.
    */
-  LOOT_API void SetGroup(const std::string& group);
+  LOOT_API void SetGroup(std::string_view group);
 
   /**
    * Unsets the plugin's group.
@@ -227,7 +228,7 @@ public:
    * @returns True if the given plugin name matches this metadata's plugin
    *          name, false otherwise.
    */
-  LOOT_API bool NameMatches(const std::string& pluginName) const;
+  LOOT_API bool NameMatches(std::string_view pluginName) const;
 
   /**
    *  @brief Serialises the plugin metadata as YAML.

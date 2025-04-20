@@ -1,6 +1,6 @@
 # libloot-rs C++ wrapper
 
-This is an **experimental** wrapper around the Rust reimplementation of libloot that provides a C++ interface that's ABI-compatible with libloot v0.25.5.
+This is an **experimental** wrapper around the Rust reimplementation of libloot that provides a C++ interface that's ABI-compatible with libloot v0.26.0.
 
 The wrapper has two layers:
 
@@ -47,7 +47,7 @@ cmake --build build --parallel
 
 ### Tests & Packaging
 
-The build process also builds a copy of the public API tests from C++ libloot v0.25.5 by default. To skip building the tests, pass `-DLIBLOOT_BUILD_TESTS=OFF` when first running CMake.
+The build process also builds a copy of the public API tests from C++ libloot v0.26.0 by default. To skip building the tests, pass `-DLIBLOOT_BUILD_TESTS=OFF` when first running CMake.
 
 If built, the tests can be run using:
 

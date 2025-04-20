@@ -10,17 +10,25 @@ std::string convert(const ::rust::String& string) {
   return std::string(string);
 }
 
+// Although there's an explicit conversion operator declared, it seems that
+// building the CXX wrapper with MSVC doesn't set __cplusplus correctly as using
+// the operator causes a linker error, so this just reimpls it as a function.
+std::string_view convert(::rust::Str str) {
+  return std::string_view(str.data(), str.length());
+}
+
 loot::Group convert(const loot::rust::Group& group) {
-  return loot::Group(std::string(group.name()),
+  return loot::Group(convert(group.name()),
                      convert<std::string>(group.after_groups()),
-                     std::string(group.description()));
+                     convert(group.description()));
 }
 
 loot::File convert(const loot::rust::File& file) {
-  return loot::File(std::string(file.filename().as_str()),
-                    std::string(file.display_name()),
-                    std::string(file.condition()),
-                    convert<loot::MessageContent>(file.detail()));
+  return loot::File(convert(file.filename().as_str()),
+                    convert(file.display_name()),
+                    convert(file.condition()),
+                    convert<loot::MessageContent>(file.detail()),
+                    convert(file.constraint()));
 }
 
 loot::MessageType convert(loot::rust::MessageType messageType) {
@@ -37,24 +45,24 @@ loot::MessageType convert(loot::rust::MessageType messageType) {
 }
 
 loot::MessageContent convert(const loot::rust::MessageContent& content) {
-  return loot::MessageContent(std::string(content.text()),
-                              std::string(content.language()));
+  return loot::MessageContent(convert(content.text()),
+                              convert(content.language()));
 }
 
 loot::Message convert(const loot::rust::Message& message) {
   return loot::Message(convert(message.message_type()),
                        convert<loot::MessageContent>(message.content()),
-                       std::string(message.condition()));
+                       convert(message.condition()));
 }
 
 loot::Tag convert(const loot::rust::Tag& tag) {
   return loot::Tag(
-      std::string(tag.name()), tag.is_addition(), std::string(tag.condition()));
+      convert(tag.name()), tag.is_addition(), convert(tag.condition()));
 }
 
 loot::PluginCleaningData convert(const loot::rust::PluginCleaningData& data) {
   return loot::PluginCleaningData(data.crc(),
-                                  std::string(data.cleaning_utility()),
+                                  convert(data.cleaning_utility()),
                                   convert<loot::MessageContent>(data.detail()),
                                   data.itm_count(),
                                   data.deleted_reference_count(),
@@ -62,15 +70,14 @@ loot::PluginCleaningData convert(const loot::rust::PluginCleaningData& data) {
 }
 
 loot::Location convert(const loot::rust::Location& location) {
-  return loot::Location(std::string(location.url()),
-                        std::string(location.name()));
+  return loot::Location(convert(location.url()), convert(location.name()));
 }
 
 loot::PluginMetadata convert(const loot::rust::PluginMetadata& metadata) {
-  auto output = loot::PluginMetadata(std::string(metadata.name()));
+  auto output = loot::PluginMetadata(convert(metadata.name()));
 
   if (!metadata.group().empty()) {
-    output.SetGroup(std::string(metadata.group()));
+    output.SetGroup(convert(metadata.group()));
   }
 
   output.SetLoadAfterFiles(convert<loot::File>(metadata.load_after_files()));
@@ -123,9 +130,9 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
   try {
     const auto outEdgeType = convert(vertex.out_edge_type());
     if (outEdgeType.has_value()) {
-      return loot::Vertex(std::string(vertex.name()), outEdgeType.value());
+      return loot::Vertex(convert(vertex.name()), outEdgeType.value());
     } else {
-      return loot::Vertex(std::string(vertex.name()));
+      return loot::Vertex(convert(vertex.name()));
     }
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
@@ -134,6 +141,10 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
 
 // From public types
 ///////////////////////
+
+::rust::Str convert(std::string_view view) {
+  return ::rust::Str(view.data(), view.length());
+}
 
 ::rust::Box<loot::rust::Group> convert(const loot::Group& group) {
   auto output = loot::rust::new_group(group.GetName());
@@ -155,6 +166,8 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
   }
 
   output->set_condition(file.GetCondition());
+
+  output->set_constraint(file.GetConstraint());
 
   return output;
 }

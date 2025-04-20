@@ -57,12 +57,19 @@ pub fn evaluate_all_conditions(
     }
 }
 
-fn evaluate_condition(
+pub fn evaluate_condition(
+    condition: &str,
+    state: &loot_condition_interpreter::State,
+) -> Result<bool, loot_condition_interpreter::Error> {
+    Expression::from_str(condition).and_then(|e| e.eval(state))
+}
+
+fn evaluate_condition_option(
     condition: Option<&str>,
     state: &loot_condition_interpreter::State,
 ) -> Result<bool, loot_condition_interpreter::Error> {
     if let Some(condition) = condition {
-        Expression::from_str(condition).and_then(|e| e.eval(state))
+        evaluate_condition(condition, state)
     } else {
         Ok(true)
     }
@@ -73,7 +80,7 @@ pub fn filter_map_on_condition<T: Clone>(
     condition: Option<&str>,
     state: &loot_condition_interpreter::State,
 ) -> Option<Result<T, loot_condition_interpreter::Error>> {
-    evaluate_condition(condition, state)
+    evaluate_condition_option(condition, state)
         .map(|r| r.then(|| item.clone()))
         .transpose()
 }

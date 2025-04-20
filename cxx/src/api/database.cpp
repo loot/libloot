@@ -8,22 +8,28 @@ namespace loot {
 Database::Database(::rust::Box<loot::rust::Database>&& database) :
     database_(std::move(database)) {}
 
-void Database::LoadLists(const std::filesystem::path& masterlistPath,
-                         const std::filesystem::path& userlistPath,
-                         const std::filesystem::path& masterlistPreludePath) {
+void Database::LoadMasterlist(const std::filesystem::path& masterlistPath) {
   try {
-    if (!masterlistPath.empty()) {
-      if (!masterlistPreludePath.empty()) {
-        database_->load_masterlist_with_prelude(
-            masterlistPath.u8string(), masterlistPreludePath.u8string());
-      } else {
-        database_->load_masterlist(masterlistPath.u8string());
-      }
-    }
+    database_->load_masterlist(masterlistPath.u8string());
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
 
-    if (!userlistPath.empty()) {
-      database_->load_userlist(userlistPath.u8string());
-    }
+void Database::LoadMasterlistWithPrelude(
+    const std::filesystem::path& masterlistPath,
+    const std::filesystem::path& masterlistPreludePath) {
+  try {
+    database_->load_masterlist_with_prelude(masterlistPath.u8string(),
+                                            masterlistPreludePath.u8string());
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
+
+void Database::LoadUserlist(const std::filesystem::path& userlistPath) {
+  try {
+    database_->load_userlist(userlistPath.u8string());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -33,6 +39,14 @@ void Database::WriteUserMetadata(const std::filesystem::path& outputFile,
                                  const bool overwrite) const {
   try {
     database_->write_user_metadata(outputFile.u8string(), overwrite);
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
+
+bool Database::Evaluate(const std::string& condition) const {
+  try {
+    return database_->evaluate(condition);
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -81,22 +95,23 @@ void Database::SetUserGroups(const std::vector<Group>& groups) {
 }
 
 std::vector<Vertex> Database::GetGroupsPath(
-    const std::string& fromGroupName,
-    const std::string& toGroupName) const {
+    std::string_view fromGroupName,
+    std::string_view toGroupName) const {
   try {
-    return convert<Vertex>(database_->groups_path(fromGroupName, toGroupName));
+    return convert<Vertex>(
+        database_->groups_path(convert(fromGroupName), convert(toGroupName)));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
 }
 
 std::optional<PluginMetadata> Database::GetPluginMetadata(
-    const std::string& plugin,
+    std::string_view plugin,
     bool includeUserMetadata,
     bool evaluateConditions) const {
   try {
     const auto metadata = database_->plugin_metadata(
-        plugin, includeUserMetadata, evaluateConditions);
+        convert(plugin), includeUserMetadata, evaluateConditions);
     if (metadata->is_some()) {
       return convert(metadata->as_ref());
     } else {
@@ -108,11 +123,11 @@ std::optional<PluginMetadata> Database::GetPluginMetadata(
 }
 
 std::optional<PluginMetadata> Database::GetPluginUserMetadata(
-    const std::string& plugin,
+    std::string_view plugin,
     bool evaluateConditions) const {
   try {
     const auto metadata =
-        database_->plugin_user_metadata(plugin, evaluateConditions);
+        database_->plugin_user_metadata(convert(plugin), evaluateConditions);
     if (metadata->is_some()) {
       return convert(metadata->as_ref());
     } else {
@@ -131,9 +146,9 @@ void Database::SetPluginUserMetadata(const PluginMetadata& pluginMetadata) {
   }
 }
 
-void Database::DiscardPluginUserMetadata(const std::string& plugin) {
+void Database::DiscardPluginUserMetadata(std::string_view plugin) {
   try {
-    database_->discard_plugin_user_metadata(plugin);
+    database_->discard_plugin_user_metadata(convert(plugin));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

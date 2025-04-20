@@ -12,6 +12,8 @@ namespace loot {
 
 std::string convert(const ::rust::String& string);
 
+std::string_view convert(::rust::Str string);
+
 loot::Group convert(const loot::rust::Group& group);
 
 loot::File convert(const loot::rust::File& file);
@@ -36,6 +38,8 @@ loot::Vertex convert(const loot::rust::Vertex& vertex);
 
 // From public types
 ///////////////////////
+
+::rust::Str convert(std::string_view view);
 
 ::rust::Box<loot::rust::Group> convert(const loot::Group& group);
 

@@ -565,7 +565,7 @@ dependencies = [
 
 [[package]]
 name = "libloot"
-version = "0.25.5"
+version = "0.26.0"
 dependencies = [
  "crc32fast",
  "esplugin",
@@ -587,7 +587,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-cxx"
-version = "0.25.5"
+version = "0.26.0"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -599,7 +599,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-ffi-errors"
-version = "0.25.5"
+version = "0.26.0"
 dependencies = [
  "esplugin",
  "libloadorder",
@@ -609,7 +609,7 @@ dependencies = [
 
 [[package]]
 name = "libloot_pyo3"
-version = "0.25.5"
+version = "0.26.0"
 dependencies = [
  "libloot",
  "libloot-ffi-errors",

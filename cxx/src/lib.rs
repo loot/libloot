@@ -232,6 +232,8 @@ mod ffi {
 
         pub fn write_minimal_list(&self, output_path: &str, overwrite: bool) -> Result<()>;
 
+        pub fn evaluate(&self, condition: &str) -> Result<bool>;
+
         pub fn known_bash_tags(&self) -> Result<Vec<String>>;
 
         pub fn general_messages(&self, evaluate_conditions: bool) -> Result<Vec<Message>>;
@@ -488,6 +490,10 @@ mod ffi {
         pub fn condition(&self) -> &str;
 
         pub fn set_condition(&mut self, condition: String);
+
+        pub fn constraint(&self) -> &str;
+
+        pub fn set_constraint(&mut self, constraint: String);
 
         pub fn boxed_clone(&self) -> Box<File>;
     }

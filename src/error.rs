@@ -273,3 +273,11 @@ impl From<MetadataRetrievalError> for SortPluginsError {
         SortPluginsError::MetadataRetrievalError(value)
     }
 }
+
+impl From<ConditionEvaluationError> for SortPluginsError {
+    fn from(value: ConditionEvaluationError) -> Self {
+        SortPluginsError::MetadataRetrievalError(MetadataRetrievalError::ConditionEvaluationError(
+            value,
+        ))
+    }
+}

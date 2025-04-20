@@ -79,7 +79,7 @@ impl TryFromYaml for Tag {
                 let name =
                     get_required_string_value(value.span.start, h, "name", YamlObjectType::Tag)?;
 
-                let condition = parse_condition(h, YamlObjectType::Tag)?;
+                let condition = parse_condition(h, "condition", YamlObjectType::Tag)?;
 
                 let (name, suggestion) = name_and_suggestion(name);
                 Ok(Tag {

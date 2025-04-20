@@ -160,52 +160,31 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
-
-  for (const auto& path : pluginPaths) {
-    auto key = Filename(path.filename().u8string());
-    auto it = plugins_.find(key);
-    if (it != plugins_.end()) {
-      plugins_.erase(it);
-    }
-  }
 }
 
-void Game::ClearLoadedPlugins() {
-  game_->clear_loaded_plugins();
-  plugins_.clear();
-}
+void Game::ClearLoadedPlugins() { game_->clear_loaded_plugins(); }
 
-const PluginInterface* Game::GetPlugin(const std::string& pluginName) const {
-  const auto pluginOpt = game_->plugin(pluginName);
+std::shared_ptr<const PluginInterface> Game::GetPlugin(
+    std::string_view pluginName) const {
+  const auto pluginOpt = game_->plugin(convert(pluginName));
   if (!pluginOpt->is_some()) {
     return nullptr;
   }
 
-  auto key = Filename(pluginName);
-  const auto it = plugins_.find(key);
-  if (it != plugins_.end()) {
-    return it->second.get();
-  }
-
   try {
-    auto plugin = std::make_shared<Plugin>(std::move(pluginOpt->as_ref().boxed_clone()));
-    const auto result = plugins_.emplace(key, plugin);
-
-    return result.first->second.get();
+    return std::make_shared<Plugin>(
+        std::move(pluginOpt->as_ref().boxed_clone()));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
 }
 
-std::vector<const PluginInterface*> Game::GetLoadedPlugins() const {
-  std::vector<const PluginInterface*> plugins;
+std::vector<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
+    const {
+  std::vector<std::shared_ptr<const PluginInterface>> plugins;
   for (const auto& pluginRef : game_->loaded_plugins()) {
-    const auto plugin =
-        std::make_shared<Plugin>(std::move(pluginRef.boxed_clone()));
-
-    const auto result =
-        plugins_.insert_or_assign(Filename(plugin->GetName()), plugin);
-    plugins.push_back(result.first->second.get());
+    plugins.push_back(
+        std::make_shared<Plugin>(std::move(pluginRef.boxed_clone())));
   }
 
   return plugins;

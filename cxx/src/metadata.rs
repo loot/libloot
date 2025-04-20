@@ -408,6 +408,14 @@ impl File {
         self.0.set_condition(condition);
     }
 
+    pub fn constraint(&self) -> &str {
+        self.0.constraint().unwrap_or("")
+    }
+
+    pub fn set_constraint(&mut self, constraint: String) {
+        self.0.set_constraint(constraint);
+    }
+
     pub fn boxed_clone(&self) -> Box<Self> {
         Box::new(Self(self.0.clone()))
     }

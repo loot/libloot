@@ -10,16 +10,21 @@ class Database final : public DatabaseInterface {
 public:
   explicit Database(::rust::Box<loot::rust::Database>&& database);
 
-  void LoadLists(
+  void LoadMasterlist(const std::filesystem::path& masterlist_path) override;
+
+  void LoadMasterlistWithPrelude(
       const std::filesystem::path& masterlist_path,
-      const std::filesystem::path& userlist_path = "",
-      const std::filesystem::path& masterlist_prelude_path = "") override;
+      const std::filesystem::path& masterlist_prelude_path) override;
+
+  void LoadUserlist(const std::filesystem::path& userlist_path) override;
 
   void WriteUserMetadata(const std::filesystem::path& outputFile,
                          const bool overwrite) const override;
 
   void WriteMinimalList(const std::filesystem::path& outputFile,
                         const bool overwrite) const override;
+
+  bool Evaluate(const std::string& condition) const override;
 
   std::vector<std::string> GetKnownBashTags() const override;
 
@@ -30,21 +35,21 @@ public:
   std::vector<Group> GetUserGroups() const override;
   void SetUserGroups(const std::vector<Group>& groups) override;
   std::vector<Vertex> GetGroupsPath(
-      const std::string& fromGroupName,
-      const std::string& toGroupName) const override;
+      std::string_view fromGroupName,
+      std::string_view toGroupName) const override;
 
   std::optional<PluginMetadata> GetPluginMetadata(
-      const std::string& plugin,
+      std::string_view plugin,
       bool includeUserMetadata = true,
       bool evaluateConditions = false) const override;
 
   std::optional<PluginMetadata> GetPluginUserMetadata(
-      const std::string& plugin,
+      std::string_view plugin,
       bool evaluateConditions = false) const override;
 
   void SetPluginUserMetadata(const PluginMetadata& pluginMetadata) override;
 
-  void DiscardPluginUserMetadata(const std::string& plugin) override;
+  void DiscardPluginUserMetadata(std::string_view plugin) override;
 
   void DiscardAllUserMetadata() override;
 

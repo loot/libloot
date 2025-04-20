@@ -34,10 +34,10 @@ pub struct PluginSortingData<'a, T: SortingPlugin> {
 
     pub(super) group: Box<str>,
     group_is_user_metadata: bool,
-    pub(super) masterlist_load_after: Box<[String]>,
-    pub(super) user_load_after: Box<[String]>,
-    pub(super) masterlist_req: Box<[String]>,
-    pub(super) user_req: Box<[String]>,
+    pub(crate) masterlist_load_after: Box<[String]>,
+    pub(crate) user_load_after: Box<[String]>,
+    pub(crate) masterlist_req: Box<[String]>,
+    pub(crate) user_req: Box<[String]>,
 }
 
 impl<'a, T: SortingPlugin> PluginSortingData<'a, T> {

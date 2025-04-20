@@ -10,19 +10,20 @@
 #include "loot/vertex.h"
 
 namespace {
+using std::string_view_literals::operator""sv;
 using loot::EdgeType;
 using loot::Vertex;
 
-constexpr std::string_view CYCLIC_ERROR_PREFIX = "CyclicInteractionError: ";
+constexpr std::string_view CYCLIC_ERROR_PREFIX = "CyclicInteractionError: "sv;
 constexpr std::string_view UNDEFINED_GROUP_ERROR_PREFIX =
-    "UndefinedGroupError: ";
-constexpr std::string_view ESPLUGIN_ERROR_PREFIX = "EspluginError: ";
-constexpr std::string_view LIBLOADORDER_ERROR_PREFIX = "LibloadorderError: ";
-constexpr std::string_view LCI_ERROR_PREFIX = "LciError: ";
-constexpr std::string_view FILE_ACCESS_ERROR_PREFIX = "FileAccessError: ";
-constexpr std::string_view INVALID_ARGUMENT_PREFIX = "InvalidArgument: ";
+    "UndefinedGroupError: "sv;
+constexpr std::string_view ESPLUGIN_ERROR_PREFIX = "EspluginError: "sv;
+constexpr std::string_view LIBLOADORDER_ERROR_PREFIX = "LibloadorderError: "sv;
+constexpr std::string_view LCI_ERROR_PREFIX = "LciError: "sv;
+constexpr std::string_view FILE_ACCESS_ERROR_PREFIX = "FileAccessError: "sv;
+constexpr std::string_view INVALID_ARGUMENT_PREFIX = "InvalidArgument: "sv;
 
-bool startsWith(const std::string_view& str, const std::string_view& prefix) {
+bool startsWith(std::string_view str, std::string_view prefix) {
   if (str.size() < prefix.size()) {
     return false;
   }
@@ -30,9 +31,9 @@ bool startsWith(const std::string_view& str, const std::string_view& prefix) {
   return str.substr(0, prefix.size()) == prefix;
 }
 
-std::string replace(const std::string_view& str,
-                    const std::string_view& from,
-                    const std::string_view& to) {
+std::string replace(std::string_view str,
+                    std::string_view from,
+                    std::string_view to) {
   std::string out;
   out.reserve(str.size());
 
@@ -50,7 +51,7 @@ std::string replace(const std::string_view& str,
   return out;
 }
 
-EdgeType toEdgeType(const std::string_view& edgeTypeDisplay) {
+EdgeType toEdgeType(std::string_view edgeTypeDisplay) {
   if (edgeTypeDisplay == "Hardcoded") {
     return EdgeType::hardcoded;
   } else if (edgeTypeDisplay == "Master Flag") {
@@ -84,7 +85,7 @@ EdgeType toEdgeType(const std::string_view& edgeTypeDisplay) {
   }
 }
 
-std::vector<Vertex> parseCyclicError(const std::string_view& what) {
+std::vector<Vertex> parseCyclicError(std::string_view what) {
   const auto suffix = what.substr(0, CYCLIC_ERROR_PREFIX.size());
 
   std::vector<Vertex> vertices;
@@ -111,14 +112,13 @@ std::vector<Vertex> parseCyclicError(const std::string_view& what) {
   return vertices;
 }
 
-std::string getErrorSuffix(const std::string_view& what) {
+std::string getErrorSuffix(std::string_view what) {
   const auto sepPos = what.find(": ");
 
   return std::string(what.substr(sepPos + 2));
 }
 
-std::pair<int, std::string> parseSystemError(
-    const std::string_view& whatSuffix) {
+std::pair<int, std::string> parseSystemError(std::string_view whatSuffix) {
   const auto sepPos = whatSuffix.find(": ");
   int code;
   const auto result =

@@ -38,13 +38,8 @@ std::vector<std::string> Plugin::GetMasters() const {
   }
 }
 
-std::vector<Tag> Plugin::GetBashTags() const {
-  std::vector<Tag> tags;
-  for (const auto& tag : plugin_->bash_tags()) {
-    tags.push_back(Tag(std::string(tag)));
-  }
-
-  return tags;
+std::vector<std::string> Plugin::GetBashTags() const {
+  return convert<std::string>(plugin_->bash_tags());
 }
 
 std::optional<uint32_t> Plugin::GetCRC() const {
@@ -102,7 +97,9 @@ bool Plugin::DoRecordsOverlap(const PluginInterface& plugin) const {
 
     return plugin_->do_records_overlap(*otherPlugin.plugin_);
   } catch (std::bad_cast&) {
-    throw std::invalid_argument("Tried to check if records overlapped with a different concrete type implementing PluginInterface");
+    throw std::invalid_argument(
+        "Tried to check if records overlapped with a different concrete type "
+        "implementing PluginInterface");
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

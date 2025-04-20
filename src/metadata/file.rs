@@ -21,6 +21,7 @@ pub struct File {
     display_name: Option<Box<str>>,
     detail: Box<[MessageContent]>,
     condition: Option<Box<str>>,
+    constraint: Option<Box<str>>,
 }
 
 impl File {
@@ -57,6 +58,13 @@ impl File {
     ) -> Result<Self, MultilingualMessageContentsError> {
         self.set_detail(detail)?;
         Ok(self)
+    }
+
+    /// Set the constraint string.
+    #[must_use]
+    pub fn with_constraint(mut self, constraint: String) -> Self {
+        self.set_constraint(constraint);
+        self
     }
 
     /// Gets the name of the file (which may actually be a path).
@@ -105,6 +113,17 @@ impl File {
     /// Set the condition string.
     pub fn set_condition(&mut self, condition: String) -> &mut Self {
         self.condition = Some(condition.into_boxed_str());
+        self
+    }
+
+    /// Get the constraint string.
+    pub fn constraint(&self) -> Option<&str> {
+        self.constraint.as_deref()
+    }
+
+    /// Set the constraint string.
+    pub fn set_constraint(&mut self, constraint: String) -> &mut Self {
+        self.constraint = Some(constraint.into_boxed_str());
         self
     }
 }
@@ -172,6 +191,7 @@ impl TryFromYaml for File {
                 display_name: None,
                 detail: Box::default(),
                 condition: None,
+                constraint: None,
             }),
             YamlData::Mapping(h) => {
                 let name =
@@ -188,13 +208,16 @@ impl TryFromYaml for File {
                     None => Box::default(),
                 };
 
-                let condition = parse_condition(h, YamlObjectType::File)?;
+                let condition = parse_condition(h, "condition", YamlObjectType::File)?;
+
+                let constraint = parse_condition(h, "constraint", YamlObjectType::File)?;
 
                 Ok(File {
                     name: Filename::new(name.to_string()),
                     display_name: display_name.map(|(_, s)| s.into()),
                     detail,
                     condition,
+                    constraint,
                 })
             }
             _ => Err(ParseMetadataError::unexpected_type(
@@ -208,7 +231,10 @@ impl TryFromYaml for File {
 
 impl EmitYaml for File {
     fn is_scalar(&self) -> bool {
-        self.condition.is_none() && self.detail.is_empty() && self.display_name.is_none()
+        self.condition.is_none()
+            && self.constraint.is_none()
+            && self.detail.is_empty()
+            && self.display_name.is_none()
     }
 
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
@@ -228,6 +254,11 @@ impl EmitYaml for File {
             if let Some(condition) = &self.condition {
                 emitter.map_key("condition");
                 emitter.single_quoted_str(condition);
+            }
+
+            if let Some(constraint) = &self.constraint {
+                emitter.map_key("constraint");
+                emitter.single_quoted_str(constraint);
             }
 
             emit_message_contents(&self.detail, emitter, "detail");
@@ -277,6 +308,7 @@ mod tests {
             assert_eq!("name1", file.name().as_str());
             assert!(file.display_name().is_none());
             assert!(file.condition().is_none());
+            assert!(file.constraint().is_none());
             assert!(file.detail().is_empty());
         }
 
@@ -302,9 +334,16 @@ mod tests {
         }
 
         #[test]
+        fn should_error_if_given_an_invalid_constraint() {
+            let yaml = parse("{name: name1, constraint: invalid}");
+
+            assert!(File::try_from_yaml(&yaml).is_err());
+        }
+
+        #[test]
         fn should_set_all_given_fields() {
             let yaml = parse(
-                "{name: name1, display: display1, condition: 'file(\"Foo.esp\")', detail: 'details'}",
+                "{name: name1, display: display1, condition: 'file(\"Foo.esp\")', constraint: 'file(\"Bar.esp\")', detail: 'details'}",
             );
 
             let file = File::try_from_yaml(&yaml).unwrap();
@@ -312,6 +351,7 @@ mod tests {
             assert_eq!("name1", file.name().as_str());
             assert_eq!("display1", file.display_name().unwrap());
             assert_eq!("file(\"Foo.esp\")", file.condition().unwrap());
+            assert_eq!("file(\"Bar.esp\")", file.constraint().unwrap());
             assert_eq!(&[MessageContent::new("details".into())], file.detail());
         }
 
@@ -324,6 +364,7 @@ mod tests {
             assert_eq!("name1", file.name().as_str());
             assert!(file.display_name().is_none());
             assert!(file.condition().is_none());
+            assert!(file.constraint().is_none());
             assert!(file.detail().is_empty());
         }
 
@@ -410,6 +451,21 @@ mod tests {
         }
 
         #[test]
+        fn should_emit_map_with_constraint_if_it_is_not_empty() {
+            let file = File::new("filename".into()).with_constraint("constraint1".into());
+            let yaml = emit(&file);
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nconstraint: '{}'",
+                    file.name.as_str(),
+                    file.constraint.unwrap()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
         fn should_emit_map_with_a_detail_string_if_detail_is_monolingual() {
             let file = File::new("filename".into())
                 .with_detail(vec![MessageContent::new("message".into())])
@@ -459,6 +515,7 @@ detail:
             let file = File::new("filename".into())
                 .with_display_name("display1".into())
                 .with_condition("condition1".into())
+                .with_constraint("constraint1".into())
                 .with_detail(vec![
                     MessageContent::new("english".into()).with_language("en".into()),
                     MessageContent::new("french".into()).with_language("fr".into()),
@@ -471,6 +528,7 @@ detail:
                     "name: '{}'
 display: '{}'
 condition: '{}'
+constraint: '{}'
 detail:
   - lang: {}
     text: '{}'
@@ -479,6 +537,7 @@ detail:
                     file.name.as_str(),
                     file.display_name.unwrap(),
                     file.condition.unwrap(),
+                    file.constraint.unwrap(),
                     file.detail[0].language(),
                     file.detail[0].text(),
                     file.detail[1].language(),

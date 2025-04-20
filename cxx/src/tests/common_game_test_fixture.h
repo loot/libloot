@@ -185,7 +185,7 @@ protected:
   }
 
   void copyPlugin(const std::filesystem::path& sourceParentPath,
-                  const std::string& filename) {
+                  std::string_view filename) {
     std::filesystem::copy_file(sourceParentPath / filename,
                                dataPath / filename);
     ASSERT_TRUE(std::filesystem::exists(dataPath / filename));
@@ -341,6 +341,21 @@ protected:
           blankEsp,
           blankDifferentEsp,
           blankMasterDependentEsp,
+      };
+    } else if (supportsLightPlugins(gameType_)) {
+      return {
+          masterFile,
+          blankEsm,
+          blankDifferentEsm,
+          blankMasterDependentEsm,
+          blankDifferentMasterDependentEsm,
+          blankEsl,
+          blankEsp,
+          blankDifferentEsp,
+          blankMasterDependentEsp,
+          blankDifferentMasterDependentEsp,
+          blankPluginDependentEsp,
+          blankDifferentPluginDependentEsp,
       };
     } else {
       return {

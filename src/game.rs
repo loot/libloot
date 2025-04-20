@@ -455,17 +455,7 @@ impl Game {
         let plugins_sorting_data = plugins
             .into_iter()
             .enumerate()
-            .map(|(i, p)| {
-                let masterlist_metadata = database.plugin_metadata(p.name(), false, true)?;
-                let user_metadata = database.plugin_user_metadata(p.name(), true)?;
-                let plugin = PluginSortingData::new(
-                    p.as_ref(),
-                    masterlist_metadata.as_ref(),
-                    user_metadata.as_ref(),
-                    i,
-                )?;
-                Ok::<_, SortPluginsError>(plugin)
-            })
+            .map(|(i, p)| to_plugin_sorting_data(&database, p, i))
             .collect::<Result<Vec<_>, _>>()?;
 
         if is_log_enabled(LogLevel::Debug) {
@@ -747,6 +737,30 @@ fn update_loaded_plugin_state<'a>(
     }
 }
 
+fn to_plugin_sorting_data<'a>(
+    database: &Database,
+    plugin: &'a Arc<Plugin>,
+    load_order_index: usize,
+) -> Result<PluginSortingData<'a, Plugin>, SortPluginsError> {
+    let masterlist_metadata = database
+        .plugin_metadata(plugin.name(), false, true)?
+        .map(|m| m.filter_by_constraints(database))
+        .transpose()?;
+
+    let user_metadata = database
+        .plugin_user_metadata(plugin.name(), true)?
+        .map(|m| m.filter_by_constraints(database))
+        .transpose()?;
+
+    PluginSortingData::new(
+        plugin.as_ref(),
+        masterlist_metadata.as_ref(),
+        user_metadata.as_ref(),
+        load_order_index,
+    )
+    .map_err(Into::into)
+}
+
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) struct GameCache {
     plugins: HashMap<Filename, Arc<Plugin>>,
@@ -793,7 +807,13 @@ mod tests {
 
     use rstest_reuse::apply;
 
-    use crate::tests::{Fixture, all_game_types};
+    use crate::{
+        metadata::{File, PluginMetadata},
+        tests::{
+            BLANK_DIFFERENT_ESM, BLANK_DIFFERENT_ESP, BLANK_ESM, BLANK_ESP,
+            BLANK_MASTER_DEPENDENT_ESM, Fixture, all_game_types,
+        },
+    };
 
     mod game {
         use std::path::Component;
@@ -2025,6 +2045,58 @@ mod tests {
                 });
             });
         }
+    }
+
+    #[test]
+    fn to_plugin_sorting_data_should_filter_out_files_with_false_constraints() {
+        let game_type = GameType::TES4;
+        let true_constraint = "file(\"Blank.esm\")";
+        let false_constraint = "file(\"missing.esm\")";
+
+        let fixture = Fixture::new(game_type);
+
+        let plugin = Arc::new(
+            Plugin::new(
+                game_type,
+                &GameCache::default(),
+                &fixture.data_path().join(BLANK_ESP),
+                LoadScope::HeaderOnly,
+            )
+            .unwrap(),
+        );
+
+        let mut database = Database::new(loot_condition_interpreter::State::new(
+            game_type.into(),
+            fixture.data_path(),
+        ));
+
+        let masterlist_path = fixture.local_path.join("masterlist.yaml");
+        let masterlist = format!(
+            "{{plugins: [{{name: Blank.esp, after: [{{name: A.esp, constraint: '{true_constraint}'}}, {{name: B.esp, constraint: '{false_constraint}'}}], req: [{{name: C.esp, constraint: '{true_constraint}'}}, {{name: D.esp, constraint: '{false_constraint}'}}]}}]}}"
+        );
+        std::fs::write(&masterlist_path, masterlist).unwrap();
+
+        database.load_masterlist(&masterlist_path).unwrap();
+
+        let mut user_metadata = PluginMetadata::new(BLANK_ESP).unwrap();
+        user_metadata.set_load_after_files(vec![
+            File::new(BLANK_ESM.to_owned()).with_constraint(true_constraint.to_owned()),
+            File::new(BLANK_DIFFERENT_ESM.to_owned()).with_constraint(false_constraint.to_owned()),
+        ]);
+        user_metadata.set_requirements(vec![
+            File::new(BLANK_DIFFERENT_ESP.to_owned()).with_constraint(true_constraint.to_owned()),
+            File::new(BLANK_MASTER_DEPENDENT_ESM.to_owned())
+                .with_constraint(false_constraint.to_owned()),
+        ]);
+
+        database.set_plugin_user_metadata(user_metadata);
+
+        let data = to_plugin_sorting_data(&database, &plugin, 0).unwrap();
+
+        assert_eq!(["A.esp".to_owned()], *data.masterlist_load_after);
+        assert_eq!(["C.esp".to_owned()], *data.masterlist_req);
+        assert_eq!([BLANK_ESM.to_owned()], *data.user_load_after);
+        assert_eq!([BLANK_DIFFERENT_ESP.to_owned()], *data.user_req);
     }
 
     mod game_cache {

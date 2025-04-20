@@ -1,6 +1,8 @@
 fn main() {
     cxx_build::bridge("src/lib.rs")
         .std("c++17")
+        .flag_if_supported("/Zc:__cplusplus")
+        .flag_if_supported("/permissive-")
         .compile("libloot-cxx");
 
     // From <https://github.com/dtolnay/cxx/issues/880#issuecomment-2521375384>

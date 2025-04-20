@@ -30,8 +30,7 @@
 #include "libloot-cxx/src/lib.rs.h"
 
 namespace loot {
-Filename::Filename(const std::string& filename) :
-    filename_(filename) {}
+Filename::Filename(std::string_view filename) : filename_(filename) {}
 
 Filename::operator std::string() const { return filename_; }
 

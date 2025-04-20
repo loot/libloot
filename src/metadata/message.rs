@@ -364,7 +364,7 @@ impl TryFromYaml for Message {
             }
         }
 
-        let condition = parse_condition(mapping, YamlObjectType::Message)?;
+        let condition = parse_condition(mapping, "condition", YamlObjectType::Message)?;
 
         Ok(Message {
             message_type,

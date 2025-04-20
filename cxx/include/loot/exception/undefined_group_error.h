@@ -26,6 +26,7 @@
 #define LOOT_EXCEPTION_UNDEFINED_GROUP_ERROR
 
 #include <stdexcept>
+#include <string_view>
 
 #include "loot/api_decorator.h"
 
@@ -39,7 +40,7 @@ public:
    * @brief Construct an exception for an undefined group.
    * @param groupName The name of the group that is undefined.
    */
-  LOOT_API UndefinedGroupError(const std::string& groupName);
+  LOOT_API UndefinedGroupError(std::string_view groupName);
 
   /**
    * Get the name of the undefined group.

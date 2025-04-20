@@ -3,7 +3,7 @@ mod error;
 
 use std::{collections::HashMap, path::Path};
 
-use conditions::{evaluate_all_conditions, filter_map_on_condition};
+use conditions::{evaluate_all_conditions, evaluate_condition, filter_map_on_condition};
 
 use crate::{
     logging,
@@ -125,6 +125,11 @@ impl Database {
         }
 
         doc.save(output_path)
+    }
+
+    /// Evaluate the given condition string.
+    pub fn evaluate(&self, condition: &str) -> Result<bool, ConditionEvaluationError> {
+        evaluate_condition(condition, &self.condition_evaluator_state).map_err(Into::into)
     }
 
     /// Gets the Bash Tags that are listed in the loaded metadata lists.
@@ -800,6 +805,26 @@ plugins:
                 &[Message::new(MessageType::Say, "A user message".into())],
                 database.general_messages(true).unwrap().as_slice()
             );
+        }
+    }
+
+    mod evaluate {
+        use super::*;
+
+        #[test]
+        fn should_return_true_if_the_condition_is_true() {
+            let fixture = Fixture::new(GameType::TES4);
+            let database = fixture.database();
+
+            assert!(database.evaluate("file(\"Blank.esp\")").unwrap());
+        }
+
+        #[test]
+        fn should_return_false_if_the_condition_is_false() {
+            let fixture = Fixture::new(GameType::TES4);
+            let database = fixture.database();
+
+            assert!(!database.evaluate("file(\"missing.esp\")").unwrap());
         }
     }
 

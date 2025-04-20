@@ -25,8 +25,8 @@
 #include "loot/metadata/message_content.h"
 
 namespace loot {
-MessageContent::MessageContent(const std::string& text,
-                               const std::string& language) :
+MessageContent::MessageContent(std::string_view text,
+                               std::string_view language) :
     text_(text), language_(language) {}
 
 std::string MessageContent::GetText() const { return text_; }
@@ -68,7 +68,7 @@ bool operator>=(const MessageContent& lhs, const MessageContent& rhs) {
 
 std::optional<MessageContent> SelectMessageContent(
     const std::vector<MessageContent> content,
-    const std::string& language) {
+    std::string_view language) {
   if (content.empty())
     return std::nullopt;
   else if (content.size() == 1)

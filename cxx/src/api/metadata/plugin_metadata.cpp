@@ -50,9 +50,10 @@ std::vector<T> mergeVectors(std::vector<T> first,
   return first;
 }
 
-std::string TrimDotGhostExtension(const std::string& filename) {
+std::string TrimDotGhostExtension(std::string&& filename) {
+  using std::string_view_literals::operator""sv;
   // If the name passed ends in '.ghost', that should be trimmed.
-  constexpr std::string_view GHOST_FILE_EXTENSION = ".ghost";
+  constexpr std::string_view GHOST_FILE_EXTENSION = ".ghost"sv;
 
   if (filename.length() < GHOST_FILE_EXTENSION.length()) {
     return filename;
@@ -77,10 +78,9 @@ std::string TrimDotGhostExtension(const std::string& filename) {
 }
 
 namespace loot {
-PluginMetadata::PluginMetadata(const std::string& n) : name_(n) {
-  // If the name passed ends in '.ghost', that should be trimmed.
-  name_ = TrimDotGhostExtension(n);
-
+// If the name passed ends in '.ghost', that should be trimmed.
+PluginMetadata::PluginMetadata(std::string_view n) :
+    name_(TrimDotGhostExtension(std::string(n))) {
   if (IsRegexPlugin()) {
     nameRegex_ = std::regex(name_, std::regex::ECMAScript | std::regex::icase);
   }
@@ -144,7 +144,7 @@ std::vector<Location> PluginMetadata::GetLocations() const {
   return locations_;
 }
 
-void PluginMetadata::SetGroup(const std::string& group) { group_ = group; }
+void PluginMetadata::SetGroup(std::string_view group) { group_ = group; }
 
 void PluginMetadata::UnsetGroup() { group_ = std::nullopt; }
 
@@ -192,16 +192,17 @@ bool PluginMetadata::IsRegexPlugin() const {
   return strpbrk(name_.c_str(), ":\\*?|") != nullptr;
 }
 
-bool PluginMetadata::NameMatches(const std::string& pluginName) const {
+bool PluginMetadata::NameMatches(std::string_view pluginName) const {
   if (IsRegexPlugin()) {
     if (!nameRegex_.has_value()) {
       throw std::runtime_error("Regex plugin does not have regex object");
     }
 
-    return std::regex_match(pluginName, nameRegex_.value());
+    return std::regex_match(
+        pluginName.begin(), pluginName.end(), nameRegex_.value());
   }
 
-  return loot::rust::compare_filenames(name_, pluginName) == 0;
+  return loot::rust::compare_filenames(name_, convert(pluginName)) == 0;
 }
 
 std::string PluginMetadata::AsYaml() const {

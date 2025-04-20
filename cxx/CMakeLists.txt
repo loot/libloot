@@ -154,6 +154,7 @@ target_include_directories(loot SYSTEM PRIVATE
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(loot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
+    target_compile_options(loot PRIVATE "/Zc:__cplusplus")
 
     set(LOOT_LIBS ntdll ws2_32 bcrypt)
 
@@ -224,7 +225,7 @@ endif()
 # Install
 ########################################
 
-set(LIBLOOT_VERSION "0.25.4")
+set(LIBLOOT_VERSION "0.26.0")
 
 set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
 set_property(TARGET loot PROPERTY SOVERSION 0)

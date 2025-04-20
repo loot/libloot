@@ -25,9 +25,9 @@
 #include "loot/metadata/group.h"
 
 namespace loot {
-Group::Group(const std::string& name,
+Group::Group(std::string_view name,
              const std::vector<std::string>& afterGroups,
-             const std::string& description) :
+             std::string_view description) :
     name_(name), description_(description), afterGroups_(afterGroups) {}
 
 std::string Group::GetName() const { return name_; }

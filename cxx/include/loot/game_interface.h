@@ -141,8 +141,8 @@ public:
    *          is called, this GameInterface is destroyed, or until a plugin with
    *          a case-insensitively equal filename is loaded.
    */
-  virtual const PluginInterface* GetPlugin(
-      const std::string& pluginName) const = 0;
+  virtual std::shared_ptr<const PluginInterface> GetPlugin(
+      std::string_view pluginName) const = 0;
 
   /**
    * @brief Get a set of const references to all loaded plugins' PluginInterface
@@ -152,7 +152,8 @@ public:
    *          this GameInterface is destroyed, or until a plugin with a
    *          case-insensitively equal filename is loaded.
    */
-  virtual std::vector<const PluginInterface*> GetLoadedPlugins() const = 0;
+  virtual std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
+      const = 0;
 
   /**
    *  @}

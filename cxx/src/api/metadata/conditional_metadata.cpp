@@ -25,7 +25,7 @@
 #include "loot/metadata/conditional_metadata.h"
 
 namespace loot {
-ConditionalMetadata::ConditionalMetadata(const std::string& condition) :
+ConditionalMetadata::ConditionalMetadata(std::string_view condition) :
     condition_(condition) {}
 
 bool ConditionalMetadata::IsConditional() const { return !condition_.empty(); }

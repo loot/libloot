@@ -1,6 +1,6 @@
 # libloot-rs
 
-This is an **experimental** reimplementation of [libloot](https://github.com/loot/libloot) using Rust instead of C++, that should match libloot v0.25.5.
+This is an **experimental** reimplementation of [libloot](https://github.com/loot/libloot) using Rust instead of C++, that should match libloot v0.26.0.
 
 See the `cxx` and `pyo3` subdirectories for C++ and Python wrappers respectively.
 

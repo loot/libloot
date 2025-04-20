@@ -25,6 +25,7 @@
 #define LOOT_METADATA_MESSAGE
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/api_decorator.h"
@@ -57,8 +58,8 @@ public:
    * @return A Message object.
    */
   LOOT_API explicit Message(const MessageType type,
-                            const std::string& content,
-                            const std::string& condition = "");
+                            std::string_view content,
+                            std::string_view condition = "");
 
   /**
    * Construct a Message object with the given type, content and condition
@@ -73,7 +74,7 @@ public:
    */
   LOOT_API explicit Message(const MessageType type,
                             const std::vector<MessageContent>& content,
-                            const std::string& condition = "");
+                            std::string_view condition = "");
 
   /**
    * Get the message type.

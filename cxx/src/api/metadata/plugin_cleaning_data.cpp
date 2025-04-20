@@ -25,13 +25,12 @@
 #include "loot/metadata/plugin_cleaning_data.h"
 
 namespace loot {
-PluginCleaningData::PluginCleaningData(uint32_t crc,
-                                       const std::string& utility) :
+PluginCleaningData::PluginCleaningData(uint32_t crc, std::string_view utility) :
     crc_(crc), utility_(utility) {}
 
 PluginCleaningData::PluginCleaningData(
     uint32_t crc,
-    const std::string& utility,
+    std::string_view utility,
     const std::vector<MessageContent>& detail,
     unsigned int itm,
     unsigned int ref,

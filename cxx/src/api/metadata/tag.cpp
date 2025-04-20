@@ -25,9 +25,9 @@
 #include "loot/metadata/tag.h"
 
 namespace loot {
-Tag::Tag(const std::string& tag,
+Tag::Tag(std::string_view tag,
          const bool isAddition,
-         const std::string& condition) :
+         std::string_view condition) :
     ConditionalMetadata(condition), name_(tag), addTag_(isAddition) {}
 
 bool Tag::IsAddition() const { return addTag_; }

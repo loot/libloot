@@ -180,9 +180,10 @@ pub fn get_as_slice<'a>(
 
 pub fn parse_condition(
     mapping: &saphyr::AnnotatedMapping<MarkedYaml>,
+    key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<Option<Box<str>>, ParseMetadataError> {
-    match get_string_value(mapping, "condition", yaml_type)? {
+    match get_string_value(mapping, key, yaml_type)? {
         Some((marker, s)) => {
             let s = s.to_string();
             if let Err(e) = Expression::from_str(&s) {

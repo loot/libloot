@@ -85,6 +85,14 @@ impl Database {
             .map_err(Into::into)
     }
 
+    pub fn evaluate(&self, condition: &str) -> Result<bool, VerboseError> {
+        self.0
+            .read()
+            .map_err(|_| DatabaseLockPoisonError)?
+            .evaluate(condition)
+            .map_err(Into::into)
+    }
+
     pub fn known_bash_tags(&self) -> Result<Vec<String>, VerboseError> {
         Ok(self
             .0

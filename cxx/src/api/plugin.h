@@ -22,7 +22,7 @@ public:
   std::optional<float> GetHeaderVersion() const override;
   std::optional<std::string> GetVersion() const override;
   std::vector<std::string> GetMasters() const override;
-  std::vector<Tag> GetBashTags() const override;
+  std::vector<std::string> GetBashTags() const override;
   std::optional<uint32_t> GetCRC() const override;
 
   bool IsMaster() const override;

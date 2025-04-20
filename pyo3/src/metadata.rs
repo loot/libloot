@@ -305,12 +305,13 @@ pub struct File(libloot::metadata::File);
 #[pymethods]
 impl File {
     #[new]
-    #[pyo3(signature = (name, display_name = None, detail = None, condition = None))]
+    #[pyo3(signature = (name, display_name = None, detail = None, condition = None, constraint = None))]
     fn new(
         name: String,
         display_name: Option<String>,
         detail: Option<Vec<MessageContent>>,
         condition: Option<String>,
+        constraint: Option<String>,
     ) -> Result<Self, VerboseError> {
         let mut file = libloot::metadata::File::new(name);
 
@@ -325,6 +326,10 @@ impl File {
 
         if let Some(condition) = condition {
             file.set_condition(condition);
+        }
+
+        if let Some(constraint) = constraint {
+            file.set_constraint(constraint);
         }
 
         Ok(Self(file))
@@ -367,16 +372,27 @@ impl File {
         self.0.set_condition(condition);
     }
 
+    #[getter]
+    fn constraint(&self) -> Option<&str> {
+        self.0.constraint()
+    }
+
+    #[setter]
+    fn set_constraint(&mut self, constraint: String) {
+        self.0.set_constraint(constraint);
+    }
+
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
         let class_name = slf.get_type().qualname()?;
         let inner = &slf.borrow().0;
         Ok(format!(
-            "{}({}, {}, {}, {})",
+            "{}({}, {}, {}, {}, {})",
             class_name,
             inner.name(),
             inner.display_name().unwrap_or(NONE_REPR),
             repr_message_contents(inner.detail()),
-            inner.condition().unwrap_or(NONE_REPR)
+            inner.condition().unwrap_or(NONE_REPR),
+            inner.constraint().unwrap_or(NONE_REPR)
         ))
     }
 

@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use fancy_regex::{Error as RegexImplError, Regex};
 use saphyr::MarkedYaml;
 
-use crate::{case_insensitive_regex, logging};
+use crate::{Database, case_insensitive_regex, error::ConditionEvaluationError, logging};
 
 use super::{
     error::{MetadataParsingErrorReason, ParseMetadataError, RegexError},
@@ -217,6 +217,32 @@ impl PluginMetadata {
         self.emit_yaml(&mut emitter);
         emitter.into_string()
     }
+
+    pub(crate) fn filter_by_constraints(
+        mut self,
+        database: &Database,
+    ) -> Result<Self, ConditionEvaluationError> {
+        self.load_after = filter_files_by_constraint(self.load_after, database)?;
+        self.requirements = filter_files_by_constraint(self.requirements, database)?;
+
+        Ok(self)
+    }
+}
+
+fn filter_files_by_constraint(
+    files: Box<[File]>,
+    database: &Database,
+) -> Result<Box<[File]>, ConditionEvaluationError> {
+    files
+        .into_iter()
+        .filter_map(|f| {
+            if let Some(c) = f.constraint() {
+                database.evaluate(c).map(|r| r.then_some(f)).transpose()
+            } else {
+                Some(Ok(f))
+            }
+        })
+        .collect()
 }
 
 #[derive(Clone, Debug, Default)]

@@ -25,6 +25,7 @@
 #define LOOT_METADATA_GROUP
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "loot/api_decorator.h"
@@ -38,7 +39,7 @@ public:
   /**
    * The name of the group to which all plugins belong by default.
    */
-  static constexpr const char* DEFAULT_NAME = "default";
+  static constexpr std::string_view DEFAULT_NAME = "default";
 
   /**
    * Construct a Group with the name "default" and an empty set of groups to
@@ -58,9 +59,9 @@ public:
    *         A description of the group.
    * @return A Group object.
    */
-  LOOT_API explicit Group(const std::string& name,
+  LOOT_API explicit Group(std::string_view name,
                           const std::vector<std::string>& afterGroups = {},
-                          const std::string& description = "");
+                          std::string_view description = "");
 
   /**
    * Get the name of the group.
