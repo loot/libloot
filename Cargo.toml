@@ -31,7 +31,7 @@ tempfile = "3.17.1"
 members = ["cxx", "ffi-errors", "pyo3"]
 
 [workspace.dependencies]
-esplugin = "6.1.1"
+esplugin = "6.1.2"
 libloadorder = "18.3.0"
 loot-condition-interpreter = "5.3.1"
 
