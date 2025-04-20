@@ -383,7 +383,7 @@ fn find_prelude_bounds(masterlist: &str) -> Option<(usize, usize)> {
         pos += next_line_break_pos + 1;
 
         if let Some(c) = masterlist.as_bytes().get(pos) {
-            if *c != b' ' && *c != b'#' && *c != b'\n' {
+            if !matches!(*c, b' ' | b'#' | b'\n' | b'\r') {
                 return Some((start, pos - 1));
             }
         }
@@ -412,6 +412,8 @@ mod tests {
     use super::*;
 
     mod metadata_document {
+        use crate::metadata::MessageType;
+
         use super::*;
 
         const METADATA_LIST_YAML: &str = r#"bash_tags:
@@ -576,12 +578,12 @@ plugins:
             let tmp_dir = tempdir().unwrap();
 
             let masterlist_path = tmp_dir.path().join("masterlist.yaml");
-            std::fs::write(&masterlist_path, "prelude:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from same file\r\nglobals:\r\n  - *ref\r\n").unwrap();
+            std::fs::write(&masterlist_path, "prelude:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from same file\r\n\r\n  - &otherRef\r\n    type: error\r\n    content: Error from same file\r\nglobals:\r\n  - *ref\r\n  - *otherRef").unwrap();
 
             let prelude_path = tmp_dir.path().join("prelude.yaml");
             std::fs::write(
                 &prelude_path,
-                "common:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from prelude\r\n",
+                "common:\r\n  - &ref\r\n    type: say\r\n    content: Loaded from prelude\r\n\r\n  - &otherRef\r\n    type: error\r\n    content: An error message",
             )
             .unwrap();
 
@@ -589,6 +591,14 @@ plugins:
             metadata_list
                 .load_with_prelude(&masterlist_path, &prelude_path)
                 .unwrap();
+
+            assert_eq!(
+                [
+                    Message::new(MessageType::Say, "Loaded from prelude".to_owned()),
+                    Message::new(MessageType::Error, "An error message".to_owned()),
+                ],
+                metadata_list.messages()
+            );
         }
 
         #[test]
@@ -596,12 +606,12 @@ plugins:
             let tmp_dir = tempdir().unwrap();
 
             let masterlist_path = tmp_dir.path().join("masterlist.yaml");
-            std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\nglobals:\n  - *ref\n").unwrap();
+            std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\n\n  - &otherRef\n    type: error\n    content: Error from same file\nglobals:\n  - *ref\n  - *otherRef").unwrap();
 
             let prelude_path = tmp_dir.path().join("prelude.yaml");
             std::fs::write(
                 &prelude_path,
-                "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n",
+                "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n\n  - &otherRef\n    type: error\n    content: An error message",
             )
             .unwrap();
 
@@ -609,6 +619,14 @@ plugins:
             metadata_list
                 .load_with_prelude(&masterlist_path, &prelude_path)
                 .unwrap();
+
+            assert_eq!(
+                [
+                    Message::new(MessageType::Say, "Loaded from prelude".to_owned()),
+                    Message::new(MessageType::Error, "An error message".to_owned()),
+                ],
+                metadata_list.messages()
+            );
         }
 
         #[test]
