@@ -7,8 +7,8 @@ mod plugin;
 use database::{Database, EdgeType, Vertex};
 use game::{Game, GameType};
 use metadata::{
-    File, Filename, Group, Location, Message, MessageContent, MessageType, PluginMetadata, Tag,
-    TagSuggestion, select_message_content,
+    File, Filename, Group, Location, Message, MessageContent, MessageType, PluginCleaningData,
+    PluginMetadata, Tag, TagSuggestion, select_message_content,
 };
 use plugin::Plugin;
 use pyo3::{create_exception, exceptions::PyException, prelude::*};
@@ -59,6 +59,7 @@ fn libloot_pyo3(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Message>()?;
     m.add_class::<File>()?;
     m.add_class::<Filename>()?;
+    m.add_class::<PluginCleaningData>()?;
     m.add_class::<Tag>()?;
     m.add_class::<TagSuggestion>()?;
     m.add_class::<Location>()?;
