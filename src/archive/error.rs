@@ -55,8 +55,12 @@ impl std::fmt::Display for ArchiveParsingError {
         match self {
             Self::IoError(_) => write!(f, "an I/O error occurred"),
             Self::UnsupportedHeaderVersion(v) => write!(f, "unsupported archive version {v}"),
-            Self::UnsupportedHeaderArchiveType(a) => write!(f, "unsupported archive type {a:?}"),
-            Self::UnsupportedArchiveTypeId(t) => write!(f, "unsupported archive type ID {t:?}"),
+            Self::UnsupportedHeaderArchiveType(a) => {
+                write!(f, "unsupported archive type {}", a.escape_ascii())
+            }
+            Self::UnsupportedArchiveTypeId(t) => {
+                write!(f, "unsupported archive type ID {}", t.escape_ascii())
+            }
             Self::InvalidRecordsOffset(o) => write!(f, "invalid records offset {o}"),
             Self::InvalidFolderNameLengthOffset(o) => {
                 write!(f, "invalid folder name length offset {o}")

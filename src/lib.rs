@@ -93,7 +93,7 @@
     clippy::unused_result_ok,
     clippy::unwrap_in_result,
     clippy::unwrap_used,
-    // clippy::use_debug,
+    clippy::use_debug,
     clippy::verbose_file_reads,
     // clippy::wildcard_enum_match_arm,
 )]
