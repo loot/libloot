@@ -28,10 +28,10 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
     fn try_from(value: [u8; HEADER_SIZE - TYPE_ID.len()]) -> Result<Self, Self::Error> {
         let header = Self {
             type_id: TYPE_ID,
-            version: to_u32(&value)?,
+            version: to_u32(&value, 0)?,
             archive_type: to_archive_type(&value)?,
-            file_count: to_u32(&value[8..])?,
-            file_paths_offset: to_u64(&value[12..])?,
+            file_count: to_u32(&value, 8)?,
+            file_paths_offset: to_u64(&value, 12)?,
         };
 
         // The header version is 1, 7 or 8 for Fallout 4 and 2 or 3 for Starfield.
@@ -140,8 +140,11 @@ fn trim_slashes(mut path_bytes: &[u8]) -> &[u8] {
 }
 
 fn rsplit_on(slice: &[u8], needle: u8) -> Option<(&[u8], &[u8])> {
-    let index = slice.iter().rposition(|b| *b == needle)?;
-    Some((&slice[..index], &slice[index + 1..]))
+    let mut iter = slice.rsplitn(2, |b| *b == needle);
+    let second = iter.next()?;
+    let first = iter.next()?;
+
+    Some((first, second))
 }
 
 fn hash<T: Hash>(value: &T) -> u64 {

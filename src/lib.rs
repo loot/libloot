@@ -44,7 +44,7 @@
     clippy::get_unwrap,
     clippy::host_endian_bytes,
     clippy::if_then_some_else_none,
-    // clippy::indexing_slicing,
+    clippy::indexing_slicing,
     clippy::infinite_loop,
     clippy::integer_division,
     clippy::integer_division_remainder_used,
@@ -101,6 +101,7 @@
     test,
     allow(
         clippy::assertions_on_result_states,
+        clippy::indexing_slicing,
         clippy::missing_asserts_for_indexing,
         clippy::panic,
         clippy::unwrap_used,

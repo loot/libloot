@@ -996,8 +996,10 @@ fn get_plugins_in_groups<T: SortingPlugin>(
         let mut keys = plugins_in_groups.keys().collect::<Vec<_>>();
         keys.sort();
         for key in keys {
-            let plugin_names: Vec<_> = plugins_in_groups[key]
-                .iter()
+            let plugin_names: Vec<_> = plugins_in_groups
+                .get(key)
+                .into_iter()
+                .flatten()
                 .map(|i| format!("\"{}\"", graph[*i].name()))
                 .collect();
             logging::debug!("\t{}: {}", key, plugin_names.join(", "));
@@ -1087,13 +1089,25 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
         edge_stack_index: usize,
         target_plugins: &[PluginNodeIndex],
     ) {
-        let from_plugins = self.edge_stack[edge_stack_index].1;
+        let Some([from_edge, edges @ ..]) = self.edge_stack.get(edge_stack_index..) else {
+            if is_log_enabled(LogLevel::Error) {
+                logging::error!(
+                    "Unexpected invalid edge stack index {} for edge stack {:?}",
+                    edge_stack_index,
+                    self.edge_stack
+                        .iter()
+                        .map(|e| e.0.weight())
+                        .collect::<Vec<_>>()
+                );
+            }
+            return;
+        };
 
-        let path_involves_user_metadata = self.edge_stack[edge_stack_index..]
-            .iter()
+        let path_involves_user_metadata = std::iter::once(from_edge)
+            .chain(edges.iter())
             .any(|p| *p.0.weight() == EdgeType::UserLoadAfter);
 
-        for from_plugin in from_plugins {
+        for from_plugin in from_edge.1 {
             self.add_edges_from_plugin(*from_plugin, target_plugins, path_involves_user_metadata);
         }
     }

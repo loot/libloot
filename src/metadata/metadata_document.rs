@@ -335,27 +335,12 @@ impl std::default::Default for MetadataDocument {
 }
 
 fn replace_prelude(masterlist: String, prelude: &str) -> String {
-    let line_ending = detect_line_ending(&masterlist);
     if let Some((start, end)) = split_on_prelude(&masterlist) {
-        let prelude = indent_prelude(prelude, line_ending);
+        let prelude = indent_prelude(prelude);
 
         format!("{start}{prelude}{end}")
     } else {
         masterlist
-    }
-}
-
-fn detect_line_ending(masterlist: &str) -> &'static str {
-    if let Some(pos) = masterlist.rfind('\n') {
-        if pos == 0 {
-            "\n"
-        } else if masterlist.as_bytes()[pos - 1] == b'\r' {
-            "\r\n"
-        } else {
-            "\n"
-        }
-    } else {
-        "\n"
     }
 }
 
@@ -396,17 +381,17 @@ fn split_on_prelude_start(masterlist: &str) -> Option<(&str, &str)> {
             // two steps and there's always the risk of a bug being introduced
             // in the middle.
             if let Some((prefix, remainder)) = masterlist.split_at_checked(index) {
-                return Some((prefix, remainder))
+                return Some((prefix, remainder));
             }
         }
         None
     }
-
 }
 
-fn indent_prelude(prelude: &str, line_ending: &str) -> String {
+fn indent_prelude(prelude: &str) -> String {
     let prelude = ("\n  ".to_owned() + &prelude.replace('\n', "\n  "))
-        .replace(&format!("  {line_ending}"), line_ending);
+        .replace("  \r\n", "\r\n")
+        .replace("  \n", "\n");
 
     if prelude.ends_with("\n  ") {
         prelude.trim_end_matches(' ').to_owned()

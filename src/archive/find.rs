@@ -111,8 +111,7 @@ fn find_associated_archives_with_arbitrary_suffixes(
                 return false;
             }
 
-            let Ok(filename) = std::str::from_utf8(&archive_filename.as_bytes()[..plugin_stem_len])
-            else {
+            let Some(filename) = archive_filename.get(..plugin_stem_len) else {
                 return false;
             };
 

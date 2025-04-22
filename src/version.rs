@@ -32,6 +32,10 @@ pub fn is_compatible(major: u32, minor: u32, _patch: u32) -> bool {
     clippy::as_conversions,
     reason = "Can't const-convert the byte to a u32 a safer way"
 )]
+#[expect(
+    clippy::indexing_slicing,
+    reason = "Can't const-convert the byte to a u8 a safer way"
+)]
 const fn parse_u32(value: &str) -> u32 {
     let mut acc = 0;
     let mut i = 0;

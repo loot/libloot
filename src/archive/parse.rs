@@ -94,20 +94,27 @@ fn get_assets_in_archive(
     }
 }
 
-pub(super) fn to_u32(bytes: &[u8]) -> Result<u32, ArchiveParsingError> {
+pub(super) fn to_u32(bytes: &[u8], start_index: usize) -> Result<u32, ArchiveParsingError> {
     const ARRAY_SIZE: usize = to_usize(u32::BITS >> 3);
-
-    <[u8; ARRAY_SIZE]>::try_from(&bytes[..ARRAY_SIZE])
-        .map(u32::from_le_bytes)
-        .map_err(|_e| slice_too_small(bytes, ARRAY_SIZE))
+    subarray::<ARRAY_SIZE>(bytes, start_index).map(u32::from_le_bytes)
 }
 
-pub(super) fn to_u64(bytes: &[u8]) -> Result<u64, ArchiveParsingError> {
+pub(super) fn to_u64(bytes: &[u8], start_index: usize) -> Result<u64, ArchiveParsingError> {
     const ARRAY_SIZE: usize = to_usize(u64::BITS >> 3);
+    subarray::<ARRAY_SIZE>(bytes, start_index).map(u64::from_le_bytes)
+}
 
-    <[u8; ARRAY_SIZE]>::try_from(&bytes[..ARRAY_SIZE])
-        .map(u64::from_le_bytes)
-        .map_err(|_e| slice_too_small(bytes, ARRAY_SIZE))
+fn subarray<const SIZE: usize>(
+    bytes: &[u8],
+    start_index: usize,
+) -> Result<[u8; SIZE], ArchiveParsingError> {
+    let stop_index = start_index + SIZE;
+
+    let bytes = bytes
+        .get(start_index..stop_index)
+        .ok_or_else(|| slice_too_small(bytes, stop_index))?;
+
+    <[u8; SIZE]>::try_from(bytes).map_err(|_e| slice_too_small(bytes, SIZE))
 }
 
 #[expect(

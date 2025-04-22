@@ -30,14 +30,14 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
     fn try_from(value: [u8; HEADER_SIZE - TYPE_ID.len()]) -> Result<Self, Self::Error> {
         let header = Self {
             type_id: TYPE_ID,
-            version: to_u32(&value)?,
-            records_offset: to_u32(&value[4..])?,
-            archive_flags: to_u32(&value[8..])?,
-            folder_count: to_u32(&value[12..])?,
-            total_file_count: to_u32(&value[16..])?,
-            total_folder_names_length: to_u32(&value[20..])?,
-            total_file_names_length: to_u32(&value[24..])?,
-            content_type_flags: to_u32(&value[28..])?,
+            version: to_u32(&value, 0)?,
+            records_offset: to_u32(&value, 4)?,
+            archive_flags: to_u32(&value, 8)?,
+            folder_count: to_u32(&value, 12)?,
+            total_file_count: to_u32(&value, 16)?,
+            total_folder_names_length: to_u32(&value, 20)?,
+            total_file_names_length: to_u32(&value, 24)?,
+            content_type_flags: to_u32(&value, 28)?,
         };
 
         if to_usize(header.records_offset) != HEADER_SIZE {
@@ -80,9 +80,9 @@ mod v103 {
         }
 
         Ok(FolderRecord {
-            name_hash: to_u64(value)?,
-            file_count: to_u32(&value[8..])?,
-            file_records_offset: to_u32(&value[12..])?,
+            name_hash: to_u64(value, 0)?,
+            file_count: to_u32(value, 8)?,
+            file_records_offset: to_u32(value, 12)?,
         })
     }
 }
@@ -106,9 +106,9 @@ mod v105 {
         }
 
         Ok(FolderRecord {
-            name_hash: to_u64(value)?,
-            file_count: to_u32(&value[8..])?,
-            file_records_offset: to_u32(&value[16..])?,
+            name_hash: to_u64(value, 0)?,
+            file_count: to_u32(value, 8)?,
+            file_records_offset: to_u32(value, 16)?,
         })
     }
 }
@@ -197,7 +197,7 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
             .chunks_exact(FILE_RECORD_SIZE)
             .take(to_usize(folder_record.file_count))
         {
-            let file_hash = to_u64(file_chunk)?;
+            let file_hash = to_u64(file_chunk, 0)?;
 
             if !file_hashes.insert(file_hash) {
                 return Err(ArchiveParsingError::HashCollision {
