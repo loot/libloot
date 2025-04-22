@@ -1,3 +1,103 @@
+// Deny some rustc lints that are allow-by-default.
+#![deny(
+    ambiguous_negative_literals,
+    impl_trait_overcaptures,
+    let_underscore_drop,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    non_ascii_idents,
+    redundant_imports,
+    redundant_lifetimes,
+    trivial_casts,
+    trivial_numeric_casts,
+    unit_bindings
+)]
+#![deny(clippy::pedantic)]
+// Allow a few clippy pedantic lints.
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(
+    clippy::unnecessary_box_returns,
+    reason = "CXX requires many returns to be boxed"
+)]
+// Selectively deny clippy restriction lints.
+#![deny(
+    clippy::as_conversions,
+    clippy::as_underscore,
+    clippy::assertions_on_result_states,
+    clippy::big_endian_bytes,
+    clippy::cfg_not_test,
+    clippy::clone_on_ref_ptr,
+    clippy::create_dir,
+    clippy::dbg_macro,
+    clippy::decimal_literal_representation,
+    clippy::default_numeric_fallback,
+    clippy::doc_include_without_cfg,
+    clippy::empty_drop,
+    clippy::error_impl_error,
+    clippy::exit,
+    clippy::exhaustive_enums,
+    clippy::expect_used,
+    clippy::filetype_is_file,
+    clippy::float_cmp_const,
+    clippy::fn_to_numeric_cast_any,
+    clippy::get_unwrap,
+    clippy::host_endian_bytes,
+    clippy::if_then_some_else_none,
+    clippy::indexing_slicing,
+    clippy::infinite_loop,
+    clippy::integer_division,
+    clippy::integer_division_remainder_used,
+    clippy::iter_over_hash_type,
+    clippy::let_underscore_must_use,
+    clippy::lossy_float_literal,
+    clippy::map_err_ignore,
+    clippy::map_with_unused_argument_over_ranges,
+    clippy::mem_forget,
+    clippy::missing_assert_message,
+    clippy::missing_asserts_for_indexing,
+    clippy::missing_asserts_for_indexing,
+    clippy::mixed_read_write_in_expression,
+    clippy::multiple_inherent_impl,
+    clippy::multiple_unsafe_ops_per_block,
+    clippy::mutex_atomic,
+    clippy::mutex_integer,
+    clippy::needless_raw_strings,
+    clippy::non_ascii_literal,
+    clippy::non_zero_suggestions,
+    clippy::panic,
+    clippy::panic_in_result_fn,
+    clippy::partial_pub_fields,
+    clippy::pathbuf_init_then_push,
+    clippy::precedence_bits,
+    clippy::print_stderr,
+    clippy::print_stdout,
+    clippy::rc_buffer,
+    clippy::rc_mutex,
+    clippy::redundant_type_annotations,
+    clippy::ref_patterns,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::str_to_string,
+    clippy::string_lit_chars_any,
+    clippy::string_slice,
+    clippy::string_to_string,
+    clippy::suspicious_xor_used_as_pow,
+    clippy::tests_outside_test_module,
+    clippy::todo,
+    clippy::try_err,
+    clippy::undocumented_unsafe_blocks,
+    clippy::unimplemented,
+    clippy::unnecessary_safety_comment,
+    clippy::unneeded_field_pattern,
+    clippy::unreachable,
+    clippy::unused_result_ok,
+    clippy::unwrap_in_result,
+    clippy::unwrap_used,
+    clippy::use_debug,
+    clippy::verbose_file_reads,
+    clippy::wildcard_enum_match_arm
+)]
+
 mod database;
 mod error;
 mod game;
@@ -35,11 +135,12 @@ impl<T: ?Sized> OptionalRef<T> {
 
     /// # Safety
     ///
-    /// This is safe as long as the pointer in the OptionalRef is still valid.
+    /// This is safe as long as the pointer in the `OptionalRef` is still valid.
     pub unsafe fn as_ref(&self) -> Result<&T, EmptyOptionalError> {
         if self.0.is_null() {
             Err(EmptyOptionalError)
         } else {
+            // SAFETY: This is safe as long as self.0 is still valid.
             unsafe { Ok(&*self.0) }
         }
     }
@@ -99,7 +200,13 @@ impl TryFrom<ffi::LogLevel> for libloot::LogLevel {
     }
 }
 
-#[allow(clippy::needless_lifetimes)]
+#[allow(
+    let_underscore_drop,
+    missing_debug_implementations,
+    clippy::multiple_unsafe_ops_per_block,
+    clippy::needless_lifetimes,
+    reason = "Required by CXX"
+)]
 #[cxx::bridge(namespace = "loot::rust")]
 mod ffi {
 
@@ -581,22 +688,33 @@ pub static LIBLOOT_VERSION_MINOR: c_uint = libloot::LIBLOOT_VERSION_MINOR;
 pub static LIBLOOT_VERSION_PATCH: c_uint = libloot::LIBLOOT_VERSION_PATCH;
 
 #[unsafe(no_mangle)]
-pub static LIBLOOT_LOG_LEVEL_TRACE: c_uchar = libloot::LogLevel::Trace as u8;
+pub static LIBLOOT_LOG_LEVEL_TRACE: c_uchar = 0;
 
 #[unsafe(no_mangle)]
-pub static LIBLOOT_LOG_LEVEL_DEBUG: c_uchar = libloot::LogLevel::Debug as u8;
+pub static LIBLOOT_LOG_LEVEL_DEBUG: c_uchar = 1;
 
 #[unsafe(no_mangle)]
-pub static LIBLOOT_LOG_LEVEL_INFO: c_uchar = libloot::LogLevel::Info as u8;
+pub static LIBLOOT_LOG_LEVEL_INFO: c_uchar = 2;
 
 #[unsafe(no_mangle)]
-pub static LIBLOOT_LOG_LEVEL_WARNING: c_uchar = libloot::LogLevel::Warning as u8;
+pub static LIBLOOT_LOG_LEVEL_WARNING: c_uchar = 3;
 
 #[unsafe(no_mangle)]
-pub static LIBLOOT_LOG_LEVEL_ERROR: c_uchar = libloot::LogLevel::Error as u8;
+pub static LIBLOOT_LOG_LEVEL_ERROR: c_uchar = 4;
 
 #[unsafe(no_mangle)]
-pub static LIBLOOT_LOG_LEVEL_FATAL: c_uchar = libloot::LogLevel::Fatal as u8;
+pub static LIBLOOT_LOG_LEVEL_FATAL: c_uchar = 5;
+
+fn to_u8(value: libloot::LogLevel) -> u8 {
+    match value {
+        libloot::LogLevel::Trace => LIBLOOT_LOG_LEVEL_TRACE,
+        libloot::LogLevel::Debug => LIBLOOT_LOG_LEVEL_DEBUG,
+        libloot::LogLevel::Info => LIBLOOT_LOG_LEVEL_INFO,
+        libloot::LogLevel::Warning => LIBLOOT_LOG_LEVEL_WARNING,
+        libloot::LogLevel::Error => LIBLOOT_LOG_LEVEL_ERROR,
+        libloot::LogLevel::Fatal => LIBLOOT_LOG_LEVEL_FATAL,
+    }
+}
 
 #[unsafe(no_mangle)]
 unsafe extern "C" fn libloot_set_logging_callback(
@@ -606,9 +724,8 @@ unsafe extern "C" fn libloot_set_logging_callback(
     let mutex = Mutex::new(AtomicPtr::new(context));
 
     set_logging_callback(move |level, message| {
-        let (level, c_string) = match CString::new(message) {
-            Ok(c) => (level, c),
-            Err(_) => {
+        let (level, c_string) = CString::new(message).map_or_else(
+            |_| {
                 let c_string = CString::new(format!(
                     "Attempted to log a message containing a null byte: {}",
                     message.replace('\0', "\\0")
@@ -617,8 +734,9 @@ unsafe extern "C" fn libloot_set_logging_callback(
                     CString::from(c"Attempted to log a message containing a null byte")
                 });
                 (libloot::LogLevel::Error, c_string)
-            }
-        };
+            },
+            |c| (level, c),
+        );
 
         let mut context = match mutex.lock() {
             Ok(c) => c,
@@ -629,8 +747,9 @@ unsafe extern "C" fn libloot_set_logging_callback(
             }
         };
 
+        // SAFETY: This is safe so long as callback remains a valid function pointer.
         unsafe {
-            callback(level as u8, c_string.as_ptr(), *context.get_mut());
+            callback(to_u8(level), c_string.as_ptr(), *context.get_mut());
         }
     });
 }

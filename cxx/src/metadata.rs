@@ -16,10 +16,10 @@ unsafe trait TransparentWrapper {
     where
         Self: Sized,
     {
-        let v = value as *const Self::Wrapped;
+        let v: *const Self::Wrapped = value;
         // SAFETY: Reinterpreting the pointer of a transparent wrapper to the type it wraps is safe.
         unsafe {
-            let v = v as *const Self;
+            let v: *const Self = v.cast();
             &*v
         }
     }

@@ -31,16 +31,16 @@ impl std::fmt::Display for VerboseError {
             Self::CyclicInteractionError(cycle) => {
                 write!(f, "CyclicInteractionError: ")?;
                 for vertex in cycle {
-                    let name = vertex.name().replace("\\", "\\\\").replace("-", "\\-");
+                    let name = vertex.name().replace('\\', "\\\\").replace('-', "\\-");
                     match vertex.out_edge_type() {
-                        Some(e) => write!(f, "{}--{}--", name, e)?,
-                        None => write!(f, "{}", name)?,
+                        Some(e) => write!(f, "{name}--{e}--")?,
+                        None => write!(f, "{name}")?,
                     }
                 }
                 Ok(())
             }
             Self::UndefinedGroupError(group) => {
-                write!(f, "UndefinedGroupError: {}", group)
+                write!(f, "UndefinedGroupError: {group}",)
             }
             Self::SystemError(e) => {
                 let prefix = match e.category() {
@@ -51,8 +51,8 @@ impl std::fmt::Display for VerboseError {
                 };
                 write!(f, "{}: {}: {}", prefix, e.code(), e.message())
             }
-            Self::FileAccessError(s) => write!(f, "FileAccessError: {}", s),
-            Self::InvalidArgument(s) => write!(f, "InvalidArgument: {}", s),
+            Self::FileAccessError(s) => write!(f, "FileAccessError: {s}"),
+            Self::InvalidArgument(s) => write!(f, "InvalidArgument: {s}"),
             Self::Other(e) => fmt_error_chain(e.as_ref(), f),
         }
     }
@@ -79,7 +79,9 @@ impl From<LoadPluginsError> for VerboseError {
         match value {
             LoadPluginsError::PluginDataError(e) => e.into(),
             LoadPluginsError::PluginValidationError(_) => Self::InvalidArgument(value.to_string()),
-            _ => Self::Other(Box::new(value)),
+            LoadPluginsError::DatabaseLockPoisoned | LoadPluginsError::IoError(_) | _ => {
+                Self::Other(Box::new(value))
+            }
         }
     }
 }
@@ -91,7 +93,11 @@ impl From<SortPluginsError> for VerboseError {
             SortPluginsError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             SortPluginsError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
             SortPluginsError::PluginDataError(e) => e.into(),
-            _ => Self::Other(Box::new(value)),
+            SortPluginsError::DatabaseLockPoisoned
+            | SortPluginsError::PluginNotLoaded(_)
+            | SortPluginsError::CycleFoundInvolving(_)
+            | SortPluginsError::PathfindingError(_)
+            | _ => Self::Other(Box::new(value)),
         }
     }
 }
@@ -100,7 +106,7 @@ impl From<LoadOrderStateError> for VerboseError {
     fn from(value: LoadOrderStateError) -> Self {
         match value {
             LoadOrderStateError::LoadOrderError(e) => e.into(),
-            _ => Self::Other(Box::new(value)),
+            LoadOrderStateError::DatabaseLockPoisoned | _ => Self::Other(Box::new(value)),
         }
     }
 }
@@ -134,7 +140,7 @@ impl From<GroupsPathError> for VerboseError {
         match value {
             GroupsPathError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             GroupsPathError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
-            _ => Self::Other(Box::new(value)),
+            GroupsPathError::PathfindingError(_) => Self::Other(Box::new(value)),
         }
     }
 }
@@ -143,7 +149,7 @@ impl From<MetadataRetrievalError> for VerboseError {
     fn from(value: MetadataRetrievalError) -> Self {
         match value {
             MetadataRetrievalError::ConditionEvaluationError(e) => e.into(),
-            _ => Self::Other(Box::new(value)),
+            MetadataRetrievalError::RegexError(_) => Self::Other(Box::new(value)),
         }
     }
 }
@@ -154,7 +160,7 @@ impl From<PluginDataError> for VerboseError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct EmptyOptionalError;
 
 impl std::fmt::Display for EmptyOptionalError {

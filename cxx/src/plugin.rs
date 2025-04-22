@@ -26,7 +26,7 @@ impl Plugin {
     }
 
     pub fn crc(&self) -> i64 {
-        self.0.crc().map(Into::into).unwrap_or(-1)
+        self.0.crc().map_or(-1, Into::into)
     }
 
     pub fn is_valid_as_light_plugin(&self) -> Result<bool, VerboseError> {
@@ -46,7 +46,7 @@ impl Plugin {
     }
 
     pub fn boxed_clone(&self) -> Box<Self> {
-        Box::new(Self(self.0.clone()))
+        Box::new(Self(Arc::clone(&self.0)))
     }
 
     delegate! {

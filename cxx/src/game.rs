@@ -59,7 +59,7 @@ impl From<libloot::Game> for Game {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct NotValidUtf8;
 
 impl std::fmt::Display for NotValidUtf8 {
@@ -97,7 +97,7 @@ pub fn new_game_with_local_path(
 
 fn path_to_string(path: &Path) -> Result<String, VerboseError> {
     path.to_str()
-        .map(|s| s.to_owned())
+        .map(str::to_owned)
         .ok_or(NotValidUtf8)
         .map_err(Into::into)
 }
@@ -177,7 +177,11 @@ impl Game {
     }
 
     pub fn load_order(&self) -> Vec<String> {
-        self.0.load_order().iter().map(|s| s.to_string()).collect()
+        self.0
+            .load_order()
+            .iter()
+            .map(ToString::to_string)
+            .collect()
     }
 
     pub fn set_load_order(&mut self, load_order: &[&str]) -> Result<(), VerboseError> {
