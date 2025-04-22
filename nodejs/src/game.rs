@@ -5,21 +5,20 @@ use napi_derive::napi;
 
 use crate::{database::Database, error::VerboseError, plugin::Plugin};
 
-#[allow(non_camel_case_types)]
 #[napi]
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum GameType {
-    tes4,
-    tes5,
-    fo3,
-    fonv,
-    fo4,
-    tes5se,
-    fo4vr,
-    tes5vr,
-    tes3,
-    starfield,
-    openmw,
+    Oblivion,
+    Skyrim,
+    Fallout3,
+    FalloutNV,
+    Fallout4,
+    SkyrimSE,
+    Fallout4VR,
+    SkyrimVR,
+    Morrowind,
+    Starfield,
+    OpenMW,
 }
 
 impl TryFrom<libloot::GameType> for GameType {
@@ -27,17 +26,17 @@ impl TryFrom<libloot::GameType> for GameType {
 
     fn try_from(value: libloot::GameType) -> Result<Self, Self::Error> {
         match value {
-            libloot::GameType::TES4 => Ok(GameType::tes4),
-            libloot::GameType::TES5 => Ok(GameType::tes5),
-            libloot::GameType::FO3 => Ok(GameType::fo3),
-            libloot::GameType::FONV => Ok(GameType::fonv),
-            libloot::GameType::FO4 => Ok(GameType::fo4),
-            libloot::GameType::TES5SE => Ok(GameType::tes5se),
-            libloot::GameType::FO4VR => Ok(GameType::fo4vr),
-            libloot::GameType::TES5VR => Ok(GameType::tes5vr),
-            libloot::GameType::TES3 => Ok(GameType::tes3),
-            libloot::GameType::Starfield => Ok(GameType::starfield),
-            libloot::GameType::OpenMW => Ok(GameType::openmw),
+            libloot::GameType::TES4 => Ok(GameType::Oblivion),
+            libloot::GameType::TES5 => Ok(GameType::Skyrim),
+            libloot::GameType::FO3 => Ok(GameType::Fallout3),
+            libloot::GameType::FONV => Ok(GameType::FalloutNV),
+            libloot::GameType::FO4 => Ok(GameType::Fallout4),
+            libloot::GameType::TES5SE => Ok(GameType::SkyrimSE),
+            libloot::GameType::FO4VR => Ok(GameType::Fallout4VR),
+            libloot::GameType::TES5VR => Ok(GameType::SkyrimVR),
+            libloot::GameType::TES3 => Ok(GameType::Morrowind),
+            libloot::GameType::Starfield => Ok(GameType::Starfield),
+            libloot::GameType::OpenMW => Ok(GameType::OpenMW),
             _ => Err(UnsupportedEnumValueError),
         }
     }
@@ -46,17 +45,17 @@ impl TryFrom<libloot::GameType> for GameType {
 impl From<GameType> for libloot::GameType {
     fn from(value: GameType) -> Self {
         match value {
-            GameType::tes4 => libloot::GameType::TES4,
-            GameType::tes5 => libloot::GameType::TES5,
-            GameType::fo3 => libloot::GameType::FO3,
-            GameType::fonv => libloot::GameType::FONV,
-            GameType::fo4 => libloot::GameType::FO4,
-            GameType::tes5se => libloot::GameType::TES5SE,
-            GameType::fo4vr => libloot::GameType::FO4VR,
-            GameType::tes5vr => libloot::GameType::TES5VR,
-            GameType::tes3 => libloot::GameType::TES3,
-            GameType::starfield => libloot::GameType::Starfield,
-            GameType::openmw => libloot::GameType::OpenMW,
+            GameType::Oblivion => libloot::GameType::TES4,
+            GameType::Skyrim => libloot::GameType::TES5,
+            GameType::Fallout3 => libloot::GameType::FO3,
+            GameType::FalloutNV => libloot::GameType::FONV,
+            GameType::Fallout4 => libloot::GameType::FO4,
+            GameType::SkyrimSE => libloot::GameType::TES5SE,
+            GameType::Fallout4VR => libloot::GameType::FO4VR,
+            GameType::SkyrimVR => libloot::GameType::TES5VR,
+            GameType::Morrowind => libloot::GameType::TES3,
+            GameType::Starfield => libloot::GameType::Starfield,
+            GameType::OpenMW => libloot::GameType::OpenMW,
         }
     }
 }

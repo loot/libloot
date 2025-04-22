@@ -4,7 +4,7 @@ use napi_derive::napi;
 use crate::error::VerboseError;
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct Group(libloot::metadata::Group);
 
@@ -73,7 +73,7 @@ impl From<Group> for libloot::metadata::Group {
 }
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct MessageContent(libloot::metadata::MessageContent);
 
@@ -135,6 +135,7 @@ pub fn select_message_content(
 }
 
 #[napi]
+#[derive(Debug)]
 pub enum MessageType {
     Say,
     Warn,
@@ -162,7 +163,7 @@ impl From<MessageType> for libloot::metadata::MessageType {
 }
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct Message(libloot::metadata::Message);
 
@@ -223,7 +224,7 @@ impl From<Message> for libloot::metadata::Message {
 }
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct File(libloot::metadata::File);
 
@@ -320,6 +321,7 @@ impl From<File> for libloot::metadata::File {
 }
 
 #[napi]
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct Filename(libloot::metadata::Filename);
 
@@ -343,7 +345,7 @@ impl From<libloot::metadata::Filename> for Filename {
 }
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct PluginCleaningData(libloot::metadata::PluginCleaningData);
 
@@ -446,6 +448,7 @@ impl From<PluginCleaningData> for libloot::metadata::PluginCleaningData {
 }
 
 #[napi]
+#[derive(Debug)]
 pub enum TagSuggestion {
     Addition,
     Removal,
@@ -461,7 +464,7 @@ impl From<TagSuggestion> for libloot::metadata::TagSuggestion {
 }
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct Tag(libloot::metadata::Tag);
 
@@ -512,7 +515,7 @@ impl From<Tag> for libloot::metadata::Tag {
 }
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct Location(libloot::metadata::Location);
 
@@ -558,7 +561,7 @@ impl From<Location> for libloot::metadata::Location {
 }
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[repr(transparent)]
 pub struct PluginMetadata(libloot::metadata::PluginMetadata);
 
