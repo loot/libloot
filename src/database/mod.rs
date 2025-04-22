@@ -602,8 +602,6 @@ plugins:
     }
 
     mod write_minimal_list {
-        use crate::tests::{BLANK_DIFFERENT_ESM, BLANK_ESM};
-
         use super::*;
 
         #[test]
@@ -964,8 +962,6 @@ plugins:
     }
 
     mod plugin_metadata {
-        use crate::tests::BLANK_ESM;
-
         use super::*;
 
         #[test]

@@ -1,5 +1,8 @@
 use std::path::{Path, PathBuf};
 
+#[cfg(windows)]
+use windows::Win32::Storage::FileSystem::BY_HANDLE_FILE_INFORMATION;
+
 use crate::{GameType, game::GameCache, plugin::has_ascii_extension};
 
 const BSA_FILE_EXTENSION: &str = "bsa";
@@ -126,11 +129,6 @@ fn find_associated_archives_with_arbitrary_suffixes(
 #[cfg(windows)]
 fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
     use std::fs::File;
-    use std::os::windows::io::AsRawHandle;
-    use windows::Win32::{
-        Foundation::HANDLE,
-        Storage::FileSystem::{BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle},
-    };
 
     if lhs == rhs {
         return true;
@@ -144,22 +142,36 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
         return false;
     };
 
-    let mut lhs_info = BY_HANDLE_FILE_INFORMATION::default();
-    let mut rhs_info = BY_HANDLE_FILE_INFORMATION::default();
-    // SAFETY: This is safe because the file handles and the info struct pointers are all valid until this function exits.
-    unsafe {
-        if GetFileInformationByHandle(HANDLE(lhs_file.as_raw_handle()), &mut lhs_info).is_err() {
-            return false;
-        }
+    let Some(lhs_info) = get_file_info(&lhs_file) else {
+        return false;
+    };
 
-        if GetFileInformationByHandle(HANDLE(rhs_file.as_raw_handle()), &mut rhs_info).is_err() {
-            return false;
-        }
-    }
+    let Some(rhs_info) = get_file_info(&rhs_file) else {
+        return false;
+    };
 
     lhs_info.dwVolumeSerialNumber == rhs_info.dwVolumeSerialNumber
         && lhs_info.nFileIndexHigh == rhs_info.nFileIndexHigh
         && lhs_info.nFileIndexLow == rhs_info.nFileIndexLow
+}
+
+#[cfg(windows)]
+fn get_file_info(file: &std::fs::File) -> Option<BY_HANDLE_FILE_INFORMATION> {
+    use std::os::windows::io::AsRawHandle;
+    use windows::Win32::{Foundation::HANDLE, Storage::FileSystem::GetFileInformationByHandle};
+
+    let mut info = BY_HANDLE_FILE_INFORMATION::default();
+
+    // SAFETY: This is safe because the file handles and the info struct pointers are all valid until this function exits.
+    #[expect(
+        unsafe_code,
+        reason = "There is currently no way to get this data safely"
+    )]
+    unsafe {
+        GetFileInformationByHandle(HANDLE(file.as_raw_handle()), &mut info)
+            .is_ok()
+            .then_some(info)
+    }
 }
 
 #[cfg(not(windows))]

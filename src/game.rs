@@ -1176,11 +1176,6 @@ mod tests {
             mod set_additional_data_paths {
                 use std::time::{Duration, SystemTime};
 
-                use crate::{
-                    metadata::{File, PluginMetadata},
-                    tests::{BLANK_ESM, BLANK_ESP},
-                };
-
                 use super::*;
 
                 #[test]
@@ -1274,9 +1269,7 @@ mod tests {
         mod is_valid_plugin {
             use super::*;
 
-            use crate::tests::{
-                BLANK_ESM, BLANK_MASTER_DEPENDENT_ESM, NON_ASCII_ESM, NON_PLUGIN_FILE,
-            };
+            use crate::tests::{NON_ASCII_ESM, NON_PLUGIN_FILE};
 
             #[apply(all_game_types)]
             fn should_return_true_for_a_valid_non_ascii_plugin(game_type: GameType) {
@@ -1310,7 +1303,7 @@ mod tests {
                 .unwrap();
 
                 let plugin = fixture.data_path().join("empty.omwscripts");
-                let _ = std::fs::File::create(&plugin).unwrap();
+                std::fs::File::create(&plugin).unwrap();
 
                 if game_type == GameType::OpenMW {
                     assert!(game.is_valid_plugin(&plugin));
@@ -1345,7 +1338,7 @@ mod tests {
                 .unwrap();
 
                 let empty_file_path = fixture.data_path().join("empty.esp");
-                let _ = std::fs::File::create(&empty_file_path).unwrap();
+                std::fs::File::create(&empty_file_path).unwrap();
 
                 assert!(!game.is_valid_plugin(&empty_file_path));
             }
@@ -1416,7 +1409,7 @@ mod tests {
         }
 
         mod load_plugin_headers {
-            use crate::tests::{BLANK_DIFFERENT_ESM, BLANK_ESM, BLANK_ESP, NON_PLUGIN_FILE};
+            use crate::tests::NON_PLUGIN_FILE;
 
             use super::*;
 
@@ -1517,10 +1510,7 @@ mod tests {
         mod load_plugins {
             use std::error::Error;
 
-            use crate::tests::{
-                BLANK_DIFFERENT_ESM, BLANK_ESM, BLANK_ESP, BLANK_FULL_ESM,
-                BLANK_MASTER_DEPENDENT_ESM,
-            };
+            use crate::tests::BLANK_FULL_ESM;
 
             use super::*;
 
@@ -1692,8 +1682,6 @@ mod tests {
         }
 
         mod load_plugins_common {
-            use crate::tests::{BLANK_ESM, BLANK_MASTER_DEPENDENT_ESM};
-
             use super::*;
 
             #[apply(all_game_types)]
@@ -1896,7 +1884,7 @@ mod tests {
         }
 
         mod sort_plugins {
-            use crate::tests::{BLANK_DIFFERENT_ESP, BLANK_ESP, initial_load_order};
+            use crate::tests::initial_load_order;
 
             use super::*;
 
@@ -1958,8 +1946,6 @@ mod tests {
         }
 
         mod is_plugin_active {
-            use crate::tests::BLANK_ESP;
-
             use super::*;
 
             #[test]

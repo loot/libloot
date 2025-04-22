@@ -1017,7 +1017,7 @@ mod tests {
 
     mod emit_yaml {
         use super::*;
-        use crate::metadata::{MessageType, TagSuggestion, emit};
+        use crate::metadata::emit;
 
         #[test]
         fn should_omit_group_if_not_set() {

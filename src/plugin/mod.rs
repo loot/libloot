@@ -705,7 +705,7 @@ mod tests {
 
             std::fs::copy(data_path.join(blank_esm(game_type)), &omwgame).unwrap();
             std::fs::copy(data_path.join(BLANK_ESP), &omwaddon).unwrap();
-            let _ = File::create(&omwscripts).unwrap();
+            File::create(&omwscripts).unwrap();
 
             assert!(
                 Plugin::new(

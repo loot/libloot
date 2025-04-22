@@ -1,3 +1,19 @@
+// Deny some rustc lints that are allow-by-default.
+#![deny(
+    ambiguous_negative_literals,
+    impl_trait_overcaptures,
+    let_underscore_drop,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    non_ascii_idents,
+    redundant_imports,
+    redundant_lifetimes,
+    trivial_casts,
+    trivial_numeric_casts,
+    unit_bindings,
+    // unreachable_pub,
+    unsafe_code
+)]
 #![deny(clippy::pedantic)]
 // Allow a few clippy pedantic lints.
 #![allow(clippy::doc_markdown)]
