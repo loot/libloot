@@ -312,12 +312,20 @@ impl TryFromYaml for Message {
         let subs = get_strings_vec_value(mapping, "subs", YamlObjectType::Message)?;
 
         if !subs.is_empty() {
+            #[expect(
+                clippy::expect_used,
+                reason = "Only panics if the hardcoded regex string is invalid"
+            )]
             static FMT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
                 Regex::new(r"\{(\d+)\}").expect("hardcoded fmt placeholder regex should be valid")
             });
 
             for mc in &mut content {
                 if mc.text.contains("%1%") {
+                    #[expect(
+                        clippy::expect_used,
+                        reason = "Only panics if the hardcoded regex string is invalid"
+                    )]
                     static BOOST_REGEX: LazyLock<Regex> = LazyLock::new(|| {
                         Regex::new(r"%(\d+)%")
                             .expect("hardcoded Boost placeholder regex should be valid")

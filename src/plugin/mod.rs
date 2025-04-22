@@ -404,6 +404,10 @@ fn extract_bash_tags(description: &str) -> Vec<String> {
 }
 
 fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplError>> {
+    #[expect(
+        clippy::expect_used,
+        reason = "Only panics if a hardcoded regex string is invalid"
+    )]
     static VERSION_REGEXES: LazyLock<Box<[Regex]>> = LazyLock::new(|| {
         // The string below matches the range of version strings supported by
         // Pseudosem v1.0.1, excluding space separators, as they make version

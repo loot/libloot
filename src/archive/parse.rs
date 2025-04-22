@@ -7,6 +7,7 @@ use std::{
 
 use super::error::{ArchiveParsingError, ArchivePathParsingError};
 use crate::{
+    archive::error::slice_too_small,
     logging::{self, format_details},
     plugin::has_ascii_extension,
 };
@@ -93,20 +94,30 @@ fn get_assets_in_archive(
     }
 }
 
-pub(super) fn to_u32(bytes: &[u8]) -> u32 {
-    let array =
-        <[u8; 4]>::try_from(&bytes[..4]).expect("Bytes slice is large enough to hold a u32");
-    u32::from_le_bytes(array)
+pub(super) fn to_u32(bytes: &[u8]) -> Result<u32, ArchiveParsingError> {
+    const ARRAY_SIZE: usize = to_usize(u32::BITS >> 3);
+
+    <[u8; ARRAY_SIZE]>::try_from(&bytes[..ARRAY_SIZE])
+        .map(u32::from_le_bytes)
+        .map_err(|_e| slice_too_small(bytes, ARRAY_SIZE))
 }
 
-pub(super) fn to_u64(bytes: &[u8]) -> u64 {
-    let array =
-        <[u8; 8]>::try_from(&bytes[..8]).expect("Bytes slice is large enough to hold a u64");
-    u64::from_le_bytes(array)
+pub(super) fn to_u64(bytes: &[u8]) -> Result<u64, ArchiveParsingError> {
+    const ARRAY_SIZE: usize = to_usize(u64::BITS >> 3);
+
+    <[u8; ARRAY_SIZE]>::try_from(&bytes[..ARRAY_SIZE])
+        .map(u64::from_le_bytes)
+        .map_err(|_e| slice_too_small(bytes, ARRAY_SIZE))
 }
 
-pub(super) fn to_usize(size: u32) -> usize {
-    usize::try_from(size).expect("usize can hold a u32")
+#[expect(
+    clippy::as_conversions,
+    reason = "Made safe by a compile-time assertion"
+)]
+pub(super) const fn to_usize(value: u32) -> usize {
+    // Error at compile time if this conversion isn't lossless.
+    const _: () = assert!(u32::BITS <= usize::BITS, "cannot fit a u32 into a usize!");
+    value as usize
 }
 
 #[cfg(test)]

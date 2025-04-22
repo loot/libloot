@@ -86,9 +86,13 @@ fn add_groups<'a>(
             );
         }
 
-        let node_index = group_nodes
-            .get(group.name())
-            .expect("Group node should have just been added");
+        let Some(node_index) = group_nodes.get(group.name()) else {
+            logging::error!(
+                "Unexpectedly couldn't find node for group {}: it should have just been added to the graph",
+                group.name()
+            );
+            return Err(UndefinedGroupError::new(group.name().to_string()));
+        };
 
         for other_group_name in sorted_clone(group.after_groups()) {
             if let Some(other_index) = group_nodes.get(other_group_name) {

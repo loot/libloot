@@ -30,21 +30,17 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
     fn try_from(value: [u8; HEADER_SIZE - TYPE_ID.len()]) -> Result<Self, Self::Error> {
         let header = Self {
             type_id: TYPE_ID,
-            version: to_u32(&value),
-            records_offset: to_u32(&value[4..]),
-            archive_flags: to_u32(&value[8..]),
-            folder_count: to_u32(&value[12..]),
-            total_file_count: to_u32(&value[16..]),
-            total_folder_names_length: to_u32(&value[20..]),
-            total_file_names_length: to_u32(&value[24..]),
-            content_type_flags: to_u32(&value[28..]),
+            version: to_u32(&value)?,
+            records_offset: to_u32(&value[4..])?,
+            archive_flags: to_u32(&value[8..])?,
+            folder_count: to_u32(&value[12..])?,
+            total_file_count: to_u32(&value[16..])?,
+            total_folder_names_length: to_u32(&value[20..])?,
+            total_file_names_length: to_u32(&value[24..])?,
+            content_type_flags: to_u32(&value[28..])?,
         };
 
-        if header.records_offset
-            != HEADER_SIZE
-                .try_into()
-                .expect("header size can fit in a u32")
-        {
+        if to_usize(header.records_offset) != HEADER_SIZE {
             return Err(ArchiveParsingError::InvalidRecordsOffset(
                 header.records_offset,
             ));
@@ -66,46 +62,54 @@ struct FolderRecord {
 
 // Also used for v104 BSAs.
 mod v103 {
-    use crate::archive::parse::{to_u32, to_u64};
+    use crate::archive::{
+        error::ArchiveParsingError,
+        parse::{to_u32, to_u64},
+    };
 
     use super::FolderRecord;
 
     pub(super) const FOLDER_RECORD_SIZE: usize = 16;
 
-    pub(super) fn read_folder_record(value: &[u8]) -> FolderRecord {
-        assert!(
-            value.len() >= FOLDER_RECORD_SIZE,
-            "Folder record byte slice is too small, expected {FOLDER_RECORD_SIZE} bytes, got {}",
-            value.len()
-        );
-
-        FolderRecord {
-            name_hash: to_u64(value),
-            file_count: to_u32(&value[8..]),
-            file_records_offset: to_u32(&value[12..]),
+    pub(super) fn read_folder_record(value: &[u8]) -> Result<FolderRecord, ArchiveParsingError> {
+        if value.len() < FOLDER_RECORD_SIZE {
+            return Err(ArchiveParsingError::SliceTooSmall {
+                expected: FOLDER_RECORD_SIZE,
+                actual: value.len(),
+            });
         }
+
+        Ok(FolderRecord {
+            name_hash: to_u64(value)?,
+            file_count: to_u32(&value[8..])?,
+            file_records_offset: to_u32(&value[12..])?,
+        })
     }
 }
 
 mod v105 {
-    use crate::archive::parse::{to_u32, to_u64};
+    use crate::archive::{
+        error::ArchiveParsingError,
+        parse::{to_u32, to_u64},
+    };
 
     use super::FolderRecord;
 
     pub(super) const FOLDER_RECORD_SIZE: usize = 24;
 
-    pub(super) fn read_folder_record(value: &[u8]) -> FolderRecord {
-        assert!(
-            value.len() >= FOLDER_RECORD_SIZE,
-            "Folder record byte slice is too small, expected {FOLDER_RECORD_SIZE} bytes, got {}",
-            value.len()
-        );
-
-        FolderRecord {
-            name_hash: to_u64(value),
-            file_count: to_u32(&value[8..]),
-            file_records_offset: to_u32(&value[16..]),
+    pub(super) fn read_folder_record(value: &[u8]) -> Result<FolderRecord, ArchiveParsingError> {
+        if value.len() < FOLDER_RECORD_SIZE {
+            return Err(ArchiveParsingError::SliceTooSmall {
+                expected: FOLDER_RECORD_SIZE,
+                actual: value.len(),
+            });
         }
+
+        Ok(FolderRecord {
+            name_hash: to_u64(value)?,
+            file_count: to_u32(&value[8..])?,
+            file_records_offset: to_u32(&value[16..])?,
+        })
     }
 }
 
@@ -138,7 +142,7 @@ pub(super) fn read_assets<T: BufRead>(
 fn read_assets_with_header<T: BufRead, const U: usize>(
     mut reader: T,
     header: &Header,
-    read_folder_record: impl Fn(&[u8]) -> FolderRecord,
+    read_folder_record: impl Fn(&[u8]) -> Result<FolderRecord, ArchiveParsingError>,
 ) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
     let mut folders_buffer: Vec<u8> = vec![0; U * to_usize(header.folder_count)];
 
@@ -157,7 +161,7 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
 
     let mut assets = BTreeMap::new();
     for chunk in folders_buffer.chunks_exact(U) {
-        let folder_record = read_folder_record(chunk);
+        let folder_record = read_folder_record(chunk)?;
 
         let entry = assets.entry(folder_record.name_hash);
         if let Entry::Occupied(_) = entry {
@@ -193,7 +197,7 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
             .chunks_exact(FILE_RECORD_SIZE)
             .take(to_usize(folder_record.file_count))
         {
-            let file_hash = to_u64(file_chunk);
+            let file_hash = to_u64(file_chunk)?;
 
             if !file_hashes.insert(file_hash) {
                 return Err(ArchiveParsingError::HashCollision {

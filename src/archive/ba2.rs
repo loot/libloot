@@ -4,7 +4,7 @@ use std::{
     io::{BufRead, Seek},
 };
 
-use super::error::ArchiveParsingError;
+use super::error::{ArchiveParsingError, slice_too_small};
 
 use super::parse::{to_u32, to_u64};
 
@@ -28,11 +28,10 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
     fn try_from(value: [u8; HEADER_SIZE - TYPE_ID.len()]) -> Result<Self, Self::Error> {
         let header = Self {
             type_id: TYPE_ID,
-            version: to_u32(&value),
-            archive_type: <[u8; 4]>::try_from(&value[4..8])
-                .expect("Bytes slice is large enough to hold a 4-byte array"),
-            file_count: to_u32(&value[8..]),
-            file_paths_offset: to_u64(&value[12..]),
+            version: to_u32(&value)?,
+            archive_type: to_archive_type(&value)?,
+            file_count: to_u32(&value[8..])?,
+            file_paths_offset: to_u64(&value[12..])?,
         };
 
         // The header version is 1, 7 or 8 for Fallout 4 and 2 or 3 for Starfield.
@@ -50,6 +49,17 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
 
         Ok(header)
     }
+}
+
+fn to_archive_type(
+    array: &[u8; HEADER_SIZE - TYPE_ID.len()],
+) -> Result<[u8; 4], ArchiveParsingError> {
+    let slice = &array[4..8];
+
+    slice
+        .try_into()
+        // This should be impossible, but it can't be asserted at compile time.
+        .map_err(|_e| slice_too_small(slice, 4))
 }
 
 pub(super) fn read_assets<T: BufRead + Seek>(
