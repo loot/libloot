@@ -1,5 +1,5 @@
 use loadorder::Error;
-use std::ffi::c_int;
+use std::{ffi::c_int, io::ErrorKind};
 
 /// There is a mismatch between the files used to keep track of load order.
 ///
@@ -70,49 +70,55 @@ pub static LIBLO_ERROR_SYSTEM_ERROR: c_int = 22;
 #[unsafe(no_mangle)]
 pub static LIBLO_ERROR_NO_PATH: c_int = 23;
 
-/// Matches the value of the highest-numbered return code.
+/// Matches the value of the highest-numbered return code, aside from `LIBLO_ERROR_UNKNOWN`.
 ///
 /// Provided in case clients wish to incorporate additional return codes in their implementation
 /// and desire some method of avoiding value conflicts.
 #[unsafe(no_mangle)]
 pub static LIBLO_RETURN_MAX: c_int = 23;
 
+#[unsafe(no_mangle)]
+pub static LIBLO_ERROR_UNKNOWN: c_int = c_int::MAX;
+
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "It doesn't matter if other I/O error kinds are added in the future"
+)]
 fn map_io_error(err: &std::io::Error) -> c_int {
-    use std::io::ErrorKind::*;
     match err.kind() {
-        NotFound => LIBLO_ERROR_FILE_NOT_FOUND,
-        AlreadyExists => LIBLO_ERROR_FILE_RENAME_FAIL,
-        PermissionDenied => LIBLO_ERROR_IO_PERMISSION_DENIED,
+        ErrorKind::NotFound => LIBLO_ERROR_FILE_NOT_FOUND,
+        ErrorKind::AlreadyExists => LIBLO_ERROR_FILE_RENAME_FAIL,
+        ErrorKind::PermissionDenied => LIBLO_ERROR_IO_PERMISSION_DENIED,
         _ => LIBLO_ERROR_IO_ERROR,
     }
 }
 
+#[must_use]
 pub fn map_error(err: &Error) -> c_int {
-    use Error::*;
-    match *err {
-        InvalidPath(_) => LIBLO_ERROR_FILE_NOT_FOUND,
-        IoError(_, ref x) => map_io_error(x),
-        NoFilename(_) => LIBLO_ERROR_FILE_PARSE_FAIL,
-        DecodeError(_) => LIBLO_ERROR_TEXT_DECODE_FAIL,
-        EncodeError(_) => LIBLO_ERROR_TEXT_ENCODE_FAIL,
-        PluginParsingError(_, _) => LIBLO_ERROR_FILE_PARSE_FAIL,
-        PluginNotFound(_) => LIBLO_ERROR_INVALID_ARGS,
-        TooManyActivePlugins { .. } => LIBLO_ERROR_INVALID_ARGS,
-        DuplicatePlugin(_) => LIBLO_ERROR_INVALID_ARGS,
-        NonMasterBeforeMaster { .. } => LIBLO_ERROR_INVALID_ARGS,
-        InvalidEarlyLoadingPluginPosition { .. } => LIBLO_ERROR_INVALID_ARGS,
-        ImplicitlyActivePlugin(_) => LIBLO_ERROR_INVALID_ARGS,
-        NoLocalAppData => LIBLO_ERROR_INVALID_ARGS,
-        NoDocumentsPath => LIBLO_ERROR_INVALID_ARGS,
-        NoUserConfigPath => LIBLO_ERROR_NO_PATH,
-        NoUserDataPath => LIBLO_ERROR_NO_PATH,
-        NoProgramFilesPath => LIBLO_ERROR_NO_PATH,
-        UnrepresentedHoist { .. } => LIBLO_ERROR_INVALID_ARGS,
-        InstalledPlugin(_) => LIBLO_ERROR_INVALID_ARGS,
-        IniParsingError { .. } => LIBLO_ERROR_FILE_PARSE_FAIL,
-        VdfParsingError(_, _) => LIBLO_ERROR_FILE_PARSE_FAIL,
-        SystemError(_, _) => LIBLO_ERROR_SYSTEM_ERROR,
-        InvalidBlueprintPluginPosition { .. } => LIBLO_ERROR_INVALID_ARGS,
+    match err {
+        Error::InvalidPath(_) => LIBLO_ERROR_FILE_NOT_FOUND,
+        Error::IoError(_, x) => map_io_error(x),
+        Error::NoFilename(_)
+        | Error::PluginParsingError(_, _)
+        | Error::IniParsingError { .. }
+        | Error::VdfParsingError(_, _) => LIBLO_ERROR_FILE_PARSE_FAIL,
+        Error::DecodeError(_) => LIBLO_ERROR_TEXT_DECODE_FAIL,
+        Error::EncodeError(_) => LIBLO_ERROR_TEXT_ENCODE_FAIL,
+        Error::PluginNotFound(_)
+        | Error::TooManyActivePlugins { .. }
+        | Error::DuplicatePlugin(_)
+        | Error::NonMasterBeforeMaster { .. }
+        | Error::InvalidEarlyLoadingPluginPosition { .. }
+        | Error::ImplicitlyActivePlugin(_)
+        | Error::NoLocalAppData
+        | Error::NoDocumentsPath
+        | Error::UnrepresentedHoist { .. }
+        | Error::InstalledPlugin(_)
+        | Error::InvalidBlueprintPluginPosition { .. } => LIBLO_ERROR_INVALID_ARGS,
+        Error::NoUserConfigPath | Error::NoUserDataPath | Error::NoProgramFilesPath => {
+            LIBLO_ERROR_NO_PATH
+        }
+        Error::SystemError(_, _) => LIBLO_ERROR_SYSTEM_ERROR,
         _ => LIBLO_ERROR_INTERNAL_LOGIC_ERROR,
     }
 }

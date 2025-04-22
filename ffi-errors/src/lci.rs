@@ -33,11 +33,15 @@ pub static LCI_ERROR_TEXT_ENCODE_FAIL: c_int = -7;
 #[unsafe(no_mangle)]
 pub static LCI_ERROR_INTERNAL_LOGIC_ERROR: c_int = -8;
 
+#[unsafe(no_mangle)]
+pub static LCI_ERROR_UNKNOWN: c_int = c_int::MAX;
+
+#[must_use]
 pub fn map_error(err: &Error) -> c_int {
     match err {
-        Error::ParsingIncomplete(_) => LCI_ERROR_PARSING_ERROR,
-        Error::UnconsumedInput(_) => LCI_ERROR_PARSING_ERROR,
-        Error::ParsingError(_, _) => LCI_ERROR_PARSING_ERROR,
+        Error::ParsingIncomplete(_) | Error::UnconsumedInput(_) | Error::ParsingError(_, _) => {
+            LCI_ERROR_PARSING_ERROR
+        }
         Error::PeParsingError(_, _) => LCI_ERROR_PE_PARSING_ERROR,
         Error::IoError(_, _) => LCI_ERROR_IO_ERROR,
         _ => LCI_ERROR_INTERNAL_LOGIC_ERROR,

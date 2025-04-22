@@ -47,6 +47,7 @@ impl std::fmt::Display for VerboseError {
                     SystemErrorCategory::Esplugin => "EspluginError",
                     SystemErrorCategory::Libloadorder => "LibloadorderError",
                     SystemErrorCategory::LootConditionInterpreter => "LciError",
+                    _ => "UnknownCategoryError",
                 };
                 write!(f, "{}: {}: {}", prefix, e.code(), e.message())
             }

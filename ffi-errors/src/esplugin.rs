@@ -44,6 +44,13 @@ pub static ESP_ERROR_UNRESOLVED_RECORD_IDS: c_int = 13;
 #[unsafe(no_mangle)]
 pub static ESP_ERROR_PLUGIN_METADATA_NOT_FOUND: c_int = 14;
 
+#[unsafe(no_mangle)]
+pub static ESP_ERROR_UNKNOWN: c_int = c_int::MAX;
+
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "It doesn't matter if other I/O error kinds are added in the future"
+)]
 fn map_io_error(err: &std::io::Error) -> c_int {
     match err.kind() {
         std::io::ErrorKind::NotFound => ESP_ERROR_FILE_NOT_FOUND,
@@ -52,12 +59,12 @@ fn map_io_error(err: &std::io::Error) -> c_int {
     }
 }
 
+#[must_use]
 pub fn map_error(err: &Error) -> c_int {
-    match *err {
-        Error::IoError(ref x) => map_io_error(x),
+    match err {
+        Error::IoError(x) => map_io_error(x),
         Error::NoFilename(_) => ESP_ERROR_NO_FILENAME,
-        Error::ParsingIncomplete(_) => ESP_ERROR_PARSE_ERROR,
-        Error::ParsingError(_, _) => ESP_ERROR_PARSE_ERROR,
+        Error::ParsingIncomplete(_) | Error::ParsingError(_, _) => ESP_ERROR_PARSE_ERROR,
         Error::DecodeError(_) => ESP_ERROR_TEXT_DECODE_ERROR,
         Error::UnresolvedRecordIds(_) => ESP_ERROR_UNRESOLVED_RECORD_IDS,
         Error::PluginMetadataNotFound(_) => ESP_ERROR_PLUGIN_METADATA_NOT_FOUND,
