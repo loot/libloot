@@ -131,7 +131,7 @@ mod tests {
             let mut plugin = PluginMetadata::new(BLANK_ESM).unwrap();
             plugin.set_group("group1".into());
 
-            let condition = "file(\"missing.esp\")".to_string();
+            let condition = "file(\"missing.esp\")".to_owned();
             let files = vec![
                 File::new(BLANK_ESP.into()),
                 File::new(BLANK_DIFFERENT_ESM.into()).with_condition(condition.clone()),

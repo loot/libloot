@@ -333,7 +333,7 @@ fn merge_groups(lhs: &[Group], rhs: &[Group]) -> Vec<Group> {
                 let mut new_group = group.clone();
 
                 if let Some(description) = rhs_group.description() {
-                    new_group = new_group.with_description(description.to_string());
+                    new_group = new_group.with_description(description.to_owned());
                 }
 
                 if !rhs_group.after_groups().is_empty() {

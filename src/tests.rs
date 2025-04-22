@@ -284,7 +284,7 @@ impl Fixture {
         } else {
             std::fs::rename(
                 data_path.join(BLANK_MASTER_DEPENDENT_ESM),
-                data_path.join(BLANK_MASTER_DEPENDENT_ESM.to_string() + ".ghost"),
+                data_path.join(BLANK_MASTER_DEPENDENT_ESM.to_owned() + ".ghost"),
             )
             .unwrap();
         }

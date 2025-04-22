@@ -339,7 +339,7 @@ impl Game {
                 .collect();
 
             for plugin in &plugins {
-                loaded_plugins.insert(Filename::new(plugin.name().to_string()), plugin);
+                loaded_plugins.insert(Filename::new(plugin.name().to_owned()), plugin);
             }
 
             let loaded_plugins: Vec<_> = loaded_plugins.into_values().collect();
@@ -776,7 +776,7 @@ impl GameCache {
     fn insert_plugins(&mut self, plugins: Vec<Plugin>) {
         for plugin in plugins {
             self.plugins
-                .insert(Filename::new(plugin.name().to_string()), Arc::new(plugin));
+                .insert(Filename::new(plugin.name().to_owned()), Arc::new(plugin));
         }
     }
 
@@ -793,7 +793,7 @@ impl GameCache {
     }
 
     fn plugin(&self, plugin_name: &str) -> Option<&Arc<Plugin>> {
-        self.plugins.get(&Filename::new(plugin_name.to_string()))
+        self.plugins.get(&Filename::new(plugin_name.to_owned()))
     }
 
     pub fn archives_iter(&self) -> impl Iterator<Item = &PathBuf> {
@@ -1259,7 +1259,7 @@ mod tests {
                         .unwrap();
                     game.load_current_load_order_state().unwrap();
 
-                    load_order.push(filename.to_string());
+                    load_order.push(filename.to_owned());
 
                     assert_eq!(load_order, game.load_order());
                 }

@@ -25,22 +25,21 @@ mod test {
     impl TestPlugin {
         pub fn new(name: &str) -> Self {
             Self {
-                name: name.to_string(),
+                name: name.to_owned(),
                 ..Default::default()
             }
         }
 
         pub fn add_master(&mut self, plugin_name: &str) {
-            self.masters.push(plugin_name.to_string());
+            self.masters.push(plugin_name.to_owned());
         }
 
         pub fn add_overlapping_records(&mut self, plugin_name: &str) {
-            self.overlapping_record_plugins
-                .push(plugin_name.to_string());
+            self.overlapping_record_plugins.push(plugin_name.to_owned());
         }
 
         pub fn add_overlapping_assets(&mut self, plugin_name: &str) {
-            self.overlapping_asset_plugins.push(plugin_name.to_string());
+            self.overlapping_asset_plugins.push(plugin_name.to_owned());
         }
     }
 

@@ -120,11 +120,11 @@ impl MetadataDocument {
             if plugin.is_regex_plugin() {
                 regex_plugins.push(plugin);
             } else {
-                let filename = Filename::new(plugin.name().to_string());
+                let filename = Filename::new(plugin.name().to_owned());
                 if let Some(old) = plugins.insert(filename, plugin) {
                     return Err(ParseMetadataError::duplicate_entry(
                         plugin_yaml.span.start,
-                        old.name().to_string(),
+                        old.name().to_owned(),
                         YamlObjectType::PluginMetadata,
                     )
                     .into());
@@ -155,13 +155,13 @@ impl MetadataDocument {
             if str_set.contains(bash_tag) {
                 return Err(ParseMetadataError::duplicate_entry(
                     bash_tag_yaml.span.start,
-                    bash_tag.to_string(),
+                    bash_tag.to_owned(),
                     YamlObjectType::BashTagsElement,
                 )
                 .into());
             }
 
-            bash_tags.push(bash_tag.to_string());
+            bash_tags.push(bash_tag.to_owned());
             str_set.insert(bash_tag);
         }
 
@@ -170,11 +170,11 @@ impl MetadataDocument {
         for group_yaml in get_as_slice(&doc, "groups", YamlObjectType::MetadataDocument)? {
             let group = Group::try_from_yaml(group_yaml)?;
 
-            let name = group.name().to_string();
+            let name = group.name().to_owned();
             if group_names.contains(&name) {
                 return Err(ParseMetadataError::duplicate_entry(
                     group_yaml.span.start,
-                    group.name().to_string(),
+                    group.name().to_owned(),
                     YamlObjectType::Group,
                 )
                 .into());
@@ -266,7 +266,7 @@ impl MetadataDocument {
     }
 
     pub fn find_plugin(&self, plugin_name: &str) -> Result<Option<PluginMetadata>, RegexError> {
-        let mut metadata = match self.plugins.get(&Filename::new(plugin_name.to_string())) {
+        let mut metadata = match self.plugins.get(&Filename::new(plugin_name.to_owned())) {
             Some(m) => m.clone(),
             None => PluginMetadata::new(plugin_name)?,
         };
@@ -303,14 +303,14 @@ impl MetadataDocument {
             self.regex_plugins.push(plugin_metadata);
         } else {
             self.plugins.insert(
-                Filename::new(plugin_metadata.name().to_string()),
+                Filename::new(plugin_metadata.name().to_owned()),
                 plugin_metadata,
             );
         }
     }
 
     pub fn remove_plugin_metadata(&mut self, plugin_name: &str) {
-        self.plugins.remove(&Filename::new(plugin_name.to_string()));
+        self.plugins.remove(&Filename::new(plugin_name.to_owned()));
     }
 
     pub fn clear(&mut self) {
@@ -390,7 +390,7 @@ fn find_prelude_bounds(masterlist: &str) -> Option<(usize, usize)> {
 }
 
 fn indent_prelude(prelude: &str, line_ending: &str) -> String {
-    let prelude = ("\n  ".to_string() + &prelude.replace('\n', "\n  "))
+    let prelude = ("\n  ".to_owned() + &prelude.replace('\n', "\n  "))
         .replace(&format!("  {line_ending}"), line_ending);
 
     if prelude.ends_with("\n  ") {

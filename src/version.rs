@@ -9,12 +9,12 @@ pub const LIBLOOT_VERSION_PATCH: u32 = parse_u32(env!("CARGO_PKG_VERSION_PATCH")
 
 /// Get the library version in the form "major.minor.patch".
 pub fn libloot_version() -> String {
-    env!("CARGO_PKG_VERSION").to_string()
+    env!("CARGO_PKG_VERSION").to_owned()
 }
 
 /// Get the ID of the source control revision that libloot was built from.
 pub fn libloot_revision() -> String {
-    libloot_revision_const().to_string()
+    libloot_revision_const().to_owned()
 }
 
 /// Checks whether the loaded API is compatible with the given version of the

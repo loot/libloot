@@ -142,10 +142,7 @@ impl SortingPlugin for Plugin {
 }
 
 fn to_filenames(files: &[File]) -> Box<[String]> {
-    files
-        .iter()
-        .map(|f| f.name().as_str().to_string())
-        .collect()
+    files.iter().map(|f| f.name().as_str().to_owned()).collect()
 }
 
 type InnerPluginsGraph<'a, T> = Graph<Rc<PluginSortingData<'a, T>>, EdgeType>;
@@ -288,7 +285,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
     }
 
     fn check_for_cycles(&mut self) -> Result<(), CyclicInteractionError> {
-        if let Some(cycle) = find_cycle(&self.inner, |node| node.name().to_string()) {
+        if let Some(cycle) = find_cycle(&self.inner, |node| node.name().to_owned()) {
             Err(CyclicInteractionError::new(cycle))
         } else {
             Ok(())
@@ -692,7 +689,7 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
     fn topological_sort(&self) -> Result<Vec<NodeIndex>, SortingError> {
         petgraph::algo::toposort(&self.inner, None)
-            .map_err(|e| SortingError::CycleInvolving(self[e.node_id()].name().to_string()))
+            .map_err(|e| SortingError::CycleInvolving(self[e.node_id()].name().to_owned()))
     }
 
     /// Returns the first pair of consecutive nodes that don't have an edge joining them.
@@ -862,7 +859,7 @@ fn sort_plugins_partition<T: SortingPlugin>(
 
     let sorted_plugin_names = sorted_nodes
         .into_iter()
-        .map(|i| graph[i].name().to_string())
+        .map(|i| graph[i].name().to_owned())
         .collect();
 
     Ok(sorted_plugin_names)
@@ -926,7 +923,7 @@ impl<'a, 'b, T: SortingPlugin> PathFinder<'a, 'b, T> {
                             path_to_string(self.graph, &path)
                         );
                         return Err(PathfindingError::PrecedingNodeNotFound(
-                            self.graph[current_node].name().to_string(),
+                            self.graph[current_node].name().to_owned(),
                         ));
                     }
                 }
@@ -947,7 +944,7 @@ impl<'a, 'b, T: SortingPlugin> PathFinder<'a, 'b, T> {
                             path_to_string(self.graph, &path)
                         );
                         return Err(PathfindingError::FollowingNodeNotFound(
-                            self.graph[current_node].name().to_string(),
+                            self.graph[current_node].name().to_owned(),
                         ));
                     }
                 }
@@ -3109,7 +3106,7 @@ mod tests {
 
                 let sorted_plugin_names: Vec<_> = sorted
                     .into_iter()
-                    .map(|i| graph[i].name().to_string())
+                    .map(|i| graph[i].name().to_owned())
                     .collect();
 
                 assert_eq!(
@@ -3154,7 +3151,7 @@ mod tests {
 
                 let sorted_plugin_names: Vec<_> = sorted
                     .into_iter()
-                    .map(|i| graph[i].name().to_string())
+                    .map(|i| graph[i].name().to_owned())
                     .collect();
 
                 assert_eq!(
@@ -3199,7 +3196,7 @@ mod tests {
 
                 let sorted_plugin_names: Vec<_> = sorted
                     .into_iter()
-                    .map(|i| graph[i].name().to_string())
+                    .map(|i| graph[i].name().to_owned())
                     .collect();
 
                 assert_eq!(

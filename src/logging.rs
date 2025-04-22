@@ -192,7 +192,7 @@ mod tests {
 
             fn callback(level: LogLevel, message: &str) {
                 if let Ok(mut messages) = MESSAGES.lock() {
-                    messages.push((level, message.to_string()));
+                    messages.push((level, message.to_owned()));
                 }
             }
 
@@ -216,7 +216,7 @@ mod tests {
             let cloned_messages = Arc::clone(&messages);
             let callback = move |level, message: &str| {
                 if let Ok(mut messages) = cloned_messages.lock() {
-                    messages.push((level, message.to_string()));
+                    messages.push((level, message.to_owned()));
                 }
             };
 
@@ -237,7 +237,7 @@ mod tests {
 
             fn callback_fn(level: LogLevel, message: &str) {
                 if let Ok(mut messages) = MESSAGES.lock() {
-                    messages.push((level, message.to_string()));
+                    messages.push((level, message.to_owned()));
                 }
             }
 
@@ -250,7 +250,7 @@ mod tests {
             let cloned_messages = Arc::clone(&messages);
             let callback = move |level, message: &str| {
                 if let Ok(mut messages) = cloned_messages.lock() {
-                    messages.push((level, message.to_string()));
+                    messages.push((level, message.to_owned()));
                 }
             };
 
@@ -284,7 +284,7 @@ mod tests {
 
             fn callback(level: LogLevel, message: &str) {
                 if let Ok(mut messages) = MESSAGES.lock() {
-                    messages.push((level, message.to_string()));
+                    messages.push((level, message.to_owned()));
                 }
             }
 

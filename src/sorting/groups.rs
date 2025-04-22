@@ -91,14 +91,14 @@ fn add_groups<'a>(
                 "Unexpectedly couldn't find node for group {}: it should have just been added to the graph",
                 group.name()
             );
-            return Err(UndefinedGroupError::new(group.name().to_string()));
+            return Err(UndefinedGroupError::new(group.name().to_owned()));
         };
 
         for other_group_name in sorted_clone(group.after_groups()) {
             if let Some(other_index) = group_nodes.get(other_group_name) {
                 graph.update_edge(*other_index, *node_index, edge_type);
             } else {
-                return Err(UndefinedGroupError::new(other_group_name.to_string()));
+                return Err(UndefinedGroupError::new(other_group_name.to_owned()));
             }
         }
     }
@@ -198,7 +198,7 @@ fn find_node_by_weight(
         Ok(n)
     } else {
         logging::error!("Can't find group with name {}", weight);
-        Err(UndefinedGroupError::new(weight.to_string()))
+        Err(UndefinedGroupError::new(weight.to_owned()))
     }
 }
 
@@ -272,7 +272,7 @@ pub fn get_default_group_node(graph: &GroupsGraph) -> Result<NodeIndex, Undefine
     graph
         .node_indices()
         .find(|n| graph[*n].as_ref() == Group::DEFAULT_NAME)
-        .ok_or_else(|| UndefinedGroupError::new(Group::DEFAULT_NAME.to_string()))
+        .ok_or_else(|| UndefinedGroupError::new(Group::DEFAULT_NAME.to_owned()))
 }
 
 #[cfg(test)]

@@ -77,7 +77,7 @@
     clippy::redundant_type_annotations,
     clippy::ref_patterns,
     clippy::rest_pat_in_fully_bound_structs,
-    // clippy::str_to_string,
+    clippy::str_to_string,
     clippy::string_lit_chars_any,
     // clippy::string_slice,
     clippy::string_to_string,

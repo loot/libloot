@@ -185,7 +185,7 @@ pub fn parse_condition(
 ) -> Result<Option<Box<str>>, ParseMetadataError> {
     match get_string_value(mapping, key, yaml_type)? {
         Some((marker, s)) => {
-            let s = s.to_string();
+            let s = s.to_owned();
             if let Err(e) = Expression::from_str(&s) {
                 return Err(ParseMetadataError::invalid_condition(marker, s, e));
             }

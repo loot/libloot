@@ -93,7 +93,7 @@ fn validate_plugin<T: SortingPlugin>(
         if non_masters.contains(&key) {
             return Err(CyclicInteractionError::new(vec![
                 Vertex::new(master).with_out_edge_type(EdgeType::Master),
-                Vertex::new(plugin.name().to_string()).with_out_edge_type(EdgeType::MasterFlag),
+                Vertex::new(plugin.name().to_owned()).with_out_edge_type(EdgeType::MasterFlag),
             ])
             .into());
         }
@@ -164,14 +164,14 @@ fn validate_files(
         if non_masters.contains(&key) {
             return Err(CyclicInteractionError::new(vec![
                 Vertex::new(file.clone()).with_out_edge_type(edge_type),
-                Vertex::new(plugin_name.to_string()).with_out_edge_type(EdgeType::MasterFlag),
+                Vertex::new(plugin_name.to_owned()).with_out_edge_type(EdgeType::MasterFlag),
             ]));
         }
 
         if blueprint_masters.contains(&key) {
             return Err(CyclicInteractionError::new(vec![
                 Vertex::new(file.clone()).with_out_edge_type(edge_type),
-                Vertex::new(plugin_name.to_string()).with_out_edge_type(EdgeType::BlueprintMaster),
+                Vertex::new(plugin_name.to_owned()).with_out_edge_type(EdgeType::BlueprintMaster),
             ]));
         }
     }
@@ -191,7 +191,7 @@ fn validate_early_loading_plugins<T: SortingPlugin>(
                 // Just report the cycle to the first master.
                 return Err(CyclicInteractionError::new(vec![
                     Vertex::new(plugin.to_string()).with_out_edge_type(EdgeType::Hardcoded),
-                    Vertex::new(master.name().to_string()).with_out_edge_type(EdgeType::MasterFlag),
+                    Vertex::new(master.name().to_owned()).with_out_edge_type(EdgeType::MasterFlag),
                 ]));
             }
         }

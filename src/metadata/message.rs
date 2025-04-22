@@ -369,7 +369,7 @@ impl TryFromYaml for Message {
                 if let Ok(Some(m)) = FMT_REGEX.find(&mc.text) {
                     return Err(ParseMetadataError::new(
                         value.span.start,
-                        MetadataParsingErrorReason::MissingSubstitution(m.as_str().to_string()),
+                        MetadataParsingErrorReason::MissingSubstitution(m.as_str().to_owned()),
                     ));
                 }
             }

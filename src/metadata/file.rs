@@ -213,7 +213,7 @@ impl TryFromYaml for File {
                 let constraint = parse_condition(h, "constraint", YamlObjectType::File)?;
 
                 Ok(File {
-                    name: Filename::new(name.to_string()),
+                    name: Filename::new(name.to_owned()),
                     display_name: display_name.map(|(_, s)| s.into()),
                     detail,
                     condition,

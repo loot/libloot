@@ -56,10 +56,10 @@ pub(crate) fn display_cycle(cycle: &[Vertex]) -> String {
             if let Some(edge_type) = v.out_edge_type() {
                 format!("{} --[{}]-> ", v.name(), edge_type)
             } else {
-                v.name().to_string()
+                v.name().to_owned()
             }
         })
-        .chain(cycle.first().iter().map(|v| v.name().to_string()))
+        .chain(cycle.first().iter().map(|v| v.name().to_owned()))
         .collect()
 }
 

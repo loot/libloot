@@ -358,8 +358,8 @@ pub(crate) fn plugins_metadata(
 fn name_string(game_type: GameType, path: &Path) -> Result<String, LoadPluginError> {
     match path.file_name() {
         Some(f) => match f.to_str() {
-            Some(f) if game_type == GameType::OpenMW => Ok(f.to_string()),
-            Some(f) => Ok(trim_dot_ghost(f).to_string()),
+            Some(f) if game_type == GameType::OpenMW => Ok(f.to_owned()),
+            Some(f) => Ok(trim_dot_ghost(f).to_owned()),
             None => Err(LoadPluginError::InvalidFilename(
                 InvalidFilenameReason::NonUnicode,
             )),
@@ -396,7 +396,7 @@ fn extract_bash_tags(description: &str) -> Vec<String> {
         if let Some(end_pos) = description[start_pos..].find("}}") {
             return description[start_pos..start_pos + end_pos]
                 .split(',')
-                .map(|s| s.trim().to_string())
+                .map(|s| s.trim().to_owned())
                 .collect();
         }
     }
@@ -1147,7 +1147,7 @@ Requires Skyrim Special Edition 1.5.39 or greater.
 
         assert_eq!(
             vec![
-                "C.Climate".to_string(),
+                "C.Climate".to_owned(),
                 "C.Encounter".into(),
                 "C.ImageSpace".into(),
                 "C.Light".into(),
