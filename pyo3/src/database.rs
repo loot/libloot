@@ -5,13 +5,14 @@ use std::{
 };
 
 use libloot::{WriteMode, error::DatabaseLockPoisonError};
+use libloot_ffi_errors::UnsupportedEnumValueError;
 use pyo3::{
     Bound, PyResult, pyclass, pymethods,
     types::{PyAnyMethods, PyTypeMethods},
 };
 
 use crate::{
-    error::{UnsupportedEnumValueError, VerboseError},
+    error::VerboseError,
     metadata::{Group, Message, NONE_REPR, PluginMetadata},
 };
 
@@ -237,15 +238,15 @@ impl Vertex {
     }
 
     #[getter]
-    fn out_edge_type(&self) -> Result<Option<EdgeType>, UnsupportedEnumValueError> {
-        self.0.out_edge_type().map(|e| e.try_into()).transpose()
+    fn out_edge_type(&self) -> Result<Option<EdgeType>, VerboseError> {
+        self.0
+            .out_edge_type()
+            .map(|e| e.try_into().map_err(Into::into))
+            .transpose()
     }
 
     #[setter]
-    fn set_out_edge_type(
-        &mut self,
-        out_edge_type: EdgeType,
-    ) -> Result<(), UnsupportedEnumValueError> {
+    fn set_out_edge_type(&mut self, out_edge_type: EdgeType) -> Result<(), VerboseError> {
         let out_edge_type = out_edge_type.try_into()?;
         self.0.set_out_edge_type(out_edge_type);
         Ok(())

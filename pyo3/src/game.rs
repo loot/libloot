@@ -1,12 +1,9 @@
 use std::path::{Path, PathBuf};
 
+use libloot_ffi_errors::UnsupportedEnumValueError;
 use pyo3::{pyclass, pymethods};
 
-use crate::{
-    database::Database,
-    error::{UnsupportedEnumValueError, VerboseError},
-    plugin::Plugin,
-};
+use crate::{database::Database, error::VerboseError, plugin::Plugin};
 
 #[allow(non_camel_case_types)]
 #[pyclass(eq, frozen, hash, ord)]

@@ -1,11 +1,12 @@
 use std::hash::{DefaultHasher, Hash, Hasher};
 
+use libloot_ffi_errors::UnsupportedEnumValueError;
 use pyo3::{
     Bound, FromPyObject, PyResult, pyclass, pyfunction, pymethods,
     types::{PyAnyMethods, PyTypeMethods},
 };
 
-use crate::error::{UnsupportedEnumValueError, VerboseError};
+use crate::error::VerboseError;
 
 pub const NONE_REPR: &str = "None";
 

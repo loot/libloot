@@ -8,85 +8,46 @@ use libloot::{
         LoadMetadataError, MultilingualMessageContentsError, RegexError, WriteMetadataError,
     },
 };
-use libloot_ffi_errors::SystemError;
+use libloot_ffi_errors::{
+    SystemError, UnsupportedEnumValueError, fmt_error_chain, variant_box_from_error,
+};
 use pyo3::{PyErr, exceptions::PyValueError};
 
 use crate::{CyclicInteractionError, EspluginError, UndefinedGroupError, database::Vertex};
-
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct UnsupportedEnumValueError;
-
-impl std::fmt::Display for UnsupportedEnumValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Enum value is unsupported")
-    }
-}
-
-impl std::error::Error for UnsupportedEnumValueError {}
-
-impl From<UnsupportedEnumValueError> for PyErr {
-    fn from(value: UnsupportedEnumValueError) -> Self {
-        PyValueError::new_err(value.to_string())
-    }
-}
 
 #[derive(Debug)]
 pub enum VerboseError {
     CyclicInteractionError(Vec<libloot::Vertex>),
     UndefinedGroupError(String),
-    EspluginError(i32, String),
+    EspluginError(SystemError),
     Other(Box<dyn std::error::Error>),
 }
 
 impl std::fmt::Display for VerboseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::CyclicInteractionError(c) => {
-                let cycle = display_cycle(c);
-                write!(f, "cyclic interaction detected: {}", cycle)
-            }
-            Self::UndefinedGroupError(g) => {
-                write!(f, "the group \"{}\" does not exist", g)
-            }
-            Self::EspluginError(_, s) => s.fmt(f),
-            Self::Other(e) => {
-                write!(f, "{}", e)?;
-                let mut error = e.as_ref();
-                while let Some(source) = error.source() {
-                    write!(f, ": {}", source)?;
-                    error = source;
-                }
-                Ok(())
-            }
+            Self::CyclicInteractionError(c) => SortPluginsError::CycleFound(c.clone()).fmt(f),
+            Self::UndefinedGroupError(g) => SortPluginsError::UndefinedGroup(g.clone()).fmt(f),
+            Self::EspluginError(e) => e.message().fmt(f),
+            Self::Other(e) => fmt_error_chain(e.as_ref(), f),
         }
     }
 }
+
+variant_box_from_error!(UnsupportedEnumValueError, VerboseError::Other);
+variant_box_from_error!(DatabaseLockPoisonError, VerboseError::Other);
+variant_box_from_error!(LoadPluginsError, VerboseError::Other);
+variant_box_from_error!(LoadOrderError, VerboseError::Other);
+variant_box_from_error!(LoadMetadataError, VerboseError::Other);
+variant_box_from_error!(WriteMetadataError, VerboseError::Other);
+variant_box_from_error!(ConditionEvaluationError, VerboseError::Other);
+variant_box_from_error!(MultilingualMessageContentsError, VerboseError::Other);
+variant_box_from_error!(RegexError, VerboseError::Other);
 
 impl From<GameHandleCreationError> for VerboseError {
     fn from(value: GameHandleCreationError) -> Self {
         match value {
             GameHandleCreationError::LoadOrderError(e) => e.into(),
-            _ => Self::Other(Box::new(value)),
-        }
-    }
-}
-
-impl From<UnsupportedEnumValueError> for VerboseError {
-    fn from(value: UnsupportedEnumValueError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<DatabaseLockPoisonError> for VerboseError {
-    fn from(value: DatabaseLockPoisonError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<LoadPluginsError> for VerboseError {
-    fn from(value: LoadPluginsError) -> Self {
-        match value {
-            LoadPluginsError::PluginDataError(e) => e.into(),
             _ => Self::Other(Box::new(value)),
         }
     }
@@ -113,30 +74,6 @@ impl From<LoadOrderStateError> for VerboseError {
     }
 }
 
-impl From<LoadOrderError> for VerboseError {
-    fn from(value: LoadOrderError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<LoadMetadataError> for VerboseError {
-    fn from(value: LoadMetadataError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<WriteMetadataError> for VerboseError {
-    fn from(value: WriteMetadataError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<ConditionEvaluationError> for VerboseError {
-    fn from(value: ConditionEvaluationError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
 impl From<GroupsPathError> for VerboseError {
     fn from(value: GroupsPathError) -> Self {
         match value {
@@ -158,20 +95,7 @@ impl From<MetadataRetrievalError> for VerboseError {
 
 impl From<PluginDataError> for VerboseError {
     fn from(value: PluginDataError) -> Self {
-        let error = SystemError::from(value);
-        Self::EspluginError(error.code(), error.message().to_string())
-    }
-}
-
-impl From<MultilingualMessageContentsError> for VerboseError {
-    fn from(value: MultilingualMessageContentsError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<RegexError> for VerboseError {
-    fn from(value: RegexError) -> Self {
-        Self::Other(Box::new(value))
+        Self::EspluginError(SystemError::from(value))
     }
 }
 
@@ -187,22 +111,10 @@ impl From<VerboseError> for PyErr {
             VerboseError::UndefinedGroupError(g) => {
                 PyErr::new::<UndefinedGroupError, _>((g, message))
             }
-            VerboseError::EspluginError(i, s) => PyErr::new::<EspluginError, _>((i, s)),
+            VerboseError::EspluginError(e) => {
+                PyErr::new::<EspluginError, _>((e.code(), e.message().to_owned()))
+            }
             VerboseError::Other(_) => PyValueError::new_err(message),
         }
     }
-}
-
-fn display_cycle(cycle: &[libloot::Vertex]) -> String {
-    cycle
-        .iter()
-        .map(|v| {
-            if let Some(edge_type) = v.out_edge_type() {
-                format!("{} --[{}]-> ", v.name(), edge_type)
-            } else {
-                v.name().to_string()
-            }
-        })
-        .chain(cycle.first().iter().map(|v| v.name().to_string()))
-        .collect()
 }

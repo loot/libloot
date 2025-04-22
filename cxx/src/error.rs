@@ -1,5 +1,8 @@
 use crate::game::NotValidUtf8;
-use libloot_ffi_errors::SystemError;
+use libloot_ffi_errors::{
+    SystemError, SystemErrorCategory, UnsupportedEnumValueError, fmt_error_chain,
+    variant_box_from_error,
+};
 
 use libloot::{
     error::{
@@ -16,9 +19,7 @@ use libloot::{
 pub enum VerboseError {
     CyclicInteractionError(Vec<libloot::Vertex>),
     UndefinedGroupError(String),
-    EspluginError(i32, String),
-    LibloadorderError(i32, String),
-    LciError(i32, String),
+    SystemError(SystemError),
     FileAccessError(String),
     InvalidArgument(String),
     Other(Box<dyn std::error::Error>),
@@ -41,29 +42,26 @@ impl std::fmt::Display for VerboseError {
             Self::UndefinedGroupError(group) => {
                 write!(f, "UndefinedGroupError: {}", group)
             }
-            Self::EspluginError(c, s) => {
-                write!(f, "EspluginError: {}: {}", c, s)
-            }
-            Self::LibloadorderError(c, s) => {
-                write!(f, "LibloadorderError: {}: {}", c, s)
-            }
-            Self::LciError(c, s) => {
-                write!(f, "LciError: {}: {}", c, s)
+            Self::SystemError(e) => {
+                let prefix = match e.category() {
+                    SystemErrorCategory::Esplugin => "EspluginError",
+                    SystemErrorCategory::Libloadorder => "LibloadorderError",
+                    SystemErrorCategory::LootConditionInterpreter => "LciError",
+                };
+                write!(f, "{}: {}: {}", prefix, e.code(), e.message())
             }
             Self::FileAccessError(s) => write!(f, "FileAccessError: {}", s),
             Self::InvalidArgument(s) => write!(f, "InvalidArgument: {}", s),
-            Self::Other(e) => {
-                write!(f, "{}", e)?;
-                let mut error = e.as_ref();
-                while let Some(source) = error.source() {
-                    write!(f, ": {}", source)?;
-                    error = source;
-                }
-                Ok(())
-            }
+            Self::Other(e) => fmt_error_chain(e.as_ref(), f),
         }
     }
 }
+
+variant_box_from_error!(UnsupportedEnumValueError, VerboseError::Other);
+variant_box_from_error!(NotValidUtf8, VerboseError::Other);
+variant_box_from_error!(DatabaseLockPoisonError, VerboseError::Other);
+variant_box_from_error!(MultilingualMessageContentsError, VerboseError::Other);
+variant_box_from_error!(RegexError, VerboseError::Other);
 
 impl From<GameHandleCreationError> for VerboseError {
     fn from(value: GameHandleCreationError) -> Self {
@@ -72,24 +70,6 @@ impl From<GameHandleCreationError> for VerboseError {
             GameHandleCreationError::NotADirectory(_) => Self::InvalidArgument(value.to_string()),
             _ => Self::Other(Box::new(value)),
         }
-    }
-}
-
-impl From<UnsupportedEnumValueError> for VerboseError {
-    fn from(value: UnsupportedEnumValueError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<NotValidUtf8> for VerboseError {
-    fn from(value: NotValidUtf8) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<DatabaseLockPoisonError> for VerboseError {
-    fn from(value: DatabaseLockPoisonError) -> Self {
-        Self::Other(Box::new(value))
     }
 }
 
@@ -126,8 +106,7 @@ impl From<LoadOrderStateError> for VerboseError {
 
 impl From<LoadOrderError> for VerboseError {
     fn from(value: LoadOrderError) -> Self {
-        let error = SystemError::from(value);
-        Self::LibloadorderError(error.code(), error.message().to_string())
+        Self::SystemError(SystemError::from(value))
     }
 }
 
@@ -145,8 +124,7 @@ impl From<WriteMetadataError> for VerboseError {
 
 impl From<ConditionEvaluationError> for VerboseError {
     fn from(value: ConditionEvaluationError) -> Self {
-        let error = SystemError::from(value);
-        Self::LciError(error.code(), error.message().to_string())
+        Self::SystemError(SystemError::from(value))
     }
 }
 
@@ -171,20 +149,7 @@ impl From<MetadataRetrievalError> for VerboseError {
 
 impl From<PluginDataError> for VerboseError {
     fn from(value: PluginDataError) -> Self {
-        let error = SystemError::from(value);
-        Self::EspluginError(error.code(), error.message().to_string())
-    }
-}
-
-impl From<MultilingualMessageContentsError> for VerboseError {
-    fn from(value: MultilingualMessageContentsError) -> Self {
-        Self::Other(Box::new(value))
-    }
-}
-
-impl From<RegexError> for VerboseError {
-    fn from(value: RegexError) -> Self {
-        Self::Other(Box::new(value))
+        Self::SystemError(SystemError::from(value))
     }
 }
 
@@ -198,14 +163,3 @@ impl std::fmt::Display for EmptyOptionalError {
 }
 
 impl std::error::Error for EmptyOptionalError {}
-
-#[derive(Debug)]
-pub struct UnsupportedEnumValueError;
-
-impl std::fmt::Display for UnsupportedEnumValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Enum value is unsupported")
-    }
-}
-
-impl std::error::Error for UnsupportedEnumValueError {}

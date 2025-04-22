@@ -5,8 +5,9 @@ mod metadata;
 mod plugin;
 
 use database::{Database, Vertex, new_vertex};
-use error::{EmptyOptionalError, UnsupportedEnumValueError, VerboseError};
+use error::{EmptyOptionalError, VerboseError};
 use game::{Game, new_game, new_game_with_local_path};
+use libloot_ffi_errors::UnsupportedEnumValueError;
 use metadata::{
     File, Filename, Group, Location, Message, MessageContent, OptionalMessageContentRef,
     OptionalPluginMetadata, PluginCleaningData, PluginMetadata, Tag, group_default_name,

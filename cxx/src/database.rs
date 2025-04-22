@@ -5,9 +5,10 @@ use std::{
 
 use delegate::delegate;
 use libloot::{WriteMode, error::DatabaseLockPoisonError};
+use libloot_ffi_errors::UnsupportedEnumValueError;
 
 use crate::{
-    UnsupportedEnumValueError, VerboseError,
+    VerboseError,
     ffi::EdgeType,
     metadata::{Group, Message, OptionalPluginMetadata, PluginMetadata, to_vec_of_unwrapped},
 };

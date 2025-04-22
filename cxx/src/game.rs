@@ -1,11 +1,9 @@
 use std::path::Path;
 
 use delegate::delegate;
+use libloot_ffi_errors::UnsupportedEnumValueError;
 
-use crate::{
-    Plugin, UnsupportedEnumValueError, VerboseError, database::Database, ffi::GameType,
-    plugin::OptionalPlugin,
-};
+use crate::{Plugin, VerboseError, database::Database, ffi::GameType, plugin::OptionalPlugin};
 
 impl TryFrom<libloot::GameType> for GameType {
     type Error = UnsupportedEnumValueError;
