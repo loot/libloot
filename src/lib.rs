@@ -79,7 +79,7 @@
     clippy::rest_pat_in_fully_bound_structs,
     clippy::str_to_string,
     clippy::string_lit_chars_any,
-    // clippy::string_slice,
+    clippy::string_slice,
     clippy::string_to_string,
     clippy::suspicious_xor_used_as_pow,
     clippy::tests_outside_test_module,

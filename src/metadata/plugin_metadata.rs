@@ -318,8 +318,13 @@ impl std::hash::Hash for PluginName {
 }
 
 pub(crate) fn trim_dot_ghost(string: &str) -> &str {
-    if iends_with_ascii(string, GHOST_FILE_EXTENSION) {
-        &string[..(string.len() - 6)]
+    let suffix_start_index = string.len().saturating_sub(GHOST_FILE_EXTENSION.len());
+    if let Some((first, last)) = string.split_at_checked(suffix_start_index) {
+        if last.eq_ignore_ascii_case(GHOST_FILE_EXTENSION) {
+            first
+        } else {
+            string
+        }
     } else {
         string
     }
@@ -352,38 +357,30 @@ fn merge_slices<T: Clone + PartialEq>(target: &mut Box<[T]>, source: &[T]) {
 }
 
 fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
-    let mut output = String::new();
-    let mut prefix_length = 0;
-    let mut remainder = regex_string;
-    while let Some(pos) = remainder.find('(') {
-        let Some((before, after)) = remainder.split_at_checked(pos + 1) else {
+    let mut iter = regex_string.split_inclusive('(').peekable();
+
+    let mut parts = Vec::new();
+
+    while let Some(before) = iter.next() {
+        let Some(after) = iter.peek() else {
+            parts.push(before);
             break;
         };
 
         if after.starts_with('?') || (before.ends_with("\\(") && !before.ends_with("\\\\(")) {
-            if output.is_empty() {
-                // No need to copy the string yet.
-                prefix_length += before.len();
-            } else {
-                output.push_str(before);
-            }
+            parts.push(before);
         } else {
-            if output.is_empty() {
-                output.push_str(&regex_string[..prefix_length]);
-            }
-
-            output.push_str(before);
-            output.push_str("?:");
+            parts.push(before);
+            parts.push("?:");
         }
-
-        remainder = after;
     }
 
-    if output.is_empty() {
+    let new_length: usize = parts.iter().map(|s| s.len()).sum();
+
+    if new_length == regex_string.len() {
         Cow::Borrowed(regex_string)
     } else {
-        output.push_str(remainder);
-        Cow::Owned(output)
+        Cow::Owned(parts.into_iter().collect())
     }
 }
 
@@ -1237,7 +1234,7 @@ mod tests {
 
             match replace_capturing_groups(input) {
                 Cow::Borrowed(output) => assert_eq!(input, output),
-                Cow::Owned(output) => panic!("Expected borrowed output, got {output}"),
+                Cow::Owned(output) => panic!("Expected borrowed output, got \"{output}\""),
             }
         }
 
@@ -1247,14 +1244,14 @@ mod tests {
 
             match replace_capturing_groups(input) {
                 Cow::Borrowed(output) => assert_eq!(input, output),
-                Cow::Owned(output) => panic!("Expected borrowed output, got {output}"),
+                Cow::Owned(output) => panic!("Expected borrowed output, got \"{output}\""),
             }
 
             let input = "no paren(?:th(?:e)s)es";
 
             match replace_capturing_groups(input) {
                 Cow::Borrowed(output) => assert_eq!(input, output),
-                Cow::Owned(output) => panic!("Expected borrowed output, got {output}"),
+                Cow::Owned(output) => panic!("Expected borrowed output, got \"{output}\""),
             }
         }
 

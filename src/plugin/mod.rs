@@ -388,16 +388,9 @@ fn calculate_crc(path: &Path) -> std::io::Result<u32> {
 }
 
 fn extract_bash_tags(description: &str) -> Vec<String> {
-    let bash_tags_opener = "{{BASH:";
-
-    if let Some(mut start_pos) = description.find(bash_tags_opener) {
-        start_pos += bash_tags_opener.len();
-
-        if let Some(end_pos) = description[start_pos..].find("}}") {
-            return description[start_pos..start_pos + end_pos]
-                .split(',')
-                .map(|s| s.trim().to_owned())
-                .collect();
+    if let Some((_, bash_tags)) = description.split_once("{{BASH:") {
+        if let Some((bash_tags, _)) = bash_tags.split_once("}}") {
+            return bash_tags.split(',').map(|s| s.trim().to_owned()).collect();
         }
     }
     Vec::new()

@@ -336,10 +336,10 @@ impl std::default::Default for MetadataDocument {
 
 fn replace_prelude(masterlist: String, prelude: &str) -> String {
     let line_ending = detect_line_ending(&masterlist);
-    if let Some((start, end)) = find_prelude_bounds(&masterlist) {
+    if let Some((start, end)) = split_on_prelude(&masterlist) {
         let prelude = indent_prelude(prelude, line_ending);
 
-        masterlist[..start].to_string() + &prelude + &masterlist[end..]
+        format!("{start}{prelude}{end}")
     } else {
         masterlist
     }
@@ -359,34 +359,49 @@ fn detect_line_ending(masterlist: &str) -> &'static str {
     }
 }
 
-fn find_prelude_bounds(masterlist: &str) -> Option<(usize, usize)> {
-    let prelude_on_first_line = "prelude:";
-    let prelude_on_new_line = "\nprelude:";
+fn split_on_prelude(masterlist: &str) -> Option<(&str, &str)> {
+    let (prefix, remainder) = split_on_prelude_start(masterlist)?;
 
-    let start = if masterlist.starts_with(prelude_on_first_line) {
-        prelude_on_first_line.len()
-    } else if let Some(pos) = masterlist.find(prelude_on_new_line) {
-        pos + prelude_on_new_line.len()
-    } else {
-        return None;
-    };
-
-    let mut pos = start;
-    while let Some(next_line_break_pos) = masterlist[pos..].find('\n') {
-        if next_line_break_pos == masterlist.len() - 1 {
-            break;
+    let mut iter = remainder.bytes().enumerate().peekable();
+    while let Some((index, byte)) = iter.next() {
+        if byte != b'\n' {
+            continue;
         }
 
-        pos += next_line_break_pos + 1;
-
-        if let Some(c) = masterlist.as_bytes().get(pos) {
-            if !matches!(*c, b' ' | b'#' | b'\n' | b'\r') {
-                return Some((start, pos - 1));
+        if let Some((_, next_byte)) = iter.peek() {
+            if !matches!(next_byte, b' ' | b'#' | b'\n' | b'\r') {
+                // Slicing at index should never fail, but we can't prove that,
+                // and we don't want to risk panicking.
+                if let Some(suffix) = remainder.get(index..) {
+                    return Some((prefix, suffix));
+                }
             }
         }
     }
 
-    Some((start, masterlist.len()))
+    Some((prefix, ""))
+}
+
+fn split_on_prelude_start(masterlist: &str) -> Option<(&str, &str)> {
+    let prelude_on_first_line = "prelude:";
+    let prelude_on_new_line = "\nprelude:";
+
+    if let Some(remainder) = masterlist.strip_prefix(prelude_on_first_line) {
+        Some((prelude_on_first_line, remainder))
+    } else {
+        if let Some(pos) = masterlist.find(prelude_on_new_line) {
+            let index = pos + prelude_on_new_line.len();
+            // A checked split shouldn't be necessary, but there's no
+            // split_inclusive_once() method, so we need to find and split in
+            // two steps and there's always the risk of a bug being introduced
+            // in the middle.
+            if let Some((prefix, remainder)) = masterlist.split_at_checked(index) {
+                return Some((prefix, remainder))
+            }
+        }
+        None
+    }
+
 }
 
 fn indent_prelude(prelude: &str, line_ending: &str) -> String {
@@ -394,7 +409,7 @@ fn indent_prelude(prelude: &str, line_ending: &str) -> String {
         .replace(&format!("  {line_ending}"), line_ending);
 
     if prelude.ends_with("\n  ") {
-        prelude[..prelude.len() - 2].to_string()
+        prelude.trim_end_matches(' ').to_owned()
     } else {
         prelude
     }
