@@ -114,6 +114,16 @@ jobs:
 
           maturin build --target ${{ matrix.target.triple }} --release
 
+      - name: Build the Node.js wrapper
+        working-directory: nodejs
+        run: |
+          npm install
+          npm run build
+
+      - name: Run the Node.js wrapper's tests
+        working-directory: nodejs
+        run: npm test
+
       - name: Build the CXX wrapper layer
         working-directory: cxx
         run: cargo build --release --target ${{ matrix.target.triple }}
