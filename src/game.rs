@@ -1707,8 +1707,8 @@ mod tests {
                     .join("sub2")
                     .join("archive")
                     .with_extension(extension);
-                std::fs::create_dir(path1.parent().unwrap()).unwrap();
-                std::fs::create_dir(path2.parent().unwrap()).unwrap();
+                std::fs::create_dir_all(path1.parent().unwrap()).unwrap();
+                std::fs::create_dir_all(path2.parent().unwrap()).unwrap();
                 std::fs::File::create(&path1).unwrap();
                 std::fs::File::create(&path2).unwrap();
 

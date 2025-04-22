@@ -119,6 +119,10 @@ impl Database {
             let Ok(mut minimal_plugin) = PluginMetadata::new(plugin.name()) else {
                 // This should never happen because the regex plugin name from
                 // an existing PluginMetadata object should be valid.
+                logging::error!(
+                    "Unexpectedly encountered a regex error trying to create a PluginMetadata object with the name {}",
+                    plugin.name()
+                );
                 continue;
             };
             minimal_plugin.set_tags(plugin.tags().to_vec());

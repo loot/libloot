@@ -456,7 +456,7 @@ plugins:
 
         #[test]
         fn load_from_str_should_resolve_aliases() {
-            let yaml = r"
+            let yaml = "
         prelude:
           - &anchor
             type: say
@@ -489,7 +489,7 @@ plugins:
 
         #[test]
         fn load_from_str_should_error_if_a_plugin_has_two_exact_entries() {
-            let yaml = r"
+            let yaml = "
 plugins:
   - name: 'Blank.esm'
     msg:

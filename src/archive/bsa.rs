@@ -73,7 +73,11 @@ mod v103 {
     pub(super) const FOLDER_RECORD_SIZE: usize = 16;
 
     pub(super) fn read_folder_record(value: &[u8]) -> FolderRecord {
-        assert!(value.len() >= FOLDER_RECORD_SIZE);
+        assert!(
+            value.len() >= FOLDER_RECORD_SIZE,
+            "Folder record byte slice is too small, expected {FOLDER_RECORD_SIZE} bytes, got {}",
+            value.len()
+        );
 
         FolderRecord {
             name_hash: to_u64(value),
@@ -91,7 +95,11 @@ mod v105 {
     pub(super) const FOLDER_RECORD_SIZE: usize = 24;
 
     pub(super) fn read_folder_record(value: &[u8]) -> FolderRecord {
-        assert!(value.len() >= FOLDER_RECORD_SIZE);
+        assert!(
+            value.len() >= FOLDER_RECORD_SIZE,
+            "Folder record byte slice is too small, expected {FOLDER_RECORD_SIZE} bytes, got {}",
+            value.len()
+        );
 
         FolderRecord {
             name_hash: to_u64(value),

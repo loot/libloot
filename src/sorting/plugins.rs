@@ -275,8 +275,8 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         early_loader_indices.sort_by_key(|e| e.0);
 
         for window in early_loader_indices.windows(2) {
-            if let [(_, from_index), (_, to_index)] = window {
-                self.add_edge(*from_index, *to_index, EdgeType::Hardcoded);
+            if let [(_, from_index), (_, to_index)] = *window {
+                self.add_edge(from_index, to_index, EdgeType::Hardcoded);
             }
         }
 
@@ -506,9 +506,10 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         nodes.sort_by_key(|a| self[*a].load_order_index);
 
         for window in nodes.windows(2) {
-            let (current, next) = match window {
-                [a, b] => (*a, *b),
-                _ => panic!("Window length should be 2, got {}", window.len()),
+            let [current, next] = *window else {
+                // This should never happen.
+                logging::error!("Unexpectedly encountered a window length that was not 2");
+                continue;
             };
 
             match self.find_path(next, current)? {
@@ -700,8 +701,8 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         logging::trace!("Checking uniqueness of path through plugin graph...");
 
-        path.windows(2).find_map(|slice| match slice {
-            [a, b] => self.inner.contains_edge(*a, *b).not().then_some((*a, *b)),
+        path.windows(2).find_map(|slice| match *slice {
+            [a, b] => self.inner.contains_edge(a, b).not().then_some((a, b)),
             _ => None,
         })
     }
@@ -995,8 +996,10 @@ fn get_plugins_in_groups<T: SortingPlugin>(
 
     if is_log_enabled(LogLevel::Debug) {
         logging::debug!("Found the following plugins in groups:");
-        for (key, value) in &plugins_in_groups {
-            let plugin_names: Vec<_> = value
+        let mut keys = plugins_in_groups.keys().collect::<Vec<_>>();
+        keys.sort();
+        for key in keys {
+            let plugin_names: Vec<_> = plugins_in_groups[key]
                 .iter()
                 .map(|i| format!("\"{}\"", graph[*i].name()))
                 .collect();
@@ -1256,7 +1259,7 @@ mod tests {
         }
 
         fn get_plugin(&self, name: &str) -> &(TestPlugin, usize) {
-            self.plugins.get(name).unwrap()
+            &self.plugins[name]
         }
 
         fn get_plugin_mut(&mut self, name: &str) -> &mut TestPlugin {

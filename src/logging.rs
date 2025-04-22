@@ -213,7 +213,7 @@ mod tests {
             let _lock = TEST_LOCK.lock().unwrap();
 
             let messages = Arc::new(Mutex::new(Vec::new()));
-            let cloned_messages = messages.clone();
+            let cloned_messages = Arc::clone(&messages);
             let callback = move |level, message: &str| {
                 if let Ok(mut messages) = cloned_messages.lock() {
                     messages.push((level, message.to_string()));
@@ -247,7 +247,7 @@ mod tests {
             set_logging_callback(callback);
 
             let messages = Arc::new(Mutex::new(Vec::new()));
-            let cloned_messages = messages.clone();
+            let cloned_messages = Arc::clone(&messages);
             let callback = move |level, message: &str| {
                 if let Ok(mut messages) = cloned_messages.lock() {
                     messages.push((level, message.to_string()));

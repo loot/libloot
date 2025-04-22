@@ -179,11 +179,7 @@ impl<'a, N, F: FnMut(&N) -> String> CycleDetector<'a, N, F> {
     }
 
     fn into_cycle_path(self) -> Option<Vec<Vertex>> {
-        if self.found_cycle {
-            Some(self.trail)
-        } else {
-            None
-        }
+        self.found_cycle.then_some(self.trail)
     }
 }
 

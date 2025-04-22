@@ -14,10 +14,10 @@ mod test {
     pub struct TestPlugin {
         name: String,
         masters: Vec<String>,
-        pub is_master: bool,
-        pub is_blueprint_plugin: bool,
-        pub override_record_count: usize,
-        pub asset_count: usize,
+        pub(super) is_master: bool,
+        pub(super) is_blueprint_plugin: bool,
+        pub(super) override_record_count: usize,
+        pub(super) asset_count: usize,
         overlapping_record_plugins: Vec<String>,
         overlapping_asset_plugins: Vec<String>,
     }

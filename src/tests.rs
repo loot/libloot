@@ -167,9 +167,9 @@ fn data_path(game_type: GameType, game_path: &Path) -> PathBuf {
 
 pub struct Fixture {
     _temp_dir: TempDir,
-    pub game_type: GameType,
-    pub game_path: PathBuf,
-    pub local_path: PathBuf,
+    pub(crate) game_type: GameType,
+    pub(crate) game_path: PathBuf,
+    pub(crate) local_path: PathBuf,
 }
 
 impl Fixture {

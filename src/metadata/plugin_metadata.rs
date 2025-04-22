@@ -337,7 +337,7 @@ pub(crate) fn iends_with_ascii(string: &str, suffix: &str) -> bool {
 }
 
 fn is_regex_name(name: &str) -> bool {
-    name.contains(|c| ":\\*?|".chars().any(|n| c == n))
+    name.contains([':', '\\', '*', '?', '|'])
 }
 
 fn merge_slices<T: Clone + PartialEq>(target: &mut Box<[T]>, source: &[T]) {

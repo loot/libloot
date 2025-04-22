@@ -147,10 +147,10 @@ mod tests {
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
             assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
-            assert_eq!(1, assets.get(&expected_key).unwrap().len());
+            assert_eq!(1, assets[&expected_key].len());
             assert_eq!(
                 0x4670_B683_6C07_7365,
-                *assets.get(&expected_key).unwrap().first().unwrap()
+                *assets[&expected_key].first().unwrap()
             );
         }
 
@@ -165,10 +165,10 @@ mod tests {
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
             assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
-            assert_eq!(1, assets.get(&expected_key).unwrap().len());
+            assert_eq!(1, assets[&expected_key].len());
             assert_eq!(
                 0x4670_B683_6C07_7365,
-                *assets.get(&expected_key).unwrap().first().unwrap()
+                *assets[&expected_key].first().unwrap()
             );
         }
 
@@ -183,10 +183,10 @@ mod tests {
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
             assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
-            assert_eq!(1, assets.get(&expected_key).unwrap().len());
+            assert_eq!(1, assets[&expected_key].len());
             assert_eq!(
                 0x4670_B683_6C07_7365,
-                *assets.get(&expected_key).unwrap().first().unwrap()
+                *assets[&expected_key].first().unwrap()
             );
         }
 
@@ -286,15 +286,15 @@ mod tests {
             assert_eq!(3, assets.len());
             assert_eq!(3, files_count);
 
-            let value = assets.get(&0).unwrap();
+            let value = &assets[&0];
             assert_eq!(1, value.len());
             assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
 
-            let value = assets.get(&0x2E01_002E).unwrap();
+            let value = &assets[&0x2E01_002E];
             assert_eq!(1, value.len());
             assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
 
-            let value = assets.get(&0xB681_02C9_6417_6E73).unwrap();
+            let value = &assets[&0xB681_02C9_6417_6E73];
             assert_eq!(1, value.len());
             assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
         }

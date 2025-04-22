@@ -144,7 +144,7 @@ pub fn get_u32_value(
 ) -> Result<Option<u32>, ParseMetadataError> {
     match mapping.get(&as_string_node(key)) {
         Some(n) => match n.data.as_integer() {
-            Some(i) => i.try_into().map(Some).map_err(|_| {
+            Some(i) => i.try_into().map(Some).map_err(|_e| {
                 ParseMetadataError::new(n.span.start, MetadataParsingErrorReason::NonU32Number(i))
             }),
             None => Err(ParseMetadataError::unexpected_value_type(

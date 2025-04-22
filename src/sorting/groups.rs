@@ -130,7 +130,7 @@ pub fn find_path(
     let to_vertex = find_node_by_weight(graph, to_group_name)?;
 
     let paths =
-        bellman_ford(&float_graph, from_vertex).map_err(|_| PathfindingError::NegativeCycle)?;
+        bellman_ford(&float_graph, from_vertex).map_err(|_e| PathfindingError::NegativeCycle)?;
 
     let mut path = vec![Vertex::new(graph[to_vertex].clone().into_string())];
     let mut current = to_vertex;
