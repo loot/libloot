@@ -8,7 +8,7 @@ use pyo3::{
 
 use crate::error::VerboseError;
 
-pub const NONE_REPR: &str = "None";
+pub(crate) const NONE_REPR: &str = "None";
 
 #[pyclass(eq, ord, str = "{0:?}")]
 #[repr(transparent)]
@@ -171,6 +171,10 @@ fn repr_message_contents(contents: &[libloot::metadata::MessageContent]) -> Stri
         .join(",")
 }
 
+#[expect(
+    unreachable_pub,
+    reason = "It's exported by PyO3, so while the pub isn't necessary, it's misleading to not have it"
+)]
 #[pyfunction]
 pub fn select_message_content(
     content: Vec<MessageContent>,
@@ -745,8 +749,8 @@ pub struct PluginMetadata(libloot::metadata::PluginMetadata);
 #[pymethods]
 impl PluginMetadata {
     #[new]
-    fn new(name: String) -> Result<Self, VerboseError> {
-        Ok(Self(libloot::metadata::PluginMetadata::new(&name)?))
+    fn new(name: &str) -> Result<Self, VerboseError> {
+        Ok(Self(libloot::metadata::PluginMetadata::new(name)?))
     }
 
     #[getter]
@@ -880,7 +884,7 @@ impl PluginMetadata {
         self.0.set_locations(value);
     }
 
-    fn merge_metadata(&mut self, other: PluginMetadata) {
+    fn merge_metadata(&mut self, other: &PluginMetadata) {
         self.0.merge_metadata(&other.0);
     }
 

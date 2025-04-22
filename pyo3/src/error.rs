@@ -48,7 +48,7 @@ impl From<GameHandleCreationError> for VerboseError {
     fn from(value: GameHandleCreationError) -> Self {
         match value {
             GameHandleCreationError::LoadOrderError(e) => e.into(),
-            _ => Self::Other(Box::new(value)),
+            GameHandleCreationError::NotADirectory(_) | _ => Self::Other(Box::new(value)),
         }
     }
 }
@@ -60,7 +60,11 @@ impl From<SortPluginsError> for VerboseError {
             SortPluginsError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             SortPluginsError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
             SortPluginsError::PluginDataError(e) => e.into(),
-            _ => Self::Other(Box::new(value)),
+            SortPluginsError::DatabaseLockPoisoned
+            | SortPluginsError::PluginNotLoaded(_)
+            | SortPluginsError::CycleFoundInvolving(_)
+            | SortPluginsError::PathfindingError(_)
+            | _ => Self::Other(Box::new(value)),
         }
     }
 }
@@ -69,7 +73,7 @@ impl From<LoadOrderStateError> for VerboseError {
     fn from(value: LoadOrderStateError) -> Self {
         match value {
             LoadOrderStateError::LoadOrderError(e) => e.into(),
-            _ => Self::Other(Box::new(value)),
+            LoadOrderStateError::DatabaseLockPoisoned | _ => Self::Other(Box::new(value)),
         }
     }
 }
@@ -79,7 +83,7 @@ impl From<GroupsPathError> for VerboseError {
         match value {
             GroupsPathError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             GroupsPathError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
-            _ => Self::Other(Box::new(value)),
+            GroupsPathError::PathfindingError(_) => Self::Other(Box::new(value)),
         }
     }
 }
@@ -88,7 +92,7 @@ impl From<MetadataRetrievalError> for VerboseError {
     fn from(value: MetadataRetrievalError) -> Self {
         match value {
             MetadataRetrievalError::ConditionEvaluationError(e) => e.into(),
-            _ => Self::Other(Box::new(value)),
+            MetadataRetrievalError::RegexError(_) => Self::Other(Box::new(value)),
         }
     }
 }

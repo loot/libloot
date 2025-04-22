@@ -22,14 +22,16 @@ pub struct Database(Arc<RwLock<libloot::Database>>);
 
 #[pymethods]
 impl Database {
+    #[expect(clippy::needless_pass_by_value, reason = "Required by PyO3")]
     pub fn load_masterlist(&self, path: PathBuf) -> Result<(), VerboseError> {
         self.0
             .write()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .load_masterlist(&path)
             .map_err(Into::into)
     }
 
+    #[expect(clippy::needless_pass_by_value, reason = "Required by PyO3")]
     pub fn load_masterlist_with_prelude(
         &self,
         masterlist_path: PathBuf,
@@ -37,19 +39,21 @@ impl Database {
     ) -> Result<(), VerboseError> {
         self.0
             .write()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .load_masterlist_with_prelude(&masterlist_path, &prelude_path)
             .map_err(Into::into)
     }
 
+    #[expect(clippy::needless_pass_by_value, reason = "Required by PyO3")]
     pub fn load_userlist(&self, path: PathBuf) -> Result<(), VerboseError> {
         self.0
             .write()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .load_userlist(&path)
             .map_err(Into::into)
     }
 
+    #[expect(clippy::needless_pass_by_value, reason = "Required by PyO3")]
     pub fn write_user_metadata(
         &self,
         output_path: PathBuf,
@@ -63,11 +67,12 @@ impl Database {
 
         self.0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .write_user_metadata(&output_path, write_mode)
             .map_err(Into::into)
     }
 
+    #[expect(clippy::needless_pass_by_value, reason = "Required by PyO3")]
     pub fn write_minimal_list(
         &self,
         output_path: PathBuf,
@@ -81,7 +86,7 @@ impl Database {
 
         self.0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .write_minimal_list(&output_path, write_mode)
             .map_err(Into::into)
     }
@@ -89,7 +94,7 @@ impl Database {
     pub fn evaluate(&self, condition: &str) -> Result<bool, VerboseError> {
         self.0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .evaluate(condition)
             .map_err(Into::into)
     }
@@ -98,7 +103,7 @@ impl Database {
         Ok(self
             .0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .known_bash_tags())
     }
 
@@ -108,7 +113,7 @@ impl Database {
     ) -> Result<Vec<Message>, VerboseError> {
         self.0
             .write()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .general_messages(evaluate_conditions)
             .map(|v| v.into_iter().map(Into::into).collect())
             .map_err(Into::into)
@@ -118,7 +123,7 @@ impl Database {
         Ok(self
             .0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .groups(include_user_metadata)
             .into_iter()
             .map(Into::into)
@@ -129,7 +134,7 @@ impl Database {
         Ok(self
             .0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .user_groups()
             .iter()
             .cloned()
@@ -141,7 +146,7 @@ impl Database {
         let groups = groups.into_iter().map(Into::into).collect();
         self.0
             .write()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .set_user_groups(groups);
         Ok(())
     }
@@ -153,7 +158,7 @@ impl Database {
     ) -> Result<Vec<Vertex>, VerboseError> {
         self.0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .groups_path(from_group_name, to_group_name)
             .map(|v| v.into_iter().map(Into::into).collect())
             .map_err(Into::into)
@@ -167,7 +172,7 @@ impl Database {
     ) -> Result<Option<PluginMetadata>, VerboseError> {
         self.0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .plugin_metadata(plugin_name, include_user_metadata, evaluate_conditions)
             .map(|p| p.map(Into::into))
             .map_err(Into::into)
@@ -180,7 +185,7 @@ impl Database {
     ) -> Result<Option<PluginMetadata>, VerboseError> {
         self.0
             .read()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .plugin_user_metadata(plugin_name, evaluate_conditions)
             .map(|p| p.map(Into::into))
             .map_err(Into::into)
@@ -192,7 +197,7 @@ impl Database {
     ) -> Result<(), VerboseError> {
         self.0
             .write()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .set_plugin_user_metadata(plugin_metadata.into());
         Ok(())
     }
@@ -200,7 +205,7 @@ impl Database {
     pub fn discard_plugin_user_metadata(&self, plugin: &str) -> Result<(), VerboseError> {
         self.0
             .write()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .discard_plugin_user_metadata(plugin);
         Ok(())
     }
@@ -208,7 +213,7 @@ impl Database {
     pub fn discard_all_user_metadata(&self) -> Result<(), VerboseError> {
         self.0
             .write()
-            .map_err(|_| DatabaseLockPoisonError)?
+            .map_err(DatabaseLockPoisonError::from)?
             .discard_all_user_metadata();
         Ok(())
     }
@@ -259,10 +264,7 @@ impl Vertex {
             "{}({}, {})",
             class_name,
             inner.name(),
-            inner
-                .out_edge_type()
-                .map(repr_edge_type)
-                .unwrap_or(NONE_REPR),
+            inner.out_edge_type().map_or(NONE_REPR, repr_edge_type),
         ))
     }
 
