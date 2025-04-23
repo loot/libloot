@@ -13,21 +13,21 @@ pub fn find_associated_archives(
     plugin_path: &Path,
 ) -> Vec<PathBuf> {
     match game_type {
-        GameType::TES3 | GameType::OpenMW => Vec::new(),
+        GameType::Morrowind | GameType::OpenMW => Vec::new(),
 
         // Skyrim (non-SE) plugins can only load BSAs that have exactly the same
         // basename, ignoring file extensions.
-        GameType::TES5 => find_associated_archive(plugin_path),
+        GameType::Skyrim => find_associated_archive(plugin_path),
 
         // Skyrim SE can load BSAs that have exactly the same basename, ignoring
         // file extensions, and also BSAs with filenames of the form "<basename>
         // - Textures.bsa" (case-insensitively). This assumes that Skyrim VR
         // works the same way as Skyrim SE.
-        GameType::TES5SE | GameType::TES5VR => find_associated_archives_with_suffixes(plugin_path, BSA_FILE_EXTENSION, &["", " - Textures"]),
+        GameType::SkyrimSE | GameType::SkyrimVR => find_associated_archives_with_suffixes(plugin_path, BSA_FILE_EXTENSION, &["", " - Textures"]),
 
         // Oblivion .esp files can load archives which begin with the plugin
         // basename.
-        GameType::TES4 => {
+        GameType::Oblivion => {
             if has_ascii_extension(plugin_path, "esp") {
                 find_associated_archives_with_arbitrary_suffixes(plugin_path, game_cache)
             } else {
@@ -37,7 +37,7 @@ pub fn find_associated_archives(
 
         // FO3, FNV, FO4 plugins can load archives which begin with the plugin
         // basename. This assumes that FO4 VR works the same way as FO4.
-        GameType::FO3 | GameType::FONV | GameType::FO4 | GameType::FO4VR =>
+        GameType::Fallout3 | GameType::FalloutNV | GameType::Fallout4 | GameType::Fallout4VR =>
             find_associated_archives_with_arbitrary_suffixes(plugin_path, game_cache)
         ,
 
@@ -228,8 +228,8 @@ mod tests {
                 let data_path = tmp_dir.path().to_path_buf();
 
                 match game_type {
-                    GameType::TES3 | GameType::OpenMW => {}
-                    GameType::FO4 | GameType::FO4VR | GameType::Starfield => {
+                    GameType::Morrowind | GameType::OpenMW => {}
+                    GameType::Fallout4 | GameType::Fallout4VR | GameType::Starfield => {
                         let source = absolute("./testing-plugins/Fallout 4/Data").unwrap();
                         copy_file(&source, &data_path, "Blank - Main.ba2");
                         copy_file(&source, &data_path, "Blank - Textures.ba2");
@@ -308,7 +308,7 @@ mod tests {
 
             if matches!(
                 game_type,
-                GameType::TES3 | GameType::OpenMW | GameType::TES4
+                GameType::Morrowind | GameType::OpenMW | GameType::Oblivion
             ) {
                 assert!(archives.is_empty());
             } else {
@@ -330,7 +330,7 @@ mod tests {
 
             if matches!(
                 game_type,
-                GameType::TES3 | GameType::OpenMW | GameType::Starfield
+                GameType::Morrowind | GameType::OpenMW | GameType::Starfield
             ) {
                 assert!(archives.is_empty());
             } else {
@@ -350,7 +350,7 @@ mod tests {
                 &fixture.data_path.join(BLANK_ESP),
             );
 
-            if matches!(game_type, GameType::TES3 | GameType::OpenMW) {
+            if matches!(game_type, GameType::Morrowind | GameType::OpenMW) {
                 assert!(archives.is_empty());
             } else {
                 assert!(!archives.is_empty());
@@ -371,7 +371,10 @@ mod tests {
 
             if matches!(
                 game_type,
-                GameType::FO3 | GameType::FONV | GameType::FO4 | GameType::FO4VR
+                GameType::Fallout3
+                    | GameType::FalloutNV
+                    | GameType::Fallout4
+                    | GameType::Fallout4VR
             ) {
                 assert!(!archives.is_empty());
             } else {
@@ -393,7 +396,11 @@ mod tests {
 
             if matches!(
                 game_type,
-                GameType::TES4 | GameType::FO3 | GameType::FONV | GameType::FO4 | GameType::FO4VR
+                GameType::Oblivion
+                    | GameType::Fallout3
+                    | GameType::FalloutNV
+                    | GameType::Fallout4
+                    | GameType::Fallout4VR
             ) {
                 assert!(!archives.is_empty());
             } else {

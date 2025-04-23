@@ -10,17 +10,17 @@ impl TryFrom<libloot::GameType> for GameType {
 
     fn try_from(value: libloot::GameType) -> Result<Self, Self::Error> {
         match value {
-            libloot::GameType::TES4 => Ok(GameType::tes4),
-            libloot::GameType::TES5 => Ok(GameType::tes5),
-            libloot::GameType::FO3 => Ok(GameType::fo3),
-            libloot::GameType::FONV => Ok(GameType::fonv),
-            libloot::GameType::FO4 => Ok(GameType::fo4),
-            libloot::GameType::TES5SE => Ok(GameType::tes5se),
-            libloot::GameType::FO4VR => Ok(GameType::fo4vr),
-            libloot::GameType::TES5VR => Ok(GameType::tes5vr),
-            libloot::GameType::TES3 => Ok(GameType::tes3),
-            libloot::GameType::Starfield => Ok(GameType::starfield),
-            libloot::GameType::OpenMW => Ok(GameType::openmw),
+            libloot::GameType::Oblivion => Ok(GameType::Oblivion),
+            libloot::GameType::Skyrim => Ok(GameType::Skyrim),
+            libloot::GameType::Fallout3 => Ok(GameType::Fallout3),
+            libloot::GameType::FalloutNV => Ok(GameType::FalloutNV),
+            libloot::GameType::Fallout4 => Ok(GameType::Fallout4),
+            libloot::GameType::SkyrimSE => Ok(GameType::SkyrimSE),
+            libloot::GameType::Fallout4VR => Ok(GameType::Fallout4VR),
+            libloot::GameType::SkyrimVR => Ok(GameType::SkyrimVR),
+            libloot::GameType::Morrowind => Ok(GameType::Morrowind),
+            libloot::GameType::Starfield => Ok(GameType::Starfield),
+            libloot::GameType::OpenMW => Ok(GameType::OpenMW),
             _ => Err(UnsupportedEnumValueError),
         }
     }
@@ -31,17 +31,17 @@ impl TryFrom<GameType> for libloot::GameType {
 
     fn try_from(value: GameType) -> Result<Self, Self::Error> {
         match value {
-            GameType::tes4 => Ok(libloot::GameType::TES4),
-            GameType::tes5 => Ok(libloot::GameType::TES5),
-            GameType::fo3 => Ok(libloot::GameType::FO3),
-            GameType::fonv => Ok(libloot::GameType::FONV),
-            GameType::fo4 => Ok(libloot::GameType::FO4),
-            GameType::tes5se => Ok(libloot::GameType::TES5SE),
-            GameType::fo4vr => Ok(libloot::GameType::FO4VR),
-            GameType::tes5vr => Ok(libloot::GameType::TES5VR),
-            GameType::tes3 => Ok(libloot::GameType::TES3),
-            GameType::starfield => Ok(libloot::GameType::Starfield),
-            GameType::openmw => Ok(libloot::GameType::OpenMW),
+            GameType::Oblivion => Ok(libloot::GameType::Oblivion),
+            GameType::Skyrim => Ok(libloot::GameType::Skyrim),
+            GameType::Fallout3 => Ok(libloot::GameType::Fallout3),
+            GameType::FalloutNV => Ok(libloot::GameType::FalloutNV),
+            GameType::Fallout4 => Ok(libloot::GameType::Fallout4),
+            GameType::SkyrimSE => Ok(libloot::GameType::SkyrimSE),
+            GameType::Fallout4VR => Ok(libloot::GameType::Fallout4VR),
+            GameType::SkyrimVR => Ok(libloot::GameType::SkyrimVR),
+            GameType::Morrowind => Ok(libloot::GameType::Morrowind),
+            GameType::Starfield => Ok(libloot::GameType::Starfield),
+            GameType::OpenMW => Ok(libloot::GameType::OpenMW),
             _ => Err(UnsupportedEnumValueError),
         }
     }

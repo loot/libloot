@@ -39,7 +39,7 @@ TEST(libloot_revision, shouldReturnExpectedValue) {
 }
 
 TEST(new_game, shouldThrowIfGivenNonsense) {
-  EXPECT_THROW(new_game(GameType::fo3, "foo"), ::rust::Error);
+  EXPECT_THROW(new_game(GameType::Fallout3, "foo"), ::rust::Error);
 }
 
 TEST(Message, creation) {

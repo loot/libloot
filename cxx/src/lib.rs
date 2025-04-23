@@ -210,17 +210,17 @@ impl TryFrom<ffi::LogLevel> for libloot::LogLevel {
 mod ffi {
 
     pub enum GameType {
-        tes4,
-        tes5,
-        fo3,
-        fonv,
-        fo4,
-        tes5se,
-        fo4vr,
-        tes5vr,
-        tes3,
-        starfield,
-        openmw,
+        Oblivion,
+        Skyrim,
+        Fallout3,
+        FalloutNV,
+        Fallout4,
+        SkyrimSE,
+        Fallout4VR,
+        SkyrimVR,
+        Morrowind,
+        Starfield,
+        OpenMW,
     }
 
     pub enum MessageType {

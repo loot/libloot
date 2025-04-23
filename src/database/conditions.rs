@@ -157,7 +157,7 @@ mod tests {
 
             let state = loot_condition_interpreter::State::new(
                 loot_condition_interpreter::GameType::Oblivion,
-                source_plugins_path(crate::GameType::TES4),
+                source_plugins_path(crate::GameType::Oblivion),
             );
             let result = evaluate_all_conditions(plugin, &state).unwrap().unwrap();
 
@@ -183,7 +183,7 @@ mod tests {
 
             let state = loot_condition_interpreter::State::new(
                 loot_condition_interpreter::GameType::Oblivion,
-                source_plugins_path(crate::GameType::TES4),
+                source_plugins_path(crate::GameType::Oblivion),
             );
             assert!(evaluate_all_conditions(plugin, &state).unwrap().is_none());
         }

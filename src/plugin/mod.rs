@@ -331,10 +331,10 @@ fn has_plugin_file_extension(game_type: GameType, plugin_path: &Path) -> bool {
         } else {
             matches!(
                 game_type,
-                GameType::FO4
-                    | GameType::FO4VR
-                    | GameType::TES5SE
-                    | GameType::TES5VR
+                GameType::Fallout4
+                    | GameType::Fallout4VR
+                    | GameType::SkyrimSE
+                    | GameType::SkyrimVR
                     | GameType::Starfield
             ) && extension.eq_ignore_ascii_case("esl")
         }
@@ -510,7 +510,7 @@ mod tests {
         #[test]
         fn new_should_handle_non_ascii_filenames_correctly() {
             let tmp_dir = tempdir().unwrap();
-            let source_path = source_plugins_path(GameType::TES4).join(BLANK_ESM);
+            let source_path = source_plugins_path(GameType::Oblivion).join(BLANK_ESM);
             let path = tmp_dir.path().join(NON_ASCII_ESM);
 
             std::fs::copy(source_path, &path).unwrap();
@@ -539,10 +539,10 @@ mod tests {
 
             #[expect(clippy::float_cmp, reason = "float values should be exactly equal")]
             match game_type {
-                GameType::TES3 | GameType::OpenMW => {
+                GameType::Morrowind | GameType::OpenMW => {
                     assert_eq!(1.2, plugin.header_version().unwrap());
                 }
-                GameType::TES4 => assert_eq!(0.8, plugin.header_version().unwrap()),
+                GameType::Oblivion => assert_eq!(0.8, plugin.header_version().unwrap()),
                 GameType::Starfield => assert_eq!(0.96, plugin.header_version().unwrap()),
                 _ => assert_eq!(0.94, plugin.header_version().unwrap()),
             }
@@ -610,18 +610,18 @@ mod tests {
 
             #[expect(clippy::float_cmp, reason = "float values should be exactly equal")]
             match game_type {
-                GameType::TES3 | GameType::OpenMW => {
+                GameType::Morrowind | GameType::OpenMW => {
                     assert_eq!(1.2, plugin.header_version().unwrap());
                 }
-                GameType::TES4 => assert_eq!(0.8, plugin.header_version().unwrap()),
+                GameType::Oblivion => assert_eq!(0.8, plugin.header_version().unwrap()),
                 GameType::Starfield => assert_eq!(0.96, plugin.header_version().unwrap()),
                 _ => assert_eq!(0.94, plugin.header_version().unwrap()),
             }
 
             let expected_crc = match game_type {
-                GameType::TES3 | GameType::OpenMW => 3_317_676_987,
+                GameType::Morrowind | GameType::OpenMW => 3_317_676_987,
                 GameType::Starfield => 1_422_425_298,
-                GameType::TES4 => 3_759_349_588,
+                GameType::Oblivion => 3_759_349_588,
                 _ => 3_000_242_590,
             };
 
@@ -629,7 +629,7 @@ mod tests {
             assert!(!plugin.do_assets_overlap(&plugin));
             assert_eq!(0, plugin.asset_count());
 
-            if matches!(game_type, GameType::TES3 | GameType::OpenMW) {
+            if matches!(game_type, GameType::Morrowind | GameType::OpenMW) {
                 let master = Plugin::new(
                     game_type,
                     &GameCache::default(),
@@ -678,7 +678,7 @@ mod tests {
 
             if matches!(
                 game_type,
-                GameType::TES3 | GameType::OpenMW | GameType::Starfield
+                GameType::Morrowind | GameType::OpenMW | GameType::Starfield
             ) {
                 // The Starfield test data doesn't include a BA2 file.
                 assert!(!plugin.loads_archive());
@@ -742,7 +742,7 @@ mod tests {
 
             assert!(
                 Plugin::new(
-                    GameType::TES4,
+                    GameType::Oblivion,
                     &GameCache::default(),
                     path,
                     LoadScope::HeaderOnly
@@ -802,10 +802,10 @@ mod tests {
 
             if matches!(
                 game_type,
-                GameType::FO4
-                    | GameType::FO4VR
-                    | GameType::TES5SE
-                    | GameType::TES5VR
+                GameType::Fallout4
+                    | GameType::Fallout4VR
+                    | GameType::SkyrimSE
+                    | GameType::SkyrimVR
                     | GameType::Starfield
             ) {
                 assert!(light.is_light_plugin());
@@ -948,10 +948,10 @@ mod tests {
 
             if matches!(
                 game_type,
-                GameType::FO4
-                    | GameType::FO4VR
-                    | GameType::TES5SE
-                    | GameType::TES5VR
+                GameType::Fallout4
+                    | GameType::Fallout4VR
+                    | GameType::SkyrimSE
+                    | GameType::SkyrimVR
                     | GameType::Starfield
             ) {
                 assert!(result);
@@ -1053,10 +1053,10 @@ mod tests {
             let result = has_plugin_file_extension(game_type, Path::new("file.esl"));
             if matches!(
                 game_type,
-                GameType::FO4
-                    | GameType::TES5SE
-                    | GameType::FO4VR
-                    | GameType::TES5VR
+                GameType::Fallout4
+                    | GameType::SkyrimSE
+                    | GameType::Fallout4VR
+                    | GameType::SkyrimVR
                     | GameType::Starfield
             ) {
                 assert!(result);

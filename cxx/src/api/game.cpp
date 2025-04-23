@@ -7,27 +7,27 @@
 namespace {
 loot::GameType convert(loot::rust::GameType gameType) {
   switch (gameType) {
-    case loot::rust::GameType::tes3:
+    case loot::rust::GameType::Morrowind:
       return loot::GameType::tes3;
-    case loot::rust::GameType::tes4:
+    case loot::rust::GameType::Oblivion:
       return loot::GameType::tes4;
-    case loot::rust::GameType::tes5:
+    case loot::rust::GameType::Skyrim:
       return loot::GameType::tes5;
-    case loot::rust::GameType::tes5se:
+    case loot::rust::GameType::SkyrimSE:
       return loot::GameType::tes5se;
-    case loot::rust::GameType::tes5vr:
+    case loot::rust::GameType::SkyrimVR:
       return loot::GameType::tes5vr;
-    case loot::rust::GameType::fo3:
+    case loot::rust::GameType::Fallout3:
       return loot::GameType::fo3;
-    case loot::rust::GameType::fonv:
+    case loot::rust::GameType::FalloutNV:
       return loot::GameType::fonv;
-    case loot::rust::GameType::fo4:
+    case loot::rust::GameType::Fallout4:
       return loot::GameType::fo4;
-    case loot::rust::GameType::fo4vr:
+    case loot::rust::GameType::Fallout4VR:
       return loot::GameType::fo4vr;
-    case loot::rust::GameType::starfield:
+    case loot::rust::GameType::Starfield:
       return loot::GameType::starfield;
-    case loot::rust::GameType::openmw:
+    case loot::rust::GameType::OpenMW:
       return loot::GameType::openmw;
     default:
       throw std::logic_error("Unsupported GameType value");
@@ -37,27 +37,27 @@ loot::GameType convert(loot::rust::GameType gameType) {
 loot::rust::GameType convert(loot::GameType gameType) {
   switch (gameType) {
     case loot::GameType::tes3:
-      return loot::rust::GameType::tes3;
+      return loot::rust::GameType::Morrowind;
     case loot::GameType::tes4:
-      return loot::rust::GameType::tes4;
+      return loot::rust::GameType::Oblivion;
     case loot::GameType::tes5:
-      return loot::rust::GameType::tes5;
+      return loot::rust::GameType::Skyrim;
     case loot::GameType::tes5se:
-      return loot::rust::GameType::tes5se;
+      return loot::rust::GameType::SkyrimSE;
     case loot::GameType::tes5vr:
-      return loot::rust::GameType::tes5vr;
+      return loot::rust::GameType::SkyrimVR;
     case loot::GameType::fo3:
-      return loot::rust::GameType::fo3;
+      return loot::rust::GameType::Fallout3;
     case loot::GameType::fonv:
-      return loot::rust::GameType::fonv;
+      return loot::rust::GameType::FalloutNV;
     case loot::GameType::fo4:
-      return loot::rust::GameType::fo4;
+      return loot::rust::GameType::Fallout4;
     case loot::GameType::fo4vr:
-      return loot::rust::GameType::fo4vr;
+      return loot::rust::GameType::Fallout4VR;
     case loot::GameType::starfield:
-      return loot::rust::GameType::starfield;
+      return loot::rust::GameType::Starfield;
     case loot::GameType::openmw:
-      return loot::rust::GameType::openmw;
+      return loot::rust::GameType::OpenMW;
     default:
       throw std::logic_error("Unsupported GameType value");
   }

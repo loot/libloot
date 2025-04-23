@@ -36,23 +36,23 @@ use crate::{
 #[non_exhaustive]
 pub enum GameType {
     /// The Elder Scrolls IV: Oblivion
-    TES4,
+    Oblivion,
     /// The Elder Scrolls V: Skyrim
-    TES5,
+    Skyrim,
     /// Fallout 3
-    FO3,
+    Fallout3,
     /// Fallout: New Vegas
-    FONV,
+    FalloutNV,
     /// Fallout 4
-    FO4,
+    Fallout4,
     /// The Elder Scrolls V: Skyrim Special Edition
-    TES5SE,
+    SkyrimSE,
     /// Fallout 4 VR
-    FO4VR,
+    Fallout4VR,
     /// Skyrim VR
-    TES5VR,
+    SkyrimVR,
     /// The Elder Scrolls III: Morrowind
-    TES3,
+    Morrowind,
     /// Starfield
     Starfield,
     /// OpenMW
@@ -62,15 +62,15 @@ pub enum GameType {
 impl Display for GameType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GameType::TES4 => write!(f, "The Elder Scrolls IV: Oblivion"),
-            GameType::TES5 => write!(f, "The Elder Scrolls V: Skyrim"),
-            GameType::FO3 => write!(f, "Fallout 3"),
-            GameType::FONV => write!(f, "Fallout: New Vegas"),
-            GameType::FO4 => write!(f, "Fallout 4"),
-            GameType::TES5SE => write!(f, "The Elder Scrolls V: Skyrim Special Edition"),
-            GameType::FO4VR => write!(f, "Fallout 4 VR"),
-            GameType::TES5VR => write!(f, "The Elder Scrolls V: Skyrim VR"),
-            GameType::TES3 => write!(f, "The Elder Scrolls III: Morrowind"),
+            GameType::Oblivion => write!(f, "The Elder Scrolls IV: Oblivion"),
+            GameType::Skyrim => write!(f, "The Elder Scrolls V: Skyrim"),
+            GameType::Fallout3 => write!(f, "Fallout 3"),
+            GameType::FalloutNV => write!(f, "Fallout: New Vegas"),
+            GameType::Fallout4 => write!(f, "Fallout 4"),
+            GameType::SkyrimSE => write!(f, "The Elder Scrolls V: Skyrim Special Edition"),
+            GameType::Fallout4VR => write!(f, "Fallout 4 VR"),
+            GameType::SkyrimVR => write!(f, "The Elder Scrolls V: Skyrim VR"),
+            GameType::Morrowind => write!(f, "The Elder Scrolls III: Morrowind"),
             GameType::Starfield => write!(f, "Starfield"),
             GameType::OpenMW => write!(f, "OpenMW"),
         }
@@ -80,15 +80,15 @@ impl Display for GameType {
 impl From<GameType> for loadorder::GameId {
     fn from(value: GameType) -> Self {
         match value {
-            GameType::TES4 => loadorder::GameId::Oblivion,
-            GameType::TES5 => loadorder::GameId::Skyrim,
-            GameType::FO3 => loadorder::GameId::Fallout3,
-            GameType::FONV => loadorder::GameId::FalloutNV,
-            GameType::FO4 => loadorder::GameId::Fallout4,
-            GameType::TES5SE => loadorder::GameId::SkyrimSE,
-            GameType::FO4VR => loadorder::GameId::Fallout4VR,
-            GameType::TES5VR => loadorder::GameId::SkyrimVR,
-            GameType::TES3 => loadorder::GameId::Morrowind,
+            GameType::Oblivion => loadorder::GameId::Oblivion,
+            GameType::Skyrim => loadorder::GameId::Skyrim,
+            GameType::Fallout3 => loadorder::GameId::Fallout3,
+            GameType::FalloutNV => loadorder::GameId::FalloutNV,
+            GameType::Fallout4 => loadorder::GameId::Fallout4,
+            GameType::SkyrimSE => loadorder::GameId::SkyrimSE,
+            GameType::Fallout4VR => loadorder::GameId::Fallout4VR,
+            GameType::SkyrimVR => loadorder::GameId::SkyrimVR,
+            GameType::Morrowind => loadorder::GameId::Morrowind,
             GameType::Starfield => loadorder::GameId::Starfield,
             GameType::OpenMW => loadorder::GameId::OpenMW,
         }
@@ -98,15 +98,15 @@ impl From<GameType> for loadorder::GameId {
 impl From<GameType> for loot_condition_interpreter::GameType {
     fn from(value: GameType) -> Self {
         match value {
-            GameType::TES4 => loot_condition_interpreter::GameType::Oblivion,
-            GameType::TES5 => loot_condition_interpreter::GameType::Skyrim,
-            GameType::FO3 => loot_condition_interpreter::GameType::Fallout3,
-            GameType::FONV => loot_condition_interpreter::GameType::FalloutNV,
-            GameType::FO4 => loot_condition_interpreter::GameType::Fallout4,
-            GameType::TES5SE => loot_condition_interpreter::GameType::SkyrimSE,
-            GameType::FO4VR => loot_condition_interpreter::GameType::Fallout4VR,
-            GameType::TES5VR => loot_condition_interpreter::GameType::SkyrimVR,
-            GameType::TES3 => loot_condition_interpreter::GameType::Morrowind,
+            GameType::Oblivion => loot_condition_interpreter::GameType::Oblivion,
+            GameType::Skyrim => loot_condition_interpreter::GameType::Skyrim,
+            GameType::Fallout3 => loot_condition_interpreter::GameType::Fallout3,
+            GameType::FalloutNV => loot_condition_interpreter::GameType::FalloutNV,
+            GameType::Fallout4 => loot_condition_interpreter::GameType::Fallout4,
+            GameType::SkyrimSE => loot_condition_interpreter::GameType::SkyrimSE,
+            GameType::Fallout4VR => loot_condition_interpreter::GameType::Fallout4VR,
+            GameType::SkyrimVR => loot_condition_interpreter::GameType::SkyrimVR,
+            GameType::Morrowind => loot_condition_interpreter::GameType::Morrowind,
             GameType::Starfield => loot_condition_interpreter::GameType::Starfield,
             GameType::OpenMW => loot_condition_interpreter::GameType::OpenMW,
         }
@@ -116,13 +116,13 @@ impl From<GameType> for loot_condition_interpreter::GameType {
 impl From<GameType> for esplugin::GameId {
     fn from(value: GameType) -> Self {
         match value {
-            GameType::TES4 => esplugin::GameId::Oblivion,
-            GameType::TES5 => esplugin::GameId::Skyrim,
-            GameType::FO3 => esplugin::GameId::Fallout3,
-            GameType::FONV => esplugin::GameId::FalloutNV,
-            GameType::FO4 | GameType::FO4VR => esplugin::GameId::Fallout4,
-            GameType::TES5SE | GameType::TES5VR => esplugin::GameId::SkyrimSE,
-            GameType::TES3 | GameType::OpenMW => esplugin::GameId::Morrowind,
+            GameType::Oblivion => esplugin::GameId::Oblivion,
+            GameType::Skyrim => esplugin::GameId::Skyrim,
+            GameType::Fallout3 => esplugin::GameId::Fallout3,
+            GameType::FalloutNV => esplugin::GameId::FalloutNV,
+            GameType::Fallout4 | GameType::Fallout4VR => esplugin::GameId::Fallout4,
+            GameType::SkyrimSE | GameType::SkyrimVR => esplugin::GameId::SkyrimSE,
+            GameType::Morrowind | GameType::OpenMW => esplugin::GameId::Morrowind,
             GameType::Starfield => esplugin::GameId::Starfield,
         }
     }
@@ -329,7 +329,7 @@ impl Game {
 
         if matches!(
             self.game_type,
-            GameType::TES3 | GameType::OpenMW | GameType::Starfield
+            GameType::Morrowind | GameType::OpenMW | GameType::Starfield
         ) {
             let mut loaded_plugins: HashMap<Filename, &Plugin> = self
                 .cache
@@ -552,7 +552,7 @@ fn resolve_path(path: &Path) -> PathBuf {
 
 fn data_path(game_type: GameType, game_path: &Path) -> PathBuf {
     match game_type {
-        GameType::TES3 => game_path.join("Data Files"),
+        GameType::Morrowind => game_path.join("Data Files"),
         GameType::OpenMW => game_path.join("resources/vfs"),
         _ => game_path.join("Data"),
     }
@@ -632,7 +632,7 @@ fn find_archives(
 
 fn archive_file_extension(game_type: GameType) -> &'static str {
     match game_type {
-        GameType::FO4 | GameType::FO4VR | GameType::Starfield => ".ba2",
+        GameType::Fallout4 | GameType::Fallout4VR | GameType::Starfield => ".ba2",
         _ => ".bsa",
     }
 }
@@ -915,7 +915,7 @@ mod tests {
             fn should_succeed_for_morrowind_if_given_valid_game_path(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
-                if matches!(game_type, GameType::TES3 | GameType::OpenMW) {
+                if matches!(game_type, GameType::Morrowind | GameType::OpenMW) {
                     assert!(Game::new(fixture.game_type, &fixture.game_path).is_ok());
                 } else {
                     assert!(Game::new(fixture.game_type, &fixture.game_path).is_err());
@@ -924,7 +924,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_a_relative_game_path() {
-                let fixture = Fixture::in_path(GameType::TES3, Path::new("target"));
+                let fixture = Fixture::in_path(GameType::Morrowind, Path::new("target"));
 
                 let game_path = make_relative(&fixture.game_path);
                 assert!(game_path.is_relative());
@@ -934,7 +934,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_an_absolute_game_path() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::new(GameType::Morrowind);
 
                 assert!(fixture.game_path.is_absolute());
                 assert!(Game::new(fixture.game_type, &fixture.game_path).is_ok());
@@ -942,7 +942,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_a_symlink_path() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::new(GameType::Morrowind);
 
                 let game_path = fixture.game_path.with_extension("symlink");
                 symlink_dir(&fixture.game_path, &game_path);
@@ -954,7 +954,7 @@ mod tests {
             #[cfg(windows)]
             #[test]
             fn should_succeed_if_given_a_junction_link_path() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::new(GameType::Morrowind);
 
                 let game_path = fixture.game_path.with_extension("junction");
                 junction_link(&fixture.game_path, &game_path);
@@ -965,7 +965,7 @@ mod tests {
             #[test]
             fn should_error_if_given_a_game_path_that_does_not_exist() {
                 let game_path = Path::new("missing");
-                match Game::new(GameType::TES3, game_path) {
+                match Game::new(GameType::Morrowind, game_path) {
                     Err(GameHandleCreationError::NotADirectory(p)) => assert_eq!(game_path, p),
                     _ => panic!("Expected a not-a-directory error"),
                 }
@@ -990,7 +990,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_relative_paths() {
-                let fixture = Fixture::in_path(GameType::TES3, Path::new("target"));
+                let fixture = Fixture::in_path(GameType::Morrowind, Path::new("target"));
 
                 let game_path = make_relative(&fixture.game_path);
                 assert!(game_path.is_relative());
@@ -1005,7 +1005,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_absolute_paths() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 assert!(fixture.game_path.is_absolute());
                 assert!(fixture.local_path.is_absolute());
@@ -1021,7 +1021,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_symlink_paths() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let game_path = fixture.game_path.with_extension("symlink");
                 symlink_dir(&fixture.game_path, &game_path);
@@ -1039,7 +1039,7 @@ mod tests {
             #[cfg(windows)]
             #[test]
             fn should_succeed_if_given_junction_link_paths() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let game_path = fixture.game_path.with_extension("junction");
                 junction_link(&fixture.game_path, &game_path);
@@ -1054,7 +1054,7 @@ mod tests {
 
             #[test]
             fn should_error_if_given_a_game_path_that_does_not_exist() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let game_path = Path::new("missing");
                 let game = Game::with_local_path(fixture.game_type, game_path, &fixture.local_path);
@@ -1067,7 +1067,7 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_a_local_path_that_does_not_exist() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let local_path = Path::new("missing");
                 let game = Game::with_local_path(fixture.game_type, &fixture.game_path, local_path);
@@ -1077,7 +1077,7 @@ mod tests {
 
             #[test]
             fn should_error_if_given_a_local_path_that_is_not_a_directory() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let local_path = Path::new("README.md");
                 assert!(local_path.exists());
@@ -1095,7 +1095,7 @@ mod tests {
                 let fixture = Fixture::new(game_type);
 
                 match game_type {
-                    GameType::FO4 => {
+                    GameType::Fallout4 => {
                         std::fs::File::create(fixture.game_path.join("appxmanifest.xml")).unwrap();
                     }
                     GameType::OpenMW => {
@@ -1117,7 +1117,7 @@ mod tests {
                 .unwrap();
 
                 match game_type {
-                    GameType::FO4 => {
+                    GameType::Fallout4 => {
                         let base_path = fixture.game_path.join("../..");
                         assert_eq!(
                             &[
@@ -1180,7 +1180,7 @@ mod tests {
 
                 #[test]
                 fn should_clear_the_condition_cache() {
-                    let fixture = Fixture::new(GameType::TES4);
+                    let fixture = Fixture::new(GameType::Oblivion);
 
                     let mut game = Game::with_local_path(
                         fixture.game_type,
@@ -1223,7 +1223,7 @@ mod tests {
 
                 #[test]
                 fn should_update_where_load_order_plugins_are_found() {
-                    let fixture = Fixture::new(GameType::TES4);
+                    let fixture = Fixture::new(GameType::Oblivion);
 
                     let mut game = Game::with_local_path(
                         fixture.game_type,
@@ -1375,7 +1375,7 @@ mod tests {
 
             #[test]
             fn should_resolve_relative_paths_relative_to_the_data_path() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let game = Game::with_local_path(
                     fixture.game_type,
@@ -1393,7 +1393,7 @@ mod tests {
 
             #[test]
             fn should_use_absolute_paths_as_given() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let game = Game::with_local_path(
                     fixture.game_type,
@@ -1441,7 +1441,7 @@ mod tests {
 
             #[test]
             fn should_not_modify_loaded_plugins_storage_if_given_a_non_plugin() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::new(GameType::Morrowind);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1464,7 +1464,7 @@ mod tests {
 
             #[test]
             fn should_not_clear_the_plugins_cache() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::new(GameType::Morrowind);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1484,7 +1484,7 @@ mod tests {
 
             #[test]
             fn should_replace_an_existing_cache_entry_for_the_same_plugin() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::new(GameType::Morrowind);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1542,7 +1542,7 @@ mod tests {
 
             #[test]
             fn should_not_clear_the_plugins_cache() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::new(GameType::Morrowind);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1562,7 +1562,7 @@ mod tests {
 
             #[test]
             fn should_replace_an_existing_cache_entry_for_the_same_plugin() {
-                let fixture = Fixture::new(GameType::TES3);
+                let fixture = Fixture::new(GameType::Morrowind);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1601,7 +1601,7 @@ mod tests {
 
                 if matches!(
                     game_type,
-                    GameType::TES3 | GameType::OpenMW | GameType::Starfield
+                    GameType::Morrowind | GameType::OpenMW | GameType::Starfield
                 ) {
                     match game.load_plugins(paths) {
                         Err(LoadPluginsError::PluginDataError(e)) => {
@@ -1690,7 +1690,7 @@ mod tests {
 
                 let extension = if matches!(
                     game_type,
-                    GameType::FO4 | GameType::FO4VR | GameType::Starfield
+                    GameType::Fallout4 | GameType::Fallout4VR | GameType::Starfield
                 ) {
                     ".ba2"
                 } else {
@@ -1730,7 +1730,7 @@ mod tests {
 
             #[test]
             fn should_clear_the_archive_cache_before_finding_archives() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1752,7 +1752,7 @@ mod tests {
             #[test]
             fn should_not_error_if_an_installed_filename_has_non_windows_1252_encodable_characters()
             {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1770,7 +1770,7 @@ mod tests {
 
             #[test]
             fn should_error_given_duplicate_filenames() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1800,7 +1800,7 @@ mod tests {
 
             #[test]
             fn should_resolve_relative_paths_relative_to_the_data_path() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1823,7 +1823,7 @@ mod tests {
 
             #[test]
             fn should_use_absolute_paths_as_given() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1844,7 +1844,7 @@ mod tests {
 
             #[test]
             fn should_trim_ghost_extensions_from_loaded_plugin_names() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1868,7 +1868,7 @@ mod tests {
 
         #[test]
         fn clear_loaded_plugins_should_clear_the_plugins_cache() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
 
             let mut game =
                 Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path)
@@ -1899,7 +1899,7 @@ mod tests {
 
             #[test]
             fn should_return_an_empty_list_if_given_an_empty_list() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let game = Game::with_local_path(
                     fixture.game_type,
@@ -1913,7 +1913,7 @@ mod tests {
 
             #[test]
             fn should_only_sort_the_given_plugins() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1932,7 +1932,7 @@ mod tests {
 
             #[test]
             fn should_error_if_a_given_plugin_is_not_loaded() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let game = Game::with_local_path(
                     fixture.game_type,
@@ -1950,7 +1950,7 @@ mod tests {
 
             #[test]
             fn should_be_independent_of_plugins_being_loaded() {
-                let fixture = Fixture::new(GameType::TES4);
+                let fixture = Fixture::new(GameType::Oblivion);
 
                 let mut game = Game::with_local_path(
                     fixture.game_type,
@@ -1979,7 +1979,7 @@ mod tests {
 
         #[test]
         fn set_load_order_should_persist_the_given_load_order() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
 
             let mut game =
                 Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path)
@@ -2005,7 +2005,7 @@ mod tests {
 
         #[test]
         fn should_support_loading_plugins_and_metadata_in_parallel() {
-            let fixture = Fixture::new(GameType::TES3);
+            let fixture = Fixture::new(GameType::Morrowind);
 
             let mut game =
                 Game::with_local_path(fixture.game_type, &fixture.game_path, &fixture.local_path)
@@ -2030,7 +2030,7 @@ mod tests {
 
     #[test]
     fn to_plugin_sorting_data_should_filter_out_files_with_false_constraints() {
-        let game_type = GameType::TES4;
+        let game_type = GameType::Oblivion;
         let true_constraint = "file(\"Blank.esm\")";
         let false_constraint = "file(\"missing.esm\")";
 
@@ -2095,9 +2095,9 @@ mod tests {
 
                 cache.insert_plugins(vec![
                     Plugin::new(
-                        GameType::TES4,
+                        GameType::Oblivion,
                         &cache,
-                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        &source_plugins_path(GameType::Oblivion).join(BLANK_ESM),
                         LoadScope::HeaderOnly,
                     )
                     .unwrap(),
@@ -2112,9 +2112,9 @@ mod tests {
 
                 cache.insert_plugins(vec![
                     Plugin::new(
-                        GameType::TES4,
+                        GameType::Oblivion,
                         &cache,
-                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        &source_plugins_path(GameType::Oblivion).join(BLANK_ESM),
                         LoadScope::HeaderOnly,
                     )
                     .unwrap(),
@@ -2124,9 +2124,9 @@ mod tests {
 
                 cache.insert_plugins(vec![
                     Plugin::new(
-                        GameType::TES4,
+                        GameType::Oblivion,
                         &cache,
-                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        &source_plugins_path(GameType::Oblivion).join(BLANK_ESM),
                         LoadScope::WholePlugin,
                     )
                     .unwrap(),
@@ -2145,9 +2145,9 @@ mod tests {
 
                 cache.insert_plugins(vec![
                     Plugin::new(
-                        GameType::TES4,
+                        GameType::Oblivion,
                         &cache,
-                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        &source_plugins_path(GameType::Oblivion).join(BLANK_ESM),
                         LoadScope::HeaderOnly,
                     )
                     .unwrap(),
@@ -2173,9 +2173,9 @@ mod tests {
 
                 cache.insert_plugins(vec![
                     Plugin::new(
-                        GameType::TES4,
+                        GameType::Oblivion,
                         &cache,
-                        &source_plugins_path(GameType::TES4).join(BLANK_ESM),
+                        &source_plugins_path(GameType::Oblivion).join(BLANK_ESM),
                         LoadScope::HeaderOnly,
                     )
                     .unwrap(),

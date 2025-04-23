@@ -28,10 +28,12 @@ pub const NON_ASCII_ESM: &str = "non\u{00C1}scii.esm";
 
 pub fn source_plugins_path(game_type: GameType) -> PathBuf {
     match game_type {
-        GameType::TES3 | GameType::OpenMW => absolute("./testing-plugins/Morrowind/Data Files"),
-        GameType::TES4 => absolute("./testing-plugins/Oblivion/Data"),
+        GameType::Morrowind | GameType::OpenMW => {
+            absolute("./testing-plugins/Morrowind/Data Files")
+        }
+        GameType::Oblivion => absolute("./testing-plugins/Oblivion/Data"),
         GameType::Starfield => absolute("./testing-plugins/Starfield/Data"),
-        GameType::FO3 | GameType::FONV | GameType::TES5 => {
+        GameType::Fallout3 | GameType::FalloutNV | GameType::Skyrim => {
             absolute("./testing-plugins/Skyrim/Data")
         }
         _ => absolute("./testing-plugins/SkyrimSE/Data"),
@@ -41,12 +43,12 @@ pub fn source_plugins_path(game_type: GameType) -> PathBuf {
 
 fn master_file(game_type: GameType) -> &'static str {
     match game_type {
-        GameType::TES3 | GameType::OpenMW => "Morrowind.esm",
-        GameType::TES4 => "Oblivion.esm",
-        GameType::TES5 | GameType::TES5SE | GameType::TES5VR => "Skyrim.esm",
-        GameType::FO3 => "Fallout3.esm",
-        GameType::FONV => "FalloutNV.esm",
-        GameType::FO4 | GameType::FO4VR => "Fallout4.esm",
+        GameType::Morrowind | GameType::OpenMW => "Morrowind.esm",
+        GameType::Oblivion => "Oblivion.esm",
+        GameType::Skyrim | GameType::SkyrimSE | GameType::SkyrimVR => "Skyrim.esm",
+        GameType::Fallout3 => "Fallout3.esm",
+        GameType::FalloutNV => "FalloutNV.esm",
+        GameType::Fallout4 | GameType::Fallout4VR => "Fallout4.esm",
         GameType::Starfield => "Starfield.esm",
     }
 }
@@ -62,14 +64,18 @@ fn touch(file_path: &Path) {
 fn supports_light_plugins(game_type: GameType) -> bool {
     matches!(
         game_type,
-        GameType::TES5SE | GameType::TES5VR | GameType::FO4 | GameType::FO4VR | GameType::Starfield
+        GameType::SkyrimSE
+            | GameType::SkyrimVR
+            | GameType::Fallout4
+            | GameType::Fallout4VR
+            | GameType::Starfield
     )
 }
 
 fn is_load_order_timestamp_based(game_type: GameType) -> bool {
     matches!(
         game_type,
-        GameType::TES3 | GameType::TES4 | GameType::FO3 | GameType::FONV
+        GameType::Morrowind | GameType::Oblivion | GameType::Fallout3 | GameType::FalloutNV
     )
 }
 
@@ -119,7 +125,7 @@ fn set_load_order(
     use std::io::Write;
 
     match game_type {
-        GameType::TES3 | GameType::OpenMW => {}
+        GameType::Morrowind | GameType::OpenMW => {}
         _ => {
             let mut file = File::create(local_path.join("Plugins.txt")).unwrap();
             for (plugin, is_active) in load_order {
@@ -149,7 +155,7 @@ fn set_load_order(
 
             mod_time += Duration::from_secs(60);
         }
-    } else if game_type == GameType::TES5 {
+    } else if game_type == GameType::Skyrim {
         let mut file = File::create(local_path.join("loadorder.txt")).unwrap();
         for (plugin, _) in load_order {
             writeln!(file, "{plugin}").unwrap();
@@ -160,7 +166,7 @@ fn set_load_order(
 fn data_path(game_type: GameType, game_path: &Path) -> PathBuf {
     match game_type {
         GameType::OpenMW => game_path.join("resources/vfs"),
-        GameType::TES3 => game_path.join("Data Files"),
+        GameType::Morrowind => game_path.join("Data Files"),
         _ => game_path.join("Data"),
     }
 }
@@ -312,15 +318,15 @@ impl Fixture {
 #[rstest::rstest]
 pub fn all_game_types(
     #[values(
-        GameType::TES4,
-        GameType::TES5,
-        GameType::FO3,
-        GameType::FONV,
-        GameType::FO4,
-        GameType::TES5SE,
-        GameType::FO4VR,
-        GameType::TES5VR,
-        GameType::TES3,
+        GameType::Oblivion,
+        GameType::Skyrim,
+        GameType::Fallout3,
+        GameType::FalloutNV,
+        GameType::Fallout4,
+        GameType::SkyrimSE,
+        GameType::Fallout4VR,
+        GameType::SkyrimVR,
+        GameType::Morrowind,
         GameType::Starfield,
         GameType::OpenMW
     )]

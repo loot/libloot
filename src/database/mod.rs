@@ -456,7 +456,7 @@ plugins:
 
     #[test]
     fn load_masterlist_should_succeed_if_given_a_valid_path() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -466,7 +466,7 @@ plugins:
 
     #[test]
     fn load_masterlist_with_prelude_should_succeed_if_given_valid_paths() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database
@@ -478,7 +478,7 @@ plugins:
 
     #[test]
     fn load_userlist_should_succeed_if_given_a_valid_path() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database.load_userlist(&fixture.metadata_path).unwrap();
@@ -499,7 +499,7 @@ plugins:
 
         #[test]
         fn should_write_only_user_metadata() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -518,7 +518,7 @@ plugins:
 
         #[test]
         fn should_succeed_if_the_path_does_not_exist() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("userlist.yaml");
 
@@ -531,7 +531,7 @@ plugins:
 
         #[test]
         fn should_succeed_if_the_path_does_not_exist_and_truncation_is_allowed() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("userlist.yaml");
 
@@ -544,7 +544,7 @@ plugins:
 
         #[test]
         fn should_succeed_if_the_path_exists_and_truncation_is_allowed() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("userlist.yaml");
 
@@ -559,7 +559,7 @@ plugins:
 
         #[test]
         fn should_error_if_the_parent_path_does_not_exist() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("missing/userlist.yaml");
 
@@ -572,7 +572,7 @@ plugins:
 
         #[test]
         fn should_error_if_the_path_is_read_only() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("userlist.yaml");
 
@@ -591,7 +591,7 @@ plugins:
 
         #[test]
         fn should_error_if_the_path_exists_and_truncation_is_not_allowed() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("userlist.yaml");
 
@@ -610,7 +610,7 @@ plugins:
 
         #[test]
         fn should_only_write_plugin_bash_tags_and_dirty_info() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
             let output_path = fixture.inner.local_path.join("minimal.yaml");
 
@@ -656,7 +656,7 @@ plugins:
 
         #[test]
         fn should_succeed_if_the_path_does_not_exist() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("minimal.yaml");
 
@@ -669,7 +669,7 @@ plugins:
 
         #[test]
         fn should_succeed_if_the_path_does_not_exist_and_truncation_is_allowed() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("minimal.yaml");
 
@@ -682,7 +682,7 @@ plugins:
 
         #[test]
         fn should_succeed_if_the_path_exists_and_truncation_is_allowed() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("minimal.yaml");
 
@@ -697,7 +697,7 @@ plugins:
 
         #[test]
         fn should_error_if_the_parent_path_does_not_exist() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("missing/minimal.yaml");
 
@@ -710,7 +710,7 @@ plugins:
 
         #[test]
         fn should_error_if_the_path_is_read_only() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("minimal.yaml");
 
@@ -729,7 +729,7 @@ plugins:
 
         #[test]
         fn should_error_if_the_path_exists_and_truncation_is_not_allowed() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
             let output_path = fixture.inner.local_path.join("minimal.yaml");
 
@@ -745,7 +745,7 @@ plugins:
 
     #[test]
     fn known_bash_tags_should_append_userlist_tags_to_masterlist_tags() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -766,7 +766,7 @@ plugins:
 
         #[test]
         fn should_append_userlist_messages_to_masterlist_messages() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -792,7 +792,7 @@ plugins:
 
         #[test]
         fn should_filter_out_messages_with_false_conditions_when_evaluating_conditions() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -818,7 +818,7 @@ plugins:
 
         #[test]
         fn should_return_true_if_the_condition_is_true() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
 
             assert!(database.evaluate("file(\"Blank.esp\")").unwrap());
@@ -826,7 +826,7 @@ plugins:
 
         #[test]
         fn should_return_false_if_the_condition_is_false() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
 
             assert!(!database.evaluate("file(\"missing.esp\")").unwrap());
@@ -838,7 +838,7 @@ plugins:
 
         #[test]
         fn should_return_default_group_before_metadata_has_been_loaded() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
 
             assert_eq!(&[Group::default(),], database.groups(true).as_slice());
@@ -846,7 +846,7 @@ plugins:
 
         #[test]
         fn should_not_include_user_groups_if_param_is_false() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -872,7 +872,7 @@ plugins:
 
         #[test]
         fn should_merge_masterlist_and_userlist_groups() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -901,7 +901,7 @@ plugins:
 
     #[test]
     fn user_groups_should_not_include_masterlist_groups() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -911,7 +911,7 @@ plugins:
 
     #[test]
     fn set_user_groups_should_replace_existing_user_groups() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -944,7 +944,7 @@ plugins:
 
     #[test]
     fn groups_path_should_find_path_using_masterlist_and_user_metadata() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -970,7 +970,7 @@ plugins:
 
         #[test]
         fn should_return_none_if_plugin_has_no_metadata_set() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
 
             assert!(
@@ -983,7 +983,7 @@ plugins:
 
         #[test]
         fn should_return_none_if_plugin_metadata_has_only_name() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.set_plugin_user_metadata(PluginMetadata::new(BLANK_ESM).unwrap());
@@ -998,7 +998,7 @@ plugins:
 
         #[test]
         fn should_prefer_user_metadata_when_merging_metadata() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -1023,7 +1023,7 @@ plugins:
 
         #[test]
         fn should_return_only_masterlist_metadata_if_include_user_metadata_is_false() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -1045,7 +1045,7 @@ plugins:
 
         #[test]
         fn should_filter_out_metadata_with_false_conditions_when_evaluating_conditions() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -1074,7 +1074,7 @@ plugins:
 
         #[test]
         fn should_return_none_if_plugin_has_no_user_metadata_set() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
 
             assert!(
@@ -1087,7 +1087,7 @@ plugins:
 
         #[test]
         fn should_return_none_if_plugin_user_metadata_has_only_name() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.set_plugin_user_metadata(PluginMetadata::new(BLANK_ESM).unwrap());
@@ -1102,7 +1102,7 @@ plugins:
 
         #[test]
         fn should_return_only_user_metadata() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -1124,7 +1124,7 @@ plugins:
 
         #[test]
         fn should_filter_out_metadata_with_false_conditions_when_evaluating_conditions() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -1151,7 +1151,7 @@ plugins:
 
         #[test]
         fn should_replace_existing_user_metadata_for_the_plugin() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -1177,7 +1177,7 @@ plugins:
 
         #[test]
         fn should_not_modify_masterlist_metadata_for_the_plugin() {
-            let fixture = Fixture::new(GameType::TES4);
+            let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
             database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -1203,7 +1203,7 @@ plugins:
 
     #[test]
     fn discard_plugin_user_metadata_should_discard_only_user_metadata_for_only_the_given_plugin() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database.load_masterlist(&fixture.metadata_path).unwrap();
@@ -1242,7 +1242,7 @@ plugins:
 
     #[test]
     fn discard_all_user_metadata_should_not_remove_masterlist_metadata() {
-        let fixture = Fixture::new(GameType::TES4);
+        let fixture = Fixture::new(GameType::Oblivion);
         let mut database = fixture.database();
 
         database.load_masterlist(&fixture.metadata_path).unwrap();
