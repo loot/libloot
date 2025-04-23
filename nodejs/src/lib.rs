@@ -54,7 +54,6 @@
     clippy::mem_forget,
     clippy::missing_assert_message,
     clippy::missing_asserts_for_indexing,
-    clippy::missing_asserts_for_indexing,
     clippy::mixed_read_write_in_expression,
     clippy::multiple_inherent_impl,
     clippy::multiple_unsafe_ops_per_block,
