@@ -362,15 +362,13 @@ fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
     let mut parts = Vec::new();
 
     while let Some(before) = iter.next() {
+        parts.push(before);
+
         let Some(after) = iter.peek() else {
-            parts.push(before);
             break;
         };
 
-        if after.starts_with('?') || (before.ends_with("\\(") && !before.ends_with("\\\\(")) {
-            parts.push(before);
-        } else {
-            parts.push(before);
+        if !after.starts_with('?') && (!before.ends_with("\\(") || before.ends_with("\\\\(")) {
             parts.push("?:");
         }
     }
