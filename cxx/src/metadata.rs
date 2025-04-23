@@ -44,9 +44,9 @@ unsafe trait TransparentWrapper {
 impl From<libloot::metadata::MessageType> for MessageType {
     fn from(value: libloot::metadata::MessageType) -> Self {
         match value {
-            libloot::metadata::MessageType::Say => MessageType::say,
-            libloot::metadata::MessageType::Warn => MessageType::warn,
-            libloot::metadata::MessageType::Error => MessageType::error,
+            libloot::metadata::MessageType::Say => MessageType::Say,
+            libloot::metadata::MessageType::Warn => MessageType::Warn,
+            libloot::metadata::MessageType::Error => MessageType::Error,
         }
     }
 }
@@ -56,9 +56,9 @@ impl TryFrom<MessageType> for libloot::metadata::MessageType {
 
     fn try_from(value: MessageType) -> Result<Self, UnsupportedEnumValueError> {
         match value {
-            MessageType::say => Ok(libloot::metadata::MessageType::Say),
-            MessageType::warn => Ok(libloot::metadata::MessageType::Warn),
-            MessageType::error => Ok(libloot::metadata::MessageType::Error),
+            MessageType::Say => Ok(libloot::metadata::MessageType::Say),
+            MessageType::Warn => Ok(libloot::metadata::MessageType::Warn),
+            MessageType::Error => Ok(libloot::metadata::MessageType::Error),
             _ => Err(UnsupportedEnumValueError),
         }
     }

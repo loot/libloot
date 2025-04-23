@@ -33,11 +33,11 @@ loot::File convert(const loot::rust::File& file) {
 
 loot::MessageType convert(loot::rust::MessageType messageType) {
   switch (messageType) {
-    case loot::rust::MessageType::say:
+    case loot::rust::MessageType::Say:
       return loot::MessageType::say;
-    case loot::rust::MessageType::warn:
+    case loot::rust::MessageType::Warn:
       return loot::MessageType::warn;
-    case loot::rust::MessageType::error:
+    case loot::rust::MessageType::Error:
       return loot::MessageType::error;
     default:
       throw std::logic_error("Unsupported MessageType value");
@@ -182,11 +182,11 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
 loot::rust::MessageType convert(loot::MessageType messageType) {
   switch (messageType) {
     case loot::MessageType::say:
-      return loot::rust::MessageType::say;
+      return loot::rust::MessageType::Say;
     case loot::MessageType::warn:
-      return loot::rust::MessageType::warn;
+      return loot::rust::MessageType::Warn;
     case loot::MessageType::error:
-      return loot::rust::MessageType::error;
+      return loot::rust::MessageType::Error;
     default:
       throw std::logic_error("Unsupported MessageType value");
   }

@@ -47,20 +47,20 @@ TEST(Message, creation) {
   content->set_language(
       ::rust::String(std::string(message_content_default_language())));
 
-  auto message = new_message(MessageType::say, "message2");
+  auto message = new_message(MessageType::Say, "message2");
   message->set_condition("invalid condition");
 
   std::vector<::rust::Box<MessageContent>> contents;
   contents.push_back(std::move(content));
   auto multi_message = multilingual_message(
-      MessageType::say,
+      MessageType::Say,
       ::rust::Slice<const ::rust::Box<MessageContent>>(contents));
 
   multi_message->set_condition("invalid condition");
 
   EXPECT_EQ(multi_message->content()[0].text(), "a message");
   EXPECT_EQ(multi_message->content()[0].language(), "en");
-  EXPECT_EQ(MessageType::say, multi_message->message_type());
+  EXPECT_EQ(MessageType::Say, multi_message->message_type());
   EXPECT_EQ(multi_message->condition(), "invalid condition");
 }
 }

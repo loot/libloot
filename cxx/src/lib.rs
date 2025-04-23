@@ -224,9 +224,9 @@ mod ffi {
     }
 
     pub enum MessageType {
-        say,
-        warn,
-        error,
+        Say,
+        Warn,
+        Error,
     }
 
     pub enum TagSuggestion {
