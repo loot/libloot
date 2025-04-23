@@ -95,31 +95,31 @@ loot::PluginMetadata convert(const loot::rust::PluginMetadata& metadata) {
 
 std::optional<loot::EdgeType> convert(uint8_t edgeType) {
   switch (edgeType) {
-    case static_cast<uint8_t>(loot::rust::EdgeType::hardcoded):
+    case static_cast<uint8_t>(loot::rust::EdgeType::Hardcoded):
       return loot::EdgeType::hardcoded;
-    case static_cast<uint8_t>(loot::rust::EdgeType::masterFlag):
+    case static_cast<uint8_t>(loot::rust::EdgeType::MasterFlag):
       return loot::EdgeType::masterFlag;
-    case static_cast<uint8_t>(loot::rust::EdgeType::master):
+    case static_cast<uint8_t>(loot::rust::EdgeType::Master):
       return loot::EdgeType::master;
-    case static_cast<uint8_t>(loot::rust::EdgeType::masterlistRequirement):
+    case static_cast<uint8_t>(loot::rust::EdgeType::MasterlistRequirement):
       return loot::EdgeType::masterlistRequirement;
-    case static_cast<uint8_t>(loot::rust::EdgeType::userRequirement):
+    case static_cast<uint8_t>(loot::rust::EdgeType::UserRequirement):
       return loot::EdgeType::userRequirement;
-    case static_cast<uint8_t>(loot::rust::EdgeType::masterlistLoadAfter):
+    case static_cast<uint8_t>(loot::rust::EdgeType::MasterlistLoadAfter):
       return loot::EdgeType::masterlistLoadAfter;
-    case static_cast<uint8_t>(loot::rust::EdgeType::userLoadAfter):
+    case static_cast<uint8_t>(loot::rust::EdgeType::UserLoadAfter):
       return loot::EdgeType::userLoadAfter;
-    case static_cast<uint8_t>(loot::rust::EdgeType::masterlistGroup):
+    case static_cast<uint8_t>(loot::rust::EdgeType::MasterlistGroup):
       return loot::EdgeType::masterlistGroup;
-    case static_cast<uint8_t>(loot::rust::EdgeType::userGroup):
+    case static_cast<uint8_t>(loot::rust::EdgeType::UserGroup):
       return loot::EdgeType::userGroup;
-    case static_cast<uint8_t>(loot::rust::EdgeType::recordOverlap):
+    case static_cast<uint8_t>(loot::rust::EdgeType::RecordOverlap):
       return loot::EdgeType::recordOverlap;
-    case static_cast<uint8_t>(loot::rust::EdgeType::assetOverlap):
+    case static_cast<uint8_t>(loot::rust::EdgeType::AssetOverlap):
       return loot::EdgeType::assetOverlap;
-    case static_cast<uint8_t>(loot::rust::EdgeType::tieBreak):
+    case static_cast<uint8_t>(loot::rust::EdgeType::TieBreak):
       return loot::EdgeType::tieBreak;
-    case static_cast<uint8_t>(loot::rust::EdgeType::blueprintMaster):
+    case static_cast<uint8_t>(loot::rust::EdgeType::BlueprintMaster):
       return loot::EdgeType::blueprintMaster;
     default:
       return std::nullopt;

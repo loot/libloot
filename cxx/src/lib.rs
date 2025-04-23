@@ -235,19 +235,19 @@ mod ffi {
     }
 
     pub enum EdgeType {
-        hardcoded,
-        masterFlag,
-        master,
-        masterlistRequirement,
-        userRequirement,
-        masterlistLoadAfter,
-        userLoadAfter,
-        masterlistGroup,
-        userGroup,
-        recordOverlap,
-        assetOverlap,
-        tieBreak,
-        blueprintMaster,
+        Hardcoded,
+        MasterFlag,
+        Master,
+        MasterlistRequirement,
+        UserRequirement,
+        MasterlistLoadAfter,
+        UserLoadAfter,
+        MasterlistGroup,
+        UserGroup,
+        RecordOverlap,
+        AssetOverlap,
+        TieBreak,
+        BlueprintMaster,
     }
 
     pub enum LogLevel {
