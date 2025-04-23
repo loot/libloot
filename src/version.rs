@@ -30,17 +30,18 @@ pub fn is_compatible(major: u32, minor: u32, _patch: u32) -> bool {
 
 #[expect(
     clippy::as_conversions,
-    reason = "Can't const-convert the byte to a u32 a safer way"
+    reason = "Can't convert the u8 to a u32 another way in a const context"
 )]
 #[expect(
     clippy::indexing_slicing,
-    reason = "Can't const-convert the byte to a u8 a safer way"
+    reason = "Can't iterate over the byte values another way in a const context"
 )]
 const fn parse_u32(value: &str) -> u32 {
+    let bytes = value.as_bytes();
     let mut acc = 0;
     let mut i = 0;
-    while i < value.len() {
-        acc = acc * 10 + (value.as_bytes()[i] - b'0') as u32;
+    while i < bytes.len() {
+        acc = acc * 10 + (bytes[i] - b'0') as u32;
         i += 1;
     }
     acc

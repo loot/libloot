@@ -119,7 +119,7 @@ fn subarray<const SIZE: usize>(
 
 #[expect(
     clippy::as_conversions,
-    reason = "Made safe by a compile-time assertion"
+    reason = "A compile-time assertion ensures that this conversion will be lossless on all relevant target platforms"
 )]
 pub(super) const fn to_usize(value: u32) -> usize {
     // Error at compile time if this conversion isn't lossless.
