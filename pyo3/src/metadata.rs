@@ -10,7 +10,7 @@ use crate::error::VerboseError;
 
 pub(crate) const NONE_REPR: &str = "None";
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[repr(transparent)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Group(libloot::metadata::Group);
@@ -28,11 +28,11 @@ impl Group {
         let mut group = libloot::metadata::Group::new(name);
 
         if let Some(description) = description {
-            group.set_description(description);
+            group = group.with_description(description);
         }
 
         if let Some(after_groups) = after_groups {
-            group.set_after_groups(after_groups);
+            group = group.with_after_groups(after_groups);
         }
 
         Self(group)
@@ -48,19 +48,9 @@ impl Group {
         self.0.description()
     }
 
-    #[setter]
-    fn set_description(&mut self, description: String) {
-        self.0.set_description(description);
-    }
-
     #[getter]
     fn after_groups(&self) -> &[String] {
         self.0.after_groups()
-    }
-
-    #[setter]
-    fn set_after_groups(&mut self, after_groups: Vec<String>) {
-        self.0.set_after_groups(after_groups);
     }
 
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
@@ -73,12 +63,6 @@ impl Group {
             inner.description().unwrap_or(NONE_REPR),
             inner.after_groups().join(",")
         ))
-    }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
     }
 }
 
@@ -94,7 +78,7 @@ impl From<Group> for libloot::metadata::Group {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[repr(transparent)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct MessageContent(libloot::metadata::MessageContent);
@@ -112,7 +96,7 @@ impl MessageContent {
         let mut content = libloot::metadata::MessageContent::new(text);
 
         if let Some(language) = language {
-            content.set_language(language);
+            content = content.with_language(language);
         }
 
         Self(content)
@@ -128,11 +112,6 @@ impl MessageContent {
         self.0.language()
     }
 
-    #[setter]
-    fn set_language(&mut self, language: String) {
-        self.0.set_language(language);
-    }
-
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
         let class_name = slf.get_type().qualname()?;
         let inner = &slf.borrow().0;
@@ -142,12 +121,6 @@ impl MessageContent {
             inner.text(),
             inner.language()
         ))
-    }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
     }
 }
 
@@ -214,7 +187,7 @@ impl From<MessageType> for libloot::metadata::MessageType {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Message(libloot::metadata::Message);
@@ -245,7 +218,7 @@ impl Message {
         };
 
         if let Some(condition) = condition {
-            message.set_condition(condition);
+            message = message.with_condition(condition);
         }
 
         Ok(Self(message))
@@ -266,11 +239,6 @@ impl Message {
         self.0.condition()
     }
 
-    #[setter]
-    fn set_condition(&mut self, condition: String) {
-        self.0.set_condition(condition);
-    }
-
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
         let class_name = slf.get_type().qualname()?;
         let inner = &slf.borrow().0;
@@ -281,12 +249,6 @@ impl Message {
             repr_message_contents(inner.content()),
             inner.condition().unwrap_or(NONE_REPR),
         ))
-    }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
     }
 }
 
@@ -302,7 +264,7 @@ impl From<Message> for libloot::metadata::Message {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct File(libloot::metadata::File);
@@ -321,20 +283,20 @@ impl File {
         let mut file = libloot::metadata::File::new(name);
 
         if let Some(display_name) = display_name {
-            file.set_display_name(display_name);
+            file = file.with_display_name(display_name);
         }
 
         if let Some(detail) = detail {
             let detail = detail.into_iter().map(Into::into).collect();
-            file.set_detail(detail)?;
+            file = file.with_detail(detail)?;
         }
 
         if let Some(condition) = condition {
-            file.set_condition(condition);
+            file = file.with_condition(condition);
         }
 
         if let Some(constraint) = constraint {
-            file.set_constraint(constraint);
+            file = file.with_constraint(constraint);
         }
 
         Ok(Self(file))
@@ -350,21 +312,9 @@ impl File {
         self.0.display_name()
     }
 
-    #[setter]
-    fn set_display_name(&mut self, description: String) {
-        self.0.set_display_name(description);
-    }
-
     #[getter]
     fn detail(&self) -> Vec<MessageContent> {
         self.0.detail().iter().cloned().map(Into::into).collect()
-    }
-
-    #[setter]
-    fn set_detail(&mut self, detail: Vec<MessageContent>) -> Result<(), VerboseError> {
-        let detail = detail.into_iter().map(Into::into).collect();
-        self.0.set_detail(detail)?;
-        Ok(())
     }
 
     #[getter]
@@ -372,19 +322,9 @@ impl File {
         self.0.condition()
     }
 
-    #[setter]
-    fn set_condition(&mut self, condition: String) {
-        self.0.set_condition(condition);
-    }
-
     #[getter]
     fn constraint(&self) -> Option<&str> {
         self.0.constraint()
-    }
-
-    #[setter]
-    fn set_constraint(&mut self, constraint: String) {
-        self.0.set_constraint(constraint);
     }
 
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
@@ -400,12 +340,6 @@ impl File {
             inner.constraint().unwrap_or(NONE_REPR)
         ))
     }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
-    }
 }
 
 impl From<libloot::metadata::File> for File {
@@ -420,7 +354,7 @@ impl From<File> for libloot::metadata::File {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Filename(libloot::metadata::Filename);
@@ -441,12 +375,6 @@ impl Filename {
         let inner = &slf.borrow().0;
         Ok(format!("{}({})", class_name, inner.as_str(),))
     }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
-    }
 }
 
 impl From<libloot::metadata::Filename> for Filename {
@@ -455,7 +383,7 @@ impl From<libloot::metadata::Filename> for Filename {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct PluginCleaningData(libloot::metadata::PluginCleaningData);
@@ -475,20 +403,20 @@ impl PluginCleaningData {
         let mut data = libloot::metadata::PluginCleaningData::new(crc, cleaning_utility);
 
         if let Some(count) = itm_count {
-            data.set_itm_count(count);
+            data = data.with_itm_count(count);
         }
 
         if let Some(count) = deleted_reference_count {
-            data.set_deleted_reference_count(count);
+            data = data.with_deleted_reference_count(count);
         }
 
         if let Some(count) = deleted_navmesh_count {
-            data.set_deleted_navmesh_count(count);
+            data = data.with_deleted_navmesh_count(count);
         }
 
         if let Some(detail) = detail {
             let detail = detail.into_iter().map(Into::into).collect();
-            data.set_detail(detail)?;
+            data = data.with_detail(detail)?;
         }
 
         Ok(Self(data))
@@ -504,29 +432,14 @@ impl PluginCleaningData {
         self.0.itm_count()
     }
 
-    #[setter]
-    fn set_itm_count(&mut self, count: u32) {
-        self.0.set_itm_count(count);
-    }
-
     #[getter]
     fn deleted_reference_count(&self) -> u32 {
         self.0.deleted_reference_count()
     }
 
-    #[setter]
-    fn set_deleted_reference_count(&mut self, count: u32) {
-        self.0.set_deleted_reference_count(count);
-    }
-
     #[getter]
     fn deleted_navmesh_count(&self) -> u32 {
         self.0.deleted_navmesh_count()
-    }
-
-    #[setter]
-    fn set_deleted_navmesh_count(&mut self, count: u32) {
-        self.0.set_deleted_navmesh_count(count);
     }
 
     #[getter]
@@ -537,13 +450,6 @@ impl PluginCleaningData {
     #[getter]
     fn detail(&self) -> Vec<MessageContent> {
         self.0.detail().iter().cloned().map(Into::into).collect()
-    }
-
-    #[setter]
-    fn set_detail(&mut self, detail: Vec<MessageContent>) -> Result<(), VerboseError> {
-        let detail = detail.into_iter().map(Into::into).collect();
-        self.0.set_detail(detail)?;
-        Ok(())
     }
 
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
@@ -559,12 +465,6 @@ impl PluginCleaningData {
             inner.deleted_navmesh_count(),
             repr_message_contents(inner.detail())
         ))
-    }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
     }
 }
 
@@ -598,7 +498,7 @@ impl TryFrom<TagSuggestion> for libloot::metadata::TagSuggestion {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Tag(libloot::metadata::Tag);
@@ -615,7 +515,7 @@ impl Tag {
         let mut tag = libloot::metadata::Tag::new(name, suggestion.try_into()?);
 
         if let Some(condition) = condition {
-            tag.set_condition(condition);
+            tag = tag.with_condition(condition);
         }
 
         Ok(Self(tag))
@@ -636,11 +536,6 @@ impl Tag {
         self.0.condition()
     }
 
-    #[setter]
-    fn set_condition(&mut self, condition: String) {
-        self.0.set_condition(condition);
-    }
-
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
         let class_name = slf.get_type().qualname()?;
         let inner = &slf.borrow().0;
@@ -657,12 +552,6 @@ impl Tag {
             inner.condition().unwrap_or(NONE_REPR)
         ))
     }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
-    }
 }
 
 impl From<libloot::metadata::Tag> for Tag {
@@ -677,7 +566,7 @@ impl From<Tag> for libloot::metadata::Tag {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Location(libloot::metadata::Location);
@@ -690,7 +579,7 @@ impl Location {
         let mut location = libloot::metadata::Location::new(url);
 
         if let Some(name) = name {
-            location.set_name(name);
+            location = location.with_name(name);
         }
 
         Self(location)
@@ -706,11 +595,6 @@ impl Location {
         self.0.name()
     }
 
-    #[setter]
-    fn set_name(&mut self, name: String) {
-        self.0.set_name(name);
-    }
-
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
         let class_name = slf.get_type().qualname()?;
         let inner = &slf.borrow().0;
@@ -720,12 +604,6 @@ impl Location {
             inner.url(),
             inner.name().unwrap_or(NONE_REPR)
         ))
-    }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
     }
 }
 

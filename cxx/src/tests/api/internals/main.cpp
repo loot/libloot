@@ -4,7 +4,6 @@
 
 #include "libloot-cxx/src/lib.rs.h"
 #include "rust/cxx.h"
-
 #include "tests/api/internals/metadata/conditional_metadata_test.h"
 #include "tests/api/internals/metadata/file_test.h"
 #include "tests/api/internals/metadata/group_test.h"
@@ -43,20 +42,18 @@ TEST(new_game, shouldThrowIfGivenNonsense) {
 }
 
 TEST(Message, creation) {
-  auto content = new_message_content("a message");
-  content->set_language(
+  auto content = new_message_content(
+      "a message",
       ::rust::String(std::string(message_content_default_language())));
 
-  auto message = new_message(MessageType::Say, "message2");
-  message->set_condition("invalid condition");
+  auto message = new_message(MessageType::Say, "message2", "invalid condition");
 
   std::vector<::rust::Box<MessageContent>> contents;
   contents.push_back(std::move(content));
   auto multi_message = multilingual_message(
       MessageType::Say,
-      ::rust::Slice<const ::rust::Box<MessageContent>>(contents));
-
-  multi_message->set_condition("invalid condition");
+      ::rust::Slice<const ::rust::Box<MessageContent>>(contents),
+      "invalid condition");
 
   EXPECT_EQ(multi_message->content()[0].text(), "a message");
   EXPECT_EQ(multi_message->content()[0].language(), "en");

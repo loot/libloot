@@ -383,11 +383,16 @@ mod ffi {
     extern "Rust" {
         type Message;
 
-        pub fn new_message(message_type: MessageType, content: String) -> Result<Box<Message>>;
+        pub fn new_message(
+            message_type: MessageType,
+            content: String,
+            condition: &str,
+        ) -> Result<Box<Message>>;
 
         pub fn multilingual_message(
             message_type: MessageType,
             contents: &[Box<MessageContent>],
+            condition: &str,
         ) -> Result<Box<Message>>;
 
         pub fn message_type(&self) -> MessageType;
@@ -395,8 +400,6 @@ mod ffi {
         pub fn content(&self) -> &[MessageContent];
 
         pub fn condition(&self) -> &str;
-
-        pub fn set_condition(&mut self, condition: String);
 
         pub fn boxed_clone(&self) -> Box<Message>;
     }
@@ -406,13 +409,11 @@ mod ffi {
 
         pub fn message_content_default_language() -> &'static str;
 
-        pub fn new_message_content(text: String) -> Box<MessageContent>;
+        pub fn new_message_content(text: String, language: &str) -> Box<MessageContent>;
 
         pub fn text(&self) -> &str;
 
         pub fn language(&self) -> &str;
-
-        pub fn set_language(&mut self, language: String);
 
         pub fn boxed_clone(&self) -> Box<MessageContent>;
     }
@@ -420,7 +421,7 @@ mod ffi {
     extern "Rust" {
         type Group;
 
-        pub fn new_group(name: String) -> Box<Group>;
+        pub fn new_group(name: String, description: &str, after_groups: Vec<String>) -> Box<Group>;
 
         pub fn group_default_name() -> &'static str;
 
@@ -430,11 +431,7 @@ mod ffi {
 
         pub fn description(&self) -> &str;
 
-        pub fn set_description(&mut self, description: String);
-
         pub fn after_groups(&self) -> &[String];
-
-        pub fn set_after_groups(&mut self, groups: Vec<String>);
     }
 
     extern "Rust" {
@@ -582,25 +579,31 @@ mod ffi {
     extern "Rust" {
         type File;
 
-        pub fn new_file(name: String) -> Box<File>;
+        pub fn new_file(
+            name: String,
+            display_name: &str,
+            condition: &str,
+            detail: &[Box<MessageContent>],
+            constraint: &str,
+        ) -> Result<Box<File>>;
 
         pub fn filename(&self) -> &Filename;
 
         pub fn display_name(&self) -> &str;
 
-        pub fn set_display_name(&mut self, display_name: String);
+        // pub fn set_display_name(&mut self, display_name: String);
 
         pub fn detail(&self) -> &[MessageContent];
 
-        pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<()>;
+        // pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<()>;
 
         pub fn condition(&self) -> &str;
 
-        pub fn set_condition(&mut self, condition: String);
+        // pub fn set_condition(&mut self, condition: String);
 
         pub fn constraint(&self) -> &str;
 
-        pub fn set_constraint(&mut self, constraint: String);
+        // pub fn set_constraint(&mut self, constraint: String);
 
         pub fn boxed_clone(&self) -> Box<File>;
     }
@@ -618,15 +621,17 @@ mod ffi {
     extern "Rust" {
         type Tag;
 
-        pub fn new_tag(name: String, suggestion: TagSuggestion) -> Result<Box<Tag>>;
+        pub fn new_tag(
+            name: String,
+            suggestion: TagSuggestion,
+            condition: &str,
+        ) -> Result<Box<Tag>>;
 
         pub fn name(&self) -> &str;
 
         pub fn is_addition(&self) -> bool;
 
         pub fn condition(&self) -> &str;
-
-        pub fn set_condition(&mut self, condition: String);
 
         pub fn boxed_clone(&self) -> Box<Tag>;
     }
@@ -637,27 +642,23 @@ mod ffi {
         pub fn new_plugin_cleaning_data(
             crc: u32,
             cleaning_utility: String,
-        ) -> Box<PluginCleaningData>;
+            detail: &[Box<MessageContent>],
+            itm_count: u32,
+            deleted_reference_count: u32,
+            deleted_navmesh_count: u32,
+        ) -> Result<Box<PluginCleaningData>>;
 
         pub fn crc(&self) -> u32;
 
         pub fn itm_count(&self) -> u32;
 
-        pub fn set_itm_count(&mut self, count: u32);
-
         pub fn deleted_reference_count(&self) -> u32;
 
-        pub fn set_deleted_reference_count(&mut self, count: u32);
-
         pub fn deleted_navmesh_count(&self) -> u32;
-
-        pub fn set_deleted_navmesh_count(&mut self, count: u32);
 
         pub fn cleaning_utility(&self) -> &str;
 
         pub fn detail(&self) -> &[MessageContent];
-
-        pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<()>;
 
         pub fn boxed_clone(&self) -> Box<PluginCleaningData>;
     }
@@ -665,13 +666,11 @@ mod ffi {
     extern "Rust" {
         type Location;
 
-        pub fn new_location(url: String) -> Box<Location>;
+        pub fn new_location(url: String, name: &str) -> Box<Location>;
 
         pub fn url(&self) -> &str;
 
         pub fn name(&self) -> &str;
-
-        pub fn set_name(&mut self, name: String);
 
         pub fn boxed_clone(&self) -> Box<Location>;
     }

@@ -68,8 +68,14 @@ impl TryFrom<MessageType> for libloot::metadata::MessageType {
 #[repr(transparent)]
 pub struct MessageContent(libloot::metadata::MessageContent);
 
-pub fn new_message_content(text: String) -> Box<MessageContent> {
-    Box::new(MessageContent(libloot::metadata::MessageContent::new(text)))
+pub fn new_message_content(text: String, language: &str) -> Box<MessageContent> {
+    let mut content = libloot::metadata::MessageContent::new(text);
+
+    if !language.is_empty() {
+        content = content.with_language(language.to_owned());
+    }
+
+    Box::new(MessageContent(content))
 }
 
 pub fn message_content_default_language() -> &'static str {
@@ -86,8 +92,6 @@ impl MessageContent {
             pub fn text(&self) -> &str;
 
             pub fn language(&self) -> &str;
-
-            pub fn set_language(&mut self, language: String);
         }
     }
 }
@@ -128,22 +132,31 @@ pub struct Message(libloot::metadata::Message);
 pub fn new_message(
     message_type: MessageType,
     content: String,
+    condition: &str,
 ) -> Result<Box<Message>, VerboseError> {
-    Ok(Box::new(Message(libloot::metadata::Message::new(
-        message_type.try_into()?,
-        content,
-    ))))
+    let mut message = libloot::metadata::Message::new(message_type.try_into()?, content);
+
+    if !condition.is_empty() {
+        message = message.with_condition(condition.to_owned());
+    }
+
+    Ok(Box::new(Message(message)))
 }
 
 pub fn multilingual_message(
     message_type: MessageType,
     contents: &[Box<MessageContent>],
+    condition: &str,
 ) -> Result<Box<Message>, VerboseError> {
     let contents = to_vec_of_unwrapped(contents);
-    Ok(Box::new(Message(libloot::metadata::Message::multilingual(
-        message_type.try_into()?,
-        contents,
-    )?)))
+
+    let mut message = libloot::metadata::Message::multilingual(message_type.try_into()?, contents)?;
+
+    if !condition.is_empty() {
+        message = message.with_condition(condition.to_owned());
+    }
+
+    Ok(Box::new(Message(message)))
 }
 
 impl Message {
@@ -163,8 +176,6 @@ impl Message {
         to self.0 {
             #[into]
             pub fn message_type(&self) -> MessageType;
-
-            pub fn set_condition(&mut self, condition: String);
         }
     }
 }
@@ -190,8 +201,18 @@ impl From<Box<Message>> for libloot::metadata::Message {
 #[repr(transparent)]
 pub struct Group(libloot::metadata::Group);
 
-pub fn new_group(name: String) -> Box<Group> {
-    Box::new(Group(libloot::metadata::Group::new(name)))
+pub fn new_group(name: String, description: &str, after_groups: Vec<String>) -> Box<Group> {
+    let mut group = libloot::metadata::Group::new(name);
+
+    if !description.is_empty() {
+        group = group.with_description(description.to_owned());
+    }
+
+    if !after_groups.is_empty() {
+        group = group.with_after_groups(after_groups);
+    }
+
+    Box::new(Group(group))
 }
 
 pub fn group_default_name() -> &'static str {
@@ -211,11 +232,7 @@ impl Group {
         to self.0 {
             pub fn name(&self) -> &str;
 
-            pub fn set_description(&mut self, description: String);
-
             pub fn after_groups(&self) -> &[String];
-
-            pub fn set_after_groups(&mut self, groups: Vec<String>);
         }
     }
 }
@@ -374,8 +391,32 @@ impl From<Option<PluginMetadata>> for Optional<PluginMetadata> {
 #[repr(transparent)]
 pub struct File(libloot::metadata::File);
 
-pub fn new_file(name: String) -> Box<File> {
-    Box::new(File(libloot::metadata::File::new(name)))
+pub fn new_file(
+    name: String,
+    display_name: &str,
+    condition: &str,
+    detail: &[Box<MessageContent>],
+    constraint: &str,
+) -> Result<Box<File>, VerboseError> {
+    let mut file = libloot::metadata::File::new(name);
+
+    if !display_name.is_empty() {
+        file = file.with_display_name(display_name.to_owned());
+    }
+
+    if !condition.is_empty() {
+        file = file.with_condition(condition.to_owned());
+    }
+
+    if !detail.is_empty() {
+        file = file.with_detail(to_vec_of_unwrapped(detail))?;
+    }
+
+    if !constraint.is_empty() {
+        file = file.with_constraint(constraint.to_owned());
+    }
+
+    Ok(Box::new(File(file)))
 }
 
 impl File {
@@ -387,34 +428,34 @@ impl File {
         self.0.display_name().unwrap_or("")
     }
 
-    pub fn set_display_name(&mut self, display_name: String) {
-        self.0.set_display_name(display_name);
-    }
+    // pub fn set_display_name(&mut self, display_name: String) {
+    //     self.0.set_display_name(display_name);
+    // }
 
     pub fn detail(&self) -> &[MessageContent] {
         MessageContent::wrap_slice(self.0.detail())
     }
 
-    pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<(), VerboseError> {
-        self.0.set_detail(to_vec_of_unwrapped(detail))?;
-        Ok(())
-    }
+    // pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<(), VerboseError> {
+    //     self.0.set_detail(to_vec_of_unwrapped(detail))?;
+    //     Ok(())
+    // }
 
     pub fn condition(&self) -> &str {
         self.0.condition().unwrap_or("")
     }
 
-    pub fn set_condition(&mut self, condition: String) {
-        self.0.set_condition(condition);
-    }
+    // pub fn set_condition(&mut self, condition: String) {
+    //     self.0.set_condition(condition);
+    // }
 
     pub fn constraint(&self) -> &str {
         self.0.constraint().unwrap_or("")
     }
 
-    pub fn set_constraint(&mut self, constraint: String) {
-        self.0.set_constraint(constraint);
-    }
+    // pub fn set_constraint(&mut self, constraint: String) {
+    //     self.0.set_constraint(constraint);
+    // }
 
     pub fn boxed_clone(&self) -> Box<Self> {
         Box::new(Self(self.0.clone()))
@@ -461,11 +502,18 @@ unsafe impl TransparentWrapper for Filename {
 #[repr(transparent)]
 pub struct Tag(libloot::metadata::Tag);
 
-pub fn new_tag(name: String, suggestion: TagSuggestion) -> Result<Box<Tag>, VerboseError> {
-    Ok(Box::new(Tag(libloot::metadata::Tag::new(
-        name,
-        suggestion.try_into()?,
-    ))))
+pub fn new_tag(
+    name: String,
+    suggestion: TagSuggestion,
+    condition: &str,
+) -> Result<Box<Tag>, VerboseError> {
+    let mut tag = libloot::metadata::Tag::new(name, suggestion.try_into()?);
+
+    if !condition.is_empty() {
+        tag = tag.with_condition(condition.to_owned());
+    }
+
+    Ok(Box::new(Tag(tag)))
 }
 
 impl Tag {
@@ -482,8 +530,6 @@ impl Tag {
             pub fn name(&self) -> &str;
 
             pub fn is_addition(&self) -> bool;
-
-            pub fn set_condition(&mut self, condition: String);
         }
     }
 }
@@ -515,20 +561,29 @@ impl TryFrom<TagSuggestion> for libloot::metadata::TagSuggestion {
 #[repr(transparent)]
 pub struct PluginCleaningData(libloot::metadata::PluginCleaningData);
 
-pub fn new_plugin_cleaning_data(crc: u32, cleaning_utility: String) -> Box<PluginCleaningData> {
-    Box::new(PluginCleaningData(
-        libloot::metadata::PluginCleaningData::new(crc, cleaning_utility),
-    ))
+pub fn new_plugin_cleaning_data(
+    crc: u32,
+    cleaning_utility: String,
+    detail: &[Box<MessageContent>],
+    itm_count: u32,
+    deleted_reference_count: u32,
+    deleted_navmesh_count: u32,
+) -> Result<Box<PluginCleaningData>, VerboseError> {
+    let mut data = libloot::metadata::PluginCleaningData::new(crc, cleaning_utility)
+        .with_itm_count(itm_count)
+        .with_deleted_reference_count(deleted_reference_count)
+        .with_deleted_navmesh_count(deleted_navmesh_count);
+
+    if !detail.is_empty() {
+        data = data.with_detail(to_vec_of_unwrapped(detail))?;
+    }
+
+    Ok(Box::new(PluginCleaningData(data)))
 }
 
 impl PluginCleaningData {
     pub fn detail(&self) -> &[MessageContent] {
         MessageContent::wrap_slice(self.0.detail())
-    }
-
-    pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<(), VerboseError> {
-        self.0.set_detail(to_vec_of_unwrapped(detail))?;
-        Ok(())
     }
 
     pub fn boxed_clone(&self) -> Box<Self> {
@@ -541,15 +596,9 @@ impl PluginCleaningData {
 
             pub fn itm_count(&self) -> u32;
 
-            pub fn set_itm_count(&mut self, count: u32);
-
             pub fn deleted_reference_count(&self) -> u32;
 
-            pub fn set_deleted_reference_count(&mut self, count: u32);
-
             pub fn deleted_navmesh_count(&self) -> u32;
-
-            pub fn set_deleted_navmesh_count(&mut self, count: u32);
 
             pub fn cleaning_utility(&self) -> &str;
         }
@@ -571,8 +620,14 @@ impl From<Box<PluginCleaningData>> for libloot::metadata::PluginCleaningData {
 #[repr(transparent)]
 pub struct Location(libloot::metadata::Location);
 
-pub fn new_location(url: String) -> Box<Location> {
-    Box::new(Location(libloot::metadata::Location::new(url)))
+pub fn new_location(url: String, name: &str) -> Box<Location> {
+    let mut location = libloot::metadata::Location::new(url);
+
+    if !name.is_empty() {
+        location = location.with_name(name.to_owned());
+    }
+
+    Box::new(Location(location))
 }
 
 impl Location {
@@ -587,8 +642,6 @@ impl Location {
     delegate! {
         to self.0 {
             pub fn url(&self) -> &str;
-
-            pub fn set_name(&mut self, name: String);
         }
     }
 }

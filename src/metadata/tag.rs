@@ -38,7 +38,7 @@ impl Tag {
     /// Set the condition string.
     #[must_use]
     pub fn with_condition(mut self, condition: String) -> Self {
-        self.set_condition(condition);
+        self.condition = Some(condition.into_boxed_str());
         self
     }
 
@@ -55,12 +55,6 @@ impl Tag {
     /// Get the condition string.
     pub fn condition(&self) -> Option<&str> {
         self.condition.as_deref()
-    }
-
-    /// Set the condition string.
-    pub fn set_condition(&mut self, condition: String) -> &mut Self {
-        self.condition = Some(condition.into_boxed_str());
-        self
     }
 }
 

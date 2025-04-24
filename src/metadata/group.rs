@@ -29,14 +29,14 @@ impl Group {
     /// Set a description for the group.
     #[must_use]
     pub fn with_description(mut self, description: String) -> Self {
-        self.set_description(description);
+        self.description = Some(description.into_boxed_str());
         self
     }
 
     /// Set the names of the groups that this group loads after.
     #[must_use]
     pub fn with_after_groups(mut self, after_groups: Vec<String>) -> Self {
-        self.set_after_groups(after_groups);
+        self.after_groups = after_groups.into_boxed_slice();
         self
     }
 
@@ -53,21 +53,9 @@ impl Group {
         self.description.as_deref()
     }
 
-    /// Set a description for the group.
-    pub fn set_description(&mut self, description: String) -> &mut Self {
-        self.description = Some(description.into_boxed_str());
-        self
-    }
-
     /// Get the names of the groups that this group loads after.
     pub fn after_groups(&self) -> &[String] {
         &self.after_groups
-    }
-
-    /// Set the names of the groups that this group loads after.
-    pub fn set_after_groups(&mut self, after_groups: Vec<String>) -> &mut Self {
-        self.after_groups = after_groups.into_boxed_slice();
-        self
     }
 }
 

@@ -147,36 +147,21 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
 }
 
 ::rust::Box<loot::rust::Group> convert(const loot::Group& group) {
-  auto output = loot::rust::new_group(group.GetName());
-  output->set_after_groups(convert(group.GetAfterGroups()));
-  output->set_description(group.GetDescription());
-
-  return output;
+  return loot::rust::new_group(
+      group.GetName(), group.GetDescription(), convert(group.GetAfterGroups()));
 }
 
 ::rust::Box<loot::rust::File> convert(const loot::File& file) {
-  auto output = loot::rust::new_file(std::string(file.GetName()));
-
-  if (!file.GetDisplayName().empty()) {
-    output->set_display_name(file.GetDisplayName());
-  }
-
   try {
-    output->set_detail(
-        ::rust::Slice(convert<loot::rust::MessageContent>(file.GetDetail())));
+    return loot::rust::new_file(
+        std::string(file.GetName()),
+        file.GetDisplayName(),
+        file.GetCondition(),
+        ::rust::Slice(convert<loot::rust::MessageContent>(file.GetDetail())),
+        file.GetConstraint());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
-
-  if (file.IsConditional()) {
-    output->set_condition(file.GetCondition());
-  }
-
-    if (!file.GetConstraint().empty()) {
-    output->set_constraint(file.GetConstraint());
-  }
-
-  return output;
 }
 
 loot::rust::MessageType convert(loot::MessageType messageType) {
@@ -194,24 +179,17 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
 
 ::rust::Box<loot::rust::MessageContent> convert(
     const loot::MessageContent& content) {
-  auto output = loot::rust::new_message_content(content.GetText());
-  output->set_language(content.GetLanguage());
-
-  return output;
+  return loot::rust::new_message_content(content.GetText(),
+                                         content.GetLanguage());
 }
 
 ::rust::Box<loot::rust::Message> convert(const loot::Message& message) {
   try {
-    auto output = loot::rust::multilingual_message(
+    return loot::rust::multilingual_message(
         convert(message.GetType()),
         ::rust::Slice(
-            convert<loot::rust::MessageContent>(message.GetContent())));
-
-    if (message.IsConditional()) {
-      output->set_condition(message.GetCondition());
-    }
-
-    return output;
+            convert<loot::rust::MessageContent>(message.GetContent())),
+        message.GetCondition());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -222,13 +200,7 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
     const auto suggestion = tag.IsAddition()
                                 ? loot::rust::TagSuggestion::Addition
                                 : loot::rust::TagSuggestion::Removal;
-    auto output = loot::rust::new_tag(tag.GetName(), suggestion);
-
-    if (tag.IsConditional()) {
-      output->set_condition(tag.GetCondition());
-    }
-
-    return output;
+    return loot::rust::new_tag(tag.GetName(), suggestion, tag.GetCondition());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -236,30 +208,21 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
 
 ::rust::Box<loot::rust::PluginCleaningData> convert(
     const loot::PluginCleaningData& data) {
-  auto output = loot::rust::new_plugin_cleaning_data(data.GetCRC(),
-                                                     data.GetCleaningUtility());
   try {
-    output->set_detail(
-        ::rust::Slice(convert<loot::rust::MessageContent>(data.GetDetail())));
+    return loot::rust::new_plugin_cleaning_data(
+        data.GetCRC(),
+        data.GetCleaningUtility(),
+        ::rust::Slice(convert<loot::rust::MessageContent>(data.GetDetail())),
+        data.GetITMCount(),
+        data.GetDeletedReferenceCount(),
+        data.GetDeletedNavmeshCount());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
-
-  output->set_itm_count(data.GetITMCount());
-  output->set_deleted_reference_count(data.GetDeletedReferenceCount());
-  output->set_deleted_navmesh_count(data.GetDeletedNavmeshCount());
-
-  return output;
 }
 
 ::rust::Box<loot::rust::Location> convert(const loot::Location& location) {
-  auto output = loot::rust::new_location(location.GetURL());
-
-  if (!location.GetName().empty()) {
-    output->set_name(location.GetName());
-  }
-
-  return output;
+  return loot::rust::new_location(location.GetURL(), location.GetName());
 }
 
 ::rust::Box<loot::rust::PluginMetadata> convert(

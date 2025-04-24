@@ -64,7 +64,7 @@ impl MessageContent {
     /// Set the language code to the given value.
     #[must_use]
     pub fn with_language(mut self, language: String) -> Self {
-        self.set_language(language);
+        self.language = language.into_boxed_str();
         self
     }
 
@@ -76,12 +76,6 @@ impl MessageContent {
     /// Get the text's language code.
     pub fn language(&self) -> &str {
         &self.language
-    }
-
-    /// Set the language code to the given value.
-    pub fn set_language(&mut self, language: String) -> &mut Self {
-        self.language = language.into_boxed_str();
-        self
     }
 }
 
@@ -196,7 +190,7 @@ impl Message {
     /// Set the condition string.
     #[must_use]
     pub fn with_condition(mut self, condition: String) -> Self {
-        self.set_condition(condition);
+        self.condition = Some(condition.into_boxed_str());
         self
     }
 
@@ -213,12 +207,6 @@ impl Message {
     /// Get the condition string.
     pub fn condition(&self) -> Option<&str> {
         self.condition.as_deref()
-    }
-
-    /// Set the condition string.
-    pub fn set_condition(&mut self, condition: String) -> &mut Self {
-        self.condition = Some(condition.into_boxed_str());
-        self
     }
 }
 

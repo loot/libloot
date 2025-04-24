@@ -24,11 +24,11 @@ impl Group {
         let mut group = libloot::metadata::Group::new(name);
 
         if let Some(description) = description {
-            group.set_description(description);
+            group = group.with_description(description);
         }
 
         if let Some(after_groups) = after_groups {
-            group.set_after_groups(after_groups);
+            group = group.with_after_groups(after_groups);
         }
 
         Self(group)
@@ -44,19 +44,9 @@ impl Group {
         self.0.description()
     }
 
-    #[napi(setter)]
-    pub fn set_description(&mut self, description: String) {
-        self.0.set_description(description);
-    }
-
     #[napi(getter)]
     pub fn after_groups(&self) -> Vec<String> {
         self.0.after_groups().to_vec()
-    }
-
-    #[napi(setter)]
-    pub fn set_after_groups(&mut self, after_groups: Vec<String>) {
-        self.0.set_after_groups(after_groups);
     }
 }
 
@@ -89,7 +79,7 @@ impl MessageContent {
         let mut content = libloot::metadata::MessageContent::new(text);
 
         if let Some(language) = language {
-            content.set_language(language);
+            content = content.with_language(language);
         }
 
         Self(content)
@@ -103,11 +93,6 @@ impl MessageContent {
     #[napi(getter)]
     pub fn language(&self) -> &str {
         self.0.language()
-    }
-
-    #[napi(setter)]
-    pub fn set_language(&mut self, language: String) {
-        self.0.set_language(language);
     }
 }
 
@@ -184,7 +169,7 @@ impl Message {
         };
 
         if let Some(condition) = condition {
-            message.set_condition(condition);
+            message = message.with_condition(condition);
         }
 
         Ok(Self(message))
@@ -203,11 +188,6 @@ impl Message {
     #[napi(getter)]
     pub fn condition(&self) -> Option<&str> {
         self.0.condition()
-    }
-
-    #[napi(setter)]
-    pub fn set_condition(&mut self, condition: String) {
-        self.0.set_condition(condition);
     }
 }
 
@@ -241,20 +221,20 @@ impl File {
         let mut file = libloot::metadata::File::new(name);
 
         if let Some(display_name) = display_name {
-            file.set_display_name(display_name);
+            file = file.with_display_name(display_name);
         }
 
         if let Some(detail) = detail {
             let detail = detail.into_iter().cloned().map(Into::into).collect();
-            file.set_detail(detail)?;
+            file = file.with_detail(detail)?;
         }
 
         if let Some(condition) = condition {
-            file.set_condition(condition);
+            file = file.with_condition(condition);
         }
 
         if let Some(constraint) = constraint {
-            file.set_constraint(constraint);
+            file = file.with_constraint(constraint);
         }
 
         Ok(Self(file))
@@ -270,21 +250,9 @@ impl File {
         self.0.display_name()
     }
 
-    #[napi(setter)]
-    pub fn set_display_name(&mut self, description: String) {
-        self.0.set_display_name(description);
-    }
-
     #[napi(getter)]
     pub fn detail(&self) -> Vec<MessageContent> {
         self.0.detail().iter().cloned().map(Into::into).collect()
-    }
-
-    #[napi(setter)]
-    pub fn set_detail(&mut self, detail: Vec<&MessageContent>) -> Result<(), VerboseError> {
-        let detail = detail.into_iter().cloned().map(Into::into).collect();
-        self.0.set_detail(detail)?;
-        Ok(())
     }
 
     #[napi(getter)]
@@ -292,19 +260,9 @@ impl File {
         self.0.condition()
     }
 
-    #[napi(setter)]
-    pub fn set_condition(&mut self, condition: String) {
-        self.0.set_condition(condition);
-    }
-
     #[napi(getter)]
     pub fn constraint(&self) -> Option<&str> {
         self.0.constraint()
-    }
-
-    #[napi(setter)]
-    pub fn set_constraint(&mut self, constraint: String) {
-        self.0.set_constraint(constraint);
     }
 }
 
@@ -363,20 +321,20 @@ impl PluginCleaningData {
         let mut data = libloot::metadata::PluginCleaningData::new(crc, cleaning_utility);
 
         if let Some(count) = itm_count {
-            data.set_itm_count(count);
+            data = data.with_itm_count(count);
         }
 
         if let Some(count) = deleted_reference_count {
-            data.set_deleted_reference_count(count);
+            data = data.with_deleted_reference_count(count);
         }
 
         if let Some(count) = deleted_navmesh_count {
-            data.set_deleted_navmesh_count(count);
+            data = data.with_deleted_navmesh_count(count);
         }
 
         if let Some(detail) = detail {
             let detail = detail.into_iter().cloned().map(Into::into).collect();
-            data.set_detail(detail)?;
+            data = data.with_detail(detail)?;
         }
 
         Ok(Self(data))
@@ -392,29 +350,14 @@ impl PluginCleaningData {
         self.0.itm_count()
     }
 
-    #[napi(setter)]
-    pub fn set_itm_count(&mut self, count: u32) {
-        self.0.set_itm_count(count);
-    }
-
     #[napi(getter)]
     pub fn deleted_reference_count(&self) -> u32 {
         self.0.deleted_reference_count()
     }
 
-    #[napi(setter)]
-    pub fn set_deleted_reference_count(&mut self, count: u32) {
-        self.0.set_deleted_reference_count(count);
-    }
-
     #[napi(getter)]
     pub fn deleted_navmesh_count(&self) -> u32 {
         self.0.deleted_navmesh_count()
-    }
-
-    #[napi(setter)]
-    pub fn set_deleted_navmesh_count(&mut self, count: u32) {
-        self.0.set_deleted_navmesh_count(count);
     }
 
     #[napi(getter)]
@@ -425,13 +368,6 @@ impl PluginCleaningData {
     #[napi(getter)]
     pub fn detail(&self) -> Vec<MessageContent> {
         self.0.detail().iter().cloned().map(Into::into).collect()
-    }
-
-    #[napi(setter)]
-    pub fn set_detail(&mut self, detail: Vec<&MessageContent>) -> Result<(), VerboseError> {
-        let detail = detail.into_iter().cloned().map(Into::into).collect();
-        self.0.set_detail(detail)?;
-        Ok(())
     }
 }
 
@@ -475,7 +411,7 @@ impl Tag {
         let mut tag = libloot::metadata::Tag::new(name, suggestion.into());
 
         if let Some(condition) = condition {
-            tag.set_condition(condition);
+            tag = tag.with_condition(condition);
         }
 
         Self(tag)
@@ -494,11 +430,6 @@ impl Tag {
     #[napi(getter)]
     pub fn condition(&self) -> Option<&str> {
         self.0.condition()
-    }
-
-    #[napi(setter)]
-    pub fn set_condition(&mut self, condition: String) {
-        self.0.set_condition(condition);
     }
 }
 
@@ -526,7 +457,7 @@ impl Location {
         let mut location = libloot::metadata::Location::new(url);
 
         if let Some(name) = name {
-            location.set_name(name);
+            location = location.with_name(name);
         }
 
         Self(location)
@@ -540,11 +471,6 @@ impl Location {
     #[napi(getter)]
     pub fn name(&self) -> Option<&str> {
         self.0.name()
-    }
-
-    #[napi(setter)]
-    pub fn set_name(&mut self, name: String) {
-        self.0.set_name(name);
     }
 }
 

@@ -38,14 +38,14 @@ impl File {
     /// CommonMark.
     #[must_use]
     pub fn with_display_name(mut self, display_name: String) -> Self {
-        self.set_display_name(display_name);
+        self.display_name = Some(display_name.into_boxed_str());
         self
     }
 
     /// Set the condition string.
     #[must_use]
     pub fn with_condition(mut self, condition: String) -> Self {
-        self.set_condition(condition);
+        self.condition = Some(condition.into_boxed_str());
         self
     }
 
@@ -56,14 +56,15 @@ impl File {
         mut self,
         detail: Vec<MessageContent>,
     ) -> Result<Self, MultilingualMessageContentsError> {
-        self.set_detail(detail)?;
+        validate_message_contents(&detail)?;
+        self.detail = detail.into_boxed_slice();
         Ok(self)
     }
 
     /// Set the constraint string.
     #[must_use]
     pub fn with_constraint(mut self, constraint: String) -> Self {
-        self.set_constraint(constraint);
+        self.constraint = Some(constraint.into_boxed_str());
         self
     }
 
@@ -77,13 +78,6 @@ impl File {
         self.display_name.as_deref()
     }
 
-    /// Set the name to be displayed for the file in messages, formatted using
-    /// CommonMark.
-    pub fn set_display_name(&mut self, display_name: String) -> &mut Self {
-        self.display_name = Some(display_name.into_boxed_str());
-        self
-    }
-
     /// Get the detail message content of the file.
     ///
     /// If this file causes an error message to be displayed, the detail message
@@ -93,38 +87,14 @@ impl File {
         &self.detail
     }
 
-    /// Set the detail message content, which may be appended to any messages
-    /// generated for this file. If multilingual, one language must be
-    /// [MessageContent::DEFAULT_LANGUAGE].
-    pub fn set_detail(
-        &mut self,
-        detail: Vec<MessageContent>,
-    ) -> Result<&mut Self, MultilingualMessageContentsError> {
-        validate_message_contents(&detail)?;
-        self.detail = detail.into_boxed_slice();
-        Ok(self)
-    }
-
     /// Get the condition string.
     pub fn condition(&self) -> Option<&str> {
         self.condition.as_deref()
     }
 
-    /// Set the condition string.
-    pub fn set_condition(&mut self, condition: String) -> &mut Self {
-        self.condition = Some(condition.into_boxed_str());
-        self
-    }
-
     /// Get the constraint string.
     pub fn constraint(&self) -> Option<&str> {
         self.constraint.as_deref()
-    }
-
-    /// Set the constraint string.
-    pub fn set_constraint(&mut self, constraint: String) -> &mut Self {
-        self.constraint = Some(constraint.into_boxed_str());
-        self
     }
 }
 
