@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::GameType;
-use rstest_reuse::template;
+use parameterized_test::test_parameter;
 use tempfile::TempDir;
 
 pub const BLANK_ESM: &str = "Blank.esm";
@@ -314,25 +314,20 @@ impl Fixture {
     }
 }
 
-#[template]
-#[rstest::rstest]
-pub fn all_game_types(
-    #[values(
-        GameType::Oblivion,
-        GameType::Skyrim,
-        GameType::Fallout3,
-        GameType::FalloutNV,
-        GameType::Fallout4,
-        GameType::SkyrimSE,
-        GameType::Fallout4VR,
-        GameType::SkyrimVR,
-        GameType::Morrowind,
-        GameType::Starfield,
-        GameType::OpenMW
-    )]
-    game_type: GameType,
-) {
-}
+#[test_parameter]
+pub const ALL_GAME_TYPES: [GameType; 11] = [
+    GameType::Oblivion,
+    GameType::Skyrim,
+    GameType::Fallout3,
+    GameType::FalloutNV,
+    GameType::Fallout4,
+    GameType::SkyrimSE,
+    GameType::Fallout4VR,
+    GameType::SkyrimVR,
+    GameType::Morrowind,
+    GameType::Starfield,
+    GameType::OpenMW,
+];
 
 mod unicase {
     #[test]

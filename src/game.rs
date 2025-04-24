@@ -805,13 +805,13 @@ impl GameCache {
 mod tests {
     use super::*;
 
-    use rstest_reuse::apply;
+    use parameterized_test::parameterized_test;
 
     use crate::{
         metadata::{File, PluginMetadata},
         tests::{
-            BLANK_DIFFERENT_ESM, BLANK_DIFFERENT_ESP, BLANK_ESM, BLANK_ESP,
-            BLANK_MASTER_DEPENDENT_ESM, Fixture, all_game_types,
+            ALL_GAME_TYPES, BLANK_DIFFERENT_ESM, BLANK_DIFFERENT_ESP, BLANK_ESM, BLANK_ESP,
+            BLANK_MASTER_DEPENDENT_ESM, Fixture,
         },
     };
 
@@ -903,7 +903,7 @@ mod tests {
             use super::*;
 
             #[cfg(windows)]
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_succeed_if_given_valid_game_path(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -911,7 +911,7 @@ mod tests {
             }
 
             #[cfg(not(windows))]
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_succeed_for_morrowind_if_given_valid_game_path(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -975,7 +975,7 @@ mod tests {
         mod with_local_path {
             use super::*;
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_succeed_if_given_valid_paths(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -1090,7 +1090,7 @@ mod tests {
                 }
             }
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_set_default_additional_data_paths(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -1271,7 +1271,7 @@ mod tests {
 
             use crate::tests::{NON_ASCII_ESM, NON_PLUGIN_FILE};
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_return_true_for_a_valid_non_ascii_plugin(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -1291,7 +1291,7 @@ mod tests {
                 assert!(game.is_valid_plugin(Path::new(NON_ASCII_ESM)));
             }
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_return_true_for_an_omwscripts_plugin(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -1312,7 +1312,7 @@ mod tests {
                 }
             }
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_return_false_for_a_non_plugin_file(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -1326,7 +1326,7 @@ mod tests {
                 assert!(!game.is_valid_plugin(Path::new(NON_PLUGIN_FILE)));
             }
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_return_false_for_an_empty_file(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -1343,7 +1343,7 @@ mod tests {
                 assert!(!game.is_valid_plugin(&empty_file_path));
             }
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_try_ghosted_path_if_given_plugin_does_not_exist_unless_game_is_openmw(
                 game_type: GameType,
             ) {
@@ -1413,7 +1413,7 @@ mod tests {
 
             use super::*;
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_load_the_headers_of_the_given_plugins(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -1514,7 +1514,7 @@ mod tests {
 
             use super::*;
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_fully_load_the_given_plugins(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
@@ -1584,7 +1584,7 @@ mod tests {
                 assert_ne!(plugin2, plugin3);
             }
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_error_if_loading_a_plugin_with_a_master_that_is_not_loaded_if_game_is_morrowind_or_starfield(
                 game_type: GameType,
             ) {
@@ -1626,7 +1626,7 @@ mod tests {
                 }
             }
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_not_error_if_loading_a_plugin_with_a_master_that_is_also_being_loaded_if_game_is_morrowind_or_starfield(
                 game_type: GameType,
             ) {
@@ -1653,7 +1653,7 @@ mod tests {
                 assert!(game.plugin(BLANK_MASTER_DEPENDENT_ESM).is_some());
             }
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_not_error_if_loading_a_plugin_with_a_master_that_is_already_loaded_if_game_is_morrowind_or_starfield(
                 game_type: GameType,
             ) {
@@ -1684,7 +1684,7 @@ mod tests {
         mod load_plugins_common {
             use super::*;
 
-            #[apply(all_game_types)]
+            #[parameterized_test(ALL_GAME_TYPES)]
             fn should_find_archives_in_additional_data_paths(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 

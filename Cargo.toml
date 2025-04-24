@@ -23,12 +23,11 @@ loot-condition-interpreter.workspace = true
 windows = { version = "0.61.1", features = ["Win32_Storage_FileSystem"] }
 
 [dev-dependencies]
-rstest = "0.25.0"
-rstest_reuse = "0.7.0"
+parameterized-test = { path = "./parameterized-test" }
 tempfile = "3.17.1"
 
 [workspace]
-members = ["cxx", "ffi-errors", "nodejs", "pyo3"]
+members = ["cxx", "ffi-errors", "nodejs", "parameterized-test", "pyo3"]
 
 [workspace.dependencies]
 esplugin = "6.1.2"

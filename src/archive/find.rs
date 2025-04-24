@@ -201,14 +201,14 @@ mod tests {
     mod find_associated_archives {
         use std::path::absolute;
 
-        use rstest_reuse::apply;
+        use parameterized_test::parameterized_test;
         use tempfile::TempDir;
 
         use super::*;
 
         use crate::tests::{
-            BLANK_DIFFERENT_ESM, BLANK_DIFFERENT_ESP, BLANK_ESM, BLANK_ESP,
-            BLANK_MASTER_DEPENDENT_ESM, all_game_types, copy_file, source_plugins_path,
+            ALL_GAME_TYPES, BLANK_DIFFERENT_ESM, BLANK_DIFFERENT_ESP, BLANK_ESM, BLANK_ESP,
+            BLANK_MASTER_DEPENDENT_ESM, copy_file, source_plugins_path,
         };
 
         const NON_ASCII_ESP: &str = "non\u{00C1}scii.esp";
@@ -281,7 +281,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_return_empty_vec_if_no_matching_archives_are_found(game_type: GameType) {
             let fixture = Fixture::new(game_type);
 
@@ -294,7 +294,7 @@ mod tests {
             assert!(archives.is_empty());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_find_an_archive_that_exactly_matches_an_esm_file_basename_except_for_morrowind_and_oblivion(
             game_type: GameType,
         ) {
@@ -316,7 +316,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_find_an_archive_that_exactly_matches_a_non_ascii_esp_file_basename_except_for_morrowind_and_starfield(
             game_type: GameType,
         ) {
@@ -338,7 +338,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_find_an_archive_that_starts_with_an_esp_file_basename_except_for_morrowind_and(
             game_type: GameType,
         ) {
@@ -357,7 +357,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_find_an_archive_that_starts_with_an_esm_file_basename_only_for_fallout(
             game_type: GameType,
         ) {
@@ -382,7 +382,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_find_an_archive_that_starts_with_an_esp_file_basename_only_for_oblivion_and_fallout(
             game_type: GameType,
         ) {

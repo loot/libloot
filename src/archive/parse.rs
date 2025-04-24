@@ -137,7 +137,7 @@ mod tests {
             io::SeekFrom,
         };
 
-        use rstest::rstest;
+        use parameterized_test::{parameterized_test, test_parameter};
         use tempfile::tempdir;
 
         use super::*;
@@ -246,8 +246,11 @@ mod tests {
             assert_eq!(expected_file_hash, *value.first().unwrap());
         }
 
-        #[rstest]
-        fn should_support_ba2_versions(#[values(1, 2, 3, 7, 8)] version: u32) {
+        #[test_parameter]
+        const BA2_VERSIONS: [u32; 5] = [1, 2, 3, 7, 8];
+
+        #[parameterized_test(BA2_VERSIONS)]
+        fn should_support_ba2_versions(version: u32) {
             use std::io::{Seek, Write};
 
             let tmp_dir = tempdir().unwrap();

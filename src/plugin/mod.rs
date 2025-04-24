@@ -453,17 +453,19 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplErr
 mod tests {
     use super::*;
 
+    use crate::tests::ALL_GAME_TYPES;
+    use parameterized_test::parameterized_test;
+
     mod plugin {
         use std::io::Seek;
         use std::io::Write;
 
-        use rstest_reuse::apply;
         use tempfile::tempdir;
 
         use crate::tests::{
             BLANK_ESL, BLANK_ESM, BLANK_ESP, BLANK_FULL_ESM, BLANK_MASTER_DEPENDENT_ESM,
             BLANK_MASTER_DEPENDENT_ESP, BLANK_MEDIUM_ESM, BLANK_OVERRIDE_ESP, NON_ASCII_ESM,
-            all_game_types, source_plugins_path,
+            source_plugins_path,
         };
 
         use super::*;
@@ -484,7 +486,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn new_should_trim_ghost_extension_unless_game_is_openmw(game_type: GameType) {
             let tmp_dir = tempdir().unwrap();
             let source_path = source_plugins_path(game_type).join(BLANK_ESP);
@@ -516,7 +518,7 @@ mod tests {
             std::fs::copy(source_path, &path).unwrap();
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn new_with_header_only_scope_should_read_header_data_only(game_type: GameType) {
             let plugin_name = blank_master_dependent_esm(game_type);
             let path = source_plugins_path(game_type).join(plugin_name);
@@ -554,7 +556,7 @@ mod tests {
             assert_eq!(0, plugin.override_record_count().unwrap());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn new_with_header_only_scope_should_read_version_from_header_description(
             game_type: GameType,
         ) {
@@ -571,7 +573,7 @@ mod tests {
             assert_eq!("5.0", plugin.version().unwrap());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn new_with_header_only_scope_should_not_read_assets(game_type: GameType) {
             let path = source_plugins_path(game_type).join(blank_esm(game_type));
 
@@ -587,7 +589,7 @@ mod tests {
             assert_eq!(0, plugin.asset_count());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn new_with_whole_plugin_scope_should_read_records(game_type: GameType) {
             let plugin_name = blank_master_dependent_esm(game_type);
             let path = source_plugins_path(game_type).join(plugin_name);
@@ -663,7 +665,7 @@ mod tests {
             assert!(plugin.do_records_overlap(&plugin).unwrap());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn new_with_whole_plugin_scope_should_read_assets(game_type: GameType) {
             let data_path = source_plugins_path(game_type);
             let path = data_path.join(BLANK_ESP);
@@ -691,7 +693,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn new_with_whole_plugin_scope_should_succeed_for_openmw_plugins(game_type: GameType) {
             let tmp_dir = tempdir().unwrap();
 
@@ -751,7 +753,7 @@ mod tests {
             );
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn is_master_should_be_false_for_a_non_master_plugin(game_type: GameType) {
             let path = source_plugins_path(game_type).join(BLANK_ESP);
             let plugin = Plugin::new(
@@ -765,7 +767,7 @@ mod tests {
             assert!(!plugin.is_master());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn is_light_plugin_should_be_true_for_a_plugin_with_esl_extension_for_fo4_and_later(
             game_type: GameType,
         ) {
@@ -814,7 +816,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn is_medium_plugin_should_be_true_for_a_medium_flagged_plugin_for_starfield(
             game_type: GameType,
         ) {
@@ -851,7 +853,7 @@ mod tests {
             assert_eq!(game_type == GameType::Starfield, plugin.is_medium_plugin());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn is_update_plugin_should_be_true_for_an_update_plugin_for_starfield(game_type: GameType) {
             let tmp_dir = tempdir().unwrap();
 
@@ -887,7 +889,7 @@ mod tests {
             assert_eq!(game_type == GameType::Starfield, update.is_update_plugin());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn is_blueprint_plugin_should_be_true_for_a_blueprint_plugin_for_starfield(
             game_type: GameType,
         ) {
@@ -917,7 +919,7 @@ mod tests {
             assert_eq!(game_type == GameType::Starfield, update.is_update_plugin());
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn is_valid_as_light_plugin_should_be_true_only_for_a_skyrim_fallout4_or_starfield_plugin_with_new_formids_in_the_valid_range(
             game_type: GameType,
         ) {
@@ -960,7 +962,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn is_valid_as_medium_plugin_should_be_true_only_for_a_starfield_plugin_with_new_formids_in_the_valid_range(
             game_type: GameType,
         ) {
@@ -996,7 +998,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn is_valid_as_update_plugin_should_be_true_only_for_a_starfield_plugin_with_no_new_records(
             game_type: GameType,
         ) {
@@ -1035,20 +1037,16 @@ mod tests {
     }
 
     mod has_plugin_file_extension {
-        use rstest_reuse::apply;
-
-        use crate::tests::all_game_types;
-
         use super::*;
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_be_true_if_file_ends_in_dot_esp_or_dot_esm(game_type: GameType) {
             assert!(has_plugin_file_extension(game_type, Path::new("file.esp")));
             assert!(has_plugin_file_extension(game_type, Path::new("file.esm")));
             assert!(!has_plugin_file_extension(game_type, Path::new("file.bsa")));
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_be_true_if_file_ends_in_dot_esl_and_game_is_fo4_or_later(game_type: GameType) {
             let result = has_plugin_file_extension(game_type, Path::new("file.esl"));
             if matches!(
@@ -1065,7 +1063,7 @@ mod tests {
             }
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_trim_ghost_extension_unless_game_is_openmw(game_type: GameType) {
             if game_type == GameType::OpenMW {
                 assert!(!has_plugin_file_extension(
@@ -1092,7 +1090,7 @@ mod tests {
             ));
         }
 
-        #[apply(all_game_types)]
+        #[parameterized_test(ALL_GAME_TYPES)]
         fn should_recognise_openmw_plugin_extensions(game_type: GameType) {
             if game_type == GameType::OpenMW {
                 assert!(has_plugin_file_extension(
