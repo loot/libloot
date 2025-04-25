@@ -32,7 +32,9 @@ void libloot_set_logging_callback(void (*callback)(uint8_t, const char*, void*),
 namespace {
 using loot::LogLevel;
 
-static std::function<void(LogLevel, std::string_view)> STORED_CALLBACK;
+typedef std::function<void(LogLevel, std::string_view)> Callback;
+
+static Callback STORED_CALLBACK;
 
 LogLevel convert(uint8_t level) {
   if (level == LIBLOOT_LOG_LEVEL_TRACE) {
@@ -70,16 +72,14 @@ loot::rust::LogLevel convert(LogLevel level) {
 }
 
 void logging_callback(uint8_t level, const char* message, void* context) {
-  auto callbackPtr =
-      static_cast<std::function<void(LogLevel, std::string_view)>*>(context);
+  auto& callback = *static_cast<Callback*>(context);
 
-  (*callbackPtr)(convert(level), message);
+  callback(convert(level), message);
 }
 }
 
 namespace loot {
-LOOT_API void SetLoggingCallback(
-    std::function<void(LogLevel, std::string_view)> callback) {
+LOOT_API void SetLoggingCallback(Callback callback) {
   STORED_CALLBACK = callback;
   libloot_set_logging_callback(logging_callback, &STORED_CALLBACK);
 }
