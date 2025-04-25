@@ -428,34 +428,17 @@ impl File {
         self.0.display_name().unwrap_or("")
     }
 
-    // pub fn set_display_name(&mut self, display_name: String) {
-    //     self.0.set_display_name(display_name);
-    // }
-
     pub fn detail(&self) -> &[MessageContent] {
         MessageContent::wrap_slice(self.0.detail())
     }
-
-    // pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<(), VerboseError> {
-    //     self.0.set_detail(to_vec_of_unwrapped(detail))?;
-    //     Ok(())
-    // }
 
     pub fn condition(&self) -> &str {
         self.0.condition().unwrap_or("")
     }
 
-    // pub fn set_condition(&mut self, condition: String) {
-    //     self.0.set_condition(condition);
-    // }
-
     pub fn constraint(&self) -> &str {
         self.0.constraint().unwrap_or("")
     }
-
-    // pub fn set_constraint(&mut self, constraint: String) {
-    //     self.0.set_constraint(constraint);
-    // }
 
     pub fn boxed_clone(&self) -> Box<Self> {
         Box::new(Self(self.0.clone()))

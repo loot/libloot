@@ -591,19 +591,11 @@ mod ffi {
 
         pub fn display_name(&self) -> &str;
 
-        // pub fn set_display_name(&mut self, display_name: String);
-
         pub fn detail(&self) -> &[MessageContent];
-
-        // pub fn set_detail(&mut self, detail: &[Box<MessageContent>]) -> Result<()>;
 
         pub fn condition(&self) -> &str;
 
-        // pub fn set_condition(&mut self, condition: String);
-
         pub fn constraint(&self) -> &str;
-
-        // pub fn set_constraint(&mut self, constraint: String);
 
         pub fn boxed_clone(&self) -> Box<File>;
     }
