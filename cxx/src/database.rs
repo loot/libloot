@@ -8,9 +8,9 @@ use libloot::{WriteMode, error::DatabaseLockPoisonError};
 use libloot_ffi_errors::UnsupportedEnumValueError;
 
 use crate::{
-    VerboseError,
+    OptionalPluginMetadata, VerboseError,
     ffi::EdgeType,
-    metadata::{Group, Message, OptionalPluginMetadata, PluginMetadata, to_vec_of_unwrapped},
+    metadata::{Group, Message, PluginMetadata, to_vec_of_unwrapped},
 };
 
 #[derive(Debug)]

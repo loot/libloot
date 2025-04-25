@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use delegate::delegate;
 
-use crate::{Optional, VerboseError};
+use crate::{OptionalCrc, VerboseError};
 
 #[derive(Debug)]
 #[repr(transparent)]
@@ -25,8 +25,8 @@ impl Plugin {
         self.0.masters().map_err(Into::into)
     }
 
-    pub fn crc(&self) -> i64 {
-        self.0.crc().map_or(-1, Into::into)
+    pub fn crc(&self) -> Box<OptionalCrc> {
+        Box::new(self.0.crc().into())
     }
 
     pub fn is_valid_as_light_plugin(&self) -> Result<bool, VerboseError> {
@@ -75,13 +75,5 @@ impl Plugin {
 impl From<Arc<libloot::Plugin>> for Plugin {
     fn from(value: Arc<libloot::Plugin>) -> Self {
         Plugin(value)
-    }
-}
-
-pub type OptionalPlugin = Optional<Plugin>;
-
-impl From<Option<Arc<libloot::Plugin>>> for Optional<Plugin> {
-    fn from(value: Option<Arc<libloot::Plugin>>) -> Self {
-        Self(value.map(Into::into))
     }
 }

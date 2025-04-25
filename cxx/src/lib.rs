@@ -105,16 +105,16 @@ mod plugin;
 
 use database::{Database, Vertex, new_vertex};
 use error::{EmptyOptionalError, VerboseError};
+use ffi::OptionalMessageContentRef;
 use game::{Game, new_game, new_game_with_local_path};
 use libloot_ffi_errors::UnsupportedEnumValueError;
 use metadata::{
-    File, Filename, Group, Location, Message, MessageContent, OptionalMessageContentRef,
-    OptionalPluginMetadata, PluginCleaningData, PluginMetadata, Tag, group_default_name,
-    message_content_default_language, multilingual_message, new_file, new_filename, new_group,
-    new_location, new_message, new_message_content, new_plugin_cleaning_data, new_plugin_metadata,
-    new_tag, select_message_content,
+    File, Filename, Group, Location, Message, MessageContent, PluginCleaningData, PluginMetadata,
+    Tag, group_default_name, message_content_default_language, multilingual_message, new_file,
+    new_filename, new_group, new_location, new_message, new_message_content,
+    new_plugin_cleaning_data, new_plugin_metadata, new_tag, select_message_content,
 };
-use plugin::{OptionalPlugin, Plugin};
+use plugin::Plugin;
 use std::{
     ffi::{CString, c_char, c_uchar, c_uint, c_void},
     sync::{Mutex, atomic::AtomicPtr},
@@ -124,32 +124,31 @@ use unicase::UniCase;
 use libloot::set_logging_callback;
 pub use libloot::{is_compatible, libloot_revision, libloot_version};
 
-#[derive(Debug)]
-pub struct OptionalRef<T: ?Sized>(*const T);
-
-impl<T: ?Sized> OptionalRef<T> {
+impl OptionalMessageContentRef {
     pub fn is_some(&self) -> bool {
-        !self.0.is_null()
+        !self.pointer.is_null()
     }
 
     /// # Safety
     ///
     /// This is safe as long as the pointer in the `OptionalRef` is still valid.
-    pub unsafe fn as_ref(&self) -> Result<&T, EmptyOptionalError> {
-        if self.0.is_null() {
+    pub unsafe fn as_ref(&self) -> Result<&MessageContent, EmptyOptionalError> {
+        if self.pointer.is_null() {
             Err(EmptyOptionalError)
         } else {
             // SAFETY: This is safe as long as self.0 is still valid.
-            unsafe { Ok(&*self.0) }
+            unsafe { Ok(&*self.pointer) }
         }
     }
 }
 
-impl<T> From<Option<&T>> for OptionalRef<T> {
-    fn from(value: Option<&T>) -> Self {
+impl From<Option<&MessageContent>> for OptionalMessageContentRef {
+    fn from(value: Option<&MessageContent>) -> Self {
         match value {
-            Some(p) => OptionalRef(p),
-            None => OptionalRef(std::ptr::null()),
+            Some(p) => OptionalMessageContentRef { pointer: p },
+            None => OptionalMessageContentRef {
+                pointer: std::ptr::null(),
+            },
         }
     }
 }
@@ -169,6 +168,18 @@ impl<T> Optional<T> {
         }
     }
 }
+
+impl<T> From<Option<T>> for Optional<T> {
+    fn from(value: Option<T>) -> Self {
+        Self(value)
+    }
+}
+
+pub type OptionalPlugin = Optional<Plugin>;
+
+pub type OptionalPluginMetadata = Optional<PluginMetadata>;
+
+pub type OptionalCrc = Optional<u32>;
 
 fn compare_filenames(lhs: &str, rhs: &str) -> i8 {
     match UniCase::new(lhs).cmp(&UniCase::new(rhs)) {
@@ -259,6 +270,19 @@ mod ffi {
         Fatal,
     }
 
+    #[derive(Debug)]
+    struct OptionalMessageContentRef {
+        pointer: *const MessageContent,
+    }
+
+    extern "Rust" {
+        pub fn is_some(self: &OptionalMessageContentRef) -> bool;
+
+        // Again, these lifetimes are wrong.
+        pub unsafe fn as_ref<'a>(self: &'a OptionalMessageContentRef)
+        -> Result<&'a MessageContent>;
+    }
+
     extern "Rust" {
         fn set_log_level(level: LogLevel) -> Result<()>;
 
@@ -269,7 +293,7 @@ mod ffi {
         fn select_message_content(
             contents: &[MessageContent],
             language: &str,
-        ) -> Box<OptionalMessageContentRef>;
+        ) -> OptionalMessageContentRef;
 
         fn compare_filenames(lhs: &str, rhs: &str) -> i8;
     }
@@ -450,7 +474,7 @@ mod ffi {
         pub fn bash_tags(&self) -> &[String];
 
         // The None case is signalled by -1, all other values fit in u32.
-        pub fn crc(&self) -> i64;
+        pub fn crc(&self) -> Box<OptionalCrc>;
 
         pub fn is_master(&self) -> bool;
 
@@ -487,12 +511,12 @@ mod ffi {
     }
 
     extern "Rust" {
-        type OptionalMessageContentRef;
+        type OptionalCrc;
 
         pub fn is_some(&self) -> bool;
 
         // Again, these lifetimes are wrong.
-        pub unsafe fn as_ref<'a>(&'a self) -> Result<&'a MessageContent>;
+        pub unsafe fn as_ref<'a>(&'a self) -> Result<&'a u32>;
     }
 
     extern "Rust" {

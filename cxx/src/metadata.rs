@@ -1,8 +1,8 @@
 use delegate::delegate;
 
 use crate::{
-    Optional, OptionalRef, UnsupportedEnumValueError, VerboseError,
-    ffi::{MessageType, TagSuggestion},
+    UnsupportedEnumValueError, VerboseError,
+    ffi::{MessageType, OptionalMessageContentRef, TagSuggestion},
 };
 
 /// # Safety
@@ -113,16 +113,14 @@ impl From<Box<MessageContent>> for libloot::metadata::MessageContent {
     }
 }
 
-pub type OptionalMessageContentRef = OptionalRef<MessageContent>;
-
 pub fn select_message_content(
     contents: &[MessageContent],
     language: &str,
-) -> Box<OptionalMessageContentRef> {
+) -> OptionalMessageContentRef {
     let option =
         libloot::metadata::select_message_content(MessageContent::unwrap_slice(contents), language);
 
-    Box::new(option.map(MessageContent::wrap_ref).into())
+    option.map(MessageContent::wrap_ref).into()
 }
 
 #[derive(Clone, Debug)]
@@ -376,14 +374,6 @@ impl From<libloot::metadata::PluginMetadata> for PluginMetadata {
 impl From<Box<PluginMetadata>> for libloot::metadata::PluginMetadata {
     fn from(value: Box<PluginMetadata>) -> Self {
         value.0
-    }
-}
-
-pub type OptionalPluginMetadata = Optional<PluginMetadata>;
-
-impl From<Option<PluginMetadata>> for Optional<PluginMetadata> {
-    fn from(value: Option<PluginMetadata>) -> Self {
-        Self(value)
     }
 }
 

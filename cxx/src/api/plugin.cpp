@@ -43,11 +43,15 @@ std::vector<std::string> Plugin::GetBashTags() const {
 }
 
 std::optional<uint32_t> Plugin::GetCRC() const {
-  const auto value = plugin_->crc();
-  if (value < 0 || value > UINT32_MAX) {
+  try {
+    auto optional = plugin_->crc();
+    if (optional->is_some()) {
+      return optional->as_ref();
+    }
+
     return std::nullopt;
-  } else {
-    return uint32_t(value);
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
   }
 }
 
