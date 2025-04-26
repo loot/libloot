@@ -14,15 +14,13 @@ The wrapper has two layers:
 To build a release build with debug info:
 
 ```
-cargo build --release
 cmake -B build .
 cmake --build build --parallel --config RelWithDebInfo
 ```
 
-Debug builds need a little extra config to get the static and shared libraries to use the same C runtime library on Windows:
+To build a debug build:
 
 ```
-cargo build --config ../.cargo/msvcd-config.toml
 cmake -B build .
 cmake --build build --parallel --config Debug
 ```
@@ -32,7 +30,6 @@ cmake --build build --parallel --config Debug
 To build a release build with debug info:
 
 ```
-cargo build --release
 cmake -B build . -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build --parallel
 ```

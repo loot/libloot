@@ -24,8 +24,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # External Projects
 ##############################
 
-add_library(libloot-cxx STATIC IMPORTED)
-
 if(MSVC)
     set(LIBLOOT_CXX_FILENAME "libloot_cxx.lib")
 else()
@@ -38,10 +36,19 @@ else()
     set(TARGET_PATH "${CMAKE_SOURCE_DIR}/../target")
 endif()
 
-set_target_properties(libloot-cxx PROPERTIES
-    IMPORTED_CONFIGURATIONS "Release;Debug"
-    IMPORTED_LOCATION "${TARGET_PATH}/release/${LIBLOOT_CXX_FILENAME}"
-    IMPORTED_LOCATION_DEBUG "${TARGET_PATH}/debug/${LIBLOOT_CXX_FILENAME}")
+add_custom_target(libloot-cxx-build
+    COMMAND cargo build
+        $<$<NOT:$<CONFIG:Debug>>:--release>
+        $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:--config>
+        $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:${CMAKE_SOURCE_DIR}/../.cargo/msvcd-config.toml>
+)
+
+add_library(libloot-cxx INTERFACE)
+add_dependencies(libloot-cxx libloot-cxx-build)
+
+target_link_libraries(libloot-cxx INTERFACE
+    optimized "${TARGET_PATH}/release/${LIBLOOT_CXX_FILENAME}"
+    debug "${TARGET_PATH}/debug/${LIBLOOT_CXX_FILENAME}")
 target_include_directories(libloot-cxx INTERFACE "${TARGET_PATH}/cxxbridge")
 
 
