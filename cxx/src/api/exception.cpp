@@ -143,7 +143,7 @@ std::exception_ptr mapError(const ::rust::Error& error) {
         UndefinedGroupError(getErrorSuffix(error.what())));
   } else if (startsWith(error.what(), ESPLUGIN_ERROR_PREFIX)) {
     const auto [code, details] = parseSystemError(
-        std::string_view(error.what()).substr(0, ESPLUGIN_ERROR_PREFIX.size()));
+        std::string_view(error.what()).substr(ESPLUGIN_ERROR_PREFIX.size()));
 
     return std::make_exception_ptr(
         std::system_error(code, esplugin_category(), details));
@@ -151,13 +151,13 @@ std::exception_ptr mapError(const ::rust::Error& error) {
   } else if (startsWith(error.what(), LIBLOADORDER_ERROR_PREFIX)) {
     const auto [code, details] =
         parseSystemError(std::string_view(error.what())
-                             .substr(0, LIBLOADORDER_ERROR_PREFIX.size()));
+                             .substr(LIBLOADORDER_ERROR_PREFIX.size()));
 
     return std::make_exception_ptr(
         std::system_error(code, libloadorder_category(), details));
   } else if (startsWith(error.what(), LCI_ERROR_PREFIX)) {
     const auto [code, details] = parseSystemError(
-        std::string_view(error.what()).substr(0, LCI_ERROR_PREFIX.size()));
+        std::string_view(error.what()).substr(LCI_ERROR_PREFIX.size()));
 
     return std::make_exception_ptr(ConditionSyntaxError(
         code, loot_condition_interpreter_category(), details));
