@@ -41,6 +41,11 @@ add_custom_target(libloot-cxx-build
         $<$<NOT:$<CONFIG:Debug>>:--release>
         $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:--config>
         $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:${CMAKE_SOURCE_DIR}/../.cargo/msvcd-config.toml>
+    BYPRODUCTS
+        "${TARGET_PATH}/$<IF:$<CONFIG:Debug>,debug,release>/${LIBLOOT_CXX_FILENAME}"
+        "${TARGET_PATH}/cxxbridge/libloot-cxx/src/lib.rs.cc"
+        "${TARGET_PATH}/cxxbridge/libloot-cxx/src/lib.rs.h"
+        "${TARGET_PATH}/cxxbridge/rust/cxx.h"
 )
 
 add_library(libloot-cxx INTERFACE)
