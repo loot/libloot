@@ -92,7 +92,7 @@ ExternalProject_Add(esplugin
     URL_HASH ${ESPLUGIN_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
+    BUILD_COMMAND cargo build --release --config debug="limited" --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
         cbindgen ffi/ -o ffi/include/esplugin.hpp
     COMMAND ${RUST_CLEANUP_COMMAND}
     INSTALL_COMMAND ""
@@ -117,7 +117,7 @@ ExternalProject_Add(libloadorder
     URL_HASH ${LIBLOADORDER_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
+    BUILD_COMMAND cargo build --release --config debug="limited" --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
         cbindgen ffi/ -l c++ -o ffi/include/libloadorder.hpp
     COMMAND ${RUST_CLEANUP_COMMAND}
     INSTALL_COMMAND ""
@@ -142,7 +142,7 @@ ExternalProject_Add(loot-condition-interpreter
     URL_HASH ${LOOT_CONDITION_INTERPRETER_HASH}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND cargo build --release --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
+    BUILD_COMMAND cargo build --release --config debug="limited" --manifest-path ffi/Cargo.toml ${RUST_TARGET_ARGS} &&
         cbindgen ffi/ -o ffi/include/loot_condition_interpreter.h
     COMMAND ${RUST_CLEANUP_COMMAND}
     INSTALL_COMMAND ""
