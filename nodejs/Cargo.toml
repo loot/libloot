@@ -16,7 +16,3 @@ napi-derive = "2.12.2"
 
 [build-dependencies]
 napi-build = "2.0.1"
-
-[profile.release]
-lto = true
-strip = "symbols"

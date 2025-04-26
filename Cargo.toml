@@ -36,6 +36,7 @@ loot-condition-interpreter = "5.3.1"
 
 [profile.release]
 debug = "limited"
+lto = "thin"
 
 [profile.rel-with-deb-info]
 inherits = "release"

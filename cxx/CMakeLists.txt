@@ -154,7 +154,6 @@ target_include_directories(loot SYSTEM PRIVATE
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(loot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
-    target_compile_options(loot PRIVATE "/Zc:__cplusplus")
 
     set(LOOT_LIBS ntdll ws2_32 bcrypt)
 
@@ -167,7 +166,8 @@ endif()
 
 if(MSVC)
     # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
-    target_compile_options(loot PRIVATE "/permissive-" "/W4")
+    target_compile_options(loot PRIVATE "/permissive-" "/W4" "/Zc:__cplusplus" "/GL")
+    target_link_options(loot PRIVATE "/LTCG")
 endif()
 
 ##############################
