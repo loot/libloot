@@ -1089,15 +1089,22 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
         edge_stack_index: usize,
         target_plugins: &[PluginNodeIndex],
     ) {
+        use std::fmt::Write;
+
         let Some([from_edge, edges @ ..]) = self.edge_stack.get(edge_stack_index..) else {
             if is_log_enabled(LogLevel::Error) {
                 logging::error!(
-                    "Unexpected invalid edge stack index {} for edge stack {:?}",
+                    "Unexpected invalid edge stack index {} for edge stack [{}]",
                     edge_stack_index,
                     self.edge_stack
                         .iter()
                         .map(|e| e.0.weight())
-                        .collect::<Vec<_>>()
+                        .fold(String::new(), |mut a, b| if a.is_empty() {
+                            b.to_string()
+                        } else {
+                            let _e = write!(a, ", {b}");
+                            a
+                        })
                 );
             }
             return;
