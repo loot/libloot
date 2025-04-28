@@ -341,7 +341,7 @@ impl YamlMergeKeyError {
                 yaml = yaml.split_off(index);
             }
         } else {
-            yaml = format!("{yaml:?}");
+            yaml = format!("{unmarked_yaml:?}");
         }
 
         YamlMergeKeyError {
