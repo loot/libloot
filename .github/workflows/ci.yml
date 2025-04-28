@@ -99,7 +99,7 @@ jobs:
 
       - name: Build the Python wrapper
         shell: bash
-        working-directory: pyo3
+        working-directory: python
         run: |
           python -m venv .venv
 

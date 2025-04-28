@@ -1,4 +1,4 @@
-# libloot-pyo3
+# libloot-python
 
 An **experimental** Python wrapper around the libloot Rust implementation, built using [PyO3](https://pyo3.rs).
 
