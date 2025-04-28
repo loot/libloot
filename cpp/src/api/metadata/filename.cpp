@@ -27,7 +27,7 @@
 #include <stdexcept>
 
 // #include "api/helpers/text.h"
-#include "libloot-cxx/src/lib.rs.h"
+#include "libloot-cpp/src/lib.rs.h"
 
 namespace loot {
 Filename::Filename(std::string_view filename) : filename_(filename) {}

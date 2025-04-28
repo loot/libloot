@@ -29,7 +29,7 @@
 #include <stdexcept>
 
 #include "api/convert.h"
-#include "libloot-cxx/src/lib.rs.h"
+#include "libloot-cpp/src/lib.rs.h"
 
 namespace {
 // Append second to first, skipping any elements that are already present in

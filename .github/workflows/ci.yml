@@ -124,10 +124,6 @@ jobs:
         working-directory: nodejs
         run: npm test
 
-      - name: Build the CXX wrapper layer
-        working-directory: cxx
-        run: cargo build --release --target ${{ matrix.target.triple }}
-
       - name: Get descriptive libloot version
         id: get-libloot-version
         shell: bash
@@ -138,7 +134,7 @@ jobs:
           echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
 
       - name: Build the C++ wrapper (Linux)
-        working-directory: cxx
+        working-directory: cpp
         run: |
           cmake \
             -DCMAKE_BUILD_TYPE=${{ env.CMAKE_CONFIG }} \
@@ -149,7 +145,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Build the C++ wrapper (Windows)
-        working-directory: cxx
+        working-directory: cpp
         run: |
           cmake -G "Visual Studio 16 2019" `
             -A ${{ matrix.target.platform }} `
@@ -160,11 +156,11 @@ jobs:
         if: runner.os == 'Windows'
 
       - name: Run the C++ wrapper tests
-        working-directory: cxx
+        working-directory: cpp
         run: ctest --test-dir build --build-config ${{ env.CMAKE_CONFIG }} --output-on-failure --parallel
 
       - name: Package the C++ wrapper
-        working-directory: cxx/build
+        working-directory: cpp/build
         run: cpack -C ${{ env.CMAKE_CONFIG }}
 
       - name: Get archive name
@@ -193,5 +189,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.archive-name.outputs.filename }}
-          path: cxx/build/package/${{ steps.archive-name.outputs.filename }}
+          path: cpp/build/package/${{ steps.archive-name.outputs.filename }}
         if: github.event_name == 'push'

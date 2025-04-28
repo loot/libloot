@@ -1,7 +1,7 @@
 #ifndef LOOT_API_DATABASE
 #define LOOT_API_DATABASE
 
-#include "libloot-cxx/src/lib.rs.h"
+#include "libloot-cpp/src/lib.rs.h"
 #include "loot/database_interface.h"
 #include "rust/cxx.h"
 

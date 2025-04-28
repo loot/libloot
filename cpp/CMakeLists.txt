@@ -25,9 +25,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ##############################
 
 if(MSVC)
-    set(LIBLOOT_CXX_FILENAME "libloot_cxx.lib")
+    set(LIBLOOT_CPP_FILENAME "libloot_cpp.lib")
 else()
-    set(LIBLOOT_CXX_FILENAME "liblibloot_cxx.a")
+    set(LIBLOOT_CPP_FILENAME "liblibloot_cpp.a")
 endif()
 
 if(DEFINED RUST_TARGET)
@@ -36,25 +36,27 @@ else()
     set(TARGET_PATH "${CMAKE_SOURCE_DIR}/../target")
 endif()
 
-add_custom_target(libloot-cxx-build
+add_custom_target(libloot-cpp-build
     COMMAND cargo build
         $<$<NOT:$<CONFIG:Debug>>:--release>
         $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:--config>
         $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:${CMAKE_SOURCE_DIR}/.cargo/msvc-debug-config.toml>
+        $<$<BOOL:${RUST_TARGET}>:--target>
+        $<$<BOOL:${RUST_TARGET}>:${RUST_TARGET}>
     BYPRODUCTS
-        "${TARGET_PATH}/$<IF:$<CONFIG:Debug>,debug,release>/${LIBLOOT_CXX_FILENAME}"
-        "${TARGET_PATH}/cxxbridge/libloot-cxx/src/lib.rs.cc"
-        "${TARGET_PATH}/cxxbridge/libloot-cxx/src/lib.rs.h"
+        "${TARGET_PATH}/$<IF:$<CONFIG:Debug>,debug,release>/${LIBLOOT_CPP_FILENAME}"
+        "${TARGET_PATH}/cxxbridge/libloot-cpp/src/lib.rs.cc"
+        "${TARGET_PATH}/cxxbridge/libloot-cpp/src/lib.rs.h"
         "${TARGET_PATH}/cxxbridge/rust/cxx.h"
 )
 
-add_library(libloot-cxx INTERFACE)
-add_dependencies(libloot-cxx libloot-cxx-build)
+add_library(libloot-cpp INTERFACE)
+add_dependencies(libloot-cpp libloot-cpp-build)
 
-target_link_libraries(libloot-cxx INTERFACE
-    optimized "${TARGET_PATH}/release/${LIBLOOT_CXX_FILENAME}"
-    debug "${TARGET_PATH}/debug/${LIBLOOT_CXX_FILENAME}")
-target_include_directories(libloot-cxx INTERFACE "${TARGET_PATH}/cxxbridge")
+target_link_libraries(libloot-cpp INTERFACE
+    optimized "${TARGET_PATH}/release/${LIBLOOT_CPP_FILENAME}"
+    debug "${TARGET_PATH}/debug/${LIBLOOT_CPP_FILENAME}")
+target_include_directories(libloot-cpp INTERFACE "${TARGET_PATH}/cxxbridge")
 
 
 ##############################
@@ -142,7 +144,7 @@ set(LIBLOOT_ALL_SOURCES
 
 # Build API.
 add_library(loot ${LIBLOOT_ALL_SOURCES})
-target_link_libraries(loot PRIVATE libloot-cxx)
+target_link_libraries(loot PRIVATE libloot-cpp)
 
 ##############################
 # Set Target-Specific Flags

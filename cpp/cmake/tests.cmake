@@ -97,7 +97,7 @@ set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
 # Build tests.
 add_executable(libloot_internals_tests ${LIBLOOT_INTERNALS_TESTS_ALL_SOURCES})
 target_link_libraries(libloot_internals_tests PRIVATE
-    libloot-cxx
+    libloot-cpp
     GTest::gtest_main)
 
 # Build API tests.

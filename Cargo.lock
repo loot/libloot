@@ -565,7 +565,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "libloot-cxx"
+name = "libloot-cpp"
 version = "0.26.0"
 dependencies = [
  "cxx",

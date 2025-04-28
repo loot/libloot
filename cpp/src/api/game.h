@@ -5,7 +5,7 @@
 
 #include "api/database.h"
 #include "api/plugin.h"
-#include "libloot-cxx/src/lib.rs.h"
+#include "libloot-cpp/src/lib.rs.h"
 #include "loot/game_interface.h"
 #include "loot/metadata/filename.h"
 #include "rust/cxx.h"

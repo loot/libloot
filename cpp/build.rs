@@ -3,7 +3,7 @@ fn main() {
         .std("c++17")
         .flag_if_supported("/Zc:__cplusplus")
         .flag_if_supported("/permissive-")
-        .compile("libloot-cxx");
+        .compile("libloot-cpp");
 
     // From <https://github.com/dtolnay/cxx/issues/880#issuecomment-2521375384>
     if std::env::var("TARGET").is_ok_and(|s| s.contains("windows-msvc")) {

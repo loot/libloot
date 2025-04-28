@@ -1,7 +1,7 @@
 #ifndef LOOT_API_CONVERT
 #define LOOT_API_CONVERT
 
-#include "libloot-cxx/src/lib.rs.h"
+#include "libloot-cpp/src/lib.rs.h"
 #include "loot/metadata/group.h"
 #include "loot/metadata/plugin_metadata.h"
 #include "loot/vertex.h"

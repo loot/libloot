@@ -3,7 +3,7 @@
 #include "loot/api.h"
 
 #include "api/game.h"
-#include "libloot-cxx/src/lib.rs.h"
+#include "libloot-cpp/src/lib.rs.h"
 #include "rust/cxx.h"
 
 extern "C" {

@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "libloot-cxx/src/lib.rs.h"
+#include "libloot-cpp/src/lib.rs.h"
 #include "rust/cxx.h"
 #include "tests/api/internals/metadata/conditional_metadata_test.h"
 #include "tests/api/internals/metadata/file_test.h"

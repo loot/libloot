@@ -2,7 +2,7 @@
 
 This is an **experimental** reimplementation of [libloot](https://github.com/loot/libloot) using Rust instead of C++, that should match libloot v0.26.0.
 
-See the `cxx` and `python` subdirectories for C++ and Python wrappers respectively.
+See the `cpp` and `python` subdirectories for C++ and Python wrappers respectively.
 
 Expect:
 

@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "libloot-cxx/src/lib.rs.h"
+#include "libloot-cpp/src/lib.rs.h"
 #include "loot/metadata/tag.h"
 #include "loot/plugin_interface.h"
 
