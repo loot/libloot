@@ -5,7 +5,7 @@ use std::{
 
 use saphyr::{LoadableYamlNode, MarkedYaml, YamlData};
 
-use crate::logging;
+use crate::{escape_ascii, logging};
 
 use super::{
     error::{
@@ -37,7 +37,7 @@ impl MetadataDocument {
             ));
         }
 
-        logging::trace!("Loading file: {:?}", file_path);
+        logging::trace!("Loading file at \"{}\"", escape_ascii(file_path));
 
         let content = std::fs::read_to_string(file_path)
             .map_err(|e| LoadMetadataError::from_io_error(file_path.into(), e))?;
@@ -46,8 +46,8 @@ impl MetadataDocument {
             .map_err(|e| LoadMetadataError::new(file_path.into(), e))?;
 
         logging::trace!(
-            "Successfully loaded metadata from file at \"{:?}\".",
-            file_path
+            "Successfully loaded metadata from file at \"{}\".",
+            escape_ascii(file_path)
         );
 
         Ok(())
@@ -84,8 +84,8 @@ impl MetadataDocument {
             .map_err(|e| LoadMetadataError::new(masterlist_path.into(), e))?;
 
         logging::trace!(
-            "Successfully loaded metadata from file at \"{:?}\".",
-            masterlist_path
+            "Successfully loaded metadata from file at \"{}\".",
+            escape_ascii(masterlist_path)
         );
 
         Ok(())
@@ -198,7 +198,7 @@ impl MetadataDocument {
     }
 
     pub fn save(&self, file_path: &Path) -> Result<(), WriteMetadataError> {
-        logging::trace!("Saving metadata list to: {}", file_path.display());
+        logging::trace!("Saving metadata list to: \"{}\"", escape_ascii(file_path));
 
         let mut emitter = YamlEmitter::new();
 

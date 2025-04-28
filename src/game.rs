@@ -15,6 +15,7 @@ use crate::{
         DatabaseLockPoisonError, GameHandleCreationError, LoadOrderError, LoadOrderStateError,
         LoadPluginsError, SortPluginsError,
     },
+    escape_ascii,
     logging::{self, format_details, is_log_enabled},
     metadata::{
         Filename,
@@ -155,9 +156,9 @@ impl Game {
     /// can be used to provide the local path instead.
     pub fn new(game_type: GameType, game_path: &Path) -> Result<Self, GameHandleCreationError> {
         logging::info!(
-            "Attempting to create a game handle for game type \"{}\" with game path {:?}",
+            "Attempting to create a game handle for game type \"{}\" with game path \"{}\"",
             game_type,
-            game_path
+            escape_ascii(game_path)
         );
 
         let resolved_game_path = resolve_path(game_path);
@@ -197,10 +198,10 @@ impl Game {
         game_local_path: &Path,
     ) -> Result<Self, GameHandleCreationError> {
         logging::info!(
-            "Attempting to create a game handle for game type \"{}\" with game path {:?} and game local path {:?}",
+            "Attempting to create a game handle for game type \"{}\" with game path \"{}\" and game local path \"{}\"",
             game_type,
-            game_path,
-            game_local_path
+            escape_ascii(game_path),
+            escape_ascii(game_local_path)
         );
 
         let resolved_game_path = resolve_path(game_path);
@@ -671,7 +672,7 @@ fn try_load_plugin(
         Err(e) => {
             logging::error!(
                 "Caught error while trying to load \"{}\": {}",
-                plugin_path.display(),
+                escape_ascii(plugin_path),
                 format_details(&e)
             );
             None
@@ -685,8 +686,8 @@ fn resolve_plugin_path(game_type: GameType, data_path: &Path, plugin_path: &Path
     if game_type != GameType::OpenMW && !plugin_path.exists() {
         if let Some(filename) = plugin_path.file_name() {
             logging::debug!(
-                "Could not find plugin at {}, adding {} file extension",
-                plugin_path.display(),
+                "Could not find plugin at \"{}\", adding {} file extension",
+                escape_ascii(&plugin_path),
                 GHOST_FILE_EXTENSION
             );
             let mut filename = filename.to_os_string();

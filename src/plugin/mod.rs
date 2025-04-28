@@ -15,7 +15,7 @@ use fancy_regex::{Error as RegexImplError, Regex};
 use crate::{
     GameType,
     archive::{assets_in_archives, do_assets_overlap, find_associated_archives},
-    case_insensitive_regex,
+    case_insensitive_regex, escape_ascii,
     game::GameCache,
     logging,
     metadata::plugin_metadata::trim_dot_ghost,
@@ -289,7 +289,7 @@ pub(crate) fn validate_plugin_path_and_header(
     } else if !has_plugin_file_extension(game_type, plugin_path) {
         logging::debug!(
             "The file \"{}\" is not a valid plugin",
-            plugin_path.display()
+            escape_ascii(plugin_path)
         );
         Err(PluginValidationError::invalid(
             plugin_path.into(),
@@ -301,7 +301,7 @@ pub(crate) fn validate_plugin_path_and_header(
     } else {
         logging::debug!(
             "The file \"{}\" is not a valid plugin",
-            plugin_path.display()
+            escape_ascii(plugin_path)
         );
         Err(PluginValidationError::new(
             plugin_path.into(),
