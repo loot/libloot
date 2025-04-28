@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use fancy_regex::Error as RegexImplError;
 
+use crate::escape_ascii;
+
 /// Represents an error that occurred while reading a parsed plugin's data.
 #[derive(Debug)]
 pub struct PluginDataError(esplugin::Error);
@@ -121,13 +123,13 @@ impl std::fmt::Display for PluginValidationError {
             PluginValidationErrorReason::InvalidFilename(i) => write!(
                 f,
                 "the path \"{}\" has a filename that {}",
-                self.path.display(),
+                escape_ascii(&self.path),
                 i
             ),
             PluginValidationErrorReason::InvalidPluginHeader => write!(
                 f,
                 "the file at \"{}\" does not have a valid plugin header",
-                self.path.display()
+                escape_ascii(&self.path)
             ),
         }
     }

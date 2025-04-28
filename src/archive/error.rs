@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use crate::escape_ascii;
+
 #[derive(Debug)]
 pub(crate) struct ArchivePathParsingError {
     path: PathBuf,
@@ -24,7 +26,7 @@ impl std::fmt::Display for ArchivePathParsingError {
         write!(
             f,
             "failed to parse the archive at \"{}\"",
-            self.path.display()
+            escape_ascii(&self.path)
         )
     }
 }

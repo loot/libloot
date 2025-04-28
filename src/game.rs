@@ -1784,12 +1784,16 @@ mod tests {
                     Path::new("b").join(BLANK_ESM),
                 ];
 
+                let expected_path = if cfg!(windows) {
+                    "b\\\\Blank.esm"
+                } else {
+                    "b/Blank.esm"
+                };
                 match game.load_plugins_common(&[&paths[0], &paths[1]], LoadScope::HeaderOnly) {
                     Err(LoadPluginsError::PluginValidationError(e)) => {
                         assert_eq!(
                             format!(
-                                "the path \"{}\" has a filename that is not unique",
-                                paths[1].display()
+                                "the path \"{expected_path}\" has a filename that is not unique"
                             ),
                             e.to_string()
                         );

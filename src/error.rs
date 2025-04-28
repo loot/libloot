@@ -6,10 +6,10 @@ pub use crate::plugin::error::PluginDataError;
 use crate::plugin::error::PluginValidationError;
 pub use crate::sorting::error::GroupsPathError;
 
-use crate::Vertex;
 use crate::sorting::error::{
     BuildGroupsGraphError, PluginGraphValidationError, SortingError, display_cycle,
 };
+use crate::{Vertex, escape_ascii};
 
 /// Represents an error that occurred while trying to create a [Game][crate::Game].
 #[derive(Debug)]
@@ -25,7 +25,7 @@ impl std::fmt::Display for GameHandleCreationError {
             Self::NotADirectory(p) => write!(
                 f,
                 "the path \"{}\" does not resolve to a directory",
-                p.display()
+                escape_ascii(p)
             ),
             Self::LoadOrderError(_) => {
                 write!(f, "failed to initialise the load order game settings")

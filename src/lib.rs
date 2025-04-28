@@ -119,6 +119,8 @@ mod sorting;
 mod tests;
 mod version;
 
+use std::{path::Path, slice::EscapeAscii};
+
 use fancy_regex::{Error as RegexImplError, Regex, RegexBuilder};
 
 pub use database::{Database, WriteMode};
@@ -136,4 +138,8 @@ fn case_insensitive_regex(value: &str) -> Result<Regex, Box<RegexImplError>> {
         .case_insensitive(true)
         .build()
         .map_err(Into::into)
+}
+
+fn escape_ascii(path: &Path) -> EscapeAscii {
+    path.as_os_str().as_encoded_bytes().escape_ascii()
 }

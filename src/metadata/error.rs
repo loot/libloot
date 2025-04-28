@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use fancy_regex::Error as RegexImplError;
 use saphyr::Marker;
 
-use crate::metadata::MessageContent;
+use crate::{escape_ascii, metadata::MessageContent};
 
 use super::yaml::{YamlObjectType, to_unmarked_yaml};
 
@@ -244,7 +244,11 @@ impl LoadMetadataError {
 
 impl std::fmt::Display for LoadMetadataError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "failed to parse the file at \"{}\"", self.path.display())
+        write!(
+            f,
+            "failed to parse the file at \"{}\"",
+            escape_ascii(&self.path)
+        )
     }
 }
 
@@ -380,10 +384,14 @@ impl std::fmt::Display for WriteMetadataError {
             WriteMetadataErrorReason::ParentDirectoryNotFound => write!(
                 f,
                 "the parent directory of the path \"{}\" was not found",
-                self.path.display()
+                escape_ascii(&self.path)
             ),
             WriteMetadataErrorReason::PathAlreadyExists => {
-                write!(f, "the path \"{}\" already exists", self.path.display())
+                write!(
+                    f,
+                    "the path \"{}\" already exists",
+                    escape_ascii(&self.path)
+                )
             }
             WriteMetadataErrorReason::IoError(_) => write!(f, "an I/O error occurred"),
         }
