@@ -22,16 +22,14 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_CONTENT_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_CONTENT_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_MESSAGE_CONTENT_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_MESSAGE_CONTENT_TEST
 
 #include <gtest/gtest.h>
 
-#include "api/metadata/yaml/message_content.h"
 #include "loot/metadata/message_content.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 const std::string french = "fr";
 
 TEST(MessageContent, defaultConstructorShouldSetEmptyEnglishLanguageString) {
@@ -329,45 +327,6 @@ TEST(
   EXPECT_TRUE(content.has_value());
   EXPECT_EQ("pt_PT", content.value().GetLanguage());
   EXPECT_EQ("test3", content.value().GetText());
-}
-
-TEST(MessageContent, emittingAsYamlShouldOutputDataCorrectly) {
-  MessageContent content("content", french);
-  YAML::Emitter emitter;
-  emitter << content;
-
-  EXPECT_EQ("lang: " + french + "\ntext: '" + content.GetText() + "'",
-            emitter.c_str());
-}
-
-TEST(MessageContent, encodingAsYamlShouldOutputDataCorrectly) {
-  MessageContent content("content", french);
-  YAML::Node node;
-  node = content;
-
-  EXPECT_EQ(content.GetText(), node["text"].as<std::string>());
-  EXPECT_EQ(french, node["lang"].as<std::string>());
-}
-
-TEST(MessageContent, decodingFromYamlShouldSetDataCorrectly) {
-  YAML::Node node = YAML::Load("{text: content, lang: fr}");
-  MessageContent content = node.as<MessageContent>();
-
-  EXPECT_EQ("content", content.GetText());
-  EXPECT_EQ(french, content.GetLanguage());
-}
-
-TEST(MessageContent, decodingFromYamlScalarShouldThrow) {
-  YAML::Node node = YAML::Load("scalar");
-
-  EXPECT_THROW(node.as<MessageContent>(), YAML::RepresentationException);
-}
-
-TEST(MessageContent, decodingFromYamlListShouldThrow) {
-  YAML::Node node = YAML::Load("[0, 1, 2]");
-
-  EXPECT_THROW(node.as<MessageContent>(), YAML::RepresentationException);
-}
 }
 }
 

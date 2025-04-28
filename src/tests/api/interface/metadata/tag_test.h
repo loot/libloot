@@ -22,16 +22,14 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_TAG_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_TAG_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_TAG_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_TAG_TEST
 
 #include <gtest/gtest.h>
 
-#include "api/metadata/yaml/tag.h"
 #include "loot/metadata/tag.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 TEST(Tag,
      defaultConstructorShouldSetEmptyNameAndConditionStringsForATagAddition) {
   Tag tag;
@@ -283,112 +281,6 @@ TEST(
 
   EXPECT_FALSE(tag1 >= tag2);
   EXPECT_TRUE(tag2 >= tag1);
-}
-
-TEST(
-    Tag,
-    emittingAsYamlShouldOutputOnlyTheNameStringIfTheTagIsAnAdditionWithNoCondition) {
-  Tag tag("name1");
-  YAML::Emitter emitter;
-  emitter << tag;
-
-  EXPECT_EQ(tag.GetName(), emitter.c_str());
-}
-
-TEST(
-    Tag,
-    emittingAsYamlShouldOutputOnlyTheNameStringPrefixedWithAHyphenIfTheTagIsARemovalWithNoCondition) {
-  Tag tag("name1", false);
-  YAML::Emitter emitter;
-  emitter << tag;
-
-  EXPECT_EQ("-" + tag.GetName(), emitter.c_str());
-}
-
-TEST(Tag, emittingAsYamlShouldOutputAMapIfTheTagHasACondition) {
-  Tag tag("name1", false, "condition1");
-  YAML::Emitter emitter;
-  emitter << tag;
-
-  EXPECT_STREQ("name: -name1\ncondition: 'condition1'", emitter.c_str());
-}
-
-TEST(Tag,
-     encodingAsYamlShouldOmitTheConditionFieldIfTheConditionStringIsEmpty) {
-  Tag tag;
-  YAML::Node node;
-  node = tag;
-
-  EXPECT_FALSE(node["condition"]);
-}
-
-TEST(Tag, encodingAsYamlShouldOutputTheNameFieldCorrectly) {
-  Tag tag("name1");
-  YAML::Node node;
-  node = tag;
-
-  EXPECT_EQ(tag.GetName(), node["name"].as<std::string>());
-}
-
-TEST(
-    Tag,
-    encodingAsYamlShouldOutputTheNameFieldWithAHyphenPrefixIfTheTagIsARemoval) {
-  Tag tag("name1", false);
-  YAML::Node node;
-  node = tag;
-
-  EXPECT_EQ("-" + tag.GetName(), node["name"].as<std::string>());
-}
-
-TEST(
-    Tag,
-    encodingAsYamlShouldOutputTheConditionFieldIfTheConditionStringIsNotEmpty) {
-  Tag tag("name1", true, "condition1");
-  YAML::Node node;
-  node = tag;
-
-  EXPECT_EQ(tag.GetName(), node["name"].as<std::string>());
-  EXPECT_EQ(tag.GetCondition(), node["condition"].as<std::string>());
-}
-
-TEST(Tag, decodingFromYamlScalarShouldSetNameCorrectly) {
-  YAML::Node node = YAML::Load("name1");
-  Tag tag = node.as<Tag>();
-
-  EXPECT_EQ("name1", tag.GetName());
-  EXPECT_TRUE(tag.IsAddition());
-  EXPECT_EQ("", tag.GetCondition());
-}
-
-TEST(Tag, decodingFromYamlScalarShouldSetAdditionStateCorrectly) {
-  YAML::Node node = YAML::Load("-name1");
-  Tag tag = node.as<Tag>();
-
-  EXPECT_EQ("name1", tag.GetName());
-  EXPECT_FALSE(tag.IsAddition());
-  EXPECT_EQ("", tag.GetCondition());
-}
-
-TEST(Tag, decodingFromYamlMapShouldSetDataCorrectly) {
-  YAML::Node node = YAML::Load("{name: name1, condition: 'file(\"Foo.esp\")'}");
-  Tag tag = node.as<Tag>();
-
-  EXPECT_EQ("name1", tag.GetName());
-  EXPECT_TRUE(tag.IsAddition());
-  EXPECT_EQ("file(\"Foo.esp\")", tag.GetCondition());
-}
-
-TEST(Tag, decodingFromYamlShouldThrowIfAnInvalidConditionIsGiven) {
-  YAML::Node node = YAML::Load("{name: name1, condition: invalid}");
-
-  EXPECT_THROW(node.as<Tag>(), YAML::RepresentationException);
-}
-
-TEST(Tag, decodingFromYamlListShouldThrow) {
-  YAML::Node node = YAML::Load("[0, 1, 2]");
-
-  EXPECT_THROW(node.as<Tag>(), YAML::RepresentationException);
-}
 }
 }
 

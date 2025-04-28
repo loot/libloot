@@ -25,6 +25,15 @@
 #include <gtest/gtest.h>
 
 #include "loot/api.h"
+#include "tests/api/interface/metadata/conditional_metadata_test.h"
+#include "tests/api/interface/metadata/file_test.h"
+#include "tests/api/interface/metadata/group_test.h"
+#include "tests/api/interface/metadata/location_test.h"
+#include "tests/api/interface/metadata/message_content_test.h"
+#include "tests/api/interface/metadata/message_test.h"
+#include "tests/api/interface/metadata/plugin_cleaning_data_test.h"
+#include "tests/api/interface/metadata/plugin_metadata_test.h"
+#include "tests/api/interface/metadata/tag_test.h"
 #include "tests/api/interface/create_game_handle_test.h"
 #include "tests/api/interface/database_interface_test.h"
 #include "tests/api/interface/game_interface_test.h"

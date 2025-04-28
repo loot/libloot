@@ -22,16 +22,14 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_LOCATION_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_LOCATION_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_LOCATION_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_LOCATION_TEST
 
 #include <gtest/gtest.h>
 
-#include "api/metadata/yaml/location.h"
 #include "loot/metadata/location.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 TEST(Location, defaultConstructorShouldInitialiseEmptyStrings) {
   Location location;
 
@@ -233,66 +231,6 @@ TEST(
 
   EXPECT_TRUE(location2 >= location1);
   EXPECT_FALSE(location1 >= location2);
-}
-
-TEST(Location, emittingAsYamlShouldOutputAScalarIfTheNameStringIsEmpty) {
-  Location location("http://www.example.com");
-  YAML::Emitter emitter;
-  emitter << location;
-
-  EXPECT_EQ("'" + location.GetURL() + "'", emitter.c_str());
-}
-
-TEST(Location, emittingAsYamlShouldOutputAMapIfTheNameStringIsNotEmpty) {
-  Location location("http://www.example.com", "example");
-  YAML::Emitter emitter;
-  emitter << location;
-
-  EXPECT_EQ(
-      "link: '" + location.GetURL() + "'\nname: '" + location.GetName() + "'",
-      emitter.c_str());
-}
-
-TEST(Location, encodingAsYamlShouldStoreDataCorrectly) {
-  Location location("http://www.example.com", "example");
-  YAML::Node node;
-  node = location;
-
-  EXPECT_EQ(location.GetURL(), node["link"].as<std::string>());
-  EXPECT_EQ(location.GetName(), node["name"].as<std::string>());
-}
-
-TEST(Location, encodingAsYamlShouldOmitEmptyFields) {
-  Location location("http://www.example.com");
-  YAML::Node node;
-  node = location;
-
-  EXPECT_EQ(location.GetURL(), node["link"].as<std::string>());
-  EXPECT_FALSE(node["name"]);
-}
-
-TEST(Location, decodingFromYamlShouldSetDataCorrectly) {
-  YAML::Node node = YAML::Load("{link: http://www.example.com, name: example}");
-  Location location = node.as<Location>();
-
-  EXPECT_EQ(node["link"].as<std::string>(), location.GetURL());
-  EXPECT_EQ(node["name"].as<std::string>(), location.GetName());
-}
-
-TEST(Location,
-     decodingFromYamlScalarShouldSetUrlToScalarValueAndLeaveNameEmpty) {
-  YAML::Node node = YAML::Load("http://www.example.com");
-  Location location = node.as<Location>();
-
-  EXPECT_EQ(node.as<std::string>(), location.GetURL());
-  EXPECT_TRUE(location.GetName().empty());
-}
-
-TEST(Location, decodingFromYamlShouldThrowIfAListIsGiven) {
-  YAML::Node node = YAML::Load("[0, 1, 2]");
-
-  EXPECT_THROW(node.as<Location>(), YAML::RepresentationException);
-}
 }
 }
 
