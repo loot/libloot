@@ -390,7 +390,7 @@ impl Game {
 
         self.cache.set_archive_paths(archive_paths);
 
-        logging::trace!("Starting loading {}s.", load_scope);
+        logging::trace!("Starting loading {load_scope}s.");
 
         let plugins: Vec<_> = plugin_paths
             .par_iter()
@@ -462,7 +462,7 @@ impl Game {
         if is_log_enabled(LogLevel::Debug) {
             logging::debug!("Current load order:");
             for plugin_name in plugin_names {
-                logging::debug!("\t{}", plugin_name);
+                logging::debug!("\t{plugin_name}");
             }
         }
 
@@ -477,7 +477,7 @@ impl Game {
         if is_log_enabled(LogLevel::Debug) {
             logging::debug!("Sorted load order:");
             for plugin_name in &new_load_order {
-                logging::debug!("\t{}", plugin_name);
+                logging::debug!("\t{plugin_name}");
             }
         }
 

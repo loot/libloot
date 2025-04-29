@@ -197,7 +197,7 @@ fn find_node_by_weight(
     {
         Ok(n)
     } else {
-        logging::error!("Can't find group with name {}", weight);
+        logging::error!("Can't find group with name {weight}");
         Err(UndefinedGroupError::new(weight.to_owned()))
     }
 }

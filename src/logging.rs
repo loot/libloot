@@ -105,6 +105,7 @@ impl Logger {
     }
 }
 
+#[clippy::format_args]
 macro_rules! log {
     ($level:expr, $($arg:tt)+) => {
         // Log using the Rust log crate, as it's probably good to support that.
@@ -123,22 +124,27 @@ macro_rules! log {
     };
 }
 
+#[clippy::format_args]
 macro_rules! error {
     ($($arg:tt)+) => { $crate::logging::log!(crate::LogLevel::Error, $($arg)+) };
 }
 
+#[clippy::format_args]
 macro_rules! warning {
     ($($arg:tt)+) => { $crate::logging::log!(crate::LogLevel::Warning, $($arg)+) };
 }
 
+#[clippy::format_args]
 macro_rules! info {
     ($($arg:tt)+) => { $crate::logging::log!(crate::LogLevel::Info, $($arg)+) };
 }
 
+#[clippy::format_args]
 macro_rules! debug {
     ($($arg:tt)+) => { $crate::logging::log!(crate::LogLevel::Debug, $($arg)+) };
 }
 
+#[clippy::format_args]
 macro_rules! trace {
     ($($arg:tt)+) => { $crate::logging::log!(crate::LogLevel::Trace, $($arg)+) };
 }
