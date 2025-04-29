@@ -6,6 +6,7 @@ on:
 
 env:
   BOOST_VERSION: 1.87.0
+  CBINDGEN_VERSION: 0.28.0
   CARGO_TERM_COLOR: always
   MSVC_CONFIG: RelWithDebInfo
 
@@ -29,14 +30,14 @@ jobs:
           tag_name: ${{ steps.get-git-tag.outputs.name }}
           release_name: libloot v${{ steps.get-git-tag.outputs.name }}
           body: |
-            Requires Windows 7 or later, the MSVC 2019 [x86](https://aka.ms/vs/16/release/vc_redist.x86.exe) or [x64](https://aka.ms/vs/16/release/vc_redist.x64.exe) redistributable for 32-bit and 64-bit builds respectively, and [7-Zip](http://www.7-zip.org/) to extract the archives.
+            Requires Windows 7 or later, the MSVC 2022 [x86](https://aka.ms/vs/17/release/vc_redist.x86.exe) or [x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) redistributable for 32-bit and 64-bit builds respectively, and [7-Zip](http://www.7-zip.org/) to extract the archives.
 
             ## Change Logs
             - [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)
             - [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)
 
   windows:
-    runs-on: windows-2019
+    runs-on: windows-2025
     needs: create_release
 
     strategy:
@@ -74,9 +75,12 @@ jobs:
           python install_boost.py --directory ${{ github.workspace }} --boost-version ${{ env.BOOST_VERSION }} -a 64 system
         if: steps.boost-cache.outputs.cache-hit != 'true'
 
+      - name: Install cbindgen
+        run: cargo install --version $env:CBINDGEN_VERSION cbindgen
+
       - name: Run CMake
         run: |
-          cmake -G "Visual Studio 16 2019" `
+          cmake -G "Visual Studio 17 2022" `
             -A ${{ matrix.platform }} `
             -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" `
             -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}" `

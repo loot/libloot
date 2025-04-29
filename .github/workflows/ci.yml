@@ -9,6 +9,7 @@ on:
 
 env:
   BOOST_VERSION: 1.87.0
+  CBINDGEN_VERSION: 0.28.0
   CARGO_TERM_COLOR: always
   MSVC_CONFIG: RelWithDebInfo
 
@@ -65,7 +66,7 @@ jobs:
       # The version in apt is too old.
       - name: Install cbindgen
         run: |
-          wget https://github.com/mozilla/cbindgen/releases/download/0.28.0/cbindgen
+          wget https://github.com/mozilla/cbindgen/releases/download/$CBINDGEN_VERSION/cbindgen
           BIN_PATH="$HOME/.local/bin/"
           mkdir -p "$BIN_PATH"
           mv cbindgen "$BIN_PATH"
@@ -127,7 +128,7 @@ jobs:
         if: github.event_name == 'push'
 
   windows:
-    runs-on: windows-2019
+    runs-on: windows-2025
 
     strategy:
       matrix:
@@ -173,9 +174,12 @@ jobs:
           LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
           echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
 
+      - name: Install cbindgen
+        run: cargo install --version $env:CBINDGEN_VERSION cbindgen
+
       - name: Run CMake
         run: |
-          cmake -G "Visual Studio 16 2019" `
+          cmake -G "Visual Studio 17 2022" `
             -A ${{ matrix.platform }} `
             -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" `
             -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" `
