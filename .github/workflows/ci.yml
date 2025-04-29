@@ -126,7 +126,7 @@ jobs:
         if: github.event_name == 'push'
 
   windows:
-    runs-on: windows-2019
+    runs-on: windows-2025
 
     strategy:
       matrix:
@@ -184,7 +184,7 @@ jobs:
 
       - name: Run CMake
         run: |
-          cmake -G "Visual Studio 16 2019" `
+          cmake -G "Visual Studio 17 2022" `
             -A ${{ matrix.platform }} `
             -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" `
             -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" `
