@@ -461,7 +461,13 @@ std::string PathToString(const RawPluginGraph& graph,
 
 class BidirVisitor {
 public:
+  BidirVisitor() = default;
+  BidirVisitor(const BidirVisitor&) = delete;
+  BidirVisitor(BidirVisitor&&) = delete;
   virtual ~BidirVisitor() = default;
+
+  BidirVisitor& operator=(const BidirVisitor&) = delete;
+  BidirVisitor& operator=(BidirVisitor&&) = delete;
 
   virtual void VisitForwardVertex(const vertex_t& sourceVertex,
                                   const vertex_t& targetVertex) = 0;
@@ -479,15 +485,17 @@ public:
                       const vertex_t& toVertex) :
       pathsCache_(&pathsCache), fromVertex_(fromVertex), toVertex_(toVertex) {}
 
-  void VisitForwardVertex(const vertex_t&, const vertex_t& targetVertex) {
+  void VisitForwardVertex(const vertex_t&,
+                          const vertex_t& targetVertex) override {
     pathsCache_->CachePath(fromVertex_, targetVertex);
   }
 
-  void VisitReverseVertex(const vertex_t& sourceVertex, const vertex_t&) {
+  void VisitReverseVertex(const vertex_t& sourceVertex,
+                          const vertex_t&) override {
     pathsCache_->CachePath(sourceVertex, toVertex_);
   }
 
-  void VisitIntersectionVertex(const vertex_t&) {}
+  void VisitIntersectionVertex(const vertex_t&) override {}
 
 protected:
   vertex_t GetFromVertex() const { return fromVertex_; }
@@ -509,20 +517,20 @@ public:
       PathCacher(pathsCache, fromVertex, toVertex), graph_(&graph) {}
 
   void VisitForwardVertex(const vertex_t& sourceVertex,
-                          const vertex_t& targetVertex) {
+                          const vertex_t& targetVertex) override {
     PathCacher::VisitForwardVertex(sourceVertex, targetVertex);
 
     forwardParents.insert_or_assign(targetVertex, sourceVertex);
   }
 
   void VisitReverseVertex(const vertex_t& sourceVertex,
-                          const vertex_t& targetVertex) {
+                          const vertex_t& targetVertex) override {
     PathCacher::VisitReverseVertex(sourceVertex, targetVertex);
 
     reverseChildren.insert_or_assign(sourceVertex, targetVertex);
   }
 
-  void VisitIntersectionVertex(const vertex_t& intersectionVertex) {
+  void VisitIntersectionVertex(const vertex_t& intersectionVertex) override {
     intersectionVertex_ = intersectionVertex;
   }
 

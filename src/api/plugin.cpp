@@ -207,14 +207,15 @@ void HandleEspluginError(unsigned int returnCode, std::string_view operation) {
   throw std::system_error(returnCode, esplugin_category(), err);
 }
 
+template<typename ...Args>
 void HandleEspluginError(unsigned int returnCode,
                          std::string_view message,
-                         std::string_view args...) {
+                         Args... args) {
   if (returnCode == ESP_OK) {
     return;
   }
 
-  auto operation = fmt::format(message, args);
+  auto operation = fmt::format(message, args...);
   return HandleEspluginError(returnCode, operation);
 }
 

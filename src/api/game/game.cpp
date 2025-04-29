@@ -50,72 +50,7 @@
 using std::filesystem::u8path;
 
 namespace {
-using std::string_view_literals::operator""sv;
 using loot::GameType;
-
-// The Microsoft Store installs Fallout 4 DLCs to directories outside of the
-// game's install path. These directories have fixed paths relative to the
-// game install path (renaming them causes the game launch to fail, or not
-// find the DLC files).
-constexpr std::string_view MS_FO4_AUTOMATRON_DATA_PATH =
-    "../../Fallout 4- Automatron (PC)/Content/Data"sv;
-constexpr std::string_view MS_FO4_CONTRAPTIONS_DATA_PATH =
-    "../../Fallout 4- Contraptions Workshop (PC)/Content/Data"sv;
-constexpr std::string_view MS_FO4_FAR_HARBOR_DATA_PATH =
-    "../../Fallout 4- Far Harbor (PC)/Content/Data"sv;
-constexpr std::string_view MS_FO4_TEXTURE_PACK_DATA_PATH =
-    "../../Fallout 4- High Resolution Texture Pack/Content/Data"sv;
-constexpr std::string_view MS_FO4_NUKA_WORLD_DATA_PATH =
-    "../../Fallout 4- Nuka-World (PC)/Content/Data"sv;
-constexpr std::string_view MS_FO4_VAULT_TEC_DATA_PATH =
-    "../../Fallout 4- Vault-Tec Workshop (PC)/Content/Data"sv;
-constexpr std::string_view MS_FO4_WASTELAND_DATA_PATH =
-    "../../Fallout 4- Wasteland Workshop (PC)/Content/Data"sv;
-
-bool IsMicrosoftStoreInstall(const GameType gameType,
-                             const std::filesystem::path& gamePath) {
-  switch (gameType) {
-    case GameType::tes3:
-    case GameType::tes4:
-    case GameType::fo3:
-    case GameType::fonv:
-      // tes3, tes4, fo3 and fonv install paths are localised, with the
-      // appxmanifest.xml file sitting in the parent directory.
-      return std::filesystem::exists(gamePath.parent_path() /
-                                     "appxmanifest.xml");
-    case GameType::tes5se:
-    case GameType::fo4:
-    case GameType::starfield:
-      return std::filesystem::exists(gamePath / "appxmanifest.xml");
-    case GameType::tes5:
-    case GameType::tes5vr:
-    case GameType::fo4vr:
-    case GameType::openmw:
-      return false;
-    default:
-      throw std::logic_error("Unrecognised game type");
-  }
-}
-
-std::filesystem::path GetUserDocumentsPath(
-    const std::filesystem::path& gameLocalPath) {
-#ifdef _WIN32
-  PWSTR path;
-
-  if (SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &path) != S_OK)
-    throw std::system_error(GetLastError(),
-                            std::system_category(),
-                            "Failed to get user Documents path.");
-
-  std::filesystem::path documentsPath(path);
-  CoTaskMemFree(path);
-
-  return documentsPath;
-#else
-  // Get the documents path relative to the game's local path.
-  return gameLocalPath.parent_path().parent_path().parent_path() / "Documents";
-#endif
-}
 
 std::filesystem::path ResolvePluginPath(
     GameType gameType,
@@ -319,7 +254,7 @@ std::shared_ptr<const PluginInterface> Game::GetPlugin(
 std::vector<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
     const {
   std::vector<std::shared_ptr<const PluginInterface>> interfacePointers;
-  for (const auto plugin : cache_.GetPlugins()) {
+  for (const auto& plugin : cache_.GetPlugins()) {
     interfacePointers.push_back(plugin);
   }
 

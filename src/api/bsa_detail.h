@@ -34,7 +34,7 @@
 
 namespace loot::bsa {
 struct Header {
-  std::array<char, 4> typeId;  // Should always be "BSA\0"
+  std::array<char, 4> typeId{};  // Should always be "BSA\0"
   uint32_t version{0};  // 103 (0x67) for TES4, 104 (0x68) for FO3, FONV, TES5,
                         // 105
                         // (0x69) for TES5SE.

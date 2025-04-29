@@ -115,9 +115,9 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBSA(
 
 namespace ba2 {
 struct Header {
-  std::array<char, 4> typeId;
+  std::array<char, 4> typeId{};
   uint32_t version{0};
-  std::array<char, 4> archiveType;
+  std::array<char, 4> archiveType{};
   uint32_t fileCount{0};
   uint64_t filePathsOffset{0};
 };
@@ -176,7 +176,7 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBA2FromFilePaths(
 
   // The file paths are prefixed by a two-byte length, and not null-terminated.
   for (size_t i = 0; i < header.fileCount; ++i) {
-    uint16_t pathLength;
+    uint16_t pathLength = 0;
     in.read(reinterpret_cast<char*>(&pathLength), sizeof(pathLength));
 
     std::string filePath(pathLength, '\0');
@@ -282,7 +282,7 @@ std::map<uint64_t, std::set<uint64_t>> GetAssetsInBethesdaArchive(
                 std::ios::eofbit);  // Causes ifstream::failure to be thrown if
                                     // a problem is encountered.
 
-  std::array<char, 4> typeId;
+  std::array<char, 4> typeId{};
   in.read(typeId.data(), typeId.size());
 
   if (typeId == BSA_TYPE_ID) {

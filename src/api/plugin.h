@@ -83,8 +83,8 @@ public:
   // Load ordering functions.
   size_t GetOverrideRecordCount() const override;
 
-  size_t GetAssetCount() const;
-  bool DoAssetsOverlap(const PluginSortingInterface& plugin) const;
+  size_t GetAssetCount() const override;
+  bool DoAssetsOverlap(const PluginSortingInterface& plugin) const override;
 
   // Validity checks.
   static bool IsValid(const GameType gameType,
