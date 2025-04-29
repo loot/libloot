@@ -305,7 +305,7 @@ impl TryFromYaml for Message {
                 reason = "Only panics if the hardcoded regex string is invalid"
             )]
             static FMT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-                Regex::new(r"\{(\d+)\}").expect("hardcoded fmt placeholder regex should be valid")
+                Regex::new(r"\{\d+\}").expect("hardcoded fmt placeholder regex should be valid")
             });
 
             for mc in &mut content {
