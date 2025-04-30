@@ -106,9 +106,8 @@ TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForAnEmptyFile) {
   EXPECT_FALSE(handle_->IsValidPlugin(emptyFile));
 }
 
-TEST_P(
-    GameInterfaceTest,
-    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllGivenPlugins) {
+TEST_P(GameInterfaceTest,
+       loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllGivenPlugins) {
   handle_->LoadPlugins(pluginsToLoad, true);
   if (GetParam() == GameType::starfield) {
     EXPECT_EQ(6, handle_->GetLoadedPlugins().size());
@@ -245,14 +244,14 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
 }
 
 TEST_P(GameInterfaceTest,
-       isPluginActiveShouldReturnFalseIfTheGivenPluginIsNotActive) {
+       isPluginActiveShouldReturnTrueIfTheGivenPluginIsActive) {
   handle_->LoadCurrentLoadOrderState();
 
   EXPECT_TRUE(handle_->IsPluginActive(blankEsm));
 }
 
 TEST_P(GameInterfaceTest,
-       isPluginActiveShouldReturnTrueIfTheGivenPluginIsActive) {
+       isPluginActiveShouldReturnFalseIfTheGivenPluginIsNotActive) {
   handle_->LoadCurrentLoadOrderState();
   EXPECT_FALSE(handle_->IsPluginActive(blankEsp));
 }
