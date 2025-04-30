@@ -36,7 +36,11 @@
 #include "loot/exception/error_categories.h"
 #include "loot/exception/file_access_error.h"
 
-namespace loot {
+namespace {
+using loot::BSA_FILE_EXTENSION;
+using loot::GameCache;
+using loot::GameType;
+
 // Intentionally takes a copy of the first parameter.
 std::filesystem::path ReplaceExtension(std::filesystem::path path,
                                        std::string_view newExtension) {
@@ -52,31 +56,6 @@ std::filesystem::path GetSuffixedArchivePath(std::filesystem::path pluginPath,
   pluginPath += suffix;
   pluginPath += newExtension;
   return pluginPath;
-}
-
-bool equivalent(const std::filesystem::path& path1,
-                const std::filesystem::path& path2) {
-  // If the paths are identical, they've got to be equivalent,
-  // it doesn't matter if the paths exist or not.
-  if (path1 == path2) {
-    return true;
-  }
-  // If the paths are not identical, the filesystem might be case-insensitive
-  // so check with the filesystem.
-  try {
-    return std::filesystem::equivalent(path1, path2);
-  } catch (const std::filesystem::filesystem_error&) {
-    // One of the paths checked for equivalence doesn't exist,
-    // so they can't be equivalent.
-    return false;
-  } catch (const std::system_error&) {
-    // This can be thrown if one or both of the paths contains a character
-    // that can't be represented in Windows' multi-byte code page (e.g.
-    // Windows-1252), even though Unicode paths shouldn't be a problem,
-    // and throwing system_error is undocumented. Seems like a bug in MSVC's
-    // implementation.
-    return false;
-  }
 }
 
 std::vector<std::filesystem::path> FindAssociatedArchive(
@@ -178,7 +157,7 @@ std::vector<std::filesystem::path> FindAssociatedArchives(
       // likely.
       return FindAssociatedArchivesWithSuffixes(
           pluginPath,
-          BA2_FILE_EXTENSION,
+          loot::BA2_FILE_EXTENSION,
           {" - Main", " - Textures", " - Localization", " - Voices_en"});
     default:
       throw std::logic_error("Unrecognised game type");
@@ -201,12 +180,12 @@ void HandleEspluginError(unsigned int returnCode, std::string_view operation) {
     err += ". Details: " + std::string(e);
   }
 
-  auto logger = getLogger();
+  auto logger = loot::getLogger();
   if (logger) {
     logger->error(err);
   }
 
-  throw std::system_error(returnCode, esplugin_category(), err);
+  throw std::system_error(returnCode, loot::esplugin_category(), err);
 }
 
 template<typename... Args>
@@ -246,7 +225,9 @@ bool ShouldIgnoreMasterFlag(GameType gameType) {
   return gameType == GameType::openmw ||
          gameType == GameType::oblivionRemastered;
 }
+}
 
+namespace loot {
 Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
                const std::filesystem::path& pluginPath,
@@ -700,5 +681,30 @@ bool hasPluginFileExtension(std::string_view filename, GameType gameType) {
   }
 
   return false;
+}
+
+bool equivalent(const std::filesystem::path& path1,
+                const std::filesystem::path& path2) {
+  // If the paths are identical, they've got to be equivalent,
+  // it doesn't matter if the paths exist or not.
+  if (path1 == path2) {
+    return true;
+  }
+  // If the paths are not identical, the filesystem might be case-insensitive
+  // so check with the filesystem.
+  try {
+    return std::filesystem::equivalent(path1, path2);
+  } catch (const std::filesystem::filesystem_error&) {
+    // One of the paths checked for equivalence doesn't exist,
+    // so they can't be equivalent.
+    return false;
+  } catch (const std::system_error&) {
+    // This can be thrown if one or both of the paths contains a character
+    // that can't be represented in Windows' multi-byte code page (e.g.
+    // Windows-1252), even though Unicode paths shouldn't be a problem,
+    // and throwing system_error is undocumented. Seems like a bug in MSVC's
+    // implementation.
+    return false;
+  }
 }
 }
