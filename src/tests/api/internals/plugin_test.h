@@ -208,7 +208,9 @@ public:
            otherPlugin->assetsOverlapWith.count(this) != 0;
   }
 
-  void AddMaster(std::string_view master) { masters_.push_back(std::string(master)); }
+  void AddMaster(std::string_view master) {
+    masters_.push_back(std::string(master));
+  }
 
   void SetIsMaster(bool isMaster) { isMaster_ = isMaster; }
 
@@ -246,19 +248,7 @@ private:
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_SUITE_P(,
-                         PluginTest,
-                         ::testing::Values(GameType::tes4,
-                                           GameType::tes5,
-                                           GameType::fo3,
-                                           GameType::fonv,
-                                           GameType::fo4,
-                                           GameType::tes5se,
-                                           GameType::fo4vr,
-                                           GameType::tes5vr,
-                                           GameType::tes3,
-                                           GameType::starfield,
-                                           GameType::openmw));
+INSTANTIATE_TEST_SUITE_P(, PluginTest, ::testing::ValuesIn(ALL_GAME_TYPES));
 
 TEST_P(PluginTest, constructorShouldTrimGhostExtensionExceptForOpenMW) {
   const auto pluginPath =

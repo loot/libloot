@@ -82,14 +82,7 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
                          ConditionEvaluatorTest,
-                         ::testing::Values(GameType::tes3,
-                                           GameType::tes4,
-                                           GameType::tes5,
-                                           GameType::fo3,
-                                           GameType::fonv,
-                                           GameType::fo4,
-                                           GameType::tes5se,
-                                           GameType::openmw));
+                         ::testing::ValuesIn(ALL_GAME_TYPES));
 
 TEST_P(ConditionEvaluatorTest,
        evaluateShouldReturnTrueForAnEmptyConditionString) {

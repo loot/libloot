@@ -74,17 +74,7 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
                          GameInterfaceTest,
-                         ::testing::Values(GameType::tes4,
-                                           GameType::tes5,
-                                           GameType::fo3,
-                                           GameType::fonv,
-                                           GameType::fo4,
-                                           GameType::tes5se,
-                                           GameType::fo4vr,
-                                           GameType::tes5vr,
-                                           GameType::tes3,
-                                           GameType::starfield,
-                                           GameType::openmw));
+                         ::testing::ValuesIn(ALL_GAME_TYPES));
 
 TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldDoThat) {
   const auto paths = std::vector<std::filesystem::path>{

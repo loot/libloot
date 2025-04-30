@@ -50,6 +50,16 @@ protected:
       }) {
     if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
       loadOrderToSet_.insert(loadOrderToSet_.begin() + 5, blankEsl);
+    } else if (GetParam() == GameType::starfield) {
+      loadOrderToSet_ = {
+          masterFile,
+          blankEsm,
+          blankMasterDependentEsm,
+          blankDifferentEsm,
+          blankDifferentEsp,
+          blankEsp,
+          blankMasterDependentEsp,
+      };
     }
   }
 
@@ -87,6 +97,16 @@ protected:
                 "DLCUltraHighResolution.esm"};
       case GameType::fo4vr:
         return {"Fallout4.esm", "Fallout4_VR.esm"};
+      case GameType::starfield:
+        return {"Starfield.esm",
+                "Constellation.esm",
+                "OldMars.esm",
+                "ShatteredSpace.esm",
+                "SFBGS003.esm",
+                "SFBGS004.esm",
+                "SFBGS006.esm",
+                "SFBGS007.esm",
+                "SFBGS008.esm"};
       default:
         return {};
     }
@@ -109,14 +129,7 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
                          LoadOrderHandlerTest,
-                         ::testing::Values(GameType::tes3,
-                                           GameType::tes4,
-                                           GameType::tes5,
-                                           GameType::fo3,
-                                           GameType::fonv,
-                                           GameType::fo4,
-                                           GameType::tes5se,
-                                           GameType::openmw));
+                         ::testing::ValuesIn(ALL_GAME_TYPES));
 
 TEST_P(LoadOrderHandlerTest, constructorShouldThrowIfNoGamePathIsSet) {
   EXPECT_THROW(LoadOrderHandler(GetParam(), ""), std::invalid_argument);
@@ -281,7 +294,9 @@ TEST_P(LoadOrderHandlerTest, setLoadOrderShouldSetTheLoadOrder) {
 
   EXPECT_NO_THROW(loadOrderHandler.SetLoadOrder(loadOrderToSet_));
 
-  if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se)
+  if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
+      GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
+      GetParam() == GameType::starfield)
     loadOrderToSet_.erase(begin(loadOrderToSet_));
 
   if (GetParam() == GameType::openmw) {

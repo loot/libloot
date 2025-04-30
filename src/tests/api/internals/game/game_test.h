@@ -50,19 +50,7 @@ protected:
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
 // but we only have the one so no prefix is necessary.
-INSTANTIATE_TEST_SUITE_P(,
-                         GameTest,
-                         ::testing::Values(GameType::tes4,
-                                           GameType::tes5,
-                                           GameType::fo3,
-                                           GameType::fonv,
-                                           GameType::fo4,
-                                           GameType::tes5se,
-                                           GameType::fo4vr,
-                                           GameType::tes5vr,
-                                           GameType::tes3,
-                                           GameType::starfield,
-                                           GameType::openmw));
+INSTANTIATE_TEST_SUITE_P(, GameTest, ::testing::ValuesIn(ALL_GAME_TYPES));
 
 TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
   Game game = Game(GetParam(), gamePath, localPath);
