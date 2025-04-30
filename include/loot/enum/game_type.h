@@ -52,7 +52,9 @@ enum struct GameType : unsigned int {
   /** Starfield */
   starfield,
   /** OpenMW */
-  openmw
+  openmw,
+  /** The Elder Scrolls IV: Oblivion Remastered */
+  oblivionRemastered
 };
 }
 

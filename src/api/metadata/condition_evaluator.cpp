@@ -60,6 +60,7 @@ int mapGameType(GameType gameType) {
     case GameType::tes3:
       return LCI_GAME_MORROWIND;
     case GameType::tes4:
+    case GameType::oblivionRemastered:
       return LCI_GAME_OBLIVION;
     case GameType::tes5:
       return LCI_GAME_SKYRIM;

@@ -56,6 +56,8 @@ const char* DescribeGameType(GameType gameType) {
       return "Starfield";
     case GameType::openmw:
       return "OpenMW";
+    case GameType::oblivionRemastered:
+      return "The Elder Scrolls IV: Oblivion Remastered";
     default:
       return "Unknown";
   }

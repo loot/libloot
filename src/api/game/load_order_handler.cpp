@@ -52,6 +52,8 @@ unsigned int mapGameId(GameType gameType) {
       return LIBLO_GAME_STARFIELD;
     case GameType::openmw:
       return LIBLO_GAME_OPENMW;
+    case GameType::oblivionRemastered:
+      return LIBLO_GAME_OBLIVION_REMASTERED;
     default:
       throw std::logic_error("Unexpected game type");
   }

@@ -152,7 +152,8 @@ std::vector<std::filesystem::path> FindAssociatedArchives(
       // This assumes that Skyrim VR works the same way as Skyrim SE.
       return FindAssociatedArchivesWithSuffixes(
           pluginPath, BSA_FILE_EXTENSION, {"", " - Textures"});
-    case GameType::tes4: {
+    case GameType::tes4:
+    case GameType::oblivionRemastered: {
       // Oblivion .esp files can load archives which begin with the plugin
       // basename.
       if (!boost::iends_with(pluginPath.filename().u8string(), ".esp")) {
@@ -189,7 +190,8 @@ void HandleEspluginError(unsigned int returnCode, std::string_view operation) {
     return;
   }
 
-  auto err = fmt::format("esplugin failed to {}. Error code: {}", operation, returnCode);
+  auto err = fmt::format(
+      "esplugin failed to {}. Error code: {}", operation, returnCode);
 
   const char* e = nullptr;
   esp_get_error_message(&e);
@@ -207,7 +209,7 @@ void HandleEspluginError(unsigned int returnCode, std::string_view operation) {
   throw std::system_error(returnCode, esplugin_category(), err);
 }
 
-template<typename ...Args>
+template<typename... Args>
 void HandleEspluginError(unsigned int returnCode,
                          std::string_view message,
                          Args... args) {
@@ -228,17 +230,30 @@ void HandleEspluginError(unsigned int returnCode,
   return HandleEspluginError(returnCode, getMessage());
 }
 
+std::string GetPluginName(GameType gameType,
+                          const std::filesystem::path& pluginPath) {
+  return gameType == GameType::openmw
+             ? pluginPath.filename().u8string()
+             : loot::TrimDotGhostExtension(pluginPath.filename().u8string());
+}
+
+std::unique_ptr<::Plugin, decltype(&esp_plugin_free)> MakeEspluginPtr() {
+  return std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(nullptr,
+                                                               esp_plugin_free);
+}
+
+bool ShouldIgnoreMasterFlag(GameType gameType) {
+  return gameType == GameType::openmw ||
+         gameType == GameType::oblivionRemastered;
+}
+
 Plugin::Plugin(const GameType gameType,
                const GameCache& gameCache,
                const std::filesystem::path& pluginPath,
                const bool headerOnly) :
-    name_(gameType == GameType::openmw
-              ? pluginPath.filename().u8string()
-              : TrimDotGhostExtension(pluginPath.filename().u8string())),
-    esPlugin(
-        std::unique_ptr<::Plugin, decltype(&esp_plugin_free)>(nullptr,
-                                                              esp_plugin_free)),
-    ignoreMasterFlag_(gameType == GameType::openmw),
+    name_(GetPluginName(gameType, pluginPath)),
+    esPlugin(MakeEspluginPtr()),
+    ignoreMasterFlag_(ShouldIgnoreMasterFlag(gameType)),
     isEmpty_(true) {
   auto logger = getLogger();
 
@@ -595,8 +610,7 @@ std::string Plugin::GetDescription() const {
 }
 
 std::unique_ptr<Vec_PluginMetadata, decltype(&esp_plugins_metadata_free)>
-Plugin::GetPluginsMetadata(
-    const std::vector<const Plugin*>& plugins) {
+Plugin::GetPluginsMetadata(const std::vector<const Plugin*>& plugins) {
   if (plugins.empty()) {
     return std::unique_ptr<Vec_PluginMetadata,
                            decltype(&esp_plugins_metadata_free)>(
@@ -638,6 +652,7 @@ unsigned int Plugin::GetEspluginGameId(GameType gameType) {
     case GameType::openmw:
       return ESP_GAME_MORROWIND;
     case GameType::tes4:
+    case GameType::oblivionRemastered:
       return ESP_GAME_OBLIVION;
     case GameType::tes5:
       return ESP_GAME_SKYRIM;

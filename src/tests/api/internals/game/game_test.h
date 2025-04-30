@@ -60,9 +60,11 @@ TEST_P(GameTest, constructingShouldStoreTheGivenValues) {
 }
 
 #ifndef _WIN32
-TEST_P(GameTest,
-       constructingShouldThrowOnLinuxIfLocalPathIsNotGivenExceptForMorrowind) {
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
+TEST_P(
+    GameTest,
+    constructingShouldThrowOnLinuxIfLocalPathIsNotGivenExceptForMorrowindOpenMWAndOblivionRemastered) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::oblivionRemastered) {
     EXPECT_NO_THROW(Game(GetParam(), gamePath));
   } else {
     EXPECT_THROW(Game(GetParam(), gamePath), std::system_error);

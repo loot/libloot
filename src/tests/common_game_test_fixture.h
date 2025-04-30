@@ -40,7 +40,7 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
-static const std::array<GameType, 11> ALL_GAME_TYPES = {
+static const std::array<GameType, 12> ALL_GAME_TYPES = {
     GameType::tes3,
     GameType::tes4,
     GameType::tes5,
@@ -52,6 +52,7 @@ static const std::array<GameType, 11> ALL_GAME_TYPES = {
     GameType::fo4vr,
     GameType::starfield,
     GameType::openmw,
+    GameType::oblivionRemastered,
 };
 
 class CommonGameTestFixture : public ::testing::Test {
@@ -238,8 +239,11 @@ protected:
         }
       }
       for (const auto& plugin : loadOrder) actual.push_back(plugin.second);
-    } else if (gameType_ == GameType::tes5) {
-      std::ifstream in(localPath / "loadorder.txt");
+    } else if (gameType_ == GameType::tes5 ||
+               gameType_ == GameType::oblivionRemastered) {
+      const auto& parentPath =
+          gameType_ == GameType::oblivionRemastered ? dataPath : localPath;
+      std::ifstream in(parentPath / "loadorder.txt");
       while (in) {
         std::string line;
         std::getline(in, line);
@@ -420,7 +424,8 @@ private:
   std::string getMasterFile() const {
     if (gameType_ == GameType::tes3 || gameType_ == GameType::openmw)
       return "Morrowind.esm";
-    else if (gameType_ == GameType::tes4)
+    else if (gameType_ == GameType::tes4 ||
+             gameType_ == GameType::oblivionRemastered)
       return "Oblivion.esm";
     else if (gameType_ == GameType::tes5 || gameType_ == GameType::tes5se ||
              gameType_ == GameType::tes5vr)
@@ -442,6 +447,8 @@ private:
       return "resources/vfs";
     } else if (gameType_ == GameType::tes3) {
       return "Data Files";
+    } else if (gameType_ == GameType::oblivionRemastered) {
+      return "OblivionRemastered/Content/Dev/ObvData/Data";
     } else {
       return "Data";
     }
@@ -453,6 +460,7 @@ private:
       case GameType::openmw:
         return 0x790DC6FB;
       case GameType::tes4:
+      case GameType::oblivionRemastered:
         return 0x374E2A6F;
       case GameType::starfield:
         return 0xDE586309;
@@ -479,7 +487,9 @@ private:
         }
       }
     } else {
-      std::ofstream out(localPath / "Plugins.txt");
+      const auto& parentPath =
+          gameType_ == GameType::oblivionRemastered ? dataPath : localPath;
+      std::ofstream out(parentPath / "Plugins.txt");
       for (const auto& plugin : loadOrder) {
         if (supportsLightPlugins(gameType_)) {
           if (plugin.second)
@@ -506,8 +516,11 @@ private:
         }
         modificationTime += std::chrono::seconds(60);
       }
-    } else if (gameType_ == GameType::tes5) {
-      std::ofstream out(localPath / "loadorder.txt");
+    } else if (gameType_ == GameType::tes5 ||
+               gameType_ == GameType::oblivionRemastered) {
+      const auto& parentPath =
+          gameType_ == GameType::oblivionRemastered ? dataPath : localPath;
+      std::ofstream out(parentPath / "loadorder.txt");
       for (const auto& plugin : loadOrder) out << plugin.first << std::endl;
     }
   }

@@ -120,6 +120,9 @@ std::filesystem::path Game::DataPath() const {
     return gamePath_ / "Data Files";
   } else if (type_ == GameType::openmw) {
     return gamePath_ / "resources" / "vfs";
+  } else if (type_ == GameType::oblivionRemastered) {
+    return gamePath_ / "OblivionRemastered" / "Content" / "Dev" / "ObvData" /
+           "Data";
   } else {
     return gamePath_ / "Data";
   }

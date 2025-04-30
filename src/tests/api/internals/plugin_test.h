@@ -284,7 +284,8 @@ TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.GetMasters().empty());
-  if (GetParam() == GameType::openmw) {
+  if (GetParam() == GameType::openmw ||
+      GetParam() == GameType::oblivionRemastered) {
     EXPECT_FALSE(plugin.IsMaster());
   } else {
     EXPECT_TRUE(plugin.IsMaster());
@@ -294,7 +295,8 @@ TEST_P(PluginTest, loadingHeaderOnlyShouldReadHeaderData) {
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion().value());
-  } else if (GetParam() == GameType::tes4) {
+  } else if (GetParam() == GameType::tes4 ||
+             GetParam() == GameType::oblivionRemastered) {
     EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion().value());
   } else if (GetParam() == GameType::starfield) {
     EXPECT_FLOAT_EQ(0.96f, plugin.GetHeaderVersion().value());
@@ -316,7 +318,8 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
 
   EXPECT_EQ(blankEsm, plugin.GetName());
   EXPECT_TRUE(plugin.GetMasters().empty());
-  if (GetParam() == GameType::openmw) {
+  if (GetParam() == GameType::openmw ||
+      GetParam() == GameType::oblivionRemastered) {
     EXPECT_FALSE(plugin.IsMaster());
   } else {
     EXPECT_TRUE(plugin.IsMaster());
@@ -326,7 +329,8 @@ TEST_P(PluginTest, loadingWholePluginShouldReadHeaderData) {
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
     EXPECT_FLOAT_EQ(1.2f, plugin.GetHeaderVersion().value());
-  } else if (GetParam() == GameType::tes4) {
+  } else if (GetParam() == GameType::tes4 ||
+             GetParam() == GameType::oblivionRemastered) {
     EXPECT_FLOAT_EQ(0.8f, plugin.GetHeaderVersion().value());
   } else if (GetParam() == GameType::starfield) {
     EXPECT_FLOAT_EQ(0.96f, plugin.GetHeaderVersion().value());
@@ -508,7 +512,8 @@ TEST_P(
           .LoadsArchive();
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
-      GetParam() == GameType::tes4)
+      GetParam() == GameType::tes4 ||
+      GetParam() == GameType::oblivionRemastered)
     EXPECT_FALSE(loadsArchive);
   else
     EXPECT_TRUE(loadsArchive);
@@ -575,7 +580,8 @@ TEST_P(
 
   if (GetParam() == GameType::tes4 || GetParam() == GameType::fo3 ||
       GetParam() == GameType::fonv || GetParam() == GameType::fo4 ||
-      GetParam() == GameType::fo4vr) {
+      GetParam() == GameType::fo4vr ||
+      GetParam() == GameType::oblivionRemastered) {
     EXPECT_TRUE(loadsArchive);
   } else {
     EXPECT_FALSE(loadsArchive);
@@ -595,7 +601,8 @@ TEST_P(
 
   if (GetParam() == GameType::tes4 || GetParam() == GameType::fo3 ||
       GetParam() == GameType::fonv || GetParam() == GameType::fo4 ||
-      GetParam() == GameType::fo4vr) {
+      GetParam() == GameType::fo4vr ||
+      GetParam() == GameType::oblivionRemastered) {
     EXPECT_TRUE(loadsArchive);
   } else {
     EXPECT_FALSE(loadsArchive);

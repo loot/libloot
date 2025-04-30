@@ -147,7 +147,8 @@ TEST_P(LoadOrderHandlerTest, constructorShouldNotThrowIfNoLocalPathIsSet) {
 #else
 TEST_P(LoadOrderHandlerTest,
        constructorShouldNotThrowIfNoLocalPathIsSetAndGameTypeIsMorrowind) {
-  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::oblivionRemastered) {
     EXPECT_NO_THROW(LoadOrderHandler(GetParam(), gamePath));
   } else {
     EXPECT_THROW(LoadOrderHandler(GetParam(), gamePath), std::system_error);
