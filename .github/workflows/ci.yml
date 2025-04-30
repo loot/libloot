@@ -67,12 +67,21 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-upgrade \
-            cbindgen \
             doxygen \
             language-pack-el \
             language-pack-tr \
             libtbb-dev \
             libicu-dev
+
+      # The version in apt is too old.
+      - name: Install cbindgen
+        run: |
+          wget https://github.com/mozilla/cbindgen/releases/download/0.28.0/cbindgen
+          BIN_PATH="$HOME/.local/bin/"
+          mkdir -p "$BIN_PATH"
+          mv cbindgen "$BIN_PATH"
+          chmod +x "$BIN_PATH/cbindgen"
+          echo "$BIN_PATH" >> "$GITHUB_PATH"
 
       - name: Run CMake
         run: |
@@ -91,9 +100,7 @@ jobs:
 
       - name: Install packages for building docs
         shell: bash
-        run: |
-          pip3 install --user -r docs/requirements.txt
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: pip3 install --user -r docs/requirements.txt
 
       - name: Build docs
         run: sphinx-build -b html docs build/docs/html
