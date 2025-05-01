@@ -76,7 +76,8 @@ set(LIBLOOT_SRC_TESTS_INTERFACE_H_FILES
     "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/message_content_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/plugin_cleaning_data_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/plugin_metadata_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/tag_test.h")
+    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/tag_test.h"
+    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/plugin_interface_test.h")
 
 source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/internals"
     PREFIX "Source Files"
