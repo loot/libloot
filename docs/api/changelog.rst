@@ -2,6 +2,43 @@
 Version History
 ***************
 
+0.26.1 - 2025-05-01
+===================
+
+Added
+-----
+
+- Support for TES IV: Oblivion Remastered. A game handle can be obtained using :cpp:any:`loot::GameType::oblivionRemastered`.
+
+  - Oblivion Remastered uses a similar load order system to Skyrim (not Skyrim
+    Special Edition), so libloot will similarly read and write a
+    ``loadorder.txt`` in the same directory as ``Plugins.txt``.
+  - Like OpenMW, Oblivion Remastered does not force master plugins to load
+    before other plugins: all plugins are treated as non-masters.
+
+Fixed
+-----
+
+- A crash could occur when creating a game handle for an OpenMW install that
+  does not define any user config paths. An error now occurs instead. Via
+  libloadorder.
+- A crash could occur when loading plugin files. Via esplugin.
+- The ``description_contains()`` metadata condition function did not read the
+  description field of OpenMW plugins. Via loot-condition-interpreter.
+- No debug info was included for libloot's Rust dependencies (esplugin,
+  libloadorder and loot-condition-interpreter). Via libloadorder.
+- A few compiler warnings.
+
+Changed
+-------
+
+- Paths in condition strings are no longer restricted to staying within the
+  directory tree that starts one level above the game's main plugins directory
+  (usually the ``Data`` directory). Via loot-condition-interpreter.
+- Updated esplugin to v6.1.3.
+- Updated loot-condition-interpreter to v5.3.2.
+- Updated libloadorder to v18.4.0.
+
 0.26.0 - 2025-04-19
 ===================
 
