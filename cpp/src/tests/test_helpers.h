@@ -42,7 +42,8 @@ std::filesystem::path getSourcePluginsPath(GameType gameType) {
   using std::filesystem::absolute;
   if (gameType == GameType::tes3 || gameType == GameType::openmw) {
     return absolute("./testing-plugins/Morrowind/Data Files");
-  } else if (gameType == GameType::tes4) {
+  } else if (gameType == GameType::tes4 ||
+             gameType == GameType::oblivionRemastered) {
     return absolute("./testing-plugins/Oblivion/Data");
   } else if (gameType == GameType::starfield) {
     return absolute("./testing-plugins/Starfield/Data");

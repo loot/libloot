@@ -232,6 +232,7 @@ mod ffi {
         Morrowind,
         Starfield,
         OpenMW,
+        OblivionRemastered,
     }
 
     pub enum MessageType {

@@ -30,6 +30,8 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
+constexpr unsigned int ESP_ERROR_PLUGIN_METADATA_NOT_FOUND = 14;
+
 class GameInterfaceTest : public ApiGameOperationsTest {
 protected:
   GameInterfaceTest() :
@@ -74,17 +76,7 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
                          GameInterfaceTest,
-                         ::testing::Values(GameType::tes4,
-                                           GameType::tes5,
-                                           GameType::fo3,
-                                           GameType::fonv,
-                                           GameType::fo4,
-                                           GameType::tes5se,
-                                           GameType::fo4vr,
-                                           GameType::tes5vr,
-                                           GameType::tes3,
-                                           GameType::starfield,
-                                           GameType::openmw));
+                         ::testing::ValuesIn(ALL_GAME_TYPES));
 
 TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldDoThat) {
   const auto paths = std::vector<std::filesystem::path>{
@@ -93,6 +85,56 @@ TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldDoThat) {
   handle_->SetAdditionalDataPaths(paths);
 
   EXPECT_EQ(paths, handle_->GetAdditionalDataPaths());
+}
+
+TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldClearTheConditionCache) {
+  PluginMetadata metadata(blankEsm);
+  metadata.SetLoadAfterFiles({File("plugin.esp", "", "file(\"plugin.esp\")")});
+  handle_->GetDatabase().SetPluginUserMetadata(metadata);
+
+  auto evaluatedMetadata =
+      handle_->GetDatabase().GetPluginUserMetadata(blankEsm, true);
+  EXPECT_FALSE(evaluatedMetadata.has_value());
+
+  const auto dataFilePath = gamePath.parent_path() / "Data" / "plugin.esp";
+  touch(dataFilePath);
+  handle_->SetAdditionalDataPaths({dataFilePath.parent_path()});
+
+  evaluatedMetadata =
+      handle_->GetDatabase().GetPluginUserMetadata(blankEsm, true);
+  EXPECT_FALSE(evaluatedMetadata.value().GetLoadAfterFiles().empty());
+}
+
+TEST_P(GameInterfaceTest,
+       setAdditionalDataPathsShouldUpdateWhereLoadOrderPluginsAreFound) {
+  // Set no additional data paths to avoid picking up non-test plugins on PCs
+  // which have Starfield or Fallout 4 installed.
+  handle_->SetAdditionalDataPaths({});
+  handle_->LoadCurrentLoadOrderState();
+  auto loadOrder = handle_->GetLoadOrder();
+
+  const auto filename = "plugin.esp";
+  const auto dataFilePath = gamePath.parent_path() / "Data" / filename;
+  std::filesystem::create_directories(dataFilePath.parent_path());
+  std::filesystem::copy_file(getSourcePluginsPath() / blankEsp, dataFilePath);
+  ASSERT_TRUE(std::filesystem::exists(dataFilePath));
+
+  if (GetParam() == GameType::starfield) {
+    std::filesystem::copy_file(getSourcePluginsPath() / blankEsp,
+                               dataPath / filename);
+    ASSERT_TRUE(std::filesystem::exists(dataPath / filename));
+  }
+
+  std::filesystem::last_write_time(
+      dataFilePath,
+      std::filesystem::file_time_type::clock().now() + std::chrono::hours(1));
+
+  handle_->SetAdditionalDataPaths({dataFilePath.parent_path()});
+  handle_->LoadCurrentLoadOrderState();
+
+  loadOrder.push_back(filename);
+
+  EXPECT_EQ(loadOrder, handle_->GetLoadOrder());
 }
 
 TEST_P(GameInterfaceTest, isValidPluginShouldReturnTrueForAValidPlugin) {
@@ -116,9 +158,37 @@ TEST_P(GameInterfaceTest, isValidPluginShouldReturnFalseForAnEmptyFile) {
   EXPECT_FALSE(handle_->IsValidPlugin(emptyFile));
 }
 
+TEST_P(GameInterfaceTest,
+       isValidPluginShouldResolveRelativePathsRelativeToDataPath) {
+  const auto path = ".." / dataPath.filename() / blankEsm;
+
+  EXPECT_TRUE(handle_->IsValidPlugin(path));
+}
+
+TEST_P(GameInterfaceTest, isValidPluginShouldUseAbsolutePathsAsGiven) {
+  ASSERT_TRUE(dataPath.is_absolute());
+
+  const auto path = dataPath / std::filesystem::u8path(blankEsm);
+
+  EXPECT_TRUE(handle_->IsValidPlugin(path));
+}
+
 TEST_P(
     GameInterfaceTest,
-    loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllGivenPlugins) {
+    isValidPluginShouldTryGhostedPathIfGivenPluginDoesNotExistExceptForOpenMW) {
+  if (GetParam() == GameType::openmw) {
+    // This wasn't done for OpenMW during common setup.
+    const auto pluginPath = dataPath / (blankMasterDependentEsm + ".ghost");
+    std::filesystem::rename(dataPath / blankMasterDependentEsm, pluginPath);
+
+    EXPECT_FALSE(handle_->IsValidPlugin(blankMasterDependentEsm));
+  } else {
+    EXPECT_TRUE(handle_->IsValidPlugin(blankMasterDependentEsm));
+  }
+}
+
+TEST_P(GameInterfaceTest,
+       loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfAllGivenPlugins) {
   handle_->LoadPlugins(pluginsToLoad, true);
   if (GetParam() == GameType::starfield) {
     EXPECT_EQ(6, handle_->GetLoadedPlugins().size());
@@ -155,8 +225,28 @@ TEST_P(GameInterfaceTest, loadPluginsShouldTrimDotGhostFileExtensions) {
 }
 
 TEST_P(GameInterfaceTest,
+       loadPluginsWithHeadersOnlyTrueShouldLoadTheHeadersOfGivenPlugins) {
+  handle_->LoadPlugins(pluginsToLoad, true);
+
+  if (GetParam() == GameType::starfield) {
+    EXPECT_EQ(6, handle_->GetLoadedPlugins().size());
+  } else {
+    EXPECT_EQ(11, handle_->GetLoadedPlugins().size());
+  }
+
+  // Check that one plugin's header has been read.
+  ASSERT_NO_THROW(handle_->GetPlugin(masterFile));
+  auto plugin = handle_->GetPlugin(masterFile);
+  EXPECT_EQ("5.0", plugin->GetVersion().value());
+
+  // Check that only the header has been read.
+  EXPECT_FALSE(plugin->GetCRC());
+}
+
+TEST_P(GameInterfaceTest,
        loadPluginsWithHeadersOnlyFalseShouldFullyLoadAllInstalledPlugins) {
   handle_->LoadPlugins(pluginsToLoad, false);
+
   if (GetParam() == GameType::starfield) {
     EXPECT_EQ(6, handle_->GetLoadedPlugins().size());
   } else {
@@ -182,6 +272,211 @@ TEST_P(GameInterfaceTest, loadPluginsWithANonAsciiPluginShouldLoadIt) {
 
   // Check that not only the header has been read.
   EXPECT_EQ(blankEsmCrc, plugin->GetCRC().value());
+}
+
+TEST_P(
+    GameInterfaceTest,
+    loadPluginsShouldNotThrowIfAFilenameHasNonWindows1252EncodableCharacters) {
+  const auto pluginName = std::filesystem::u8path(
+      u8"\u2551\u00BB\u00C1\u2510\u2557\u00FE\u00C3\u00CE.esp");
+  std::filesystem::copy(dataPath / blankEsp, dataPath / pluginName);
+
+  EXPECT_NO_THROW(handle_->LoadPlugins({pluginName}, false));
+}
+
+TEST_P(GameInterfaceTest,
+       loadPluginsWithANonPluginShouldNotAddItToTheLoadedPlugins) {
+  ASSERT_THROW(handle_->LoadPlugins({nonPluginFile}, false),
+               std::invalid_argument);
+
+  ASSERT_TRUE(handle_->GetLoadedPlugins().empty());
+}
+
+TEST_P(GameInterfaceTest,
+       loadPluginsWithAnInvalidPluginShouldNotAddItToTheLoadedPlugins) {
+  ASSERT_FALSE(std::filesystem::exists(dataPath / invalidPlugin));
+  ASSERT_NO_THROW(std::filesystem::copy_file(dataPath / blankEsm,
+                                             dataPath / invalidPlugin));
+  ASSERT_TRUE(std::filesystem::exists(dataPath / invalidPlugin));
+  std::ofstream out(dataPath / invalidPlugin, std::fstream::app);
+  out << "GRUP0";
+  out.close();
+
+  ASSERT_NO_THROW(handle_->LoadPlugins({invalidPlugin}, false));
+
+  ASSERT_TRUE(handle_->GetLoadedPlugins().empty());
+}
+
+TEST_P(GameInterfaceTest, loadPluginsShouldNotClearThePluginsCache) {
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+  ASSERT_EQ(1, handle_->GetLoadedPlugins().size());
+
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsp)}, true);
+
+  EXPECT_EQ(2, handle_->GetLoadedPlugins().size());
+}
+
+TEST_P(GameInterfaceTest,
+       loadPluginsShouldReplaceCacheEntriesForTheGivenPlugins) {
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+  const auto pointer = handle_->GetPlugin(blankEsm);
+  ASSERT_NE(nullptr, pointer);
+
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, false);
+
+  const auto newPointer = handle_->GetPlugin(blankEsm);
+  ASSERT_NE(nullptr, newPointer);
+  EXPECT_NE(pointer, newPointer);
+}
+
+TEST_P(GameInterfaceTest,
+       loadPluginsShouldThrowIfGivenVectorElementsWithTheSameFilename) {
+  const auto dataPluginPath = dataPath / std::filesystem::u8path(blankEsm);
+  const auto sourcePluginPath =
+      getSourcePluginsPath() / std::filesystem::u8path(blankEsm);
+
+  EXPECT_THROW(handle_->LoadPlugins(std::vector<std::filesystem::path>(
+                                        {dataPluginPath, sourcePluginPath}),
+                                    true),
+               std::invalid_argument);
+}
+
+TEST_P(GameInterfaceTest,
+       loadPluginsShouldResolveRelativePathsRelativeToDataPath) {
+  const auto relativePath = ".." / dataPath.filename() / blankEsm;
+
+  handle_->LoadPlugins(std::vector<std::filesystem::path>({relativePath}),
+                       true);
+
+  EXPECT_NE(nullptr, handle_->GetPlugin(blankEsm));
+}
+
+TEST_P(GameInterfaceTest, loadPluginsShouldUseAbsolutePathsAsGiven) {
+  const auto absolutePath = dataPath / std::filesystem::u8path(blankEsm);
+
+  handle_->LoadPlugins(std::vector<std::filesystem::path>({absolutePath}),
+                       true);
+
+  EXPECT_NE(nullptr, handle_->GetPlugin(blankEsm));
+}
+
+TEST_P(
+    GameInterfaceTest,
+    loadPluginsShouldThrowIfFullyLoadingAPluginWithAMissingMasterIfGameIsMorrowindOrStarfield) {
+  const auto pluginName =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+
+  std::filesystem::remove(dataPath / pluginName);
+
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::starfield) {
+    try {
+      handle_->LoadPlugins({blankMasterDependentEsm}, false);
+      FAIL();
+    } catch (const std::system_error& e) {
+      EXPECT_EQ(ESP_ERROR_PLUGIN_METADATA_NOT_FOUND, e.code().value());
+      EXPECT_EQ(esplugin_category(), e.code().category());
+    }
+  } else {
+    handle_->LoadPlugins({blankMasterDependentEsm}, false);
+
+    EXPECT_NE(nullptr, handle_->GetPlugin(blankMasterDependentEsm));
+  }
+}
+
+TEST_P(
+    GameInterfaceTest,
+    loadPluginsShouldThrowIfAPluginHasAMasterThatIsNotInTheInputAndIsNotAlreadyLoadedAndGameIsMorrowindOrStarfield) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::starfield) {
+    try {
+      handle_->LoadPlugins({blankMasterDependentEsm}, false);
+      FAIL();
+    } catch (const std::system_error& e) {
+      EXPECT_EQ(ESP_ERROR_PLUGIN_METADATA_NOT_FOUND, e.code().value());
+      EXPECT_EQ(esplugin_category(), e.code().category());
+    }
+  } else {
+    handle_->LoadPlugins({blankMasterDependentEsm}, false);
+
+    EXPECT_NE(nullptr, handle_->GetPlugin(blankMasterDependentEsm));
+  }
+}
+
+TEST_P(
+    GameInterfaceTest,
+    loadPluginsShouldNotThrowIfAPluginHasAMasterThatIsNotInTheInputButIsAlreadyLoaded) {
+  const auto pluginName =
+      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+
+  handle_->LoadPlugins({pluginName}, true);
+
+  handle_->LoadPlugins({blankMasterDependentEsm}, false);
+
+  EXPECT_NE(nullptr, handle_->GetPlugin(blankMasterDependentEsm));
+}
+
+TEST_P(GameInterfaceTest,
+       sortPluginsWithNoLoadedPluginsShouldReturnAnEmptyList) {
+  const auto sorted = handle_->SortPlugins(handle_->GetLoadOrder());
+
+  EXPECT_TRUE(sorted.empty());
+}
+
+TEST_P(GameInterfaceTest, sortPluginsShouldOnlySortTheGivenPlugins) {
+  handle_->LoadPlugins(GetInstalledPlugins(), false);
+
+  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+  const auto sorted = handle_->SortPlugins(plugins);
+
+  EXPECT_EQ(plugins, sorted);
+}
+
+TEST_P(GameInterfaceTest,
+       sortingShouldNotMakeUnnecessaryChangesToAnExistingLoadOrder) {
+  std::filesystem::remove(dataPath / std::filesystem::u8path(nonAsciiEsm));
+
+  handle_->LoadCurrentLoadOrderState();
+
+  auto plugins = GetInstalledPlugins();
+  handle_->LoadPlugins({plugins.front()}, true);
+  plugins.erase(plugins.begin());
+  handle_->LoadPlugins(plugins, false);
+
+  std::vector<std::string> expectedSortedOrder;
+  if (GetParam() == GameType::openmw) {
+    // The existing load order for OpenMW doesn't have plugins loading after
+    // their masters, because the game doesn't enforce that, and the test
+    // setup cannot enforce the positions of inactive plugins.
+    expectedSortedOrder = {
+        blankDifferentEsm,
+        blankDifferentMasterDependentEsm,
+        blankDifferentEsp,
+        blankDifferentPluginDependentEsp,
+        blankEsm,
+        blankMasterDependentEsm,
+        blankMasterDependentEsp,
+        blankEsp,
+        blankPluginDependentEsp,
+        masterFile,
+        blankDifferentMasterDependentEsp,
+    };
+  } else {
+    expectedSortedOrder = getLoadOrder();
+  }
+
+  // Check stability by running the sort 100 times.
+  for (int i = 0; i < 100; i++) {
+    auto input = handle_->GetLoadOrder();
+    auto sorted = handle_->SortPlugins(handle_->GetLoadOrder());
+    ASSERT_EQ(expectedSortedOrder, sorted) << " for sort " << i;
+  }
+}
+
+TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfAGivenPluginIsNotLoaded) {
+  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+
+  EXPECT_THROW(handle_->SortPlugins(plugins), std::runtime_error);
 }
 
 TEST_P(GameInterfaceTest, clearLoadedPluginsShouldClearThePluginsCache) {
@@ -255,15 +550,51 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
 }
 
 TEST_P(GameInterfaceTest,
-       isPluginActiveShouldReturnFalseIfTheGivenPluginIsNotActive) {
+       isPluginActiveShouldReturnTrueIfTheGivenPluginIsActive) {
   handle_->LoadCurrentLoadOrderState();
 
   EXPECT_TRUE(handle_->IsPluginActive(blankEsm));
 }
 
 TEST_P(GameInterfaceTest,
-       isPluginActiveShouldReturnTrueIfTheGivenPluginIsActive) {
+       isPluginActiveShouldReturnFalseIfTheGivenPluginIsNotActive) {
   handle_->LoadCurrentLoadOrderState();
+  EXPECT_FALSE(handle_->IsPluginActive(blankEsp));
+}
+
+TEST_P(GameInterfaceTest,
+       isPluginActiveShouldActivePluginAsActiveWithHeaderLoaded) {
+  handle_->LoadCurrentLoadOrderState();
+
+  ASSERT_NO_THROW(handle_->LoadPlugins({blankEsm}, true));
+
+  EXPECT_TRUE(handle_->IsPluginActive(blankEsm));
+}
+
+TEST_P(GameInterfaceTest,
+       isPluginActiveShouldInactivePluginAsInactiveWithHeaderLoaded) {
+  handle_->LoadCurrentLoadOrderState();
+
+  ASSERT_NO_THROW(handle_->LoadPlugins({blankEsp}, true));
+
+  EXPECT_FALSE(handle_->IsPluginActive(blankEsp));
+}
+
+TEST_P(GameInterfaceTest,
+       isPluginActiveShouldActivePluginAsActiveWhenFullyLoaded) {
+  handle_->LoadCurrentLoadOrderState();
+
+  ASSERT_NO_THROW(handle_->LoadPlugins({blankEsm}, false));
+
+  EXPECT_TRUE(handle_->IsPluginActive(blankEsm));
+}
+
+TEST_P(GameInterfaceTest,
+       isPluginActiveShouldInactivePluginAsInactiveWhenFullyLoaded) {
+  handle_->LoadCurrentLoadOrderState();
+
+  ASSERT_NO_THROW(handle_->LoadPlugins({blankEsp}, false));
+
   EXPECT_FALSE(handle_->IsPluginActive(blankEsp));
 }
 

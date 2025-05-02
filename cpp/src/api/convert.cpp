@@ -1,6 +1,6 @@
 #include "api/convert.h"
 
-#include "api/exception.h"
+#include "api/exception/exception.h"
 
 namespace loot {
 // To public types

@@ -22,15 +22,14 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_CONTENT_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_CONTENT_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_MESSAGE_CONTENT_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_MESSAGE_CONTENT_TEST
 
 #include <gtest/gtest.h>
 
 #include "loot/metadata/message_content.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 const std::string french = "fr";
 
 TEST(MessageContent, defaultConstructorShouldSetEmptyEnglishLanguageString) {
@@ -328,7 +327,6 @@ TEST(
   EXPECT_TRUE(content.has_value());
   EXPECT_EQ("pt_PT", content.value().GetLanguage());
   EXPECT_EQ("test3", content.value().GetText());
-}
 }
 }
 

@@ -2,7 +2,7 @@
 #include "api/game.h"
 
 #include "api/convert.h"
-#include "api/exception.h"
+#include "api/exception/exception.h"
 
 namespace {
 loot::GameType convert(loot::rust::GameType gameType) {
@@ -29,6 +29,8 @@ loot::GameType convert(loot::rust::GameType gameType) {
       return loot::GameType::starfield;
     case loot::rust::GameType::OpenMW:
       return loot::GameType::openmw;
+    case loot::rust::GameType::OblivionRemastered:
+      return loot::GameType::oblivionRemastered;
     default:
       throw std::logic_error("Unsupported GameType value");
   }
@@ -58,6 +60,8 @@ loot::rust::GameType convert(loot::GameType gameType) {
       return loot::rust::GameType::Starfield;
     case loot::GameType::openmw:
       return loot::rust::GameType::OpenMW;
+    case loot::GameType::oblivionRemastered:
+      return loot::rust::GameType::OblivionRemastered;
     default:
       throw std::logic_error("Unsupported GameType value");
   }

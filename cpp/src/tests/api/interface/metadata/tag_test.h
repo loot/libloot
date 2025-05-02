@@ -22,15 +22,14 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_TAG_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_TAG_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_TAG_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_TAG_TEST
 
 #include <gtest/gtest.h>
 
 #include "loot/metadata/tag.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 TEST(Tag,
      defaultConstructorShouldSetEmptyNameAndConditionStringsForATagAddition) {
   Tag tag;
@@ -282,7 +281,6 @@ TEST(
 
   EXPECT_FALSE(tag1 >= tag2);
   EXPECT_TRUE(tag2 >= tag1);
-}
 }
 }
 

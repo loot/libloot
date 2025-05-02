@@ -88,17 +88,7 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
                          CreateGameHandleTest,
-                         ::testing::Values(GameType::tes4,
-                                           GameType::tes5,
-                                           GameType::fo3,
-                                           GameType::fonv,
-                                           GameType::fo4,
-                                           GameType::tes5se,
-                                           GameType::fo4vr,
-                                           GameType::tes5vr,
-                                           GameType::tes3,
-                                           GameType::starfield,
-                                           GameType::openmw));
+                         ::testing::ValuesIn(ALL_GAME_TYPES));
 
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {
@@ -151,6 +141,74 @@ TEST_P(CreateGameHandleTest,
   EXPECT_TRUE(handle_);
 }
 #endif
+
+#ifndef _WIN32
+TEST_P(
+    CreateGameHandleTest,
+    shouldThrowOnLinuxIfLocalPathIsNotGivenExceptForMorrowindOpenMWAndOblivionRemastered) {
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
+      GetParam() == GameType::oblivionRemastered) {
+    EXPECT_NO_THROW(CreateGameHandle(GetParam(), gamePath));
+  } else {
+    EXPECT_THROW(CreateGameHandle(GetParam(), gamePath), std::system_error);
+  }
+}
+#else
+TEST_P(CreateGameHandleTest,
+       shouldNotThrowOnWindowsIfLocalPathIsNotGiven) {
+  EXPECT_NO_THROW(CreateGameHandle(GetParam(), gamePath));
+}
+#endif
+
+TEST_P(CreateGameHandleTest,
+       shouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
+  EXPECT_NO_THROW(CreateGameHandle(GetParam(), gamePath, localPath));
+}
+
+TEST_P(
+    CreateGameHandleTest,
+       shouldSetAdditionalDataPathsForFallout4FromMicrosoftStoreOrStarfield) {
+  if (GetParam() == GameType::fo4) {
+    // Create the file that indicates it's a Microsoft Store install.
+    touch(gamePath / "appxmanifest.xml");
+  } else if (GetParam() == GameType::openmw) {
+    std::ofstream out(gamePath / "openmw.cfg");
+    out << "data-local=\"" << (localPath / "data").u8string() << "\""
+        << std::endl
+        << "config=\"" << localPath.u8string() << "\"";
+  }
+
+  const auto game = CreateGameHandle(GetParam(), gamePath, localPath);
+
+  if (GetParam() == GameType::fo4) {
+    const auto basePath = gamePath / ".." / "..";
+    EXPECT_EQ(std::vector<std::filesystem::path>(
+                  {basePath / "Fallout 4- Automatron (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Nuka-World (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Wasteland Workshop (PC)" / "Content" /
+                       "Data",
+                   basePath / "Fallout 4- High Resolution Texture Pack" /
+                       "Content" / "Data",
+                   basePath / "Fallout 4- Vault-Tec Workshop (PC)" / "Content" /
+                       "Data",
+                   basePath / "Fallout 4- Far Harbor (PC)" / "Content" / "Data",
+                   basePath / "Fallout 4- Contraptions Workshop (PC)" /
+                       "Content" / "Data"}),
+              game->GetAdditionalDataPaths());
+  } else if (GetParam() == GameType::starfield) {
+    ASSERT_EQ(1, game->GetAdditionalDataPaths().size());
+
+    const auto expectedSuffix = std::filesystem::u8path("Documents") /
+                                "My Games" / "Starfield" / "Data";
+    EXPECT_TRUE(endsWith(game->GetAdditionalDataPaths()[0].u8string(),
+                                 expectedSuffix.u8string()));
+  } else if (GetParam() == GameType::openmw) {
+    EXPECT_EQ(std::vector<std::filesystem::path>{localPath / "data"},
+              game->GetAdditionalDataPaths());
+  } else {
+    EXPECT_TRUE(game->GetAdditionalDataPaths().empty());
+  }
+}
 }
 }
 

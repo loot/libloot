@@ -22,8 +22,8 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_CONDITIONAL_METADATA_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_CONDITIONAL_METADATA_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_CONDITIONAL_METADATA_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_CONDITIONAL_METADATA_TEST
 
 #include "loot/metadata/conditional_metadata.h"
 #include "tests/common_game_test_fixture.h"
@@ -41,12 +41,7 @@ protected:
 // but we only have the one so no prefix is necessary.
 INSTANTIATE_TEST_SUITE_P(,
                          ConditionalMetadataTest,
-                         ::testing::Values(GameType::tes4,
-                                           GameType::tes5,
-                                           GameType::fo3,
-                                           GameType::fonv,
-                                           GameType::fo4,
-                                           GameType::tes5se));
+                         ::testing::ValuesIn(ALL_GAME_TYPES));
 
 TEST_P(ConditionalMetadataTest,
        defaultConstructorShouldSetEmptyConditionString) {

@@ -22,14 +22,13 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_MESSAGE_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_MESSAGE_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_MESSAGE_TEST
 
 #include "loot/metadata/message.h"
 #include "tests/common_game_test_fixture.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 class MessageTest : public CommonGameTestFixture {
 protected:
   MessageTest() : CommonGameTestFixture(GameType::tes4) {}
@@ -340,7 +339,6 @@ TEST_F(
 
   EXPECT_FALSE(message1 >= message2);
   EXPECT_TRUE(message2 >= message1);
-}
 }
 }
 

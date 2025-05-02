@@ -19,6 +19,7 @@ pub enum GameType {
     Morrowind,
     Starfield,
     OpenMW,
+    OblivionRemastered,
 }
 
 impl TryFrom<libloot::GameType> for GameType {
@@ -37,6 +38,7 @@ impl TryFrom<libloot::GameType> for GameType {
             libloot::GameType::Morrowind => Ok(GameType::Morrowind),
             libloot::GameType::Starfield => Ok(GameType::Starfield),
             libloot::GameType::OpenMW => Ok(GameType::OpenMW),
+            libloot::GameType::OblivionRemastered => Ok(GameType::OblivionRemastered),
             _ => Err(UnsupportedEnumValueError),
         }
     }
@@ -56,6 +58,7 @@ impl From<GameType> for libloot::GameType {
             GameType::Morrowind => libloot::GameType::Morrowind,
             GameType::Starfield => libloot::GameType::Starfield,
             GameType::OpenMW => libloot::GameType::OpenMW,
+            GameType::OblivionRemastered => libloot::GameType::OblivionRemastered,
         }
     }
 }

@@ -379,9 +379,9 @@ dependencies = [
 
 [[package]]
 name = "esplugin"
-version = "6.1.2"
+version = "6.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd8b3f4507e489fce3df78273537e93e939916c83d992fbfb712db9b1f5eee62"
+checksum = "3c334f10e3dc2e21d45e208f5b6b232a6876ea6352130d90a42bdb05246f7fcc"
 dependencies = [
  "encoding_rs",
  "memchr",
@@ -528,9 +528,9 @@ dependencies = [
 
 [[package]]
 name = "libloadorder"
-version = "18.3.0"
+version = "18.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "034ffaf7bf5bd34669741500d4ccddc5dbc62c491cdb0c5e103c592da535dbeb"
+checksum = "bc4de694d488b4ce2a775d59825ec30d206546ec87fe0866717e6db25c46a164"
 dependencies = [
  "dirs",
  "encoding_rs",
@@ -545,7 +545,7 @@ dependencies = [
 
 [[package]]
 name = "libloot"
-version = "0.26.0"
+version = "0.26.1"
 dependencies = [
  "crc32fast",
  "esplugin",
@@ -566,7 +566,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-cpp"
-version = "0.26.0"
+version = "0.26.1"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -578,7 +578,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-ffi-errors"
-version = "0.26.0"
+version = "0.26.1"
 dependencies = [
  "esplugin",
  "libloadorder",
@@ -588,7 +588,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-nodejs"
-version = "0.26.0"
+version = "0.26.1"
 dependencies = [
  "libloot",
  "libloot-ffi-errors",
@@ -599,7 +599,7 @@ dependencies = [
 
 [[package]]
 name = "libloot_python"
-version = "0.26.0"
+version = "0.26.1"
 dependencies = [
  "libloot",
  "libloot-ffi-errors",
@@ -640,9 +640,9 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
 name = "loot-condition-interpreter"
-version = "5.3.1"
+version = "5.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94d58882c85aba2f4fca0951301b58e03428a8a02e51ccb0cf5f5b28d7869281"
+checksum = "eec12dc709a84442632efdc064e3463612bf7ddcc39d804de021cf56e557be04"
 dependencies = [
  "crc32fast",
  "esplugin",

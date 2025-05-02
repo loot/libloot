@@ -58,6 +58,8 @@ pub enum GameType {
     Starfield,
     /// OpenMW
     OpenMW,
+    /// The Elder Scrolls IV: Oblivion Remastered
+    OblivionRemastered,
 }
 
 impl Display for GameType {
@@ -74,6 +76,7 @@ impl Display for GameType {
             GameType::Morrowind => write!(f, "The Elder Scrolls III: Morrowind"),
             GameType::Starfield => write!(f, "Starfield"),
             GameType::OpenMW => write!(f, "OpenMW"),
+            GameType::OblivionRemastered => write!(f, "The Elder Scrolls IV: Oblivion Remastered"),
         }
     }
 }
@@ -92,6 +95,7 @@ impl From<GameType> for loadorder::GameId {
             GameType::Morrowind => loadorder::GameId::Morrowind,
             GameType::Starfield => loadorder::GameId::Starfield,
             GameType::OpenMW => loadorder::GameId::OpenMW,
+            GameType::OblivionRemastered => loadorder::GameId::OblivionRemastered,
         }
     }
 }
@@ -99,7 +103,9 @@ impl From<GameType> for loadorder::GameId {
 impl From<GameType> for loot_condition_interpreter::GameType {
     fn from(value: GameType) -> Self {
         match value {
-            GameType::Oblivion => loot_condition_interpreter::GameType::Oblivion,
+            GameType::Oblivion | GameType::OblivionRemastered => {
+                loot_condition_interpreter::GameType::Oblivion
+            }
             GameType::Skyrim => loot_condition_interpreter::GameType::Skyrim,
             GameType::Fallout3 => loot_condition_interpreter::GameType::Fallout3,
             GameType::FalloutNV => loot_condition_interpreter::GameType::FalloutNV,
@@ -117,7 +123,7 @@ impl From<GameType> for loot_condition_interpreter::GameType {
 impl From<GameType> for esplugin::GameId {
     fn from(value: GameType) -> Self {
         match value {
-            GameType::Oblivion => esplugin::GameId::Oblivion,
+            GameType::Oblivion | GameType::OblivionRemastered => esplugin::GameId::Oblivion,
             GameType::Skyrim => esplugin::GameId::Skyrim,
             GameType::Fallout3 => esplugin::GameId::Fallout3,
             GameType::FalloutNV => esplugin::GameId::FalloutNV,
@@ -555,6 +561,9 @@ fn data_path(game_type: GameType, game_path: &Path) -> PathBuf {
     match game_type {
         GameType::Morrowind => game_path.join("Data Files"),
         GameType::OpenMW => game_path.join("resources/vfs"),
+        GameType::OblivionRemastered => {
+            game_path.join("OblivionRemastered/Content/Dev/ObvData/Data")
+        }
         _ => game_path.join("Data"),
     }
 }
@@ -916,7 +925,10 @@ mod tests {
             fn should_succeed_for_morrowind_if_given_valid_game_path(game_type: GameType) {
                 let fixture = Fixture::new(game_type);
 
-                if matches!(game_type, GameType::Morrowind | GameType::OpenMW) {
+                if matches!(
+                    game_type,
+                    GameType::Morrowind | GameType::OpenMW | GameType::OblivionRemastered
+                ) {
                     assert!(Game::new(fixture.game_type, &fixture.game_path).is_ok());
                 } else {
                     assert!(Game::new(fixture.game_type, &fixture.game_path).is_err());

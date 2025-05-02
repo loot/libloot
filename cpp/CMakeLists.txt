@@ -67,8 +67,10 @@ set(LIBLOOT_SRC_API_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/api/api.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/convert.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/database.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/error_categories.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/exception.cpp"
+    "${CMAKE_SOURCE_DIR}/src/api/exception/cyclic_interaction_error.cpp"
+    "${CMAKE_SOURCE_DIR}/src/api/exception/error_categories.cpp"
+    "${CMAKE_SOURCE_DIR}/src/api/exception/exception.cpp"
+    "${CMAKE_SOURCE_DIR}/src/api/exception/undefined_group_error.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/conditional_metadata.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/file.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/metadata/filename.cpp"
@@ -81,8 +83,6 @@ set(LIBLOOT_SRC_API_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/api/metadata/tag.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/game.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/plugin.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/sorting/cyclic_interaction_error.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/sorting/undefined_group_error.cpp"
     "${CMAKE_SOURCE_DIR}/src/api/vertex.cpp")
 
 set(LIBLOOT_INCLUDE_H_FILES
@@ -116,7 +116,7 @@ set(LIBLOOT_INCLUDE_H_FILES
 set(LIBLOOT_SRC_API_H_FILES
     "${CMAKE_SOURCE_DIR}/src/api/convert.h"
     "${CMAKE_SOURCE_DIR}/src/api/database.h"
-    "${CMAKE_SOURCE_DIR}/src/api/exception.h"
+    "${CMAKE_SOURCE_DIR}/src/api/exception/exception.h"
     "${CMAKE_SOURCE_DIR}/src/api/game.h"
     "${CMAKE_SOURCE_DIR}/src/api/plugin.h")
 
@@ -239,7 +239,7 @@ endif()
 # Install
 ########################################
 
-set(LIBLOOT_VERSION "0.26.0")
+set(LIBLOOT_VERSION "0.26.1")
 
 set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
 set_property(TARGET loot PROPERTY SOVERSION 0)

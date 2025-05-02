@@ -4,7 +4,7 @@
 #include <typeinfo>
 
 #include "api/convert.h"
-#include "api/exception.h"
+#include "api/exception/exception.h"
 
 namespace loot {
 Plugin::Plugin(::rust::Box<loot::rust::Plugin> plugin) :
@@ -101,9 +101,7 @@ bool Plugin::DoRecordsOverlap(const PluginInterface& plugin) const {
 
     return plugin_->do_records_overlap(*otherPlugin.plugin_);
   } catch (std::bad_cast&) {
-    throw std::invalid_argument(
-        "Tried to check if records overlapped with a different concrete type "
-        "implementing PluginInterface");
+    return false;
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

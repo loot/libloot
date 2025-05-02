@@ -22,15 +22,14 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_GROUP_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_GROUP_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_GROUP_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_GROUP_TEST
 
 #include <gtest/gtest.h>
 
 #include "loot/metadata/group.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 TEST(Group, defaultConstructorShouldCreateDefaultGroup) {
   Group group;
 
@@ -348,7 +347,6 @@ TEST(
 
   EXPECT_FALSE(group1 >= group2);
   EXPECT_TRUE(group2 >= group1);
-}
 }
 }
 

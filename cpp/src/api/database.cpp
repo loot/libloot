@@ -2,7 +2,7 @@
 #include "api/database.h"
 
 #include "api/convert.h"
-#include "api/exception.h"
+#include "api/exception/exception.h"
 
 namespace loot {
 Database::Database(::rust::Box<loot::rust::Database>&& database) :

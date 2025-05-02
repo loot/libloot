@@ -1,6 +1,6 @@
 [package]
 name = "libloot"
-version = "0.26.0"
+version = "0.26.1"
 edition = "2024"
 license = "GPL-3.0"
 
@@ -30,9 +30,9 @@ tempfile = "3.17.1"
 members = ["cpp", "ffi-errors", "nodejs", "parameterized-test", "python"]
 
 [workspace.dependencies]
-esplugin = "6.1.2"
-libloadorder = "18.3.0"
-loot-condition-interpreter = "5.3.1"
+esplugin = "6.1.3"
+libloadorder = "18.4.0"
+loot-condition-interpreter = "5.3.2"
 
 [profile.release]
 debug = "limited"

@@ -22,15 +22,14 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_FILE_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_FILE_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_FILE_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_FILE_TEST
 
 #include <gtest/gtest.h>
 
 #include "loot/metadata/file.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 TEST(File, defaultConstructorShouldInitialiseEmptyStrings) {
   File file;
 
@@ -379,7 +378,6 @@ TEST(File, getDisplayNameShouldReturnDisplayString) {
   File file("name", "display");
 
   EXPECT_EQ("display", file.GetDisplayName());
-}
 }
 }
 

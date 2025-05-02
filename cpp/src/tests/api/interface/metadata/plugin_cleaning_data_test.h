@@ -22,14 +22,13 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_PLUGIN_CLEANING_DATA
-#define LOOT_TESTS_API_INTERNALS_METADATA_PLUGIN_CLEANING_DATA
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_PLUGIN_CLEANING_DATA_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_PLUGIN_CLEANING_DATA_TEST
 
 #include "loot/metadata/plugin_cleaning_data.h"
 #include "tests/common_game_test_fixture.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 class PluginCleaningDataTest : public CommonGameTestFixture {
 protected:
   PluginCleaningDataTest() :
@@ -308,7 +307,6 @@ TEST_F(
   info2 = PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 60);
   EXPECT_FALSE(info1 > info2);
   EXPECT_TRUE(info2 > info1);
-}
 }
 }
 

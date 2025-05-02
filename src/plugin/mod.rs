@@ -170,7 +170,10 @@ impl Plugin {
     /// sometimes referred to as *master files* or simply *masters*, while the
     /// other meaning is always referenced in relation to another plugin.
     pub fn is_master(&self) -> bool {
-        if self.game_type == GameType::OpenMW {
+        if matches!(
+            self.game_type,
+            GameType::OpenMW | GameType::OblivionRemastered
+        ) {
             false
         } else {
             self.plugin
@@ -535,7 +538,11 @@ mod tests {
 
             assert_eq!(plugin_name, plugin.name());
             assert_eq!(expected_masters, plugin.masters().unwrap());
-            assert_eq!(game_type != GameType::OpenMW, plugin.is_master());
+            if matches!(game_type, GameType::OpenMW | GameType::OblivionRemastered) {
+                assert!(!plugin.is_master());
+            } else {
+                assert!(plugin.is_master());
+            }
             assert!(!plugin.is_empty());
             assert!(plugin.version().is_none());
 
@@ -544,7 +551,9 @@ mod tests {
                 GameType::Morrowind | GameType::OpenMW => {
                     assert_eq!(1.2, plugin.header_version().unwrap());
                 }
-                GameType::Oblivion => assert_eq!(0.8, plugin.header_version().unwrap()),
+                GameType::Oblivion | GameType::OblivionRemastered => {
+                    assert_eq!(0.8, plugin.header_version().unwrap());
+                }
                 GameType::Starfield => assert_eq!(0.96, plugin.header_version().unwrap()),
                 _ => assert_eq!(0.94, plugin.header_version().unwrap()),
             }
@@ -606,7 +615,11 @@ mod tests {
 
             assert_eq!(plugin_name, plugin.name());
             assert_eq!(expected_masters, plugin.masters().unwrap());
-            assert_eq!(game_type != GameType::OpenMW, plugin.is_master());
+            if matches!(game_type, GameType::OpenMW | GameType::OblivionRemastered) {
+                assert!(!plugin.is_master());
+            } else {
+                assert!(plugin.is_master());
+            }
             assert!(!plugin.is_empty());
             assert!(plugin.version().is_none());
 
@@ -615,7 +628,9 @@ mod tests {
                 GameType::Morrowind | GameType::OpenMW => {
                     assert_eq!(1.2, plugin.header_version().unwrap());
                 }
-                GameType::Oblivion => assert_eq!(0.8, plugin.header_version().unwrap()),
+                GameType::Oblivion | GameType::OblivionRemastered => {
+                    assert_eq!(0.8, plugin.header_version().unwrap());
+                }
                 GameType::Starfield => assert_eq!(0.96, plugin.header_version().unwrap()),
                 _ => assert_eq!(0.94, plugin.header_version().unwrap()),
             }
@@ -623,7 +638,7 @@ mod tests {
             let expected_crc = match game_type {
                 GameType::Morrowind | GameType::OpenMW => 3_317_676_987,
                 GameType::Starfield => 1_422_425_298,
-                GameType::Oblivion => 3_759_349_588,
+                GameType::Oblivion | GameType::OblivionRemastered => 3_759_349_588,
                 _ => 3_000_242_590,
             };
 

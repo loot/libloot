@@ -22,7 +22,7 @@ public:
 
   GameType GetType() const override;
 
-  std::vector<std::filesystem::path> GetAdditionalDataPaths() const;
+  std::vector<std::filesystem::path> GetAdditionalDataPaths() const override;
 
   void SetAdditionalDataPaths(
       const std::vector<std::filesystem::path>& additionalDataPaths) override;

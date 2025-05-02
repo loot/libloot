@@ -27,7 +27,7 @@ pub fn find_associated_archives(
 
         // Oblivion .esp files can load archives which begin with the plugin
         // basename.
-        GameType::Oblivion => {
+        GameType::Oblivion | GameType::OblivionRemastered => {
             if has_ascii_extension(plugin_path, "esp") {
                 find_associated_archives_with_arbitrary_suffixes(plugin_path, game_cache)
             } else {
@@ -308,7 +308,10 @@ mod tests {
 
             if matches!(
                 game_type,
-                GameType::Morrowind | GameType::OpenMW | GameType::Oblivion
+                GameType::Morrowind
+                    | GameType::OpenMW
+                    | GameType::Oblivion
+                    | GameType::OblivionRemastered
             ) {
                 assert!(archives.is_empty());
             } else {
@@ -397,6 +400,7 @@ mod tests {
             if matches!(
                 game_type,
                 GameType::Oblivion
+                    | GameType::OblivionRemastered
                     | GameType::Fallout3
                     | GameType::FalloutNV
                     | GameType::Fallout4

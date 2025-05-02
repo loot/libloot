@@ -21,6 +21,7 @@ impl TryFrom<libloot::GameType> for GameType {
             libloot::GameType::Morrowind => Ok(GameType::Morrowind),
             libloot::GameType::Starfield => Ok(GameType::Starfield),
             libloot::GameType::OpenMW => Ok(GameType::OpenMW),
+            libloot::GameType::OblivionRemastered => Ok(GameType::OblivionRemastered),
             _ => Err(UnsupportedEnumValueError),
         }
     }
@@ -42,6 +43,7 @@ impl TryFrom<GameType> for libloot::GameType {
             GameType::Morrowind => Ok(libloot::GameType::Morrowind),
             GameType::Starfield => Ok(libloot::GameType::Starfield),
             GameType::OpenMW => Ok(libloot::GameType::OpenMW),
+            GameType::OblivionRemastered => Ok(libloot::GameType::OblivionRemastered),
             _ => Err(UnsupportedEnumValueError),
         }
     }

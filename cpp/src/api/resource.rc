@@ -13,12 +13,12 @@ BLOCK "040904b0"
 BEGIN
 VALUE "CompanyName", "LOOT"
 VALUE "FileDescription", "Library providing LOOT's core functionality"
-VALUE "FileVersion", "0.26.0"
+VALUE "FileVersion", "0.26.1"
 VALUE "InternalName", "loot"
 VALUE "LegalCopyright", "Copyright (C) 2013-2022 Oliver Hamlet"
 VALUE "OriginalFilename", "loot.dll"
 VALUE "ProductName", "LOOT"
-VALUE "ProductVersion", "0.26.0"
+VALUE "ProductVersion", "0.26.1"
 END
 END
 BLOCK "VarFileInfo"

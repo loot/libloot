@@ -22,14 +22,13 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_PLUGIN_METADATA_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_PLUGIN_METADATA_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_PLUGIN_METADATA_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_PLUGIN_METADATA_TEST
 
 #include "loot/metadata/plugin_metadata.h"
 #include "tests/common_game_test_fixture.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 class PluginMetadataTest : public CommonGameTestFixture {
 protected:
   PluginMetadataTest() :
@@ -390,7 +389,6 @@ TEST_F(PluginMetadataTest,
       "name: 'Blank.esm'\n"
       "after: ['Blank.esm']",
       plugin.AsYaml());
-}
 }
 }
 

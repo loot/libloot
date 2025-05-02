@@ -4,15 +4,6 @@
 
 #include "libloot-cpp/src/lib.rs.h"
 #include "rust/cxx.h"
-#include "tests/api/internals/metadata/conditional_metadata_test.h"
-#include "tests/api/internals/metadata/file_test.h"
-#include "tests/api/internals/metadata/group_test.h"
-#include "tests/api/internals/metadata/location_test.h"
-#include "tests/api/internals/metadata/message_content_test.h"
-#include "tests/api/internals/metadata/message_test.h"
-#include "tests/api/internals/metadata/plugin_cleaning_data_test.h"
-#include "tests/api/internals/metadata/plugin_metadata_test.h"
-#include "tests/api/internals/metadata/tag_test.h"
 
 namespace rust {
 template<typename T>
@@ -28,7 +19,7 @@ namespace loot::rust {
 TEST(libloot_version, shouldReturnExpectedValue) {
   auto version = libloot_version();
 
-  EXPECT_EQ(version, "0.26.0");
+  EXPECT_EQ(version, "0.26.1");
 }
 
 TEST(libloot_revision, shouldReturnExpectedValue) {

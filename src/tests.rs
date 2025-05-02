@@ -31,7 +31,9 @@ pub fn source_plugins_path(game_type: GameType) -> PathBuf {
         GameType::Morrowind | GameType::OpenMW => {
             absolute("./testing-plugins/Morrowind/Data Files")
         }
-        GameType::Oblivion => absolute("./testing-plugins/Oblivion/Data"),
+        GameType::Oblivion | GameType::OblivionRemastered => {
+            absolute("./testing-plugins/Oblivion/Data")
+        }
         GameType::Starfield => absolute("./testing-plugins/Starfield/Data"),
         GameType::Fallout3 | GameType::FalloutNV | GameType::Skyrim => {
             absolute("./testing-plugins/Skyrim/Data")
@@ -44,7 +46,7 @@ pub fn source_plugins_path(game_type: GameType) -> PathBuf {
 fn master_file(game_type: GameType) -> &'static str {
     match game_type {
         GameType::Morrowind | GameType::OpenMW => "Morrowind.esm",
-        GameType::Oblivion => "Oblivion.esm",
+        GameType::Oblivion | GameType::OblivionRemastered => "Oblivion.esm",
         GameType::Skyrim | GameType::SkyrimSE | GameType::SkyrimVR => "Skyrim.esm",
         GameType::Fallout3 => "Fallout3.esm",
         GameType::FalloutNV => "FalloutNV.esm",
@@ -155,7 +157,7 @@ fn set_load_order(
 
             mod_time += Duration::from_secs(60);
         }
-    } else if game_type == GameType::Skyrim {
+    } else if matches!(game_type, GameType::Skyrim | GameType::OblivionRemastered) {
         let mut file = File::create(local_path.join("loadorder.txt")).unwrap();
         for (plugin, _) in load_order {
             writeln!(file, "{plugin}").unwrap();
@@ -167,6 +169,9 @@ fn data_path(game_type: GameType, game_path: &Path) -> PathBuf {
     match game_type {
         GameType::OpenMW => game_path.join("resources/vfs"),
         GameType::Morrowind => game_path.join("Data Files"),
+        GameType::OblivionRemastered => {
+            game_path.join("OblivionRemastered/Content/Dev/ObvData/Data")
+        }
         _ => game_path.join("Data"),
     }
 }
@@ -315,7 +320,7 @@ impl Fixture {
 }
 
 #[test_parameter]
-pub const ALL_GAME_TYPES: [GameType; 11] = [
+pub const ALL_GAME_TYPES: [GameType; 12] = [
     GameType::Oblivion,
     GameType::Skyrim,
     GameType::Fallout3,
@@ -327,6 +332,7 @@ pub const ALL_GAME_TYPES: [GameType; 11] = [
     GameType::Morrowind,
     GameType::Starfield,
     GameType::OpenMW,
+    GameType::OblivionRemastered,
 ];
 
 mod unicase {

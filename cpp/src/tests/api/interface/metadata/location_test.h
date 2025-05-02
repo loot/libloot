@@ -22,15 +22,14 @@ along with LOOT.  If not, see
 <https://www.gnu.org/licenses/>.
 */
 
-#ifndef LOOT_TESTS_API_INTERNALS_METADATA_LOCATION_TEST
-#define LOOT_TESTS_API_INTERNALS_METADATA_LOCATION_TEST
+#ifndef LOOT_TESTS_API_INTERFACE_METADATA_LOCATION_TEST
+#define LOOT_TESTS_API_INTERFACE_METADATA_LOCATION_TEST
 
 #include <gtest/gtest.h>
 
 #include "loot/metadata/location.h"
 
-namespace loot {
-namespace test {
+namespace loot::test {
 TEST(Location, defaultConstructorShouldInitialiseEmptyStrings) {
   Location location;
 
@@ -232,7 +231,6 @@ TEST(
 
   EXPECT_TRUE(location2 >= location1);
   EXPECT_FALSE(location1 >= location2);
-}
 }
 }
 
