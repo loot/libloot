@@ -80,11 +80,7 @@ std::string TrimDotGhostExtension(std::string&& filename) {
 namespace loot {
 // If the name passed ends in '.ghost', that should be trimmed.
 PluginMetadata::PluginMetadata(std::string_view n) :
-    name_(TrimDotGhostExtension(std::string(n))) {
-  if (IsRegexPlugin()) {
-    nameRegex_ = std::regex(name_, std::regex::ECMAScript | std::regex::icase);
-  }
-}
+    name_(TrimDotGhostExtension(std::string(n))) {}
 
 void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   if (plugin.HasNameOnly())
@@ -193,16 +189,8 @@ bool PluginMetadata::IsRegexPlugin() const {
 }
 
 bool PluginMetadata::NameMatches(std::string_view pluginName) const {
-  if (IsRegexPlugin()) {
-    if (!nameRegex_.has_value()) {
-      throw std::runtime_error("Regex plugin does not have regex object");
-    }
-
-    return std::regex_match(
-        pluginName.begin(), pluginName.end(), nameRegex_.value());
-  }
-
-  return loot::rust::compare_filenames(name_, convert(pluginName)) == 0;
+  const auto metadata = convert(*this);
+  return metadata->name_matches(convert(pluginName));
 }
 
 std::string PluginMetadata::AsYaml() const {
