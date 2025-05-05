@@ -119,7 +119,6 @@ use std::{
     ffi::{CString, c_char, c_uchar, c_uint, c_void},
     sync::{Mutex, atomic::AtomicPtr},
 };
-use unicase::UniCase;
 
 use libloot::set_logging_callback;
 pub use libloot::{is_compatible, libloot_revision, libloot_version};
@@ -180,14 +179,6 @@ pub type OptionalPlugin = Optional<Plugin>;
 pub type OptionalPluginMetadata = Optional<PluginMetadata>;
 
 pub type OptionalCrc = Optional<u32>;
-
-fn compare_filenames(lhs: &str, rhs: &str) -> i8 {
-    match UniCase::new(lhs).cmp(&UniCase::new(rhs)) {
-        std::cmp::Ordering::Less => -1,
-        std::cmp::Ordering::Equal => 0,
-        std::cmp::Ordering::Greater => 1,
-    }
-}
 
 fn set_log_level(level: ffi::LogLevel) -> Result<(), VerboseError> {
     libloot::set_log_level(level.try_into()?);
@@ -295,8 +286,6 @@ mod ffi {
             contents: &[MessageContent],
             language: &str,
         ) -> OptionalMessageContentRef;
-
-        fn compare_filenames(lhs: &str, rhs: &str) -> i8;
     }
 
     extern "Rust" {
@@ -633,6 +622,18 @@ mod ffi {
         pub fn as_str(&self) -> &str;
 
         pub fn boxed_clone(&self) -> Box<Filename>;
+
+        pub fn eq(&self, other: &Filename) -> bool;
+
+        pub fn ne(&self, other: &Filename) -> bool;
+
+        pub fn lt(&self, other: &Filename) -> bool;
+
+        pub fn le(&self, other: &Filename) -> bool;
+
+        pub fn gt(&self, other: &Filename) -> bool;
+
+        pub fn ge(&self, other: &Filename) -> bool;
     }
 
     extern "Rust" {

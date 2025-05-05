@@ -446,7 +446,7 @@ impl From<Box<File>> for libloot::metadata::File {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 #[repr(transparent)]
 pub struct Filename(libloot::metadata::Filename);
 

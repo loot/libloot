@@ -54,6 +54,10 @@ public:
 
 private:
   std::string filename_;
+
+  LOOT_API friend bool operator==(const Filename& lhs, const Filename& rhs);
+
+  LOOT_API friend bool operator<(const Filename& lhs, const Filename& rhs);
 };
 
 /**

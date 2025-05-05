@@ -35,7 +35,8 @@ Filename::Filename(std::string_view filename) : filename_(filename) {}
 Filename::operator std::string() const { return filename_; }
 
 bool operator==(const Filename& lhs, const Filename& rhs) {
-  return loot::rust::compare_filenames(std::string(lhs), std::string(rhs)) == 0;
+  return loot::rust::new_filename(lhs.filename_)
+      ->eq(*loot::rust::new_filename(rhs.filename_));
 }
 
 bool operator!=(const Filename& lhs, const Filename& rhs) {
@@ -43,7 +44,8 @@ bool operator!=(const Filename& lhs, const Filename& rhs) {
 }
 
 bool operator<(const Filename& lhs, const Filename& rhs) {
-  return loot::rust::compare_filenames(std::string(lhs), std::string(rhs)) < 0;
+  return loot::rust::new_filename(lhs.filename_)
+             ->lt(*loot::rust::new_filename(rhs.filename_));
 }
 
 bool operator>(const Filename& lhs, const Filename& rhs) { return rhs < lhs; }

@@ -573,7 +573,6 @@ dependencies = [
  "delegate",
  "libloot",
  "libloot-ffi-errors",
- "unicase",
 ]
 
 [[package]]
