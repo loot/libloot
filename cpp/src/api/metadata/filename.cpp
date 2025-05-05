@@ -26,7 +26,6 @@
 
 #include <stdexcept>
 
-// #include "api/helpers/text.h"
 #include "libloot-cpp/src/lib.rs.h"
 
 namespace loot {
