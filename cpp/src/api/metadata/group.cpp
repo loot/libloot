@@ -35,38 +35,4 @@ std::string Group::GetName() const { return name_; }
 std::string Group::GetDescription() const { return description_; }
 
 std::vector<std::string> Group::GetAfterGroups() const { return afterGroups_; }
-
-bool operator==(const Group& lhs, const Group& rhs) {
-  return lhs.GetName() == rhs.GetName() &&
-         lhs.GetDescription() == rhs.GetDescription() &&
-         lhs.GetAfterGroups() == rhs.GetAfterGroups();
-}
-
-bool operator!=(const Group& lhs, const Group& rhs) { return !(lhs == rhs); }
-
-bool operator<(const Group& lhs, const Group& rhs) {
-  if (lhs.GetName() < rhs.GetName()) {
-    return true;
-  }
-
-  if (rhs.GetName() < lhs.GetName()) {
-    return false;
-  }
-
-  if (lhs.GetDescription() < rhs.GetDescription()) {
-    return true;
-  }
-
-  if (rhs.GetDescription() < lhs.GetDescription()) {
-    return false;
-  }
-
-  return lhs.GetAfterGroups() < rhs.GetAfterGroups();
-}
-
-bool operator>(const Group& lhs, const Group& rhs) { return rhs < lhs; }
-
-bool operator<=(const Group& lhs, const Group& rhs) { return !(lhs > rhs); }
-
-bool operator>=(const Group& lhs, const Group& rhs) { return !(lhs < rhs); }
 }

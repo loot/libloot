@@ -122,6 +122,11 @@ public:
    */
   LOOT_API std::vector<MessageContent> GetDetail() const;
 
+  /**
+   * Compares two PluginCleaningData objects.
+   */
+  LOOT_API auto operator<=>(const PluginCleaningData& rhs) const = default;
+
 private:
   uint32_t crc_{0};
   unsigned int itm_{0};
@@ -130,57 +135,6 @@ private:
   std::string utility_;
   std::vector<MessageContent> detail_;
 };
-
-/**
- * Check if two PluginCleaningData objects are equal by comparing their
- * fields.
- * @returns True if the objects' fields are equal, false otherwise.
- */
-LOOT_API bool operator==(const PluginCleaningData& lhs,
-                         const PluginCleaningData& rhs);
-
-/**
- * Check if two MessageContent objects are not equal.
- * @returns True if the MessageContent objects are not equal, false otherwise.
- */
-LOOT_API bool operator!=(const PluginCleaningData& lhs,
-                         const PluginCleaningData& rhs);
-
-/**
- * A less-than operator implemented with no semantics so that
- * PluginCleaningData objects can be stored in sets.
- * @returns True if the first PluginCleaningData is less than the second
- *          PluginCleaningData, false otherwise.
- */
-LOOT_API bool operator<(const PluginCleaningData& lhs,
-                        const PluginCleaningData& rhs);
-
-/**
- * Check if the first PluginCleaningData object is greater than the second
- * PluginCleaningData object.
- * @returns True if the second PluginCleaningData object is less than the first
- *          PluginCleaningData object, false otherwise.
- */
-LOOT_API bool operator>(const PluginCleaningData& lhs,
-                        const PluginCleaningData& rhs);
-
-/**
- * Check if the first PluginCleaningData object is less than or equal to the
- * second PluginCleaningData object.
- * @returns True if the first PluginCleaningData object is not greater than the
- *          second PluginCleaningData object, false otherwise.
- */
-LOOT_API bool operator<=(const PluginCleaningData& lhs,
-                         const PluginCleaningData& rhs);
-
-/**
- * Check if the first PluginCleaningData object is greater than or equal to the
- * second PluginCleaningData object.
- * @returns True if the first PluginCleaningData object is not less than the
- *          second PluginCleaningData object, false otherwise.
- */
-LOOT_API bool operator>=(const PluginCleaningData& lhs,
-                         const PluginCleaningData& rhs);
 }
 
 #endif

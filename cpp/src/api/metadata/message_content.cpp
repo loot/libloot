@@ -33,39 +33,6 @@ std::string MessageContent::GetText() const { return text_; }
 
 std::string MessageContent::GetLanguage() const { return language_; }
 
-bool operator==(const MessageContent& lhs, const MessageContent& rhs) {
-  return lhs.GetText() == rhs.GetText() &&
-         lhs.GetLanguage() == rhs.GetLanguage();
-}
-
-bool operator!=(const MessageContent& lhs, const MessageContent& rhs) {
-  return !(lhs == rhs);
-}
-
-bool operator<(const MessageContent& lhs, const MessageContent& rhs) {
-  if (lhs.GetText() < rhs.GetText()) {
-    return true;
-  }
-
-  if (rhs.GetText() < lhs.GetText()) {
-    return false;
-  }
-
-  return lhs.GetLanguage() < rhs.GetLanguage();
-}
-
-bool operator>(const MessageContent& lhs, const MessageContent& rhs) {
-  return rhs < lhs;
-}
-
-bool operator<=(const MessageContent& lhs, const MessageContent& rhs) {
-  return !(lhs > rhs);
-}
-
-bool operator>=(const MessageContent& lhs, const MessageContent& rhs) {
-  return !(lhs < rhs);
-}
-
 std::optional<MessageContent> SelectMessageContent(
     const std::vector<MessageContent> content,
     std::string_view language) {

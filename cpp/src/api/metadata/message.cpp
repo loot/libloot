@@ -54,40 +54,4 @@ MessageType Message::GetType() const { return type_; }
 std::vector<MessageContent> Message::GetContent() const { return content_; }
 
 std::string Message::GetCondition() const { return condition_; }
-
-bool operator==(const Message& lhs, const Message& rhs) {
-  return lhs.GetType() == rhs.GetType() &&
-         lhs.GetCondition() == rhs.GetCondition() &&
-         lhs.GetContent() == rhs.GetContent();
-}
-
-bool operator!=(const Message& lhs, const Message& rhs) {
-  return !(lhs == rhs);
-}
-
-bool operator<(const Message& lhs, const Message& rhs) {
-  if (lhs.GetType() < rhs.GetType()) {
-    return true;
-  }
-
-  if (rhs.GetType() < lhs.GetType()) {
-    return false;
-  }
-
-  if (lhs.GetCondition() < rhs.GetCondition()) {
-    return true;
-  }
-
-  if (rhs.GetCondition() < lhs.GetCondition()) {
-    return false;
-  }
-
-  return lhs.GetContent() < rhs.GetContent();
-}
-
-bool operator>(const Message& lhs, const Message& rhs) { return rhs < lhs; }
-
-bool operator<=(const Message& lhs, const Message& rhs) { return !(lhs > rhs); }
-
-bool operator>=(const Message& lhs, const Message& rhs) { return !(lhs < rhs); }
 }

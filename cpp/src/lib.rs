@@ -615,6 +615,8 @@ mod ffi {
 
         pub fn boxed_clone(&self) -> Box<Filename>;
 
+        pub fn cmp(&self, other: &Filename) -> i8;
+
         pub fn eq(&self, other: &Filename) -> bool;
 
         pub fn ne(&self, other: &Filename) -> bool;

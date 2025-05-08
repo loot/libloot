@@ -24,6 +24,7 @@
 #ifndef LOOT_METADATA_FILENAME
 #define LOOT_METADATA_FILENAME
 
+#include <compare>
 #include <string>
 #include <string_view>
 
@@ -53,10 +54,19 @@ public:
 private:
   std::string filename_;
 
-  LOOT_API friend bool operator==(const Filename& lhs, const Filename& rhs);
+  LOOT_API friend std::weak_ordering operator<=>(const Filename& lhs,
+                                                 const Filename& rhs);
 
-  LOOT_API friend bool operator<(const Filename& lhs, const Filename& rhs);
+  LOOT_API friend bool operator==(const Filename& lhs, const Filename& rhs);
 };
+
+/**
+ * Compare two Filename objects.
+ *
+ * Filenames are compared case-insensitively.
+ */
+LOOT_API std::weak_ordering operator<=>(const Filename& lhs,
+                                        const Filename& rhs);
 
 /**
  * Check if two Filename objects are equal by comparing their fields.
@@ -64,44 +74,6 @@ private:
  *          fields are case-sensitively equal, false otherwise.
  */
 LOOT_API bool operator==(const Filename& lhs, const Filename& rhs);
-
-/**
- * Check if two Filename objects are not equal.
- * @returns True if the Filename objects are not equal, false otherwise.
- */
-LOOT_API bool operator!=(const Filename& lhs, const Filename& rhs);
-
-/**
- * A less-than operator implemented with no semantics so that Filename objects
- * can be stored in sets.
- * @returns True if this Filename is less than the given Filename, false
- *          otherwise.
- */
-LOOT_API bool operator<(const Filename& lhs, const Filename& rhs);
-
-/**
- * Check if the first Filename object is greater than the second Filename
- * object.
- * @returns True if the second Filename object is less than the first Filename
- *          object, false otherwise.
- */
-LOOT_API bool operator>(const Filename& lhs, const Filename& rhs);
-
-/**
- * Check if the first Filename object is less than or equal to the second
- * Filename object.
- * @returns True if the first Filename object is not greater than the second
- *          Filename object, false otherwise.
- */
-LOOT_API bool operator<=(const Filename& lhs, const Filename& rhs);
-
-/**
- * Check if the first Filename object is greater than or equal to the second
- * Filename object.
- * @returns True if the first Filename object is not less than the second
- *          Filename object, false otherwise.
- */
-LOOT_API bool operator>=(const Filename& lhs, const Filename& rhs);
 }
 
 #endif

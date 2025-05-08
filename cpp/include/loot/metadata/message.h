@@ -90,54 +90,16 @@ public:
    */
   LOOT_API std::string GetCondition() const;
 
+  /**
+   * Compares two Message objects.
+   */
+  LOOT_API auto operator<=>(const Message& rhs) const = default;
+
 private:
   MessageType type_{MessageType::say};
   std::vector<MessageContent> content_;
   std::string condition_;
 };
-
-/**
- * Check if two Message objects are equal by comparing their fields.
- * @returns True if the objects' fields are equal, false otherwise.
- */
-LOOT_API bool operator==(const Message& lhs, const Message& rhs);
-
-/**
- * Check if two Message objects are not equal.
- * @returns True if the Message objects are not equal, false otherwise.
- */
-LOOT_API bool operator!=(const Message& lhs, const Message& rhs);
-
-/**
- * A less-than operator implemented with no semantics so that Message objects
- * can be stored in sets.
- * @returns Returns true if the first Message is less than the second Message,
- *          and false otherwise.
- */
-LOOT_API bool operator<(const Message& lhs, const Message& rhs);
-
-/**
- * Check if the first Message object is greater than the second Message object.
- * @returns True if the second Message object is less than the first Message
- *          object, false otherwise.
- */
-LOOT_API bool operator>(const Message& lhs, const Message& rhs);
-
-/**
- * Check if the first Message object is less than or equal to the second
- * Message object.
- * @returns True if the first Message object is not greater than the second
- *          Message object, false otherwise.
- */
-LOOT_API bool operator<=(const Message& lhs, const Message& rhs);
-
-/**
- * Check if the first Message object is greater than or equal to the second
- * Message object.
- * @returns True if the first Message object is not less than the second
- *          Message object, false otherwise.
- */
-LOOT_API bool operator>=(const Message& lhs, const Message& rhs);
 }
 
 #endif

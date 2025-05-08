@@ -33,27 +33,22 @@ Filename::Filename(std::string_view filename) : filename_(filename) {}
 
 Filename::operator std::string() const { return filename_; }
 
+std::weak_ordering operator<=>(const Filename& lhs, const Filename& rhs) {
+  auto result = loot::rust::new_filename(lhs.filename_)
+                    ->cmp(*loot::rust::new_filename(rhs.filename_));
+
+  if (result > 0) {
+    return std::weak_ordering::greater;
+  }
+
+  if (result == 0) {
+    return std::weak_ordering::equivalent;
+  }
+
+  return std::weak_ordering::less;
+}
+
 bool operator==(const Filename& lhs, const Filename& rhs) {
-  return loot::rust::new_filename(lhs.filename_)
-      ->eq(*loot::rust::new_filename(rhs.filename_));
-}
-
-bool operator!=(const Filename& lhs, const Filename& rhs) {
-  return !(lhs == rhs);
-}
-
-bool operator<(const Filename& lhs, const Filename& rhs) {
-  return loot::rust::new_filename(lhs.filename_)
-             ->lt(*loot::rust::new_filename(rhs.filename_));
-}
-
-bool operator>(const Filename& lhs, const Filename& rhs) { return rhs < lhs; }
-
-bool operator<=(const Filename& lhs, const Filename& rhs) {
-  return !(lhs > rhs);
-}
-
-bool operator>=(const Filename& lhs, const Filename& rhs) {
-  return !(lhs < rhs);
+  return (lhs <=> rhs) == std::weak_ordering::equivalent;
 }
 }

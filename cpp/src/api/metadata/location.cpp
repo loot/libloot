@@ -31,34 +31,4 @@ Location::Location(std::string_view url, std::string_view name) :
 std::string Location::GetURL() const { return url_; }
 
 std::string Location::GetName() const { return name_; }
-
-bool operator==(const Location& lhs, const Location& rhs) {
-  return lhs.GetURL() == rhs.GetURL() && lhs.GetName() == rhs.GetName();
-}
-
-bool operator!=(const Location& lhs, const Location& rhs) {
-  return !(lhs == rhs);
-}
-
-bool operator<(const Location& lhs, const Location& rhs) {
-  if (lhs.GetURL() < rhs.GetURL()) {
-    return true;
-  }
-
-  if (rhs.GetURL() < lhs.GetURL()) {
-    return false;
-  }
-
-  return lhs.GetName() < rhs.GetName();
-}
-
-bool operator>(const Location& lhs, const Location& rhs) { return rhs < lhs; }
-
-bool operator<=(const Location& lhs, const Location& rhs) {
-  return !(lhs > rhs);
-}
-
-bool operator>=(const Location& lhs, const Location& rhs) {
-  return !(lhs < rhs);
-}
 }

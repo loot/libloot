@@ -79,55 +79,16 @@ public:
    */
   LOOT_API std::vector<std::string> GetAfterGroups() const;
 
+  /**
+   * Compares two Group objects.
+   */
+  LOOT_API auto operator<=>(const Group& rhs) const = default;
+
 private:
   std::string name_{DEFAULT_NAME};
   std::string description_;
   std::vector<std::string> afterGroups_;
 };
-
-/**
- * Check if two Group objects are equal by comparing their names.
- * @returns True if the objects' fields are equal, false otherwise.
- */
-LOOT_API bool operator==(const Group& lhs, const Group& rhs);
-
-/**
- * Check if two Group objects are not equal.
- * @returns True if the Group objects are not equal, false otherwise.
- */
-LOOT_API bool operator!=(const Group& lhs, const Group& rhs);
-
-/**
- * A less-than operator implemented with no semantics so that Group objects
- * can be stored in sets.
- * @returns True if the first Group is less than the second Group, false
- *          otherwise.
- */
-LOOT_API bool operator<(const Group& lhs, const Group& rhs);
-
-/**
- * Check if the first Group object is greater than the second Group
- * object.
- * @returns True if the second Group object is less than the first Group
- *          object, false otherwise.
- */
-LOOT_API bool operator>(const Group& lhs, const Group& rhs);
-
-/**
- * Check if the first Group object is less than or equal to the second
- * Group object.
- * @returns True if the first Group object is not greater than the second
- *          Group object, false otherwise.
- */
-LOOT_API bool operator<=(const Group& lhs, const Group& rhs);
-
-/**
- * Check if the first Group object is greater than or equal to the second
- * Group object.
- * @returns True if the first Group object is not less than the second
- *          Group object, false otherwise.
- */
-LOOT_API bool operator>=(const Group& lhs, const Group& rhs);
 }
 
 #endif

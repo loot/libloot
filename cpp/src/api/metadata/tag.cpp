@@ -36,33 +36,20 @@ std::string Tag::GetName() const { return name_; }
 
 std::string Tag::GetCondition() const { return condition_; }
 
-bool operator==(const Tag& lhs, const Tag& rhs) {
-  return lhs.IsAddition() == rhs.IsAddition() &&
-         lhs.GetName() == rhs.GetName() &&
-         lhs.GetCondition() == rhs.GetCondition();
-}
-
-bool operator!=(const Tag& lhs, const Tag& rhs) { return !(lhs == rhs); }
-
-bool operator<(const Tag& lhs, const Tag& rhs) {
+std::strong_ordering operator<=>(const Tag& lhs, const Tag& rhs) {
   if (lhs.IsAddition() != rhs.IsAddition()) {
-    return lhs.IsAddition() && !rhs.IsAddition();
+    if (lhs.IsAddition()) {
+      return std::strong_ordering::less;
+    }
+
+    return std::strong_ordering::greater;
   }
 
-  if (lhs.GetName() < rhs.GetName()) {
-    return true;
+  auto nameOrder = lhs.GetName() <=> rhs.GetName();
+  if (nameOrder != std::strong_ordering::equal) {
+    return nameOrder;
   }
 
-  if (rhs.GetName() < lhs.GetName()) {
-    return false;
-  }
-
-  return lhs.GetCondition() < rhs.GetCondition();
+  return lhs.GetCondition() <=> rhs.GetCondition();
 }
-
-bool operator>(const Tag& lhs, const Tag& rhs) { return rhs < lhs; }
-
-bool operator<=(const Tag& lhs, const Tag& rhs) { return !(lhs > rhs); }
-
-bool operator>=(const Tag& lhs, const Tag& rhs) { return !(lhs < rhs); }
 }

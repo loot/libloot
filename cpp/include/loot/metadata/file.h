@@ -98,6 +98,11 @@ public:
    */
   LOOT_API std::string GetConstraint() const;
 
+  /**
+   * Compares two File objects.
+   */
+  LOOT_API auto operator<=>(const File& rhs) const = default;
+
 private:
   Filename name_;
   std::string display_;
@@ -105,49 +110,6 @@ private:
   std::string condition_;
   std::string constraint_;
 };
-
-/**
- * Check if two File objects are equal by comparing their fields.
- * @returns True if the objects' fields are equal, false otherwise.
- */
-LOOT_API bool operator==(const File& lhs, const File& rhs);
-
-/**
- * Check if two File objects are not equal.
- * @returns True if the File objects are not equal, false otherwise.
- */
-LOOT_API bool operator!=(const File& lhs, const File& rhs);
-
-/**
- * A less-than operator implemented with no semantics so that File objects can
- * be stored in sets.
- * @returns True if the first File is less than the second File, false
- * otherwise.
- */
-LOOT_API bool operator<(const File& lhs, const File& rhs);
-
-/**
- * Check if the first File object is greater than the second File object.
- * @returns True if the second File object is less than the first File object,
- *          false otherwise.
- */
-LOOT_API bool operator>(const File& lhs, const File& rhs);
-
-/**
- * Check if the first File object is less than or equal to the second File
- * object.
- * @returns True if the first File object is not greater than the second File
- *          object, false otherwise.
- */
-LOOT_API bool operator<=(const File& lhs, const File& rhs);
-
-/**
- * Check if the first File object is greater than or equal to the second File
- * object.
- * @returns True if the first File object is not less than the second File
- *          object, false otherwise.
- */
-LOOT_API bool operator>=(const File& lhs, const File& rhs);
 }
 
 #endif

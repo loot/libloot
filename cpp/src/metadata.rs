@@ -446,7 +446,7 @@ impl From<Box<File>> for libloot::metadata::File {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct Filename(libloot::metadata::Filename);
 
@@ -457,6 +457,14 @@ pub fn new_filename(name: String) -> Box<Filename> {
 impl Filename {
     pub fn boxed_clone(&self) -> Box<Self> {
         Box::new(Self(self.0.clone()))
+    }
+
+    #[expect(
+        clippy::as_conversions,
+        reason = "Ordering is repr(i8) but provides no way to convert to i8 without 'as'"
+    )]
+    pub fn cmp(&self, other: &Self) -> i8 {
+        Ord::cmp(self, other) as i8
     }
 
     delegate! {

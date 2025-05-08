@@ -24,6 +24,7 @@
 #ifndef LOOT_METADATA_TAG
 #define LOOT_METADATA_TAG
 
+#include <compare>
 #include <string>
 #include <string_view>
 
@@ -73,53 +74,28 @@ public:
    */
   LOOT_API std::string GetCondition() const;
 
+  /**
+   * Check if two Tag objects are equal.
+   * @returns True if the objects' fields are equal, false otherwise.
+   */
+  LOOT_API bool operator==(const Tag& rhs) const = default;
+
 private:
   std::string name_;
   bool addTag_{true};
   std::string condition_;
+
+  LOOT_API friend std::strong_ordering operator<=>(const Tag& lhs,
+                                                   const Tag& rhs);
 };
 
 /**
- * Check if two Tag objects are equal.
- * @returns True if the objects' fields are equal, false otherwise.
+ * Compares two Tag objects.
+ *
+ * Tag objects that suggest additions are considered less than those that
+ * suggest removals.
  */
-LOOT_API bool operator==(const Tag& lhs, const Tag& rhs);
-
-/**
- * Check if two Tag objects are not equal.
- * @returns True if the Tag objects are not equal, false otherwise.
- */
-LOOT_API bool operator!=(const Tag& lhs, const Tag& rhs);
-
-/**
- * A less-than operator implemented with no semantics so that Tag objects
- * can be stored in sets.
- * @returns True if the first Tag is less than the second Tag, false otherwise.
- */
-LOOT_API bool operator<(const Tag& lhs, const Tag& rhs);
-
-/**
- * Check if the first Tag object is greater than the second Tag object.
- * @returns True if the second Tag object is less than the first Tag object,
- *          false otherwise.
- */
-LOOT_API bool operator>(const Tag& lhs, const Tag& rhs);
-
-/**
- * Check if the first Tag object is less than or equal to the second Tag
- * object.
- * @returns True if the first Tag object is not greater than the second Tag
- *          object, false otherwise.
- */
-LOOT_API bool operator<=(const Tag& lhs, const Tag& rhs);
-
-/**
- * Check if the first Tag object is greater than or equal to the second Tag
- * object.
- * @returns True if the first Tag object is not less than the second Tag
- *          object, false otherwise.
- */
-LOOT_API bool operator>=(const Tag& lhs, const Tag& rhs);
+LOOT_API std::strong_ordering operator<=>(const Tag& lhs, const Tag& rhs);
 }
 
 #endif

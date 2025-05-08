@@ -47,6 +47,40 @@ TEST(Tag, dataConstructorShouldSetFieldsToGivenValues) {
   EXPECT_EQ("condition", tag.GetCondition());
 }
 
+TEST(Tag, orderingShouldCompareNamesAndConditionsLexicographically) {
+  Tag tag1("name", true, "condition");
+  Tag tag2("name", true, "condition");
+
+  EXPECT_EQ(std::weak_ordering::equivalent, tag1 <=> tag2);
+
+  tag1 = Tag("name");
+  tag2 = Tag("Name");
+
+  EXPECT_EQ(std::weak_ordering::greater, tag1 <=> tag2);
+
+  tag1 = Tag("name", true, "condition");
+  tag2 = Tag("name", true, "Condition");
+
+  EXPECT_EQ(std::weak_ordering::greater, tag1 <=> tag2);
+
+  tag1 = Tag("name1");
+  tag2 = Tag("name2");
+
+  EXPECT_EQ(std::weak_ordering::less, tag1 <=> tag2);
+
+  tag1 = Tag("name", true, "condition1");
+  tag2 = Tag("name", true, "condition2");
+
+  EXPECT_EQ(std::weak_ordering::less, tag1 <=> tag2);
+}
+
+TEST(Tag, orderingShouldMakeAdditionsLessThanRemovals) {
+  Tag tag1("name", true);
+  Tag tag2("name", false);
+
+  EXPECT_EQ(std::weak_ordering::less, tag1 <=> tag2);
+}
+
 TEST(Tag, equalityShouldBeCaseSensitiveOnNameAndCondition) {
   Tag tag1("name", true, "condition");
   Tag tag2("name", true, "condition");

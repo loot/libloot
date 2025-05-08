@@ -71,54 +71,15 @@ public:
    */
   LOOT_API std::string GetLanguage() const;
 
+  /**
+   * Compares two MessageContent objects.
+   */
+  LOOT_API auto operator<=>(const MessageContent& rhs) const = default;
+
 private:
   std::string text_;
   std::string language_{DEFAULT_LANGUAGE};
 };
-
-/**
- * Check if two MessageContent objects are equal by comparing their fields.
- * @returns True if the objects' fields are equal, false otherwise.
- */
-LOOT_API bool operator==(const MessageContent& lhs, const MessageContent& rhs);
-
-/**
- * Check if two MessageContent objects are not equal.
- * @returns True if the MessageContent objects are not equal, false otherwise.
- */
-LOOT_API bool operator!=(const MessageContent& lhs, const MessageContent& rhs);
-
-/**
- * A less-than operator implemented with no semantics so that MessageContent
- * objects can be stored in sets.
- * @returns True if the first MessageContent is less than the second
- *          MessageContent, false otherwise.
- */
-LOOT_API bool operator<(const MessageContent& lhs, const MessageContent& rhs);
-
-/**
- * Check if the first MessageContent object is greater than the second
- * MessageContent object.
- * @returns True if the second MessageContent object is less than the first
- *          MessageContent object, false otherwise.
- */
-LOOT_API bool operator>(const MessageContent& lhs, const MessageContent& rhs);
-
-/**
- * Check if the first MessageContent object is less than or equal to the second
- * MessageContent object.
- * @returns True if the first MessageContent object is not greater than the
- *          second MessageContent object, false otherwise.
- */
-LOOT_API bool operator<=(const MessageContent& lhs, const MessageContent& rhs);
-
-/**
- * Check if the first MessageContent object is greater than or equal to the
- * second MessageContent object.
- * @returns True if the first MessageContent object is not less than the second
- *          MessageContent object, false otherwise.
- */
-LOOT_API bool operator>=(const MessageContent& lhs, const MessageContent& rhs);
 
 /**
  * Choose a MessageContent object from a vector given a language.
