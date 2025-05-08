@@ -1,6 +1,6 @@
-****************
-Copyright Notice
-****************
+*****************
+Copyright Notices
+*****************
 
 LOOT and its API are distributed under the GNU General Public License v3.0. The documentation is distributed under the GNU Free Documentation License v1.3. The full texts of both licenses are included in :doc:`../licenses/texts`.
 
@@ -15,3 +15,5 @@ GNU Free Documentation License Version 1.3 Notice:
   Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.3 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
   A copy of the license is included in :doc:`../licenses/texts`.
+
+.. include:: notices.rst

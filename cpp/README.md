@@ -76,6 +76,8 @@ If running on Linux, replace `.venv\Scripts\activate` with `.venv/bin/activate`.
 
 Alternatively, you can use Docker to avoid changing your development environment, by running `docker run -it --rm -v ${PWD}/docs:/docs/docs -v ${PWD}/build:/docs/build -v ${PWD}/include:/docs/include sphinxdoc/sphinx:7.3.7 bash` to obtain a shell that you can use to run `apt-get update && apt-get install -y doxygen` and then the two commands above.
 
+The documentation files for dependency licenses and copyright notices are auto-generated using [cargo-attribution](https://github.com/ameknite/cargo-attribution): to regenerate them run `py scripts/licenses.py`.
+
 ### Packaging
 
 To package the build:
