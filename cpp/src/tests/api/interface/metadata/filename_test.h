@@ -74,7 +74,6 @@ TEST(Filename, orderingShouldBeWeakAndCaseInsensitivelyLexicographical) {
   filename2 = Filename("name2");
 
   EXPECT_EQ(std::weak_ordering::less, filename1 <=> filename2);
-
 }
 }
 
