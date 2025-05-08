@@ -434,15 +434,7 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplErr
     });
 
     for regex in &*VERSION_REGEXES {
-        let version = regex
-            .captures(description)?
-            .iter()
-            .flat_map(|captures| captures.iter())
-            .flatten()
-            .skip(1) // Skip the first capture as that's the whole regex.
-            .map(|m| m.as_str().trim())
-            .find(|v| !v.is_empty())
-            .map(str::to_owned);
+        let version = find_captured_text(regex, description)?;
 
         if version.is_some() {
             return Ok(version);
@@ -450,6 +442,20 @@ fn extract_version(description: &str) -> Result<Option<String>, Box<RegexImplErr
     }
 
     Ok(None)
+}
+
+fn find_captured_text(regex: &Regex, text: &str) -> Result<Option<String>, Box<RegexImplError>> {
+    let captured_text = regex
+        .captures(text)?
+        .iter()
+        .flat_map(|captures| captures.iter())
+        .flatten()
+        .skip(1) // Skip the first capture as that's the whole regex.
+        .map(|m| m.as_str().trim())
+        .find(|v| !v.is_empty())
+        .map(str::to_owned);
+
+    Ok(captured_text)
 }
 
 #[cfg(test)]

@@ -274,9 +274,7 @@ impl PluginName {
 
     fn matches(&self, other_name: &str) -> bool {
         if let Some(regex) = &self.regex {
-            regex.is_match(other_name).inspect_err(|e| {
-                logging::error!("Encountered an error while trying to match the regex {} to the string {}: {}", regex.as_str(), other_name, e);
-            }).unwrap_or(false)
+            is_regex_match(regex, other_name)
         } else {
             unicase::eq(self.string.as_ref(), other_name)
         }
@@ -380,6 +378,20 @@ fn replace_capturing_groups(regex_string: &str) -> Cow<'_, str> {
     } else {
         Cow::Owned(parts.into_iter().collect())
     }
+}
+
+fn is_regex_match(regex: &Regex, string: &str) -> bool {
+    regex
+        .is_match(string)
+        .inspect_err(|e| {
+            logging::error!(
+                "Encountered an error while trying to match the regex {} to the string {}: {}",
+                regex.as_str(),
+                string,
+                e
+            );
+        })
+        .unwrap_or(false)
 }
 
 impl TryFromYaml for PluginMetadata {
