@@ -44,7 +44,8 @@ public:
                               const std::filesystem::path& dataPath);
 
   bool Evaluate(const std::string& condition);
-  PluginMetadata EvaluateAll(const PluginMetadata& pluginMetadata);
+  std::optional<PluginMetadata> EvaluateAll(
+      const PluginMetadata& pluginMetadata);
 
   void ClearConditionCache();
   void RefreshActivePluginsState(

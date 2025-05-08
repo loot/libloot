@@ -119,7 +119,7 @@ bool ConditionEvaluator::Evaluate(const std::string& condition) {
   return result == LCI_RESULT_TRUE;
 }
 
-PluginMetadata ConditionEvaluator::EvaluateAll(
+std::optional<PluginMetadata> ConditionEvaluator::EvaluateAll(
     const PluginMetadata& pluginMetadata) {
   PluginMetadata evaluatedMetadata(pluginMetadata.GetName());
   evaluatedMetadata.SetLocations(pluginMetadata.GetLocations());
@@ -177,6 +177,10 @@ PluginMetadata ConditionEvaluator::EvaluateAll(
         infoVector.push_back(info);
     }
     evaluatedMetadata.SetCleanInfo(infoVector);
+  }
+
+  if (evaluatedMetadata.HasNameOnly()) {
+    return std::nullopt;
   }
 
   return evaluatedMetadata;

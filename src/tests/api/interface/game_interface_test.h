@@ -93,16 +93,16 @@ TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldClearTheConditionCache) {
   handle_->GetDatabase().SetPluginUserMetadata(metadata);
 
   auto evaluatedMetadata =
-      handle_->GetDatabase().GetPluginUserMetadata(blankEsm, true).value();
-  EXPECT_TRUE(evaluatedMetadata.GetLoadAfterFiles().empty());
+      handle_->GetDatabase().GetPluginUserMetadata(blankEsm, true);
+  EXPECT_FALSE(evaluatedMetadata.has_value());
 
   const auto dataFilePath = gamePath.parent_path() / "Data" / "plugin.esp";
   touch(dataFilePath);
   handle_->SetAdditionalDataPaths({dataFilePath.parent_path()});
 
   evaluatedMetadata =
-      handle_->GetDatabase().GetPluginUserMetadata(blankEsm, true).value();
-  EXPECT_FALSE(evaluatedMetadata.GetLoadAfterFiles().empty());
+      handle_->GetDatabase().GetPluginUserMetadata(blankEsm, true);
+  EXPECT_FALSE(evaluatedMetadata.value().GetLoadAfterFiles().empty());
 }
 
 TEST_P(GameInterfaceTest,

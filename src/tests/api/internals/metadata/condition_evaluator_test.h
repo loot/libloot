@@ -174,7 +174,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
   plugin.SetDirtyInfo({info1, info2});
   plugin.SetCleanInfo({info1, info2});
 
-  EXPECT_NO_THROW(plugin = evaluator_.EvaluateAll(plugin));
+  EXPECT_NO_THROW(plugin = evaluator_.EvaluateAll(plugin).value());
 
   std::vector<File> expectedFiles({file1});
   EXPECT_EQ("group1", plugin.GetGroup().value());
@@ -190,8 +190,7 @@ TEST_P(ConditionEvaluatorTest, evaluateAllShouldEvaluateAllMetadataConditions) {
 TEST_P(ConditionEvaluatorTest, evaluateAllShouldPreserveGroupExplicitness) {
   PluginMetadata plugin(blankEsm);
 
-  EXPECT_NO_THROW(plugin = evaluator_.EvaluateAll(plugin));
-  EXPECT_FALSE(plugin.GetGroup());
+  EXPECT_FALSE(evaluator_.EvaluateAll(plugin).has_value());
 }
 
 TEST_P(ConditionEvaluatorTest,
