@@ -3,7 +3,7 @@ import test from 'ava'
 import { liblootVersion, isCompatible, Group } from '../index.js'
 
 test('liblootVersion', t => {
-  t.is(liblootVersion(), "0.26.1")
+  t.is(liblootVersion(), process.env.npm_package_version)
 });
 
 test('isCompatible', t => {
