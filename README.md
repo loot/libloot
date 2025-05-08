@@ -68,8 +68,10 @@ cargo test
 
 ### API documentation
 
-The public API has doc comments copied from libloot, and the API documentation can be built and viewed using:
+The API documentation can be built and viewed using:
 
 ```
 cargo doc --open
 ```
+
+The C++ wrapper also has more general documentation.

@@ -42,7 +42,7 @@ cmake -B build . -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --parallel
 ```
 
-### Tests & Packaging
+### Tests
 
 The build process also builds a copy of the public API tests from C++ libloot v0.26.1 by default. To skip building the tests, pass `-DLIBLOOT_BUILD_TESTS=OFF` when first running CMake.
 
@@ -52,13 +52,28 @@ If built, the tests can be run using:
 ctest --test-dir build --output-on-failure --parallel -V
 ```
 
+### Documentation
+
+The documentation is built using [Doxygen](http://www.stack.nl/~dimitri/doxygen/), [Breathe](https://breathe.readthedocs.io/en/latest/) and [Sphinx](http://www.sphinx-doc.org/en/stable/). Install Doxygen and Python and make sure they're accessible from your `PATH`, then run:
+
+```
+py -m venv .venv
+.venv\Scripts\activate
+pip install -r docs/requirements.txt
+sphinx-build -b html docs build/docs/html
+```
+
+If running on Linux, replace `.venv\Scripts\activate` with `.venv/bin/activate`.
+
+Alternatively, you can use Docker to avoid changing your development environment, by running `docker run -it --rm -v ${PWD}/docs:/docs/docs -v ${PWD}/build:/docs/build -v ${PWD}/include:/docs/include sphinxdoc/sphinx:7.3.7 bash` to obtain a shell that you can use to run `apt-get update && apt-get install -y doxygen` and then the two commands above.
+
+### Packaging
+
 To package the build:
 
 ```
 cpack --config build/CPackConfig.cmake -C RelWithDebInfo
 ```
-
-This repository (and so the created package) doesn't currently include any of libloot's documentation, besides the API documentation included in the Rust source code.
 
 ## Usage notes
 

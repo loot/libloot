@@ -275,11 +275,10 @@ endif()
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-# TODO: Copy across the docs into this repository?
-# if(LIBLOOT_INSTALL_DOCS)
-#     install(DIRECTORY "${CMAKE_BINARY_DIR}/docs/html/"
-#         DESTINATION ${CMAKE_INSTALL_DOCDIR})
-# endif()
+if(LIBLOOT_INSTALL_DOCS)
+    install(DIRECTORY "${CMAKE_BINARY_DIR}/docs/html/"
+        DESTINATION ${CMAKE_INSTALL_DOCDIR})
+endif()
 
 install(EXPORT liblootTargets
     FILE liblootTargets.cmake
