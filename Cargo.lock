@@ -597,7 +597,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "libloot_python"
+name = "libloot-python"
 version = "0.26.1"
 dependencies = [
  "libloot",
