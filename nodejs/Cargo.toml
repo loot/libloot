@@ -2,6 +2,7 @@
 edition = "2021"
 name = "libloot-nodejs"
 version = "0.26.1"
+license = "GPL-3.0-or-later"
 
 [lib]
 crate-type = ["cdylib"]
