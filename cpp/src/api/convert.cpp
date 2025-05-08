@@ -45,6 +45,12 @@ std::string convert(const ::rust::String& string) {
   return std::string(string);
 }
 
+std::filesystem::path to_path(const ::rust::String& string) {
+  std::u8string_view view(reinterpret_cast<const char8_t*>(string.data()),
+                          string.length());
+  return std::filesystem::path(view);
+}
+
 // Although there's an explicit conversion operator declared, it seems that
 // building the CXX wrapper with MSVC doesn't set __cplusplus correctly as using
 // the operator causes a linker error, so this just reimpls it as a function.
@@ -146,6 +152,10 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
 
 ::rust::Str convert(std::string_view view) {
   return ::rust::Str(view.data(), view.length());
+}
+
+::rust::String convert(const std::filesystem::path& path) {
+  return ::rust::String(reinterpret_cast<const char*>(path.u8string().data()));
 }
 
 ::rust::Box<loot::rust::Group> convert(const loot::Group& group) {

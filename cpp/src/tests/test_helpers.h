@@ -71,10 +71,10 @@ std::filesystem::path getRootTestPath() {
 
   // The non-ASCII character is there to ensure test coverage of non-ASCII path
   // handling.
-  std::string directoryName = u8"libloot-t\u00E9st-";
+  std::u8string directoryName = u8"libloot-t\u00E9st-";
 
   for (int i = 0; i < 16; i += 1) {
-    directoryName.push_back(static_cast<char>(dist(prng)));
+    directoryName.push_back(static_cast<char8_t>(dist(prng)));
   }
 
   return std::filesystem::absolute(std::filesystem::temp_directory_path() /

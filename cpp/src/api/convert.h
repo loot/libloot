@@ -1,6 +1,8 @@
 #ifndef LOOT_API_CONVERT
 #define LOOT_API_CONVERT
 
+#include <filesystem>
+
 #include "libloot-cpp/src/lib.rs.h"
 #include "loot/metadata/group.h"
 #include "loot/metadata/plugin_metadata.h"
@@ -11,6 +13,8 @@ namespace loot {
 /////////////////////
 
 std::string convert(const ::rust::String& string);
+
+std::filesystem::path to_path(const ::rust::String& string);
 
 std::string_view convert(::rust::Str string);
 
@@ -40,6 +44,8 @@ loot::Vertex convert(const loot::rust::Vertex& vertex);
 ///////////////////////
 
 ::rust::Str convert(std::string_view view);
+
+::rust::String convert(const std::filesystem::path& path);
 
 ::rust::Box<loot::rust::Group> convert(const loot::Group& group);
 

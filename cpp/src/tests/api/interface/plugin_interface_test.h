@@ -33,8 +33,8 @@ class PluginInterfaceTest : public ApiGameOperationsTest {
 protected:
   PluginInterfaceTest() :
       ApiGameOperationsTest(),
-      nonAsciiEsp(u8"non\u00C1scii.esp"),
-      otherNonAsciiEsp(u8"other non\u00C1scii.esp"),
+      nonAsciiEsp(reinterpret_cast<const char*>(u8"non\u00C1scii.esp")),
+      otherNonAsciiEsp(reinterpret_cast<const char*>(u8"other non\u00C1scii.esp")),
       blankArchive("Blank" + GetArchiveFileExtension(GetParam())),
       blankSuffixArchive("Blank - Different - suffix" +
                          GetArchiveFileExtension(GetParam())) {}
@@ -90,12 +90,12 @@ protected:
     touch(dataPath / blankSuffixArchive);
 
     auto nonAsciiArchivePath =
-        dataPath / std::filesystem::u8path(u8"non\u00E1scii" +
+        dataPath / std::filesystem::u8path(reinterpret_cast<const char*>(u8"non\u00E1scii") +
                                            GetArchiveFileExtension(GetParam()));
     touch(dataPath / nonAsciiArchivePath);
 
     auto nonAsciiPrefixArchivePath =
-        dataPath / std::filesystem::u8path(u8"other non\u00E1scii2 - suffix" +
+        dataPath / std::filesystem::u8path(reinterpret_cast<const char*>(u8"other non\u00E1scii2 - suffix") +
                                            GetArchiveFileExtension(GetParam()));
     touch(dataPath / nonAsciiPrefixArchivePath);
   }

@@ -35,7 +35,7 @@ constexpr unsigned int ESP_ERROR_PLUGIN_METADATA_NOT_FOUND = 14;
 class GameInterfaceTest : public ApiGameOperationsTest {
 protected:
   GameInterfaceTest() :
-      emptyFile("EmptyFile.esm"), nonAsciiEsm(u8"non\u00C1scii.esm") {
+      emptyFile("EmptyFile.esm"), nonAsciiEsm(reinterpret_cast<const char*>(u8"non\u00C1scii.esm")) {
     // Make sure the plugin with a non-ASCII filename exists.
     std::filesystem::copy_file(dataPath / blankEsm,
                                dataPath / std::filesystem::u8path(nonAsciiEsm));
@@ -531,7 +531,8 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
 
   std::vector<std::string> pluginsToSort;
   for (const auto& plugin : pluginsToLoad) {
-    pluginsToSort.push_back(plugin.filename().u8string());
+    const auto filename = plugin.filename().u8string();
+    pluginsToSort.push_back(std::string(reinterpret_cast<const char *>(filename.data()), filename.length()));
   }
 
   std::vector<std::string> actualOrder = handle_->SortPlugins(pluginsToSort);

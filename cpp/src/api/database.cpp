@@ -10,7 +10,7 @@ Database::Database(::rust::Box<loot::rust::Database>&& database) :
 
 void Database::LoadMasterlist(const std::filesystem::path& masterlistPath) {
   try {
-    database_->load_masterlist(masterlistPath.u8string());
+    database_->load_masterlist(convert(masterlistPath));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -20,8 +20,8 @@ void Database::LoadMasterlistWithPrelude(
     const std::filesystem::path& masterlistPath,
     const std::filesystem::path& masterlistPreludePath) {
   try {
-    database_->load_masterlist_with_prelude(masterlistPath.u8string(),
-                                            masterlistPreludePath.u8string());
+    database_->load_masterlist_with_prelude(convert(masterlistPath),
+                                            convert(masterlistPreludePath));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -29,7 +29,7 @@ void Database::LoadMasterlistWithPrelude(
 
 void Database::LoadUserlist(const std::filesystem::path& userlistPath) {
   try {
-    database_->load_userlist(userlistPath.u8string());
+    database_->load_userlist(convert(userlistPath));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -38,7 +38,7 @@ void Database::LoadUserlist(const std::filesystem::path& userlistPath) {
 void Database::WriteUserMetadata(const std::filesystem::path& outputFile,
                                  const bool overwrite) const {
   try {
-    database_->write_user_metadata(outputFile.u8string(), overwrite);
+    database_->write_user_metadata(convert(outputFile), overwrite);
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -165,7 +165,7 @@ void Database::DiscardAllUserMetadata() {
 void Database::WriteMinimalList(const std::filesystem::path& outputFile,
                                 const bool overwrite) const {
   try {
-    database_->write_minimal_list(outputFile.u8string(), overwrite);
+    database_->write_minimal_list(convert(outputFile), overwrite);
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

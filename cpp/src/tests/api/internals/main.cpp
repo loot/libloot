@@ -29,7 +29,7 @@
 #ifdef _WIN32
 TEST(Filesystem,
      pathStringConstructorDoesNotConvertCharacterEncodingFromUtf8ToNative) {
-  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::string utf8 = reinterpret_cast<const char*>(u8"Andr\u00E9_settings.toml");
   std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
   ASSERT_EQ('\xc3', utf8[4]);
@@ -38,14 +38,14 @@ TEST(Filesystem,
   std::filesystem::path path(utf8);
 
   EXPECT_EQ(utf8, path.string());
-  EXPECT_NE(utf8, path.u8string());
+  EXPECT_NE(utf8, reinterpret_cast<const char*>(path.u8string().c_str()));
   EXPECT_NE(utf16, path.u16string());
 }
 
 TEST(
     Filesystem,
     pathStringAndLocaleConstructorDoesNotConvertCharacterEncodingFromUtf8WithClassicLocale) {
-  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::string utf8 = reinterpret_cast<const char*>(u8"Andr\u00E9_settings.toml");
   std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
   ASSERT_EQ('\xc3', utf8[4]);
@@ -55,12 +55,12 @@ TEST(
 
   EXPECT_EQ(utf8, path.string());
 
-  EXPECT_NE(utf8, path.u8string());
+  EXPECT_NE(utf8, reinterpret_cast<const char *>(path.u8string().c_str()));
   EXPECT_NE(utf16, path.u16string());
 }
 #else
 TEST(Filesystem, pathStringConstructorUsesNativeEncodingOfUtf8) {
-  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::string utf8 = reinterpret_cast<const char*>(u8"Andr\u00E9_settings.toml");
   std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
   ASSERT_EQ('\xc3', utf8[4]);
@@ -69,13 +69,13 @@ TEST(Filesystem, pathStringConstructorUsesNativeEncodingOfUtf8) {
   std::filesystem::path path(utf8);
 
   EXPECT_EQ(utf8, path.string());
-  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf8, reinterpret_cast<const char *>(path.u8string().c_str()));
   EXPECT_EQ(utf16, path.u16string());
 }
 #endif
 
 TEST(Filesystem, u8pathConvertsCharacterEncodingFromUtf8ToNative) {
-  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::string utf8 = reinterpret_cast<const char*>(u8"Andr\u00E9_settings.toml");
   std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
   ASSERT_EQ('\xc3', utf8[4]);
@@ -89,7 +89,7 @@ TEST(Filesystem, u8pathConvertsCharacterEncodingFromUtf8ToNative) {
   EXPECT_EQ(utf8, path.string());
 #endif
 
-  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf8, reinterpret_cast<const char *>(path.u8string().c_str()));
   EXPECT_EQ(utf16, path.u16string());
 }
 

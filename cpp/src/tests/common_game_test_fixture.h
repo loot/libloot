@@ -226,14 +226,25 @@ protected:
            it != std::filesystem::directory_iterator();
            ++it) {
         if (std::filesystem::is_regular_file(it->status())) {
-          std::string filename = it->path().filename().u8string();
-          if (filename == nonPluginFile)
+          std::u8string u8Filename = it->path().filename().u8string();
+          std::string filename(reinterpret_cast<const char*>(u8Filename.data()),
+                               u8Filename.length());
+
+          if (filename == nonPluginFile) {
             continue;
-          if (endsWith(filename, ".ghost"))
-            filename = it->path().stem().u8string();
-          if (endsWith(filename, ".esp") || endsWith(filename, ".esm"))
+          }
+
+          if (filename.ends_with(".ghost")) {
+            u8Filename = it->path().stem().u8string();
+            filename =
+                std::string(reinterpret_cast<const char*>(u8Filename.data()),
+                            u8Filename.length());
+          }
+
+          if (filename.ends_with(".esp") || filename.ends_with(".esm")) {
             loadOrder.emplace(std::filesystem::last_write_time(it->path()),
                               filename);
+          }
         }
       }
       for (const auto& plugin : loadOrder) actual.push_back(plugin.second);
@@ -382,17 +393,6 @@ protected:
     auto bytes = ReadFile(path);
     bytes[9] = 0x8;
     WriteFile(path, bytes);
-  }
-
-  static bool endsWith(const std::string& str, const std::string& suffix) {
-    if (str.length() < suffix.length()) {
-      return false;
-    }
-
-    auto view = std::string_view(str);
-    view.remove_prefix(str.length() - suffix.length());
-
-    return view == suffix;
   }
 
 private:

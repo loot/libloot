@@ -77,10 +77,11 @@ rust::Box<loot::rust::Game> constructGame(
     const std::filesystem::path& localDataPath) {
   try {
     if (localDataPath.empty()) {
-      return loot::rust::new_game(convert(gameType), gamePath.u8string());
+      return loot::rust::new_game(convert(gameType), loot::convert(gamePath));
     } else {
-      return loot::rust::new_game_with_local_path(
-          convert(gameType), gamePath.u8string(), localDataPath.u8string());
+      return loot::rust::new_game_with_local_path(convert(gameType),
+                                                  loot::convert(gamePath),
+                                                  loot::convert(localDataPath));
     }
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(loot::mapError(e));
@@ -134,7 +135,7 @@ void Game::SetAdditionalDataPaths(
   std::vector<::rust::String> path_strings;
   std::vector<::rust::Str> path_strs;
   for (const auto& path : additionalDataPaths) {
-    path_strings.push_back(path.u8string());
+    path_strings.push_back(convert(path));
     path_strs.push_back(path_strings.back());
   }
   try {
@@ -146,7 +147,7 @@ void Game::SetAdditionalDataPaths(
 }
 
 bool Game::IsValidPlugin(const std::filesystem::path& pluginPath) const {
-  return game_->is_valid_plugin(pluginPath.u8string());
+  return game_->is_valid_plugin(convert(pluginPath));
 }
 
 void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
@@ -154,7 +155,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
   std::vector<::rust::String> path_strings;
   std::vector<::rust::Str> path_strs;
   for (const auto& path : pluginPaths) {
-    path_strings.push_back(path.u8string());
+    path_strings.push_back(convert(path));
     path_strs.push_back(path_strings.back());
   }
 

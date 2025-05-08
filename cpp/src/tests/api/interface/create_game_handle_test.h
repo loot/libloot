@@ -154,28 +154,28 @@ TEST_P(
   }
 }
 #else
-TEST_P(CreateGameHandleTest,
-       shouldNotThrowOnWindowsIfLocalPathIsNotGiven) {
+TEST_P(CreateGameHandleTest, shouldNotThrowOnWindowsIfLocalPathIsNotGiven) {
   EXPECT_NO_THROW(CreateGameHandle(GetParam(), gamePath));
 }
 #endif
 
-TEST_P(CreateGameHandleTest,
-       shouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
+TEST_P(CreateGameHandleTest, shouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
   EXPECT_NO_THROW(CreateGameHandle(GetParam(), gamePath, localPath));
 }
 
-TEST_P(
-    CreateGameHandleTest,
+TEST_P(CreateGameHandleTest,
        shouldSetAdditionalDataPathsForFallout4FromMicrosoftStoreOrStarfield) {
   if (GetParam() == GameType::fo4) {
     // Create the file that indicates it's a Microsoft Store install.
     touch(gamePath / "appxmanifest.xml");
   } else if (GetParam() == GameType::openmw) {
     std::ofstream out(gamePath / "openmw.cfg");
-    out << "data-local=\"" << (localPath / "data").u8string() << "\""
-        << std::endl
-        << "config=\"" << localPath.u8string() << "\"";
+    out << "data-local=\""
+        << reinterpret_cast<const char*>(
+               (localPath / "data").u8string().c_str())
+        << "\"" << std::endl
+        << "config=\""
+        << reinterpret_cast<const char*>(localPath.u8string().c_str()) << "\"";
   }
 
   const auto game = CreateGameHandle(GetParam(), gamePath, localPath);
@@ -200,8 +200,8 @@ TEST_P(
 
     const auto expectedSuffix = std::filesystem::u8path("Documents") /
                                 "My Games" / "Starfield" / "Data";
-    EXPECT_TRUE(endsWith(game->GetAdditionalDataPaths()[0].u8string(),
-                                 expectedSuffix.u8string()));
+    EXPECT_TRUE(game->GetAdditionalDataPaths()[0].u8string().ends_with(
+        expectedSuffix.u8string()));
   } else if (GetParam() == GameType::openmw) {
     EXPECT_EQ(std::vector<std::filesystem::path>{localPath / "data"},
               game->GetAdditionalDataPaths());
