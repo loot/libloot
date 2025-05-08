@@ -1,59 +1,99 @@
+/*  LOOT
 
+    A load order optimisation tool for Oblivion, Skyrim, Fallout 3 and
+    Fallout: New Vegas.
+
+    Copyright (C) 2014-2016    WrinklyNinja
+
+    This file is part of LOOT.
+
+    LOOT is free software: you can redistribute
+    it and/or modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 3 of
+    the License, or (at your option) any later version.
+
+    LOOT is distributed in the hope that it will
+    be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with LOOT. If not, see
+    <https://www.gnu.org/licenses/>.
+    */
 
 #include <gtest/gtest.h>
 
-#include "libloot-cpp/src/lib.rs.h"
-#include "rust/cxx.h"
+#include <filesystem>
 
-namespace rust {
-template<typename T>
-bool operator==(const Vec<T>& lhs, const Vec<T>& rhs) {
-  if (lhs.size() != rhs.size()) {
-    return false;
-  }
-  return std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-}
+#ifdef _WIN32
+TEST(Filesystem,
+     pathStringConstructorDoesNotConvertCharacterEncodingFromUtf8ToNative) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
-namespace loot::rust {
-TEST(libloot_version, shouldReturnExpectedValue) {
-  auto version = libloot_version();
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
 
-  EXPECT_EQ(version, "0.26.1");
+  std::filesystem::path path(utf8);
+
+  EXPECT_EQ(utf8, path.string());
+  EXPECT_NE(utf8, path.u8string());
+  EXPECT_NE(utf16, path.u16string());
 }
 
-TEST(libloot_revision, shouldReturnExpectedValue) {
-  auto revision = libloot_revision();
+TEST(
+    Filesystem,
+    pathStringAndLocaleConstructorDoesNotConvertCharacterEncodingFromUtf8WithClassicLocale) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
 
-  EXPECT_EQ(revision, "unknown");
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path(utf8, std::locale::classic());
+
+  EXPECT_EQ(utf8, path.string());
+
+  EXPECT_NE(utf8, path.u8string());
+  EXPECT_NE(utf16, path.u16string());
+}
+#else
+TEST(Filesystem, pathStringConstructorUsesNativeEncodingOfUtf8) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path(utf8);
+
+  EXPECT_EQ(utf8, path.string());
+  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf16, path.u16string());
+}
+#endif
+
+TEST(Filesystem, u8pathConvertsCharacterEncodingFromUtf8ToNative) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path = std::filesystem::u8path(utf8);
+
+#ifdef _WIN32
+  EXPECT_NE(utf8, path.string());
+#else
+  EXPECT_EQ(utf8, path.string());
+#endif
+
+  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf16, path.u16string());
 }
 
-TEST(new_game, shouldThrowIfGivenNonsense) {
-  EXPECT_THROW(new_game(GameType::Fallout3, "foo"), ::rust::Error);
-}
-
-TEST(Message, creation) {
-  auto content = new_message_content(
-      "a message",
-      ::rust::String(std::string(message_content_default_language())));
-
-  auto message = new_message(MessageType::Say, "message2", "invalid condition");
-
-  std::vector<::rust::Box<MessageContent>> contents;
-  contents.push_back(std::move(content));
-  auto multi_message = multilingual_message(
-      MessageType::Say,
-      ::rust::Slice<const ::rust::Box<MessageContent>>(contents),
-      "invalid condition");
-
-  EXPECT_EQ(multi_message->content()[0].text(), "a message");
-  EXPECT_EQ(multi_message->content()[0].language(), "en");
-  EXPECT_EQ(MessageType::Say, multi_message->message_type());
-  EXPECT_EQ(multi_message->condition(), "invalid condition");
-}
-}
-
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
