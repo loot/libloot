@@ -4,20 +4,27 @@ This is an **experimental** reimplementation of [libloot](https://github.com/loo
 
 There is one intentional difference in behaviour: if a plugin has metadata but it is all filtered out when conditions are evaluated, getting its metadata returns `None` instead of a name-only PluginMetadata object.
 
-There are C++, Python and Node.js wrappers in the `cpp`, `python` and `nodejs` subdirectories respectively.
+## Introduction
 
-Expect:
+LOOT is a plugin load order optimisation tool for Starfield, TES III: Morrowind, TES IV: Oblivion, TES IV: Oblivion Remastered, TES V: Skyrim, TES V: Skyrim Special Edition, TES V: Skyrim VR, Fallout 3, Fallout: New Vegas, Fallout 4, Fallout 4 VR and OpenMW. It is designed to assist mod users in avoiding detrimental conflicts, by automatically calculating a load order that satisfies all plugin dependencies and maximises each plugin's impact on the user's game.
 
-- bugs
-- Git history to be rewritten without warning
-- this Git repository to disappear without warning
+LOOT also provides some load order error checking, including checks for requirements, incompatibilities and cyclic dependencies. In addition, it provides a large number of plugin-specific usage notes, bug warnings and Bash Tag suggestions.
 
-If this experiment is successful it will probably end up being merged into the libloot repository, replacing much of its contents.
+libloot provides access to LOOT's metadata and sorting functionality, and the LOOT application is built using it.
 
-## Outstanding issues
+libloot's core is written in Rust, and C++, Python and Node.js wrappers can be found in the `cpp`, `python` and `nodejs` subdirectories respectively.
 
-- It uses more memory than the C++ implementation, and I haven't finished investigating why or if there's anything I can/should do about that.
-- The `saphyr` and `saphyr-parser` dependencies that are used to parse metadata YAML have some rough edges, and compared to the other dependencies they are relatively new, unpopular libraries that are maintained by people I've not heard of before, so they may be relatively risky dependencies.
+## Downloads
+
+Releases are hosted on [GitHub](https://github.com/loot/libloot/releases).
+
+Snapshot builds are available as artifacts from [GitHub Actions runs](https://github.com/loot/libloot/actions), though they are only kept for 90 days and can only be downloaded when logged into a GitHub account. To mitigate these restrictions, snapshot build artifacts include a GPG signature that can be verified using the public key hosted [here](https://loot.github.io/.well-known/openpgpkey/hu/mj86by43a9hz8y8rbddtx54n3bwuuucg), which means it's possible to re-upload the artifacts elsewhere and still prove their authenticity.
+
+The snapshot build artifacts are named like so:
+
+```
+libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.<file extension>
+```
 
 ## Build
 
@@ -43,7 +50,7 @@ cargo build --release
 
 ### Tests
 
-The tests include a complete port of libloot's tests, and can be run by first extracting the [testing-plugins](https://github.com/Ortham/testing-plugins) archive to this readme's directory (so that there's a `testing-plugins` directory there).
+Before running the tests, first extract the [testing-plugins](https://github.com/Ortham/testing-plugins) archive to this readme's directory (so that there's a `testing-plugins` directory there).
 
 To do that using `curl` and `tar` in a POSIX shell:
 

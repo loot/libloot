@@ -1,6 +1,6 @@
 # libloot-rs C++ wrapper
 
-This is an **experimental** wrapper around the Rust reimplementation of libloot that provides a C++ interface that's ABI-compatible with libloot v0.26.1.
+This is a wrapper around libloot that provides a C++ interface that's ABI-compatible with libloot v0.26.1.
 
 The wrapper has two layers:
 
@@ -8,6 +8,15 @@ The wrapper has two layers:
 - a shared library built using CMake, which wraps that C++ interface to provide another that is ABI-compatible with C++ libloot.
 
 ## Building
+
+libloot uses the following CMake variables to set build parameters:
+
+Parameter | Values | Default |Description
+----------|--------|---------|-----------
+`BUILD_SHARED_LIBS` | `ON`, `OFF` | `ON` | Whether or not to build a shared libloot binary.
+`LIBLOOT_BUILD_TESTS` | `ON`, `OFF` | `ON` | Whether or not to build libloot's tests.
+`LIBLOOT_INSTALL_DOCS` | `ON`, `OFF` | `ON` | Whether or not to install libloot's docs (which need to be built separately).
+`RUN_CLANG_TIDY` | `ON`, `OFF` | `OFF` | Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator.
 
 ### Windows
 
@@ -44,7 +53,7 @@ cmake --build build --parallel
 
 ### Tests
 
-The build process also builds a copy of the public API tests from C++ libloot v0.26.1 by default. To skip building the tests, pass `-DLIBLOOT_BUILD_TESTS=OFF` when first running CMake.
+The build process also builds the test suite by default. To skip building the tests, pass `-DLIBLOOT_BUILD_TESTS=OFF` when first running CMake.
 
 If built, the tests can be run using:
 
