@@ -185,9 +185,20 @@ jobs:
 
           echo "filename=libloot-${VERSION}-${PLATFORM}.${EXTENSION}" >> $GITHUB_OUTPUT
 
+      - name: Import GPG key
+        run: echo -n "${{ secrets.GPG_SIGNING_KEY }}" | gpg --import
+        if: github.event_name == 'push'
+
+      - name: Sign archive
+        working-directory: cpp/build/package
+        run: gpg --output "${{ steps.archive-name.outputs.filename }}.sig" --detach-sig "${{ steps.archive-name.outputs.filename }}"
+        if: github.event_name == 'push'
+
       - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.archive-name.outputs.filename }}
-          path: cpp/build/package/${{ steps.archive-name.outputs.filename }}
+          path: |
+            cpp/build/package/${{ steps.archive-name.outputs.filename }}
+            cpp/build/package/${{ steps.archive-name.outputs.filename }}.sig
         if: github.event_name == 'push'
