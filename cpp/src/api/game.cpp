@@ -67,6 +67,10 @@ loot::rust::GameType convert(loot::GameType gameType) {
   }
 }
 
+std::filesystem::path to_path(const rust::String& string) {
+    return std::filesystem::u8path(string.begin(), string.end());
+}
+
 rust::Box<loot::rust::Game> constructGame(
     const loot::GameType gameType,
     const std::filesystem::path& gamePath,
@@ -115,9 +119,8 @@ DatabaseInterface& Game::GetDatabase() { return database_; }
 std::vector<std::filesystem::path> Game::GetAdditionalDataPaths() const {
   try {
     std::vector<std::filesystem::path> paths;
-    for (const auto& path_str : game_->additional_data_paths()) {
-      paths.push_back(
-          std::filesystem::u8path(path_str.begin(), path_str.end()));
+    for (const auto& path_string : game_->additional_data_paths()) {
+      paths.push_back(to_path(path_string));
     }
 
     return paths;
@@ -225,8 +228,7 @@ bool Game::IsLoadOrderAmbiguous() const {
 
 std::filesystem::path Game::GetActivePluginsFilePath() const {
   try {
-    const auto path_string = game_->active_plugins_file_path();
-    return std::filesystem::u8path(path_string.begin(), path_string.end());
+    return to_path(game_->active_plugins_file_path());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
