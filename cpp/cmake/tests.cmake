@@ -114,18 +114,18 @@ gtest_discover_tests(libloot_tests DISCOVERY_TIMEOUT 10)
 ##############################
 
 target_include_directories(libloot_internals_tests PRIVATE
-${LIBLOOT_INCLUDE_DIRS})
+    ${LIBLOOT_INCLUDE_DIRS})
 
 target_include_directories(libloot_internals_tests SYSTEM PRIVATE
-${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
+    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
 target_include_directories(libloot_tests PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(libloot_tests SYSTEM PRIVATE
     ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-target_compile_definitions(libloot_internals_tests PRIVATE
-    UNICODE _UNICODE LOOT_STATIC)
+    target_compile_definitions(libloot_internals_tests PRIVATE
+        UNICODE _UNICODE LOOT_STATIC)
     target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
 
     if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
