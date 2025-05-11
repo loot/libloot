@@ -1,6 +1,6 @@
 # libloot
 
-![CI](https://github.com/loot/libloot/workflows/CI/badge.svg?branch=master&event=push)
+![CI](https://github.com/loot/libloot/actions/workflows/ci.yml/badge.svg?branch=master&event=push)
 [![Documentation Status](https://readthedocs.org/projects/loot-api/badge/?version=latest)](http://loot-api.readthedocs.io/en/latest/?badge=latest)
 
 ## Introduction
