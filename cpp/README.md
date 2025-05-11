@@ -63,18 +63,12 @@ ctest --test-dir build --output-on-failure --parallel -V
 
 ### Documentation
 
-The documentation is built using [Doxygen](http://www.stack.nl/~dimitri/doxygen/), [Breathe](https://breathe.readthedocs.io/en/latest/) and [Sphinx](http://www.sphinx-doc.org/en/stable/). Install Doxygen and Python and make sure they're accessible from your `PATH`, then run:
+Install [Doxygen](https://www.doxygen.nl/), Python and [uv](https://docs.astral.sh/uv/getting-started/installation/) and make sure they're accessible from your `PATH`, then run:
 
 ```
-py -m venv .venv
-.venv\Scripts\activate
-pip install -r docs/requirements.txt
-sphinx-build -b html docs build/docs/html
+cd docs
+uv run -- sphinx-build -b html . ../build/docs/html
 ```
-
-If running on Linux, replace `.venv\Scripts\activate` with `.venv/bin/activate`.
-
-Alternatively, you can use Docker to avoid changing your development environment, by running `docker run -it --rm -v ${PWD}/docs:/docs/docs -v ${PWD}/build:/docs/build -v ${PWD}/include:/docs/include sphinxdoc/sphinx:7.3.7 bash` to obtain a shell that you can use to run `apt-get update && apt-get install -y doxygen` and then the two commands above.
 
 The documentation files for dependency licenses and copyright notices are auto-generated using [cargo-attribution](https://github.com/ameknite/cargo-attribution): to regenerate them run `py scripts/licenses.py`.
 

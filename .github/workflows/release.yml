@@ -87,15 +87,16 @@ jobs:
           python-version: '3.13'
 
       - name: Install packages for building docs
-        working-directory: cpp
+        working-directory: cpp/docs
         run: |
           nuget install doxygen -Version 1.8.14
           echo "${{ github.workspace }}\Doxygen.1.8.14\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          python -m pip install -r docs/requirements.txt
+          pipx install uv
+          uv sync
 
       - name: Build docs
         working-directory: cpp
-        run: sphinx-build -b html docs build\docs\html
+        run: uv run -- sphinx-build -b html . ../build/docs/html
 
       - name: Build archive
         id: build-archive
