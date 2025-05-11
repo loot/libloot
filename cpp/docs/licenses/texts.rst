@@ -7,13 +7,13 @@ Copyright License Texts
 GNU General Public License 3.0
 ==============================
 
-.. include:: GNU GPL v3.txt
+.. include:: GPL-3.0-or-later
   :literal:
 
 GNU Free Documentation License 1.3
 ==================================
 
-.. include:: GNU FDL v1.3.txt
+.. include:: GFDL-1.3-no-invariants-or-later
   :literal:
 
 Apache License 2.0
