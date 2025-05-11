@@ -32,7 +32,7 @@ jobs:
           cargo clippy -- --version
           cargo clippy --all --all-targets -- -Dwarnings
 
-  build:
+  rust:
     strategy:
       matrix:
         target:
@@ -56,11 +56,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          architecture: ${{ matrix.target.architecture }}
-
       - uses: actions/cache@v4
         with:
           path: |
@@ -69,7 +64,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
@@ -97,32 +92,51 @@ jobs:
         uses: coverallsapp/github-action@v2
         if: github.event_name == 'push'
 
-      - name: Build the Python wrapper
+  cpp:
+    strategy:
+      matrix:
+        target:
+          - os: windows-2025
+            platform: Win32
+            triple: i686-pc-windows-msvc
+            architecture: x86
+
+          - os: windows-2025
+            platform: x64
+            triple: x86_64-pc-windows-msvc
+            architecture: x64
+
+          - os: ubuntu-24.04
+            platform: x86_64
+            triple: x86_64-unknown-linux-gnu
+            architecture: x64
+
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Rust i686-pc-windows-msvc target
+        run: rustup target add i686-pc-windows-msvc
+        if: matrix.target.platform == 'Win32'
+
+      - name: Set LIBLOOT_REVISION
         shell: bash
-        working-directory: python
-        run: |
-          python -m venv .venv
-
-          if [[ "${{ runner.os }}" == "Windows" ]]
-          then
-            ./.venv/Scripts/activate
-          else
-            . .venv/bin/activate
-          fi
-
-          pip install maturin
-
-          maturin build --target ${{ matrix.target.triple }} --release
-
-      - name: Build the Node.js wrapper
-        working-directory: nodejs
-        run: |
-          npm install
-          npm run build
-
-      - name: Run the Node.js wrapper's tests
-        working-directory: nodejs
-        run: npm test
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Get descriptive libloot version
         id: get-libloot-version
@@ -222,3 +236,119 @@ jobs:
             cpp/build/package/${{ steps.archive-name.outputs.filename }}
             cpp/build/package/${{ steps.archive-name.outputs.filename }}.sig
         if: github.event_name == 'push'
+
+  python:
+    strategy:
+      matrix:
+        target:
+          - os: windows-2025
+            platform: Win32
+            triple: i686-pc-windows-msvc
+            architecture: x86
+
+          - os: windows-2025
+            platform: x64
+            triple: x86_64-pc-windows-msvc
+            architecture: x64
+
+          - os: ubuntu-24.04
+            platform: x86_64
+            triple: x86_64-unknown-linux-gnu
+            architecture: x64
+
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: ${{ matrix.target.architecture }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Rust i686-pc-windows-msvc target
+        run: rustup target add i686-pc-windows-msvc
+        if: matrix.target.platform == 'Win32'
+
+      - name: Set LIBLOOT_REVISION
+        shell: bash
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build the Python wrapper
+        shell: bash
+        working-directory: python
+        run: |
+          python -m venv .venv
+
+          if [[ "${{ runner.os }}" == "Windows" ]]
+          then
+            ./.venv/Scripts/activate
+          else
+            . .venv/bin/activate
+          fi
+
+          pip install maturin
+
+          maturin build --target ${{ matrix.target.triple }} --release
+
+  nodejs:
+    strategy:
+      matrix:
+        target:
+          - os: windows-2025
+            platform: Win32
+            triple: i686-pc-windows-msvc
+            architecture: x86
+
+          - os: windows-2025
+            platform: x64
+            triple: x86_64-pc-windows-msvc
+            architecture: x64
+
+          - os: ubuntu-24.04
+            platform: x86_64
+            triple: x86_64-unknown-linux-gnu
+            architecture: x64
+
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Rust i686-pc-windows-msvc target
+        run: rustup target add i686-pc-windows-msvc
+        if: matrix.target.platform == 'Win32'
+
+      - name: Set LIBLOOT_REVISION
+        shell: bash
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build the Node.js wrapper
+        working-directory: nodejs
+        run: |
+          npm install
+          npm run build
+
+      - name: Run the Node.js wrapper's tests
+        working-directory: nodejs
+        run: npm test
