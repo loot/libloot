@@ -2,7 +2,7 @@
 name = "libloot"
 version = "0.26.1"
 edition = "2024"
-license = "GPL-3.0"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 crc32fast = "1.4.2"
