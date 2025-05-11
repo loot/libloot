@@ -89,7 +89,7 @@ jobs:
             -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" \
             -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" \
             -B build
-          cmake --build build
+          cmake --build build --parallel
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --parallel
@@ -196,7 +196,7 @@ jobs:
             -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" `
             -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" `
             -B build
-          cmake --build build --config ${{ env.MSVC_CONFIG }}
+          cmake --build build --parallel --config ${{ env.MSVC_CONFIG }}
 
       - name: Run tests
         run: ctest --test-dir build --build-config ${{ env.MSVC_CONFIG }} --output-on-failure --parallel
