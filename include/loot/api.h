@@ -44,7 +44,6 @@
 
 namespace loot {
 /**
- * @}
  * @name Logging Functions
  * @{
  */
