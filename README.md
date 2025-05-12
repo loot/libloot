@@ -63,7 +63,7 @@ You may also need to set `CMAKE_PREFIX_PATH` if CMake cannot find Boost.
 
 ## Building The Documentation
 
-The documentation is built using [Doxygen](http://www.stack.nl/~dimitri/doxygen/), [Breathe](https://breathe.readthedocs.io/en/latest/) and [Sphinx](http://www.sphinx-doc.org/en/stable/). Install Doxygen and Python and make sure they're accessible from your `PATH`, then run:
+The documentation is built using [Doxygen](https://www.doxygen.nl/), [Breathe](https://www.breathe-doc.org/) and [Sphinx](http://www.sphinx-doc.org/en/stable/). Install Doxygen and Python and make sure they're accessible from your `PATH`, then run:
 
 ```
 py -m venv .venv
