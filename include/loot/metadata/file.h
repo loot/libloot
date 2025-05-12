@@ -87,6 +87,10 @@ public:
    */
   LOOT_API std::vector<MessageContent> GetDetail() const;
 
+  /**
+   * Get the constraint that applies to the file.
+   * @return The file's constraint.
+   */
   LOOT_API std::string GetConstraint() const;
 
 private:
