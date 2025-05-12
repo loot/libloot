@@ -40,7 +40,6 @@ class File : public ConditionalMetadata {
 public:
   /**
    * Construct a File with blank name, display and condition strings.
-   * @return A File object.
    */
   LOOT_API File() = default;
 
@@ -60,7 +59,6 @@ public:
    * @param  constraint
    *         A condition string that must evaluate to true for the file's existence
    *         to be recognised.
-   * @return A File object.
    */
   LOOT_API explicit File(std::string_view name,
                          std::string_view display = "",

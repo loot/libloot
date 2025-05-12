@@ -48,7 +48,6 @@ class PluginMetadata {
 public:
   /**
    * Construct a PluginMetadata object with a blank plugin name and no metadata.
-   * @return A PluginMetadata object.
    */
   LOOT_API PluginMetadata() = default;
 
@@ -57,7 +56,6 @@ public:
    * given filename.
    * @param  name
    *         The filename of the plugin that the object is constructed for.
-   * @return A PluginMetadata object.
    */
   LOOT_API explicit PluginMetadata(std::string_view name);
 
