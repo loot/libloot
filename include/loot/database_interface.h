@@ -50,7 +50,7 @@ public:
    * @brief Loads the masterlist from the path specified.
    * @details Can be called multiple times, each time replacing the
    *          previously-loaded data.
-   * @param masterlist_path
+   * @param masterlistPath
    *        The relative or absolute path to the masterlist file that should be
    *        loaded.
    */
@@ -62,10 +62,10 @@ public:
             specified.
    * @details Can be called multiple times, each time replacing the
    *          previously-loaded data.
-   * @param masterlist_path
+   * @param masterlistPath
    *        The relative or absolute path to the masterlist file that should be
    *        loaded.
-   * @param masterlist_prelude_path
+   * @param masterlistPreludePath
    *        The relative or absolute path to the masterlist prelude file that
    *        should be loaded.
    */
@@ -77,7 +77,7 @@ public:
    * @brief Loads the userlist from the path specified.
    * @details Can be called multiple times, each time replacing the
    *          previously-loaded data.
-   * @param userlist_path
+   * @param userlistPath
    *        The relative or absolute path to the userlist file that should be
    *        loaded.
    */
@@ -107,7 +107,7 @@ public:
   virtual void WriteMinimalList(const std::filesystem::path& outputFile,
                                 const bool overwrite) const = 0;
 
-  /** 
+  /**
    * @brief Evaluate the given condition string.
    * @param condition A condition string.
    */
