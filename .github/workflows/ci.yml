@@ -162,6 +162,7 @@ jobs:
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
+        if: matrix.platform == 'Win32'
 
       - name: Get Boost metadata
         id: boost-metadata
