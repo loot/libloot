@@ -2,6 +2,39 @@
 Version History
 ***************
 
+0.26.2 - 2025-05-13
+===================
+
+Fixed
+-----
+
+- Various minor content issues in the API's Doxygen doc comments.
+
+Changed
+-------
+
+- When LOOT sorts an Oblivion Remastered it will now force master files to load
+  before non-master files, like for most other games. Although Oblivion
+  Remastered does allow non-master files to load before master files, doing so
+  can cause issues. As a result, :cpp:any:`loot::PluginInterface::IsMaster()`
+  will now return true for master-flagged Oblivion Remastered plugins.
+- When condition evaluation removes all metadata that was found for a plugin,
+  :cpp:any:`loot::DatabaseInterface::GetPluginMetadata()` and
+  :cpp:any:`loot::DatabaseInterface::GetPluginUserMetadata()` will now return
+  ``std::nullopt`` instead of a :cpp:any:`loot::PluginMetadata` object that
+  only has a name set.
+- The declaration of Python dependencies needed to build libloot's docs have
+  been migrated from ``requirements.txt`` to ``pyproject.toml``.
+- The `uv`_ utility is now used to manage the docs' Python dependencies for
+  more reproducible builds.
+- Updated fmt to v11.2.0.
+- Updated spdlog to v1.15.3.
+- Updated Sphinx to v8.2.3.
+- Updated Breathe to v4.36.0.
+- Updated sphinx_rtd_theme to v3.0.2.
+
+.. _uv: https://docs.astral.sh/uv/
+
 0.26.1 - 2025-05-01
 ===================
 
