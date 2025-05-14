@@ -109,37 +109,9 @@ struct convert<loot::Message> {
         formatArgStore.push_back(sub);
       }
 
-      static const std::regex boostSyntax(
-          "%(\\d+)%", std::regex::ECMAScript | std::regex::icase);
-
       for (auto& mc : content) {
-        // Replace the old Boost.Format placeholder syntax for backward
-        // compatibility. To be removed after at least one major release of
-        // libloot to allow migration to the new syntax.
-        auto text = mc.GetText();
-        std::smatch match;
-        while (
-            std::regex_search(text.cbegin(), text.cend(), match, boostSyntax)) {
-          if (match.size() > 1) {
-            const auto n = std::stoul(match[1]);
-            if (n > 0) {
-              const auto newPlaceholder = "{" + std::to_string(n - 1) + "}";
-              text.replace(match[0].first, match[0].second, newPlaceholder);
-            } else {
-              throw RepresentationException(
-                  node.Mark(),
-                  "bad conversion: found zero-indexed placeholder using old "
-                  "syntax");
-            }
-          } else {
-            throw RepresentationException(node.Mark(),
-                                          "bad conversion: only partially "
-                                          "matched old placeholder syntax");
-          }
-        }
-
         try {
-          const auto formattedText = fmt::vformat(text, formatArgStore);
+          const auto formattedText = fmt::vformat(mc.GetText(), formatArgStore);
           mc = loot::MessageContent(formattedText, mc.GetLanguage());
         } catch (const fmt::format_error& e) {
           throw RepresentationException(
