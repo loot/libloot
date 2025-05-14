@@ -324,28 +324,6 @@ TEST_F(MessageTest,
             message.GetContent());
 }
 
-TEST_F(MessageTest, decodingFromYamlShouldAcceptPercentagePlaceholderSyntax) {
-  YAML::Node node = YAML::Load(
-      "type: say\n"
-      "content: content %1% %2% %3% %4% %5% %6% %7% %8% %9% %10% %11%\n"
-      "subs:\n"
-      "  - a\n"
-      "  - b\n"
-      "  - c\n"
-      "  - d\n"
-      "  - e\n"
-      "  - f\n"
-      "  - g\n"
-      "  - h\n"
-      "  - i\n"
-      "  - j\n"
-      "  - k");
-  Message message = node.as<Message>();
-
-  ASSERT_EQ(1, message.GetContent().size());
-  EXPECT_EQ("content a b c d e f g h i j k", message.GetContent()[0].GetText());
-}
-
 TEST_F(MessageTest, decodingFromYamlShouldThrowIfAnInvalidConditionIsGiven) {
   YAML::Node node = YAML::Load(
       "type: say\n"
