@@ -241,8 +241,14 @@ pub struct Vertex(libloot::Vertex);
 #[napi]
 impl Vertex {
     #[napi(constructor)]
-    pub fn new(name: String) -> Self {
-        Self(libloot::Vertex::new(name))
+    pub fn new(name: String, out_edge_type: Option<EdgeType>) -> Self {
+        let mut vertex = libloot::Vertex::new(name);
+
+        if let Some(out_edge_type) = out_edge_type {
+            vertex = vertex.with_out_edge_type(out_edge_type.into());
+        }
+
+        Self(vertex)
     }
 
     #[napi(getter)]
@@ -256,12 +262,6 @@ impl Vertex {
             .out_edge_type()
             .map(|e| e.try_into().map_err(Into::into))
             .transpose()
-    }
-
-    #[napi(setter)]
-    pub fn set_out_edge_type(&mut self, out_edge_type: EdgeType) {
-        let out_edge_type = out_edge_type.into();
-        self.0.set_out_edge_type(out_edge_type);
     }
 }
 

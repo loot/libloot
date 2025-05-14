@@ -238,6 +238,7 @@ mod ffi {
     }
 
     pub enum EdgeType {
+        None,
         Hardcoded,
         MasterFlag,
         Master,
@@ -512,13 +513,11 @@ mod ffi {
     extern "Rust" {
         type Vertex;
 
-        pub fn new_vertex(name: String) -> Box<Vertex>;
+        pub fn new_vertex(name: String, out_edge_type: EdgeType) -> Result<Box<Vertex>>;
 
         pub fn name(&self) -> &str;
 
-        pub fn out_edge_type(&self) -> Result<u8>;
-
-        pub fn set_out_edge_type(&mut self, #[into] out_edge_type: EdgeType) -> Result<()>;
+        pub fn out_edge_type(&self) -> Result<EdgeType>;
 
         pub fn boxed_clone(&self) -> Box<Vertex>;
     }

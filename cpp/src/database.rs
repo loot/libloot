@@ -220,22 +220,23 @@ impl Database {
 #[repr(transparent)]
 pub struct Vertex(libloot::Vertex);
 
-pub fn new_vertex(name: String) -> Box<Vertex> {
-    Box::new(Vertex(libloot::Vertex::new(name)))
+pub fn new_vertex(name: String, out_edge_type: EdgeType) -> Result<Box<Vertex>, VerboseError> {
+    let mut vertex = libloot::Vertex::new(name);
+
+    if out_edge_type != EdgeType::None {
+        vertex = vertex.with_out_edge_type(out_edge_type.try_into()?);
+    }
+
+    Ok(Box::new(Vertex(vertex)))
 }
 
 impl Vertex {
     // A value of 255 is used to indicate that there is no out edge.
-    pub fn out_edge_type(&self) -> Result<u8, VerboseError> {
+    pub fn out_edge_type(&self) -> Result<EdgeType, VerboseError> {
         match self.0.out_edge_type() {
-            Some(e) => Ok(EdgeType::try_from(e)?.repr),
-            None => Ok(u8::MAX),
+            Some(e) => EdgeType::try_from(e).map_err(Into::into),
+            None => Ok(EdgeType::None),
         }
-    }
-
-    pub fn set_out_edge_type(&mut self, out_edge_type: EdgeType) -> Result<(), VerboseError> {
-        self.0.set_out_edge_type(out_edge_type.try_into()?);
-        Ok(())
     }
 
     pub fn boxed_clone(&self) -> Box<Self> {

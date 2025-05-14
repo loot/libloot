@@ -59,7 +59,7 @@ impl Vertex {
     /// Set the type of the edge going from this vertex to the next in the path.
     #[must_use]
     pub fn with_out_edge_type(mut self, out_edge_type: EdgeType) -> Self {
-        self.set_out_edge_type(out_edge_type);
+        self.out_edge_type = Some(out_edge_type);
         self
     }
 
@@ -71,11 +71,5 @@ impl Vertex {
     /// Get the type of the edge going from this vertex to the next in the path.
     pub fn out_edge_type(&self) -> Option<EdgeType> {
         self.out_edge_type
-    }
-
-    /// Set the type of the edge going from this vertex to the next in the path.
-    pub fn set_out_edge_type(&mut self, out_edge_type: EdgeType) -> &mut Self {
-        self.out_edge_type = Some(out_edge_type);
-        self
     }
 }

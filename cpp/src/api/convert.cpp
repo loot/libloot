@@ -2,6 +2,41 @@
 
 #include "api/exception/exception.h"
 
+namespace {
+std::optional<loot::EdgeType> convert(loot::rust::EdgeType edgeType) {
+  switch (edgeType) {
+    case loot::rust::EdgeType::Hardcoded:
+      return loot::EdgeType::hardcoded;
+    case loot::rust::EdgeType::MasterFlag:
+      return loot::EdgeType::masterFlag;
+    case loot::rust::EdgeType::Master:
+      return loot::EdgeType::master;
+    case loot::rust::EdgeType::MasterlistRequirement:
+      return loot::EdgeType::masterlistRequirement;
+    case loot::rust::EdgeType::UserRequirement:
+      return loot::EdgeType::userRequirement;
+    case loot::rust::EdgeType::MasterlistLoadAfter:
+      return loot::EdgeType::masterlistLoadAfter;
+    case loot::rust::EdgeType::UserLoadAfter:
+      return loot::EdgeType::userLoadAfter;
+    case loot::rust::EdgeType::MasterlistGroup:
+      return loot::EdgeType::masterlistGroup;
+    case loot::rust::EdgeType::UserGroup:
+      return loot::EdgeType::userGroup;
+    case loot::rust::EdgeType::RecordOverlap:
+      return loot::EdgeType::recordOverlap;
+    case loot::rust::EdgeType::AssetOverlap:
+      return loot::EdgeType::assetOverlap;
+    case loot::rust::EdgeType::TieBreak:
+      return loot::EdgeType::tieBreak;
+    case loot::rust::EdgeType::BlueprintMaster:
+      return loot::EdgeType::blueprintMaster;
+    default:
+      return std::nullopt;
+  }
+}
+}
+
 namespace loot {
 // To public types
 /////////////////////
@@ -93,42 +128,9 @@ loot::PluginMetadata convert(const loot::rust::PluginMetadata& metadata) {
   return output;
 }
 
-std::optional<loot::EdgeType> convert(uint8_t edgeType) {
-  switch (edgeType) {
-    case static_cast<uint8_t>(loot::rust::EdgeType::Hardcoded):
-      return loot::EdgeType::hardcoded;
-    case static_cast<uint8_t>(loot::rust::EdgeType::MasterFlag):
-      return loot::EdgeType::masterFlag;
-    case static_cast<uint8_t>(loot::rust::EdgeType::Master):
-      return loot::EdgeType::master;
-    case static_cast<uint8_t>(loot::rust::EdgeType::MasterlistRequirement):
-      return loot::EdgeType::masterlistRequirement;
-    case static_cast<uint8_t>(loot::rust::EdgeType::UserRequirement):
-      return loot::EdgeType::userRequirement;
-    case static_cast<uint8_t>(loot::rust::EdgeType::MasterlistLoadAfter):
-      return loot::EdgeType::masterlistLoadAfter;
-    case static_cast<uint8_t>(loot::rust::EdgeType::UserLoadAfter):
-      return loot::EdgeType::userLoadAfter;
-    case static_cast<uint8_t>(loot::rust::EdgeType::MasterlistGroup):
-      return loot::EdgeType::masterlistGroup;
-    case static_cast<uint8_t>(loot::rust::EdgeType::UserGroup):
-      return loot::EdgeType::userGroup;
-    case static_cast<uint8_t>(loot::rust::EdgeType::RecordOverlap):
-      return loot::EdgeType::recordOverlap;
-    case static_cast<uint8_t>(loot::rust::EdgeType::AssetOverlap):
-      return loot::EdgeType::assetOverlap;
-    case static_cast<uint8_t>(loot::rust::EdgeType::TieBreak):
-      return loot::EdgeType::tieBreak;
-    case static_cast<uint8_t>(loot::rust::EdgeType::BlueprintMaster):
-      return loot::EdgeType::blueprintMaster;
-    default:
-      return std::nullopt;
-  }
-}
-
 loot::Vertex convert(const loot::rust::Vertex& vertex) {
   try {
-    const auto outEdgeType = convert(vertex.out_edge_type());
+    const auto outEdgeType = ::convert(vertex.out_edge_type());
     if (outEdgeType.has_value()) {
       return loot::Vertex(convert(vertex.name()), outEdgeType.value());
     } else {

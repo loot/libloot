@@ -1,5 +1,4 @@
 use std::{
-    hash::{DefaultHasher, Hash, Hasher},
     path::PathBuf,
     sync::{Arc, RwLock},
 };
@@ -225,7 +224,7 @@ impl From<Arc<RwLock<libloot::Database>>> for Database {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Vertex(libloot::Vertex);
@@ -250,13 +249,6 @@ impl Vertex {
             .transpose()
     }
 
-    #[setter]
-    fn set_out_edge_type(&mut self, out_edge_type: EdgeType) -> Result<(), VerboseError> {
-        let out_edge_type = out_edge_type.try_into()?;
-        self.0.set_out_edge_type(out_edge_type);
-        Ok(())
-    }
-
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
         let class_name = slf.get_type().qualname()?;
         let inner = &slf.borrow().0;
@@ -266,12 +258,6 @@ impl Vertex {
             inner.name(),
             inner.out_edge_type().map_or(NONE_REPR, repr_edge_type),
         ))
-    }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.0.hash(&mut hasher);
-        hasher.finish()
     }
 }
 
