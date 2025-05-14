@@ -1,9 +1,6 @@
-use std::{borrow::Cow, sync::LazyLock};
+use std::collections::BTreeSet;
 
-use fancy_regex::{Captures, Regex};
 use saphyr::{MarkedYaml, Scalar, YamlData};
-
-use crate::logging;
 
 use super::{
     error::{
@@ -300,52 +297,9 @@ impl TryFromYaml for Message {
         let subs = get_strings_vec_value(mapping, "subs", YamlObjectType::Message)?;
 
         if !subs.is_empty() {
-            #[expect(
-                clippy::expect_used,
-                reason = "Only panics if the hardcoded regex string is invalid"
-            )]
-            static FMT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-                Regex::new(r"\{\d+\}").expect("hardcoded fmt placeholder regex should be valid")
-            });
-
             for mc in &mut content {
-                if mc.text.contains("%1%") {
-                    #[expect(
-                        clippy::expect_used,
-                        reason = "Only panics if the hardcoded regex string is invalid"
-                    )]
-                    static BOOST_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-                        Regex::new(r"%(\d+)%")
-                            .expect("hardcoded Boost placeholder regex should be valid")
-                    });
-
-                    if let Cow::Owned(text) = replace_all(&BOOST_REGEX, &mc.text) {
-                        mc.text = text.into_boxed_str();
-                    }
-                }
-
-                for (index, sub) in subs.iter().enumerate() {
-                    let placeholder = format!("{{{index}}}");
-
-                    if !mc.text.contains(&placeholder) {
-                        return Err(ParseMetadataError::new(
-                            value.span.start,
-                            MetadataParsingErrorReason::MissingPlaceholder(
-                                (*sub).to_owned(),
-                                index,
-                            ),
-                        ));
-                    }
-
-                    mc.text = mc.text.replace(&placeholder, sub).into_boxed_str();
-                }
-
-                if let Some(m) = find_match(&FMT_REGEX, &mc.text) {
-                    return Err(ParseMetadataError::new(
-                        value.span.start,
-                        MetadataParsingErrorReason::MissingSubstitution(m.to_owned()),
-                    ));
-                }
+                mc.text = format(&mc.text, &subs)
+                    .map_err(|e| ParseMetadataError::new(value.span.start, e))?;
             }
         }
 
@@ -359,30 +313,89 @@ impl TryFromYaml for Message {
     }
 }
 
-fn replace_all<'a>(regex: &Regex, text: &'a str) -> Cow<'a, str> {
-    regex.replace_all(text, |captures: &Captures| {
-        match captures[1].parse::<u32>() {
-            Ok(i) if i > 0 => format!("{{{}}}", i - 1),
-            Ok(_) => {
-                logging::warn!(
-                    "Found zero-indexed placeholder using Boost syntax in string \"{text}\""
-                );
-                captures[0].to_string()
+fn format(text: &str, subs: &[&str]) -> Result<Box<str>, MetadataParsingErrorReason> {
+    type ParsePlaceholderFn = fn(&str) -> Option<usize>;
+    type WrapPlaceholderFn = fn(&str) -> String;
+
+    let mut unused_sub_indexes = BTreeSet::new();
+    for i in 0..subs.len() {
+        unused_sub_indexes.insert(i);
+    }
+
+    let mut new_text = String::new();
+    let mut placeholder_opener: Option<char> = None;
+
+    for slice in text.split_inclusive(['%', '{', '}']) {
+        let mut placeholder: Option<(&str, ParsePlaceholderFn, WrapPlaceholderFn)> = None;
+
+        if let Some(prefix) = slice.strip_suffix('%') {
+            if let Some('%') = placeholder_opener {
+                placeholder = Some((prefix, parse_boost_placeholder, wrap_boost_placeholder));
+            } else {
+                new_text.push_str(prefix);
+                placeholder_opener = Some('%');
             }
-            Err(e) => {
-                logging::error!(
-                    "Unexpected failure to parse Boost placeholder index \"{}\": {}",
-                    &captures[1],
-                    e
-                );
-                captures[0].to_string()
+        } else if let Some(prefix) = slice.strip_suffix('{') {
+            new_text.push_str(prefix);
+            placeholder_opener = Some('{');
+        } else if let Some(prefix) = slice.strip_suffix('}') {
+            if let Some('{') = placeholder_opener {
+                placeholder = Some((prefix, parse_fmt_placeholder, wrap_fmt_placeholder));
+            } else {
+                new_text.push_str(prefix);
             }
+        } else {
+            new_text.push_str(slice);
         }
-    })
+
+        if let Some((inner, parse, wrap)) = placeholder {
+            if let Some(sub_index) = parse(inner) {
+                let Some(sub) = subs.get(sub_index) else {
+                    return Err(MetadataParsingErrorReason::MissingSubstitution(wrap(inner)));
+                };
+
+                new_text.push_str(sub);
+
+                unused_sub_indexes.remove(&sub_index);
+            } else {
+                // Not a valid placeholder, treat it as normal text.
+                new_text.push_str(inner);
+            }
+
+            placeholder_opener = None;
+        }
+    }
+
+    if let Some(sub_index) = unused_sub_indexes.first() {
+        if let Some(sub) = subs.get(*sub_index) {
+            return Err(MetadataParsingErrorReason::MissingPlaceholder(
+                (*sub).to_owned(),
+                *sub_index,
+            ));
+        }
+    }
+
+    Ok(new_text.into_boxed_str())
 }
 
-fn find_match<'a>(regex: &Regex, text: &'a str) -> Option<&'a str> {
-    regex.find(text).ok().flatten().map(|m| m.as_str())
+fn parse_boost_placeholder(placeholder: &str) -> Option<usize> {
+    placeholder
+        .parse::<usize>()
+        .ok()
+        .filter(|i| *i > 0)
+        .map(|i| i - 1)
+}
+
+fn parse_fmt_placeholder(placeholder: &str) -> Option<usize> {
+    placeholder.parse::<usize>().ok()
+}
+
+fn wrap_boost_placeholder(index: &str) -> String {
+    format!("%{index}%")
+}
+
+fn wrap_fmt_placeholder(index: &str) -> String {
+    format!("{{{index}}}")
 }
 
 impl EmitYaml for MessageContent {
