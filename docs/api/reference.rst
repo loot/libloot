@@ -95,13 +95,8 @@ Exceptions
 .. doxygenclass:: loot::CyclicInteractionError
    :members:
 
-.. doxygenclass:: loot::UndefinedGroupError
+.. doxygenclass:: loot::PluginNotLoadedError
    :members:
 
-Error Categories
-================
-
-LOOT uses error category objects to identify errors with codes that originate in
-lower-level libraries.
-
-.. doxygenfunction:: loot::esplugin_category
+.. doxygenclass:: loot::UndefinedGroupError
+   :members:

@@ -22,25 +22,20 @@
     <https://www.gnu.org/licenses/>.
     */
 
-#include "loot/exception/error_categories.h"
+#ifndef LOOT_EXCEPTION_PLUGIN_NOT_LOADED_ERROR
+#define LOOT_EXCEPTION_PLUGIN_NOT_LOADED_ERROR
 
-#include <string>
+#include <stdexcept>
 
 namespace loot {
-namespace detail {
-class esplugin_category : public std::error_category {
-  const char* name() const noexcept override { return "esplugin"; }
-
-  std::string message(int) const override { return "esplugin error"; }
-
-  bool equivalent(const std::error_code& code, int) const noexcept override {
-    return code.category().name() == name();
-  }
+/**
+ * @brief An exception class thrown if a plugin that must be loaded hasn't been
+ *        loaded.
+ */
+class PluginNotLoadedError : public std::runtime_error {
+public:
+  using std::runtime_error::runtime_error;
 };
 }
 
-LOOT_API const std::error_category& esplugin_category() {
-  static detail::esplugin_category instance;
-  return instance;
-}
-}
+#endif

@@ -27,7 +27,7 @@ along with LOOT.  If not, see
 
 #include "api/game/game.h"
 #include "api/plugin.h"
-#include "loot/exception/error_categories.h"
+#include "loot/exception/plugin_not_loaded_error.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -328,7 +328,7 @@ TEST_P(PluginTest, loadingWholePluginShouldSucceedForOpenMWPlugins) {
   } else {
     EXPECT_THROW(
         Plugin(game_.GetType(), game_.GetCache(), dataPath / omwscripts, false),
-        std::system_error);
+        std::runtime_error);
   }
 }
 
@@ -354,16 +354,11 @@ TEST_P(
 }
 
 TEST_P(PluginTest, loadingAPluginThatDoesNotExistShouldThrow) {
-  try {
-    Plugin(game_.GetType(),
-           game_.GetCache(),
-           game_.DataPath() / "Blank\\.esp",
-           true);
-    FAIL();
-  } catch (const std::system_error& e) {
-    EXPECT_EQ(ESP_ERROR_FILE_NOT_FOUND, e.code().value());
-    EXPECT_EQ(esplugin_category(), e.code().category());
-  }
+  EXPECT_THROW(Plugin(game_.GetType(),
+                      game_.GetCache(),
+                      game_.DataPath() / "Blank\\.esp",
+                      true),
+               std::runtime_error);
 }
 
 TEST_P(PluginTest, isValidShouldReturnTrueForAValidPlugin) {

@@ -34,7 +34,7 @@
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"
 #include "api/helpers/text.h"
-#include "loot/exception/error_categories.h"
+#include "loot/exception/plugin_not_loaded_error.h"
 
 namespace {
 using loot::BSA_FILE_EXTENSION;
@@ -170,14 +170,14 @@ void HandleEspluginError(unsigned int returnCode, std::string_view operation) {
   }
 
   auto err = fmt::format(
-      "esplugin failed to {}. Error code: {}", operation, returnCode);
+      "Failed to {}. esplugin error code: {}", operation, returnCode);
 
-  const char* e = nullptr;
-  esp_get_error_message(&e);
-  if (e == nullptr) {
+  const char* message = nullptr;
+  esp_get_error_message(&message);
+  if (message == nullptr) {
     err += ". Details could not be fetched.";
   } else {
-    err += ". Details: " + std::string(e);
+    err += ". Details: " + std::string(message);
   }
 
   auto logger = loot::getLogger();
@@ -185,7 +185,11 @@ void HandleEspluginError(unsigned int returnCode, std::string_view operation) {
     logger->error(err);
   }
 
-  throw std::system_error(returnCode, loot::esplugin_category(), err);
+  if (returnCode == ESP_ERROR_PLUGIN_METADATA_NOT_FOUND) {
+    throw loot::PluginNotLoadedError(err);
+  }
+
+  throw std::runtime_error(err);
 }
 
 template<typename... Args>
@@ -268,10 +272,6 @@ Plugin::Plugin(const GameType gameType,
     tags_ = ExtractBashTags(description);
     version_ = ExtractVersion(description);
   } catch (const std::system_error& e) {
-    if (e.code().category() == esplugin_category()) {
-      throw;
-    }
-
     if (logger) {
       logger->error("Cannot read plugin file \"{}\". Details: {}",
                     pluginPath.u8string(),
