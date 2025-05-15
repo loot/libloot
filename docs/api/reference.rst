@@ -95,9 +95,6 @@ Exceptions
 .. doxygenclass:: loot::CyclicInteractionError
    :members:
 
-.. doxygenclass:: loot::ConditionSyntaxError
-   :members:
-
 .. doxygenclass:: loot::UndefinedGroupError
    :members:
 

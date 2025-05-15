@@ -25,11 +25,10 @@
 #include "api/metadata/condition_evaluator.h"
 
 #include <sstream>
+#include <stdexcept>
 
 #include "api/helpers/crc.h"
 #include "api/helpers/logging.h"
-#include "loot/exception/condition_syntax_error.h"
-#include "loot/exception/error_categories.h"
 
 namespace loot {
 void HandleError(std::string_view operation, int returnCode) {
@@ -41,7 +40,7 @@ void HandleError(std::string_view operation, int returnCode) {
   std::string err;
   lci_get_error_message(&message);
   if (message == nullptr) {
-    err = fmt::format("Failed to {}. Error code: {}", operation, returnCode);
+    err = fmt::format("Failed to {}. loot-condition-interpreter error code: {}", operation, returnCode);
   } else {
     err = fmt::format("Failed to {}. Details: {}", operation, message);
   }
@@ -51,8 +50,7 @@ void HandleError(std::string_view operation, int returnCode) {
     logger->error(err);
   }
 
-  throw ConditionSyntaxError(
-      returnCode, loot_condition_interpreter_category(), err);
+  throw std::runtime_error(err);
 }
 
 int mapGameType(GameType gameType) {

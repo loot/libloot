@@ -25,8 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_METADATA_CONDITION_EVALUATOR_TEST
 #define LOOT_TESTS_API_INTERNALS_METADATA_CONDITION_EVALUATOR_TEST
 
+#include <stdexcept>
+
 #include "api/metadata/condition_evaluator.h"
-#include "loot/exception/condition_syntax_error.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -90,7 +91,7 @@ TEST_P(ConditionEvaluatorTest,
 }
 
 TEST_P(ConditionEvaluatorTest, evaluateShouldThrowForAnInvalidConditionString) {
-  EXPECT_THROW(evaluator_.Evaluate("condition"), ConditionSyntaxError);
+  EXPECT_THROW(evaluator_.Evaluate("condition"), std::runtime_error);
 }
 
 TEST_P(ConditionEvaluatorTest,
