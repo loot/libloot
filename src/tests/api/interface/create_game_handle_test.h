@@ -150,7 +150,7 @@ TEST_P(
       GetParam() == GameType::oblivionRemastered) {
     EXPECT_NO_THROW(CreateGameHandle(GetParam(), gamePath));
   } else {
-    EXPECT_THROW(CreateGameHandle(GetParam(), gamePath), std::system_error);
+    EXPECT_THROW(CreateGameHandle(GetParam(), gamePath), std::runtime_error);
   }
 }
 #else

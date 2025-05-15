@@ -26,7 +26,6 @@ along with LOOT.  If not, see
 #define LOOT_TESTS_API_INTERNALS_GAME_GAME_TEST
 
 #include "api/game/game.h"
-#include "loot/exception/error_categories.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {

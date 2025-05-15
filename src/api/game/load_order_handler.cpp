@@ -25,7 +25,6 @@
 #include "api/game/load_order_handler.h"
 
 #include "api/helpers/logging.h"
-#include "loot/exception/error_categories.h"
 
 namespace loot {
 unsigned int mapGameId(GameType gameType) {
@@ -298,14 +297,14 @@ void LoadOrderHandler::HandleError(std::string_view operation,
     return;
   }
 
-  const char* e = nullptr;
+  const char* message = nullptr;
   std::string err;
-  lo_get_error_message(&e);
-  if (e == nullptr) {
+  lo_get_error_message(&message);
+  if (message == nullptr) {
     err = fmt::format(
-        "libloadorder failed to {}. Details could not be fetched.", operation);
+        "Failed to {}. libloadorder error code: {}", operation, returnCode);
   } else {
-    err = fmt::format("libloadorder failed to {}. Details: {}", operation, e);
+    err = fmt::format("Failed to {}. Details: {}", operation, message);
   }
 
   auto logger = getLogger();
@@ -313,6 +312,6 @@ void LoadOrderHandler::HandleError(std::string_view operation,
     logger->error(err);
   }
 
-  throw std::system_error(returnCode, libloadorder_category(), err);
+  throw std::runtime_error(err);
 }
 }
