@@ -151,7 +151,7 @@ TEST_P(LoadOrderHandlerTest,
       GetParam() == GameType::oblivionRemastered) {
     EXPECT_NO_THROW(LoadOrderHandler(GetParam(), gamePath));
   } else {
-    EXPECT_THROW(LoadOrderHandler(GetParam(), gamePath), std::system_error);
+    EXPECT_THROW(LoadOrderHandler(GetParam(), gamePath), std::runtime_error);
   }
 }
 #endif
