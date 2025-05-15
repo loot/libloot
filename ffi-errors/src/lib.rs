@@ -94,9 +94,6 @@
 )]
 use std::{error::Error, ffi::c_int};
 
-use esplugin::ESP_ERROR_UNKNOWN;
-use lci::LCI_ERROR_UNKNOWN;
-use libloadorder::LIBLO_ERROR_UNKNOWN;
 use libloot::error::{ConditionEvaluationError, LoadOrderError, PluginDataError};
 
 mod esplugin;
@@ -163,67 +160,70 @@ impl std::error::Error for SystemError {}
 
 impl From<PluginDataError> for SystemError {
     fn from(value: PluginDataError) -> Self {
-        let (code, message) = if let Some(error) = value
-            .source()
-            .and_then(|s| s.downcast_ref::<::esplugin::Error>())
-        {
-            let error_code = crate::esplugin::map_error(error);
-            (error_code, error.to_string())
-        } else {
-            (
-                ESP_ERROR_UNKNOWN,
-                "Could not retrieve esplugin error message".to_owned(),
-            )
-        };
-        SystemError {
-            code,
-            category: SystemErrorCategory::Esplugin,
-            message,
-        }
+        const ESPLUGIN_ERROR_UNKNOWN: (i32, &str) = (
+            esplugin::ESP_ERROR_UNKNOWN,
+            "Could not retrieve esplugin error message",
+        );
+
+        from_error(
+            value,
+            SystemErrorCategory::Esplugin,
+            ESPLUGIN_ERROR_UNKNOWN,
+            crate::esplugin::map_error,
+        )
     }
 }
 
 impl From<LoadOrderError> for SystemError {
     fn from(value: LoadOrderError) -> Self {
-        let (code, message) = if let Some(error) = value
-            .source()
-            .and_then(|s| s.downcast_ref::<::loadorder::Error>())
-        {
-            let error_code = crate::libloadorder::map_error(error);
-            (error_code, error.to_string())
-        } else {
-            (
-                LIBLO_ERROR_UNKNOWN,
-                "Could not retrieve libloadorder error message".to_owned(),
-            )
-        };
-        SystemError {
-            code,
-            category: SystemErrorCategory::Libloadorder,
-            message,
-        }
+        const LIBLOADORDER_ERROR_UNKNOWN: (i32, &str) = (
+            libloadorder::LIBLO_ERROR_UNKNOWN,
+            "Could not retrieve libloadorder error message",
+        );
+
+        from_error(
+            value,
+            SystemErrorCategory::Libloadorder,
+            LIBLOADORDER_ERROR_UNKNOWN,
+            crate::libloadorder::map_error,
+        )
     }
 }
 
 impl From<ConditionEvaluationError> for SystemError {
     fn from(value: ConditionEvaluationError) -> Self {
-        let (code, message) = if let Some(error) = value
-            .source()
-            .and_then(|s| s.downcast_ref::<::loot_condition_interpreter::Error>())
-        {
-            let error_code = crate::lci::map_error(error);
-            (error_code, error.to_string())
-        } else {
-            (
-                LCI_ERROR_UNKNOWN,
-                "Could not retrieve loot-condition-interpreter error message".to_owned(),
-            )
-        };
-        SystemError {
-            code,
-            category: SystemErrorCategory::LootConditionInterpreter,
-            message,
-        }
+        const LCI_ERROR_UNKNOWN: (i32, &str) = (
+            lci::LCI_ERROR_UNKNOWN,
+            "Could not retrieve loot-condition-interpreter error message",
+        );
+
+        from_error(
+            value,
+            SystemErrorCategory::LootConditionInterpreter,
+            LCI_ERROR_UNKNOWN,
+            crate::lci::map_error,
+        )
+    }
+}
+
+fn from_error<U: Error, V: Error + 'static, F: Fn(&V) -> c_int>(
+    error: U,
+    category: SystemErrorCategory,
+    default: (i32, &'static str),
+    to_code: F,
+) -> SystemError {
+    let (code, message) = error
+        .source()
+        .and_then(|s| s.downcast_ref::<V>())
+        .map_or_else(
+            || (default.0, default.1.to_owned()),
+            |e| (to_code(e), e.to_string()),
+        );
+
+    SystemError {
+        code,
+        category,
+        message,
     }
 }
 
