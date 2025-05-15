@@ -6,13 +6,22 @@ An **experimental** Python wrapper around the libloot Rust implementation, built
 
 To build, first set up a Python virtual environment and install [maturin](https://github.com/PyO3/maturin):
 
+```
+# pipx
+pipx install maturin
+# uv
+uv tool install maturin
+```
+
+or using pip on Windows:
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install maturin
 ```
 
-or in a POSIX shell:
+or using pip on Linux:
 
 ```sh
 python -m venv .venv
