@@ -24,6 +24,7 @@
 
 #include "api/api_database.h"
 
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
@@ -32,7 +33,6 @@
 #include "api/metadata/yaml/plugin_metadata.h"
 #include "api/sorting/group_sort.h"
 #include "api/sorting/plugin_sort.h"
-#include "loot/exception/file_access_error.h"
 #include "loot/metadata/group.h"
 
 namespace {
@@ -90,7 +90,7 @@ void ApiDatabase::LoadMasterlist(const std::filesystem::path& masterlistPath) {
   if (std::filesystem::exists(masterlistPath)) {
     temp.Load(masterlistPath);
   } else {
-    throw FileAccessError("The given masterlist path does not exist: " +
+    throw std::runtime_error("The given masterlist path does not exist: " +
                           masterlistPath.u8string());
   }
 
@@ -106,12 +106,12 @@ void ApiDatabase::LoadMasterlistWithPrelude(
     if (std::filesystem::exists(masterlistPreludePath)) {
       temp.LoadWithPrelude(masterlistPath, masterlistPreludePath);
     } else {
-      throw FileAccessError(
+      throw std::runtime_error(
           "The given masterlist prelude path does not exist: " +
           masterlistPreludePath.u8string());
     }
   } else {
-    throw FileAccessError("The given masterlist path does not exist: " +
+    throw std::runtime_error("The given masterlist path does not exist: " +
                           masterlistPath.u8string());
   }
 
@@ -124,7 +124,7 @@ void ApiDatabase::LoadUserlist(const std::filesystem::path& userlistPath) {
   if (std::filesystem::exists(userlistPath)) {
     temp.Load(userlistPath);
   } else {
-    throw FileAccessError("The given userlist path does not exist: " +
+    throw std::runtime_error("The given userlist path does not exist: " +
                           userlistPath.u8string());
   }
 
@@ -137,7 +137,7 @@ void ApiDatabase::WriteUserMetadata(const std::filesystem::path& outputFile,
     throw std::invalid_argument("Output directory does not exist.");
 
   if (std::filesystem::exists(outputFile) && !overwrite)
-    throw FileAccessError(
+    throw std::runtime_error(
         "Output file exists but overwrite is not set to true.");
 
   userlist_.Save(outputFile);
@@ -274,7 +274,7 @@ void ApiDatabase::WriteMinimalList(const std::filesystem::path& outputFile,
     throw std::invalid_argument("Output directory does not exist.");
 
   if (std::filesystem::exists(outputFile) && !overwrite)
-    throw FileAccessError(
+    throw std::runtime_error(
         "Output file exists but overwrite is not set to true.");
 
   MetadataList minimalList;

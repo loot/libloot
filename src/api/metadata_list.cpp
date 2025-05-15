@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 
 #include "api/game/game.h"
 #include "api/helpers/logging.h"
@@ -35,7 +36,6 @@
 #include "api/metadata/condition_evaluator.h"
 #include "api/metadata/yaml/group.h"
 #include "api/metadata/yaml/plugin_metadata.h"
-#include "loot/exception/file_access_error.h"
 
 namespace loot {
 using std::string_view_literals::operator""sv;
@@ -46,7 +46,7 @@ constexpr std::string_view PRELUDE_ON_NEW_LINE = "\nprelude:"sv;
 std::string read_to_string(const std::filesystem::path& filePath) {
   std::ifstream in(filePath);
   if (!in.good()) {
-    throw FileAccessError("Cannot open " + filePath.u8string());
+    throw std::runtime_error("Cannot open " + filePath.u8string());
   }
 
   auto content = std::string(std::istreambuf_iterator<char>(in),
@@ -150,7 +150,7 @@ void MetadataList::Load(const std::filesystem::path& filepath) {
 
   std::ifstream in(filepath);
   if (!in.good())
-    throw FileAccessError("Cannot open " + filepath.u8string());
+    throw std::runtime_error("Cannot open " + filepath.u8string());
 
   this->Load(in, filepath);
 
@@ -177,7 +177,7 @@ void MetadataList::Load(std::istream& istream,
   YAML::Node metadataList = YAML::Load(istream);
 
   if (!metadataList.IsMap())
-    throw FileAccessError("The root of the metadata file " +
+    throw std::runtime_error("The root of the metadata file " +
                           source_path.u8string() + " is not a YAML map.");
 
   if (metadataList["plugins"]) {
@@ -186,7 +186,7 @@ void MetadataList::Load(std::istream& istream,
       if (plugin.IsRegexPlugin())
         regexPlugins_.push_back(plugin);
       else if (!plugins_.emplace(Filename(plugin.GetName()), plugin).second)
-        throw FileAccessError("More than one entry exists for plugin \"" +
+        throw std::runtime_error("More than one entry exists for plugin \"" +
                               plugin.GetName() + "\"");
     }
   }
@@ -198,7 +198,7 @@ void MetadataList::Load(std::istream& istream,
     for (const auto& node : metadataList["bash_tags"]) {
       auto bashTag = node.as<std::string>();
       if (bashTags.count(bashTag) != 0) {
-        throw FileAccessError("More than one entry exists for Bash Tag \"" +
+        throw std::runtime_error("More than one entry exists for Bash Tag \"" +
                               bashTag + "\"");
       }
       bashTags_.push_back(bashTag);
@@ -211,7 +211,7 @@ void MetadataList::Load(std::istream& istream,
     for (const auto& node : metadataList["groups"]) {
       auto group = node.as<Group>();
       if (groupNames.count(group.GetName()) != 0) {
-        throw FileAccessError("More than one entry exists for group \"" +
+        throw std::runtime_error("More than one entry exists for group \"" +
                               group.GetName() + "\"");
       }
       groups_.push_back(group);
@@ -264,7 +264,7 @@ void MetadataList::Save(const std::filesystem::path& filepath) const {
 
   std::ofstream out(filepath);
   if (out.fail())
-    throw FileAccessError("Couldn't open output file.");
+    throw std::runtime_error("Couldn't open output file.");
 
   out << emitter.c_str();
   out.close();

@@ -28,12 +28,12 @@
 #include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <execution>
+#include <stdexcept>
 #include <thread>
 
 #include "api/api_database.h"
 #include "api/helpers/logging.h"
 #include "api/sorting/plugin_sort.h"
-#include "loot/exception/file_access_error.h"
 
 #ifdef _WIN32
 #ifndef UNICODE

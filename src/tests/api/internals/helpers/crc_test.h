@@ -25,8 +25,9 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERNALS_HELPERS_CRC_TEST
 #define LOOT_TESTS_API_INTERNALS_HELPERS_CRC_TEST
 
+#include <stdexcept>
+
 #include "api/helpers/crc.h"
-#include "loot/exception/file_access_error.h"
 #include "tests/common_game_test_fixture.h"
 
 namespace loot {
@@ -37,7 +38,7 @@ protected:
 };
 
 TEST_F(GetCrc32Test, gettingTheCrcOfAMissingFileShouldThrow) {
-  EXPECT_THROW(GetCrc32(dataPath / missingEsp), FileAccessError);
+  EXPECT_THROW(GetCrc32(dataPath / missingEsp), std::runtime_error);
 }
 
 TEST_F(GetCrc32Test, gettingTheCrcOfAFileShouldReturnTheCorrectValue) {

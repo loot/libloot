@@ -98,9 +98,6 @@ Exceptions
 .. doxygenclass:: loot::ConditionSyntaxError
    :members:
 
-.. doxygenclass:: loot::FileAccessError
-   :members:
-
 .. doxygenclass:: loot::UndefinedGroupError
    :members:
 
