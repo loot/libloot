@@ -29,9 +29,9 @@
 #include <array>
 #include <boost/crc.hpp>
 #include <fstream>
+#include <stdexcept>
 
 #include "api/helpers/logging.h"
-#include "loot/exception/file_access_error.h"
 
 namespace loot {
 size_t GetStreamSize(std::istream& stream) {
@@ -77,7 +77,7 @@ uint32_t GetCrc32(const std::filesystem::path& filename) {
     return checksum;
 
   } catch (const std::exception& e) {
-    throw FileAccessError("Unable to open \"" + filename.u8string() +
+    throw std::runtime_error("Unable to open \"" + filename.u8string() +
                           "\" for CRC calulation: " + e.what());
   }
 }

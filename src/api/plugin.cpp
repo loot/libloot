@@ -27,6 +27,7 @@
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <numeric>
+#include <stdexcept>
 
 #include "api/bsa.h"
 #include "api/game/game.h"
@@ -34,7 +35,6 @@
 #include "api/helpers/logging.h"
 #include "api/helpers/text.h"
 #include "loot/exception/error_categories.h"
-#include "loot/exception/file_access_error.h"
 
 namespace {
 using loot::BSA_FILE_EXTENSION;
@@ -277,7 +277,7 @@ Plugin::Plugin(const GameType gameType,
                     pluginPath.u8string(),
                     e.what());
     }
-    throw FileAccessError("Cannot read \"" + pluginPath.u8string() +
+    throw std::runtime_error("Cannot read \"" + pluginPath.u8string() +
                           "\". Details: " + e.what());
   } catch (const std::exception& e) {
     if (logger) {
@@ -285,7 +285,7 @@ Plugin::Plugin(const GameType gameType,
                     pluginPath.u8string(),
                     e.what());
     }
-    throw FileAccessError("Cannot read \"" + pluginPath.u8string() +
+    throw std::runtime_error("Cannot read \"" + pluginPath.u8string() +
                           "\". Details: " + e.what());
   }
 }

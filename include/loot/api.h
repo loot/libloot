@@ -37,7 +37,6 @@
 #include "loot/exception/condition_syntax_error.h"
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/error_categories.h"
-#include "loot/exception/file_access_error.h"
 #include "loot/exception/undefined_group_error.h"
 #include "loot/game_interface.h"
 #include "loot/loot_version.h"

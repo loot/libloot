@@ -208,7 +208,7 @@ plugins:
       - 'Blank.esm')";
   out.close();
 
-  EXPECT_THROW(metadataList.Load(metadataPath), FileAccessError);
+  EXPECT_THROW(metadataList.Load(metadataPath), std::runtime_error);
 
   out.open(metadataPath);
   out << R"(globals:
@@ -231,7 +231,7 @@ plugins:
         content: 'This plugin entry will cause a failure, as it is not the first exact entry.')";
   out.close();
 
-  EXPECT_THROW(metadataList.Load(metadataPath), FileAccessError);
+  EXPECT_THROW(metadataList.Load(metadataPath), std::runtime_error);
 }
 
 TEST_F(MetadataListTest,
@@ -243,7 +243,7 @@ TEST_F(MetadataListTest,
   ASSERT_FALSE(metadataList.Plugins().empty());
   ASSERT_FALSE(metadataList.BashTags().empty());
 
-  EXPECT_THROW(metadataList.Load(blankEsm), FileAccessError);
+  EXPECT_THROW(metadataList.Load(blankEsm), std::runtime_error);
   EXPECT_TRUE(metadataList.Messages().empty());
   EXPECT_TRUE(metadataList.Plugins().empty());
   EXPECT_TRUE(metadataList.BashTags().empty());
@@ -258,7 +258,7 @@ TEST_F(MetadataListTest,
   ASSERT_FALSE(metadataList.Plugins().empty());
   ASSERT_FALSE(metadataList.BashTags().empty());
 
-  EXPECT_THROW(metadataList.Load(missingMetadataPath), FileAccessError);
+  EXPECT_THROW(metadataList.Load(missingMetadataPath), std::runtime_error);
   EXPECT_TRUE(metadataList.Messages().empty());
   EXPECT_TRUE(metadataList.Plugins().empty());
   EXPECT_TRUE(metadataList.BashTags().empty());
