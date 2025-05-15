@@ -35,7 +35,7 @@
 #include "loot/enum/game_type.h"
 #include "loot/enum/log_level.h"
 #include "loot/exception/cyclic_interaction_error.h"
-#include "loot/exception/error_categories.h"
+#include "loot/exception/plugin_not_loaded_error.h"
 #include "loot/exception/undefined_group_error.h"
 #include "loot/game_interface.h"
 #include "loot/loot_version.h"
