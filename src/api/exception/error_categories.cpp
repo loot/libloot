@@ -47,16 +47,6 @@ class libloadorder_category : public std::error_category {
     return code.category().name() == name();
   }
 };
-
-class loot_condition_interpreter_category : public std::error_category {
-  const char* name() const noexcept override { return "loot condition interpreter"; }
-
-  std::string message(int) const override { return "loot condition interpreter error"; }
-
-  bool equivalent(const std::error_code& code, int) const noexcept override {
-    return code.category().name() == name();
-  }
-};
 }
 
 LOOT_API const std::error_category& esplugin_category() {
@@ -66,11 +56,6 @@ LOOT_API const std::error_category& esplugin_category() {
 
 LOOT_API const std::error_category& libloadorder_category() {
   static detail::libloadorder_category instance;
-  return instance;
-}
-
-LOOT_API const std::error_category& loot_condition_interpreter_category() {
-  static detail::loot_condition_interpreter_category instance;
   return instance;
 }
 }
