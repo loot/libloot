@@ -92,39 +92,25 @@
     clippy::verbose_file_reads,
     clippy::wildcard_enum_match_arm
 )]
-use std::{
-    error::Error,
-    ffi::{c_int, c_uchar},
-};
+use std::{error::Error, ffi::c_int};
 
 use esplugin::ESP_ERROR_UNKNOWN;
 use lci::LCI_ERROR_UNKNOWN;
 use libloadorder::LIBLO_ERROR_UNKNOWN;
 use libloot::error::{ConditionEvaluationError, LoadOrderError, PluginDataError};
 
-pub mod esplugin;
-pub mod lci;
-pub mod libloadorder;
+mod esplugin;
+mod lci;
+mod libloadorder;
 
-/// An error from esplugin.
-#[unsafe(no_mangle)]
-pub static LIBLOOT_SYSTEM_ERROR_CATEGORY_ESPLUGIN: c_uchar = 1;
-
-/// An error from libloadorder.
-#[unsafe(no_mangle)]
-pub static LIBLOOT_SYSTEM_ERROR_CATEGORY_LIBLOADORDER: c_uchar = 2;
-
-/// An error from loot-condition-interpreter.
-#[unsafe(no_mangle)]
-pub static LIBLOOT_SYSTEM_ERROR_CATEGORY_LCI: c_uchar = 3;
-
+// It's important for API stability that these variants' values don't change.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum SystemErrorCategory {
-    Esplugin = LIBLOOT_SYSTEM_ERROR_CATEGORY_ESPLUGIN,
-    Libloadorder = LIBLOOT_SYSTEM_ERROR_CATEGORY_LIBLOADORDER,
-    LootConditionInterpreter = LIBLOOT_SYSTEM_ERROR_CATEGORY_LCI,
+    Esplugin = 1,
+    Libloadorder = 2,
+    LootConditionInterpreter = 3,
 }
 
 impl std::fmt::Display for SystemErrorCategory {

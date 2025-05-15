@@ -1,51 +1,29 @@
+// Unless otherwise noted, these constants and the mapping logic are copied from
+// esplugin-ffi.
+
 use std::ffi::c_int;
 
 use esplugin::Error;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_NULL_POINTER: c_int = 1;
+const ESP_ERROR_PARSE_ERROR: c_int = 5;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_NOT_UTF8: c_int = 2;
+const ESP_ERROR_NO_FILENAME: c_int = 7;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_STRING_CONTAINS_NUL: c_int = 3;
+const ESP_ERROR_TEXT_DECODE_ERROR: c_int = 8;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_INVALID_GAME_ID: c_int = 4;
+const ESP_ERROR_IO_ERROR: c_int = 10;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_PARSE_ERROR: c_int = 5;
+const ESP_ERROR_FILE_NOT_FOUND: c_int = 11;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_PANICKED: c_int = 6;
+const ESP_ERROR_IO_PERMISSION_DENIED: c_int = 12;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_NO_FILENAME: c_int = 7;
+const ESP_ERROR_UNRESOLVED_RECORD_IDS: c_int = 13;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_TEXT_DECODE_ERROR: c_int = 8;
+const ESP_ERROR_PLUGIN_METADATA_NOT_FOUND: c_int = 14;
 
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_TEXT_ENCODE_ERROR: c_int = 9;
-
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_IO_ERROR: c_int = 10;
-
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_FILE_NOT_FOUND: c_int = 11;
-
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_IO_PERMISSION_DENIED: c_int = 12;
-
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_UNRESOLVED_RECORD_IDS: c_int = 13;
-
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_PLUGIN_METADATA_NOT_FOUND: c_int = 14;
-
-#[unsafe(no_mangle)]
-pub static ESP_ERROR_UNKNOWN: c_int = c_int::MAX;
+// This constant is not copied from esplugin-ffi, but does not conflict with any
+// values defined there.
+pub(crate) const ESP_ERROR_UNKNOWN: c_int = c_int::MAX;
 
 #[expect(
     clippy::wildcard_enum_match_arm,
@@ -60,7 +38,7 @@ fn map_io_error(err: &std::io::Error) -> c_int {
 }
 
 #[must_use]
-pub fn map_error(err: &Error) -> c_int {
+pub(crate) fn map_error(err: &Error) -> c_int {
     match err {
         Error::IoError(x) => map_io_error(x),
         Error::NoFilename(_) => ESP_ERROR_NO_FILENAME,
