@@ -313,55 +313,41 @@ impl TryFromYaml for Message {
 }
 
 fn format(text: &str, subs: &[&str]) -> Result<Box<str>, MetadataParsingErrorReason> {
-    type ParsePlaceholderFn = fn(&str) -> Option<usize>;
-    type WrapPlaceholderFn = fn(&str) -> String;
-
     let mut unused_sub_indexes = BTreeSet::new();
     for i in 0..subs.len() {
         unused_sub_indexes.insert(i);
     }
 
     let mut new_text = String::new();
-    let mut placeholder_opener: Option<char> = None;
+    let mut maybe_in_placeholder = false;
 
-    for slice in text.split_inclusive(['%', '{', '}']) {
-        let mut placeholder: Option<(&str, ParsePlaceholderFn, WrapPlaceholderFn)> = None;
-
-        if let Some(prefix) = slice.strip_suffix('%') {
-            if let Some('%') = placeholder_opener {
-                placeholder = Some((prefix, parse_boost_placeholder, wrap_boost_placeholder));
-            } else {
-                new_text.push_str(prefix);
-                placeholder_opener = Some('%');
-            }
-        } else if let Some(prefix) = slice.strip_suffix('{') {
+    for slice in text.split_inclusive(['{', '}']) {
+        if let Some(prefix) = slice.strip_suffix('{') {
             new_text.push_str(prefix);
-            placeholder_opener = Some('{');
+            maybe_in_placeholder = true;
         } else if let Some(prefix) = slice.strip_suffix('}') {
-            if let Some('{') = placeholder_opener {
-                placeholder = Some((prefix, parse_fmt_placeholder, wrap_fmt_placeholder));
+            if maybe_in_placeholder {
+                if let Ok(sub_index) = prefix.parse::<usize>() {
+                    let Some(sub) = subs.get(sub_index) else {
+                        return Err(MetadataParsingErrorReason::MissingSubstitution(format!(
+                            "{{{prefix}}}"
+                        )));
+                    };
+
+                    new_text.push_str(sub);
+
+                    unused_sub_indexes.remove(&sub_index);
+                } else {
+                    // Not a valid placeholder, treat it as normal text.
+                    new_text.push_str(prefix);
+                }
+
+                maybe_in_placeholder = false;
             } else {
                 new_text.push_str(prefix);
             }
         } else {
             new_text.push_str(slice);
-        }
-
-        if let Some((inner, parse, wrap)) = placeholder {
-            if let Some(sub_index) = parse(inner) {
-                let Some(sub) = subs.get(sub_index) else {
-                    return Err(MetadataParsingErrorReason::MissingSubstitution(wrap(inner)));
-                };
-
-                new_text.push_str(sub);
-
-                unused_sub_indexes.remove(&sub_index);
-            } else {
-                // Not a valid placeholder, treat it as normal text.
-                new_text.push_str(inner);
-            }
-
-            placeholder_opener = None;
         }
     }
 
@@ -375,26 +361,6 @@ fn format(text: &str, subs: &[&str]) -> Result<Box<str>, MetadataParsingErrorRea
     }
 
     Ok(new_text.into_boxed_str())
-}
-
-fn parse_boost_placeholder(placeholder: &str) -> Option<usize> {
-    placeholder
-        .parse::<usize>()
-        .ok()
-        .filter(|i| *i > 0)
-        .map(|i| i - 1)
-}
-
-fn parse_fmt_placeholder(placeholder: &str) -> Option<usize> {
-    placeholder.parse::<usize>().ok()
-}
-
-fn wrap_boost_placeholder(index: &str) -> String {
-    format!("%{index}%")
-}
-
-fn wrap_fmt_placeholder(index: &str) -> String {
-    format!("{{{index}}}")
 }
 
 impl EmitYaml for MessageContent {
@@ -769,17 +735,6 @@ mod tests {
                 let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!("content {0}", message.content()[0].text());
-            }
-
-            #[test]
-            fn should_accept_percentage_placeholder_syntax() {
-                let yaml = parse(
-                    "{type: say, content: 'content %1% %2% %3% %4% %5% %6% %7% %8% %9% %10% %11%', subs: [a, b, c, d, e, f, g, h, i, j, k]}",
-                );
-
-                let message = Message::try_from_yaml(&yaml).unwrap();
-
-                assert_eq!("content a b c d e f g h i j k", message.content()[0].text());
             }
         }
 
