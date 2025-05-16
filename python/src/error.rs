@@ -68,7 +68,7 @@ impl From<GroupsPathError> for VerboseError {
         match value {
             GroupsPathError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             GroupsPathError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
-            GroupsPathError::PathfindingError(_) => Self::Other(Box::new(value)),
+            GroupsPathError::PathfindingError(_) | _ => Self::Other(Box::new(value)),
         }
     }
 }

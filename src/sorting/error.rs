@@ -66,6 +66,7 @@ pub(crate) fn display_cycle(cycle: &[Vertex]) -> String {
 /// Represents an error that occurred while trying to get the path between two
 /// groups across the graph formed from group metadata.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum GroupsPathError {
     UndefinedGroup(String),
     CycleFound(Vec<Vertex>),

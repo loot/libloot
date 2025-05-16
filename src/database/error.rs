@@ -24,6 +24,7 @@ impl From<loot_condition_interpreter::Error> for ConditionEvaluationError {
 
 /// Represents an error that occurred while retrieving metadata for a plugin.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum MetadataRetrievalError {
     ConditionEvaluationError(ConditionEvaluationError),
     RegexError(RegexError),

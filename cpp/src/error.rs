@@ -140,7 +140,7 @@ impl From<GroupsPathError> for VerboseError {
         match value {
             GroupsPathError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             GroupsPathError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
-            GroupsPathError::PathfindingError(_) => Self::Other(Box::new(value)),
+            GroupsPathError::PathfindingError(_) | _ => Self::Other(Box::new(value)),
         }
     }
 }
@@ -149,7 +149,7 @@ impl From<MetadataRetrievalError> for VerboseError {
     fn from(value: MetadataRetrievalError) -> Self {
         match value {
             MetadataRetrievalError::ConditionEvaluationError(e) => e.into(),
-            MetadataRetrievalError::RegexError(_) => Self::Other(Box::new(value)),
+            MetadataRetrievalError::RegexError(_) | _ => Self::Other(Box::new(value)),
         }
     }
 }
