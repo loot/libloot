@@ -170,10 +170,7 @@ impl Plugin {
     /// sometimes referred to as *master files* or simply *masters*, while the
     /// other meaning is always referenced in relation to another plugin.
     pub fn is_master(&self) -> bool {
-        if matches!(
-            self.game_type,
-            GameType::OpenMW | GameType::OblivionRemastered
-        ) {
+        if self.game_type == GameType::OpenMW {
             false
         } else {
             self.plugin
@@ -544,7 +541,7 @@ mod tests {
 
             assert_eq!(plugin_name, plugin.name());
             assert_eq!(expected_masters, plugin.masters().unwrap());
-            if matches!(game_type, GameType::OpenMW | GameType::OblivionRemastered) {
+            if matches!(game_type, GameType::OpenMW) {
                 assert!(!plugin.is_master());
             } else {
                 assert!(plugin.is_master());
@@ -621,7 +618,7 @@ mod tests {
 
             assert_eq!(plugin_name, plugin.name());
             assert_eq!(expected_masters, plugin.masters().unwrap());
-            if matches!(game_type, GameType::OpenMW | GameType::OblivionRemastered) {
+            if matches!(game_type, GameType::OpenMW) {
                 assert!(!plugin.is_master());
             } else {
                 assert!(plugin.is_master());

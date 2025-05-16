@@ -186,8 +186,7 @@ TEST_P(PluginInterfaceTest,
 
   EXPECT_EQ(blankEsm, plugin->GetName());
   EXPECT_TRUE(plugin->GetMasters().empty());
-  if (GetParam() == GameType::openmw ||
-      GetParam() == GameType::oblivionRemastered) {
+  if (GetParam() == GameType::openmw) {
     EXPECT_FALSE(plugin->IsMaster());
   } else {
     EXPECT_TRUE(plugin->IsMaster());
@@ -212,8 +211,7 @@ TEST_P(PluginInterfaceTest, shouldBeAbleToGetAllDataFromFullyLoadedPlugin) {
 
   EXPECT_EQ(blankEsm, plugin->GetName());
   EXPECT_TRUE(plugin->GetMasters().empty());
-  if (GetParam() == GameType::openmw ||
-      GetParam() == GameType::oblivionRemastered) {
+  if (GetParam() == GameType::openmw) {
     EXPECT_FALSE(plugin->IsMaster());
   } else {
     EXPECT_TRUE(plugin->IsMaster());
