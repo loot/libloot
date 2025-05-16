@@ -44,7 +44,6 @@ impl std::fmt::Display for VerboseError {
             Self::SystemError(e) => {
                 let prefix = match e.category() {
                     SystemErrorCategory::Esplugin => "EspluginError",
-                    SystemErrorCategory::Libloadorder => "LibloadorderError",
                     _ => "UnknownCategoryError",
                 };
                 write!(f, "{}: {}: {}", prefix, e.code(), e.message())
@@ -64,13 +63,14 @@ variant_box_from_error!(LoadMetadataError, VerboseError::Other);
 variant_box_from_error!(WriteMetadataError, VerboseError::Other);
 variant_box_from_error!(ConditionEvaluationError, VerboseError::Other);
 variant_box_from_error!(MetadataRetrievalError, VerboseError::Other);
+variant_box_from_error!(LoadOrderError, VerboseError::Other);
+variant_box_from_error!(LoadOrderStateError, VerboseError::Other);
 
 impl From<GameHandleCreationError> for VerboseError {
     fn from(value: GameHandleCreationError) -> Self {
         match value {
-            GameHandleCreationError::LoadOrderError(e) => e.into(),
             GameHandleCreationError::NotADirectory(_) => Self::InvalidArgument(value.to_string()),
-            _ => Self::Other(Box::new(value)),
+            GameHandleCreationError::LoadOrderError(_) | _ => Self::Other(Box::new(value)),
         }
     }
 }
@@ -99,21 +99,6 @@ impl From<SortPluginsError> for VerboseError {
             | SortPluginsError::PathfindingError(_)
             | _ => Self::Other(Box::new(value)),
         }
-    }
-}
-
-impl From<LoadOrderStateError> for VerboseError {
-    fn from(value: LoadOrderStateError) -> Self {
-        match value {
-            LoadOrderStateError::LoadOrderError(e) => e.into(),
-            LoadOrderStateError::DatabaseLockPoisoned | _ => Self::Other(Box::new(value)),
-        }
-    }
-}
-
-impl From<LoadOrderError> for VerboseError {
-    fn from(value: LoadOrderError) -> Self {
-        Self::SystemError(SystemError::from(value))
     }
 }
 

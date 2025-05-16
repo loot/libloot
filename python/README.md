@@ -47,5 +47,4 @@ python
 - The Python exceptions that errors are mapped to are not the same as in the Rust or C++ interfaces:
     - The API provides the custom `CyclicInteractionError`, `UndefinedGroupError`, `EspluginError` exception types.
     - All other errors are raised as `ValueError` exceptions.
-    - There's no equivalent to the C++ interface's libloadorder system error category.
 - The `LogLevel` enum and `set_logging_callback()` and `set_log_level()` functions are not exposed because the logging is integrated with Python's `logging` module instead.

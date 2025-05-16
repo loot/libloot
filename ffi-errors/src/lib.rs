@@ -94,10 +94,9 @@
 )]
 use std::{error::Error, ffi::c_int};
 
-use libloot::error::{LoadOrderError, PluginDataError};
+use libloot::error::PluginDataError;
 
 mod esplugin;
-mod libloadorder;
 
 // It's important for API stability that these variants' values don't change.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -105,14 +104,12 @@ mod libloadorder;
 #[non_exhaustive]
 pub enum SystemErrorCategory {
     Esplugin = 1,
-    Libloadorder = 2,
 }
 
 impl std::fmt::Display for SystemErrorCategory {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SystemErrorCategory::Esplugin => write!(f, "esplugin"),
-            SystemErrorCategory::Libloadorder => write!(f, "libloadorder"),
         }
     }
 }
@@ -165,22 +162,6 @@ impl From<PluginDataError> for SystemError {
             SystemErrorCategory::Esplugin,
             ESPLUGIN_ERROR_UNKNOWN,
             crate::esplugin::map_error,
-        )
-    }
-}
-
-impl From<LoadOrderError> for SystemError {
-    fn from(value: LoadOrderError) -> Self {
-        const LIBLOADORDER_ERROR_UNKNOWN: (i32, &str) = (
-            libloadorder::LIBLO_ERROR_UNKNOWN,
-            "Could not retrieve libloadorder error message",
-        );
-
-        from_error(
-            value,
-            SystemErrorCategory::Libloadorder,
-            LIBLOADORDER_ERROR_UNKNOWN,
-            crate::libloadorder::map_error,
         )
     }
 }
