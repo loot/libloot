@@ -34,6 +34,7 @@
 #include "api/api_database.h"
 #include "api/helpers/logging.h"
 #include "api/sorting/plugin_sort.h"
+#include "loot/exception/plugin_not_loaded_error.h"
 
 #ifdef _WIN32
 #ifndef UNICODE
@@ -270,8 +271,8 @@ std::vector<std::string> Game::SortPlugins(
   for (const auto& pluginFilename : pluginFilenames) {
     const auto plugin = cache_.GetPlugin(pluginFilename);
     if (plugin == nullptr) {
-      throw std::invalid_argument("The plugin \"" + pluginFilename +
-                                  "\" has not been loaded.");
+      throw PluginNotLoadedError("The plugin \"" + pluginFilename +
+                                 "\" has not been loaded.");
     }
 
     plugins.push_back(plugin.get());
