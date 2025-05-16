@@ -29,6 +29,7 @@
 #include <stdexcept>
 
 #include "api/convert.h"
+#include "api/exception/exception.h"
 #include "libloot-cpp/src/lib.rs.h"
 
 namespace {
@@ -189,8 +190,13 @@ bool PluginMetadata::IsRegexPlugin() const {
 }
 
 bool PluginMetadata::NameMatches(std::string_view pluginName) const {
-  const auto metadata = convert(*this);
-  return metadata->name_matches(convert(pluginName));
+  try {
+    const auto metadata = loot::rust::new_plugin_metadata(name_);
+
+    return metadata->name_matches(convert(pluginName));
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
 }
 
 std::string PluginMetadata::AsYaml() const {
