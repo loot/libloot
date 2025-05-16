@@ -66,6 +66,9 @@ if __name__ == "__main__":
     update_cargo_toml(os.path.join('parameterized-test', 'Cargo.toml'), arguments.version[0])
     update_cargo_toml(os.path.join('python', 'Cargo.toml'), arguments.version[0])
 
+    # update_cargo_toml also works for pyproject.toml
+    update_cargo_toml(os.path.join('cpp', 'docs', 'pyproject.toml'), arguments.version[0])
+
     update_package_json(os.path.join('nodejs', 'package.json'), arguments.version[0])
     update_package_json(os.path.join('nodejs', 'npm', 'linux-x64-gnu', 'package.json'), arguments.version[0])
     update_package_json(os.path.join('nodejs', 'npm', 'win32-x64-msvc', 'package.json'), arguments.version[0])
