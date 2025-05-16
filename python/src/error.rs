@@ -43,15 +43,9 @@ variant_box_from_error!(WriteMetadataError, VerboseError::Other);
 variant_box_from_error!(ConditionEvaluationError, VerboseError::Other);
 variant_box_from_error!(MultilingualMessageContentsError, VerboseError::Other);
 variant_box_from_error!(RegexError, VerboseError::Other);
-
-impl From<GameHandleCreationError> for VerboseError {
-    fn from(value: GameHandleCreationError) -> Self {
-        match value {
-            GameHandleCreationError::LoadOrderError(e) => e.into(),
-            GameHandleCreationError::NotADirectory(_) | _ => Self::Other(Box::new(value)),
-        }
-    }
-}
+variant_box_from_error!(GameHandleCreationError, VerboseError::Other);
+variant_box_from_error!(LoadOrderStateError, VerboseError::Other);
+variant_box_from_error!(MetadataRetrievalError, VerboseError::Other);
 
 impl From<SortPluginsError> for VerboseError {
     fn from(value: SortPluginsError) -> Self {
@@ -69,30 +63,12 @@ impl From<SortPluginsError> for VerboseError {
     }
 }
 
-impl From<LoadOrderStateError> for VerboseError {
-    fn from(value: LoadOrderStateError) -> Self {
-        match value {
-            LoadOrderStateError::LoadOrderError(e) => e.into(),
-            LoadOrderStateError::DatabaseLockPoisoned | _ => Self::Other(Box::new(value)),
-        }
-    }
-}
-
 impl From<GroupsPathError> for VerboseError {
     fn from(value: GroupsPathError) -> Self {
         match value {
             GroupsPathError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             GroupsPathError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
             GroupsPathError::PathfindingError(_) => Self::Other(Box::new(value)),
-        }
-    }
-}
-
-impl From<MetadataRetrievalError> for VerboseError {
-    fn from(value: MetadataRetrievalError) -> Self {
-        match value {
-            MetadataRetrievalError::ConditionEvaluationError(e) => e.into(),
-            MetadataRetrievalError::RegexError(_) => Self::Other(Box::new(value)),
         }
     }
 }
