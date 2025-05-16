@@ -238,6 +238,7 @@ mod ffi {
     }
 
     pub enum EdgeType {
+        /// A special value that indicates that there is no edge.
         None,
         Hardcoded,
         MasterFlag,
@@ -271,7 +272,6 @@ mod ffi {
     extern "Rust" {
         pub fn is_some(self: &OptionalMessageContentRef) -> bool;
 
-        // Again, these lifetimes are wrong.
         pub unsafe fn as_ref<'a>(self: &'a OptionalMessageContentRef)
         -> Result<&'a MessageContent>;
     }
@@ -316,10 +316,8 @@ mod ffi {
 
         pub fn clear_loaded_plugins(&mut self);
 
-        // The plugin's lifetime is actually less than &Game's, it's only valid so long as the loaded plugin is not overwritten or cleared.
         pub fn plugin(&self, plugin_name: &str) -> Box<OptionalPlugin>;
 
-        // The plugin's lifetime is actually less than &Game's, it's only valid so long as the loaded plugin is not overwritten or cleared.
         pub fn loaded_plugins(&self) -> Vec<Plugin>;
 
         pub fn sort_plugins(&self, plugin_names: &[&str]) -> Result<Vec<String>>;
@@ -454,17 +452,16 @@ mod ffi {
 
         pub fn name(&self) -> &str;
 
-        // The None case is signalled by NaN.
+        /// NaN is used to indicate that the header version was not found.
         pub fn header_version(&self) -> f32;
 
-        // The None case is signalled by an empty string (which is not a valid version).
+        /// An empty string is used to indicate that no version was found.
         pub fn version(&self) -> &str;
 
         pub fn masters(&self) -> Result<Vec<String>>;
 
         pub fn bash_tags(&self) -> &[String];
 
-        // The None case is signalled by -1, all other values fit in u32.
         pub fn crc(&self) -> Box<OptionalCrc>;
 
         pub fn is_master(&self) -> bool;
@@ -497,7 +494,6 @@ mod ffi {
 
         pub fn is_some(&self) -> bool;
 
-        // Again, these lifetimes are wrong.
         pub unsafe fn as_ref<'a>(&'a self) -> Result<&'a Plugin>;
     }
 
@@ -506,7 +502,6 @@ mod ffi {
 
         pub fn is_some(&self) -> bool;
 
-        // Again, these lifetimes are wrong.
         pub unsafe fn as_ref<'a>(&'a self) -> Result<&'a u32>;
     }
 
@@ -527,7 +522,6 @@ mod ffi {
 
         pub fn is_some(&self) -> bool;
 
-        // Again, these lifetimes are wrong.
         pub unsafe fn as_ref<'a>(&'a self) -> Result<&'a PluginMetadata>;
     }
 
@@ -538,6 +532,7 @@ mod ffi {
 
         pub fn name(&self) -> &str;
 
+        /// An empty string is used to indicate that no group is set.
         pub fn group(&self) -> &str;
 
         pub fn load_after_files(&self) -> &[File];

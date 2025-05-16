@@ -85,9 +85,6 @@ cpack --config build/CPackConfig.cmake -C RelWithDebInfo
 For the first layer of the wrapper, built using Cargo:
 
 - `LIBLOOT_VERSION_MAJOR`, `LIBLOOT_VERSION_MINOR` and `LIBLOOT_VERSION_PATCH` are exposed as `extern "C"` `static unsigned int` globals.
-- CXX doesn't provide integration between Rust's `Option<_>` and C++'s `std::optional<T>`, so sentinel values are used to communicate the absence of a value in the wrapper's API:
-    - For `Option<&str>`, `None` is represented using an empty string, which is how it's already done for many metadata object fields in the C++ implementation of libloot.
-    - For `Option<f32>`, `None` is represented using `NaN`, since the C++ implementation of libloot's public API already says that `NaN` values get converted to `None`.
 - All Rust errors are converted to `::rust::Error` exceptions that have a `what()` string that is the concatenation of the error's display string and all its recursive source error display strings. For some errors the `what()` string also includes some data that is parsed by the wrapper's second layer to differentiate certain error types.
 
 For the ABI-compatible second layer of the wrapper, built using CMake:
