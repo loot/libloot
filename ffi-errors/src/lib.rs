@@ -94,10 +94,9 @@
 )]
 use std::{error::Error, ffi::c_int};
 
-use libloot::error::{ConditionEvaluationError, LoadOrderError, PluginDataError};
+use libloot::error::{LoadOrderError, PluginDataError};
 
 mod esplugin;
-mod lci;
 mod libloadorder;
 
 // It's important for API stability that these variants' values don't change.
@@ -107,7 +106,6 @@ mod libloadorder;
 pub enum SystemErrorCategory {
     Esplugin = 1,
     Libloadorder = 2,
-    LootConditionInterpreter = 3,
 }
 
 impl std::fmt::Display for SystemErrorCategory {
@@ -115,9 +113,6 @@ impl std::fmt::Display for SystemErrorCategory {
         match self {
             SystemErrorCategory::Esplugin => write!(f, "esplugin"),
             SystemErrorCategory::Libloadorder => write!(f, "libloadorder"),
-            SystemErrorCategory::LootConditionInterpreter => {
-                write!(f, "loot-condition-interpreter")
-            }
         }
     }
 }
@@ -186,22 +181,6 @@ impl From<LoadOrderError> for SystemError {
             SystemErrorCategory::Libloadorder,
             LIBLOADORDER_ERROR_UNKNOWN,
             crate::libloadorder::map_error,
-        )
-    }
-}
-
-impl From<ConditionEvaluationError> for SystemError {
-    fn from(value: ConditionEvaluationError) -> Self {
-        const LCI_ERROR_UNKNOWN: (i32, &str) = (
-            lci::LCI_ERROR_UNKNOWN,
-            "Could not retrieve loot-condition-interpreter error message",
-        );
-
-        from_error(
-            value,
-            SystemErrorCategory::LootConditionInterpreter,
-            LCI_ERROR_UNKNOWN,
-            crate::lci::map_error,
         )
     }
 }

@@ -45,7 +45,6 @@ impl std::fmt::Display for VerboseError {
                 let prefix = match e.category() {
                     SystemErrorCategory::Esplugin => "EspluginError",
                     SystemErrorCategory::Libloadorder => "LibloadorderError",
-                    SystemErrorCategory::LootConditionInterpreter => "LciError",
                     _ => "UnknownCategoryError",
                 };
                 write!(f, "{}: {}: {}", prefix, e.code(), e.message())
@@ -63,6 +62,8 @@ variant_box_from_error!(MultilingualMessageContentsError, VerboseError::Other);
 variant_box_from_error!(RegexError, VerboseError::Other);
 variant_box_from_error!(LoadMetadataError, VerboseError::Other);
 variant_box_from_error!(WriteMetadataError, VerboseError::Other);
+variant_box_from_error!(ConditionEvaluationError, VerboseError::Other);
+variant_box_from_error!(MetadataRetrievalError, VerboseError::Other);
 
 impl From<GameHandleCreationError> for VerboseError {
     fn from(value: GameHandleCreationError) -> Self {
@@ -116,27 +117,12 @@ impl From<LoadOrderError> for VerboseError {
     }
 }
 
-impl From<ConditionEvaluationError> for VerboseError {
-    fn from(value: ConditionEvaluationError) -> Self {
-        Self::SystemError(SystemError::from(value))
-    }
-}
-
 impl From<GroupsPathError> for VerboseError {
     fn from(value: GroupsPathError) -> Self {
         match value {
             GroupsPathError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             GroupsPathError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
             GroupsPathError::PathfindingError(_) | _ => Self::Other(Box::new(value)),
-        }
-    }
-}
-
-impl From<MetadataRetrievalError> for VerboseError {
-    fn from(value: MetadataRetrievalError) -> Self {
-        match value {
-            MetadataRetrievalError::ConditionEvaluationError(e) => e.into(),
-            MetadataRetrievalError::RegexError(_) | _ => Self::Other(Box::new(value)),
         }
     }
 }

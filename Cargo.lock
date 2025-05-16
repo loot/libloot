@@ -581,7 +581,6 @@ dependencies = [
  "esplugin",
  "libloadorder",
  "libloot",
- "loot-condition-interpreter",
 ]
 
 [[package]]

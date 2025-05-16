@@ -9,4 +9,3 @@ libloot = { path = ".." }
 
 esplugin.workspace = true
 libloadorder.workspace = true
-loot-condition-interpreter.workspace = true

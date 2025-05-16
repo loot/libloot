@@ -50,7 +50,6 @@ variant_box_from_error!(MetadataRetrievalError, VerboseError::Other);
 impl From<SortPluginsError> for VerboseError {
     fn from(value: SortPluginsError) -> Self {
         match value {
-            SortPluginsError::MetadataRetrievalError(e) => e.into(),
             SortPluginsError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             SortPluginsError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
             SortPluginsError::PluginDataError(e) => e.into(),
