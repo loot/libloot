@@ -545,7 +545,7 @@ dependencies = [
 
 [[package]]
 name = "libloot"
-version = "0.26.1"
+version = "0.26.2"
 dependencies = [
  "crc32fast",
  "esplugin",
@@ -566,7 +566,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-cpp"
-version = "0.26.1"
+version = "0.26.2"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -577,7 +577,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-ffi-errors"
-version = "0.26.1"
+version = "0.26.2"
 dependencies = [
  "esplugin",
  "libloadorder",
@@ -587,7 +587,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-nodejs"
-version = "0.26.1"
+version = "0.26.2"
 dependencies = [
  "libloot",
  "libloot-ffi-errors",
@@ -598,7 +598,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-python"
-version = "0.26.1"
+version = "0.26.2"
 dependencies = [
  "libloot",
  "libloot-ffi-errors",
@@ -780,7 +780,7 @@ dependencies = [
 
 [[package]]
 name = "parameterized-test"
-version = "0.26.1"
+version = "0.26.2"
 dependencies = [
  "proc-macro2",
  "quote",
