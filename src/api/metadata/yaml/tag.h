@@ -34,7 +34,7 @@
 #include "loot/metadata/tag.h"
 
 namespace loot {
-inline bool emitAsScalar(const Tag& tag) { return !tag.IsConditional(); }
+inline bool emitAsScalar(const Tag& tag) { return tag.GetCondition().empty(); }
 }
 
 namespace YAML {
@@ -42,7 +42,7 @@ template<>
 struct convert<loot::Tag> {
   static Node encode(const loot::Tag& rhs) {
     Node node;
-    if (rhs.IsConditional())
+    if (!rhs.GetCondition().empty())
       node["condition"] = rhs.GetCondition();
     if (rhs.IsAddition())
       node["name"] = rhs.GetName();

@@ -37,7 +37,7 @@
 
 namespace loot {
 inline bool emitAsScalar(const File& file) {
-  return !file.IsConditional() && file.GetDetail().empty() &&
+  return file.GetCondition().empty() && file.GetDetail().empty() &&
          file.GetDisplayName().empty() && file.GetConstraint().empty();
 }
 }
@@ -49,7 +49,7 @@ struct convert<loot::File> {
     Node node;
     node["name"] = std::string(rhs.GetName());
 
-    if (rhs.IsConditional()) {
+    if (!rhs.GetCondition().empty()) {
       node["condition"] = rhs.GetCondition();
     }
 
@@ -147,7 +147,7 @@ inline Emitter& operator<<(Emitter& out, const loot::File& rhs) {
     out << BeginMap << Key << "name" << Value << YAML::SingleQuoted
         << std::string(rhs.GetName());
 
-    if (rhs.IsConditional()) {
+    if (!rhs.GetCondition().empty()) {
       out << Key << "condition" << Value << YAML::SingleQuoted
           << rhs.GetCondition();
     }

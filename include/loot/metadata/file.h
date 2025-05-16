@@ -28,7 +28,6 @@
 #include <string_view>
 
 #include "loot/api_decorator.h"
-#include "loot/metadata/conditional_metadata.h"
 #include "loot/metadata/filename.h"
 #include "loot/metadata/message_content.h"
 
@@ -36,7 +35,7 @@ namespace loot {
 /**
  * Represents a file in a game's Data folder, including files in subdirectories.
  */
-class File : public ConditionalMetadata {
+class File {
 public:
   /**
    * Construct a File with blank name, display and condition strings.
@@ -88,6 +87,12 @@ public:
   LOOT_API std::vector<MessageContent> GetDetail() const;
 
   /**
+   * Get the condition string.
+   * @return The file's condition string.
+   */
+  LOOT_API std::string GetCondition() const;
+
+  /**
    * Get the constraint that applies to the file.
    * @return The file's constraint.
    */
@@ -97,6 +102,7 @@ private:
   Filename name_;
   std::string display_;
   std::vector<MessageContent> detail_;
+  std::string condition_;
   std::string constraint_;
 };
 
