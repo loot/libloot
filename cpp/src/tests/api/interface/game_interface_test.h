@@ -370,13 +370,8 @@ TEST_P(
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
       GetParam() == GameType::starfield) {
-    try {
-      handle_->LoadPlugins({blankMasterDependentEsm}, false);
-      FAIL();
-    } catch (const std::system_error& e) {
-      EXPECT_EQ(ESP_ERROR_PLUGIN_METADATA_NOT_FOUND, e.code().value());
-      EXPECT_EQ(esplugin_category(), e.code().category());
-    }
+    EXPECT_THROW(handle_->LoadPlugins({blankMasterDependentEsm}, false),
+                 PluginNotLoadedError);
   } else {
     handle_->LoadPlugins({blankMasterDependentEsm}, false);
 
@@ -389,13 +384,8 @@ TEST_P(
     loadPluginsShouldThrowIfAPluginHasAMasterThatIsNotInTheInputAndIsNotAlreadyLoadedAndGameIsMorrowindOrStarfield) {
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
       GetParam() == GameType::starfield) {
-    try {
-      handle_->LoadPlugins({blankMasterDependentEsm}, false);
-      FAIL();
-    } catch (const std::system_error& e) {
-      EXPECT_EQ(ESP_ERROR_PLUGIN_METADATA_NOT_FOUND, e.code().value());
-      EXPECT_EQ(esplugin_category(), e.code().category());
-    }
+    EXPECT_THROW(handle_->LoadPlugins({blankMasterDependentEsm}, false),
+                 PluginNotLoadedError);
   } else {
     handle_->LoadPlugins({blankMasterDependentEsm}, false);
 
@@ -476,7 +466,7 @@ TEST_P(GameInterfaceTest,
 TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfAGivenPluginIsNotLoaded) {
   std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
 
-  EXPECT_THROW(handle_->SortPlugins(plugins), std::runtime_error);
+  EXPECT_THROW(handle_->SortPlugins(plugins), PluginNotLoadedError);
 }
 
 TEST_P(GameInterfaceTest, clearLoadedPluginsShouldClearThePluginsCache) {

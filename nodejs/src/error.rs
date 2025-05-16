@@ -8,7 +8,7 @@ use libloot::{
         LoadMetadataError, MultilingualMessageContentsError, RegexError, WriteMetadataError,
     },
 };
-use libloot_ffi_errors::{fmt_error_chain, SystemError, UnsupportedEnumValueError};
+use libloot_ffi_errors::{fmt_error_chain, UnsupportedEnumValueError};
 
 #[derive(Debug)]
 pub struct VerboseError(Box<dyn std::error::Error>);
@@ -43,12 +43,7 @@ box_from_error!(GroupsPathError, VerboseError);
 box_from_error!(MetadataRetrievalError, VerboseError);
 box_from_error!(MultilingualMessageContentsError, VerboseError);
 box_from_error!(RegexError, VerboseError);
-
-impl From<PluginDataError> for VerboseError {
-    fn from(value: PluginDataError) -> Self {
-        Self(Box::new(SystemError::from(value)))
-    }
-}
+box_from_error!(PluginDataError, VerboseError);
 
 impl From<VerboseError> for napi::Error {
     fn from(value: VerboseError) -> Self {

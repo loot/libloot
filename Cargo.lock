@@ -578,7 +578,6 @@ dependencies = [
 name = "libloot-ffi-errors"
 version = "0.26.3"
 dependencies = [
- "esplugin",
  "libloot",
 ]
 

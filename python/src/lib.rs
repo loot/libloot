@@ -125,7 +125,7 @@ fn libloot_version() -> String {
 
 create_exception!(loot, CyclicInteractionError, PyException);
 create_exception!(loot, UndefinedGroupError, PyException);
-create_exception!(loot, EspluginError, PyException);
+create_exception!(loot, PluginNotLoadedError, PyException);
 
 /// A Python module implemented in Rust.
 #[pymodule(name = "loot")]
@@ -165,7 +165,10 @@ fn libloot_pyo3(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
         py.get_type::<CyclicInteractionError>(),
     )?;
     m.add("UndefinedGroupError", py.get_type::<UndefinedGroupError>())?;
-    m.add("EspluginError", py.get_type::<EspluginError>())?;
+    m.add(
+        "PluginNotLoadedError",
+        py.get_type::<PluginNotLoadedError>(),
+    )?;
 
     Ok(())
 }

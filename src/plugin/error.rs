@@ -8,6 +8,15 @@ use crate::escape_ascii;
 #[derive(Debug)]
 pub struct PluginDataError(esplugin::Error);
 
+impl PluginDataError {
+    pub(crate) fn plugin_not_loaded(&self) -> Option<&str> {
+        match &self.0 {
+            esplugin::Error::PluginMetadataNotFound(p) => Some(p.as_str()),
+            _ => None,
+        }
+    }
+}
+
 impl std::fmt::Display for PluginDataError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "failed to read plugin data")

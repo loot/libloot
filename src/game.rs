@@ -1521,8 +1521,6 @@ mod tests {
         }
 
         mod load_plugins {
-            use std::error::Error;
-
             use crate::tests::BLANK_FULL_ESM;
 
             use super::*;
@@ -1617,17 +1615,11 @@ mod tests {
                     GameType::Morrowind | GameType::OpenMW | GameType::Starfield
                 ) {
                     match game.load_plugins(paths) {
-                        Err(LoadPluginsError::PluginDataError(e)) => {
-                            let source = e.source().unwrap();
-                            match source.downcast_ref::<esplugin::Error>().unwrap() {
-                                esplugin::Error::PluginMetadataNotFound(p) => {
-                                    if game_type == GameType::Starfield {
-                                        assert_eq!(BLANK_FULL_ESM, p);
-                                    } else {
-                                        assert_eq!(BLANK_ESM, p);
-                                    }
-                                }
-                                _ => panic!("Unexpected esplugin error: {e}"),
+                        Err(LoadPluginsError::PluginNotLoaded(p)) => {
+                            if game_type == GameType::Starfield {
+                                assert_eq!(BLANK_FULL_ESM, p);
+                            } else {
+                                assert_eq!(BLANK_ESM, p);
                             }
                         }
                         _ => panic!("Expected an error due to esplugin metadata not found"),

@@ -98,6 +98,7 @@ pub enum LoadPluginsError {
     IoError(Box<std::io::Error>),
     PluginValidationError(Box<dyn std::error::Error + Send + Sync + 'static>),
     PluginDataError(PluginDataError),
+    PluginNotLoaded(String),
 }
 
 impl std::fmt::Display for LoadPluginsError {
@@ -107,6 +108,7 @@ impl std::fmt::Display for LoadPluginsError {
             Self::IoError(_) => write!(f, "an I/O error occurred"),
             Self::PluginValidationError(_) => write!(f, "failed validation of input plugin paths"),
             Self::PluginDataError(_) => write!(f, "failed to read loaded plugin data"),
+            Self::PluginNotLoaded(n) => write!(f, "the plugin \"{n}\" has not been loaded"),
         }
     }
 }
@@ -114,7 +116,7 @@ impl std::fmt::Display for LoadPluginsError {
 impl std::error::Error for LoadPluginsError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::DatabaseLockPoisoned => None,
+            Self::DatabaseLockPoisoned | Self::PluginNotLoaded(_) => None,
             Self::IoError(e) => Some(e),
             Self::PluginValidationError(e) => Some(e.as_ref()),
             Self::PluginDataError(e) => Some(e),
@@ -148,7 +150,11 @@ impl From<PluginValidationError> for LoadPluginsError {
 
 impl From<PluginDataError> for LoadPluginsError {
     fn from(value: PluginDataError) -> Self {
-        LoadPluginsError::PluginDataError(value)
+        if let Some(plugin) = value.plugin_not_loaded() {
+            Self::PluginNotLoaded(plugin.to_owned())
+        } else {
+            Self::PluginDataError(value)
+        }
     }
 }
 
@@ -264,7 +270,11 @@ impl From<BuildGroupsGraphError> for SortPluginsError {
 
 impl From<PluginDataError> for SortPluginsError {
     fn from(value: PluginDataError) -> Self {
-        SortPluginsError::PluginDataError(value)
+        if let Some(plugin) = value.plugin_not_loaded() {
+            Self::PluginNotLoaded(plugin.to_owned())
+        } else {
+            Self::PluginDataError(value)
+        }
     }
 }
 

@@ -8,18 +8,16 @@ use libloot::{
         LoadMetadataError, MultilingualMessageContentsError, RegexError, WriteMetadataError,
     },
 };
-use libloot_ffi_errors::{
-    SystemError, UnsupportedEnumValueError, fmt_error_chain, variant_box_from_error,
-};
+use libloot_ffi_errors::{UnsupportedEnumValueError, fmt_error_chain, variant_box_from_error};
 use pyo3::{PyErr, exceptions::PyValueError};
 
-use crate::{CyclicInteractionError, EspluginError, UndefinedGroupError, database::Vertex};
+use crate::{CyclicInteractionError, PluginNotLoadedError, UndefinedGroupError, database::Vertex};
 
 #[derive(Debug)]
 pub enum VerboseError {
     CyclicInteractionError(Vec<libloot::Vertex>),
     UndefinedGroupError(String),
-    EspluginError(SystemError),
+    PluginNotLoadedError(String),
     Other(Box<dyn std::error::Error>),
 }
 
@@ -28,7 +26,7 @@ impl std::fmt::Display for VerboseError {
         match self {
             Self::CyclicInteractionError(c) => SortPluginsError::CycleFound(c.clone()).fmt(f),
             Self::UndefinedGroupError(g) => SortPluginsError::UndefinedGroup(g.clone()).fmt(f),
-            Self::EspluginError(e) => e.message().fmt(f),
+            Self::PluginNotLoadedError(p) => SortPluginsError::PluginNotLoaded(p.clone()).fmt(f),
             Self::Other(e) => fmt_error_chain(e.as_ref(), f),
         }
     }
@@ -46,17 +44,18 @@ variant_box_from_error!(RegexError, VerboseError::Other);
 variant_box_from_error!(GameHandleCreationError, VerboseError::Other);
 variant_box_from_error!(LoadOrderStateError, VerboseError::Other);
 variant_box_from_error!(MetadataRetrievalError, VerboseError::Other);
+variant_box_from_error!(PluginDataError, VerboseError::Other);
 
 impl From<SortPluginsError> for VerboseError {
     fn from(value: SortPluginsError) -> Self {
         match value {
             SortPluginsError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             SortPluginsError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
-            SortPluginsError::PluginDataError(e) => e.into(),
+            SortPluginsError::PluginNotLoaded(n) => Self::PluginNotLoadedError(n),
             SortPluginsError::DatabaseLockPoisoned
-            | SortPluginsError::PluginNotLoaded(_)
             | SortPluginsError::CycleFoundInvolving(_)
             | SortPluginsError::PathfindingError(_)
+            | SortPluginsError::PluginDataError(_)
             | _ => Self::Other(Box::new(value)),
         }
     }
@@ -72,12 +71,6 @@ impl From<GroupsPathError> for VerboseError {
     }
 }
 
-impl From<PluginDataError> for VerboseError {
-    fn from(value: PluginDataError) -> Self {
-        Self::EspluginError(SystemError::from(value))
-    }
-}
-
 impl From<VerboseError> for PyErr {
     fn from(value: VerboseError) -> Self {
         let message = value.to_string();
@@ -90,8 +83,8 @@ impl From<VerboseError> for PyErr {
             VerboseError::UndefinedGroupError(g) => {
                 PyErr::new::<UndefinedGroupError, _>((g, message))
             }
-            VerboseError::EspluginError(e) => {
-                PyErr::new::<EspluginError, _>((e.code(), e.message().to_owned()))
+            VerboseError::PluginNotLoadedError(p) => {
+                PyErr::new::<PluginNotLoadedError, _>((p, message))
             }
             VerboseError::Other(_) => PyValueError::new_err(message),
         }
