@@ -45,7 +45,6 @@ pub enum LogLevel {
     Info,
     Warning,
     Error,
-    Fatal,
 }
 
 impl std::fmt::Display for LogLevel {
@@ -56,7 +55,6 @@ impl std::fmt::Display for LogLevel {
             LogLevel::Info => write!(f, "info"),
             LogLevel::Warning => write!(f, "warning"),
             LogLevel::Error => write!(f, "error"),
-            LogLevel::Fatal => write!(f, "fatal"),
         }
     }
 }
@@ -68,7 +66,7 @@ impl From<LogLevel> for log::Level {
             LogLevel::Debug => log::Level::Debug,
             LogLevel::Info => log::Level::Info,
             LogLevel::Warning => log::Level::Warn,
-            LogLevel::Error | LogLevel::Fatal => log::Level::Error,
+            LogLevel::Error => log::Level::Error,
         }
     }
 }
@@ -321,7 +319,6 @@ mod tests {
             assert!(!is_log_enabled(LogLevel::Info));
             assert!(is_log_enabled(LogLevel::Warning));
             assert!(is_log_enabled(LogLevel::Error));
-            assert!(is_log_enabled(LogLevel::Fatal));
         }
     }
 }

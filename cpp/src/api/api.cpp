@@ -23,8 +23,6 @@ extern const uint8_t LIBLOOT_LOG_LEVEL_WARNING;
 
 extern const uint8_t LIBLOOT_LOG_LEVEL_ERROR;
 
-extern const uint8_t LIBLOOT_LOG_LEVEL_FATAL;
-
 void libloot_set_logging_callback(void (*callback)(uint8_t, const char*, void*),
                                   void* context);
 }
@@ -48,7 +46,7 @@ LogLevel convert(uint8_t level) {
   } else if (level == LIBLOOT_LOG_LEVEL_ERROR) {
     return LogLevel::error;
   } else {
-    return LogLevel::fatal;
+    return LogLevel::error;
   }
 }
 
@@ -64,8 +62,6 @@ loot::rust::LogLevel convert(LogLevel level) {
       return loot::rust::LogLevel::Warning;
     case LogLevel::error:
       return loot::rust::LogLevel::Error;
-    case LogLevel::fatal:
-      return loot::rust::LogLevel::Fatal;
     default:
       return loot::rust::LogLevel::Trace;
   }

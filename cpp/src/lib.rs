@@ -195,7 +195,6 @@ impl TryFrom<ffi::LogLevel> for libloot::LogLevel {
             ffi::LogLevel::Info => Ok(libloot::LogLevel::Info),
             ffi::LogLevel::Warning => Ok(libloot::LogLevel::Warning),
             ffi::LogLevel::Error => Ok(libloot::LogLevel::Error),
-            ffi::LogLevel::Fatal => Ok(libloot::LogLevel::Fatal),
             _ => Err(UnsupportedEnumValueError),
         }
     }
@@ -261,7 +260,6 @@ mod ffi {
         Info,
         Warning,
         Error,
-        Fatal,
     }
 
     #[derive(Debug)]
@@ -712,9 +710,6 @@ pub static LIBLOOT_LOG_LEVEL_WARNING: c_uchar = 3;
 #[unsafe(no_mangle)]
 pub static LIBLOOT_LOG_LEVEL_ERROR: c_uchar = 4;
 
-#[unsafe(no_mangle)]
-pub static LIBLOOT_LOG_LEVEL_FATAL: c_uchar = 5;
-
 fn to_u8(value: libloot::LogLevel) -> u8 {
     match value {
         libloot::LogLevel::Trace => LIBLOOT_LOG_LEVEL_TRACE,
@@ -722,7 +717,6 @@ fn to_u8(value: libloot::LogLevel) -> u8 {
         libloot::LogLevel::Info => LIBLOOT_LOG_LEVEL_INFO,
         libloot::LogLevel::Warning => LIBLOOT_LOG_LEVEL_WARNING,
         libloot::LogLevel::Error => LIBLOOT_LOG_LEVEL_ERROR,
-        libloot::LogLevel::Fatal => LIBLOOT_LOG_LEVEL_FATAL,
     }
 }
 

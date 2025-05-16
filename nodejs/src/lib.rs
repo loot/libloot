@@ -141,7 +141,6 @@ pub enum LogLevel {
     Info,
     Warning,
     Error,
-    Fatal,
 }
 
 impl From<LogLevel> for libloot::LogLevel {
@@ -152,7 +151,6 @@ impl From<LogLevel> for libloot::LogLevel {
             LogLevel::Info => libloot::LogLevel::Info,
             LogLevel::Warning => libloot::LogLevel::Warning,
             LogLevel::Error => libloot::LogLevel::Error,
-            LogLevel::Fatal => libloot::LogLevel::Fatal,
         }
     }
 }
@@ -165,7 +163,6 @@ impl From<libloot::LogLevel> for LogLevel {
             libloot::LogLevel::Info => LogLevel::Info,
             libloot::LogLevel::Warning => LogLevel::Warning,
             libloot::LogLevel::Error => LogLevel::Error,
-            libloot::LogLevel::Fatal => LogLevel::Fatal,
         }
     }
 }
