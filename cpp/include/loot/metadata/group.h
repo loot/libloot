@@ -44,7 +44,6 @@ public:
   /**
    * Construct a Group with the name "default" and an empty set of groups to
    * load after.
-   * @return A Group object.
    */
   LOOT_API Group() = default;
 
@@ -57,7 +56,6 @@ public:
    *         The names of groups this group loads after.
    * @param  description
    *         A description of the group.
-   * @return A Group object.
    */
   LOOT_API explicit Group(std::string_view name,
                           const std::vector<std::string>& afterGroups = {},

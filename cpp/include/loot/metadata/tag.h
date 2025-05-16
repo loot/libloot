@@ -39,7 +39,6 @@ public:
   /**
    * Construct a Tag object with an empty tag name suggested for addition, with
    * an empty condition string.
-   * @return A Tag object.
    */
   LOOT_API explicit Tag() = default;
 
@@ -52,7 +51,6 @@ public:
    *         True if the tag should be added, false if it should be removed.
    * @param  condition
    *         A condition string.
-   * @return A Tag object.
    */
   LOOT_API explicit Tag(std::string_view tag,
                         const bool isAddition = true,

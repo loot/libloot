@@ -42,7 +42,6 @@ public:
   /**
    * Construct a Message object of type 'say' with blank content and condition
    * strings.
-   * @return A Message object.
    */
   LOOT_API Message() = default;
 
@@ -55,7 +54,6 @@ public:
    *         The English message content text.
    * @param  condition
    *         A condition string.
-   * @return A Message object.
    */
   LOOT_API explicit Message(const MessageType type,
                             std::string_view content,
@@ -70,7 +68,6 @@ public:
    *         The message content. If multilingual, one language must be English.
    * @param  condition
    *         A condition string.
-   * @return A Message object.
    */
   LOOT_API explicit Message(const MessageType type,
                             const std::vector<MessageContent>& content,

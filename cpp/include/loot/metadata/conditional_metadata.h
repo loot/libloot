@@ -38,7 +38,6 @@ class ConditionalMetadata {
 public:
   /**
    * Construct a ConditionalMetadata object with an empty condition string.
-   * @return A ConditionalMetadata object.
    */
   LOOT_API ConditionalMetadata() = default;
 
@@ -47,7 +46,6 @@ public:
    * @param  condition
    *         A condition string, as defined in the LOOT metadata syntax
    *         documentation.
-   * @return A ConditionalMetadata object.
    */
   LOOT_API explicit ConditionalMetadata(std::string_view condition);
 
