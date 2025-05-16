@@ -46,9 +46,8 @@ LogLevel mapFromSpdlog(spdlog::level::level_enum severity) {
     case level_enum::warn:
       return LogLevel::warning;
     case level_enum::err:
-      return LogLevel::error;
     case level_enum::critical:
-      return LogLevel::fatal;
+      return LogLevel::error;
     default:
       return LogLevel::trace;
   }
@@ -67,8 +66,6 @@ spdlog::level::level_enum mapToSpdlog(LogLevel severity) {
       return level_enum::warn;
     case LogLevel::error:
       return level_enum::err;
-    case LogLevel::fatal:
-      return level_enum::critical;
     default:
       return level_enum::trace;
   }
