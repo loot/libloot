@@ -79,15 +79,3 @@ To package the build:
 ```
 cpack --config build/CPackConfig.cmake -C RelWithDebInfo
 ```
-
-## Usage notes
-
-For the first layer of the wrapper, built using Cargo:
-
-- `LIBLOOT_VERSION_MAJOR`, `LIBLOOT_VERSION_MINOR` and `LIBLOOT_VERSION_PATCH` are exposed as `extern "C"` `static unsigned int` globals.
-- All Rust errors are converted to `::rust::Error` exceptions that have a `what()` string that is the concatenation of the error's display string and all its recursive source error display strings. For some errors the `what()` string also includes some data that is parsed by the wrapper's second layer to differentiate certain error types.
-
-For the ABI-compatible second layer of the wrapper, built using CMake:
-
-- Some exceptions have changed type: they all still derive from `std::exception`, but for example some `std::logic_error` and `std::invalid_argument` exceptions have become `std::runtime_error` exceptions, some `YAML::RepresentationException` exceptions have become `FileAccessError` exceptions, etc.
-- Exception messages are generally not expected to be the same between the two implementations.

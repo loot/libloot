@@ -2,6 +2,27 @@
 Version History
 ***************
 
+0.28.0 - Unreleased
+===================
+
+Changed
+-------
+
+- :cpp:any:`loot::DatabaseInterface::LoadMasterlist()`,
+  :cpp:any:`loot::DatabaseInterface::LoadMasterlistWithPrelude()` and
+  :cpp:any:`loot::DatabaseInterface::LoadUserlist()` now throw
+  ``std::runtime_error`` exceptions instead of ``YAML::RepresentationException``
+  (which was a grandchild of ``std::runtime_error``) when there is a error
+  parsing metadata YAML.
+- When :cpp:any:`loot::DatabaseInterface::WriteUserMetadata()` or
+  :cpp:any:`loot::DatabaseInterface::WriteMinimalList()` are called with an
+  output path that has a parent path that does not exist, they now throw a
+  ``std::runtime_error`` instead of a ``std::invalid_argument``.
+- When :cpp:any:`loot::DatabaseInterface::GetGroupsPath()` is given a group name
+  that is undefined, it now throws a :cpp:any:`loot::UndefinedGroupError`
+  instead of a `std::invalid_argument`.
+- Many exception messages have changed.
+
 0.27.0 - 2025-06-08
 ===================
 
