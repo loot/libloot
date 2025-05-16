@@ -139,7 +139,7 @@ TEST(SetLogLevel, shouldOnlyRunTheCallbackForMessagesAtOrAboveTheGivenLevel) {
     loggedMessages.push_back(std::make_pair(level, std::string(string)));
   };
   SetLoggingCallback(callback);
-  SetLogLevel(LogLevel::fatal);
+  SetLogLevel(LogLevel::error);
 
   try {
     CreateGameHandle(GameType::tes4, "dummy");
