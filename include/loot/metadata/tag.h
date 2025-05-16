@@ -28,13 +28,12 @@
 #include <string_view>
 
 #include "loot/api_decorator.h"
-#include "loot/metadata/conditional_metadata.h"
 
 namespace loot {
 /**
  * Represents a Bash Tag suggestion for a plugin.
  */
-class Tag : public ConditionalMetadata {
+class Tag {
 public:
   /**
    * Construct a Tag object with an empty tag name suggested for addition, with
@@ -68,9 +67,16 @@ public:
    */
   LOOT_API std::string GetName() const;
 
+  /**
+   * Get the condition string.
+   * @return The tag's condition string.
+   */
+  LOOT_API std::string GetCondition() const;
+
 private:
   std::string name_;
   bool addTag_{true};
+  std::string condition_;
 };
 
 /**

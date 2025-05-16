@@ -56,9 +56,6 @@ Interfaces
 Classes
 =======
 
-.. doxygenclass:: loot::ConditionalMetadata
-   :members:
-
 .. doxygenclass:: loot::Filename
    :members:
 

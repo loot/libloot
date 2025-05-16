@@ -25,7 +25,6 @@
 #include <gtest/gtest.h>
 
 #include "loot/api.h"
-#include "tests/api/interface/metadata/conditional_metadata_test.h"
 #include "tests/api/interface/metadata/file_test.h"
 #include "tests/api/interface/metadata/group_test.h"
 #include "tests/api/interface/metadata/location_test.h"

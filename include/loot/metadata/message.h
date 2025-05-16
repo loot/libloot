@@ -30,14 +30,13 @@
 
 #include "loot/api_decorator.h"
 #include "loot/enum/message_type.h"
-#include "loot/metadata/conditional_metadata.h"
 #include "loot/metadata/message_content.h"
 
 namespace loot {
 /**
  * Represents a message with localisable text content.
  */
-class Message : public ConditionalMetadata {
+class Message {
 public:
   /**
    * Construct a Message object of type 'say' with blank content and condition
@@ -85,9 +84,16 @@ public:
    */
   LOOT_API std::vector<MessageContent> GetContent() const;
 
+  /**
+   * Get the condition string.
+   * @return The message's condition string.
+   */
+  LOOT_API std::string GetCondition() const;
+
 private:
   MessageType type_{MessageType::say};
   std::vector<MessageContent> content_;
+  std::string condition_;
 };
 
 /**

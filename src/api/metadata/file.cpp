@@ -30,10 +30,10 @@ File::File(std::string_view name,
            std::string_view condition,
            const std::vector<MessageContent>& detail,
            std::string_view constraint) :
-    ConditionalMetadata(condition),
     name_(Filename(name)),
     display_(display),
     detail_(detail),
+    condition_(condition),
     constraint_(constraint) {}
 
 Filename File::GetName() const { return name_; }
@@ -41,6 +41,8 @@ Filename File::GetName() const { return name_; }
 std::string File::GetDisplayName() const { return display_; }
 
 std::vector<MessageContent> File::GetDetail() const { return detail_; }
+
+std::string File::GetCondition() const { return condition_; }
 
 std::string File::GetConstraint() const { return constraint_; }
 
