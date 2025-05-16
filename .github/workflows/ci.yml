@@ -187,8 +187,11 @@ jobs:
       - name: Install packages for building docs (Windows)
         working-directory: cpp/docs
         run: |
-          nuget install doxygen -Version 1.8.14
-          echo "${{ github.workspace }}\Doxygen.1.8.14\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          curl -sSfLO https://github.com/doxygen/doxygen/releases/download/Release_1_13_2/doxygen-1.13.2.windows.x64.bin.zip
+          Expand-Archive doxygen-1.13.2.windows.x64.bin.zip
+
+          echo "${{ github.workspace }}\doxygen-1.13.2.windows.x64.bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
           pipx install uv
           uv sync
         if: runner.os == 'Windows'

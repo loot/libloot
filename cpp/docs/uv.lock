@@ -22,15 +22,14 @@ wheels = [
 
 [[package]]
 name = "breathe"
-version = "4.35.0"
+version = "4.36.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "docutils" },
     { name = "sphinx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a2/9f/0c6f4ae0608d5edbb1df357c2487edfcbda13e75f4e48a898972592e2e48/breathe-4.35.0.tar.gz", hash = "sha256:5165541c3c67b6c7adde8b3ecfe895c6f7844783c4076b6d8d287e4f33d62386", size = 83358, upload-time = "2023-02-28T20:04:25.377Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/56/99bf7d0799d95ad485d95596dc01c2a5b3dda58ebf50a94f6f73b33bacdf/breathe-4.36.0.tar.gz", hash = "sha256:14860b73118ac140b7a3f55446890c777d1b67149cb024279fe3710dad7f535c", size = 154842, upload-time = "2025-02-22T18:36:03.36Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/61/faddc25913de74e60e175bcfd962ec83532653c5895c0a06a83a6b5bbf3d/breathe-4.35.0-py3-none-any.whl", hash = "sha256:52c581f42ca4310737f9e435e3851c3d1f15446205a85fbc272f1f97ed74f5be", size = 92955, upload-time = "2023-02-28T20:04:23.069Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/bc/d67ef1e11ed6e6343c135bf605aa9d5734ff0cc77eb42a2a41f182abc9d9/breathe-4.36.0-py3-none-any.whl", hash = "sha256:af85436f1f09e842bd1fd95617281211c635f8768d245ff830c59b979888d1d5", size = 97231, upload-time = "2025-02-22T18:36:01.087Z" },
 ]
 
 [[package]]
@@ -188,7 +187,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "breathe", specifier = "==4.35.0" },
+    { name = "breathe", specifier = "==4.36.0" },
     { name = "sphinx", specifier = "==7.3.7" },
     { name = "sphinx-rtd-theme", specifier = "==3.0.2" },
 ]
