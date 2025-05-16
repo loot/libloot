@@ -467,7 +467,7 @@ TEST_P(GameInterfaceTest,
 TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfAGivenPluginIsNotLoaded) {
   std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
 
-  EXPECT_THROW(handle_->SortPlugins(plugins), std::invalid_argument);
+  EXPECT_THROW(handle_->SortPlugins(plugins), PluginNotLoadedError);
 }
 
 TEST_P(GameInterfaceTest, clearLoadedPluginsShouldClearThePluginsCache) {
