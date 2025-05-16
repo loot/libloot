@@ -127,7 +127,7 @@ TEST_P(DatabaseInterfaceTest,
 TEST_P(DatabaseInterfaceTest,
        loadMasterlistShouldThrowIfNoMasterlistIsPresent) {
   EXPECT_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath),
-               FileAccessError);
+               std::runtime_error);
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -146,7 +146,7 @@ TEST_P(
 
   EXPECT_THROW(handle_->GetDatabase().LoadMasterlistWithPrelude(masterlistPath,
                                                                 preludePath),
-               FileAccessError);
+               std::runtime_error);
 }
 
 TEST_P(
@@ -185,7 +185,7 @@ TEST_P(DatabaseInterfaceTest,
        loadUserlistShouldThrowIfAUserlistDoesNotExistAtTheGivenPath) {
   ASSERT_NO_THROW(GenerateMasterlist());
   EXPECT_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_),
-               FileAccessError);
+               std::runtime_error);
 }
 
 TEST_P(DatabaseInterfaceTest, loadUserlistShouldSucceedIfTheUserlistIsPresent) {
@@ -204,7 +204,7 @@ TEST_P(
 
   EXPECT_THROW(
       handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, false),
-      FileAccessError);
+      std::runtime_error);
 }
 
 TEST_P(
@@ -238,7 +238,7 @@ TEST_P(DatabaseInterfaceTest,
 
   EXPECT_THROW(
       handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, true),
-      FileAccessError);
+      std::runtime_error);
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -753,7 +753,7 @@ TEST_P(
 
   EXPECT_THROW(
       handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, false),
-      FileAccessError);
+      std::runtime_error);
 }
 
 TEST_P(
@@ -787,7 +787,7 @@ TEST_P(DatabaseInterfaceTest,
 
   EXPECT_THROW(
       handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, true),
-      FileAccessError);
+      std::runtime_error);
 }
 
 TEST_P(DatabaseInterfaceTest,

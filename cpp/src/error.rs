@@ -20,7 +20,6 @@ pub enum VerboseError {
     CyclicInteractionError(Vec<libloot::Vertex>),
     UndefinedGroupError(String),
     SystemError(SystemError),
-    FileAccessError(String),
     InvalidArgument(String),
     Other(Box<dyn std::error::Error>),
 }
@@ -51,7 +50,6 @@ impl std::fmt::Display for VerboseError {
                 };
                 write!(f, "{}: {}: {}", prefix, e.code(), e.message())
             }
-            Self::FileAccessError(s) => write!(f, "FileAccessError: {s}"),
             Self::InvalidArgument(s) => write!(f, "InvalidArgument: {s}"),
             Self::Other(e) => fmt_error_chain(e.as_ref(), f),
         }
@@ -63,6 +61,8 @@ variant_box_from_error!(NotValidUtf8, VerboseError::Other);
 variant_box_from_error!(DatabaseLockPoisonError, VerboseError::Other);
 variant_box_from_error!(MultilingualMessageContentsError, VerboseError::Other);
 variant_box_from_error!(RegexError, VerboseError::Other);
+variant_box_from_error!(LoadMetadataError, VerboseError::Other);
+variant_box_from_error!(WriteMetadataError, VerboseError::Other);
 
 impl From<GameHandleCreationError> for VerboseError {
     fn from(value: GameHandleCreationError) -> Self {
@@ -89,7 +89,6 @@ impl From<LoadPluginsError> for VerboseError {
 impl From<SortPluginsError> for VerboseError {
     fn from(value: SortPluginsError) -> Self {
         match value {
-            SortPluginsError::MetadataRetrievalError(e) => e.into(),
             SortPluginsError::UndefinedGroup(g) => Self::UndefinedGroupError(g),
             SortPluginsError::CycleFound(cycle) => Self::CyclicInteractionError(cycle),
             SortPluginsError::PluginDataError(e) => e.into(),
@@ -114,18 +113,6 @@ impl From<LoadOrderStateError> for VerboseError {
 impl From<LoadOrderError> for VerboseError {
     fn from(value: LoadOrderError) -> Self {
         Self::SystemError(SystemError::from(value))
-    }
-}
-
-impl From<LoadMetadataError> for VerboseError {
-    fn from(value: LoadMetadataError) -> Self {
-        Self::FileAccessError(value.to_string())
-    }
-}
-
-impl From<WriteMetadataError> for VerboseError {
-    fn from(value: WriteMetadataError) -> Self {
-        Self::FileAccessError(value.to_string())
     }
 }
 

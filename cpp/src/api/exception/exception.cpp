@@ -5,7 +5,6 @@
 #include "loot/exception/condition_syntax_error.h"
 #include "loot/exception/cyclic_interaction_error.h"
 #include "loot/exception/error_categories.h"
-#include "loot/exception/file_access_error.h"
 #include "loot/exception/undefined_group_error.h"
 #include "loot/vertex.h"
 
@@ -20,7 +19,6 @@ constexpr std::string_view UNDEFINED_GROUP_ERROR_PREFIX =
 constexpr std::string_view ESPLUGIN_ERROR_PREFIX = "EspluginError: "sv;
 constexpr std::string_view LIBLOADORDER_ERROR_PREFIX = "LibloadorderError: "sv;
 constexpr std::string_view LCI_ERROR_PREFIX = "LciError: "sv;
-constexpr std::string_view FILE_ACCESS_ERROR_PREFIX = "FileAccessError: "sv;
 constexpr std::string_view INVALID_ARGUMENT_PREFIX = "InvalidArgument: "sv;
 
 bool startsWith(std::string_view str, std::string_view prefix) {
@@ -161,12 +159,6 @@ std::exception_ptr mapError(const ::rust::Error& error) {
 
     return std::make_exception_ptr(ConditionSyntaxError(
         code, loot_condition_interpreter_category(), details));
-  } else if (startsWith(error.what(), FILE_ACCESS_ERROR_PREFIX)) {
-    return std::make_exception_ptr(
-        FileAccessError(getErrorSuffix(error.what())));
-  } else if (startsWith(error.what(), FILE_ACCESS_ERROR_PREFIX)) {
-    return std::make_exception_ptr(
-        FileAccessError(getErrorSuffix(error.what())));
   } else if (startsWith(error.what(), INVALID_ARGUMENT_PREFIX)) {
     return std::make_exception_ptr(
         std::invalid_argument(getErrorSuffix(error.what())));

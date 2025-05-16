@@ -89,5 +89,5 @@ For the first layer of the wrapper, built using Cargo:
 
 For the ABI-compatible second layer of the wrapper, built using CMake:
 
-- Some exceptions have changed type: they all still derive from `std::exception`, but for example some `std::logic_error` and `std::invalid_argument` exceptions have become `std::runtime_error` and `FileAccessError` exceptions, some `YAML::RepresentationException` exceptions have become `FileAccessError` exceptions, etc.
+- Some exceptions have changed type: they all still derive from `std::exception`, but for example some `std::logic_error` and `std::invalid_argument` exceptions have become `std::runtime_error` exceptions, some `YAML::RepresentationException` exceptions have become `FileAccessError` exceptions, etc.
 - Exception messages are generally not expected to be the same between the two implementations.

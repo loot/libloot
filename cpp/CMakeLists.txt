@@ -92,7 +92,6 @@ set(LIBLOOT_INCLUDE_H_FILES
     "${CMAKE_SOURCE_DIR}/include/loot/exception/error_categories.h"
     "${CMAKE_SOURCE_DIR}/include/loot/exception/condition_syntax_error.h"
     "${CMAKE_SOURCE_DIR}/include/loot/exception/cyclic_interaction_error.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/exception/file_access_error.h"
     "${CMAKE_SOURCE_DIR}/include/loot/exception/undefined_group_error.h"
     "${CMAKE_SOURCE_DIR}/include/loot/enum/edge_type.h"
     "${CMAKE_SOURCE_DIR}/include/loot/enum/game_type.h"
