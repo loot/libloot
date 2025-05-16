@@ -168,7 +168,7 @@ public:
    *           loaded, and reads the contents of each plugin. No changes are
    *           applied to the load order used by the game. This function does
    *           not load or evaluate the masterlist or userlist.
-   *  @param pluginPaths
+   *  @param pluginFilenames
    *         The plugins to sort, in their current load order. All given plugins
    *         must have been loaded using `LoadPlugins()`.
    *  @returns A vector of the given plugin filenames in their sorted load
