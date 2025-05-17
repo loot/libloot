@@ -79,7 +79,6 @@ impl MessageContent {
 impl std::default::Default for MessageContent {
     /// Construct a [MessageContent] object with an empty message string and the
     /// default language.
-    #[must_use]
     fn default() -> Self {
         Self {
             text: Box::default(),
@@ -151,7 +150,7 @@ pub fn select_message_content<'a>(
 /// Represents a message with localisable text content.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Message {
-    message_type: MessageType,
+    level: MessageType,
     content: Box<[MessageContent]>,
     condition: Option<Box<str>>,
 }
@@ -162,7 +161,7 @@ impl Message {
     #[must_use]
     pub fn new(message_type: MessageType, content: String) -> Self {
         Self {
-            message_type,
+            level: message_type,
             content: Box::new([MessageContent::new(content)]),
             condition: None,
         }
@@ -178,7 +177,7 @@ impl Message {
         validate_message_contents(&content)?;
 
         Ok(Self {
-            message_type,
+            level: message_type,
             content: content.into_boxed_slice(),
             condition: None,
         })
@@ -193,7 +192,7 @@ impl Message {
 
     /// Get the message type.
     pub fn message_type(&self) -> MessageType {
-        self.message_type
+        self.level
     }
 
     /// Get the message content.
@@ -306,7 +305,7 @@ impl TryFromYaml for Message {
         let condition = parse_condition(mapping, "condition", YamlObjectType::Message)?;
 
         Ok(Message {
-            message_type,
+            level: message_type,
             content,
             condition,
         })
@@ -436,7 +435,7 @@ impl EmitYaml for Message {
         emitter.begin_map();
 
         emitter.map_key("type");
-        emitter.unquoted_str(&self.message_type.to_string());
+        emitter.unquoted_str(&self.level.to_string());
 
         emit_message_contents(&self.content, emitter, "content");
 
@@ -829,7 +828,7 @@ mod tests {
                 assert_eq!(
                     format!(
                         "type: {}\ncontent: '{}'\ncondition: '{}'",
-                        message.message_type,
+                        message.level,
                         message.content[0].text,
                         message.condition.unwrap()
                     ),
@@ -857,7 +856,7 @@ content:
     text: '{}'
   - lang: {}
     text: '{}'",
-                        message.message_type,
+                        message.level,
                         message.content[0].language(),
                         message.content[0].text(),
                         message.content[1].language(),

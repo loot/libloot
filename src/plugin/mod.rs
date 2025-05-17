@@ -44,7 +44,7 @@ impl std::fmt::Display for LoadScope {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Plugin {
     name: String,
-    plugin: Option<esplugin::Plugin>,
+    data: Option<esplugin::Plugin>,
     game_type: GameType,
     crc: Option<u32>,
     version: Option<String>,
@@ -97,7 +97,7 @@ impl Plugin {
 
         Ok(Self {
             name,
-            plugin,
+            data: plugin,
             game_type,
             crc,
             version,
@@ -123,7 +123,7 @@ impl Plugin {
     /// and OpenMW) or if the `HEDR` subrecord could not be found, of if the
     /// version field's value was `NaN`.
     pub fn header_version(&self) -> Option<f32> {
-        self.plugin
+        self.data
             .as_ref()
             .and_then(esplugin::Plugin::header_version)
     }
@@ -140,7 +140,7 @@ impl Plugin {
 
     /// Get the plugin's masters.
     pub fn masters(&self) -> Result<Vec<String>, PluginDataError> {
-        self.plugin
+        self.data
             .as_ref()
             .map_or_else(|| Ok(Vec::new()), |p| p.masters().map_err(Into::into))
     }
@@ -173,7 +173,7 @@ impl Plugin {
         if self.game_type == GameType::OpenMW {
             false
         } else {
-            self.plugin
+            self.data
                 .as_ref()
                 .is_some_and(esplugin::Plugin::is_master_file)
         }
@@ -181,49 +181,49 @@ impl Plugin {
 
     /// Check if the plugin is a light plugin.
     pub fn is_light_plugin(&self) -> bool {
-        self.plugin
+        self.data
             .as_ref()
             .is_some_and(esplugin::Plugin::is_light_plugin)
     }
 
     /// Check if the plugin is a medium plugin.
     pub fn is_medium_plugin(&self) -> bool {
-        self.plugin
+        self.data
             .as_ref()
             .is_some_and(esplugin::Plugin::is_medium_plugin)
     }
 
     /// Check if the plugin is an update plugin.
     pub fn is_update_plugin(&self) -> bool {
-        self.plugin
+        self.data
             .as_ref()
             .is_some_and(esplugin::Plugin::is_update_plugin)
     }
 
     /// Check if the plugin is a blueprint plugin.
     pub fn is_blueprint_plugin(&self) -> bool {
-        self.plugin
+        self.data
             .as_ref()
             .is_some_and(esplugin::Plugin::is_blueprint_plugin)
     }
 
     /// Check if the plugin is or would be valid as a light plugin.
     pub fn is_valid_as_light_plugin(&self) -> Result<bool, PluginDataError> {
-        self.plugin.as_ref().map_or(Ok(false), |p| {
+        self.data.as_ref().map_or(Ok(false), |p| {
             p.is_valid_as_light_plugin().map_err(Into::into)
         })
     }
 
     /// Check if the plugin is or would be valid as a medium plugin.
     pub fn is_valid_as_medium_plugin(&self) -> Result<bool, PluginDataError> {
-        self.plugin.as_ref().map_or(Ok(false), |p| {
+        self.data.as_ref().map_or(Ok(false), |p| {
             p.is_valid_as_medium_plugin().map_err(Into::into)
         })
     }
 
     /// Check if the plugin is or would be valid as an update plugin.
     pub fn is_valid_as_update_plugin(&self) -> Result<bool, PluginDataError> {
-        self.plugin.as_ref().map_or(Ok(false), |p| {
+        self.data.as_ref().map_or(Ok(false), |p| {
             p.is_valid_as_update_plugin().map_err(Into::into)
         })
     }
@@ -231,7 +231,7 @@ impl Plugin {
     /// Check if the plugin contains any records other than its `TES3`/`TES4`
     /// header.
     pub fn is_empty(&self) -> bool {
-        self.plugin
+        self.data
             .as_ref()
             .and_then(esplugin::Plugin::record_and_group_count)
             .unwrap_or(0)
@@ -248,7 +248,7 @@ impl Plugin {
     /// FormIDs are compared for all games apart from Morrowind, which doesn't
     /// have FormIDs and so has other identifying data compared.
     pub fn do_records_overlap(&self, plugin: &Plugin) -> Result<bool, PluginDataError> {
-        if let (Some(plugin), Some(other_plugin)) = (&self.plugin, &plugin.plugin) {
+        if let (Some(plugin), Some(other_plugin)) = (&self.data, &plugin.data) {
             plugin.overlaps_with(other_plugin).map_err(Into::into)
         } else {
             Ok(false)
@@ -256,7 +256,7 @@ impl Plugin {
     }
 
     pub(crate) fn override_record_count(&self) -> Result<usize, PluginDataError> {
-        self.plugin
+        self.data
             .as_ref()
             .map_or(Ok(0), |p| p.count_override_records().map_err(Into::into))
     }
@@ -273,7 +273,7 @@ impl Plugin {
         &mut self,
         plugins_metadata: &[esplugin::PluginMetadata],
     ) -> Result<(), PluginDataError> {
-        if let Some(plugin) = &mut self.plugin {
+        if let Some(plugin) = &mut self.data {
             plugin.resolve_record_ids(plugins_metadata)?;
         }
         Ok(())
@@ -351,7 +351,7 @@ pub(crate) fn has_ascii_extension(path: &Path, extension: &str) -> bool {
 pub(crate) fn plugins_metadata(
     plugins: &[&Plugin],
 ) -> Result<Vec<esplugin::PluginMetadata>, PluginDataError> {
-    let esplugins: Vec<_> = plugins.iter().filter_map(|p| p.plugin.as_ref()).collect();
+    let esplugins: Vec<_> = plugins.iter().filter_map(|p| p.data.as_ref()).collect();
     Ok(esplugin::plugins_metadata(&esplugins)?)
 }
 

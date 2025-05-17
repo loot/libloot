@@ -62,7 +62,6 @@ impl Group {
 impl std::default::Default for Group {
     /// Construct a Group with the default name and an empty set of groups to
     /// load after.
-    #[must_use]
     fn default() -> Self {
         Self {
             name: Group::DEFAULT_NAME.into(),

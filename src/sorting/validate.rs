@@ -190,7 +190,7 @@ fn validate_early_loading_plugins<T: SortingPlugin>(
             if non_masters.contains(&key) {
                 // Just report the cycle to the first master.
                 return Err(CyclicInteractionError::new(vec![
-                    Vertex::new(plugin.to_string()).with_out_edge_type(EdgeType::Hardcoded),
+                    Vertex::new(plugin.clone()).with_out_edge_type(EdgeType::Hardcoded),
                     Vertex::new(master.name().to_owned()).with_out_edge_type(EdgeType::MasterFlag),
                 ]));
             }

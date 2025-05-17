@@ -138,8 +138,8 @@ impl From<GameType> for esplugin::GameId {
 /// The interface through which game-specific functionality is provided.
 #[derive(Debug)]
 pub struct Game {
-    game_type: GameType,
-    game_path: PathBuf,
+    base_type: GameType,
+    install_path: PathBuf,
     load_order: Box<(dyn WritableLoadOrder + Send + Sync + 'static)>,
     // Stored in an Arc<RwLock<_>> to support loading metadata in parallel with
     // loading plugins.
@@ -179,8 +179,8 @@ impl Game {
             new_condition_evaluator_state(game_type, &resolved_game_path, load_order.as_ref());
 
         Ok(Game {
-            game_type,
-            game_path: resolved_game_path,
+            base_type: game_type,
+            install_path: resolved_game_path,
             load_order,
             database: Arc::new(RwLock::new(Database::new(condition_evaluator_state))),
             cache: GameCache::default(),
@@ -233,8 +233,8 @@ impl Game {
             new_condition_evaluator_state(game_type, &resolved_game_path, load_order.as_ref());
 
         Ok(Game {
-            game_type,
-            game_path: resolved_game_path,
+            base_type: game_type,
+            install_path: resolved_game_path,
             load_order,
             database: Arc::new(RwLock::new(Database::new(condition_evaluator_state))),
             cache: GameCache::default(),
@@ -243,7 +243,7 @@ impl Game {
 
     /// Get the game's type.
     pub fn game_type(&self) -> GameType {
-        self.game_type
+        self.base_type
     }
 
     /// Gets the currently-set additional data paths.
@@ -309,11 +309,11 @@ impl Game {
     /// as given.
     pub fn is_valid_plugin(&self, plugin_path: &Path) -> bool {
         let resolved_path = resolve_plugin_path(
-            self.game_type,
-            &data_path(self.game_type, &self.game_path),
+            self.base_type,
+            &data_path(self.base_type, &self.install_path),
             plugin_path,
         );
-        validate_plugin_path_and_header(self.game_type, &resolved_path).is_ok()
+        validate_plugin_path_and_header(self.base_type, &resolved_path).is_ok()
     }
 
     /// Fully parses plugins and loads their data.
@@ -335,7 +335,7 @@ impl Game {
         let mut plugins = self.load_plugins_common(plugin_paths, LoadScope::WholePlugin)?;
 
         if matches!(
-            self.game_type,
+            self.base_type,
             GameType::Morrowind | GameType::OpenMW | GameType::Starfield
         ) {
             let mut loaded_plugins: HashMap<Filename, &Plugin> = self
@@ -387,12 +387,12 @@ impl Game {
         plugin_paths: &[&Path],
         load_scope: LoadScope,
     ) -> Result<Vec<Plugin>, LoadPluginsError> {
-        let data_path = data_path(self.game_type, &self.game_path);
+        let data_path = data_path(self.base_type, &self.install_path);
 
-        validate_plugin_paths(self.game_type, &data_path, plugin_paths)?;
+        validate_plugin_paths(self.base_type, &data_path, plugin_paths)?;
 
         let archive_paths =
-            find_archives(self.game_type, self.additional_data_paths(), &data_path)?;
+            find_archives(self.base_type, self.additional_data_paths(), &data_path)?;
 
         self.cache.set_archive_paths(archive_paths);
 
@@ -401,7 +401,7 @@ impl Game {
         let plugins: Vec<_> = plugin_paths
             .par_iter()
             .filter_map(|path| {
-                try_load_plugin(&data_path, path, self.game_type, &self.cache, load_scope)
+                try_load_plugin(&data_path, path, self.base_type, &self.cache, load_scope)
             })
             .collect();
 
