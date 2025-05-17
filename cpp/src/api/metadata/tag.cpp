@@ -28,11 +28,13 @@ namespace loot {
 Tag::Tag(std::string_view tag,
          const bool isAddition,
          std::string_view condition) :
-    ConditionalMetadata(condition), name_(tag), addTag_(isAddition) {}
+    name_(tag), addTag_(isAddition), condition_(condition) {}
 
 bool Tag::IsAddition() const { return addTag_; }
 
 std::string Tag::GetName() const { return name_; }
+
+std::string Tag::GetCondition() const { return condition_; }
 
 bool operator==(const Tag& lhs, const Tag& rhs) {
   return lhs.IsAddition() == rhs.IsAddition() &&
