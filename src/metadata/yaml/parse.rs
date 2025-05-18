@@ -56,10 +56,7 @@ pub fn to_unmarked_yaml<'a>(yaml: &MarkedYaml<'a>) -> Yaml<'a> {
 }
 
 pub fn as_string_node(value: &str) -> MarkedYaml {
-    MarkedYaml {
-        span: saphyr_parser::Span::default(),
-        data: YamlData::Value(Scalar::String(value.into())),
-    }
+    MarkedYaml::value_from_str(value)
 }
 
 pub fn get_string_value<'a>(
