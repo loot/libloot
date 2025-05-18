@@ -7,8 +7,8 @@ use super::{
         validate_message_contents,
     },
     yaml::{
-        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, as_string_node,
-        get_required_string_value, get_u32_value,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, get_required_string_value,
+        get_u32_value, get_value,
     },
 };
 
@@ -130,7 +130,7 @@ impl TryFromYaml for PluginCleaningData {
         let udr = get_u32_value(mapping, "udr", YamlObjectType::PluginCleaningData)?.unwrap_or(0);
         let nav = get_u32_value(mapping, "nav", YamlObjectType::PluginCleaningData)?.unwrap_or(0);
 
-        let detail = match mapping.get(&as_string_node("detail")) {
+        let detail = match get_value(mapping, "detail") {
             Some(n) => {
                 parse_message_contents_yaml(n, "detail", YamlObjectType::PluginCleaningData)?
             }

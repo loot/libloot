@@ -55,8 +55,11 @@ pub fn to_unmarked_yaml<'a>(yaml: &MarkedYaml<'a>) -> Yaml<'a> {
     }
 }
 
-pub fn as_string_node(value: &str) -> MarkedYaml {
-    MarkedYaml::value_from_str(value)
+pub fn get_value<'a, 'b>(
+    mapping: &'a AnnotatedMapping<'b, MarkedYaml<'b>>,
+    key: &'static str,
+) -> Option<&'a MarkedYaml<'b>> {
+    mapping.get(&MarkedYaml::value_from_str(key))
 }
 
 pub fn get_string_value<'a>(
@@ -64,7 +67,7 @@ pub fn get_string_value<'a>(
     key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<Option<(Marker, &'a str)>, ParseMetadataError> {
-    match mapping.get(&as_string_node(key)) {
+    match get_value(mapping, key) {
         Some(n) => match n.data.as_str() {
             Some(s) => Ok(Some((n.span.start, s))),
             None => Err(ParseMetadataError::unexpected_value_type(
@@ -95,7 +98,7 @@ pub fn get_strings_vec_value<'a>(
     key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<Vec<&'a str>, ParseMetadataError> {
-    match mapping.get(&as_string_node(key)) {
+    match get_value(mapping, key) {
         Some(n) => match n.data.as_vec() {
             Some(n) => n
                 .iter()
@@ -139,7 +142,7 @@ pub fn get_u32_value(
     key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<Option<u32>, ParseMetadataError> {
-    match mapping.get(&as_string_node(key)) {
+    match get_value(mapping, key) {
         Some(n) => match n.data.as_integer() {
             Some(i) => i.try_into().map(Some).map_err(|_e| {
                 ParseMetadataError::new(n.span.start, MetadataParsingErrorReason::NonU32Number(i))
@@ -155,12 +158,12 @@ pub fn get_u32_value(
     }
 }
 
-pub fn get_as_slice<'a>(
+pub fn get_slice_value<'a>(
     mapping: &'a saphyr::AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
 ) -> Result<&'a [MarkedYaml<'a>], ParseMetadataError> {
-    if let Some(value) = mapping.get(&as_string_node(key)) {
+    if let Some(value) = get_value(mapping, key) {
         match value.data.as_vec() {
             Some(n) => Ok(n.as_slice()),
             None => Err(ParseMetadataError::unexpected_value_type(

@@ -1,12 +1,6 @@
-use std::sync::LazyLock;
-
 use saphyr::{MarkedYaml, YamlData};
 
 use crate::metadata::error::YamlMergeKeyError;
-
-use super::as_string_node;
-
-static MERGE_KEY: LazyLock<MarkedYaml> = LazyLock::new(|| as_string_node("<<"));
 
 pub fn process_merge_keys(mut yaml: MarkedYaml) -> Result<MarkedYaml, YamlMergeKeyError> {
     match yaml.data {
@@ -39,7 +33,7 @@ fn merge_mapping_keys<'a, 'b>(
         })
         .collect::<Result<_, _>>()?;
 
-    if let Some(value) = mapping.remove(&MERGE_KEY) {
+    if let Some(value) = mapping.remove(&MarkedYaml::value_from_str("<<")) {
         merge_into_mapping(mapping, value)
     } else {
         Ok(mapping)

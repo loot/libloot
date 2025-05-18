@@ -8,8 +8,8 @@ use super::{
         validate_message_contents,
     },
     yaml::{
-        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_string_node,
-        get_required_string_value, get_string_value, parse_condition,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_required_string_value,
+        get_string_value, get_value, parse_condition,
     },
 };
 
@@ -169,7 +169,7 @@ impl TryFromYaml for File {
 
                 let display_name = get_string_value(h, "display", YamlObjectType::File)?;
 
-                let detail = match h.get(&as_string_node("detail")) {
+                let detail = match get_value(h, "detail") {
                     Some(n) => parse_message_contents_yaml(
                         n,
                         "detail",

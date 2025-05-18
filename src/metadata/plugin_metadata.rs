@@ -13,8 +13,8 @@ use super::{
     plugin_cleaning_data::PluginCleaningData,
     tag::Tag,
     yaml::{
-        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, get_as_slice,
-        get_required_string_value, get_string_value,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, get_required_string_value,
+        get_slice_value, get_string_value,
     },
 };
 
@@ -444,7 +444,7 @@ fn get_boxed_slice<T: TryFromYaml>(
     mapping: &saphyr::AnnotatedMapping<MarkedYaml>,
     key: &'static str,
 ) -> Result<Box<[T]>, ParseMetadataError> {
-    get_as_slice(mapping, key, YamlObjectType::PluginMetadata)?
+    get_slice_value(mapping, key, YamlObjectType::PluginMetadata)?
         .iter()
         .map(|e| T::try_from_yaml(e))
         .collect()

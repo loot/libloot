@@ -8,8 +8,8 @@ use super::{
         ParseMetadataError,
     },
     yaml::{
-        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, as_string_node,
-        get_required_string_value, get_strings_vec_value, parse_condition,
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, as_mapping, get_required_string_value,
+        get_strings_vec_value, get_value, parse_condition,
     },
 };
 
@@ -282,7 +282,7 @@ impl TryFromYaml for Message {
             _ => MessageType::Say,
         };
 
-        let mut content = match mapping.get(&as_string_node("content")) {
+        let mut content = match get_value(mapping, "content") {
             Some(n) => parse_message_contents_yaml(n, "content", YamlObjectType::Message)?,
             None => {
                 return Err(ParseMetadataError::missing_key(

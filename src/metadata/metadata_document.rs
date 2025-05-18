@@ -16,7 +16,9 @@ use super::{
     group::Group,
     message::Message,
     plugin_metadata::PluginMetadata,
-    yaml::{EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_as_slice, process_merge_keys},
+    yaml::{
+        EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_slice_value, process_merge_keys,
+    },
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -115,7 +117,7 @@ impl MetadataDocument {
 
         let mut plugins: HashMap<Filename, PluginMetadata> = HashMap::new();
         let mut regex_plugins: Vec<PluginMetadata> = Vec::new();
-        for plugin_yaml in get_as_slice(&doc, "plugins", YamlObjectType::MetadataDocument)? {
+        for plugin_yaml in get_slice_value(&doc, "plugins", YamlObjectType::MetadataDocument)? {
             let plugin = PluginMetadata::try_from_yaml(plugin_yaml)?;
             if plugin.is_regex_plugin() {
                 regex_plugins.push(plugin);
@@ -132,14 +134,14 @@ impl MetadataDocument {
             }
         }
 
-        let messages = get_as_slice(&doc, "globals", YamlObjectType::MetadataDocument)?
+        let messages = get_slice_value(&doc, "globals", YamlObjectType::MetadataDocument)?
             .iter()
             .map(Message::try_from_yaml)
             .collect::<Result<Vec<_>, _>>()?;
 
         let mut bash_tags = Vec::new();
         let mut str_set = HashSet::new();
-        for bash_tag_yaml in get_as_slice(&doc, "bash_tags", YamlObjectType::MetadataDocument)? {
+        for bash_tag_yaml in get_slice_value(&doc, "bash_tags", YamlObjectType::MetadataDocument)? {
             let bash_tag: &str = match bash_tag_yaml.data.as_str() {
                 Some(b) => b,
                 None => {
@@ -167,7 +169,7 @@ impl MetadataDocument {
 
         let mut group_names = HashSet::new();
         let mut groups = Vec::new();
-        for group_yaml in get_as_slice(&doc, "groups", YamlObjectType::MetadataDocument)? {
+        for group_yaml in get_slice_value(&doc, "groups", YamlObjectType::MetadataDocument)? {
             let group = Group::try_from_yaml(group_yaml)?;
 
             let name = group.name().to_owned();
