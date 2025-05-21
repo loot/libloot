@@ -362,8 +362,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 if(MSVC)
-    # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
-    target_compile_options(loot PRIVATE "/Zc:__cplusplus" "/permissive-" "/W4")
+    target_compile_options(loot PRIVATE 
+        "/Zc:__cplusplus" 
+        "/permissive-" 
+        "/W4" 
+        "/GL")
 endif()
 
 ##############################
