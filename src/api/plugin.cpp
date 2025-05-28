@@ -222,7 +222,8 @@ std::unique_ptr<::Plugin, decltype(&esp_plugin_free)> MakeEspluginPtr() {
 }
 
 bool ShouldIgnoreMasterFlag(GameType gameType) {
-  return gameType == GameType::openmw;
+  return gameType == GameType::openmw ||
+         gameType == GameType::oblivionRemastered;
 }
 }
 
