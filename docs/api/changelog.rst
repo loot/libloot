@@ -2,6 +2,16 @@
 Version History
 ***************
 
+0.26.3 - 2025-05-28
+===================
+
+Changed
+-------
+
+- Reverted the change made in v0.26.2 to libloot's handling of Oblivion
+  Remastered master files, as it was too restrictive: libloot now once more
+  makes no distinction between them and non-master files.
+
 0.26.2 - 2025-05-13
 ===================
 
