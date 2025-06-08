@@ -200,9 +200,9 @@ endif()
 
 # Copy testing plugins
 add_custom_command(TARGET libloot_internals_tests POST_BUILD
-COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${testing-plugins_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/testing-plugins)
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${testing-plugins_SOURCE_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}/testing-plugins)
 
 add_custom_command(TARGET libloot_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
