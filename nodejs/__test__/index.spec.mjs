@@ -7,7 +7,7 @@ test('liblootVersion', t => {
 });
 
 test('isCompatible', t => {
-  t.is(isCompatible(0, 26, 0), true)
+  t.is(isCompatible(0, 27, 0), true)
 });
 
 test('Group equality', t => {

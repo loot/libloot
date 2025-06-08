@@ -1,6 +1,6 @@
 # libloot-rs C++ wrapper
 
-This is a wrapper around libloot that provides a C++ interface that's ABI-compatible with libloot v0.26.2.
+This is a wrapper around libloot that provides a C++ interface that's ABI-compatible with libloot v0.27.0.
 
 The wrapper has two layers:
 

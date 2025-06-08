@@ -1,6 +1,6 @@
 # libloot-rs
 
-This is an **experimental** reimplementation of [libloot](https://github.com/loot/libloot) using Rust instead of C++, that should match libloot v0.26.2.
+This is an **experimental** reimplementation of [libloot](https://github.com/loot/libloot) using Rust instead of C++, that should match libloot v0.27.0.
 
 There is one intentional difference in behaviour: if a plugin has metadata but it is all filtered out when conditions are evaluated, getting its metadata returns `None` instead of a name-only PluginMetadata object.
 
