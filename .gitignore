@@ -1,4 +1,5 @@
 /target
 /testing-plugins
 .venv/
+.vscode/
 build/
