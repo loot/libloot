@@ -2,6 +2,48 @@
 Version History
 ***************
 
+0.27.0 - 2025-06-08
+===================
+
+Added
+-----
+
+- :cpp:any:`loot::PluginNotLoadedError`, which is thrown when trying to sort a
+  load order that contains a plugin that hasn't been loaded, or when trying to
+  load a Morrowind, OpenMW or Starfield plugin that has a master that has not
+  been loaded.
+
+Changed
+-------
+
+- Windows builds that are built using MSVC (including official release builds)
+  are now built with the ``/GL`` flag to enable whole-program optimisation
+  (including link-time optimisation).
+- Official Windows builds are now built using MSVC 2022, so they now require the
+  MSVC 2022 redistributable to be installed.
+
+Removed
+-------
+
+- ``LogLevel::Fatal`` as it was never used.
+- ``ConditionalMetadata``, which was the parent class of :cpp:any:`loot::File`,
+  :cpp:any:`loot::Message` and :cpp:any:`loot::Tag`. Its ``GetCondition()``
+  member function has been moved to those child classes. There is no direct
+  replacement for its ``IsConditional()`` member function.
+- ``FileAccessError`` and ``ConditionSyntaxError``: ``std::runtime_error``
+  exceptions are thrown instead.
+- ``loot_condition_interpreter_category()`` as the error category it returned is
+  no longer used.
+- ``libloadorder_category()``, as errors reported by libloadorder are now thrown
+  as ``std::runtime_error`` exceptions instead of ``std::system_error``
+  exceptions.
+- ``esplugin_category()``, as errors reported by esplugin are now thrown as
+  either :cpp:any:`loot::PluginNotLoadedError` or ``std::runtime_error``
+  exceptions instead of ``std::system_error`` exceptions.
+- Support for the old Boost-style (e.g. ``%1%``) message placeholder syntax that
+  was replaced in the v0.21 metadata syntax by the curly brace syntax (e.g.
+  ``{0}``).
+
 0.26.3 - 2025-05-28
 ===================
 
