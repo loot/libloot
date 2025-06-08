@@ -127,25 +127,15 @@ fn find_associated_archives_with_arbitrary_suffixes(
 
 #[cfg(windows)]
 fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
-    use std::fs::File;
-
     if lhs == rhs {
         return true;
     }
 
-    let Ok(lhs_file) = File::open(lhs) else {
+    let Some(lhs_info) = get_file_info(lhs) else {
         return false;
     };
 
-    let Ok(rhs_file) = File::open(rhs) else {
-        return false;
-    };
-
-    let Some(lhs_info) = get_file_info(&lhs_file) else {
-        return false;
-    };
-
-    let Some(rhs_info) = get_file_info(&rhs_file) else {
+    let Some(rhs_info) = get_file_info(rhs) else {
         return false;
     };
 
@@ -155,9 +145,13 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
 }
 
 #[cfg(windows)]
-fn get_file_info(file: &std::fs::File) -> Option<BY_HANDLE_FILE_INFORMATION> {
+fn get_file_info(file_path: &Path) -> Option<BY_HANDLE_FILE_INFORMATION> {
     use std::os::windows::io::AsRawHandle;
     use windows::Win32::{Foundation::HANDLE, Storage::FileSystem::GetFileInformationByHandle};
+
+    let Ok(file) = std::fs::File::open(file_path) else {
+        return None;
+    };
 
     let mut info = BY_HANDLE_FILE_INFORMATION::default();
 
