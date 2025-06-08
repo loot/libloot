@@ -20,7 +20,7 @@ Changed
   ``std::runtime_error`` instead of a ``std::invalid_argument``.
 - When :cpp:any:`loot::DatabaseInterface::GetGroupsPath()` is given a group name
   that is undefined, it now throws a :cpp:any:`loot::UndefinedGroupError`
-  instead of a `std::invalid_argument`.
+  instead of a ``std::invalid_argument``.
 - Many exception messages have changed.
 
 0.27.0 - 2025-06-08
