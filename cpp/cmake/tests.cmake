@@ -142,14 +142,14 @@ endif()
 
 if(MSVC)
     # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
-    target_compile_options(libloot_tests PRIVATE "/permissive-" "/W4" "/Zc:__cplusplus")
+    target_compile_options(libloot_tests PRIVATE "/Zc:__cplusplus" "/permissive-" "/W4")
 
     # Set /bigobj to allow building Debug and RelWithDebInfo tests
     target_compile_options(libloot_internals_tests PRIVATE
+        "/Zc:__cplusplus"
         "/permissive-"
         "/W4"
-        "$<$<OR:$<CONFIG:DEBUG>,$<CONFIG:RelWithDebInfo>>:/bigobj>"
-        "/Zc:__cplusplus")
+        "$<$<OR:$<CONFIG:DEBUG>,$<CONFIG:RelWithDebInfo>>:/bigobj>")
 endif()
 
 
