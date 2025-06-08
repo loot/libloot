@@ -792,7 +792,7 @@ TEST_P(DatabaseInterfaceTest,
 
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldWriteOnlyBashTagsAndDirtyInfo) {
-    using std::endl;
+  using std::endl;
 
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
