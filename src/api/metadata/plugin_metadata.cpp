@@ -170,7 +170,8 @@ bool PluginMetadata::NameMatches(std::string_view pluginName) const {
       throw std::runtime_error("Regex plugin does not have regex object");
     }
 
-    return std::regex_match(pluginName.begin(), pluginName.end(), nameRegex_.value());
+    return std::regex_match(
+        pluginName.begin(), pluginName.end(), nameRegex_.value());
   }
 
   return CompareFilenames(name_, pluginName) == 0;

@@ -40,7 +40,9 @@ void HandleError(std::string_view operation, int returnCode) {
   std::string err;
   lci_get_error_message(&message);
   if (message == nullptr) {
-    err = fmt::format("Failed to {}. loot-condition-interpreter error code: {}", operation, returnCode);
+    err = fmt::format("Failed to {}. loot-condition-interpreter error code: {}",
+                      operation,
+                      returnCode);
   } else {
     err = fmt::format("Failed to {}. Details: {}", operation, message);
   }

@@ -28,9 +28,7 @@ namespace loot {
 Tag::Tag(std::string_view tag,
          const bool isAddition,
          std::string_view condition) :
-    name_(tag),
-    addTag_(isAddition),
-    condition_(condition) {}
+    name_(tag), addTag_(isAddition), condition_(condition) {}
 
 bool Tag::IsAddition() const { return addTag_; }
 

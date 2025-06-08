@@ -30,15 +30,12 @@ namespace loot {
 Message::Message(const MessageType type,
                  std::string_view content,
                  std::string_view condition) :
-    type_(type),
-    content_({MessageContent(content)}), condition_(condition) {}
+    type_(type), content_({MessageContent(content)}), condition_(condition) {}
 
 Message::Message(const MessageType type,
                  const std::vector<MessageContent>& content,
                  std::string_view condition) :
-    type_(type),
-    content_(content),
-    condition_(condition) {
+    type_(type), content_(content), condition_(condition) {
   if (content.size() > 1) {
     bool englishStringExists = false;
     for (const auto& mc : content) {

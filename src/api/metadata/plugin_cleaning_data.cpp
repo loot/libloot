@@ -25,8 +25,7 @@
 #include "loot/metadata/plugin_cleaning_data.h"
 
 namespace loot {
-PluginCleaningData::PluginCleaningData(uint32_t crc,
-                                       std::string_view utility) :
+PluginCleaningData::PluginCleaningData(uint32_t crc, std::string_view utility) :
     crc_(crc), utility_(utility) {}
 
 PluginCleaningData::PluginCleaningData(
