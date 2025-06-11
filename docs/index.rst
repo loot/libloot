@@ -10,7 +10,7 @@ libloot
   api/sorting
   api/rust_api_reference
   api/cpp_api_reference
-  api/licenses/index
+  api/copyright/index
   api/changelog
 
 .. toctree::

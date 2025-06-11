@@ -7,35 +7,35 @@ Copyright License Texts
 GNU General Public License 3.0
 ------------------------------
 
-.. include:: GPL-3.0-or-later
+.. include:: licenses/GPL-3.0-or-later
   :literal:
 
 GNU Free Documentation License 1.3
 ----------------------------------
 
-.. include:: GFDL-1.3-no-invariants-or-later
+.. include:: licenses/GFDL-1.3-no-invariants-or-later
   :literal:
 
 Apache License 2.0
 ------------------
 
-.. include:: Apache-2.0
+.. include:: licenses/Apache-2.0
   :literal:
 
 BSD 3-Clause "New" or "Revised" License
 ---------------------------------------
 
-.. include:: Apache-2.0
+.. include:: licenses/BSD-3-Clause
   :literal:
 
 MIT License
 -----------
 
-.. include:: MIT
+.. include:: licenses/MIT
   :literal:
 
 Unicode License v3
 ------------------
 
-.. include:: Unicode-3.0
+.. include:: licenses/Unicode-3.0
   :literal:

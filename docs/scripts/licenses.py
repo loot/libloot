@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import tomllib
 
-def process_licenses(attribution_dir, destination_dir):
+def process_licenses(source_dir, destination_dir):
     # CC0, Unlicense and Zlib don't need licenses to be included.
     # MPL doesn't need the license included with binary distributions, and
     # allows distribution under a compatible license.
@@ -30,7 +30,7 @@ def process_licenses(attribution_dir, destination_dir):
         'Zlib'
     ]
 
-    for entry in os.scandir(os.path.join(attribution_dir, 'licenses')):
+    for entry in os.scandir(source_dir):
         if entry.name not in skip_entries:
             destination_path = os.path.join(destination_dir, entry.name)
             if entry.is_dir():
@@ -78,9 +78,9 @@ def get_target_dependency_names(target_package_name):
 
 if __name__ == "__main__":
     target_package_name = 'libloot-cpp'
-    cargo_toml_path = '../cpp/Cargo.toml'
-    attribution_dir = 'build/attribution'
-    output_dir = 'api/licenses'
+    cargo_toml_path = os.path.join('..', 'cpp', 'Cargo.toml')
+    attribution_dir = os.path.join('build', 'attribution')
+    output_dir = os.path.join('api', 'copyright')
 
     subprocess.run(
         [
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         check=True
     )
 
-    process_licenses(attribution_dir, output_dir)
+    process_licenses(os.path.join(attribution_dir, 'licenses'), os.path.join(output_dir, 'licenses'))
 
     target_dependency_names = get_target_dependency_names(target_package_name)
 
