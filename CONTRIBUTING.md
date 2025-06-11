@@ -20,20 +20,3 @@ The best way to get started is to comment on something in GitHub's commit log or
 Surprise pull requests aren't recommended because everything you touched may have been rewritten, making your changes a pain to integrate, or obsolete. There are only generally a few contributors at any one time though, so there's not much chance of painful conflicts requiring resolution, provided you're working off the correct branch.
 
 When you do make a pull request, please do so from a branch which doesn't have the same name as they branch you're requesting your changes to be merged into. It's a lot easier to keep track of what pull request branches do when they're named something like `you:specific-cool-feature` rather than `you:master`.
-
-## Code Style
-
-libloot's code style is based on the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html). Formatting style is codified in the repository's `.clang-format` file, but is not enforced.
-
-### C++ Features
-
-* Static variables may contain non-POD types.
-* Reference arguments don't need to be `const` (ie. they can be used for output variables).
-* Exceptions can be used.
-* Unsigned integer types can be used.
-* There's no restriction on which Boost libraries can be used.
-* Specialising `std::hash` is allowed.
-
-### Naming
-
-* Constant, enumerator and variable names should use `camelCase` or `underscore_separators`, but they should be consistent within the same scope.

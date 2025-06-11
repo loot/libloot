@@ -6,4 +6,5 @@ Copyright Notices
   :maxdepth: 1
 
   libloot-notices
+  dependency-notices
   texts

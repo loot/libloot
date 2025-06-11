@@ -8,7 +8,8 @@ libloot
 
   api/introduction
   api/sorting
-  api/reference
+  api/rust_api_reference
+  api/cpp_api_reference
   api/licenses/index
   api/changelog
 

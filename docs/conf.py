@@ -20,13 +20,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-import subprocess, os
-
-output_directory = os.path.join('..', 'build', 'docs')
-if not os.path.exists(output_directory):
-    os.makedirs(output_directory)
-
-subprocess.call(['doxygen', 'docs/api/Doxyfile'], cwd='..')
+import shutil, subprocess, os
 
 # -- General configuration ------------------------------------------------
 
@@ -348,9 +342,23 @@ texinfo_documents = [
 #
 # texinfo_no_detailmenu = False
 
+found_doxygen = shutil.which('doxygen')
 
-breathe_projects = {
-"loot":"../build/docs/xml/",
-}
+if found_doxygen:
+    doxygen_output_directory = os.path.join('..', 'cpp', 'build', 'docs')
+    if not os.path.exists(doxygen_output_directory):
+        os.makedirs(doxygen_output_directory)
 
-breathe_default_project = 'loot'
+    subprocess.call(['doxygen', 'Doxyfile'], cwd='../cpp')
+
+    extensions.append('breathe')
+
+    breathe_projects = {
+        'loot':'../cpp/build/docs/xml/',
+    }
+
+    breathe_default_project = 'loot'
+else:
+    # This causes Sphinx to log a warning, but it's unavoidable without
+    # modifying index.rst at runtime.
+    exclude_patterns.append('api/cpp_api_reference.rst')

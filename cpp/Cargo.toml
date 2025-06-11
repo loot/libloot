@@ -1,0 +1,17 @@
+[package]
+name = "libloot-cpp"
+version = "0.27.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+cxx = { version = "1.0", features = ["c++17"] }
+delegate = "0.13.2"
+libloot = { path = ".." }
+libloot-ffi-errors = { path = "../ffi-errors" }
+
+[build-dependencies]
+cxx-build = "1.0"
+
+[lib]
+crate-type = ["staticlib"]

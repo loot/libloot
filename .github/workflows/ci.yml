@@ -8,217 +8,186 @@ on:
   pull_request:
 
 env:
-  BOOST_VERSION: 1.87.0
-  CBINDGEN_VERSION: 0.28.0
   CARGO_TERM_COLOR: always
-  MSVC_CONFIG: RelWithDebInfo
+  CMAKE_CONFIG: RelWithDebInfo
 
 jobs:
-  linux:
+  rustfmt:
     runs-on: ubuntu-24.04
-
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-          key: ${{ runner.os }}-cargo-cbindgen-${{ env.CBINDGEN_VERSION }}
-
-      - name: Get descriptive libloot version
-        id: get-libloot-version
-        shell: bash
+      - name: Check formatting
         run: |
-          GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
-          LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
-          LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
-          echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
+          cargo fmt -- --version
+          cargo fmt --all -- --check
 
-      - name: Get Boost metadata
-        id: boost-metadata
+  clippy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run clippy
         run: |
-          BOOST_ROOT="${{ github.workspace }}/boost_${BOOST_VERSION//./_}"
-          echo "root=$BOOST_ROOT" >> $GITHUB_OUTPUT
+          cargo clippy -- --version
+          cargo clippy --all --all-targets -- -Dwarnings
 
-      - name: Boost cache
-        id: boost-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ steps.boost-metadata.outputs.root }}/boost
-            ${{ steps.boost-metadata.outputs.root }}/stage
-          key: ${{ runner.os }}-Boost-${{ env.BOOST_VERSION }}
-
-      # Need to build Boost's 'system' stub to generate the CMake config file.
-      - name: Download & build Boost
-        run: |
-          curl -sSfLO https://raw.githubusercontent.com/Ortham/ci-scripts/2.2.1/install_boost.py
-          python install_boost.py --directory ${{ github.workspace }} --boost-version $BOOST_VERSION -a 64 system
-        if: steps.boost-cache.outputs.cache-hit != 'true'
-
-      - name: Install APT package dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-upgrade \
-            doxygen \
-            language-pack-el \
-            language-pack-tr \
-            libtbb-dev \
-            libicu-dev
-
-      # The version in apt is too old.
-      - name: Install cbindgen
-        run: |
-          wget https://github.com/mozilla/cbindgen/releases/download/$CBINDGEN_VERSION/cbindgen
-          BIN_PATH="$HOME/.local/bin/"
-          mkdir -p "$BIN_PATH"
-          mv cbindgen "$BIN_PATH"
-          chmod +x "$BIN_PATH/cbindgen"
-          echo "$BIN_PATH" >> "$GITHUB_PATH"
-
-      - name: Run CMake
-        run: |
-          cmake \
-            -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" \
-            -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" \
-            -DCPACK_THREADS=0 \
-            -B build
-          cmake --build build --parallel
-
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure --parallel
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install packages for building docs
-        shell: bash
-        working-directory: docs
-        run: |
-          pipx install uv
-          uv sync
-
-      - name: Build docs
-        working-directory: docs
-        run: uv run -- sphinx-build -b html . ../build/docs/html
-
-      - name: Build archive
-        id: build-archive
-        shell: bash
-        run: |
-          cd build
-          cpack
-
-          VERSION="${{ steps.get-libloot-version.outputs.version }}"
-          echo "filename=libloot-${VERSION}-Linux.tar.xz" >> $GITHUB_OUTPUT
-
-      - name: Import GPG key
-        run: echo -n "${{ secrets.GPG_SIGNING_KEY }}" | gpg --import
-        if: github.event_name == 'push'
-
-      - name: Sign archive
-        run: gpg --output "build/package/${{ steps.build-archive.outputs.filename }}.sig" --detach-sig "build/package/${{ steps.build-archive.outputs.filename }}"
-        if: github.event_name == 'push'
-
-      - name: Upload archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.build-archive.outputs.filename }}
-          path: |
-            build/package/${{ steps.build-archive.outputs.filename }}
-            build/package/${{ steps.build-archive.outputs.filename }}.sig
-        if: github.event_name == 'push'
-
-  windows:
-    runs-on: windows-2025
-
+  rust:
     strategy:
       matrix:
-        platform: [Win32, x64]
+        target:
+          - os: windows-2025
+            platform: Win32
+            triple: i686-pc-windows-msvc
+            architecture: x86
+
+          - os: windows-2025
+            platform: x64
+            triple: x86_64-pc-windows-msvc
+            architecture: x64
+
+          - os: ubuntu-24.04
+            platform: x86_64
+            triple: x86_64-unknown-linux-gnu
+            architecture: x64
+
+    runs-on: ${{ matrix.target.os }}
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Cache cargo
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-          key: ${{ runner.os }}-cargo-cbindgen-${{ env.CBINDGEN_VERSION }}
+            target/
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
-        if: matrix.platform == 'Win32'
+        if: matrix.target.platform == 'Win32'
 
-      - name: Get Boost metadata
-        id: boost-metadata
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Prepare test resources
+        shell: pwsh
         run: |
-          $BOOST_ROOT="${{ github.workspace }}/boost_" + $env:BOOST_VERSION -replace "\.", "_"
-          echo "root=$BOOST_ROOT" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Invoke-WebRequest https://github.com/Ortham/testing-plugins/archive/refs/tags/1.6.2.zip -OutFile testing-plugins-1.6.2.zip
+          Expand-Archive testing-plugins-1.6.2.zip .
+          Move-Item testing-plugins-1.6.2 testing-plugins
+          Remove-Item testing-plugins-1.6.2.zip
 
-      - name: Boost cache
-        id: boost-cache
-        uses: actions/cache@v4
+      - name: Set LIBLOOT_REVISION
+        shell: bash
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build and run tests with code coverage
+        run: cargo llvm-cov --lcov --output-path lcov.info --target ${{ matrix.target.triple }}
+
+      - name: Upload code coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        if: github.event_name == 'push'
+
+  cpp:
+    strategy:
+      matrix:
+        target:
+          - os: windows-2025
+            platform: Win32
+            triple: i686-pc-windows-msvc
+            architecture: x86
+
+          - os: windows-2025
+            platform: x64
+            triple: x86_64-pc-windows-msvc
+            architecture: x64
+
+          - os: ubuntu-24.04
+            platform: x86_64
+            triple: x86_64-unknown-linux-gnu
+            architecture: x64
+
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - uses: actions/cache@v4
         with:
           path: |
-            ${{ steps.boost-metadata.outputs.root }}/boost
-            ${{ steps.boost-metadata.outputs.root }}/stage
-          key: ${{ runner.os }}-x64-Boost-${{ env.BOOST_VERSION }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      # Need to build Boost's 'system' stub to generate the CMake config file.
-      - name: Download & build Boost
-        run: |
-          curl -sSfLO https://raw.githubusercontent.com/Ortham/ci-scripts/2.2.1/install_boost.py
-          python install_boost.py --directory ${{ github.workspace }} --boost-version ${{ env.BOOST_VERSION }} -a 64 system
-        if: steps.boost-cache.outputs.cache-hit != 'true'
+      - name: Install Rust i686-pc-windows-msvc target
+        run: rustup target add i686-pc-windows-msvc
+        if: matrix.target.platform == 'Win32'
+
+      - name: Set LIBLOOT_REVISION
+        shell: bash
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Get descriptive libloot version
         id: get-libloot-version
         shell: bash
         run: |
-          GIT_DESCRIBE=$(git describe --tags --long --abbrev=7)
+          GIT_DESCRIBE=$(git describe --tags --long --always --abbrev=7)
           LIBLOOT_DESC_REF=${GIT_DESCRIBE}_${GITHUB_REF#refs/*/}
           LIBLOOT_SAFE_DESC_REF=${LIBLOOT_DESC_REF//[\/<>\"|]/_}
           echo "version=$LIBLOOT_SAFE_DESC_REF" >> $GITHUB_OUTPUT
 
-      - name: Install cbindgen
-        run: cargo install --version $env:CBINDGEN_VERSION cbindgen
+      - name: Build the C++ wrapper (Linux)
+        working-directory: cpp
+        run: |
+          cmake \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_CONFIG }} \
+            -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" \
+            -DCPACK_THREADS=0 \
+            -DRUST_TARGET="${{ matrix.target.triple }}" \
+            -B build
+          cmake --build build --parallel
+        if: runner.os == 'Linux'
 
-      - name: Run CMake
+      - name: Build the C++ wrapper (Windows)
+        working-directory: cpp
         run: |
           cmake -G "Visual Studio 17 2022" `
-            -A ${{ matrix.platform }} `
-            -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" `
+            -A ${{ matrix.target.platform }} `
             -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" `
             -DCPACK_THREADS=0 `
+            -DRUST_TARGET="${{ matrix.target.triple }}" `
             -B build
-          cmake --build build --parallel --config ${{ env.MSVC_CONFIG }}
+          cmake --build build --parallel --config ${{ env.CMAKE_CONFIG }}
+        if: runner.os == 'Windows'
 
-      - name: Run tests
-        run: ctest --test-dir build --build-config ${{ env.MSVC_CONFIG }} --output-on-failure --parallel
+      - name: Run the C++ wrapper tests
+        working-directory: cpp
+        run: ctest --test-dir build --build-config ${{ env.CMAKE_CONFIG }} --output-on-failure --parallel
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+      - name: Install packages for building docs (Linux)
+        working-directory: docs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-upgrade doxygen
+          pipx install uv
+          uv sync
+        if: runner.os == 'Linux'
 
-      - name: Install packages for building docs
+      - name: Install packages for building docs (Windows)
+        working-directory: docs
         run: |
           curl -sSfLO https://github.com/doxygen/doxygen/releases/download/Release_1_13_2/doxygen-1.13.2.windows.x64.bin.zip
           Expand-Archive doxygen-1.13.2.windows.x64.bin.zip
@@ -226,43 +195,169 @@ jobs:
           echo "${{ github.workspace }}\doxygen-1.13.2.windows.x64.bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
           pipx install uv
-          cd docs
           uv sync
+        if: runner.os == 'Windows'
 
       - name: Build docs
         working-directory: docs
-        run: uv run -- sphinx-build -b html . ../build/docs/html
+        run: uv run -- sphinx-build -b html . build/html
 
-      - name: Build archive
-        id: build-archive
+      - name: Package the C++ wrapper
+        working-directory: cpp/build
+        run: cpack -C ${{ env.CMAKE_CONFIG }}
+
+      - name: Get archive name
+        id: archive-name
         shell: bash
         run: |
-          cd build
-          cpack -C ${{ env.MSVC_CONFIG }}
-
           VERSION="${{ steps.get-libloot-version.outputs.version }}"
-          if [[ "${{ matrix.platform }}" == "Win32" ]]
+
+          if [[ "${{ runner.os }}" == "Windows" ]]
           then
-            PLATFORM=win32
+            EXTENSION=7z
+            if [[ "${{ matrix.target.platform }}" == "Win32" ]]
+            then
+              PLATFORM=win32
+            else
+              PLATFORM=win64
+            fi
           else
-            PLATFORM=win64
+            EXTENSION=tar.xz
+            PLATFORM=Linux
           fi
 
-          echo "filename=libloot-${VERSION}-${PLATFORM}.7z" >> $GITHUB_OUTPUT
+          echo "filename=libloot-${VERSION}-${PLATFORM}.${EXTENSION}" >> $GITHUB_OUTPUT
 
       - name: Import GPG key
         run: echo -n "${{ secrets.GPG_SIGNING_KEY }}" | gpg --import
         if: github.event_name == 'push'
 
       - name: Sign archive
-        run: gpg --output "build/package/${{ steps.build-archive.outputs.filename }}.sig" --detach-sig "build/package/${{ steps.build-archive.outputs.filename }}"
+        working-directory: cpp/build/package
+        run: gpg --output "${{ steps.archive-name.outputs.filename }}.sig" --detach-sig "${{ steps.archive-name.outputs.filename }}"
         if: github.event_name == 'push'
 
       - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build-archive.outputs.filename }}
+          name: ${{ steps.archive-name.outputs.filename }}
           path: |
-            build/package/${{ steps.build-archive.outputs.filename }}
-            build/package/${{ steps.build-archive.outputs.filename }}.sig
+            cpp/build/package/${{ steps.archive-name.outputs.filename }}
+            cpp/build/package/${{ steps.archive-name.outputs.filename }}.sig
         if: github.event_name == 'push'
+
+  python:
+    strategy:
+      matrix:
+        target:
+          - os: windows-2025
+            platform: Win32
+            triple: i686-pc-windows-msvc
+            architecture: x86
+
+          - os: windows-2025
+            platform: x64
+            triple: x86_64-pc-windows-msvc
+            architecture: x64
+
+          - os: ubuntu-24.04
+            platform: x86_64
+            triple: x86_64-unknown-linux-gnu
+            architecture: x64
+
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: ${{ matrix.target.architecture }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Rust i686-pc-windows-msvc target
+        run: rustup target add i686-pc-windows-msvc
+        if: matrix.target.platform == 'Win32'
+
+      - name: Set LIBLOOT_REVISION
+        shell: bash
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build the Python wrapper
+        shell: bash
+        working-directory: python
+        run: |
+          python -m venv .venv
+
+          if [[ "${{ runner.os }}" == "Windows" ]]
+          then
+            ./.venv/Scripts/activate
+          else
+            . .venv/bin/activate
+          fi
+
+          pip install maturin
+
+          maturin build --target ${{ matrix.target.triple }} --release
+
+  nodejs:
+    strategy:
+      matrix:
+        target:
+          - os: windows-2025
+            platform: Win32
+            triple: i686-pc-windows-msvc
+            architecture: x86
+
+          - os: windows-2025
+            platform: x64
+            triple: x86_64-pc-windows-msvc
+            architecture: x64
+
+          - os: ubuntu-24.04
+            platform: x86_64
+            triple: x86_64-unknown-linux-gnu
+            architecture: x64
+
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Rust i686-pc-windows-msvc target
+        run: rustup target add i686-pc-windows-msvc
+        if: matrix.target.platform == 'Win32'
+
+      - name: Set LIBLOOT_REVISION
+        shell: bash
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build the Node.js wrapper
+        working-directory: nodejs
+        run: |
+          npm install
+          npm run build
+
+      - name: Run the Node.js wrapper's tests
+        working-directory: nodejs
+        run: npm test

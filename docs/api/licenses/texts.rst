@@ -1,44 +1,41 @@
-***********************
 Copyright License Texts
-***********************
+=======================
 
 .. contents::
+  :local:
 
-`Boost`_
-========
+GNU General Public License 3.0
+------------------------------
 
-.. _Boost: http://www.boost.org/
-
-.. include:: Boost Software License v1.0.txt
+.. include:: GPL-3.0-or-later
   :literal:
 
-libloot, `esplugin`_ & `Libloadorder`_
-======================================
+GNU Free Documentation License 1.3
+----------------------------------
 
-.. _esplugin: https://github.com/Ortham/esplugin
-.. _libloadorder: https://github.com/Ortham/libloadorder
-
-.. include:: GNU GPL v3.txt
+.. include:: GFDL-1.3-no-invariants-or-later
   :literal:
 
-libloot Documentation
-======================
+Apache License 2.0
+------------------
 
-.. include:: GNU FDL v1.3.txt
+.. include:: Apache-2.0
   :literal:
 
-`spdlog`_
-============
+BSD 3-Clause "New" or "Revised" License
+---------------------------------------
 
-.. _spdlog: https://github.com/gabime/spdlog
-
-.. include:: MIT License (spdlog).txt
+.. include:: Apache-2.0
   :literal:
 
-`yaml-cpp`_
-===========
+MIT License
+-----------
 
-.. _yaml-cpp: https://github.com/loot/yaml-cpp
+.. include:: MIT
+  :literal:
 
-.. include:: MIT License (yaml-cpp).txt
+Unicode License v3
+------------------
+
+.. include:: Unicode-3.0
   :literal:

@@ -5,10 +5,8 @@ on:
     tags: '*'
 
 env:
-  BOOST_VERSION: 1.87.0
-  CBINDGEN_VERSION: 0.28.0
   CARGO_TERM_COLOR: always
-  MSVC_CONFIG: RelWithDebInfo
+  CMAKE_CONFIG: RelWithDebInfo
 
 jobs:
   create_release:
@@ -42,7 +40,12 @@ jobs:
 
     strategy:
       matrix:
-        platform: [Win32, x64]
+        target:
+          - platform: Win32
+            triple: i686-pc-windows-msvc
+
+          - platform: x64
+            triple: x86_64-pc-windows-msvc
 
     steps:
       - uses: actions/checkout@v4
@@ -57,54 +60,34 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-          key: ${{ runner.os }}-cargo-cbindgen-${{ env.CBINDGEN_VERSION }}
+            target/
+          key: ${{ runner.os }}-${{ matrix.target.platform }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
-        if: matrix.platform == 'Win32'
+        if: matrix.target.platform == 'Win32'
 
-      - name: Get Boost metadata
-        id: boost-metadata
-        run: |
-          $BOOST_ROOT="${{ github.workspace }}/boost_" + $env:BOOST_VERSION -replace "\.", "_"
-          echo "root=$BOOST_ROOT" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-
-      - name: Boost cache
-        id: boost-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ steps.boost-metadata.outputs.root }}/boost
-            ${{ steps.boost-metadata.outputs.root }}/stage
-          key: ${{ runner.os }}-x64-Boost-${{ env.BOOST_VERSION }}
-
-      # Need to build Boost's 'system' stub to generate the CMake config file.
-      - name: Download & build Boost
-        run: |
-          curl -sSfLO https://raw.githubusercontent.com/Ortham/ci-scripts/2.2.1/install_boost.py
-          python install_boost.py --directory ${{ github.workspace }} --boost-version ${{ env.BOOST_VERSION }} -a 64 system
-        if: steps.boost-cache.outputs.cache-hit != 'true'
-
-      - name: Install cbindgen
-        run: cargo install --version $env:CBINDGEN_VERSION cbindgen
+      - name: Set LIBLOOT_REVISION
+        shell: bash
+        run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
       - name: Run CMake
+        working-directory: cpp
         run: |
           cmake -G "Visual Studio 17 2022" `
-            -A ${{ matrix.platform }} `
-            -DCMAKE_PREFIX_PATH="${{ steps.boost-metadata.outputs.root }}\stage" `
+            -A ${{ matrix.target.platform }} `
             -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}" `
             -DCPACK_THREADS=0 `
+            -DRUST_TARGET="${{ matrix.target.triple }}" `
             -B build
-          cmake --build build --parallel --config ${{ env.MSVC_CONFIG }}
+          cmake --build build --parallel --config ${{ env.CMAKE_CONFIG }}
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.13'
 
       - name: Install packages for building docs
+        working-directory: docs
         run: |
           curl -sSfLO https://github.com/doxygen/doxygen/releases/download/Release_1_13_2/doxygen-1.13.2.windows.x64.bin.zip
           Expand-Archive doxygen-1.13.2.windows.x64.bin.zip
@@ -112,28 +95,27 @@ jobs:
           echo "${{ github.workspace }}\doxygen-1.13.2.windows.x64.bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
           pipx install uv
-          cd docs
           uv sync
 
       - name: Build docs
         working-directory: docs
-        run: uv run -- sphinx-build -b html . ../build/docs/html
+        run: uv run -- sphinx-build -b html . build/html
 
       - name: Build archive
         id: build-archive
         shell: bash
+        working-directory: cpp/build
         run: |
-          cd build
-          cpack -C ${{ env.MSVC_CONFIG }}
+          cpack -C ${{ env.CMAKE_CONFIG }}
 
-          if [[ "${{ matrix.platform }}" == "Win32" ]]
+          if [[ "${{ matrix.target.platform }}" == "Win32" ]]
           then
             PLATFORM=win32
           else
             PLATFORM=win64
           fi
 
-          echo "filename=libloot-${{ needs.create_release.outputs.git_tag }}-${PLATFORM}.7z" >> $GITHUB_OUTPUT
+          echo "filename=libloot-${{ needs.create_release.outputs.git_tag }}-${PLATFORM}.7z" >> "$GITHUB_OUTPUT"
 
       - name: Upload Archive
         uses: actions/upload-release-asset@v1
@@ -141,6 +123,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: build/package/${{ steps.build-archive.outputs.filename }}
+          asset_path: cpp/build/package/${{ steps.build-archive.outputs.filename }}
           asset_name: ${{ steps.build-archive.outputs.filename }}
           asset_content_type: application/x-7z-compressed
