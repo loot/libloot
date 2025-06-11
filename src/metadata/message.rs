@@ -58,7 +58,7 @@ impl MessageContent {
         }
     }
 
-    /// Set the language code to the given value.
+    /// Set the language to the given value.
     #[must_use]
     pub fn with_language(mut self, language: String) -> Self {
         self.language = language.into_boxed_str();
@@ -70,7 +70,7 @@ impl MessageContent {
         &self.text
     }
 
-    /// Get the text's language code.
+    /// Get the text's language.
     pub fn language(&self) -> &str {
         &self.language
     }
@@ -90,18 +90,22 @@ impl std::default::Default for MessageContent {
 /// Choose a [MessageContent] object from those given in `content` based on the
 /// given `language`.
 ///
-/// The locale or language code for the preferred language to select. Codes are
-/// of the form `[language code]_[country code]`.
+/// Language strings are expected to have the form
+/// `[language code]` or `[language code]_[country code]`, where
+/// `[language code]` is an ISO 639-1 language code, and `[country code]` is an
+/// ISO 3166 country code.
 ///
 /// * If the vector only contains a single element, that element is returned.
-/// * If content with a language that exactly matches the given locale or
-///   language code is present, that content is returned.
-/// * If a locale code is given and there is no exact match but content for that
-///   locale's language is present, that content is returned.
-/// * If a language code is given and there is no exact match but content for a
-///   locale in that language is present, that content is returned.
-/// * If no locale or language code matches are found and content in the default
-///   language is present, that content is returned.
+/// * If content with a language that exactly matches the given `language` value
+///   is present, that content is returned.
+/// * If the given `language` value includes a country code and there is no
+///   exact match but content for the same language code is present, that
+///   content is returned.
+/// * If the given `language` value has no country code and there is no exact
+///   match but content for the same language code is present, that content is
+///   returned.
+/// * If no matches are found and content in the default language is present,
+///   that content is returned.
 /// * Otherwise, an empty [Option] is returned.
 pub fn select_message_content<'a>(
     content: &'a [MessageContent],
@@ -169,7 +173,7 @@ impl Message {
 
     /// Construct a [Message] with the given type and content. If more than one
     /// [MessageContent] object is given, one must use
-    /// the language code given by [MessageContent::DEFAULT_LANGUAGE].
+    /// the language given by [MessageContent::DEFAULT_LANGUAGE].
     pub fn multilingual(
         message_type: MessageType,
         content: Vec<MessageContent>,

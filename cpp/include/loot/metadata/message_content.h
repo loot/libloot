@@ -125,20 +125,23 @@ LOOT_API bool operator>=(const MessageContent& lhs, const MessageContent& rhs);
  * @param  content
  *         The MessageContent objects to choose between.
  * @param  language
- *         The locale or language code for the preferred language to select.
- *         Locale codes are of the form `[language code]_[country code]`.
+ *         The preferred language to select. Values are expected to have the
+ *         form `[language code]` or `[language code]_[country code]`, where
+ *         `[language code]` is an ISO 639-1 language code and `[country code]`
+ *         is an ISO 3166 country code.
  * @return A MessageContent object.
  *         * If the vector only contains a single element, that element is
  *           returned.
- *         * If content with a language that exactly matches the given locale
- *           or language code is present, that content is returned.
- *         * If a locale code is given and there is no exact match but content
- *           for that locale's language is present, that content is returned.
- *         * If a language code is given and there is no exact match but
- *           content for a locale in that langauge is present, that content is
- *           returned.
- *         * If no locale or language code matches are found and content in
- *           the default language is present, that content is returned.
+ *         * If content with a language that exactly matches the given language
+ *           is present, that content is returned.
+ *         * If the given language includes a country code and there is no exact
+ *           match but content for the same language code is present, that
+ *           content is returned.
+ *         * If the given language does not include a country code and there is
+ *           no exact match but content for thet same language code is present,
+ *           that content is returned.
+ *         * If no matches are found and content in the default language is
+ *           present, that content is returned.
  *         * Otherwise, an empty optional is returned.
  */
 LOOT_API std::optional<MessageContent> SelectMessageContent(
