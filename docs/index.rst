@@ -7,7 +7,6 @@ libloot
   :caption: API Documentation
 
   api/introduction
-  api/miscellaneous
   api/sorting
   api/reference
   api/licenses/index

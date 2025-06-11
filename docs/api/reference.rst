@@ -4,6 +4,18 @@ API Reference
 
 .. contents::
 
+String Encoding
+===============
+
+* All output strings are encoded in UTF-8.
+* Input strings are expected to be encoded in UTF-8.
+
+Errors
+======
+
+All errors encountered are thrown as exceptions that inherit from
+``std::exception``.
+
 Constants
 =========
 
