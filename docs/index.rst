@@ -10,7 +10,7 @@ libloot
   api/miscellaneous
   api/sorting
   api/reference
-  api/credits
+  api/licenses/index
   api/changelog
 
 .. toctree::
@@ -22,9 +22,3 @@ libloot
   metadata/data_structures/index
   metadata/conditions
   metadata/changelog
-
-.. toctree::
-  :caption: Copyright Licenses
-
-  licenses/notice.rst
-  licenses/texts.rst
