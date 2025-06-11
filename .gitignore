@@ -1,2 +1,4 @@
 /target
 /testing-plugins
+.venv/
+build/

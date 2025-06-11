@@ -22,11 +22,11 @@
 
 import subprocess, os
 
-output_directory = os.path.join('..', 'build', 'docs')
-if not os.path.exists(output_directory):
-    os.makedirs(output_directory)
+doxygen_output_directory = os.path.join('..', 'cpp', 'build', 'docs')
+if not os.path.exists(doxygen_output_directory):
+    os.makedirs(doxygen_output_directory)
 
-subprocess.call(['doxygen', 'docs/api/Doxyfile'], cwd='..')
+subprocess.call(['doxygen', 'Doxyfile'], cwd='../cpp')
 
 # -- General configuration ------------------------------------------------
 
@@ -350,7 +350,7 @@ texinfo_documents = [
 
 
 breathe_projects = {
-"loot":"../build/docs/xml/",
+    'loot':'../cpp/build/docs/xml/',
 }
 
 breathe_default_project = 'loot'

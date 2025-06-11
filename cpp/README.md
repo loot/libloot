@@ -66,11 +66,9 @@ ctest --test-dir build --output-on-failure --parallel -V
 Install [Doxygen](https://www.doxygen.nl/), Python and [uv](https://docs.astral.sh/uv/getting-started/installation/) and make sure they're accessible from your `PATH`, then run:
 
 ```
-cd docs
-uv run -- sphinx-build -b html . ../build/docs/html
+cd ../docs
+uv run -- sphinx-build -b html . build/html
 ```
-
-The documentation files for dependency licenses and copyright notices are auto-generated using [cargo-attribution](https://github.com/ameknite/cargo-attribution): to regenerate them run `py scripts/licenses.py`.
 
 ### Packaging
 

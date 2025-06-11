@@ -87,7 +87,7 @@ jobs:
           python-version: '3.13'
 
       - name: Install packages for building docs
-        working-directory: cpp/docs
+        working-directory: docs
         run: |
           curl -sSfLO https://github.com/doxygen/doxygen/releases/download/Release_1_13_2/doxygen-1.13.2.windows.x64.bin.zip
           Expand-Archive doxygen-1.13.2.windows.x64.bin.zip
@@ -98,8 +98,8 @@ jobs:
           uv sync
 
       - name: Build docs
-        working-directory: cpp
-        run: uv run -- sphinx-build -b html . ../build/docs/html
+        working-directory: docs
+        run: uv run -- sphinx-build -b html . build/html
 
       - name: Build archive
         id: build-archive

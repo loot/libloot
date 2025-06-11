@@ -78,9 +78,9 @@ def get_target_dependency_names(target_package_name):
 
 if __name__ == "__main__":
     target_package_name = 'libloot-cpp'
-    cargo_toml_path = 'Cargo.toml'
+    cargo_toml_path = '../cpp/Cargo.toml'
     attribution_dir = 'build/attribution'
-    output_dir = 'docs/licenses'
+    output_dir = 'api/licenses'
 
     subprocess.run(
         [

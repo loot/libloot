@@ -271,7 +271,7 @@ install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(LIBLOOT_INSTALL_DOCS)
-    install(DIRECTORY "${CMAKE_BINARY_DIR}/docs/html/"
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/../docs/build/html/"
         DESTINATION ${CMAKE_INSTALL_DOCDIR})
 endif()
 

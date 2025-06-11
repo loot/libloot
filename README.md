@@ -75,10 +75,10 @@ cargo test
 
 ### API documentation
 
-The API documentation can be built and viewed using:
+The Rust API's reference documentation can be built and viewed using:
 
 ```
 cargo doc --open
 ```
 
-The C++ wrapper also has more general documentation.
+The `docs` directory contains more general documentation.

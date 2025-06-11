@@ -178,7 +178,7 @@ jobs:
         run: ctest --test-dir build --build-config ${{ env.CMAKE_CONFIG }} --output-on-failure --parallel
 
       - name: Install packages for building docs (Linux)
-        working-directory: cpp/docs
+        working-directory: docs
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-upgrade doxygen
@@ -187,7 +187,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Install packages for building docs (Windows)
-        working-directory: cpp/docs
+        working-directory: docs
         run: |
           curl -sSfLO https://github.com/doxygen/doxygen/releases/download/Release_1_13_2/doxygen-1.13.2.windows.x64.bin.zip
           Expand-Archive doxygen-1.13.2.windows.x64.bin.zip
@@ -199,8 +199,8 @@ jobs:
         if: runner.os == 'Windows'
 
       - name: Build docs
-        working-directory: cpp/docs
-        run: uv run -- sphinx-build -b html . ../build/docs/html
+        working-directory: docs
+        run: uv run -- sphinx-build -b html . build/html
 
       - name: Package the C++ wrapper
         working-directory: cpp/build
