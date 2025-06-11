@@ -70,7 +70,8 @@ impl Database {
     /// Loads the masterlist from the given path, using the prelude at the given
     /// path.
     ///
-    /// Replaces any existing data that was previously loaded from a masterlist.
+    /// Replaces any existing data that was previously loaded from a masterlist
+    /// and prelude.
     pub fn load_masterlist_with_prelude(
         &mut self,
         masterlist_path: &Path,
