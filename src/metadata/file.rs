@@ -141,7 +141,7 @@ impl std::hash::Hash for Filename {
     }
 }
 
-impl AsRef<str> for &Filename {
+impl AsRef<str> for Filename {
     fn as_ref(&self) -> &str {
         &self.0
     }
