@@ -1,6 +1,6 @@
-*************
-API Reference
-*************
+*****************
+C++ API Reference
+*****************
 
 .. contents::
   :local:
