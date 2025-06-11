@@ -178,6 +178,6 @@ if __name__ == "__main__":
 
             notices_rst += section_rst
 
-        notices_rst_path = os.path.join(output_dir, 'notices.rst')
+        notices_rst_path = os.path.join(output_dir, 'dependency-notices.rst')
         with open(notices_rst_path, 'w', encoding="utf-8") as outfile:
             outfile.write(notices_rst)
