@@ -15,6 +15,8 @@ libloot's core is written in Rust, and C++, Python and Node.js wrappers can be f
 
 ## Downloads
 
+Binary artifacts are currently only provided for the C++ wrapper.
+
 Releases are hosted on [GitHub](https://github.com/loot/libloot/releases).
 
 Snapshot builds are available as artifacts from [GitHub Actions runs](https://github.com/loot/libloot/actions), though they are only kept for 90 days and can only be downloaded when logged into a GitHub account. To mitigate these restrictions, snapshot build artifacts include a GPG signature that can be verified using the public key hosted [here](https://loot.github.io/.well-known/openpgpkey/hu/mj86by43a9hz8y8rbddtx54n3bwuuucg), which means it's possible to re-upload the artifacts elsewhere and still prove their authenticity.
