@@ -2,13 +2,14 @@
 
 This directory contains documentation for libloot and LOOT's metadata syntax. It does not include Rust API reference documentation: that is generated using `cargo doc`.
 
-To build the documentation, install Python and [uv](https://docs.astral.sh/uv/getting-started/installation/) and make sure they're accessible from your `PATH`, then run:
+To build the documentation, install [Python](https://www.python.org/) and [uv](https://docs.astral.sh/uv/getting-started/installation/) and make sure they're accessible from your `PATH`, then run:
 
 ```
-cd ../docs
 uv run -- sphinx-build -b html . build/html
 ```
 
 If [Doxygen](https://www.doxygen.nl/) is also installed and accessible from your `PATH`, the C++ API's reference documentation will also be included.
 
-The documentation files for dependency licenses and copyright notices are auto-generated using [cargo-attribution](https://github.com/ameknite/cargo-attribution): to regenerate them run `py scripts/licenses.py`. The script is hardcoded to generate files for the C++ wrapper's dependencies, but in practice that doesn't add any content over doing the same for just the core libloot Rust library.
+The files for dependency licenses and copyright notices are auto-generated. The script is hardcoded to generate files for the C++ wrapper's dependencies, but in practice that doesn't add any content over doing the same for just the core libloot Rust library.
+
+To regenerate the generated files, first install [cargo-attribution](https://github.com/ameknite/cargo-attribution) then run `scripts/licenses.py`, e.g. `py scripts/licenses.py` or `python3 scripts/licenses.py`.

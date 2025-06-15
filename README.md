@@ -31,25 +31,35 @@ libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform
 
 Make sure you have [Rust](https://www.rust-lang.org/) installed.
 
-To build the library, set the `LIBLOOT_REVISION` env var and then run Cargo.
-
-Using PowerShell:
+The `LIBLOOT_REVISION` environment variable is used to embed the commit hash into the build. If it's not defined then `unknown` will be used instead. To define it in PowerShell, run:
 
 ```powershell
 $env:LIBLOOT_REVISION = git rev-parse --short HEAD
-cargo build --release
 ```
 
-Using a POSIX shell:
+To define it in a POSIX shell, run:
 
 ```sh
 export LIBLOOT_REVISION=$(git rev-parse --short HEAD)
+```
+
+The build can then be run using:
+
+```
 cargo build --release
 ```
 
-`LIBLOOT_REVISION` is used to embed the commit hash into the build, if it's not defined then `unknown` will be used instead.
+### API documentation
 
-### Tests
+The Rust API's reference documentation can be built and viewed using:
+
+```
+cargo doc --open
+```
+
+The `docs` directory contains more general documentation.
+
+## Tests
 
 Before running the tests, first extract the [testing-plugins](https://github.com/Ortham/testing-plugins) archive to this readme's directory (so that there's a `testing-plugins` directory there).
 
@@ -73,13 +83,3 @@ The tests can then be run using:
 ```
 cargo test
 ```
-
-### API documentation
-
-The Rust API's reference documentation can be built and viewed using:
-
-```
-cargo doc --open
-```
-
-The `docs` directory contains more general documentation.

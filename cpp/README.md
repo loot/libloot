@@ -1,76 +1,58 @@
-# libloot-rs C++ wrapper
+# libloot C++ wrapper
 
 This is a wrapper around libloot that provides a C++ interface that's ABI-compatible with libloot v0.27.0.
 
 The wrapper has two layers:
 
 - a static library built using Cargo, which provides a C++ interface
-- a shared library built using CMake, which wraps that C++ interface to provide another that is ABI-compatible with C++ libloot.
+- a shared library built using CMake, which wraps that C++ interface to provide another that is more idiomatic.
 
-## Building
+## Build
 
-libloot uses the following CMake variables to set build parameters:
+The prerequisites for building libloot and its C++ wrapper are [CMake](https://cmake.org/), the [Rust](https://www.rust-lang.org/) toolchain and a C++ toolchain. The CI builds currently use a recent version of CMake, the latest version of Rust, MSVC 2022 on Windows and GCC 13 on Linux, so alternatives such as other versions, Mingw-w64 or Clang may not work without modifications.
 
-Parameter | Values | Default |Description
-----------|--------|---------|-----------
-`BUILD_SHARED_LIBS` | `ON`, `OFF` | `ON` | Whether or not to build a shared libloot binary.
-`LIBLOOT_BUILD_TESTS` | `ON`, `OFF` | `ON` | Whether or not to build libloot's tests.
-`LIBLOOT_INSTALL_DOCS` | `ON`, `OFF` | `ON` | Whether or not to install libloot's docs (which need to be built separately).
-`RUN_CLANG_TIDY` | `ON`, `OFF` | `OFF` | Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator.
-
-### Windows
-
-To build a release build with debug info:
+To build a release build with debug info on Windows:
 
 ```
 cmake -B build .
 cmake --build build --parallel --config RelWithDebInfo
 ```
 
-To build a debug build:
-
-```
-cmake -B build .
-cmake --build build --parallel --config Debug
-```
-
-### Linux
-
-To build a release build with debug info:
+To do the same on Linux:
 
 ```
 cmake -B build . -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build --parallel
 ```
 
-to build a debug build:
+To build a debug build, pass `Debug` instead of `RelWithDebInfo`.
+
+The following CMake variables can be used to configure the build:
+
+Parameter | Values | Default |Description
+----------|--------|---------|-----------
+`BUILD_SHARED_LIBS` | `ON`, `OFF` | `ON` | Whether or not to build a shared libloot binary.
+`LIBLOOT_BUILD_TESTS` | `ON`, `OFF` | `ON` | Whether or not to build libloot's tests.
+`LIBLOOT_INSTALL_DOCS` | `ON`, `OFF` | `ON` | Whether or not to install libloot's docs (which need to be built separately).
+`RUN_CLANG_TIDY` | `ON`, `OFF` | `OFF` | Whether or not to run clang-tidy during build. Has no effect when using CMake's Visual Studio generator.
+
+### Documentation
+
+Install [Doxygen](https://www.doxygen.nl/), [Python](https://www.python.org/) and [uv](https://docs.astral.sh/uv/getting-started/installation/) and make sure they're accessible from your `PATH`, then run:
 
 ```
-cargo build
-cmake -B build . -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --parallel
+uv run --directory ../docs -- sphinx-build -b html . build/html
 ```
 
-### Tests
+## Tests
 
-The build process also builds the test suite by default. To skip building the tests, pass `-DLIBLOOT_BUILD_TESTS=OFF` when first running CMake.
-
-If built, the tests can be run using:
+If the tests are built they can be run using:
 
 ```
 ctest --test-dir build --output-on-failure --parallel -V
 ```
 
-### Documentation
-
-Install [Doxygen](https://www.doxygen.nl/), Python and [uv](https://docs.astral.sh/uv/getting-started/installation/) and make sure they're accessible from your `PATH`, then run:
-
-```
-cd ../docs
-uv run -- sphinx-build -b html . build/html
-```
-
-### Packaging
+## Packaging
 
 To package the build:
 
