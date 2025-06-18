@@ -1,12 +1,7 @@
 version: 2
 updates:
 - package-ecosystem: cargo
-  directories:
-    - "/"
-    - /cpp
-    - /nodejs
-    - /parameterized-test
-    - /python
+  directory: "/"
   schedule:
     interval: weekly
 
