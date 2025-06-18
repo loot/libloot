@@ -52,6 +52,7 @@ pub fn to_unmarked_yaml<'a>(yaml: &MarkedYaml<'a>) -> Yaml<'a> {
         YamlData::Alias(v) => Yaml::Alias(*v),
         YamlData::BadValue => Yaml::BadValue,
         YamlData::Representation(v, s, t) => Yaml::Representation(v.clone(), *s, t.clone()),
+        YamlData::Tagged(t, n) => Yaml::Tagged(t.clone(), Box::new(to_unmarked_yaml(n))),
     }
 }
 
