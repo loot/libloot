@@ -529,8 +529,7 @@ dependencies = [
 [[package]]
 name = "libloadorder"
 version = "18.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc4de694d488b4ce2a775d59825ec30d206546ec87fe0866717e6db25c46a164"
+source = "git+https://github.com/Ortham/libloadorder.git?branch=master#ce5944c041e7381e7b3109cdc76d67cb1fe3810e"
 dependencies = [
  "dirs",
  "encoding_rs",
