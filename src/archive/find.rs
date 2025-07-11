@@ -160,11 +160,9 @@ fn get_file_info(file_path: &Path) -> Option<BY_HANDLE_FILE_INFORMATION> {
         unsafe_code,
         reason = "There is currently no way to get this data safely"
     )]
-    unsafe {
-        GetFileInformationByHandle(HANDLE(file.as_raw_handle()), &mut info)
-            .is_ok()
-            .then_some(info)
-    }
+    unsafe { GetFileInformationByHandle(HANDLE(file.as_raw_handle()), &raw mut info) }
+        .is_ok()
+        .then_some(info)
 }
 
 #[cfg(not(windows))]
