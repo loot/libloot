@@ -149,8 +149,9 @@ fn edges<N>(
     // Petgraph produces edges in the reverse of the order that neighbouring
     // nodes were added to the graph, but for backwards compatibility we want
     // the opposite order.
-    // Unfortunately Petgraph's Edges iterator doesn't impl DoubleEndedIterator
-    // (though it probably could), so this needs to buffer the edges.
+    // LIMITATION: Unfortunately Petgraph's Edges iterator doesn't impl
+    // DoubleEndedIterator (though it probably could), so this needs to buffer
+    // the edges.
     let mut edges: Vec<_> = graph.edges(node_index).collect();
     edges.reverse();
     edges.into_iter()

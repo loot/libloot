@@ -49,8 +49,6 @@ pub fn validate_specific_and_hardcoded_edges<T: SortingPlugin>(
 
     validate_non_masters(non_masters, &blueprint_masters_set)?;
 
-    // There's at least one master, check that there are no hardcoded
-    // non-masters.
     validate_early_loading_plugins(early_loading_plugins, masters, &non_masters_set)?;
 
     Ok(())
