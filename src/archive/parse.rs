@@ -7,7 +7,6 @@ use std::{
 
 use super::error::{ArchiveParsingError, ArchivePathParsingError};
 use crate::{
-    archive::error::slice_too_small,
     escape_ascii,
     logging::{self, format_details},
     plugin::has_ascii_extension,
@@ -93,39 +92,6 @@ fn get_assets_in_archive(
             ArchiveParsingError::UnsupportedArchiveTypeId(type_id),
         )),
     }
-}
-
-pub(super) fn to_u32(bytes: &[u8], start_index: usize) -> Result<u32, ArchiveParsingError> {
-    const ARRAY_SIZE: usize = to_usize(u32::BITS >> 3);
-    subarray::<ARRAY_SIZE>(bytes, start_index).map(u32::from_le_bytes)
-}
-
-pub(super) fn to_u64(bytes: &[u8], start_index: usize) -> Result<u64, ArchiveParsingError> {
-    const ARRAY_SIZE: usize = to_usize(u64::BITS >> 3);
-    subarray::<ARRAY_SIZE>(bytes, start_index).map(u64::from_le_bytes)
-}
-
-fn subarray<const SIZE: usize>(
-    bytes: &[u8],
-    start_index: usize,
-) -> Result<[u8; SIZE], ArchiveParsingError> {
-    let stop_index = start_index + SIZE;
-
-    let bytes = bytes
-        .get(start_index..stop_index)
-        .ok_or_else(|| slice_too_small(bytes, stop_index))?;
-
-    <[u8; SIZE]>::try_from(bytes).map_err(|_e| slice_too_small(bytes, SIZE))
-}
-
-#[expect(
-    clippy::as_conversions,
-    reason = "A compile-time assertion ensures that this conversion will be lossless on all relevant target platforms"
-)]
-pub(super) const fn to_usize(value: u32) -> usize {
-    // Error at compile time if this conversion isn't lossless.
-    const _: () = assert!(u32::BITS <= usize::BITS, "cannot fit a u32 into a usize!");
-    value as usize
 }
 
 #[cfg(test)]
