@@ -49,7 +49,6 @@ pub(crate) enum ArchiveParsingError {
     UsesBigEndianNumbers,
     FolderHashCollision(u64),
     HashCollision { folder_hash: u64, file_hash: u64 },
-    SliceTooSmall { expected: usize, actual: usize },
 }
 
 impl std::fmt::Display for ArchiveParsingError {
@@ -81,10 +80,6 @@ impl std::fmt::Display for ArchiveParsingError {
                 f,
                 "unexpected collision for file name hash {file_hash:x} in set for folder name hash {folder_hash:x}"
             ),
-            Self::SliceTooSmall { expected, actual } => write!(
-                f,
-                "byte slice was unexpectedly too small: expected {expected} bytes, got {actual} bytes"
-            ),
         }
     }
 }
@@ -101,12 +96,5 @@ impl std::error::Error for ArchiveParsingError {
 impl From<std::io::Error> for ArchiveParsingError {
     fn from(value: std::io::Error) -> Self {
         ArchiveParsingError::IoError(value)
-    }
-}
-
-pub(super) fn slice_too_small(slice: &[u8], expected_size: usize) -> ArchiveParsingError {
-    ArchiveParsingError::SliceTooSmall {
-        expected: expected_size,
-        actual: slice.len(),
     }
 }

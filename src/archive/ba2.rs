@@ -4,9 +4,7 @@ use std::{
     io::{BufRead, Seek},
 };
 
-use super::error::{ArchiveParsingError, slice_too_small};
-
-use super::parse::{to_u32, to_u64};
+use super::error::ArchiveParsingError;
 
 pub(super) const TYPE_ID: [u8; 4] = *b"BTDX";
 const HEADER_SIZE: usize = 24;
@@ -26,12 +24,20 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
     type Error = ArchiveParsingError;
 
     fn try_from(value: [u8; HEADER_SIZE - TYPE_ID.len()]) -> Result<Self, Self::Error> {
+        // LIMITATION: There's no syntax to infallibly split an array into sub-arrays.
+        #[rustfmt::skip]
+        let [
+            v0, v1, v2, v3, // version
+            a0, a1, a2, a3, // archive_type
+            c0, c1, c2, c3, // file_count
+            file_paths_offset @ ..,
+        ] = value;
         let header = Self {
             type_id: TYPE_ID,
-            version: to_u32(&value, 0)?,
-            archive_type: to_archive_type(&value)?,
-            file_count: to_u32(&value, 8)?,
-            file_paths_offset: to_u64(&value, 12)?,
+            version: u32::from_le_bytes([v0, v1, v2, v3]),
+            archive_type: [a0, a1, a2, a3],
+            file_count: u32::from_le_bytes([c0, c1, c2, c3]),
+            file_paths_offset: u64::from_le_bytes(file_paths_offset),
         };
 
         // The header version is 1, 7 or 8 for Fallout 4 and 2 or 3 for Starfield.
@@ -49,17 +55,6 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
 
         Ok(header)
     }
-}
-
-fn to_archive_type(
-    array: &[u8; HEADER_SIZE - TYPE_ID.len()],
-) -> Result<[u8; 4], ArchiveParsingError> {
-    let slice = &array[4..8];
-
-    slice
-        .try_into()
-        // This should be impossible, but it can't be asserted at compile time.
-        .map_err(|_e| slice_too_small(slice, 4))
 }
 
 pub(super) fn read_assets<T: BufRead + Seek>(
