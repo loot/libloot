@@ -357,8 +357,10 @@ fn split_on_prelude(masterlist: &str) -> Option<(&str, &str)> {
 
         if let Some((_, next_byte)) = iter.peek() {
             if !matches!(next_byte, b' ' | b'#' | b'\n' | b'\r') {
-                // Slicing at index should never fail, but we can't prove that,
-                // and we don't want to risk panicking.
+                // LIMITATION: Slicing at index should never fail, but the
+                // compiler can't see that. A variation of str.find() that
+                // could take a closure that matches on substrings would
+                // eliminate the need for this.
                 if let Some(suffix) = remainder.get(index..) {
                     return Some((prefix, suffix));
                 }
@@ -378,8 +380,8 @@ fn split_on_prelude_start(masterlist: &str) -> Option<(&str, &str)> {
     } else {
         if let Some(pos) = masterlist.find(prelude_on_new_line) {
             let index = pos + prelude_on_new_line.len();
-            // A checked split shouldn't be necessary, but there's no
-            // split_inclusive_once() method, so we need to find and split in
+            // LIMITATION: A checked split shouldn't be necessary, but there's
+            // no split_inclusive_once() method, so we need to find and split in
             // two steps and there's always the risk of a bug being introduced
             // in the middle.
             if let Some((prefix, remainder)) = masterlist.split_at_checked(index) {

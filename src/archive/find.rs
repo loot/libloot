@@ -106,7 +106,10 @@ fn find_associated_archives_with_arbitrary_suffixes(
                 return false;
             };
 
-            // Can't just slice the archive filename to the same length as the plugin file stem directly because that might not slice on a character boundary, so truncate the byte slice and then check it's still valid UTF-8.
+            // Can't just slice the archive filename to the same length as the
+            // plugin file stem directly because that might not slice on a
+            // character boundary, so truncate the byte slice and then check
+            // it's still valid UTF-8.
             if archive_filename.len() < plugin_stem_len {
                 return false;
             }

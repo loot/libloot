@@ -87,6 +87,8 @@ fn add_groups<'a>(
         }
 
         let Some(node_index) = group_nodes.get(group.name()) else {
+            // LIMITATION: This should be impossible, as all the groups have
+            // just been added in the previous for loop.
             logging::error!(
                 "Unexpectedly couldn't find node for group {}: it should have just been added to the graph",
                 group.name()
@@ -151,6 +153,8 @@ pub fn find_path(
                 return Ok(Vec::new());
             }
             _ => {
+                // LIMITATION: This should be impossible, the predecessors array
+                // should have an index for every node in the graph.
                 return Err(PathfindingError::PrecedingNodeNotFound(
                     graph[current].clone().into_string(),
                 )
@@ -168,6 +172,8 @@ pub fn find_path(
         }
 
         let Some(edge) = graph.find_edge(*preceding_vertex, current) else {
+            // LIMITATION: This should be impossible, bellman_ford says there's
+            // an edge.
             return Err(PathfindingError::EdgeNotFound {
                 from_group: graph[*preceding_vertex].clone().into_string(),
                 to_group: graph[current].clone().into_string(),

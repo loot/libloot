@@ -145,11 +145,12 @@ fn to_filenames(files: &[File]) -> Box<[String]> {
     files.iter().map(|f| f.name().as_str().to_owned()).collect()
 }
 
+// LIMITATION: Use Rc so that sorting can add edges to the graph while holding
+// references to plugin sorting data.
 type InnerPluginsGraph<'a, T> = Graph<Rc<PluginSortingData<'a, T>>, EdgeType>;
 
 #[derive(Debug)]
 struct PluginsGraph<'a, T: SortingPlugin> {
-    // Put the sorting data in Rc so that it can be held onto while mutating the graph.
     inner: InnerPluginsGraph<'a, T>,
     paths_cache: HashMap<NodeIndex, HashSet<NodeIndex>>,
 }
@@ -272,6 +273,9 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         early_loader_indices.sort_by_key(|e| e.0);
 
         for window in early_loader_indices.windows(2) {
+            // LIMITATION: This should be infallible, the windows are of fixed
+            // size. The array_windows function would solve this, but it's
+            // unstable.
             if let [(_, from_index), (_, to_index)] = *window {
                 self.add_edge(from_index, to_index, EdgeType::Hardcoded);
             }
@@ -504,7 +508,9 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         for window in nodes.windows(2) {
             let [current, next] = *window else {
-                // This should never happen.
+            // LIMITATION: This should be impossible, the windows are of fixed
+            // size. The array_windows function would solve this, but it's
+            // unstable.
                 logging::error!("Unexpectedly encountered a window length that was not 2");
                 continue;
             };
@@ -700,6 +706,9 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         path.windows(2).find_map(|slice| match *slice {
             [a, b] => self.inner.contains_edge(a, b).not().then_some((a, b)),
+            // LIMITATION: This should be impossible, the windows are of fixed
+            // size. The array_windows function would solve this, but it's
+            // unstable.
             _ => None,
         })
     }
@@ -917,6 +926,8 @@ impl<'a, 'b, T: SortingPlugin> PathFinder<'a, 'b, T> {
                         path.push(*next);
                         current_node = *next;
                     } else {
+                        // LIMITATION: This should be impossible, the existence
+                        // of an intersection node indicates that a path exists.
                         logging::error!(
                             "Could not find parent vertex of {}. Path so far is {}",
                             self.graph[current_node].name(),
@@ -938,6 +949,8 @@ impl<'a, 'b, T: SortingPlugin> PathFinder<'a, 'b, T> {
                         path.push(*next);
                         current_node = *next;
                     } else {
+                        // LIMITATION: This should be impossible, the existence
+                        // of an intersection node indicates that a path exists.
                         logging::error!(
                             "Could not find child vertex of {}. Path so far is {}",
                             self.graph[current_node].name(),
@@ -1092,6 +1105,8 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
         use std::fmt::Write;
 
         let Some([from_edge, edges @ ..]) = self.edge_stack.get(edge_stack_index..) else {
+            // LIMITATION: The index should be valid, as it's only used to avoid
+            // borrowing the edge stack while adding edges.
             if is_log_enabled(LogLevel::Error) {
                 logging::error!(
                     "Unexpected invalid edge stack index {} for edge stack [{}]",
