@@ -17,6 +17,9 @@ pub struct Group {
 }
 
 impl Group {
+    /// The name of the group to which all plugins belong by default.
+    pub const DEFAULT_NAME: &'static str = "default";
+
     /// Construct a [Group] with the given name.
     #[must_use]
     pub fn new(name: String) -> Self {
@@ -39,9 +42,6 @@ impl Group {
         self.after_groups = after_groups.into_boxed_slice();
         self
     }
-
-    /// The name of the group to which all plugins belong by default.
-    pub const DEFAULT_NAME: &'static str = "default";
 
     /// Get the name of the group.
     pub fn name(&self) -> &str {
