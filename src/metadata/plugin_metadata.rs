@@ -45,6 +45,13 @@ impl PluginMetadata {
         })
     }
 
+    pub(crate) fn with_same_name(metadata: &PluginMetadata) -> Self {
+        Self {
+            name: metadata.name.clone(),
+            ..Default::default()
+        }
+    }
+
     /// Get the plugin name.
     pub fn name(&self) -> &str {
         self.name.as_str()
