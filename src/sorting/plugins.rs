@@ -273,11 +273,15 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
         early_loader_indices.sort_by_key(|e| e.0);
 
         for window in early_loader_indices.windows(2) {
-            // LIMITATION: This should be infallible, the windows are of fixed
-            // size. The array_windows function would solve this, but it's
-            // unstable.
             if let [(_, from_index), (_, to_index)] = *window {
                 self.add_edge(from_index, to_index, EdgeType::Hardcoded);
+            } else {
+                // LIMITATION: This should be impossible, the windows are of
+                // fixed size. The array_windows function would solve this, but
+                // it's unstable.
+                logging::error!(
+                    "Unexpectedly encountered a window length that was not 2 when adding early-loading plugin edges. The window was {window:?}"
+                );
             }
         }
 
@@ -508,10 +512,12 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         for window in nodes.windows(2) {
             let [current, next] = *window else {
-            // LIMITATION: This should be impossible, the windows are of fixed
-            // size. The array_windows function would solve this, but it's
-            // unstable.
-                logging::error!("Unexpectedly encountered a window length that was not 2");
+                // LIMITATION: This should be impossible, the windows are of fixed
+                // size. The array_windows function would solve this, but it's
+                // unstable.
+                logging::error!(
+                    "Unexpectedly encountered a window length that was not 2 when adding tie-break edges. The window was {window:?}"
+                );
                 continue;
             };
 
@@ -704,13 +710,17 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
 
         logging::trace!("Checking uniqueness of path through plugin graph...");
 
-        path.windows(2).find_map(|slice| match *slice {
-            [a, b] => self.inner.contains_edge(a, b).not().then_some((a, b)),
-            // LIMITATION: This should be impossible, the windows are of fixed
-            // size. The array_windows function would solve this, but it's
-            // unstable.
-            _ => None,
-        })
+        path.windows(2).find_map(|slice|
+            if let [a, b] = *slice {
+                self.inner.contains_edge(a, b).not().then_some((a, b))
+            } else {
+                // LIMITATION: This should be impossible, the windows are of fixed
+                // size. The array_windows function would solve this, but it's
+                // unstable.
+                logging::error!("Unexpectedly encountered a window length that was not 2 when checking if the sorted load order is Hamiltonian. The window was {slice:?}");
+                None
+            }
+        )
     }
 
     fn cache_path(&mut self, from: NodeIndex, to: NodeIndex) {

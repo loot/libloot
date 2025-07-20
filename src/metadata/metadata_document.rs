@@ -364,6 +364,11 @@ fn split_on_prelude(masterlist: &str) -> Option<(&str, &str)> {
                 if let Some(suffix) = remainder.get(index..) {
                     return Some((prefix, suffix));
                 }
+
+                logging::error!(
+                    "Unexpectedly failed to slice the masterlist on a new line at index {}",
+                    prefix.len() + index
+                );
             }
         }
     }
@@ -387,6 +392,10 @@ fn split_on_prelude_start(masterlist: &str) -> Option<(&str, &str)> {
             if let Some((prefix, remainder)) = masterlist.split_at_checked(index) {
                 return Some((prefix, remainder));
             }
+
+            logging::error!(
+                "Unexpectedly failed to split the masterlist on the start of the prelude key's value at index {index}"
+            );
         }
         None
     }
