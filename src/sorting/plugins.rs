@@ -19,7 +19,7 @@ use crate::{
 };
 
 use super::{
-    dfs::{BidirBfsVisitor, DfsVisitor, bidirectional_bfs, depth_first_search, find_cycle},
+    search::{BidirBfsVisitor, DfsVisitor, bidirectional_bfs, depth_first_search, find_cycle},
     groups::GroupsGraph,
     validate::{validate_plugin_groups, validate_specific_and_hardcoded_edges},
 };

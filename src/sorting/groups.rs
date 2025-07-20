@@ -9,7 +9,7 @@ use crate::{
     logging::{self, is_log_enabled},
     metadata::Group,
     sorting::{
-        dfs::find_cycle,
+        search::find_cycle,
         error::{
             BuildGroupsGraphError, CyclicInteractionError, PathfindingError, UndefinedGroupError,
         },
@@ -17,7 +17,7 @@ use crate::{
 };
 
 use super::{
-    dfs::{DfsVisitor, depth_first_search},
+    search::{DfsVisitor, depth_first_search},
     error::GroupsPathError,
 };
 

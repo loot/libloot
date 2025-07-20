@@ -1,4 +1,4 @@
-mod dfs;
+mod search;
 pub mod error;
 pub mod groups;
 pub mod plugins;
