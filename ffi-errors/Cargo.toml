@@ -6,3 +6,6 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 libloot = { path = ".." }
+
+[lints]
+workspace = true

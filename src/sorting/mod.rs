@@ -1,7 +1,7 @@
-mod search;
 pub mod error;
 pub mod groups;
 pub mod plugins;
+mod search;
 mod validate;
 pub mod vertex;
 

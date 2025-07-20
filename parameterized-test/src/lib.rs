@@ -1,3 +1,9 @@
+#![allow(
+    clippy::missing_panics_doc,
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::wildcard_enum_match_arm
+)]
 use proc_macro::{TokenStream, TokenTree};
 use quote::{ToTokens, format_ident, quote};
 use syn::{Expr, ExprLit, FnArg, Ident, ItemConst, ItemFn, Lit, Pat, PatIdent, PatType, parse};
@@ -91,19 +97,19 @@ pub fn generate_tests(item: TokenStream) -> TokenStream {
         panic!("Expected an ident for the inner_test_name");
     };
 
-    let _ = item_iter.next();
+    drop(item_iter.next());
 
     let TokenTree::Ident(inner_test_param_name) = item_iter.next().unwrap() else {
         panic!("Expected an ident for the inner_test_param_name");
     };
 
-    let _ = item_iter.next();
+    drop(item_iter.next());
 
     let TokenTree::Ident(const_item_name) = item_iter.next().unwrap() else {
         panic!("Expected an ident for the const_item_name");
     };
 
-    let _ = item_iter.next();
+    drop(item_iter.next());
 
     let TokenTree::Group(const_item_values) = item_iter.next().unwrap() else {
         panic!("Expected a group for the const_item_values");

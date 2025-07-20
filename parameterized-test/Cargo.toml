@@ -11,3 +11,6 @@ syn = { version = "2.0.104", features = ["full"] }
 
 [lib]
 proc-macro = true
+
+[lints]
+workspace = true

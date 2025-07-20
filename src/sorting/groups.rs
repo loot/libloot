@@ -9,16 +9,16 @@ use crate::{
     logging::{self, is_log_enabled},
     metadata::Group,
     sorting::{
-        search::find_cycle,
         error::{
             BuildGroupsGraphError, CyclicInteractionError, PathfindingError, UndefinedGroupError,
         },
+        search::find_cycle,
     },
 };
 
 use super::{
-    search::{DfsVisitor, depth_first_search},
     error::GroupsPathError,
+    search::{DfsVisitor, depth_first_search},
 };
 
 pub type GroupsGraph = Graph<Box<str>, EdgeType>;
