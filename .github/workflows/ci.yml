@@ -36,12 +36,12 @@ jobs:
     strategy:
       matrix:
         target:
-          - os: windows-2025
+          - os: windows-2022
             platform: Win32
             triple: i686-pc-windows-msvc
             architecture: x86
 
-          - os: windows-2025
+          - os: windows-2022
             platform: x64
             triple: x86_64-pc-windows-msvc
             architecture: x64
@@ -96,12 +96,12 @@ jobs:
     strategy:
       matrix:
         target:
-          - os: windows-2025
+          - os: windows-2022
             platform: Win32
             triple: i686-pc-windows-msvc
             architecture: x86
 
-          - os: windows-2025
+          - os: windows-2022
             platform: x64
             triple: x86_64-pc-windows-msvc
             architecture: x64
