@@ -28,7 +28,7 @@ jobs:
           tag_name: ${{ steps.get-git-tag.outputs.name }}
           release_name: libloot v${{ steps.get-git-tag.outputs.name }}
           body: |
-            Requires Windows 7 or later, the MSVC 2022 [x86](https://aka.ms/vs/17/release/vc_redist.x86.exe) or [x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) redistributable for 32-bit and 64-bit builds respectively, and [7-Zip](http://www.7-zip.org/) to extract the archives.
+            Requires Windows 10 or later, the MSVC 2022 [x86](https://aka.ms/vs/17/release/vc_redist.x86.exe) or [x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) redistributable for 32-bit and 64-bit builds respectively, and [7-Zip](http://www.7-zip.org/) to extract the archives.
 
             ## Change Logs
             - [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)
