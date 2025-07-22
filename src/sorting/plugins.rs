@@ -1107,76 +1107,59 @@ impl<'a, 'b, 'c, 'd, 'e, T: SortingPlugin> GroupsPathVisitor<'a, 'b, 'c, 'd, 'e,
             .unwrap_or_default()
     }
 
-    fn add_plugin_graph_edges(
-        &mut self,
-        edge_stack_index: usize,
-        target_plugins: &[PluginNodeIndex],
-    ) {
-        use std::fmt::Write;
+    fn add_plugin_graph_edges(&mut self, target_plugins: &[PluginNodeIndex]) {
+        let mut edge_stack = self.edge_stack.as_slice();
 
-        let Some([from_edge, edges @ ..]) = self.edge_stack.get(edge_stack_index..) else {
-            // LIMITATION: The index should be valid, as it's only used to avoid
-            // borrowing the edge stack while adding edges.
-            if is_log_enabled(LogLevel::Error) {
-                logging::error!(
-                    "Unexpected invalid edge stack index {} for edge stack [{}]",
-                    edge_stack_index,
-                    self.edge_stack
-                        .iter()
-                        .map(|e| e.0.weight())
-                        .fold(String::new(), |mut a, b| if a.is_empty() {
-                            b.to_string()
-                        } else {
-                            let _e = write!(a, ", {b}");
-                            a
-                        })
+        while let Some((from_edge, remainder)) = edge_stack.split_first() {
+            let path_involves_user_metadata = std::iter::once(from_edge)
+                .chain(remainder.iter())
+                .any(|p| *p.0.weight() == EdgeType::UserLoadAfter);
+
+            for from_plugin in from_edge.1 {
+                add_edges_from_plugin(
+                    self.plugins_graph,
+                    *from_plugin,
+                    target_plugins,
+                    path_involves_user_metadata,
                 );
             }
-            return;
-        };
 
-        let path_involves_user_metadata = std::iter::once(from_edge)
-            .chain(edges.iter())
-            .any(|p| *p.0.weight() == EdgeType::UserLoadAfter);
-
-        for from_plugin in from_edge.1 {
-            self.add_edges_from_plugin(*from_plugin, target_plugins, path_involves_user_metadata);
+            edge_stack = remainder;
         }
     }
+}
 
-    fn add_edges_from_plugin(
-        &mut self,
-        from_plugin: PluginNodeIndex,
-        to_plugins: &[PluginNodeIndex],
-        path_involves_user_metadata: bool,
-    ) {
-        if to_plugins.is_empty() {
-            return;
-        }
+fn add_edges_from_plugin<T: SortingPlugin>(
+    plugins_graph: &mut PluginsGraph<T>,
+    from_plugin: PluginNodeIndex,
+    to_plugins: &[PluginNodeIndex],
+    path_involves_user_metadata: bool,
+) {
+    if to_plugins.is_empty() {
+        return;
+    }
 
-        for to_plugin in to_plugins {
-            if !self.plugins_graph.is_path_cached(from_plugin, *to_plugin) {
-                let involves_user_metadata = path_involves_user_metadata
-                    || self.plugins_graph[from_plugin].group_is_user_metadata
-                    || self.plugins_graph[*to_plugin].group_is_user_metadata;
+    for to_plugin in to_plugins {
+        if !plugins_graph.is_path_cached(from_plugin, *to_plugin) {
+            let involves_user_metadata = path_involves_user_metadata
+                || plugins_graph[from_plugin].group_is_user_metadata
+                || plugins_graph[*to_plugin].group_is_user_metadata;
 
-                let edge_type = if involves_user_metadata {
-                    EdgeType::UserGroup
-                } else {
-                    EdgeType::MasterlistGroup
-                };
+            let edge_type = if involves_user_metadata {
+                EdgeType::UserGroup
+            } else {
+                EdgeType::MasterlistGroup
+            };
 
-                if self.plugins_graph.path_exists(*to_plugin, from_plugin) {
-                    logging::debug!(
-                        "Skipping a \"{}\" edge from \"{}\" to \"{}\" as it would create a cycle.",
-                        edge_type,
-                        self.plugins_graph[from_plugin].name(),
-                        self.plugins_graph[*to_plugin].name()
-                    );
-                } else {
-                    self.plugins_graph
-                        .add_edge(from_plugin, *to_plugin, edge_type);
-                }
+            if plugins_graph.path_exists(*to_plugin, from_plugin) {
+                logging::debug!(
+                    "Skipping a \"{}\" edge from \"{}\" to \"{}\" as it would create a cycle.",
+                    edge_type,
+                    plugins_graph[from_plugin].name(),
+                    plugins_graph[*to_plugin].name()
+                );
+            } else {
+                plugins_graph.add_edge(from_plugin, *to_plugin, edge_type);
             }
         }
     }
@@ -1205,9 +1188,7 @@ impl<'e, T: SortingPlugin> DfsVisitor<'e> for GroupsPathVisitor<'_, '_, '_, '_, 
 
         // Add edges going from all the plugins in the groups in the path being
         // currently walked, to the plugins in the current target group's plugins.
-        for i in 0..self.edge_stack.len() {
-            self.add_plugin_graph_edges(i, target_plugins);
-        }
+        self.add_plugin_graph_edges(target_plugins);
     }
 
     fn visit_forward_or_cross_edge(&mut self, edge_ref: EdgeReference<'e, EdgeType>) {
