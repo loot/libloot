@@ -33,11 +33,6 @@ set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_INITIAL})
 # General Settings
 ##############################
 
-set(LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES
-    "${CMAKE_SOURCE_DIR}/src/tests/api/internals/main.cpp")
-
-# set(LIBLOOT_SRC_TESTS_INTERNALS_H_FILES)
-
 set(LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES
     "${CMAKE_SOURCE_DIR}/src/tests/api/interface/main.cpp")
 
@@ -56,14 +51,6 @@ set(LIBLOOT_SRC_TESTS_INTERFACE_H_FILES
     "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/plugin_metadata_test.h"
     "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/tag_test.h")
 
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/internals"
-    PREFIX "Source Files"
-    FILES ${LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES})
-
-# source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/internals"
-#     PREFIX "Header Files"
-#     FILES ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES})
-
 source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
     PREFIX "Source Files"
     FILES ${LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES})
@@ -71,15 +58,6 @@ source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
 source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
     PREFIX "Header Files"
     FILES ${LIBLOOT_SRC_TESTS_INTERFACE_H_FILES})
-
-
-set(LIBLOOT_INTERNALS_TESTS_ALL_SOURCES
-    ${LIBLOOT_ALL_SOURCES}
-    ${LIBLOOT_SRC_TESTS_INTERNALS_CPP_FILES}
-    # ${LIBLOOT_SRC_TESTS_INTERNALS_H_FILES}
-    "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/test_helpers.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/printers.h")
 
 set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
     ${LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES}
@@ -93,63 +71,39 @@ set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
 # Define Targets
 ##############################
 
-# Build tests.
-add_executable(libloot_internals_tests ${LIBLOOT_INTERNALS_TESTS_ALL_SOURCES})
-target_link_libraries(libloot_internals_tests PRIVATE
-    libloot-cpp
-    GTest::gtest_main)
-
 # Build API tests.
 add_executable(libloot_tests ${LIBLOOT_INTERFACE_TESTS_ALL_SOURCES})
 add_dependencies(libloot_tests loot)
 target_link_libraries(libloot_tests PRIVATE loot GTest::gtest_main)
 
 enable_testing()
-gtest_discover_tests(libloot_internals_tests DISCOVERY_TIMEOUT 10)
 gtest_discover_tests(libloot_tests DISCOVERY_TIMEOUT 10)
 
 ##############################
 # Set Target-Specific Flags
 ##############################
 
-target_include_directories(libloot_internals_tests PRIVATE
-    ${LIBLOOT_INCLUDE_DIRS})
-
-target_include_directories(libloot_internals_tests SYSTEM PRIVATE
-    ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
-
 target_include_directories(libloot_tests PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(libloot_tests SYSTEM PRIVATE
     ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_compile_definitions(libloot_internals_tests PRIVATE
-        UNICODE _UNICODE LOOT_STATIC)
     target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
 
     if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
         target_compile_definitions(libloot_tests PRIVATE LOOT_STATIC)
     endif()
 
-    target_link_libraries(libloot_internals_tests PRIVATE ${LOOT_LIBS})
     target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(libloot_internals_tests PRIVATE "-Wall" "-Wextra")
     target_compile_options(libloot_tests PRIVATE "-Wall" "-Wextra")
 endif()
 
 if(MSVC)
     # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
     target_compile_options(libloot_tests PRIVATE "/Zc:__cplusplus" "/permissive-" "/W4")
-
-    # Set /bigobj to allow building Debug and RelWithDebInfo tests
-    target_compile_options(libloot_internals_tests PRIVATE
-        "/Zc:__cplusplus"
-        "/permissive-"
-        "/W4"
-        "$<$<OR:$<CONFIG:DEBUG>,$<CONFIG:RelWithDebInfo>>:/bigobj>")
 endif()
 
 
@@ -188,7 +142,7 @@ if(RUN_CLANG_TIDY)
     set(CLANG_TIDY_TEST
         clang-tidy "-header-filter=.*" "-checks=${CLANG_TIDY_TEST_CHECKS_JOINED}")
 
-    set_target_properties(libloot_internals_tests libloot_tests
+    set_target_properties(libloot_tests
         PROPERTIES
             CXX_CLANG_TIDY "${CLANG_TIDY_TEST}")
 endif()
@@ -199,11 +153,6 @@ endif()
 ##############################
 
 # Copy testing plugins
-add_custom_command(TARGET libloot_internals_tests POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${testing-plugins_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR}/testing-plugins)
-
 add_custom_command(TARGET libloot_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${testing-plugins_SOURCE_DIR}

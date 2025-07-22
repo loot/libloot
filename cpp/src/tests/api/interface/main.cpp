@@ -24,6 +24,8 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+
 #include "loot/api.h"
 #include "tests/api/interface/metadata/file_test.h"
 #include "tests/api/interface/metadata/group_test.h"
@@ -42,6 +44,73 @@
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
+}
+
+#ifdef _WIN32
+TEST(Filesystem,
+     pathStringConstructorDoesNotConvertCharacterEncodingFromUtf8ToNative) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path(utf8);
+
+  EXPECT_EQ(utf8, path.string());
+  EXPECT_NE(utf8, path.u8string());
+  EXPECT_NE(utf16, path.u16string());
+}
+
+TEST(
+    Filesystem,
+    pathStringAndLocaleConstructorDoesNotConvertCharacterEncodingFromUtf8WithClassicLocale) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path(utf8, std::locale::classic());
+
+  EXPECT_EQ(utf8, path.string());
+
+  EXPECT_NE(utf8, path.u8string());
+  EXPECT_NE(utf16, path.u16string());
+}
+#else
+TEST(Filesystem, pathStringConstructorUsesNativeEncodingOfUtf8) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path(utf8);
+
+  EXPECT_EQ(utf8, path.string());
+  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf16, path.u16string());
+}
+#endif
+
+TEST(Filesystem, u8pathConvertsCharacterEncodingFromUtf8ToNative) {
+  std::string utf8 = u8"Andr\u00E9_settings.toml";
+  std::u16string utf16 = u"Andr\u00E9_settings.toml";
+
+  ASSERT_EQ('\xc3', utf8[4]);
+  ASSERT_EQ('\xa9', utf8[5]);
+
+  std::filesystem::path path = std::filesystem::u8path(utf8);
+
+#ifdef _WIN32
+  EXPECT_NE(utf8, path.string());
+#else
+  EXPECT_EQ(utf8, path.string());
+#endif
+
+  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf16, path.u16string());
 }
 
 namespace loot {
