@@ -104,7 +104,8 @@ impl Game {
 
     #[napi]
     pub fn set_additional_data_paths(&mut self, paths: Vec<String>) -> Result<(), VerboseError> {
-        self.0.set_additional_data_paths(&as_paths(&paths))?;
+        let paths: Vec<_> = paths.into_iter().map(Into::into).collect();
+        self.0.set_additional_data_paths(paths)?;
         Ok(())
     }
 

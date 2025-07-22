@@ -272,23 +272,18 @@ impl Game {
     /// database object.
     pub fn set_additional_data_paths(
         &mut self,
-        additional_data_paths: &[&Path],
+        additional_data_paths: Vec<PathBuf>,
     ) -> Result<(), DatabaseLockPoisonError> {
-        let paths: Vec<_> = additional_data_paths
-            .iter()
-            .map(|p| p.to_path_buf())
-            .collect();
-
         let mut database = self.database.write()?;
         database.clear_condition_cache();
 
         self.load_order
             .game_settings_mut()
-            .set_additional_plugins_directories(paths.clone());
+            .set_additional_plugins_directories(additional_data_paths.clone());
 
         database
             .condition_evaluator_state_mut()
-            .set_additional_data_paths(paths);
+            .set_additional_data_paths(additional_data_paths);
 
         Ok(())
     }
@@ -1222,7 +1217,7 @@ mod tests {
 
                     std::fs::File::create(fixture.data_path().join("plugin.esp")).unwrap();
 
-                    game.set_additional_data_paths(&[Path::new("")]).unwrap();
+                    game.set_additional_data_paths(vec!["".into()]).unwrap();
 
                     let evaluated_metadata = game
                         .database()
@@ -1268,8 +1263,10 @@ mod tests {
                         .set_modified(SystemTime::now() + Duration::from_secs(3600))
                         .unwrap();
 
-                    game.set_additional_data_paths(&[data_file_path.parent().unwrap()])
-                        .unwrap();
+                    game.set_additional_data_paths(vec![
+                        data_file_path.parent().unwrap().to_path_buf(),
+                    ])
+                    .unwrap();
                     game.load_current_load_order_state().unwrap();
 
                     load_order.push(filename.to_owned());
@@ -1724,8 +1721,11 @@ mod tests {
                 )
                 .unwrap();
 
-                game.set_additional_data_paths(&[path1.parent().unwrap(), path2.parent().unwrap()])
-                    .unwrap();
+                game.set_additional_data_paths(vec![
+                    path1.parent().unwrap().to_path_buf(),
+                    path2.parent().unwrap().to_path_buf(),
+                ])
+                .unwrap();
 
                 game.load_plugins_common(&[], LoadScope::HeaderOnly)
                     .unwrap();

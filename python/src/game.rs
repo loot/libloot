@@ -97,9 +97,8 @@ impl Game {
         self.0.additional_data_paths()
     }
 
-    #[expect(clippy::needless_pass_by_value, reason = "Required by PyO3")]
     fn set_additional_data_paths(&mut self, paths: Vec<PathBuf>) -> Result<(), VerboseError> {
-        self.0.set_additional_data_paths(&as_paths(&paths))?;
+        self.0.set_additional_data_paths(paths)?;
         Ok(())
     }
 

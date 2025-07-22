@@ -125,9 +125,8 @@ impl Game {
         &mut self,
         additional_data_paths: &[&str],
     ) -> Result<(), VerboseError> {
-        self.0
-            .set_additional_data_paths(&strings_to_paths(additional_data_paths))
-            .map_err(Into::into)
+        let paths = additional_data_paths.iter().map(Into::into).collect();
+        self.0.set_additional_data_paths(paths).map_err(Into::into)
     }
 
     pub fn database(&self) -> Box<Database> {
