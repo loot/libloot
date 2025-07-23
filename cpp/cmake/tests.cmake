@@ -73,7 +73,6 @@ set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
 
 # Build API tests.
 add_executable(libloot_tests ${LIBLOOT_INTERFACE_TESTS_ALL_SOURCES})
-add_dependencies(libloot_tests loot)
 target_link_libraries(libloot_tests PRIVATE loot GTest::gtest_main)
 
 enable_testing()
@@ -90,7 +89,7 @@ target_include_directories(libloot_tests SYSTEM PRIVATE
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
 
-    if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    if((NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows") OR NOT LIBLOOT_BUILD_SHARED)
         target_compile_definitions(libloot_tests PRIVATE LOOT_STATIC)
     endif()
 
