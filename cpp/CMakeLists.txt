@@ -252,59 +252,61 @@ endif()
 
 add_library(libloot::loot ALIAS loot)
 
-set(LIBLOOT_VERSION "0.27.0")
+if(LIBLOOT_BUILD_SHARED)
+    set(LIBLOOT_VERSION "0.27.0")
 
-set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
-set_property(TARGET loot PROPERTY SOVERSION 0)
-set_property(TARGET loot PROPERTY INTERFACE_libloot_MAJOR_VERSION 0)
-set_property(TARGET loot APPEND PROPERTY COMPATIBLE_INTERFACE_STRING libloot_MAJOR_VERSION)
+    set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
+    set_property(TARGET loot PROPERTY SOVERSION 0)
+    set_property(TARGET loot PROPERTY INTERFACE_libloot_MAJOR_VERSION 0)
+    set_property(TARGET loot APPEND PROPERTY COMPATIBLE_INTERFACE_STRING libloot_MAJOR_VERSION)
 
-configure_package_config_file(
-    ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
-    "${PROJECT_BINARY_DIR}/liblootConfig.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot
-)
+    configure_package_config_file(
+        ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
+        "${PROJECT_BINARY_DIR}/liblootConfig.cmake"
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot
+    )
 
-write_basic_package_version_file(
-    "${PROJECT_BINARY_DIR}/liblootConfigVersion.cmake"
-    VERSION "${LIBLOOT_VERSION}"
-    COMPATIBILITY AnyNewerVersion
-)
+    write_basic_package_version_file(
+        "${PROJECT_BINARY_DIR}/liblootConfigVersion.cmake"
+        VERSION "${LIBLOOT_VERSION}"
+        COMPATIBILITY AnyNewerVersion
+    )
 
-install(TARGETS loot
-    EXPORT liblootTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(TARGETS loot
+        EXPORT liblootTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(EXPORT liblootTargets
-    NAMESPACE libloot::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
+    install(EXPORT liblootTargets
+        NAMESPACE libloot::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
 
-export(TARGETS loot
-    NAMESPACE libloot::
-    FILE "${PROJECT_BINARY_DIR}/liblootTargets.cmake")
+    export(TARGETS loot
+        NAMESPACE libloot::
+        FILE "${PROJECT_BINARY_DIR}/liblootTargets.cmake")
 
-if(MSVC)
-    install(FILES $<TARGET_PDB_FILE:loot>
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        OPTIONAL
-        CONFIGURATIONS RelWithDebInfo)
+    if(MSVC)
+        install(FILES $<TARGET_PDB_FILE:loot>
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            OPTIONAL
+            CONFIGURATIONS RelWithDebInfo)
+    endif()
+
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+    if(LIBLOOT_INSTALL_DOCS)
+        install(DIRECTORY "${PROJECT_SOURCE_DIR}/../docs/build/html/"
+            DESTINATION ${CMAKE_INSTALL_DOCDIR})
+    endif()
+
+    install(FILES
+        "${PROJECT_BINARY_DIR}/liblootConfig.cmake"
+        "${PROJECT_BINARY_DIR}/liblootConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
 endif()
-
-install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-if(LIBLOOT_INSTALL_DOCS)
-    install(DIRECTORY "${PROJECT_SOURCE_DIR}/../docs/build/html/"
-        DESTINATION ${CMAKE_INSTALL_DOCDIR})
-endif()
-
-install(FILES
-    "${PROJECT_BINARY_DIR}/liblootConfig.cmake"
-    "${PROJECT_BINARY_DIR}/liblootConfigVersion.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
 
 ########################################
 # CPack
