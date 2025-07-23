@@ -34,37 +34,37 @@ set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_INITIAL})
 ##############################
 
 set(LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/main.cpp")
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/main.cpp")
 
 set(LIBLOOT_SRC_TESTS_INTERFACE_H_FILES
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/api_game_operations_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/create_game_handle_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/database_interface_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/game_interface_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/is_compatible_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/file_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/group_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/location_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/message_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/message_content_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/plugin_cleaning_data_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/plugin_metadata_test.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/api/interface/metadata/tag_test.h")
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/api_game_operations_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/create_game_handle_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/database_interface_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/game_interface_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/is_compatible_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/file_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/group_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/location_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/message_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/message_content_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/plugin_cleaning_data_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/plugin_metadata_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/tag_test.h")
 
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
+source_group(TREE "${PROJECT_SOURCE_DIR}/src/tests/api/interface"
     PREFIX "Source Files"
     FILES ${LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES})
 
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/tests/api/interface"
+source_group(TREE "${PROJECT_SOURCE_DIR}/src/tests/api/interface"
     PREFIX "Header Files"
     FILES ${LIBLOOT_SRC_TESTS_INTERFACE_H_FILES})
 
 set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
     ${LIBLOOT_SRC_TESTS_INTERFACE_CPP_FILES}
     ${LIBLOOT_SRC_TESTS_INTERFACE_H_FILES}
-    "${CMAKE_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/test_helpers.h"
-    "${CMAKE_SOURCE_DIR}/src/tests/printers.h")
+    "${PROJECT_SOURCE_DIR}/src/tests/common_game_test_fixture.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/test_helpers.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/printers.h")
 
 
 ##############################
@@ -156,4 +156,4 @@ endif()
 add_custom_command(TARGET libloot_tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${testing-plugins_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR}/testing-plugins)
+        ${PROJECT_BINARY_DIR}/testing-plugins)

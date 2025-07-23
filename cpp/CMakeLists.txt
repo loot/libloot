@@ -35,18 +35,19 @@ else()
 endif()
 
 if(DEFINED RUST_TARGET)
-    set(TARGET_PATH "${CMAKE_SOURCE_DIR}/../target/${RUST_TARGET}")
+    set(TARGET_PATH "${PROJECT_SOURCE_DIR}/../target/${RUST_TARGET}")
 else()
-    set(TARGET_PATH "${CMAKE_SOURCE_DIR}/../target")
+    set(TARGET_PATH "${PROJECT_SOURCE_DIR}/../target")
 endif()
 
 add_custom_target(libloot-cpp-build
     COMMAND cargo build
         $<$<NOT:$<CONFIG:Debug>>:--release>
         $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:--config>
-        $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:${CMAKE_SOURCE_DIR}/.cargo/msvc-debug-config.toml>
+        $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/.cargo/msvc-debug-config.toml>
         $<$<BOOL:${RUST_TARGET}>:--target>
         $<$<BOOL:${RUST_TARGET}>:${RUST_TARGET}>
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     BYPRODUCTS
         "${TARGET_PATH}/$<IF:$<CONFIG:Debug>,debug,release>/${LIBLOOT_CPP_FILENAME}"
         "${TARGET_PATH}/cxxbridge/libloot-cpp/src/lib.rs.cc"
@@ -68,66 +69,66 @@ target_include_directories(libloot-cpp INTERFACE "${TARGET_PATH}/cxxbridge")
 ##############################
 
 set(LIBLOOT_SRC_API_CPP_FILES
-    "${CMAKE_SOURCE_DIR}/src/api/api.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/convert.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/database.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/exception/cyclic_interaction_error.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/exception/exception.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/exception/undefined_group_error.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/file.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/filename.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/group.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/location.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/message.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/message_content.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/plugin_cleaning_data.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/plugin_metadata.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/metadata/tag.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/game.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/plugin.cpp"
-    "${CMAKE_SOURCE_DIR}/src/api/vertex.cpp")
+    "${PROJECT_SOURCE_DIR}/src/api/api.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/convert.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/database.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/exception/cyclic_interaction_error.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/exception/exception.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/exception/undefined_group_error.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/file.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/filename.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/group.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/location.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/message.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/message_content.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/plugin_cleaning_data.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/plugin_metadata.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/metadata/tag.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/game.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/plugin.cpp"
+    "${PROJECT_SOURCE_DIR}/src/api/vertex.cpp")
 
 set(LIBLOOT_INCLUDE_H_FILES
-    "${CMAKE_SOURCE_DIR}/include/loot/api.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/api_decorator.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/database_interface.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/exception/cyclic_interaction_error.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/exception/plugin_not_loaded_error.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/exception/undefined_group_error.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/enum/edge_type.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/enum/game_type.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/enum/log_level.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/enum/message_type.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/game_interface.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/loot_version.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/file.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/filename.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/group.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/location.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/message.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/message_content.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/plugin_cleaning_data.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/plugin_metadata.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/metadata/tag.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/plugin_interface.h"
-    "${CMAKE_SOURCE_DIR}/include/loot/vertex.h")
+    "${PROJECT_SOURCE_DIR}/include/loot/api.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/api_decorator.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/database_interface.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/exception/cyclic_interaction_error.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/exception/plugin_not_loaded_error.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/exception/undefined_group_error.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/enum/edge_type.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/enum/game_type.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/enum/log_level.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/enum/message_type.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/game_interface.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/loot_version.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/file.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/filename.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/group.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/location.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/message.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/message_content.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/plugin_cleaning_data.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/plugin_metadata.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/metadata/tag.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/plugin_interface.h"
+    "${PROJECT_SOURCE_DIR}/include/loot/vertex.h")
 
 set(LIBLOOT_SRC_API_H_FILES
-    "${CMAKE_SOURCE_DIR}/src/api/convert.h"
-    "${CMAKE_SOURCE_DIR}/src/api/database.h"
-    "${CMAKE_SOURCE_DIR}/src/api/exception/exception.h"
-    "${CMAKE_SOURCE_DIR}/src/api/game.h"
-    "${CMAKE_SOURCE_DIR}/src/api/plugin.h")
+    "${PROJECT_SOURCE_DIR}/src/api/convert.h"
+    "${PROJECT_SOURCE_DIR}/src/api/database.h"
+    "${PROJECT_SOURCE_DIR}/src/api/exception/exception.h"
+    "${PROJECT_SOURCE_DIR}/src/api/game.h"
+    "${PROJECT_SOURCE_DIR}/src/api/plugin.h")
 
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/api"
+source_group(TREE "${PROJECT_SOURCE_DIR}/src/api"
     PREFIX "Source Files"
     FILES ${LIBLOOT_SRC_API_CPP_FILES})
 
-source_group(TREE "${CMAKE_SOURCE_DIR}/include"
+source_group(TREE "${PROJECT_SOURCE_DIR}/include"
     PREFIX "Header Files"
     FILES ${LIBLOOT_INCLUDE_H_FILES})
 
-source_group(TREE "${CMAKE_SOURCE_DIR}/src/api"
+source_group(TREE "${PROJECT_SOURCE_DIR}/src/api"
     PREFIX "Header Files"
     FILES ${LIBLOOT_SRC_API_H_FILES})
 
@@ -135,7 +136,7 @@ set(LIBLOOT_ALL_SOURCES
     ${LIBLOOT_SRC_API_CPP_FILES}
     ${LIBLOOT_INCLUDE_H_FILES}
     ${LIBLOOT_SRC_API_H_FILES}
-    "${CMAKE_SOURCE_DIR}/src/api/resource.rc")
+    "${PROJECT_SOURCE_DIR}/src/api/resource.rc")
 
 ##############################
 # Define Targets
@@ -150,8 +151,8 @@ target_link_libraries(loot PRIVATE libloot-cpp)
 ##############################
 
 set(LIBLOOT_INCLUDE_DIRS
-    "${CMAKE_SOURCE_DIR}/src"
-    "${CMAKE_SOURCE_DIR}/include")
+    "${PROJECT_SOURCE_DIR}/src"
+    "${PROJECT_SOURCE_DIR}/include")
 
 set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${LIBLOADORDER_INCLUDE_DIRS}
@@ -159,7 +160,7 @@ set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${LCI_INCLUDE_DIRS})
 
 target_include_directories(loot PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(loot SYSTEM PRIVATE
@@ -238,6 +239,8 @@ endif()
 # Install
 ########################################
 
+add_library(libloot::loot ALIAS loot)
+
 set(LIBLOOT_VERSION "0.27.0")
 
 set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
@@ -246,13 +249,13 @@ set_property(TARGET loot PROPERTY INTERFACE_libloot_MAJOR_VERSION 0)
 set_property(TARGET loot APPEND PROPERTY COMPATIBLE_INTERFACE_STRING libloot_MAJOR_VERSION)
 
 configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
-    "${CMAKE_CURRENT_BINARY_DIR}/liblootConfig.cmake"
+    ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
+    "${PROJECT_BINARY_DIR}/liblootConfig.cmake"
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot
 )
 
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/liblootConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/liblootConfigVersion.cmake"
     VERSION "${LIBLOOT_VERSION}"
     COMPATIBILITY AnyNewerVersion
 )
@@ -264,6 +267,14 @@ install(TARGETS loot
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+install(EXPORT liblootTargets
+    NAMESPACE libloot::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
+
+export(TARGETS loot
+    NAMESPACE libloot::
+    FILE "${PROJECT_BINARY_DIR}/liblootTargets.cmake")
+
 if(MSVC)
     install(FILES $<TARGET_PDB_FILE:loot>
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -271,22 +282,17 @@ if(MSVC)
         CONFIGURATIONS RelWithDebInfo)
 endif()
 
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/"
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(LIBLOOT_INSTALL_DOCS)
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/../docs/build/html/"
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/../docs/build/html/"
         DESTINATION ${CMAKE_INSTALL_DOCDIR})
 endif()
 
-install(EXPORT liblootTargets
-    FILE liblootTargets.cmake
-    NAMESPACE libloot::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
-
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/liblootConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/liblootConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/liblootConfig.cmake"
+    "${PROJECT_BINARY_DIR}/liblootConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
 
 ########################################
@@ -298,7 +304,7 @@ if(NOT DEFINED CPACK_PACKAGE_VERSION)
 
     if(GIT_FOUND)
         execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --long --always --abbrev=7
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
             OUTPUT_VARIABLE GIT_DESCRIBE_STRING
             OUTPUT_STRIP_TRAILING_WHITESPACE)
     else()
@@ -314,6 +320,6 @@ else()
     set(CPACK_GENERATOR "TXZ")
 endif()
 
-set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/package")
+set(CPACK_PACKAGE_DIRECTORY "${PROJECT_BINARY_DIR}/package")
 
 include(CPack)
