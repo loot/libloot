@@ -34,7 +34,7 @@ def update_cmakelists(path, version):
     version_parts = version.split('.')
 
     replace_in_file(path, 'set\\(LIBLOOT_VERSION "\\d+\\.\\d+\\.\\d+"\\)', 'set(LIBLOOT_VERSION "{}")'.format(version))
-    replace_in_file(path, 'TARGET loot PROPERTY SOVERSION \\d+', 'TARGET loot PROPERTY SOVERSION {}'.format(version_parts[0]))
+    replace_in_file(path, 'TARGET libloot PROPERTY SOVERSION \\d+', 'TARGET libloot PROPERTY SOVERSION {}'.format(version_parts[0]))
     replace_in_file(path, 'INTERFACE_libloot_MAJOR_VERSION \\d+', 'INTERFACE_libloot_MAJOR_VERSION {}'.format(version_parts[0]))
 
 def update_cargo_toml(path, version):

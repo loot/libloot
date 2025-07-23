@@ -154,8 +154,8 @@ else()
 endif()
 
 # Build API.
-add_library(loot ${LIBLOOT_LIBRARY_TYPE} ${LIBLOOT_ALL_SOURCES})
-target_link_libraries(loot PRIVATE libloot-cpp)
+add_library(libloot ${LIBLOOT_LIBRARY_TYPE} ${LIBLOOT_ALL_SOURCES})
+target_link_libraries(libloot PRIVATE libloot-cpp)
 
 ##############################
 # Set Target-Specific Flags
@@ -170,30 +170,33 @@ set(LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS
     ${ESPLUGIN_INCLUDE_DIRS}
     ${LCI_INCLUDE_DIRS})
 
-target_include_directories(loot PUBLIC
+target_include_directories(libloot PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
-target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
-target_include_directories(loot SYSTEM PRIVATE
+target_include_directories(libloot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
+target_include_directories(libloot SYSTEM PRIVATE
     ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_compile_definitions(loot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
+    target_compile_definitions(libloot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
 
     set(LOOT_LIBS ntdll ws2_32 bcrypt)
 
-    target_link_libraries(loot PRIVATE ${LOOT_LIBS})
+    target_link_libraries(libloot PRIVATE ${LOOT_LIBS})
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(loot PRIVATE "-Wall" "-Wextra")
+    target_compile_options(libloot PRIVATE "-Wall" "-Wextra")
 endif()
 
 if(MSVC)
     # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
-    target_compile_options(loot PRIVATE "/permissive-" "/W4" "/Zc:__cplusplus" "/GL")
-    target_link_options(loot PRIVATE "/LTCG")
+    target_compile_options(libloot PRIVATE "/permissive-" "/W4" "/Zc:__cplusplus" "/GL")
+    target_link_options(libloot PRIVATE "/LTCG")
 endif()
+
+# Stop the "lib" prefix being added on Linux, since it's already in the target name.
+set_target_properties(libloot PROPERTIES PREFIX "")
 
 ##############################
 # Configure clang-tidy
@@ -233,7 +236,7 @@ if(RUN_CLANG_TIDY)
     set(CLANG_TIDY_LIB
         clang-tidy "-header-filter=.*" "-checks=${CLANG_TIDY_LIB_CHECKS_JOINED}")
 
-    set_target_properties(loot
+    set_target_properties(libloot
         PROPERTIES
             CXX_CLANG_TIDY "${CLANG_TIDY_LIB}")
 endif()
@@ -250,15 +253,15 @@ endif()
 # Install
 ########################################
 
-add_library(libloot::loot ALIAS loot)
+add_library(libloot::libloot ALIAS libloot)
 
 if(LIBLOOT_BUILD_SHARED)
     set(LIBLOOT_VERSION "0.27.0")
 
-    set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
-    set_property(TARGET loot PROPERTY SOVERSION 0)
-    set_property(TARGET loot PROPERTY INTERFACE_libloot_MAJOR_VERSION 0)
-    set_property(TARGET loot APPEND PROPERTY COMPATIBLE_INTERFACE_STRING libloot_MAJOR_VERSION)
+    set_property(TARGET libloot PROPERTY VERSION ${LIBLOOT_VERSION})
+    set_property(TARGET libloot PROPERTY SOVERSION 0)
+    set_property(TARGET libloot PROPERTY INTERFACE_libloot_MAJOR_VERSION 0)
+    set_property(TARGET libloot APPEND PROPERTY COMPATIBLE_INTERFACE_STRING libloot_MAJOR_VERSION)
 
     configure_package_config_file(
         ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
@@ -272,7 +275,7 @@ if(LIBLOOT_BUILD_SHARED)
         COMPATIBILITY AnyNewerVersion
     )
 
-    install(TARGETS loot
+    install(TARGETS libloot
         EXPORT liblootTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -283,12 +286,12 @@ if(LIBLOOT_BUILD_SHARED)
         NAMESPACE libloot::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libloot)
 
-    export(TARGETS loot
+    export(TARGETS libloot
         NAMESPACE libloot::
         FILE "${PROJECT_BINARY_DIR}/liblootTargets.cmake")
 
     if(MSVC)
-        install(FILES $<TARGET_PDB_FILE:loot>
+        install(FILES $<TARGET_PDB_FILE:libloot>
             DESTINATION ${CMAKE_INSTALL_LIBDIR}
             OPTIONAL
             CONFIGURATIONS RelWithDebInfo)
