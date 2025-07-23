@@ -8,10 +8,15 @@ endif()
 project(libloot)
 include(ExternalProject)
 include(FetchContent)
+include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
-option(BUILD_SHARED_LIBS "Build a shared library" ON)
+cmake_dependent_option(LIBLOOT_BUILD_SHARED
+    "Build a shared library"
+    ON
+    "NOT BUILD_SHARED_LIBS"
+    ON)
 option(RUN_CLANG_TIDY "Whether or not to run clang-tidy during build. Has no effect when using CMake's MSVC generator." OFF)
 option(LIBLOOT_BUILD_TESTS "Whether or not to build libloot's tests." ON)
 option(LIBLOOT_INSTALL_DOCS "Whether or not to install libloot's docs (which need to be built separately)." ON)
@@ -142,8 +147,14 @@ set(LIBLOOT_ALL_SOURCES
 # Define Targets
 ##############################
 
+if(LIBLOOT_BUILD_SHARED)
+    set(LIBLOOT_LIBRARY_TYPE "SHARED")
+else()
+    set(LIBLOOT_LIBRARY_TYPE "STATIC")
+endif()
+
 # Build API.
-add_library(loot ${LIBLOOT_ALL_SOURCES})
+add_library(loot ${LIBLOOT_LIBRARY_TYPE} ${LIBLOOT_ALL_SOURCES})
 target_link_libraries(loot PRIVATE libloot-cpp)
 
 ##############################
