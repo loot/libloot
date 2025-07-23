@@ -76,7 +76,7 @@ endif()
 
 # Build API tests.
 add_executable(libloot_tests ${LIBLOOT_INTERFACE_TESTS_ALL_SOURCES})
-target_link_libraries(libloot_tests PRIVATE loot GTest::gtest_main)
+target_link_libraries(libloot_tests PRIVATE libloot GTest::gtest_main)
 
 enable_testing()
 gtest_discover_tests(libloot_tests DISCOVERY_TIMEOUT 10)
