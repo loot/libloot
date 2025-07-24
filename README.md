@@ -31,7 +31,9 @@ libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform
 
 Make sure you have [Rust](https://www.rust-lang.org/) installed.
 
-The `LIBLOOT_REVISION` environment variable is used to embed the commit hash into the build. If it's not defined then `unknown` will be used instead. To define it in PowerShell, run:
+The `LIBLOOT_REVISION` environment variable is used to embed the commit hash into the build. If it's not defined then `unknown` will be used instead. The Cargo build script will automatically define it if libloot is built from a Git repository and `git` is accessible from your `PATH`.
+
+To define it in PowerShell, run:
 
 ```powershell
 $env:LIBLOOT_REVISION = git rev-parse --short HEAD
