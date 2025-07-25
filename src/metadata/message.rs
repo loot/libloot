@@ -327,8 +327,17 @@ fn format(text: &str, subs: &[&str]) -> Result<Box<str>, MetadataParsingErrorRea
 
     for slice in text.split_inclusive(['{', '}']) {
         if let Some(prefix) = slice.strip_suffix('{') {
-            new_text.push_str(prefix);
-            maybe_in_placeholder = true;
+            if maybe_in_placeholder {
+                if prefix.is_empty() {
+                    new_text.push_str(slice);
+                } else {
+                    new_text.push('{');
+                    new_text.push_str(prefix);
+                }
+            } else {
+                new_text.push_str(prefix);
+                maybe_in_placeholder = true;
+            }
         } else if let Some(prefix) = slice.strip_suffix('}') {
             if maybe_in_placeholder {
                 if let Ok(sub_index) = prefix.parse::<usize>() {
@@ -343,16 +352,25 @@ fn format(text: &str, subs: &[&str]) -> Result<Box<str>, MetadataParsingErrorRea
                     unused_sub_indexes.remove(&sub_index);
                 } else {
                     // Not a valid placeholder, treat it as normal text.
-                    new_text.push_str(prefix);
+                    new_text.push('{');
+                    new_text.push_str(slice);
                 }
 
                 maybe_in_placeholder = false;
             } else {
-                new_text.push_str(prefix);
+                new_text.push_str(slice);
             }
         } else {
+            if maybe_in_placeholder {
+                new_text.push('{');
+                maybe_in_placeholder = false;
+            }
             new_text.push_str(slice);
         }
+    }
+
+    if maybe_in_placeholder {
+        new_text.push('{');
     }
 
     if let Some(sub_index) = unused_sub_indexes.first() {
@@ -739,6 +757,64 @@ mod tests {
                 let message = Message::try_from_yaml(&yaml).unwrap();
 
                 assert_eq!("content {0}", message.content()[0].text());
+            }
+        }
+
+        mod format {
+            use super::*;
+
+            #[test]
+            fn should_treat_invalid_placeholders_as_literals() {
+                let format_no_subs = |i| format(i, &[]).unwrap();
+
+                let input = "a{";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a{a";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a{}";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a{a}";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a}";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a{ }";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a{0a}";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a{{";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a{b{";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a{b{c";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a}}b";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a}b}";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                let input = "a}b}c";
+                assert_eq!(input, format_no_subs(input).as_ref());
+
+                assert_eq!("a{b", format("a{{0}", &["b"]).unwrap().as_ref());
+
+                assert_eq!("ab}", format("a{0}}", &["b"]).unwrap().as_ref());
+            }
+
+            #[test]
+            fn allows_leading_zeroes_in_placeholders() {
+                let input = "a{0}-{01}";
+                assert_eq!("ab-c", format(input, &["b", "c"]).unwrap().as_ref());
             }
         }
 
