@@ -67,7 +67,7 @@ loot::rust::GameType convert(loot::GameType gameType) {
   }
 }
 
-std::filesystem::path to_path(const rust::String& string) {
+std::filesystem::path toPath(const rust::String& string) {
     return std::filesystem::u8path(string.begin(), string.end());
 }
 
@@ -87,7 +87,7 @@ rust::Box<loot::rust::Game> constructGame(
   }
 }
 
-std::vector<::rust::Str> as_str_refs(const std::vector<std::string>& vector) {
+std::vector<::rust::Str> asStrRefs(const std::vector<std::string>& vector) {
   std::vector<::rust::Str> strings;
   for (const auto& str : vector) {
     strings.push_back(str);
@@ -120,7 +120,7 @@ std::vector<std::filesystem::path> Game::GetAdditionalDataPaths() const {
   try {
     std::vector<std::filesystem::path> paths;
     for (const auto& path_string : game_->additional_data_paths()) {
-      paths.push_back(to_path(path_string));
+      paths.push_back(toPath(path_string));
     }
 
     return paths;
@@ -199,7 +199,7 @@ std::vector<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
 
 std::vector<std::string> Game::SortPlugins(
     const std::vector<std::string>& pluginFilenames) {
-  const auto strs = as_str_refs(pluginFilenames);
+  const auto strs = asStrRefs(pluginFilenames);
 
   try {
     const auto results = game_->sort_plugins(::rust::Slice(strs));
@@ -228,7 +228,7 @@ bool Game::IsLoadOrderAmbiguous() const {
 
 std::filesystem::path Game::GetActivePluginsFilePath() const {
   try {
-    return to_path(game_->active_plugins_file_path());
+    return toPath(game_->active_plugins_file_path());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -243,7 +243,7 @@ std::vector<std::string> Game::GetLoadOrder() const {
 }
 
 void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
-  const auto strs = as_str_refs(loadOrder);
+  const auto strs = asStrRefs(loadOrder);
 
   try {
     game_->set_load_order(::rust::Slice(strs));

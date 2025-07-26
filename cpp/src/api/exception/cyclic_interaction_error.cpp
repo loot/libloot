@@ -56,11 +56,9 @@ std::string describeEdgeType(EdgeType edgeType) {
       return "Unknown";
   }
 }
-}
 
-namespace loot {
 // A.esp --[Master Flag]-> B.esp --Group->
-std::string describeCycle(const std::vector<Vertex>& cycle) {
+std::string describeCycle(const std::vector<loot::Vertex>& cycle) {
   std::string text;
   for (const auto& vertex : cycle) {
     text += vertex.GetName();
@@ -76,7 +74,9 @@ std::string describeCycle(const std::vector<Vertex>& cycle) {
 
   return text;
 }
+}
 
+namespace loot {
 CyclicInteractionError::CyclicInteractionError(std::vector<Vertex> cycle) :
     std::runtime_error("Cyclic interaction detected: " + describeCycle(cycle)),
     cycle_(cycle) {}

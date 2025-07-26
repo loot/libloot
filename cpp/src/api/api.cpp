@@ -67,7 +67,7 @@ loot::rust::LogLevel convert(LogLevel level) {
   }
 }
 
-void logging_callback(uint8_t level, const char* message, void* context) {
+void loggingCallback(uint8_t level, const char* message, void* context) {
   auto& callback = *static_cast<Callback*>(context);
 
   callback(convert(level), message);
@@ -75,9 +75,10 @@ void logging_callback(uint8_t level, const char* message, void* context) {
 }
 
 namespace loot {
-LOOT_API void SetLoggingCallback(Callback callback) {
+LOOT_API void SetLoggingCallback(
+    std::function<void(LogLevel, std::string_view)> callback) {
   STORED_CALLBACK = callback;
-  libloot_set_logging_callback(logging_callback, &STORED_CALLBACK);
+  libloot_set_logging_callback(loggingCallback, &STORED_CALLBACK);
 }
 
 LOOT_API void SetLogLevel(LogLevel level) {

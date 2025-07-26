@@ -17,9 +17,6 @@ public:
                 const std::filesystem::path& gamePath,
                 const std::filesystem::path& gameLocalDataPath = "");
 
-  // Game Interface Methods //
-  ////////////////////////////
-
   GameType GetType() const override;
 
   std::vector<std::filesystem::path> GetAdditionalDataPaths() const override;

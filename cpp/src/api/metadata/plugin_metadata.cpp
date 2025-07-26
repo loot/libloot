@@ -51,7 +51,7 @@ std::vector<T> mergeVectors(std::vector<T> first,
   return first;
 }
 
-std::string TrimDotGhostExtension(std::string&& filename) {
+std::string trimDotGhostExtension(std::string&& filename) {
   using std::string_view_literals::operator""sv;
   // If the name passed ends in '.ghost', that should be trimmed.
   constexpr std::string_view GHOST_FILE_EXTENSION = ".ghost"sv;
@@ -81,7 +81,7 @@ std::string TrimDotGhostExtension(std::string&& filename) {
 namespace loot {
 // If the name passed ends in '.ghost', that should be trimmed.
 PluginMetadata::PluginMetadata(std::string_view n) :
-    name_(TrimDotGhostExtension(std::string(n))) {}
+    name_(trimDotGhostExtension(std::string(n))) {}
 
 void PluginMetadata::MergeMetadata(const PluginMetadata& plugin) {
   if (plugin.HasNameOnly())
