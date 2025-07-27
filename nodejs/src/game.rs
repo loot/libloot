@@ -6,7 +6,7 @@ use napi_derive::napi;
 use crate::{database::Database, error::VerboseError, plugin::Plugin};
 
 #[napi]
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum GameType {
     Oblivion,
     Skyrim,

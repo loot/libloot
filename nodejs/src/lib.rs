@@ -12,10 +12,7 @@ mod game;
 mod metadata;
 mod plugin;
 
-use napi::{
-    threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
-    Either,
-};
+use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
 
 pub use metadata::select_message_content;
@@ -45,7 +42,7 @@ pub const LIBLOOT_VERSION_MINOR: u32 = libloot::LIBLOOT_VERSION_MINOR;
 pub const LIBLOOT_VERSION_PATCH: u32 = libloot::LIBLOOT_VERSION_PATCH;
 
 #[napi]
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum LogLevel {
     Trace,
     Debug,
@@ -84,22 +81,10 @@ pub fn set_log_level(level: LogLevel) {
 }
 
 #[napi(ts_args_type = "callback: (logLevel: LogLevel, message: string) => void")]
-pub fn set_logging_callback(callback: napi::JsFunction) -> napi::Result<()> {
-    let thread_safe_callback: ThreadsafeFunction<
-        (libloot::LogLevel, String),
-        ErrorStrategy::Fatal,
-    > = callback.create_threadsafe_function(0, |ctx| {
-        let (level, message): (libloot::LogLevel, String) = ctx.value;
-
-        Ok(vec![
-            Either::A::<LogLevel, _>(level.into()),
-            Either::B(message),
-        ])
-    })?;
-
+pub fn set_logging_callback(callback: ThreadsafeFunction<(LogLevel, String)>) -> napi::Result<()> {
     let rust_callback = move |level: libloot::LogLevel, message: &str| {
-        thread_safe_callback.call(
-            (level, message.to_owned()),
+        callback.call(
+            Ok((LogLevel::from(level), message.to_owned())),
             ThreadsafeFunctionCallMode::Blocking,
         );
     };

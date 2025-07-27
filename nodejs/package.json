@@ -4,18 +4,15 @@
   "main": "index.js",
   "types": "index.d.ts",
   "napi": {
-    "name": "libloot-nodejs",
-    "triples": {
-      "defaults": false,
-      "additional": [
-        "x86_64-pc-windows-msvc",
-        "x86_64-unknown-linux-gnu"
-      ]
-    }
+    "binaryName": "libloot-nodejs",
+    "targets": [
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu"
+    ]
   },
   "license": "MIT",
   "devDependencies": {
-    "@napi-rs/cli": "^2.18.4",
+    "@napi-rs/cli": "^3.0.4",
     "ava": "^6.4.1"
   },
   "ava": {
@@ -30,7 +27,7 @@
     "build:debug": "napi build --platform",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
-    "universal": "napi universal",
+    "universalize": "napi universalize",
     "version": "napi version"
   },
   "packageManager": "yarn@4.9.1"

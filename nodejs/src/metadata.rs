@@ -120,7 +120,7 @@ pub fn select_message_content(
 }
 
 #[napi]
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum MessageType {
     Say,
     Warn,
@@ -384,7 +384,7 @@ impl From<PluginCleaningData> for libloot::metadata::PluginCleaningData {
 }
 
 #[napi]
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum TagSuggestion {
     Addition,
     Removal,

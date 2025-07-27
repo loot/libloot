@@ -278,7 +278,7 @@ impl From<Vertex> for libloot::Vertex {
 }
 
 #[napi]
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum EdgeType {
     Hardcoded,
     MasterFlag,
