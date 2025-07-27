@@ -24,9 +24,9 @@ where
     }
 }
 
-// Set the log severity level.
-//
-// The default level setting is trace. This function has no effect if no logging callback has been set.
+/// Set the log severity level.
+///
+/// The default level setting is trace. This function has no effect if no logging callback has been set.
 pub fn set_log_level(level: LogLevel) {
     match LOGGER.write() {
         Ok(mut logger) => logger.set_level(level),
