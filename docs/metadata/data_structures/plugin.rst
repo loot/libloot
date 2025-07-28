@@ -9,7 +9,12 @@ This is the structure that brings all the others together, and forms the main co
 
   **Required.** Can be an exact plugin filename or a regular expression plugin filename. If the filename contains any of the characters ``:\*?|``, the string will be treated as a regular expression, otherwise it will be treated as an exact filename. For example, ``Example\.esm`` will be treated as a regular expression, as it contains a ``\`` character.
 
-  Regular expression plugin filenames must be written in `modified ECMAScript <https://en.cppreference.com/w/cpp/regex/ecmascript>`_ syntax.
+  Regular expression plugin filenames must be written in a modified `ECMAScript <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions>`_ syntax. Notable differences include:
+
+  - The ``\q{}`` `character class wrapper <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Character_class>`_ is not supported.
+  - Most `v-mode character class escapes <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Character_class#v-mode_character_class>`_ are unnecessary: only ``[``, ``&&``, ``--`` and ``~~`` need to be escaped.
+
+  Regular expression plugin filenames are prefixed with ``^`` and suffixed with ``$`` to ensure they match whole filenames, and are case-insensitive and Unicode-aware (as if they're created with the ``i`` and ``v`` flags).
 
 .. describe:: group
 
