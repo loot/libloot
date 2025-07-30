@@ -170,7 +170,7 @@ if __name__ == "__main__":
                 # The notice for hashlink is mangled so correcting it here.
                 dependency['notices'] = ['Copyright (c) 2015 The Rust Project Developers']
 
-            link_rst = f'`{dependency['name']} <{dependency['repository']}>`_'
+            link_rst = f'`{dependency['name']} v{dependency['version']} <{dependency['repository']}>`_'
             underline_rst = '-' * len(link_rst)
             dep_notices_rst = '\n    '.join(dependency['notices'])
 
