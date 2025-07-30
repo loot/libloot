@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 
 #[cfg(windows)]
 use windows::Win32::Storage::FileSystem::BY_HANDLE_FILE_INFORMATION;
@@ -87,11 +90,14 @@ fn find_associated_archives_with_arbitrary_suffixes(
     plugin_path: &Path,
     game_cache: &GameCache,
 ) -> Vec<PathBuf> {
-    let plugin_stem_len = match plugin_path.file_stem().and_then(|s| s.to_str()) {
-        Some(s) => s.len(),
-        None => return Vec::new(),
+    let Some(plugin_stem_len) = plugin_path
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::len)
+    else {
+        return Vec::new();
     };
-    let Some(plugin_extension) = plugin_path.extension() else {
+    let Some(plugin_extension) = plugin_path.extension().and_then(OsStr::to_str) else {
         return Vec::new();
     };
 
@@ -102,27 +108,11 @@ fn find_associated_archives_with_arbitrary_suffixes(
             // but case insensitively. This is hard to do accurately, so
             // instead check if the plugin with the same length basename and
             // and the given plugin's file extension is equivalent.
-            let Some(archive_filename) = path.file_name().and_then(|s| s.to_str()) else {
-                return false;
-            };
-
-            // Can't just slice the archive filename to the same length as the
-            // plugin file stem directly because that might not slice on a
-            // character boundary, so truncate the byte slice and then check
-            // it's still valid UTF-8.
-            if archive_filename.len() < plugin_stem_len {
-                return false;
-            }
-
-            let Some(filename) = archive_filename.get(..plugin_stem_len) else {
-                return false;
-            };
-
-            let archive_plugin_path = plugin_path
-                .with_file_name(filename)
-                .with_extension(plugin_extension);
-
-            are_file_paths_equivalent(&archive_plugin_path, plugin_path)
+            path.file_name()
+                .and_then(OsStr::to_str)
+                .and_then(|s| s.get(..plugin_stem_len))
+                .map(|f| plugin_path.with_file_name(format!("{f}.{plugin_extension}")))
+                .is_some_and(|p| are_file_paths_equivalent(&p, plugin_path))
         })
         .cloned()
         .collect()
@@ -405,6 +395,34 @@ mod tests {
             } else {
                 assert!(archives.is_empty());
             }
+        }
+    }
+
+    mod find_associated_archives_with_arbitrary_suffixes {
+        use crate::tests::{BLANK_ESM, source_plugins_path};
+
+        use super::*;
+
+        #[test]
+        fn should_find_archive_for_a_plugin_basename_that_contains_a_period() {
+            let tmp_dir = tempdir().unwrap();
+            let data_path = tmp_dir.path().to_path_buf();
+            let source = source_plugins_path(GameType::Oblivion);
+
+            let blank_ext_esm = "Blank.ext.esm";
+            std::fs::copy(source.join(BLANK_ESM), data_path.join(blank_ext_esm)).unwrap();
+
+            let archive_path = data_path.join("Blank.ext - Suffix.bsa");
+
+            let mut cache = GameCache::default();
+            cache.set_archive_paths(vec![archive_path.clone()]);
+
+            let archives = find_associated_archives_with_arbitrary_suffixes(
+                &data_path.join(blank_ext_esm),
+                &cache,
+            );
+
+            assert_eq!(vec![archive_path], archives);
         }
     }
 
