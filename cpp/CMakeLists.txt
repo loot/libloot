@@ -5,7 +5,7 @@ endif()
 if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
-project(libloot)
+project(libloot VERSION "0.27.0")
 include(ExternalProject)
 include(FetchContent)
 include(CMakeDependentOption)
@@ -253,11 +253,9 @@ endif()
 add_library(libloot::loot ALIAS loot)
 
 if(LIBLOOT_BUILD_SHARED)
-    set(LIBLOOT_VERSION "0.27.0")
-
-    set_property(TARGET loot PROPERTY VERSION ${LIBLOOT_VERSION})
-    set_property(TARGET loot PROPERTY SOVERSION 0)
-    set_property(TARGET loot PROPERTY INTERFACE_libloot_MAJOR_VERSION 0)
+    set_property(TARGET loot PROPERTY VERSION ${libloot_VERSION})
+    set_property(TARGET loot PROPERTY SOVERSION ${libloot_VERSION_MAJOR})
+    set_property(TARGET loot PROPERTY INTERFACE_libloot_MAJOR_VERSION ${libloot_VERSION_MAJOR})
     set_property(TARGET loot APPEND PROPERTY COMPATIBLE_INTERFACE_STRING libloot_MAJOR_VERSION)
 
     configure_package_config_file(
@@ -268,7 +266,7 @@ if(LIBLOOT_BUILD_SHARED)
 
     write_basic_package_version_file(
         "${PROJECT_BINARY_DIR}/liblootConfigVersion.cmake"
-        VERSION "${LIBLOOT_VERSION}"
+        VERSION "${libloot_VERSION}"
         COMPATIBILITY AnyNewerVersion
     )
 

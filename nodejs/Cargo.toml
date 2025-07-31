@@ -1,8 +1,8 @@
 [package]
-edition = "2021"
 name = "libloot-nodejs"
-version = "0.27.0"
-license = "GPL-3.0-or-later"
+version.workspace = true
+edition = "2021"
+license.workspace = true
 
 [lib]
 crate-type = ["cdylib"]

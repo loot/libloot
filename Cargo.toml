@@ -1,8 +1,8 @@
 [package]
 name = "libloot"
-version = "0.27.0"
-edition = "2024"
-license = "GPL-3.0-or-later"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
 crc32fast = "1.5.0"
@@ -29,6 +29,11 @@ workspace = true
 
 [workspace]
 members = ["cpp", "ffi-errors", "nodejs", "parameterized-test", "python"]
+
+[workspace.package]
+version = "0.27.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
 
 [profile.release]
 debug = "limited"

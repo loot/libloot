@@ -31,11 +31,7 @@ def update_resource_file(path, version):
     replace_in_file(path, 'Version", "\\d+\\.\\d+\\.\\d+"', 'Version", "{}"'.format(version))
 
 def update_cmakelists(path, version):
-    version_parts = version.split('.')
-
-    replace_in_file(path, 'set\\(LIBLOOT_VERSION "\\d+\\.\\d+\\.\\d+"\\)', 'set(LIBLOOT_VERSION "{}")'.format(version))
-    replace_in_file(path, 'TARGET loot PROPERTY SOVERSION \\d+', 'TARGET loot PROPERTY SOVERSION {}'.format(version_parts[0]))
-    replace_in_file(path, 'INTERFACE_libloot_MAJOR_VERSION \\d+', 'INTERFACE_libloot_MAJOR_VERSION {}'.format(version_parts[0]))
+    replace_in_file(path, 'project\\(libloot VERSION "\\d+\\.\\d+\\.\\d+"\\)', 'project(libloot VERSION "{}")'.format(version))
 
 def update_cargo_toml(path, version):
     replace_in_file(path, '^version = "\\d+\\.\\d+\\.\\d+"$', 'version = "{}"'.format(version))
@@ -60,14 +56,9 @@ if __name__ == "__main__":
     update_cmakelists(os.path.join('cpp', 'CMakeLists.txt'), arguments.version[0])
 
     update_cargo_toml('Cargo.toml', arguments.version[0])
-    update_cargo_toml(os.path.join('cpp', 'Cargo.toml'), arguments.version[0])
-    update_cargo_toml(os.path.join('ffi-errors', 'Cargo.toml'), arguments.version[0])
-    update_cargo_toml(os.path.join('nodejs', 'Cargo.toml'), arguments.version[0])
-    update_cargo_toml(os.path.join('parameterized-test', 'Cargo.toml'), arguments.version[0])
-    update_cargo_toml(os.path.join('python', 'Cargo.toml'), arguments.version[0])
 
     # update_cargo_toml also works for pyproject.toml
-    update_cargo_toml(os.path.join('cpp', 'docs', 'pyproject.toml'), arguments.version[0])
+    update_cargo_toml(os.path.join('docs', 'pyproject.toml'), arguments.version[0])
 
     update_package_json(os.path.join('nodejs', 'package.json'), arguments.version[0])
     update_package_json(os.path.join('nodejs', 'npm', 'linux-x64-gnu', 'package.json'), arguments.version[0])
