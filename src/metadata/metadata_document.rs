@@ -22,7 +22,7 @@ use super::{
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct MetadataDocument {
+pub(crate) struct MetadataDocument {
     bash_tags: Vec<String>,
     groups: Vec<Group>,
     messages: Vec<Message>,
@@ -31,7 +31,7 @@ pub struct MetadataDocument {
 }
 
 impl MetadataDocument {
-    pub fn load(&mut self, file_path: &Path) -> Result<(), LoadMetadataError> {
+    pub(crate) fn load(&mut self, file_path: &Path) -> Result<(), LoadMetadataError> {
         if !file_path.exists() {
             return Err(LoadMetadataError::new(
                 file_path.into(),
@@ -55,7 +55,7 @@ impl MetadataDocument {
         Ok(())
     }
 
-    pub fn load_with_prelude(
+    pub(crate) fn load_with_prelude(
         &mut self,
         masterlist_path: &Path,
         prelude_path: &Path,
@@ -199,7 +199,7 @@ impl MetadataDocument {
         Ok(())
     }
 
-    pub fn save(&self, file_path: &Path) -> Result<(), WriteMetadataError> {
+    pub(crate) fn save(&self, file_path: &Path) -> Result<(), WriteMetadataError> {
         logging::trace!("Saving metadata list to: \"{}\"", escape_ascii(file_path));
 
         let mut emitter = YamlEmitter::new();
@@ -251,23 +251,26 @@ impl MetadataDocument {
         Ok(())
     }
 
-    pub fn bash_tags(&self) -> &[String] {
+    pub(crate) fn bash_tags(&self) -> &[String] {
         &self.bash_tags
     }
 
-    pub fn groups(&self) -> &[Group] {
+    pub(crate) fn groups(&self) -> &[Group] {
         &self.groups
     }
 
-    pub fn messages(&self) -> &[Message] {
+    pub(crate) fn messages(&self) -> &[Message] {
         &self.messages
     }
 
-    pub fn plugins_iter(&self) -> impl Iterator<Item = &PluginMetadata> {
+    pub(crate) fn plugins_iter(&self) -> impl Iterator<Item = &PluginMetadata> {
         self.plugins.values().chain(self.regex_plugins.iter())
     }
 
-    pub fn find_plugin(&self, plugin_name: &str) -> Result<Option<PluginMetadata>, RegexError> {
+    pub(crate) fn find_plugin(
+        &self,
+        plugin_name: &str,
+    ) -> Result<Option<PluginMetadata>, RegexError> {
         let mut metadata = match self.plugins.get(&Filename::new(plugin_name.to_owned())) {
             Some(m) => m.clone(),
             None => PluginMetadata::new(plugin_name)?,
@@ -287,7 +290,7 @@ impl MetadataDocument {
         }
     }
 
-    pub fn set_groups(&mut self, groups: Vec<Group>) {
+    pub(crate) fn set_groups(&mut self, groups: Vec<Group>) {
         // Ensure that the default group is present.
         let default_group_exists = groups.iter().any(|g| g.name() == Group::DEFAULT_NAME);
 
@@ -300,7 +303,7 @@ impl MetadataDocument {
         }
     }
 
-    pub fn set_plugin_metadata(&mut self, plugin_metadata: PluginMetadata) {
+    pub(crate) fn set_plugin_metadata(&mut self, plugin_metadata: PluginMetadata) {
         if plugin_metadata.is_regex_plugin() {
             self.regex_plugins.push(plugin_metadata);
         } else {
@@ -311,11 +314,11 @@ impl MetadataDocument {
         }
     }
 
-    pub fn remove_plugin_metadata(&mut self, plugin_name: &str) {
+    pub(crate) fn remove_plugin_metadata(&mut self, plugin_name: &str) {
         self.plugins.remove(&Filename::new(plugin_name.to_owned()));
     }
 
-    pub fn clear(&mut self) {
+    pub(crate) fn clear(&mut self) {
         self.bash_tags.clear();
         self.groups.clear();
         self.messages.clear();

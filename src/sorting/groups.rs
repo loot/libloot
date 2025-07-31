@@ -21,9 +21,9 @@ use super::{
     search::{DfsVisitor, depth_first_search},
 };
 
-pub type GroupsGraph = Graph<Box<str>, EdgeType>;
+pub(super) type GroupsGraph = Graph<Box<str>, EdgeType>;
 
-pub fn build_groups_graph(
+pub(crate) fn build_groups_graph(
     masterlist_groups: &[Group],
     userlist_groups: &[Group],
 ) -> Result<GroupsGraph, BuildGroupsGraphError> {
@@ -115,7 +115,7 @@ fn sorted_clone(strings: &[String]) -> Vec<&str> {
     strings
 }
 
-pub fn find_path(
+pub(crate) fn find_path(
     graph: &GroupsGraph,
     from_group_name: &str,
     to_group_name: &str,
@@ -211,7 +211,7 @@ fn find_node_by_weight(
 /// Sort the group vertices so that root vertices come first, in order of
 /// decreasing path length, but otherwise preserving the existing
 /// (lexicographical) ordering.
-pub fn sorted_group_nodes(graph: &GroupsGraph) -> Vec<NodeIndex> {
+pub(super) fn sorted_group_nodes(graph: &GroupsGraph) -> Vec<NodeIndex> {
     let mut nodes: Vec<(NodeIndex, bool, usize)> = graph
         .node_indices()
         .map(|n| {
@@ -274,7 +274,9 @@ impl<'a> DfsVisitor<'a> for GroupsPathLengthVisitor {
     }
 }
 
-pub fn get_default_group_node(graph: &GroupsGraph) -> Result<NodeIndex, UndefinedGroupError> {
+pub(super) fn get_default_group_node(
+    graph: &GroupsGraph,
+) -> Result<NodeIndex, UndefinedGroupError> {
     graph
         .node_indices()
         .find(|n| graph[*n].as_ref() == Group::DEFAULT_NAME)

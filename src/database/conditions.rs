@@ -4,7 +4,7 @@ use loot_condition_interpreter::Expression;
 
 use crate::metadata::{File, PluginCleaningData, PluginMetadata};
 
-pub fn evaluate_all_conditions(
+pub(crate) fn evaluate_all_conditions(
     mut metadata: PluginMetadata,
     state: &loot_condition_interpreter::State,
 ) -> Result<Option<PluginMetadata>, loot_condition_interpreter::Error> {
@@ -57,7 +57,7 @@ pub fn evaluate_all_conditions(
     }
 }
 
-pub fn evaluate_condition(
+pub(crate) fn evaluate_condition(
     condition: &str,
     state: &loot_condition_interpreter::State,
 ) -> Result<bool, loot_condition_interpreter::Error> {
@@ -75,7 +75,7 @@ fn evaluate_condition_option(
     }
 }
 
-pub fn filter_map_on_condition<T: Clone>(
+pub(crate) fn filter_map_on_condition<T: Clone>(
     item: &T,
     condition: Option<&str>,
     state: &loot_condition_interpreter::State,

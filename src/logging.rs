@@ -147,7 +147,7 @@ macro_rules! trace {
     ($($arg:tt)+) => { $crate::logging::log!(crate::LogLevel::Trace, $($arg)+) };
 }
 
-pub fn is_log_enabled(level: LogLevel) -> bool {
+pub(crate) fn is_log_enabled(level: LogLevel) -> bool {
     if log::log_enabled!(level.into()) {
         return true;
     }

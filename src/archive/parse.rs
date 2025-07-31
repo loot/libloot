@@ -14,7 +14,7 @@ use crate::{
 
 use super::{ba2, bsa};
 
-pub fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTreeSet<u64>> {
+pub(crate) fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTreeSet<u64>> {
     let mut archive_assets: BTreeMap<u64, BTreeSet<u64>> = BTreeMap::new();
 
     for archive_path in archive_paths {

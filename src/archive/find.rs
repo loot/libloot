@@ -10,7 +10,7 @@ use crate::{GameType, game::GameCache, plugin::has_ascii_extension};
 
 const BSA_FILE_EXTENSION: &str = "bsa";
 
-pub fn find_associated_archives(
+pub(crate) fn find_associated_archives(
     game_type: GameType,
     game_cache: &GameCache,
     plugin_path: &Path,
@@ -205,7 +205,7 @@ mod tests {
         }
 
         impl Fixture {
-            pub fn new(game_type: GameType) -> Self {
+            fn new(game_type: GameType) -> Self {
                 let tmp_dir = tempdir().unwrap();
 
                 let mut cache = GameCache::default();

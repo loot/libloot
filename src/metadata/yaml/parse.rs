@@ -6,7 +6,7 @@ use saphyr::{AnnotatedMapping, MarkedYaml, Marker, Scalar, Yaml, YamlData};
 use super::super::error::{ExpectedType, MetadataParsingErrorReason, ParseMetadataError};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub enum YamlObjectType {
+pub(in crate::metadata) enum YamlObjectType {
     File,
     Group,
     Location,
@@ -36,7 +36,7 @@ impl std::fmt::Display for YamlObjectType {
     }
 }
 
-pub fn to_unmarked_yaml<'a>(yaml: &MarkedYaml<'a>) -> Yaml<'a> {
+pub(in crate::metadata) fn to_unmarked_yaml<'a>(yaml: &MarkedYaml<'a>) -> Yaml<'a> {
     match &yaml.data {
         YamlData::Value(Scalar::FloatingPoint(v)) => Yaml::Value(Scalar::FloatingPoint(*v)),
         YamlData::Value(Scalar::Integer(v)) => Yaml::Value(Scalar::Integer(*v)),
@@ -56,14 +56,14 @@ pub fn to_unmarked_yaml<'a>(yaml: &MarkedYaml<'a>) -> Yaml<'a> {
     }
 }
 
-pub fn get_value<'a, 'b>(
+pub(in crate::metadata) fn get_value<'a, 'b>(
     mapping: &'a AnnotatedMapping<'b, MarkedYaml<'b>>,
     key: &'static str,
 ) -> Option<&'a MarkedYaml<'b>> {
     mapping.get(&MarkedYaml::value_from_str(key))
 }
 
-pub fn get_string_value<'a>(
+pub(in crate::metadata) fn get_string_value<'a>(
     mapping: &'a AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
@@ -82,7 +82,7 @@ pub fn get_string_value<'a>(
     }
 }
 
-pub fn get_required_string_value<'a>(
+pub(in crate::metadata) fn get_required_string_value<'a>(
     marker: Marker,
     mapping: &'a AnnotatedMapping<MarkedYaml>,
     key: &'static str,
@@ -94,7 +94,7 @@ pub fn get_required_string_value<'a>(
     }
 }
 
-pub fn get_strings_vec_value<'a>(
+pub(in crate::metadata) fn get_strings_vec_value<'a>(
     mapping: &'a AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
@@ -124,7 +124,7 @@ pub fn get_strings_vec_value<'a>(
     }
 }
 
-pub fn as_mapping<'a, 'b>(
+pub(in crate::metadata) fn as_mapping<'a, 'b>(
     value: &'a MarkedYaml<'b>,
     yaml_type: YamlObjectType,
 ) -> Result<&'a AnnotatedMapping<'a, MarkedYaml<'b>>, ParseMetadataError> {
@@ -138,7 +138,7 @@ pub fn as_mapping<'a, 'b>(
     }
 }
 
-pub fn get_u32_value(
+pub(in crate::metadata) fn get_u32_value(
     mapping: &AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
@@ -159,7 +159,7 @@ pub fn get_u32_value(
     }
 }
 
-pub fn get_slice_value<'a>(
+pub(in crate::metadata) fn get_slice_value<'a>(
     mapping: &'a saphyr::AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
@@ -179,7 +179,7 @@ pub fn get_slice_value<'a>(
     }
 }
 
-pub fn parse_condition(
+pub(in crate::metadata) fn parse_condition(
     mapping: &saphyr::AnnotatedMapping<MarkedYaml>,
     key: &'static str,
     yaml_type: YamlObjectType,
@@ -198,6 +198,6 @@ pub fn parse_condition(
 
 /// This is effectively TryFrom<&MarkedYaml>, but implementing it doesn't make
 /// MarkedYaml part of the crate's public API.
-pub trait TryFromYaml: Sized {
+pub(in crate::metadata) trait TryFromYaml: Sized {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError>;
 }

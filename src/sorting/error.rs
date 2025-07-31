@@ -26,7 +26,7 @@ impl Display for UndefinedGroupError {
 impl std::error::Error for UndefinedGroupError {}
 
 #[derive(Clone, Default, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct CyclicInteractionError {
+pub(crate) struct CyclicInteractionError {
     cycle: Vec<Vertex>,
 }
 

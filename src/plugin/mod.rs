@@ -1,4 +1,4 @@
-pub mod error;
+pub(crate) mod error;
 
 use std::{
     collections::{BTreeMap, BTreeSet},

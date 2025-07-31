@@ -1,9 +1,9 @@
-pub mod error;
-pub mod groups;
-pub mod plugins;
+pub(crate) mod error;
+pub(crate) mod groups;
+pub(crate) mod plugins;
 mod search;
 mod validate;
-pub mod vertex;
+pub(crate) mod vertex;
 
 #[cfg(test)]
 mod test {
@@ -11,7 +11,7 @@ mod test {
     use crate::error::PluginDataError;
 
     #[derive(Default)]
-    pub struct TestPlugin {
+    pub(super) struct TestPlugin {
         name: String,
         masters: Vec<String>,
         pub(super) is_master: bool,
@@ -23,22 +23,22 @@ mod test {
     }
 
     impl TestPlugin {
-        pub fn new(name: &str) -> Self {
+        pub(super) fn new(name: &str) -> Self {
             Self {
                 name: name.to_owned(),
                 ..Default::default()
             }
         }
 
-        pub fn add_master(&mut self, plugin_name: &str) {
+        pub(super) fn add_master(&mut self, plugin_name: &str) {
             self.masters.push(plugin_name.to_owned());
         }
 
-        pub fn add_overlapping_records(&mut self, plugin_name: &str) {
+        pub(super) fn add_overlapping_records(&mut self, plugin_name: &str) {
             self.overlapping_record_plugins.push(plugin_name.to_owned());
         }
 
-        pub fn add_overlapping_assets(&mut self, plugin_name: &str) {
+        pub(super) fn add_overlapping_assets(&mut self, plugin_name: &str) {
             self.overlapping_asset_plugins.push(plugin_name.to_owned());
         }
     }

@@ -1,6 +1,5 @@
 // Allow some lints that are denied at the workspace level.
 #![allow(
-    unreachable_pub,
     clippy::doc_markdown,
     clippy::exhaustive_enums,
     clippy::filetype_is_file,

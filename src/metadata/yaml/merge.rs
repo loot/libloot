@@ -2,7 +2,9 @@ use saphyr::{MarkedYaml, YamlData};
 
 use crate::metadata::error::YamlMergeKeyError;
 
-pub fn process_merge_keys(mut yaml: MarkedYaml) -> Result<MarkedYaml, YamlMergeKeyError> {
+pub(in crate::metadata) fn process_merge_keys(
+    mut yaml: MarkedYaml,
+) -> Result<MarkedYaml, YamlMergeKeyError> {
     match yaml.data {
         YamlData::Sequence(a) => {
             yaml.data = merge_array_elements(a).map(YamlData::Sequence)?;

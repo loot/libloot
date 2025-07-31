@@ -9,7 +9,7 @@ use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 use crate::{EdgeType, Vertex, logging};
 
-pub trait DfsVisitor<'a> {
+pub(super) trait DfsVisitor<'a> {
     fn visit_tree_edge(&mut self, edge_ref: EdgeReference<'a, EdgeType>);
 
     fn visit_forward_or_cross_edge(&mut self, edge_ref: EdgeReference<'a, EdgeType>);
@@ -21,7 +21,7 @@ pub trait DfsVisitor<'a> {
     fn finish_node(&mut self, node_index: NodeIndex);
 }
 
-pub trait BidirBfsVisitor {
+pub(super) trait BidirBfsVisitor {
     fn visit_forward_bfs_edge(&mut self, source: NodeIndex, target: NodeIndex);
 
     fn visit_reverse_bfs_edge(&mut self, source: NodeIndex, target: NodeIndex);
@@ -29,7 +29,7 @@ pub trait BidirBfsVisitor {
     fn visit_intersection_node(&mut self, node: NodeIndex);
 }
 
-pub fn bidirectional_bfs<N, E>(
+pub(super) fn bidirectional_bfs<N, E>(
     graph: &Graph<N, E>,
     from_index: NodeIndex,
     to_index: NodeIndex,
@@ -78,7 +78,7 @@ pub fn bidirectional_bfs<N, E>(
 }
 
 // Petgraph has APIs for performing depth-first searches, but they don't give any information about the current edge, only its source and target nodes, which is a problem if the same pair of nodes can have multiple edges between them with different weights. As such, implement it myself.
-pub fn find_cycle<N>(
+pub(super) fn find_cycle<N>(
     graph: &Graph<N, EdgeType>,
     node_mapper: impl FnMut(&N) -> String,
 ) -> Option<Vec<Vertex>> {
@@ -99,14 +99,14 @@ pub fn find_cycle<N>(
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[non_exhaustive]
-pub enum Colour {
+pub(super) enum Colour {
     #[default]
     White,
     Grey,
     Black,
 }
 
-pub fn depth_first_search<'a, N>(
+pub(super) fn depth_first_search<'a, N>(
     graph: &'a Graph<N, EdgeType>,
     colour_map: &mut HashMap<NodeIndex, Colour>,
     start_node_index: NodeIndex,

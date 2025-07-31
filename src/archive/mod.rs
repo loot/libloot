@@ -6,10 +6,10 @@ mod parse;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use find::find_associated_archives;
-pub use parse::assets_in_archives;
+pub(crate) use find::find_associated_archives;
+pub(crate) use parse::assets_in_archives;
 
-pub fn do_assets_overlap(
+pub(crate) fn do_assets_overlap(
     assets: &BTreeMap<u64, BTreeSet<u64>>,
     other_assets: &BTreeMap<u64, BTreeSet<u64>>,
 ) -> bool {

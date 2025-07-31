@@ -25,7 +25,7 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct PluginSortingData<'a, T: SortingPlugin> {
+pub(crate) struct PluginSortingData<'a, T: SortingPlugin> {
     plugin: &'a T,
     pub(super) is_master: bool,
     override_record_count: usize,
@@ -41,7 +41,7 @@ pub struct PluginSortingData<'a, T: SortingPlugin> {
 }
 
 impl<'a, T: SortingPlugin> PluginSortingData<'a, T> {
-    pub fn new(
+    pub(crate) fn new(
         plugin: &'a T,
         masterlist_metadata: Option<&PluginMetadata>,
         user_metadata: Option<&PluginMetadata>,
@@ -100,7 +100,7 @@ impl<'a, T: SortingPlugin> PluginSortingData<'a, T> {
     }
 }
 
-pub trait SortingPlugin {
+pub(crate) trait SortingPlugin {
     fn name(&self) -> &str;
     fn is_master(&self) -> bool;
     fn is_blueprint_plugin(&self) -> bool;
@@ -779,7 +779,7 @@ impl<'a, T: SortingPlugin> std::ops::Index<NodeIndex> for PluginsGraph<'a, T> {
     }
 }
 
-pub fn sort_plugins<T: SortingPlugin>(
+pub(crate) fn sort_plugins<T: SortingPlugin>(
     mut plugins_sorting_data: Vec<PluginSortingData<T>>,
     groups_graph: &GroupsGraph,
     early_loading_plugins: &[String],

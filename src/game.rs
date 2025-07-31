@@ -773,7 +773,7 @@ pub(crate) struct GameCache {
 }
 
 impl GameCache {
-    pub fn set_archive_paths(&mut self, archive_paths: Vec<PathBuf>) {
+    pub(crate) fn set_archive_paths(&mut self, archive_paths: Vec<PathBuf>) {
         self.archive_paths.clear();
         self.archive_paths.extend(archive_paths);
     }
@@ -801,7 +801,7 @@ impl GameCache {
         self.plugins.get(&Filename::new(plugin_name.to_owned()))
     }
 
-    pub fn archives_iter(&self) -> impl Iterator<Item = &PathBuf> {
+    pub(crate) fn archives_iter(&self) -> impl Iterator<Item = &PathBuf> {
         self.archive_paths.iter()
     }
 }

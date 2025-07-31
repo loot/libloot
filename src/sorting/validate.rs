@@ -12,7 +12,7 @@ use super::{
     plugins::{PluginSortingData, SortingPlugin},
 };
 
-pub fn validate_plugin_groups<T: SortingPlugin>(
+pub(super) fn validate_plugin_groups<T: SortingPlugin>(
     plugins_sorting_data: &[PluginSortingData<'_, T>],
     groups_graph: &GroupsGraph,
 ) -> Result<(), UndefinedGroupError> {
@@ -30,7 +30,7 @@ pub fn validate_plugin_groups<T: SortingPlugin>(
     Ok(())
 }
 
-pub fn validate_specific_and_hardcoded_edges<T: SortingPlugin>(
+pub(super) fn validate_specific_and_hardcoded_edges<T: SortingPlugin>(
     masters: &[PluginSortingData<'_, T>],
     blueprint_masters: &[PluginSortingData<'_, T>],
     non_masters: &[PluginSortingData<'_, T>],

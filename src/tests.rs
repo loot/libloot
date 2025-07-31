@@ -8,25 +8,25 @@ use crate::GameType;
 use parameterized_test::test_parameter;
 use tempfile::TempDir;
 
-pub const BLANK_ESM: &str = "Blank.esm";
-pub const BLANK_DIFFERENT_ESM: &str = "Blank - Different.esm";
-pub const BLANK_MASTER_DEPENDENT_ESM: &str = "Blank - Master Dependent.esm";
+pub(crate) const BLANK_ESM: &str = "Blank.esm";
+pub(crate) const BLANK_DIFFERENT_ESM: &str = "Blank - Different.esm";
+pub(crate) const BLANK_MASTER_DEPENDENT_ESM: &str = "Blank - Master Dependent.esm";
 const BLANK_DIFFERENT_MASTER_DEPENDENT_ESM: &str = "Blank - Different Master Dependent.esm";
-pub const BLANK_ESP: &str = "Blank.esp";
-pub const BLANK_DIFFERENT_ESP: &str = "Blank - Different.esp";
-pub const BLANK_MASTER_DEPENDENT_ESP: &str = "Blank - Master Dependent.esp";
+pub(crate) const BLANK_ESP: &str = "Blank.esp";
+pub(crate) const BLANK_DIFFERENT_ESP: &str = "Blank - Different.esp";
+pub(crate) const BLANK_MASTER_DEPENDENT_ESP: &str = "Blank - Master Dependent.esp";
 const BLANK_DIFFERENT_MASTER_DEPENDENT_ESP: &str = "Blank - Different Master Dependent.esp";
 const BLANK_PLUGIN_DEPENDENT_ESP: &str = "Blank - Plugin Dependent.esp";
 const BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP: &str = "Blank - Different Plugin Dependent.esp";
 
-pub const BLANK_FULL_ESM: &str = "Blank.full.esm";
-pub const BLANK_MEDIUM_ESM: &str = "Blank.medium.esm";
-pub const BLANK_OVERRIDE_ESP: &str = "Blank - Override.esp";
-pub const BLANK_ESL: &str = "Blank.esl";
-pub const NON_PLUGIN_FILE: &str = "NotAPlugin.esm";
-pub const NON_ASCII_ESM: &str = "non\u{00C1}scii.esm";
+pub(crate) const BLANK_FULL_ESM: &str = "Blank.full.esm";
+pub(crate) const BLANK_MEDIUM_ESM: &str = "Blank.medium.esm";
+pub(crate) const BLANK_OVERRIDE_ESP: &str = "Blank - Override.esp";
+pub(crate) const BLANK_ESL: &str = "Blank.esl";
+pub(crate) const NON_PLUGIN_FILE: &str = "NotAPlugin.esm";
+pub(crate) const NON_ASCII_ESM: &str = "non\u{00C1}scii.esm";
 
-pub fn source_plugins_path(game_type: GameType) -> PathBuf {
+pub(crate) fn source_plugins_path(game_type: GameType) -> PathBuf {
     match game_type {
         GameType::Morrowind | GameType::OpenMW => {
             absolute("./testing-plugins/Morrowind/Data Files")
@@ -55,7 +55,7 @@ fn master_file(game_type: GameType) -> &'static str {
     }
 }
 
-pub fn copy_file(source_dir: &Path, dest_dir: &Path, filename: &str) {
+pub(crate) fn copy_file(source_dir: &Path, dest_dir: &Path, filename: &str) {
     copy(source_dir.join(filename), dest_dir.join(filename)).unwrap();
 }
 
@@ -81,7 +81,7 @@ fn is_load_order_timestamp_based(game_type: GameType) -> bool {
     )
 }
 
-pub fn initial_load_order(game_type: GameType) -> Vec<(&'static str, bool)> {
+pub(crate) fn initial_load_order(game_type: GameType) -> Vec<(&'static str, bool)> {
     if game_type == GameType::Starfield {
         vec![
             (master_file(game_type), true),
@@ -176,7 +176,7 @@ fn data_path(game_type: GameType, game_path: &Path) -> PathBuf {
     }
 }
 
-pub struct Fixture {
+pub(crate) struct Fixture {
     _temp_dir: TempDir,
     pub(crate) game_type: GameType,
     pub(crate) game_path: PathBuf,
@@ -184,7 +184,7 @@ pub struct Fixture {
 }
 
 impl Fixture {
-    pub fn new(game_type: GameType) -> Self {
+    pub(crate) fn new(game_type: GameType) -> Self {
         let temp_dir = tempfile::Builder::new()
             .prefix("libloot-t\u{00E9}st-")
             .tempdir()
@@ -193,7 +193,7 @@ impl Fixture {
         Self::with_tempdir(game_type, temp_dir)
     }
 
-    pub fn in_path(game_type: GameType, in_path: &Path) -> Fixture {
+    pub(crate) fn in_path(game_type: GameType, in_path: &Path) -> Fixture {
         let temp_dir = tempfile::Builder::new()
             .prefix("libloot-t\u{00E9}st-")
             .tempdir_in(in_path)
@@ -314,13 +314,13 @@ impl Fixture {
         }
     }
 
-    pub fn data_path(&self) -> PathBuf {
+    pub(crate) fn data_path(&self) -> PathBuf {
         data_path(self.game_type, &self.game_path)
     }
 }
 
 #[test_parameter]
-pub const ALL_GAME_TYPES: [GameType; 12] = [
+pub(crate) const ALL_GAME_TYPES: [GameType; 12] = [
     GameType::Oblivion,
     GameType::Skyrim,
     GameType::Fallout3,
