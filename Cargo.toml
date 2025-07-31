@@ -27,6 +27,10 @@ tempfile = "3.17.1"
 [lints]
 workspace = true
 
+[profile.release]
+debug = "limited"
+lto = "thin"
+
 [workspace]
 members = ["cpp", "ffi-errors", "nodejs", "parameterized-test", "python"]
 
@@ -34,15 +38,6 @@ members = ["cpp", "ffi-errors", "nodejs", "parameterized-test", "python"]
 version = "0.27.0"
 edition = "2024"
 license = "GPL-3.0-or-later"
-
-[profile.release]
-debug = "limited"
-lto = "thin"
-
-[profile.rel-with-deb-info]
-inherits = "release"
-opt-level = 2
-debug = "limited"
 
 # Deny some rustc lints that are allow-by-default.
 [workspace.lints.rust]
