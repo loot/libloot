@@ -8,7 +8,7 @@ use libloot::{
         LoadMetadataError, MultilingualMessageContentsError, RegexError, WriteMetadataError,
     },
 };
-use libloot_ffi_errors::{fmt_error_chain, UnsupportedEnumValueError};
+use libloot_ffi_errors::{UnsupportedEnumValueError, fmt_error_chain};
 
 #[derive(Debug)]
 pub struct VerboseError(Box<dyn std::error::Error>);

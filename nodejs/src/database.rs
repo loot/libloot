@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use libloot::{error::DatabaseLockPoisonError, WriteMode};
+use libloot::{WriteMode, error::DatabaseLockPoisonError};
 use libloot_ffi_errors::UnsupportedEnumValueError;
 use napi_derive::napi;
 
