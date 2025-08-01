@@ -6,8 +6,6 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 project(libloot VERSION "0.27.0")
-include(ExternalProject)
-include(FetchContent)
 include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
@@ -24,10 +22,6 @@ option(LIBLOOT_INSTALL_DOCS "Whether or not to install libloot's docs (which nee
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if(MSVC)
-    add_compile_options("/MP")
-endif()
 
 ##############################
 # External Projects
@@ -191,7 +185,7 @@ endif()
 
 if(MSVC)
     # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
-    target_compile_options(loot PRIVATE "/permissive-" "/W4" "/Zc:__cplusplus" "/GL")
+    target_compile_options(loot PRIVATE "/permissive-" "/W4" "/Zc:__cplusplus" "/GL" "/MP")
     target_link_options(loot PRIVATE "/LTCG")
 endif()
 
