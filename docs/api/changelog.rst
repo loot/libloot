@@ -8,14 +8,31 @@ Version History
 Added
 -----
 
+- Support for using libloot as a dependency with CMake's FetchContent.
+- The ``LIBLOOT_BUILD_SHARED`` CMake option as a libloot-specific alternative to
+  ``BUILD_SHARED_LIBS``.
 - Many new third-party dependencies, which are all managed by Cargo. Future
   updates to direct dependencies will be recorded in this changelog: the Git
   history of ``Cargo.lock`` will provide a record of changes to the whole
   dependency tree.
 
+Fixed
+-----
+
+- A linker error when trying to build libloot's tests against a static build
+  of libloot.
+
 Changed
 -------
 
+- The release page now says that Windows 10 or later is required, up from
+  Windows 7 or later for previous releases. Nothing in this release should have
+  changed what versions of Windows libloot actually works on, but the release
+  text no longer claims Windows 7 support as it is impractical to target.
+
+  The claimed support for Windows 7 has probably been broken for at least a
+  year, and may have been broken since 2018, as libloot has been neither built
+  nor tested on Windows 7 in that time.
 - Most of libloot has been reimplemented in Rust instead of C++, with the C++
   API now a thin wrapper around the Rust implementation. The C++ ABI and the
   documented C++ API are unchanged, though there have been changes to many of
@@ -35,6 +52,14 @@ Changed
     name that is undefined, it now throws a :cpp:any:`loot::UndefinedGroupError`
     instead of a ``std::invalid_argument``.
   - Many exception messages have changed.
+  - The regex engine used to evaluate ``PluginMetadata`` name regexes has
+    changed. Unlike the old engine, the new engine is Unicode-aware,
+    locale-independent, and does not support POSIX character classes (e.g.
+    ``[:alpha:]``).
+  - If building libloot from source, the C++ wrapper's source code is in the
+    ``cpp`` subdirectory instead of the Git repository's or source archive's
+    root directory.
+- The C++ code is now built with ``/MP`` set when using MSVC.
 
 Removed
 -------
