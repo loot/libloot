@@ -30,7 +30,7 @@ jobs:
       - name: Run clippy
         run: |
           cargo clippy -- --version
-          cargo clippy --all --all-targets -- -Dwarnings
+          cargo clippy --workspace --all-targets -- -Dwarnings
 
   rust:
     strategy:
