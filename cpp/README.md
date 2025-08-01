@@ -36,6 +36,23 @@ Parameter | Values | Default |Description
 `LIBLOOT_INSTALL_DOCS` | `ON`, `OFF` | `ON` | Whether or not to install libloot's docs (which need to be built separately).
 `RUN_CLANG_TIDY` | `ON`, `OFF` | `OFF` | Whether or not to run clang-tidy during build. Has no effect when using CMake's Visual Studio generator.
 
+An example of using libloot with CMake's FetchContent:
+
+```cmake
+set(LIBLOOT_BUILD_TESTS OFF)
+set(LIBLOOT_INSTALL_DOCS OFF)
+
+FetchContent_Declare(libloot
+    GIT_REPOSITORY "https://github.com/loot/libloot.git"
+    GIT_TAG "master" # Better to use a specific commit hash.
+    SOURCE_SUBDIR "cpp")
+
+FetchContent_MakeAvailable(libloot)
+
+add_executable(myapp ${MYAPP_SOURCES})
+target_link_libraries(myapp PRIVATE libloot::loot)
+```
+
 ### Documentation
 
 Install [Doxygen](https://www.doxygen.nl/), [Python](https://www.python.org/) and [uv](https://docs.astral.sh/uv/getting-started/installation/) and make sure they're accessible from your `PATH`, then run:
