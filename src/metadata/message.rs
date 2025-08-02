@@ -15,6 +15,10 @@ use super::{
 
 /// Codes used to indicate the type of a message.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[expect(
+    clippy::exhaustive_enums,
+    reason = "Adding a new message is a breaking change."
+)]
 pub enum MessageType {
     /// A notification message that is of no significant severity.
     #[default]

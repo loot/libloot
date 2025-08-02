@@ -22,6 +22,7 @@ pub use error::{ConditionEvaluationError, MetadataRetrievalError};
 
 /// Control behaviour when writing to files.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[non_exhaustive]
 pub enum WriteMode {
     /// Create the file if it does not exist, otherwise error.
     Create,

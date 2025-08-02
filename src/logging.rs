@@ -39,6 +39,10 @@ pub fn set_log_level(level: LogLevel) {
 
 /// Codes used to specify different levels of API logging.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[expect(
+    clippy::exhaustive_enums,
+    reason = "Adding a new log level should be a breaking change."
+)]
 pub enum LogLevel {
     Trace,
     Debug,

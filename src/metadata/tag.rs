@@ -10,6 +10,7 @@ use super::{
 
 /// Represents whether a Bash Tag suggestion is for addition or removal.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[expect(clippy::exhaustive_enums, reason = "It's effectively a boolean")]
 pub enum TagSuggestion {
     #[default]
     Addition,
