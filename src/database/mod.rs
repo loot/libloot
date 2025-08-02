@@ -30,6 +30,27 @@ pub enum WriteMode {
     CreateOrTruncate,
 }
 
+/// Control whether user metadata is included or not when retrieving metadata.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[expect(clippy::exhaustive_enums, reason = "It's effectively a boolean")]
+pub enum MergeMode {
+    /// Do not include user metadata in the return value.
+    WithoutUserMetadata,
+    /// Include user metadata in the return value.
+    WithUserMetadata,
+}
+
+/// Control whether or not conditions are evaluated when retrieving metadata.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[expect(clippy::exhaustive_enums, reason = "It's effectively a boolean")]
+pub enum EvalMode {
+    /// Do not evaluate metadata conditions when retrieving metadata.
+    DoNotEvaluate,
+    /// Evaluate metadata conditions when retrieving metadata, filtering out
+    /// metadata with conditions that evaluate to false.
+    Evaluate,
+}
+
 /// The interface through which metadata can be accessed.
 #[derive(Debug)]
 pub struct Database {
@@ -145,15 +166,13 @@ impl Database {
 
     /// Get all general messages listed in the loaded metadata lists.
     ///
-    /// If `evaluate_conditions` is `true`, any metadata conditions are
-    /// evaluated before the metadata is returned, otherwise unevaluated
-    /// metadata is returned. Evaluating general message conditions also clears
-    /// the condition cache before evaluating conditions.
+    /// Evaluating general message conditions also clears the condition cache
+    /// before evaluating conditions.
     pub fn general_messages(
         &mut self,
-        evaluate_conditions: bool,
+        evaluate_conditions: EvalMode,
     ) -> Result<Vec<Message>, ConditionEvaluationError> {
-        if evaluate_conditions {
+        if evaluate_conditions == EvalMode::Evaluate {
             self.clear_condition_cache();
         }
 
@@ -163,7 +182,7 @@ impl Database {
             .iter()
             .chain(self.userlist.messages());
 
-        if evaluate_conditions {
+        if evaluate_conditions == EvalMode::Evaluate {
             let messages = messages_iter
                 .filter_map(|m| {
                     filter_map_on_condition(m, m.condition(), &self.condition_evaluator_state)
@@ -177,12 +196,8 @@ impl Database {
     }
 
     /// Gets the groups that are defined in the loaded metadata lists.
-    ///
-    /// If `include_user_metadata` is `true`, any group metadata present in the
-    /// userlist is included in the returned metadata, otherwise the metadata
-    /// returned only includes metadata from the masterlist.
-    pub fn groups(&self, include_user_metadata: bool) -> Vec<Group> {
-        if include_user_metadata {
+    pub fn groups(&self, include_user_metadata: MergeMode) -> Vec<Group> {
+        if include_user_metadata == MergeMode::WithUserMetadata {
             merge_groups(self.masterlist.groups(), self.userlist.groups())
         } else {
             self.masterlist.groups().to_vec()
@@ -223,23 +238,17 @@ impl Database {
 
     /// Get all of a plugin's loaded metadata.
     ///
-    /// If `include_user_metadata` is `true`, any user metadata the plugin has
-    /// is included in the returned metadata, otherwise the metadata returned
-    /// only includes metadata from the masterlist.
-    ///
-    /// If `evaluateConditions` is `true`, any metadata conditions are evaluated
-    /// before the metadata otherwise unevaluated metadata is returned.
     /// Evaluating plugin metadata conditions does **not** clear the condition
     /// cache.
     pub fn plugin_metadata(
         &self,
         plugin_name: &str,
-        include_user_metadata: bool,
-        evaluate_conditions: bool,
+        include_user_metadata: MergeMode,
+        evaluate_conditions: EvalMode,
     ) -> Result<Option<PluginMetadata>, MetadataRetrievalError> {
         let mut metadata = self.masterlist.find_plugin(plugin_name)?;
 
-        if include_user_metadata {
+        if include_user_metadata == MergeMode::WithUserMetadata {
             if let Some(mut user_metadata) = self.userlist.find_plugin(plugin_name)? {
                 if let Some(metadata) = metadata {
                     user_metadata.merge_metadata(&metadata);
@@ -248,7 +257,7 @@ impl Database {
             }
         }
 
-        if evaluate_conditions {
+        if evaluate_conditions == EvalMode::Evaluate {
             if let Some(metadata) = metadata {
                 return evaluate_all_conditions(metadata, &self.condition_evaluator_state)
                     .map_err(Into::into);
@@ -260,18 +269,16 @@ impl Database {
 
     /// Get a plugin's metadata loaded from the given userlist.
     ///
-    /// If `evaluateConditions` is `true`, any metadata conditions are evaluated
-    /// before the metadata otherwise unevaluated metadata is returned.
     /// Evaluating plugin metadata conditions does **not** clear the condition
     /// cache.
     pub fn plugin_user_metadata(
         &self,
         plugin_name: &str,
-        evaluate_conditions: bool,
+        evaluate_conditions: EvalMode,
     ) -> Result<Option<PluginMetadata>, MetadataRetrievalError> {
         let metadata = self.userlist.find_plugin(plugin_name)?;
 
-        if evaluate_conditions {
+        if evaluate_conditions == EvalMode::Evaluate {
             if let Some(metadata) = metadata {
                 return evaluate_all_conditions(metadata, &self.condition_evaluator_state)
                     .map_err(Into::into);
@@ -780,7 +787,10 @@ plugins:
                         .with_condition("file(\"missing.esp\")".into()),
                     Message::new(MessageType::Say, "A user message".into())
                 ],
-                database.general_messages(false).unwrap().as_slice()
+                database
+                    .general_messages(EvalMode::DoNotEvaluate)
+                    .unwrap()
+                    .as_slice()
             );
         }
 
@@ -802,7 +812,10 @@ plugins:
 
             assert_eq!(
                 &[Message::new(MessageType::Say, "A user message".into())],
-                database.general_messages(true).unwrap().as_slice()
+                database
+                    .general_messages(EvalMode::Evaluate)
+                    .unwrap()
+                    .as_slice()
             );
         }
     }
@@ -835,7 +848,10 @@ plugins:
             let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
 
-            assert_eq!(&[Group::default(),], database.groups(true).as_slice());
+            assert_eq!(
+                &[Group::default(),],
+                database.groups(MergeMode::WithUserMetadata).as_slice()
+            );
         }
 
         #[test]
@@ -860,7 +876,7 @@ plugins:
                     Group::new("group1".into()),
                     Group::new("group2".into()).with_after_groups(vec!["group1".into()])
                 ],
-                database.groups(false).as_slice()
+                database.groups(MergeMode::WithoutUserMetadata).as_slice()
             );
         }
 
@@ -888,7 +904,7 @@ plugins:
                         .with_after_groups(vec!["group1".into(), "default".into()]),
                     Group::new("group3".into()).with_after_groups(vec!["group1".into()])
                 ],
-                database.groups(true).as_slice()
+                database.groups(MergeMode::WithUserMetadata).as_slice()
             );
         }
     }
@@ -927,7 +943,7 @@ plugins:
                 Group::new("group1".into()),
                 Group::new("group2".into()).with_after_groups(vec!["group1".into()])
             ],
-            database.groups(false).as_slice()
+            database.groups(MergeMode::WithoutUserMetadata).as_slice()
         );
 
         assert_eq!(
@@ -969,7 +985,11 @@ plugins:
 
             assert!(
                 database
-                    .plugin_metadata(BLANK_ESM, true, false)
+                    .plugin_metadata(
+                        BLANK_ESM,
+                        MergeMode::WithUserMetadata,
+                        EvalMode::DoNotEvaluate
+                    )
                     .unwrap()
                     .is_none()
             );
@@ -984,7 +1004,11 @@ plugins:
 
             assert!(
                 database
-                    .plugin_metadata(BLANK_ESM, true, false)
+                    .plugin_metadata(
+                        BLANK_ESM,
+                        MergeMode::WithUserMetadata,
+                        EvalMode::DoNotEvaluate
+                    )
                     .unwrap()
                     .is_none()
             );
@@ -1008,7 +1032,11 @@ plugins:
                     File::new("Oblivion.esm".into())
                 ],
                 database
-                    .plugin_metadata(BLANK_ESM, true, false)
+                    .plugin_metadata(
+                        BLANK_ESM,
+                        MergeMode::WithUserMetadata,
+                        EvalMode::DoNotEvaluate
+                    )
                     .unwrap()
                     .unwrap()
                     .load_after_files()
@@ -1030,7 +1058,11 @@ plugins:
             assert_eq!(
                 &[File::new("Oblivion.esm".into())],
                 database
-                    .plugin_metadata(BLANK_ESM, false, false)
+                    .plugin_metadata(
+                        BLANK_ESM,
+                        MergeMode::WithoutUserMetadata,
+                        EvalMode::DoNotEvaluate
+                    )
                     .unwrap()
                     .unwrap()
                     .load_after_files()
@@ -1054,7 +1086,7 @@ plugins:
 
             assert!(
                 database
-                    .plugin_metadata(BLANK_ESM, true, true)
+                    .plugin_metadata(BLANK_ESM, MergeMode::WithUserMetadata, EvalMode::Evaluate)
                     .unwrap()
                     .unwrap()
                     .messages()
@@ -1073,7 +1105,7 @@ plugins:
 
             assert!(
                 database
-                    .plugin_user_metadata(BLANK_ESM, false)
+                    .plugin_user_metadata(BLANK_ESM, EvalMode::DoNotEvaluate)
                     .unwrap()
                     .is_none()
             );
@@ -1088,7 +1120,7 @@ plugins:
 
             assert!(
                 database
-                    .plugin_user_metadata(BLANK_ESM, false)
+                    .plugin_user_metadata(BLANK_ESM, EvalMode::DoNotEvaluate)
                     .unwrap()
                     .is_none()
             );
@@ -1109,7 +1141,7 @@ plugins:
             assert_eq!(
                 &[File::new(BLANK_DIFFERENT_ESM.into())],
                 database
-                    .plugin_user_metadata(BLANK_ESM, false)
+                    .plugin_user_metadata(BLANK_ESM, EvalMode::DoNotEvaluate)
                     .unwrap()
                     .unwrap()
                     .load_after_files()
@@ -1133,7 +1165,7 @@ plugins:
 
             assert!(
                 database
-                    .plugin_user_metadata(BLANK_ESM, true)
+                    .plugin_user_metadata(BLANK_ESM, EvalMode::Evaluate)
                     .unwrap()
                     .is_none()
             );
@@ -1162,7 +1194,7 @@ plugins:
             assert_eq!(
                 &[File::new(BLANK_MASTER_DEPENDENT_ESM.into())],
                 database
-                    .plugin_user_metadata(BLANK_ESM, false)
+                    .plugin_user_metadata(BLANK_ESM, EvalMode::DoNotEvaluate)
                     .unwrap()
                     .unwrap()
                     .load_after_files()
@@ -1187,7 +1219,11 @@ plugins:
                     File::new("Oblivion.esm".into()),
                 ],
                 database
-                    .plugin_metadata(BLANK_ESM, true, false)
+                    .plugin_metadata(
+                        BLANK_ESM,
+                        MergeMode::WithUserMetadata,
+                        EvalMode::DoNotEvaluate
+                    )
                     .unwrap()
                     .unwrap()
                     .load_after_files()
@@ -1216,7 +1252,11 @@ plugins:
         assert_eq!(
             &[File::new("Oblivion.esm".into())],
             database
-                .plugin_metadata(BLANK_ESM, true, false)
+                .plugin_metadata(
+                    BLANK_ESM,
+                    MergeMode::WithUserMetadata,
+                    EvalMode::DoNotEvaluate
+                )
                 .unwrap()
                 .unwrap()
                 .load_after_files()
@@ -1227,7 +1267,11 @@ plugins:
                 File::new(BLANK_MASTER_DEPENDENT_ESM.into()),
             ],
             database
-                .plugin_metadata(BLANK_DIFFERENT_ESM, true, false)
+                .plugin_metadata(
+                    BLANK_DIFFERENT_ESM,
+                    MergeMode::WithUserMetadata,
+                    EvalMode::DoNotEvaluate
+                )
                 .unwrap()
                 .unwrap()
                 .load_after_files()
@@ -1259,12 +1303,16 @@ plugins:
                 Group::new("group1".into()),
                 Group::new("group2".into()).with_after_groups(vec!["group1".into()])
             ],
-            database.groups(true).as_slice()
+            database.groups(MergeMode::WithUserMetadata).as_slice()
         );
         assert_eq!(
             &[File::new("Oblivion.esm".into())],
             database
-                .plugin_metadata(BLANK_ESM, true, false)
+                .plugin_metadata(
+                    BLANK_ESM,
+                    MergeMode::WithUserMetadata,
+                    EvalMode::DoNotEvaluate
+                )
                 .unwrap()
                 .unwrap()
                 .load_after_files()
@@ -1272,7 +1320,11 @@ plugins:
         assert_eq!(
             &[File::new(BLANK_MASTER_DEPENDENT_ESM.into()),],
             database
-                .plugin_metadata(BLANK_DIFFERENT_ESM, true, false)
+                .plugin_metadata(
+                    BLANK_DIFFERENT_ESM,
+                    MergeMode::WithUserMetadata,
+                    EvalMode::DoNotEvaluate
+                )
                 .unwrap()
                 .unwrap()
                 .load_after_files()

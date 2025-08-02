@@ -13,6 +13,38 @@ use crate::{
 };
 
 #[napi]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum EvalMode {
+    DoNotEvaluate,
+    Evaluate,
+}
+
+impl From<EvalMode> for libloot::EvalMode {
+    fn from(value: EvalMode) -> Self {
+        match value {
+            EvalMode::DoNotEvaluate => libloot::EvalMode::DoNotEvaluate,
+            EvalMode::Evaluate => libloot::EvalMode::Evaluate,
+        }
+    }
+}
+
+#[napi]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum MergeMode {
+    WithoutUserMetadata,
+    WithUserMetadata,
+}
+
+impl From<MergeMode> for libloot::MergeMode {
+    fn from(value: MergeMode) -> Self {
+        match value {
+            MergeMode::WithoutUserMetadata => libloot::MergeMode::WithoutUserMetadata,
+            MergeMode::WithUserMetadata => libloot::MergeMode::WithUserMetadata,
+        }
+    }
+}
+
+#[napi]
 #[derive(Clone, Debug)]
 pub struct Database(Arc<RwLock<libloot::Database>>);
 
@@ -108,23 +140,23 @@ impl Database {
     #[napi]
     pub fn general_messages(
         &self,
-        evaluate_conditions: bool,
+        evaluate_conditions: EvalMode,
     ) -> Result<Vec<Message>, VerboseError> {
         self.0
             .write()
             .map_err(DatabaseLockPoisonError::from)?
-            .general_messages(evaluate_conditions)
+            .general_messages(evaluate_conditions.into())
             .map(|v| v.into_iter().map(Into::into).collect())
             .map_err(Into::into)
     }
 
     #[napi]
-    pub fn groups(&self, include_user_metadata: bool) -> Result<Vec<Group>, VerboseError> {
+    pub fn groups(&self, include_user_metadata: MergeMode) -> Result<Vec<Group>, VerboseError> {
         Ok(self
             .0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .groups(include_user_metadata)
+            .groups(include_user_metadata.into())
             .into_iter()
             .map(Into::into)
             .collect())
@@ -171,13 +203,17 @@ impl Database {
     pub fn plugin_metadata(
         &self,
         plugin_name: String,
-        include_user_metadata: bool,
-        evaluate_conditions: bool,
+        include_user_metadata: MergeMode,
+        evaluate_conditions: EvalMode,
     ) -> Result<Option<PluginMetadata>, VerboseError> {
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .plugin_metadata(&plugin_name, include_user_metadata, evaluate_conditions)
+            .plugin_metadata(
+                &plugin_name,
+                include_user_metadata.into(),
+                evaluate_conditions.into(),
+            )
             .map(|p| p.map(Into::into))
             .map_err(Into::into)
     }
@@ -186,12 +222,12 @@ impl Database {
     pub fn plugin_user_metadata(
         &self,
         plugin_name: String,
-        evaluate_conditions: bool,
+        evaluate_conditions: EvalMode,
     ) -> Result<Option<PluginMetadata>, VerboseError> {
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .plugin_user_metadata(&plugin_name, evaluate_conditions)
+            .plugin_user_metadata(&plugin_name, evaluate_conditions.into())
             .map(|p| p.map(Into::into))
             .map_err(Into::into)
     }

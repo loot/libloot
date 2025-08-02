@@ -9,7 +9,7 @@ use loadorder::WritableLoadOrder;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::{
-    LogLevel,
+    EvalMode, LogLevel, MergeMode,
     database::Database,
     error::{
         DatabaseLockPoisonError, GameHandleCreationError, LoadOrderError, LoadOrderStateError,
@@ -467,7 +467,10 @@ impl Game {
             }
         }
 
-        let groups_graph = build_groups_graph(&database.groups(false), database.user_groups())?;
+        let groups_graph = build_groups_graph(
+            &database.groups(MergeMode::WithoutUserMetadata),
+            database.user_groups(),
+        )?;
 
         let new_load_order = sort_plugins(
             plugins_sorting_data,
@@ -748,12 +751,16 @@ fn to_plugin_sorting_data<'a>(
     load_order_index: usize,
 ) -> Result<PluginSortingData<'a, Plugin>, SortPluginsError> {
     let masterlist_metadata = database
-        .plugin_metadata(plugin.name(), false, true)?
+        .plugin_metadata(
+            plugin.name(),
+            MergeMode::WithoutUserMetadata,
+            EvalMode::Evaluate,
+        )?
         .map(|m| m.filter_by_constraints(database))
         .transpose()?;
 
     let user_metadata = database
-        .plugin_user_metadata(plugin.name(), true)?
+        .plugin_user_metadata(plugin.name(), EvalMode::Evaluate)?
         .map(|m| m.filter_by_constraints(database))
         .transpose()?;
 
@@ -1211,7 +1218,7 @@ mod tests {
                         .database()
                         .read()
                         .unwrap()
-                        .plugin_user_metadata(BLANK_ESM, true)
+                        .plugin_user_metadata(BLANK_ESM, EvalMode::Evaluate)
                         .unwrap();
                     assert!(evaluated_metadata.is_none());
 
@@ -1223,7 +1230,7 @@ mod tests {
                         .database()
                         .read()
                         .unwrap()
-                        .plugin_user_metadata(BLANK_ESM, true)
+                        .plugin_user_metadata(BLANK_ESM, EvalMode::Evaluate)
                         .unwrap()
                         .unwrap();
                     assert!(!evaluated_metadata.load_after_files().is_empty());

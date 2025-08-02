@@ -4,7 +4,7 @@ use std::{
 };
 
 use delegate::delegate;
-use libloot::{WriteMode, error::DatabaseLockPoisonError};
+use libloot::{EvalMode, MergeMode, WriteMode, error::DatabaseLockPoisonError};
 use libloot_ffi_errors::UnsupportedEnumValueError;
 
 use crate::{
@@ -109,7 +109,7 @@ impl Database {
         self.0
             .write()
             .map_err(DatabaseLockPoisonError::from)?
-            .general_messages(evaluate_conditions)
+            .general_messages(to_eval_mode(evaluate_conditions))
             .map(|v| v.into_iter().map(Into::into).collect())
             .map_err(Into::into)
     }
@@ -119,7 +119,7 @@ impl Database {
             .0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .groups(include_user_metadata)
+            .groups(to_merge_mode(include_user_metadata))
             .into_iter()
             .map(Into::into)
             .collect())
@@ -170,7 +170,11 @@ impl Database {
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .plugin_metadata(plugin_name, include_user_metadata, evaluate_conditions)
+            .plugin_metadata(
+                plugin_name,
+                to_merge_mode(include_user_metadata),
+                to_eval_mode(evaluate_conditions),
+            )
             .map(|p| Box::new(p.map(Into::into).into()))
             .map_err(Into::into)
     }
@@ -183,7 +187,7 @@ impl Database {
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .plugin_user_metadata(plugin_name, evaluate_conditions)
+            .plugin_user_metadata(plugin_name, to_eval_mode(evaluate_conditions))
             .map(|p| Box::new(p.map(Into::into).into()))
             .map_err(Into::into)
     }
@@ -213,6 +217,22 @@ impl Database {
             .map_err(DatabaseLockPoisonError::from)?
             .discard_all_user_metadata();
         Ok(())
+    }
+}
+
+fn to_eval_mode(value: bool) -> EvalMode {
+    if value {
+        EvalMode::Evaluate
+    } else {
+        EvalMode::DoNotEvaluate
+    }
+}
+
+fn to_merge_mode(value: bool) -> MergeMode {
+    if value {
+        MergeMode::WithUserMetadata
+    } else {
+        MergeMode::WithoutUserMetadata
     }
 }
 
