@@ -186,7 +186,7 @@ mod tests {
     mod find_associated_archives {
         use std::path::absolute;
 
-        use parameterized_test::parameterized_test;
+        use array_parameterized_test::parameterized_test;
         use tempfile::TempDir;
 
         use super::*;

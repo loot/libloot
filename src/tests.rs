@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::GameType;
-use parameterized_test::test_parameter;
+use array_parameterized_test::test_parameter;
 use tempfile::TempDir;
 
 pub(crate) const BLANK_ESM: &str = "Blank.esm";

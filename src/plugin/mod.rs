@@ -463,7 +463,7 @@ mod tests {
     use super::*;
 
     use crate::tests::ALL_GAME_TYPES;
-    use parameterized_test::parameterized_test;
+    use array_parameterized_test::parameterized_test;
 
     mod plugin {
         use std::io::Seek;

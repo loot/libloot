@@ -30,6 +30,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
 
 [[package]]
+name = "array-parameterized-test"
+version = "0.27.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "arraydeque"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -545,12 +554,12 @@ dependencies = [
 name = "libloot"
 version = "0.27.0"
 dependencies = [
+ "array-parameterized-test",
  "crc32fast",
  "esplugin",
  "libloadorder",
  "log",
  "loot-condition-interpreter",
- "parameterized-test",
  "petgraph",
  "rayon",
  "regress",
@@ -772,15 +781,6 @@ checksum = "49203cdcae0030493bad186b28da2fa25645fa276a51b6fec8010d281e02ef79"
 dependencies = [
  "dlv-list",
  "hashbrown 0.14.5",
-]
-
-[[package]]
-name = "parameterized-test"
-version = "0.27.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

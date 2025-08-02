@@ -104,7 +104,7 @@ mod tests {
             io::SeekFrom,
         };
 
-        use parameterized_test::{parameterized_test, test_parameter};
+        use array_parameterized_test::{parameterized_test, test_parameter};
         use tempfile::tempdir;
 
         use super::*;

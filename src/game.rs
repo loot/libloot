@@ -810,7 +810,7 @@ impl GameCache {
 mod tests {
     use super::*;
 
-    use parameterized_test::parameterized_test;
+    use array_parameterized_test::parameterized_test;
 
     use crate::{
         metadata::{File, PluginMetadata},

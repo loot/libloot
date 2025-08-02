@@ -114,7 +114,7 @@ if __name__ == "__main__":
             'libloot-cpp',
             'libloot-nodejs',
             'libloot-python',
-            'parameterized-test',
+            'array-parameterized-test',
             'esplugin',
             'libloadorder'
         ]

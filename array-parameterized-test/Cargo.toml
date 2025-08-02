@@ -1,6 +1,6 @@
 [package]
-name = "parameterized-test"
-description = "Procedural macros to support parameterized testing in libloot."
+name = "array-parameterized-test"
+description = "Parameterized testing using an input array."
 categories = ["development-tools::testing"]
 version.workspace = true
 repository.workspace = true

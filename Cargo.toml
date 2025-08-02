@@ -24,7 +24,7 @@ unicase = "2.8.1"
 windows = { version = "0.61.1", features = ["Win32_Storage_FileSystem"] }
 
 [dev-dependencies]
-parameterized-test = { path = "./parameterized-test" }
+array-parameterized-test = { path = "./array-parameterized-test" }
 tempfile = "3.17.1"
 
 [lints]
@@ -35,7 +35,7 @@ debug = "limited"
 lto = "thin"
 
 [workspace]
-members = ["cpp", "ffi-errors", "nodejs", "parameterized-test", "python"]
+members = ["cpp", "ffi-errors", "nodejs", "array-parameterized-test", "python"]
 
 [workspace.package]
 version = "0.27.0"
@@ -103,7 +103,7 @@ multiple_unsafe_ops_per_block = "deny"
 mutex_atomic = "forbid"
 mutex_integer = "forbid"
 needless_raw_strings = "forbid"
-non_ascii_literal = "forbid"
+non_ascii_literal = "deny"
 non_zero_suggestions = "forbid"
 panic = "deny"
 panic_in_result_fn = "forbid"
