@@ -1,6 +1,9 @@
 [package]
 name = "libloot"
+description = "A library for accessing LOOT's metadata and sorting functionality."
+categories = ["games"]
 version.workspace = true
+repository.workspace = true
 edition.workspace = true
 license.workspace = true
 
@@ -36,8 +39,10 @@ members = ["cpp", "ffi-errors", "nodejs", "parameterized-test", "python"]
 
 [workspace.package]
 version = "0.27.0"
+repository = "https://github.com/loot/libloot.git"
 edition = "2024"
 license = "GPL-3.0-or-later"
+categories = ["games"]
 
 # Deny some rustc lints that are allow-by-default.
 [workspace.lints.rust]

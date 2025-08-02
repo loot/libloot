@@ -1,6 +1,9 @@
 [package]
 name = "parameterized-test"
+description = "Procedural macros to support parameterized testing in libloot."
+categories = ["development-tools::testing"]
 version.workspace = true
+repository.workspace = true
 edition.workspace = true
 license = "MIT"
 

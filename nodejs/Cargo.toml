@@ -1,6 +1,9 @@
 [package]
 name = "libloot-nodejs"
+description = "An experimental Node.js wrapper around libloot."
+publish = false
 version.workspace = true
+repository.workspace = true
 edition.workspace = true
 license.workspace = true
 
