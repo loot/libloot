@@ -52,8 +52,7 @@ impl MessageContent {
     /// The code for the default language assumed for message content.
     pub const DEFAULT_LANGUAGE: &'static str = "en";
 
-    /// Construct a [MessageContent] object with the given text in the default
-    /// language.
+    /// Create a value with the given text in the default language.
     #[must_use]
     pub fn new(text: String) -> Self {
         MessageContent {
@@ -81,8 +80,7 @@ impl MessageContent {
 }
 
 impl std::default::Default for MessageContent {
-    /// Construct a [MessageContent] object with an empty message string and the
-    /// default language.
+    /// Create a value with an empty message string and the default language.
     fn default() -> Self {
         Self {
             text: Box::default(),
@@ -91,8 +89,8 @@ impl std::default::Default for MessageContent {
     }
 }
 
-/// Choose a [MessageContent] object from those given in `content` based on the
-/// given `language`.
+/// Choose a `MessageContent` object from those given in `content` based on
+/// the given `language`.
 ///
 /// Language strings are expected to have the form
 /// `[language code]` or `[language code]_[country code]`, where
@@ -110,7 +108,7 @@ impl std::default::Default for MessageContent {
 ///   returned.
 /// * If no matches are found and content in the default language is present,
 ///   that content is returned.
-/// * Otherwise, an empty [Option] is returned.
+/// * Otherwise, an empty `Option` is returned.
 pub fn select_message_content<'a>(
     content: &'a [MessageContent],
     language: &str,
@@ -164,8 +162,8 @@ pub struct Message {
 }
 
 impl Message {
-    /// Construct a [Message] with the given type and a content string in the
-    /// language given by [MessageContent::DEFAULT_LANGUAGE].
+    /// Create a value with the given type and a content string in the language
+    /// given by [`MessageContent::DEFAULT_LANGUAGE`].
     #[must_use]
     pub fn new(message_type: MessageType, content: String) -> Self {
         Self {
@@ -175,9 +173,9 @@ impl Message {
         }
     }
 
-    /// Construct a [Message] with the given type and content. If more than one
-    /// [MessageContent] object is given, one must use
-    /// the language given by [MessageContent::DEFAULT_LANGUAGE].
+    /// Create a value with the given type and content. If more than one
+    /// `MessageContent` object is given, one must use
+    /// the language given by [`MessageContent::DEFAULT_LANGUAGE`].
     pub fn multilingual(
         message_type: MessageType,
         content: Vec<MessageContent>,

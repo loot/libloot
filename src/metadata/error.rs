@@ -9,7 +9,7 @@ use crate::{escape_ascii, metadata::MessageContent};
 use super::yaml::{YamlObjectType, to_unmarked_yaml};
 
 /// Represents an error that occurred when validating a collection of
-/// [MessageContent] objects.
+/// [`MessageContent`] objects.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct MultilingualMessageContentsError;
 

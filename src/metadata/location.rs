@@ -13,7 +13,7 @@ pub struct Location {
 }
 
 impl Location {
-    /// Construct a [Location] with the given URL.
+    /// Create a value with the given URL.
     #[must_use]
     pub fn new(url: String) -> Self {
         Location {

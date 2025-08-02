@@ -196,8 +196,8 @@ pub(in crate::metadata) fn parse_condition(
     }
 }
 
-/// This is effectively TryFrom<&MarkedYaml>, but implementing it doesn't make
-/// MarkedYaml part of the crate's public API.
+// This is effectively TryFrom<&MarkedYaml>, but implementing it doesn't make
+// MarkedYaml part of the crate's public API.
 pub(in crate::metadata) trait TryFromYaml: Sized {
     fn try_from_yaml(value: &MarkedYaml) -> Result<Self, ParseMetadataError>;
 }

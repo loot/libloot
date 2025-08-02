@@ -25,7 +25,7 @@ pub struct File {
 }
 
 impl File {
-    /// Construct a [File] with the given name. This can also be a relative path.
+    /// Create a value with the given name. This can also be a relative path.
     #[must_use]
     pub fn new(name: String) -> Self {
         Self {
@@ -51,7 +51,7 @@ impl File {
 
     /// Set the detail message content, which may be appended to any messages
     /// generated for this file. If multilingual, one language must be
-    /// [MessageContent::DEFAULT_LANGUAGE].
+    /// [`MessageContent::DEFAULT_LANGUAGE`].
     pub fn with_detail(
         mut self,
         detail: Vec<MessageContent>,
@@ -103,7 +103,7 @@ impl File {
 pub struct Filename(Box<str>);
 
 impl Filename {
-    /// Construct a Filename using the given string.
+    /// Create a value using the given string.
     #[must_use]
     pub fn new(s: String) -> Self {
         Filename(s.into())

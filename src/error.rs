@@ -11,7 +11,7 @@ use crate::sorting::error::{
 };
 use crate::{Vertex, escape_ascii};
 
-/// Represents an error that occurred while trying to create a [Game][crate::Game].
+/// Represents an error that occurred while trying to create a [`Game`].
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum GameHandleCreationError {
@@ -71,7 +71,7 @@ impl From<loadorder::Error> for LoadOrderError {
     }
 }
 
-/// Indicates that the Database's RwLock wrapper has been poisoned and as such
+/// Indicates that the Database's `RwLock` wrapper has been poisoned and as such
 /// the Database may be in an invalid state.
 #[derive(Clone, Copy, Default, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct DatabaseLockPoisonError;

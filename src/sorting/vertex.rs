@@ -47,7 +47,7 @@ pub struct Vertex {
 }
 
 impl Vertex {
-    /// Construct a Vertex with the given name and no out edge.
+    /// Create a value with the given name and no out edge.
     #[must_use]
     pub fn new(name: String) -> Self {
         Self {

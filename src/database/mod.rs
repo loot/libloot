@@ -207,7 +207,7 @@ impl Database {
     /// user metadata involved while minimising the amount of masterlist
     /// metadata involved. It's not the path involving the fewest groups.
     ///
-    /// If there is no path between the two groups, the returned [Vec] will be
+    /// If there is no path between the two groups, the returned `Vec` will be
     /// empty.
     pub fn groups_path(
         &self,

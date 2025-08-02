@@ -36,8 +36,7 @@ pub struct PluginMetadata {
 }
 
 impl PluginMetadata {
-    /// Construct a [PluginMetadata] object with no metadata for a plugin with
-    /// the given filename.
+    /// Create a value with no metadata for a plugin with the given filename.
     pub fn new(name: &str) -> Result<Self, RegexError> {
         Ok(Self {
             name: PluginName::new(name)?,
@@ -59,7 +58,7 @@ impl PluginMetadata {
 
     /// Get the plugin's group.
     ///
-    /// The [Option] is `None` if no group is explicitly set.
+    /// The `Option` is `None` if no group is explicitly set.
     pub fn group(&self) -> Option<&str> {
         self.group.as_deref()
     }
@@ -155,9 +154,9 @@ impl PluginMetadata {
         self.locations = locations.into_boxed_slice();
     }
 
-    /// Merge metadata from the given [PluginMetadata] object into this object.
+    /// Merge metadata from the given `PluginMetadata` object into this object.
     ///
-    /// If an equal metadata object already exists in this PluginMetadata
+    /// If an equal metadata object already exists in this `PluginMetadata`
     /// object, it is not duplicated. This object's group is replaced by the
     /// given object's group if the latter is explicit.
     pub fn merge_metadata(&mut self, plugin: &PluginMetadata) {

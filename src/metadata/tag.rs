@@ -26,7 +26,7 @@ pub struct Tag {
 }
 
 impl Tag {
-    /// Create a [Tag] suggestion for the given tag name.
+    /// Create a Bash Tag suggestion for the given tag name.
     #[must_use]
     pub fn new(name: String, suggestion: TagSuggestion) -> Self {
         Self {

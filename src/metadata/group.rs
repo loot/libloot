@@ -20,7 +20,7 @@ impl Group {
     /// The name of the group to which all plugins belong by default.
     pub const DEFAULT_NAME: &'static str = "default";
 
-    /// Construct a [Group] with the given name.
+    /// Create a value with the given name.
     #[must_use]
     pub fn new(name: String) -> Self {
         Self {
@@ -60,7 +60,7 @@ impl Group {
 }
 
 impl std::default::Default for Group {
-    /// Construct a Group with the default name and an empty set of groups to
+    /// Create a value with the default name and an empty set of groups to
     /// load after.
     fn default() -> Self {
         Self {

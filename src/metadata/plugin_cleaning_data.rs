@@ -25,9 +25,8 @@ pub struct PluginCleaningData {
 }
 
 impl PluginCleaningData {
-    /// Construct a [PluginCleaningData] object with the given CRC and cleaning
-    /// utility, no detail and the ITM, deleted reference and deleted navmesh
-    /// counts set to zero.
+    /// Create a value with the given CRC and cleaning utility, no detail and
+    /// the ITM, deleted reference and deleted navmesh counts set to zero.
     #[must_use]
     pub fn new(crc: u32, cleaning_utility: String) -> Self {
         Self {
@@ -60,7 +59,7 @@ impl PluginCleaningData {
 
     /// Set the detail message content, which may be appended to any messages
     /// generated for this cleaning data. If multilingual, one language must be
-    /// [MessageContent::DEFAULT_LANGUAGE].
+    /// [`MessageContent::DEFAULT_LANGUAGE`].
     pub fn with_detail(
         mut self,
         detail: Vec<MessageContent>,

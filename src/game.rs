@@ -158,7 +158,7 @@ impl Game {
     ///
     /// This function will attempt to look up the game's local data path, which
     /// may fail in some situations (e.g. when running libloot natively on Linux
-    /// for a game other than Morrowind or OpenMW). [Game::with_local_path]
+    /// for a game other than Morrowind or OpenMW). [`Game::with_local_path`]
     /// can be used to provide the local path instead.
     pub fn new(game_type: GameType, game_path: &Path) -> Result<Self, GameHandleCreationError> {
         logging::info!(
@@ -415,8 +415,8 @@ impl Game {
         Ok(())
     }
 
-    /// Clears the plugins loaded by previous calls to [Game::load_plugins] or
-    /// [Game::load_plugin_headers].
+    /// Clears the plugins loaded by previous calls to [`Game::load_plugins`] or
+    /// [`Game::load_plugin_headers`].
     pub fn clear_loaded_plugins(&mut self) {
         self.cache.clear_plugins();
     }
@@ -441,7 +441,7 @@ impl Game {
     ///
     /// The order in which plugins are listed in `plugin_filenames` is used as
     /// their current load order. All given plugins must have been already been
-    /// loaded using [Game::load_plugins] or [Game::load_plugin_headers].
+    /// loaded using [`Game::load_plugins`] or [`Game::load_plugin_headers`].
     pub fn sort_plugins(&self, plugin_names: &[&str]) -> Result<Vec<String>, SortPluginsError> {
         let plugins = plugin_names
             .iter()
