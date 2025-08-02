@@ -552,7 +552,7 @@ dependencies = [
 
 [[package]]
 name = "libloot"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "array-parameterized-test",
  "crc32fast",
@@ -572,7 +572,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-cpp"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -583,11 +583,11 @@ dependencies = [
 
 [[package]]
 name = "libloot-ffi-errors"
-version = "0.27.0"
+version = "0.28.0"
 
 [[package]]
 name = "libloot-nodejs"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "libloot",
  "libloot-ffi-errors",
@@ -598,7 +598,7 @@ dependencies = [
 
 [[package]]
 name = "libloot-python"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "libloot",
  "libloot-ffi-errors",

@@ -34,7 +34,7 @@ namespace loot {
 inline constexpr unsigned int LIBLOOT_VERSION_MAJOR = 0;
 
 /** @brief libloot's minor version number. */
-inline constexpr unsigned int LIBLOOT_VERSION_MINOR = 27;
+inline constexpr unsigned int LIBLOOT_VERSION_MINOR = 28;
 
 /** @brief libloot's patch version number. */
 inline constexpr unsigned int LIBLOOT_VERSION_PATCH = 0;
