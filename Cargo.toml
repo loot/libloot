@@ -24,7 +24,7 @@ unicase = "2.8.1"
 windows = { version = "0.61.1", features = ["Win32_Storage_FileSystem"] }
 
 [dev-dependencies]
-array-parameterized-test = { path = "./array-parameterized-test" }
+array-parameterized-test = { path = "./array-parameterized-test", version = "1.0.0" }
 tempfile = "3.17.1"
 
 [lints]

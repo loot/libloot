@@ -31,7 +31,7 @@ checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
 
 [[package]]
 name = "array-parameterized-test"
-version = "0.27.0"
+version = "1.0.0"
 dependencies = [
  "proc-macro2",
  "quote",

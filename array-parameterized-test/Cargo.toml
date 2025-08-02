@@ -2,7 +2,7 @@
 name = "array-parameterized-test"
 description = "Parameterized testing using an input array."
 categories = ["development-tools::testing"]
-version.workspace = true
+version = "1.0.0"
 repository.workspace = true
 edition.workspace = true
 license = "MIT"
