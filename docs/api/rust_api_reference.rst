@@ -2,5 +2,4 @@
 Rust API Reference
 ******************
 
-To view the Rust API reference, run ``cargo doc --open`` from the root directory
-of a copy of the libloot source code repository.
+The Rust API reference can be read `on docs.rs <https://docs.rs/libloot/latest/libloot/>`_ or by running ``cargo doc --open`` from the root directory of the libloot source code.
