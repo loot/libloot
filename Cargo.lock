@@ -535,16 +535,15 @@ dependencies = [
 
 [[package]]
 name = "libloadorder"
-version = "18.4.0"
+version = "18.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc4de694d488b4ce2a775d59825ec30d206546ec87fe0866717e6db25c46a164"
+checksum = "e3ffd695d1e67468555244807358d53524a372c4f5d2becd0890de48a106e797"
 dependencies = [
  "dirs",
  "encoding_rs",
  "esplugin",
  "keyvalues-parser",
  "rayon",
- "regex",
  "rust-ini",
  "unicase",
  "windows",
@@ -1034,13 +1033,12 @@ dependencies = [
 
 [[package]]
 name = "rust-ini"
-version = "0.21.1"
+version = "0.21.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e310ef0e1b6eeb79169a1171daf9abcb87a2e17c03bee2c4bb100b55c75409f"
+checksum = "e7295b7ce3bf4806b419dc3420745998b447178b7005e2011947b38fc5aa6791"
 dependencies = [
  "cfg-if",
  "ordered-multimap",
- "trim-in-place",
  "unicase",
 ]
 
@@ -1234,12 +1232,6 @@ checksum = "2c9d3793400a45f954c52e73d068316d76b6f4e36977e3fcebb13a2721e80237"
 dependencies = [
  "crunchy",
 ]
-
-[[package]]
-name = "trim-in-place"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "343e926fc669bc8cde4fa3129ab681c63671bae288b1f1081ceee6d9d37904fc"
 
 [[package]]
 name = "typenum"

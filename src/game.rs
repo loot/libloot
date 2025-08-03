@@ -625,14 +625,15 @@ fn find_archives(
     data_path: &Path,
 ) -> std::io::Result<Vec<PathBuf>> {
     let extension = archive_file_extension(game_type);
+    let allow_symlinks = allow_archive_symlinks(game_type);
 
     let mut archive_paths = Vec::new();
     for path in additional_data_paths {
-        let paths = find_archives_in_path(path, extension)?;
+        let paths = find_archives_in_path(path, extension, allow_symlinks)?;
         archive_paths.extend(paths);
     }
 
-    let paths = find_archives_in_path(data_path, extension)?;
+    let paths = find_archives_in_path(data_path, extension, allow_symlinks)?;
     archive_paths.extend(paths);
 
     Ok(archive_paths)
@@ -645,18 +646,29 @@ fn archive_file_extension(game_type: GameType) -> &'static str {
     }
 }
 
+fn allow_archive_symlinks(game_type: GameType) -> bool {
+    // Assuming support for archive symlinks matches support for plugin symlinks.
+    !cfg!(windows) || matches!(game_type, GameType::OblivionRemastered | GameType::OpenMW)
+}
+
 fn find_archives_in_path(
     parent_path: &Path,
     archive_file_extension: &str,
+    allow_symlinks: bool,
 ) -> std::io::Result<Vec<PathBuf>> {
     if !parent_path.exists() {
         return Ok(Vec::new());
     }
 
+    #[expect(
+        clippy::filetype_is_file,
+        reason = "Only files are supported except in specific cases"
+    )]
     let paths = std::fs::read_dir(parent_path)?
         .filter_map(Result::ok)
         .filter(|e| {
-            e.file_type().map(|f| f.is_file()).unwrap_or(false)
+            e.file_type()
+                .is_ok_and(|f| f.is_file() || (allow_symlinks && f.is_symlink()))
                 && iends_with_ascii(&e.file_name().to_string_lossy(), archive_file_extension)
         })
         .map(|e| e.path())
@@ -2041,6 +2053,61 @@ mod tests {
                     game.load_plugins(&[]).unwrap();
                 });
             });
+        }
+    }
+
+    mod find_archives {
+        use tempfile::tempdir;
+
+        use super::*;
+
+        #[cfg(windows)]
+        pub(crate) fn symlink_file(original: &Path, link: &Path) {
+            std::os::windows::fs::symlink_file(original, link).unwrap();
+        }
+
+        #[cfg(unix)]
+        pub(crate) fn symlink_file(original: &Path, link: &Path) {
+            std::os::unix::fs::symlink(original, link).unwrap();
+        }
+
+        #[cfg(unix)]
+        #[parameterized_test(ALL_GAME_TYPES)]
+        fn should_find_symlinked_archives_on_linux(game_type: GameType) {
+            test_find_symlinked_archives(game_type, true);
+        }
+
+        #[cfg(windows)]
+        #[parameterized_test(ALL_GAME_TYPES)]
+        fn should_find_symlinked_archives_for_only_openmw_and_oblivion_remastered_on_windows(
+            game_type: GameType,
+        ) {
+            test_find_symlinked_archives(
+                game_type,
+                matches!(game_type, GameType::OpenMW | GameType::OblivionRemastered),
+            );
+        }
+
+        fn test_find_symlinked_archives(game_type: GameType, should_include_symlinks: bool) {
+            let tmp_dir = tempdir().unwrap();
+
+            let extension = archive_file_extension(game_type);
+            let archive_path = tmp_dir.path().join(format!("archive{extension}"));
+            let symlink_path = tmp_dir.path().join(format!("archive.symlink{extension}"));
+
+            std::fs::File::create(&archive_path).unwrap();
+
+            symlink_file(&archive_path, &symlink_path);
+
+            let archives = find_archives(game_type, &[], tmp_dir.path()).unwrap();
+
+            assert!(archives.contains(&archive_path));
+
+            if should_include_symlinks {
+                assert!(archives.contains(&symlink_path));
+            } else {
+                assert!(!archives.contains(&symlink_path));
+            }
         }
     }
 

@@ -482,9 +482,10 @@ private:
       const std::vector<std::pair<std::string, bool>>& loadOrder) const {
     if (gameType_ == GameType::tes3) {
       std::ofstream out(gamePath / "Morrowind.ini");
-      for (const auto& plugin : loadOrder) {
-        if (plugin.second) {
-          out << "GameFile0=" << plugin.first << std::endl;
+      out << "[Game Files]" << std::endl;
+      for (auto i = 0; i < loadOrder.size(); i += 1) {
+        if (loadOrder[i].second) {
+          out << "GameFile" << i << "=" << loadOrder[i].first << std::endl;
         }
       }
     } else if (gameType_ == GameType::openmw) {
