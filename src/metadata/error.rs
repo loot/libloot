@@ -106,7 +106,7 @@ impl std::error::Error for ParseMetadataError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match &self.reason {
             MetadataParsingErrorReason::InvalidCondition(b) => Some(&b.1),
-            MetadataParsingErrorReason::InvalidRegex(b) => Some(b),
+            MetadataParsingErrorReason::InvalidRegex(_, b) => Some(b),
             _ => None,
         }
     }
@@ -125,7 +125,7 @@ impl From<saphyr::ScanError> for ParseMetadataError {
 pub(super) enum MetadataParsingErrorReason {
     InvalidCondition(Box<(String, loot_condition_interpreter::Error)>),
     MissingKey(&'static str, YamlObjectType),
-    InvalidRegex(Box<RegexImplError>),
+    InvalidRegex(String, Box<RegexImplError>),
     InvalidMultilingualMessageContents,
     UnexpectedType(ExpectedType, YamlObjectType),
     UnexpectedValueType(&'static str, ExpectedType, YamlObjectType),
@@ -145,8 +145,8 @@ impl std::fmt::Display for MetadataParsingErrorReason {
             Self::MissingKey(key, yaml_object_type) => {
                 write!(f, "\"{key}\" key in \"{yaml_object_type}\" map is missing")
             }
-            Self::InvalidRegex(_) => {
-                write!(f, "invalid regex in \"name\" key")
+            Self::InvalidRegex(value, _) => {
+                write!(f, "invalid regex in \"name\" key with value \"{value}\"")
             }
             Self::InvalidMultilingualMessageContents => MultilingualMessageContentsError.fmt(f),
             Self::UnexpectedType(expected_type, yaml_object_type) => {

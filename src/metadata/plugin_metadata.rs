@@ -405,7 +405,7 @@ impl TryFromYaml for PluginMetadata {
             Err(e) => {
                 return Err(ParseMetadataError::new(
                     value.span.start,
-                    MetadataParsingErrorReason::InvalidRegex(e),
+                    MetadataParsingErrorReason::InvalidRegex(name.to_owned(), e),
                 ));
             }
         };
