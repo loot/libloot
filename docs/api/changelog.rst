@@ -55,7 +55,10 @@ Changed
   - The regex engine used to evaluate ``PluginMetadata`` name regexes has
     changed. Unlike the old engine, the new engine is Unicode-aware,
     locale-independent, and does not support POSIX character classes (e.g.
-    ``[:alpha:]``).
+    ``[:alpha:]``). It also only no longer supports identity escapes, so the
+    ``!"#%&',: ;<=>@_`~`` characters must now appear unescaped everywhere, and
+    ``-`` must appear unescaped outside of character classes, but may still be
+    escaped within character classes as required.
   - If building libloot from source, the C++ wrapper's source code is in the
     ``cpp`` subdirectory instead of the Git repository's or source archive's
     root directory.
