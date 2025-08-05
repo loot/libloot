@@ -2,6 +2,7 @@
 #define LOOT_API_GAME
 
 #include <map>
+#include <mutex>
 
 #include "api/database.h"
 #include "api/plugin.h"
@@ -58,6 +59,9 @@ public:
 private:
   ::rust::Box<loot::rust::Game> game_;
   Database database_;
+
+  mutable std::map<Filename, std::shared_ptr<const PluginInterface>> plugins_;
+  mutable std::mutex pluginsMutex_;
 };
 }
 

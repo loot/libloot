@@ -68,7 +68,7 @@ loot::rust::GameType convert(loot::GameType gameType) {
 }
 
 std::filesystem::path toPath(const rust::String& string) {
-    return std::filesystem::u8path(string.begin(), string.end());
+  return std::filesystem::u8path(string.begin(), string.end());
 }
 
 rust::Box<loot::rust::Game> constructGame(
@@ -167,20 +167,45 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
+
+  std::lock_guard<std::mutex> guard(pluginsMutex_);
+
+  for (const auto& path : pluginPaths) {
+    auto key = Filename(path.filename().u8string());
+    auto it = plugins_.find(key);
+    if (it != plugins_.end()) {
+      plugins_.erase(it);
+    }
+  }
 }
 
-void Game::ClearLoadedPlugins() { game_->clear_loaded_plugins(); }
+void Game::ClearLoadedPlugins() {
+  game_->clear_loaded_plugins();
+
+  std::lock_guard<std::mutex> guard(pluginsMutex_);
+  plugins_.clear();
+}
 
 std::shared_ptr<const PluginInterface> Game::GetPlugin(
     std::string_view pluginName) const {
+  std::lock_guard<std::mutex> guard(pluginsMutex_);
+
+  auto key = Filename(pluginName);
+  const auto it = plugins_.find(key);
+  if (it != plugins_.end()) {
+    return it->second;
+  }
+
   const auto pluginOpt = game_->plugin(convert(pluginName));
   if (!pluginOpt->is_some()) {
     return nullptr;
   }
 
   try {
-    return std::make_shared<Plugin>(
-        std::move(pluginOpt->as_ref().boxed_clone()));
+    std::shared_ptr<const PluginInterface> plugin =
+        std::make_shared<Plugin>(std::move(pluginOpt->as_ref().boxed_clone()));
+
+    return plugins_.emplace(key, plugin).first->second;
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -188,10 +213,18 @@ std::shared_ptr<const PluginInterface> Game::GetPlugin(
 
 std::vector<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
     const {
+  std::lock_guard<std::mutex> guard(pluginsMutex_);
+
   std::vector<std::shared_ptr<const PluginInterface>> plugins;
   for (const auto& pluginRef : game_->loaded_plugins()) {
-    plugins.push_back(
-        std::make_shared<Plugin>(std::move(pluginRef.boxed_clone())));
+    auto key = Filename(convert(pluginRef.name()));
+    auto it = plugins_.find(key);
+    if (it == plugins_.end()) {
+      std::shared_ptr<const PluginInterface> plugin =
+          std::make_shared<Plugin>(std::move(pluginRef.boxed_clone()));
+      it = plugins_.emplace(key, plugin).first;
+    }
+    plugins.push_back(it->second);
   }
 
   return plugins;
