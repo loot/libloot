@@ -473,7 +473,12 @@ TEST_P(GameInterfaceTest,
 TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfAGivenPluginIsNotLoaded) {
   std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
 
-  EXPECT_THROW(handle_->SortPlugins(plugins), PluginNotLoadedError);
+  try {
+    handle_->SortPlugins(plugins);
+    FAIL();
+  } catch (PluginNotLoadedError& e) {
+    EXPECT_STREQ("The plugin \"Blank.esp\" has not been loaded", e.what());
+  }
 }
 
 TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfACyclicInteractionOccurs) {

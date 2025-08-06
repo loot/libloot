@@ -434,6 +434,23 @@ TEST_P(DatabaseInterfaceTest,
   }
 }
 
+TEST_P(DatabaseInterfaceTest, getGroupsPathShouldThrowIfAGroupIsNotDefined) {
+  auto& db = handle_->GetDatabase();
+
+  auto group1Name = "group1";
+  auto group2Name = "group2";
+  Group group1(group1Name, {group2Name});
+
+  db.SetUserGroups({group1});
+
+  try {
+    handle_->GetDatabase().GetGroupsPath(group1Name, group2Name);
+    FAIL();
+  } catch (UndefinedGroupError& e) {
+    EXPECT_EQ(group2Name, e.GetGroupName());
+  }
+}
+
 TEST_P(DatabaseInterfaceTest,
        getKnownBashTagsShouldReturnAllBashTagsListedInLoadedMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
