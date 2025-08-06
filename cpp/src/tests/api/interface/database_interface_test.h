@@ -410,6 +410,31 @@ TEST_P(DatabaseInterfaceTest,
 }
 
 TEST_P(DatabaseInterfaceTest,
+       getGroupsPathShouldThrowIfThereIsACycleBetweenGroups) {
+  auto& db = handle_->GetDatabase();
+
+  auto group1Name = "backslash \\\\ group \\";
+  auto group2Name = "greater than > group";
+  Group group1(group1Name, {group2Name});
+  Group group2(group2Name, {group1Name});
+
+  db.SetUserGroups({group1, group2});
+
+  try {
+    handle_->GetDatabase().GetGroupsPath(group1Name, group2Name);
+    FAIL();
+  } catch (CyclicInteractionError& e) {
+    const auto cycle = e.GetCycle();
+    ASSERT_EQ(2, cycle.size());
+    ASSERT_EQ(2, cycle.size());
+    EXPECT_EQ(group1Name, cycle[0].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter, cycle[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(group2Name, cycle[1].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter, cycle[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
+TEST_P(DatabaseInterfaceTest,
        getKnownBashTagsShouldReturnAllBashTagsListedInLoadedMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());

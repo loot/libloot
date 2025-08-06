@@ -82,23 +82,25 @@ EdgeType toEdgeType(std::string_view edgeTypeDisplay) {
 }
 
 std::vector<Vertex> parseCyclicError(std::string_view what) {
-  const auto suffix = what.substr(0, CYCLIC_ERROR_PREFIX.size());
+  constexpr std::string_view SEPARATOR = " > ";
+  const auto suffix = what.substr(CYCLIC_ERROR_PREFIX.size());
 
   std::vector<Vertex> vertices;
   size_t pos = 0;
   while (pos < suffix.size()) {
-    const auto sepPos = suffix.find("--", pos);
-    const auto escapedName = suffix.substr(pos, sepPos);
-    const auto name = replace(replace(escapedName, "\\-", "-"), "\\\\", "\\");
+    const auto sepPos = suffix.find(SEPARATOR, pos);
+    const auto escapedName = suffix.substr(pos, sepPos - pos);
+    const auto name = replace(replace(escapedName, "\\>", ">"), "\\\\", "\\");
 
-    if (sepPos != std::string::npos) {
-      const auto secondSepPos = suffix.find("--", sepPos + 2);
+    const auto secondSepPos = suffix.find(SEPARATOR, sepPos + SEPARATOR.size());
+    if (secondSepPos != std::string::npos) {
       const auto escapedEdgeName =
-          suffix.substr(sepPos + 2, secondSepPos - (sepPos + 2));
+          suffix.substr(sepPos + SEPARATOR.size(),
+                        secondSepPos - (sepPos + SEPARATOR.size()));
 
       vertices.push_back(Vertex(name, toEdgeType(escapedEdgeName)));
 
-      pos = secondSepPos + 2;
+      pos = secondSepPos + SEPARATOR.size();
     } else {
       vertices.push_back(Vertex(name));
       pos = suffix.size();

@@ -469,6 +469,32 @@ TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfAGivenPluginIsNotLoaded) {
   EXPECT_THROW(handle_->SortPlugins(plugins), PluginNotLoadedError);
 }
 
+TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfACyclicInteractionOccurs) {
+  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+  handle_->LoadPlugins({blankEsp, blankDifferentEsp}, false);
+
+  auto& db = handle_->GetDatabase();
+  PluginMetadata blankEspMetadata(blankEsp);
+  blankEspMetadata.SetLoadAfterFiles({File(blankDifferentEsp)});
+  db.SetPluginUserMetadata(blankEspMetadata);
+
+  PluginMetadata blankDifferentEspMetadata(blankDifferentEsp);
+  blankDifferentEspMetadata.SetLoadAfterFiles({File(blankEsp)});
+  db.SetPluginUserMetadata(blankDifferentEspMetadata);
+
+  try {
+    handle_->SortPlugins(plugins);
+    FAIL();
+  } catch (CyclicInteractionError& e) {
+    const auto cycle = e.GetCycle();
+    ASSERT_EQ(2, cycle.size());
+    EXPECT_EQ(blankDifferentEsp, cycle[0].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter, cycle[0].GetTypeOfEdgeToNextVertex());
+    EXPECT_EQ(blankEsp, cycle[1].GetName());
+    EXPECT_EQ(EdgeType::userLoadAfter, cycle[1].GetTypeOfEdgeToNextVertex());
+  }
+}
+
 TEST_P(GameInterfaceTest, clearLoadedPluginsShouldClearThePluginsCache) {
   handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
   const auto pointer = handle_->GetPlugin(blankEsm);

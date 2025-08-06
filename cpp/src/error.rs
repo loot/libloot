@@ -27,9 +27,9 @@ impl std::fmt::Display for VerboseError {
             Self::CyclicInteractionError(cycle) => {
                 write!(f, "CyclicInteractionError: ")?;
                 for vertex in cycle {
-                    let name = vertex.name().replace('\\', "\\\\").replace('-', "\\-");
+                    let name = vertex.name().replace('\\', "\\\\").replace('>', "\\>");
                     match vertex.out_edge_type() {
-                        Some(e) => write!(f, "{name}--{e}--")?,
+                        Some(e) => write!(f, "{name} > {e} > ")?,
                         None => write!(f, "{name}")?,
                     }
                 }
