@@ -17,7 +17,7 @@ pub enum VerboseError {
     CyclicInteractionError(Vec<libloot::Vertex>),
     UndefinedGroupError(String),
     PluginNotLoadedError(String),
-    InvalidArgument(String),
+    InvalidArgument(Box<dyn std::error::Error>),
     Other(Box<dyn std::error::Error>),
 }
 
@@ -39,7 +39,10 @@ impl std::fmt::Display for VerboseError {
                 write!(f, "UndefinedGroupError: {group}",)
             }
             Self::PluginNotLoadedError(plugin) => write!(f, "PluginNotLoadedError: {plugin}"),
-            Self::InvalidArgument(s) => write!(f, "InvalidArgument: {s}"),
+            Self::InvalidArgument(e) => {
+                write!(f, "InvalidArgument: ")?;
+                fmt_error_chain(e.as_ref(), f)
+            }
             Self::Other(e) => fmt_error_chain(e.as_ref(), f),
         }
     }
@@ -61,7 +64,7 @@ variant_box_from_error!(PluginDataError, VerboseError::Other);
 impl From<GameHandleCreationError> for VerboseError {
     fn from(value: GameHandleCreationError) -> Self {
         match value {
-            GameHandleCreationError::NotADirectory(_) => Self::InvalidArgument(value.to_string()),
+            GameHandleCreationError::NotADirectory(_) => Self::InvalidArgument(Box::new(value)),
             GameHandleCreationError::LoadOrderError(_) | _ => Self::Other(Box::new(value)),
         }
     }
@@ -71,7 +74,7 @@ impl From<LoadPluginsError> for VerboseError {
     fn from(value: LoadPluginsError) -> Self {
         match value {
             LoadPluginsError::PluginNotLoaded(p) => Self::PluginNotLoadedError(p),
-            LoadPluginsError::PluginValidationError(_) => Self::InvalidArgument(value.to_string()),
+            LoadPluginsError::PluginValidationError(_) => Self::InvalidArgument(Box::new(value)),
             LoadPluginsError::DatabaseLockPoisoned
             | LoadPluginsError::IoError(_)
             | LoadPluginsError::PluginDataError(_)

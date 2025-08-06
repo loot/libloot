@@ -286,8 +286,15 @@ TEST_P(
 
 TEST_P(GameInterfaceTest,
        loadPluginsWithANonPluginShouldNotAddItToTheLoadedPlugins) {
-  ASSERT_THROW(handle_->LoadPlugins({nonPluginFile}, false),
-               std::invalid_argument);
+  try {
+    handle_->LoadPlugins({nonPluginFile}, false);
+    FAIL();
+  } catch (std::invalid_argument& e) {
+    EXPECT_TRUE(startsWith(
+        e.what(), "failed validation of input plugin paths: the file at \""));
+    EXPECT_TRUE(endsWith(
+        e.what(), "NotAPlugin.esm\" does not have a valid plugin header"));
+  }
 
   ASSERT_TRUE(handle_->GetLoadedPlugins().empty());
 }

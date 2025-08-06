@@ -384,6 +384,17 @@ protected:
     WriteFile(path, bytes);
   }
 
+  static bool startsWith(const std::string& str, const std::string& prefix) {
+    if (str.length() < prefix.length()) {
+      return false;
+    }
+
+    auto view = std::string_view(str);
+    view.remove_suffix(str.length() - prefix.length());
+
+    return view == prefix;
+  }
+
   static bool endsWith(const std::string& str, const std::string& suffix) {
     if (str.length() < suffix.length()) {
       return false;
