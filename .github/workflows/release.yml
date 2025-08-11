@@ -11,28 +11,17 @@ env:
 jobs:
   create_release:
     runs-on: ubuntu-24.04
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      git_tag: ${{ steps.get-git-tag.outputs.name }}
 
     steps:
-      - name: Get Git tag
-        id: get-git-tag
-        run: echo "name=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
-
-      - id: create_release
-        uses: actions/create-release@v1
+      - name: Create a draft GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.get-git-tag.outputs.name }}
-          release_name: libloot v${{ steps.get-git-tag.outputs.name }}
-          body: |
-            Requires Windows 10 or later, the MSVC 2022 [x86](https://aka.ms/vs/17/release/vc_redist.x86.exe) or [x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) redistributable for 32-bit and 64-bit builds respectively, and [7-Zip](http://www.7-zip.org/) to extract the archives.
+        run: |
+          RELEASE_TAG="${{ github.ref_name }}"
+          RELEASE_TITLE="libloot v$RELEASE_TAG"
+          RELEASE_NOTES="$(printf "Requires Windows 10 or later, the MSVC 2022 [x86](https://aka.ms/vs/17/release/vc_redist.x86.exe) or [x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) redistributable for 32-bit and 64-bit builds respectively, and [7-Zip](http://www.7-zip.org/) to extract the archives.\n\n## Change Logs\n- [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)\n- [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)")"
 
-            ## Change Logs
-            - [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)
-            - [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)
+          gh release create --draft --title "$RELEASE_TITLE" --notes "$RELEASE_NOTES" --verify-tag --repo "${{ github.repository }}" "$RELEASE_TAG"
 
   windows:
     runs-on: windows-2022
@@ -76,7 +65,7 @@ jobs:
         run: |
           cmake -G "Visual Studio 17 2022" `
             -A ${{ matrix.target.platform }} `
-            -DCPACK_PACKAGE_VERSION="${{ needs.create_release.outputs.git_tag }}" `
+            -DCPACK_PACKAGE_VERSION="${{ github.ref_name }}" `
             -DCPACK_THREADS=0 `
             -DRUST_TARGET="${{ matrix.target.triple }}" `
             -B build
@@ -115,17 +104,12 @@ jobs:
             PLATFORM=win64
           fi
 
-          echo "filename=libloot-${{ needs.create_release.outputs.git_tag }}-${PLATFORM}.7z" >> "$GITHUB_OUTPUT"
+          echo "filename=libloot-${{ github.ref_name }}-${PLATFORM}.7z" >> "$GITHUB_OUTPUT"
 
-      - name: Upload Archive
-        uses: actions/upload-release-asset@v1
+      - name: Upload archive to GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: cpp/build/package/${{ steps.build-archive.outputs.filename }}
-          asset_name: ${{ steps.build-archive.outputs.filename }}
-          asset_content_type: application/x-7z-compressed
+        run: gh release upload --repo "${{ github.repository }}" "${{ github.ref_name }}" cpp/build/package/${{ steps.build-archive.outputs.filename }}#${{ steps.build-archive.outputs.filename }}
 
   publish:
     runs-on: ubuntu-24.04
