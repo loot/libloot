@@ -2,6 +2,27 @@
 Version History
 ***************
 
+0.28.1 - 2025-08-11
+===================
+
+Fixed
+-----
+
+- The lifetime of :cpp:any:`loot::PluginInterface` pointers did not match their
+  documented lifetimes in v0.28.0.
+- :cpp:any:`loot::CyclicInteractionError::GetCycle()` did not return the correct
+  cycle data in v0.28.0.
+
+Changed
+-------
+
+- The error message for an invalid plugin metadata name regex now includes the
+  invalid value.
+- The error messages of ``std::invalid_argument`` errors now include the full
+  chain of error details instead of just the top-level error message.
+- The Rust API Reference page of this documentation now links to the docs.rs
+  page for the latest version of libloot.
+
 0.28.0 - 2025-08-02
 ===================
 
