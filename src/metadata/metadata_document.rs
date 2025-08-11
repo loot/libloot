@@ -358,21 +358,21 @@ fn split_on_prelude(masterlist: &str) -> Option<(&str, &str)> {
             continue;
         }
 
-        if let Some((_, next_byte)) = iter.peek() {
-            if !matches!(next_byte, b' ' | b'#' | b'\n' | b'\r') {
-                // LIMITATION: Slicing at index should never fail, but the
-                // compiler can't see that. A variation of str.find() that
-                // could take a closure that matches on substrings would
-                // eliminate the need for this.
-                if let Some(suffix) = remainder.get(index..) {
-                    return Some((prefix, suffix));
-                }
-
-                logging::error!(
-                    "Unexpectedly failed to slice the masterlist on a new line at index {}",
-                    prefix.len() + index
-                );
+        if let Some((_, next_byte)) = iter.peek()
+            && !matches!(next_byte, b' ' | b'#' | b'\n' | b'\r')
+        {
+            // LIMITATION: Slicing at index should never fail, but the
+            // compiler can't see that. A variation of str.find() that
+            // could take a closure that matches on substrings would
+            // eliminate the need for this.
+            if let Some(suffix) = remainder.get(index..) {
+                return Some((prefix, suffix));
             }
+
+            logging::error!(
+                "Unexpectedly failed to slice the masterlist on a new line at index {}",
+                prefix.len() + index
+            );
         }
     }
 

@@ -248,23 +248,22 @@ impl Database {
     ) -> Result<Option<PluginMetadata>, MetadataRetrievalError> {
         let mut metadata = self.masterlist.find_plugin(plugin_name)?;
 
-        if include_user_metadata == MergeMode::WithUserMetadata {
-            if let Some(mut user_metadata) = self.userlist.find_plugin(plugin_name)? {
-                if let Some(metadata) = metadata {
-                    user_metadata.merge_metadata(&metadata);
-                }
-                metadata = Some(user_metadata);
-            }
-        }
-
-        if evaluate_conditions == EvalMode::Evaluate {
+        if include_user_metadata == MergeMode::WithUserMetadata
+            && let Some(mut user_metadata) = self.userlist.find_plugin(plugin_name)?
+        {
             if let Some(metadata) = metadata {
-                return evaluate_all_conditions(metadata, &self.condition_evaluator_state)
-                    .map_err(Into::into);
+                user_metadata.merge_metadata(&metadata);
             }
+            metadata = Some(user_metadata);
         }
 
-        Ok(metadata)
+        if evaluate_conditions == EvalMode::Evaluate
+            && let Some(metadata) = metadata
+        {
+            evaluate_all_conditions(metadata, &self.condition_evaluator_state).map_err(Into::into)
+        } else {
+            Ok(metadata)
+        }
     }
 
     /// Get a plugin's metadata loaded from the given userlist.
@@ -278,14 +277,13 @@ impl Database {
     ) -> Result<Option<PluginMetadata>, MetadataRetrievalError> {
         let metadata = self.userlist.find_plugin(plugin_name)?;
 
-        if evaluate_conditions == EvalMode::Evaluate {
-            if let Some(metadata) = metadata {
-                return evaluate_all_conditions(metadata, &self.condition_evaluator_state)
-                    .map_err(Into::into);
-            }
+        if evaluate_conditions == EvalMode::Evaluate
+            && let Some(metadata) = metadata
+        {
+            evaluate_all_conditions(metadata, &self.condition_evaluator_state).map_err(Into::into)
+        } else {
+            Ok(metadata)
         }
-
-        Ok(metadata)
     }
 
     /// Sets a plugin's user metadata, replacing any loaded user metadata for

@@ -46,6 +46,6 @@ fn case_insensitive_regex(value: &str) -> Result<Regex, Box<RegexImplError>> {
     Regex::with_flags(value, "iu").map_err(Into::into)
 }
 
-fn escape_ascii(path: &Path) -> EscapeAscii {
+fn escape_ascii(path: &Path) -> EscapeAscii<'_> {
     path.as_os_str().as_encoded_bytes().escape_ascii()
 }

@@ -391,12 +391,13 @@ fn calculate_crc(path: &Path) -> std::io::Result<u32> {
 }
 
 fn extract_bash_tags(description: &str) -> Vec<String> {
-    if let Some((_, bash_tags)) = description.split_once("{{BASH:") {
-        if let Some((bash_tags, _)) = bash_tags.split_once("}}") {
-            return bash_tags.split(',').map(|s| s.trim().to_owned()).collect();
-        }
+    if let Some((_, bash_tags)) = description.split_once("{{BASH:")
+        && let Some((bash_tags, _)) = bash_tags.split_once("}}")
+    {
+        bash_tags.split(',').map(|s| s.trim().to_owned()).collect()
+    } else {
+        Vec::new()
     }
-    Vec::new()
 }
 
 fn extract_version(description: &str) -> Option<String> {

@@ -129,12 +129,11 @@ pub fn select_message_content<'a>(
             } else if matched.is_none() {
                 if language_code.is_some_and(|c| c == mc.language.as_ref()) {
                     matched = Some(mc);
-                } else if language_code.is_none() {
-                    if let Some((content_language_code, _)) = mc.language.split_once('_') {
-                        if content_language_code == language {
-                            matched = Some(mc);
-                        }
-                    }
+                } else if language_code.is_none()
+                    && let Some((content_language_code, _)) = mc.language.split_once('_')
+                    && content_language_code == language
+                {
+                    matched = Some(mc);
                 }
 
                 if mc.language.as_ref() == MessageContent::DEFAULT_LANGUAGE {
@@ -375,16 +374,16 @@ fn format(text: &str, subs: &[&str]) -> Result<Box<str>, MetadataParsingErrorRea
         new_text.push('{');
     }
 
-    if let Some(sub_index) = unused_sub_indexes.first() {
-        if let Some(sub) = subs.get(*sub_index) {
-            return Err(MetadataParsingErrorReason::MissingPlaceholder(
-                (*sub).to_owned(),
-                *sub_index,
-            ));
-        }
+    if let Some(sub_index) = unused_sub_indexes.first()
+        && let Some(sub) = subs.get(*sub_index)
+    {
+        Err(MetadataParsingErrorReason::MissingPlaceholder(
+            (*sub).to_owned(),
+            *sub_index,
+        ))
+    } else {
+        Ok(new_text.into_boxed_str())
     }
-
-    Ok(new_text.into_boxed_str())
 }
 
 impl EmitYaml for MessageContent {

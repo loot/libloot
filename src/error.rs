@@ -11,7 +11,7 @@ use crate::sorting::error::{
 };
 use crate::{Vertex, escape_ascii};
 
-/// Represents an error that occurred while trying to create a [`Game`].
+/// Represents an error that occurred while trying to create a [`Game`](crate::Game).
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum GameHandleCreationError {
