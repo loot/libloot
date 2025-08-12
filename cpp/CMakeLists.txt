@@ -180,12 +180,55 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(loot PRIVATE "-Wall" "-Wextra")
+    target_compile_options(loot PRIVATE
+        "-Werror"
+        "-Wall"
+        "-Wextra"
+        "-Wpedantic"
+        "-Wconversion"
+        "-Wdeprecated"
+        "-Wuninitialized"
+        "-Winit-self"
+        "-Wswitch-enum"
+        "-Wstrict-overflow=5"
+        "-Wstringop-overflow=4"
+        "-Wduplicated-branches"
+        "-Wduplicated-cond"
+        "-Wzero-as-null-pointer-constant"
+        "-Wfloat-equal"
+        "-Wshadow"
+        "-Wcast-qual"
+        "-Wcast-align"
+        "-Wsign-conversion"
+        "-Wlogical-op"
+        "-Wvla"
+        "-Wno-xor-used-as-pow")
 endif()
 
 if(MSVC)
     # Turn off permissive mode to be more standards-compliant and avoid compiler errors.
-    target_compile_options(loot PRIVATE "/permissive-" "/W4" "/Zc:__cplusplus" "/GL" "/MP")
+    target_compile_options(loot PRIVATE
+        "/permissive-"
+        "/W4"
+        "/Wall"
+        "/WX"
+        "/wd4514"
+        "/wd4623"
+        "/wd4625"
+        "/wd4626"
+        "/wd4710"
+        "/wd4738"
+        "/wd4820"
+        "/wd5026"
+        "/wd5027"
+        "/wd5045"
+        "/external:anglebrackets"
+        "/external:W0"
+        "/Zc:__cplusplus"
+        "/GL"
+        "/MP"
+        "/sdl"
+        "$<$<CONFIG:Debug>:/RTC1>")
     target_link_options(loot PRIVATE "/LTCG")
 endif()
 

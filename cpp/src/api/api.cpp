@@ -43,8 +43,6 @@ LogLevel convert(uint8_t level) {
     return LogLevel::info;
   } else if (level == LIBLOOT_LOG_LEVEL_WARNING) {
     return LogLevel::warning;
-  } else if (level == LIBLOOT_LOG_LEVEL_ERROR) {
-    return LogLevel::error;
   } else {
     return LogLevel::error;
   }
@@ -67,10 +65,13 @@ loot::rust::LogLevel convert(LogLevel level) {
   }
 }
 
-void loggingCallback(uint8_t level, const char* message, void* context) {
-  auto& callback = *static_cast<Callback*>(context);
-
-  callback(convert(level), message);
+void loggingCallback(uint8_t level, const char* message, void* context) noexcept {
+  try {
+    auto& callback = *static_cast<Callback*>(context);
+    callback(convert(level), message);
+  } catch (...) {
+    // Can't do anything with the exception.
+  }
 }
 }
 

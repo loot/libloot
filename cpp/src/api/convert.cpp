@@ -31,6 +31,8 @@ std::optional<loot::EdgeType> convert(loot::rust::EdgeType edgeType) {
       return loot::EdgeType::tieBreak;
     case loot::rust::EdgeType::BlueprintMaster:
       return loot::EdgeType::blueprintMaster;
+    case loot::rust::EdgeType::None:
+      return std::nullopt;
     default:
       return std::nullopt;
   }

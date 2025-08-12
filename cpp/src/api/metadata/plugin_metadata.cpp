@@ -39,7 +39,7 @@ namespace {
 template<typename T>
 std::vector<T> mergeVectors(std::vector<T> first,
                             const std::vector<T>& second) {
-  const auto initialSizeOfFirst = first.size();
+  const auto initialSizeOfFirst = first.end() - first.begin();
   for (const auto& element : second) {
     const auto end = first.cbegin() + initialSizeOfFirst;
 
