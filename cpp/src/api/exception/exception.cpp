@@ -33,16 +33,17 @@ std::string replace(std::string_view str,
   std::string out;
   out.reserve(str.size());
 
-  size_t i = 0;
-  while (i < str.size()) {
-    if (i + from.size() <= str.size() && str.substr(i, from.size()) == from) {
-      out.append(to);
-      i += from.size();
-    } else {
-      out.push_back(str[i]);
-      i += 1;
-    }
+  size_t startPos = 0;
+  auto findPos = str.find(from, startPos);
+  while (findPos != std::string_view::npos) {
+    out.append(str.substr(startPos, findPos - startPos));
+    out.append(to);
+
+    startPos = findPos + from.size();
+    findPos = str.find(from, startPos);
   }
+
+  out.append(str.substr(startPos));
 
   return out;
 }
