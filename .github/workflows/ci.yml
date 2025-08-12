@@ -53,6 +53,11 @@ jobs:
 
     runs-on: ${{ matrix.target.os }}
 
+    outputs:
+      coverage_windows_x86: ${{ steps.check-coverage.outputs.coverage_i686-pc-windows-msvc }}
+      coverage_windows_x86_64: ${{ steps.check-coverage.outputs.coverage_x86_64-pc-windows-msvc }}
+      coverage_linux_x86_64: ${{ steps.check-coverage.outputs.coverage_x86_64-unknown-linux-gnu }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -92,6 +97,11 @@ jobs:
         uses: coverallsapp/github-action@v2
         if: github.event_name == 'push'
         continue-on-error: true
+
+      - name: Compress coverage data
+        id: check-coverage
+        shell: bash
+        run: echo "coverage_${{ matrix.target.triple }}=$(cat lcov.info | xz -z | base64 -w 0)" >> $GITHUB_OUTPUT
 
   cpp:
     strategy:
@@ -342,3 +352,44 @@ jobs:
       - name: Run the Node.js wrapper's tests
         working-directory: nodejs
         run: npm test
+
+  report-coverage:
+    runs-on: ubuntu-24.04
+
+    needs: rust
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install lcov
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-upgrade lcov
+
+      - name: Merge lcov coverage reports
+        env:
+          coverage_windows_x86: ${{ needs.rust.outputs.coverage_windows_x86 }}
+          coverage_windows_x86_64: ${{ needs.rust.outputs.coverage_windows_x86_64 }}
+          coverage_linux_x86_64: ${{ needs.rust.outputs.coverage_linux_x86_64 }}
+        run: |
+          echo "$coverage_windows_x86" | base64 -d | xz -d > windows_x86.info
+          echo "$coverage_windows_x86_64" | base64 -d | xz -d > windows_x86_64.info
+          echo "$coverage_linux_x86_64" | base64 -d | xz -d > linux_x86_64.info
+
+          lcov -a windows_x86.info -a windows_x86_64.info -a linux_x86_64.info -o merged.info
+
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "$(lcov --summary merged.info)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate HTML coverage report
+        run: |
+          mkdir report
+          genhtml --output-directory=report --substitute "s#.*libloot#$(pwd)#g" --substitute 's#\\#/#g' merged.info
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Code coverage report
+          path: report/
+        if: github.event_name == 'push'
