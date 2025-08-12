@@ -34,7 +34,10 @@ std::optional<loot::EdgeType> convert(loot::rust::EdgeType edgeType) {
     case loot::rust::EdgeType::None:
       return std::nullopt;
     default:
-      return std::nullopt;
+      throw std::logic_error(
+          "Unrecognised EdgeType: " +
+          std::to_string(
+              std::underlying_type_t<loot::rust::EdgeType>(edgeType)));
   }
 }
 }
