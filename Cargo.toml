@@ -14,7 +14,7 @@ libloadorder = "18.4.0"
 log = { version = "0.4.26", features = ["std"] }
 loot-condition-interpreter = "5.3.2"
 petgraph = "0.8.1"
-rayon = "1.10.0"
+rayon = "1.11.0"
 regress = "0.10.4"
 rustc-hash = "2.1.1"
 saphyr = "0.0.6"
