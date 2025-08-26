@@ -335,6 +335,19 @@ jobs:
             target/
           key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+        if: startsWith(runner.os, 'Linux')
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
         if: matrix.target.platform == 'Win32'
