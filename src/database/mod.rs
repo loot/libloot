@@ -75,13 +75,6 @@ impl Database {
         &mut self.condition_evaluator_state
     }
 
-    pub(crate) fn clear_condition_cache(&mut self) {
-        if let Err(e) = self.condition_evaluator_state.clear_condition_cache() {
-            logging::error!("The condition cache's lock is poisoned, assigning a new cache");
-            *e.into_inner() = HashMap::new();
-        }
-    }
-
     /// Loads the masterlist from the given path.
     ///
     /// Replaces any existing data that was previously loaded from a masterlist.
@@ -154,6 +147,22 @@ impl Database {
         evaluate_condition(condition, &self.condition_evaluator_state).map_err(Into::into)
     }
 
+    /// Clears the cache of metadata condition evaluation results.
+    ///
+    /// As many conditions involve reading files and/or directories, libloot
+    /// caches the results of condition evaluation and reuses those cached
+    /// results in subsequent evaluations.
+    ///
+    /// Clearing the condition cache means that the next time a condition is
+    /// evaluated, it will be evaluated from scratch instead of using a cached
+    /// result.
+    pub fn clear_condition_cache(&mut self) {
+        if let Err(e) = self.condition_evaluator_state.clear_condition_cache() {
+            logging::error!("The condition cache's lock is poisoned, assigning a new cache");
+            *e.into_inner() = HashMap::new();
+        }
+    }
+
     /// Gets the Bash Tags that are listed in the loaded metadata lists.
     ///
     /// Bash Tag suggestions can include Bash Tags not in this list.
@@ -165,17 +174,10 @@ impl Database {
     }
 
     /// Get all general messages listed in the loaded metadata lists.
-    ///
-    /// Evaluating general message conditions also clears the condition cache
-    /// before evaluating conditions.
     pub fn general_messages(
-        &mut self,
+        &self,
         evaluate_conditions: EvalMode,
     ) -> Result<Vec<Message>, ConditionEvaluationError> {
-        if evaluate_conditions == EvalMode::Evaluate {
-            self.clear_condition_cache();
-        }
-
         let messages_iter = self
             .masterlist
             .messages()
@@ -237,9 +239,6 @@ impl Database {
     }
 
     /// Get all of a plugin's loaded metadata.
-    ///
-    /// Evaluating plugin metadata conditions does **not** clear the condition
-    /// cache.
     pub fn plugin_metadata(
         &self,
         plugin_name: &str,
@@ -267,9 +266,6 @@ impl Database {
     }
 
     /// Get a plugin's metadata loaded from the given userlist.
-    ///
-    /// Evaluating plugin metadata conditions does **not** clear the condition
-    /// cache.
     pub fn plugin_user_metadata(
         &self,
         plugin_name: &str,
@@ -838,6 +834,43 @@ plugins:
         }
     }
 
+    mod evaluate {
+        use super::*;
+
+        #[test]
+        fn should_return_true_if_the_condition_is_true() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let database = fixture.database();
+
+            assert!(database.evaluate("file(\"Blank.esp\")").unwrap());
+        }
+
+        #[test]
+        fn should_return_false_if_the_condition_is_false() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let database = fixture.database();
+
+            assert!(!database.evaluate("file(\"missing.esp\")").unwrap());
+        }
+    }
+
+    #[test]
+    fn clear_condition_cache_should_cause_conditions_to_be_evaluated_from_scratch() {
+        let fixture = Fixture::new(GameType::Oblivion);
+        let condition = "file(\"Blank.esp\")";
+        let mut database = fixture.database();
+
+        assert!(database.evaluate(condition).unwrap());
+
+        std::fs::remove_file(fixture.inner.data_path().join("Blank.esp")).unwrap();
+
+        assert!(database.evaluate(condition).unwrap());
+
+        database.clear_condition_cache();
+
+        assert!(!database.evaluate(condition).unwrap());
+    }
+
     #[test]
     fn known_bash_tags_should_append_userlist_tags_to_masterlist_tags() {
         let fixture = Fixture::new(GameType::Oblivion);
@@ -911,26 +944,6 @@ plugins:
                     .unwrap()
                     .as_slice()
             );
-        }
-    }
-
-    mod evaluate {
-        use super::*;
-
-        #[test]
-        fn should_return_true_if_the_condition_is_true() {
-            let fixture = Fixture::new(GameType::Oblivion);
-            let database = fixture.database();
-
-            assert!(database.evaluate("file(\"Blank.esp\")").unwrap());
-        }
-
-        #[test]
-        fn should_return_false_if_the_condition_is_false() {
-            let fixture = Fixture::new(GameType::Oblivion);
-            let database = fixture.database();
-
-            assert!(!database.evaluate("file(\"missing.esp\")").unwrap());
         }
     }
 

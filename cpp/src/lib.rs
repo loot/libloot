@@ -266,6 +266,8 @@ mod ffi {
 
         pub fn evaluate(&self, condition: &str) -> Result<bool>;
 
+        pub fn clear_condition_cache(&self) -> Result<()>;
+
         pub fn known_bash_tags(&self) -> Result<Vec<String>>;
 
         pub fn general_messages(&self, evaluate_conditions: bool) -> Result<Vec<Message>>;

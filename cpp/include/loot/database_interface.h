@@ -121,6 +121,18 @@ public:
   virtual bool Evaluate(const std::string& condition) const = 0;
 
   /**
+   * @brief Clears the cache of metadata condition evaluation results.
+   * @details As many conditions involve reading files and/or directories,
+   *          libloot caches the results of condition evaluation and reuses
+   *          those cached results in subsequent evaluations.
+   *
+   *          Clearing the condition cache means that the next time a condition
+   *          is evaluated, it will be evaluated from scratch instead of using a
+   *          cached result.
+   */
+  virtual void ClearConditionCache() = 0;
+
+  /**
    * @}
    * @name Non-plugin Data Access
    * @{

@@ -278,6 +278,21 @@ TEST_P(DatabaseInterfaceTest, evaluateShouldReturnFalseIfTheConditionIsFalse) {
 }
 
 TEST_P(DatabaseInterfaceTest,
+    clearConditionCacheShouldCauseConditionsToBeEvaluatedFromScratch) {
+  const auto condition = "file(\"Blank.esp\")";
+
+  EXPECT_TRUE(handle_->GetDatabase().Evaluate(condition));
+
+  std::filesystem::remove(dataPath / "Blank.esp");
+
+  EXPECT_TRUE(handle_->GetDatabase().Evaluate(condition));
+
+  handle_->GetDatabase().ClearConditionCache();
+
+  EXPECT_FALSE(handle_->GetDatabase().Evaluate(condition));
+}
+
+TEST_P(DatabaseInterfaceTest,
        getGroupsShouldReturnAllGroupsListedInTheLoadedMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());

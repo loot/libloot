@@ -94,6 +94,15 @@ impl Database {
             .map_err(Into::into)
     }
 
+    pub fn clear_condition_cache(&self) -> Result<(), VerboseError> {
+        self.0
+            .write()
+            .map_err(DatabaseLockPoisonError::from)?
+            .clear_condition_cache();
+
+        Ok(())
+    }
+
     pub fn known_bash_tags(&self) -> Result<Vec<String>, VerboseError> {
         Ok(self
             .0
