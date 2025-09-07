@@ -106,8 +106,8 @@ public:
    * @brief Parses plugins and loads their data.
    * @details If a given plugin filename (or one that is case-insensitively
    *          equal) has already been loaded, its previously-loaded data
-   *          data is discarded, invalidating any existing shared pointers to
-   *          that plugin's PluginInterface object.
+   *          data is discarded. Any existing PluginInterface objects are
+   *          unaffected.
    *
    *          If the game is Morrowind, OpenMW or Starfield, it's only valid to
    *          fully load a plugin if its masters are already loaded or included
@@ -126,8 +126,7 @@ public:
 
   /**
    * @brief Clears the plugins loaded by previous calls to `LoadPlugins()`.
-   * @details This invalidates any PluginInterface pointers retrieved using
-   *          `GetPlugin()` or `GetLoadedPlugins()`.
+   * @details This does not affect any existing PluginInterface objects.
    */
   virtual void ClearLoadedPlugins() = 0;
 
@@ -136,10 +135,7 @@ public:
    * @param  pluginName
    *         The filename of the plugin to get data for.
    * @returns A shared pointer to a const PluginInterface implementation. The
-   *          pointer is null if the given plugin has not been loaded. The
-   *          pointer remains valid until the `ClearLoadedPlugins()` function
-   *          is called, this GameInterface is destroyed, or until a plugin with
-   *          a case-insensitively equal filename is loaded.
+   *          pointer is null if the given plugin has not been loaded.
    */
   virtual std::shared_ptr<const PluginInterface> GetPlugin(
       std::string_view pluginName) const = 0;
@@ -147,10 +143,7 @@ public:
   /**
    * @brief Get a set of const references to all loaded plugins' PluginInterface
    *        objects.
-   * @returns A set of shared pointers to const PluginInterface. The pointers
-   *          remain valid until the `ClearLoadedPlugins()` function is called,
-   *          this GameInterface is destroyed, or until a plugin with a
-   *          case-insensitively equal filename is loaded.
+   * @returns A set of shared pointers to const PluginInterface objects.
    */
   virtual std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
       const = 0;

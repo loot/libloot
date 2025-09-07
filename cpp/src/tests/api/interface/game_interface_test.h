@@ -336,6 +336,17 @@ TEST_P(GameInterfaceTest,
   EXPECT_NE(pointer, newPointer);
 }
 
+TEST_P(GameInterfaceTest, loadPluginsShouldNotAffectExistingPluginPointers) {
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+  const auto pointer = handle_->GetPlugin(blankEsm);
+  ASSERT_NE(nullptr, pointer);
+
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsp)}, true);
+
+  const auto newPointer = handle_->GetPlugin(blankEsm);
+  EXPECT_EQ(pointer, newPointer);
+}
+
 TEST_P(GameInterfaceTest,
        loadPluginsShouldThrowIfGivenVectorElementsWithTheSameFilename) {
   const auto dataPluginPath = dataPath / std::filesystem::u8path(blankEsm);
@@ -522,8 +533,28 @@ TEST_P(GameInterfaceTest, getPluginThatIsNotCachedShouldReturnANullPointer) {
 }
 
 TEST_P(GameInterfaceTest,
-       gettingPluginsShouldReturnAnEmptySetIfNoneHaveBeenLoaded) {
+       getPluginReturnsTheSamePointerForConsecutiveCallsGivenTheSamePlugin) {
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+
+  const auto pointer1 = handle_->GetPlugin(blankEsm);
+  const auto pointer2 = handle_->GetPlugin(blankEsm);
+
+  EXPECT_EQ(pointer1, pointer2);
+}
+
+TEST_P(GameInterfaceTest,
+       getLoadedPluginsShouldReturnAnEmptySetIfNoneHaveBeenLoaded) {
   EXPECT_TRUE(handle_->GetLoadedPlugins().empty());
+}
+
+TEST_P(GameInterfaceTest,
+       getLoadedPluginReturnsTheSamePointersForConsecutiveCalls) {
+  handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
+
+  const auto pointers1 = handle_->GetLoadedPlugins();
+  const auto pointers2 = handle_->GetLoadedPlugins();
+
+  EXPECT_EQ(pointers1, pointers2);
 }
 
 TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
