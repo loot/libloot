@@ -135,7 +135,9 @@ public:
    * @param  pluginName
    *         The filename of the plugin to get data for.
    * @returns A shared pointer to a const PluginInterface implementation. The
-   *          pointer is null if the given plugin has not been loaded.
+   *          pointer is null if the given plugin has not been loaded. Repeated
+   *          calls given the same filename may return different pointers to
+   *          equivalent objects.
    */
   virtual std::shared_ptr<const PluginInterface> GetPlugin(
       std::string_view pluginName) const = 0;
@@ -144,6 +146,8 @@ public:
    * @brief Get a set of const references to all loaded plugins' PluginInterface
    *        objects.
    * @returns A set of shared pointers to const PluginInterface objects.
+   *          Repeated calls may return different pointers to equivalent
+   *          objects.
    */
   virtual std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
       const = 0;

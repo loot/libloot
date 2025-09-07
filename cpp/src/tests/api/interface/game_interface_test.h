@@ -317,10 +317,13 @@ TEST_P(GameInterfaceTest,
 TEST_P(GameInterfaceTest, loadPluginsShouldNotClearThePluginsCache) {
   handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
   ASSERT_EQ(1, handle_->GetLoadedPlugins().size());
+  ASSERT_NE(nullptr, handle_->GetPlugin(blankEsm));
 
   handle_->LoadPlugins({std::filesystem::u8path(blankEsp)}, true);
 
   EXPECT_EQ(2, handle_->GetLoadedPlugins().size());
+  ASSERT_NE(nullptr, handle_->GetPlugin(blankEsm));
+  ASSERT_NE(nullptr, handle_->GetPlugin(blankEsp));
 }
 
 TEST_P(GameInterfaceTest,
@@ -334,17 +337,6 @@ TEST_P(GameInterfaceTest,
   const auto newPointer = handle_->GetPlugin(blankEsm);
   ASSERT_NE(nullptr, newPointer);
   EXPECT_NE(pointer, newPointer);
-}
-
-TEST_P(GameInterfaceTest, loadPluginsShouldNotAffectExistingPluginPointers) {
-  handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
-  const auto pointer = handle_->GetPlugin(blankEsm);
-  ASSERT_NE(nullptr, pointer);
-
-  handle_->LoadPlugins({std::filesystem::u8path(blankEsp)}, true);
-
-  const auto newPointer = handle_->GetPlugin(blankEsm);
-  EXPECT_EQ(pointer, newPointer);
 }
 
 TEST_P(GameInterfaceTest,
@@ -533,13 +525,13 @@ TEST_P(GameInterfaceTest, getPluginThatIsNotCachedShouldReturnANullPointer) {
 }
 
 TEST_P(GameInterfaceTest,
-       getPluginReturnsTheSamePointerForConsecutiveCallsGivenTheSamePlugin) {
+       getPluginReturnsDifferentPointersForConsecutiveCallsGivenTheSamePlugin) {
   handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
 
   const auto pointer1 = handle_->GetPlugin(blankEsm);
   const auto pointer2 = handle_->GetPlugin(blankEsm);
 
-  EXPECT_EQ(pointer1, pointer2);
+  EXPECT_NE(pointer1, pointer2);
 }
 
 TEST_P(GameInterfaceTest,
@@ -548,13 +540,13 @@ TEST_P(GameInterfaceTest,
 }
 
 TEST_P(GameInterfaceTest,
-       getLoadedPluginReturnsTheSamePointersForConsecutiveCalls) {
+       getLoadedPluginsReturnsDifferentPointersForConsecutiveCalls) {
   handle_->LoadPlugins({std::filesystem::u8path(blankEsm)}, true);
 
   const auto pointers1 = handle_->GetLoadedPlugins();
   const auto pointers2 = handle_->GetLoadedPlugins();
 
-  EXPECT_EQ(pointers1, pointers2);
+  EXPECT_NE(pointers1, pointers2);
 }
 
 TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
