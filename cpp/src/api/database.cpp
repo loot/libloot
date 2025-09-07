@@ -52,6 +52,14 @@ bool Database::Evaluate(const std::string& condition) const {
   }
 }
 
+void Database::ClearConditionCache() {
+  try {
+    return database_->clear_condition_cache();
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
+
 std::vector<std::string> Database::GetKnownBashTags() const {
   try {
     return convert<std::string>(database_->known_bash_tags());

@@ -26,6 +26,8 @@ public:
 
   bool Evaluate(const std::string& condition) const override;
 
+  void ClearConditionCache() override;
+
   std::vector<std::string> GetKnownBashTags() const override;
 
   std::vector<Message> GetGeneralMessages(
