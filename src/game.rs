@@ -140,7 +140,7 @@ impl From<GameType> for esplugin::GameId {
 pub struct Game {
     base_type: GameType,
     install_path: PathBuf,
-    load_order: Box<(dyn WritableLoadOrder + Send + Sync + 'static)>,
+    load_order: Box<dyn WritableLoadOrder + Send + Sync + 'static>,
     // Stored in an Arc<RwLock<_>> to support loading metadata in parallel with
     // loading plugins.
     database: Arc<RwLock<Database>>,
