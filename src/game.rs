@@ -834,6 +834,8 @@ mod tests {
 
         use super::*;
 
+        const MAX_PATH_COMPONENT: usize = 255;
+
         #[cfg(windows)]
         fn symlink_dir(original: &Path, link: &Path) {
             std::os::windows::fs::symlink_dir(original, link).unwrap();
@@ -957,13 +959,14 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_a_symlink_path() {
-                let fixture = Fixture::new(GameType::Morrowind);
+                let fixture = Fixture::without_long_paths(GameType::Morrowind);
 
-                let game_path = fixture.game_path.with_extension("symlink");
-                symlink_dir(&fixture.game_path, &game_path);
-                assert!(game_path.is_symlink());
+                let symlink_game_path = fixture.root_path().join("a".repeat(MAX_PATH_COMPONENT));
 
-                assert!(Game::new(fixture.game_type, &game_path).is_ok());
+                symlink_dir(&fixture.game_path, &symlink_game_path);
+                assert!(symlink_game_path.is_symlink());
+
+                assert!(Game::new(fixture.game_type, &symlink_game_path).is_ok());
             }
 
             #[cfg(windows)]
@@ -1036,17 +1039,21 @@ mod tests {
 
             #[test]
             fn should_succeed_if_given_symlink_paths() {
-                let fixture = Fixture::new(GameType::Oblivion);
+                let fixture = Fixture::without_long_paths(GameType::Oblivion);
 
-                let game_path = fixture.game_path.with_extension("symlink");
-                symlink_dir(&fixture.game_path, &game_path);
-                assert!(game_path.is_symlink());
+                let symlink_game_path = fixture.root_path().join("a".repeat(MAX_PATH_COMPONENT));
+                symlink_dir(&fixture.game_path, &symlink_game_path);
+                assert!(symlink_game_path.is_symlink());
 
-                let local_path = fixture.local_path.with_extension("symlink");
-                symlink_dir(&fixture.local_path, &local_path);
-                assert!(local_path.is_symlink());
+                let symlink_local_path = fixture.root_path().join("b".repeat(MAX_PATH_COMPONENT));
+                symlink_dir(&fixture.local_path, &symlink_local_path);
+                assert!(symlink_local_path.is_symlink());
 
-                let game = Game::with_local_path(fixture.game_type, &game_path, &local_path);
+                let game = Game::with_local_path(
+                    fixture.game_type,
+                    &symlink_game_path,
+                    &symlink_local_path,
+                );
 
                 assert!(game.is_ok());
             }

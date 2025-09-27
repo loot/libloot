@@ -177,35 +177,119 @@ fn data_path(game_type: GameType, game_path: &Path) -> PathBuf {
 }
 
 pub(crate) struct Fixture {
-    _temp_dir: TempDir,
+    temp_dir: TempDir,
     pub(crate) game_type: GameType,
     pub(crate) game_path: PathBuf,
     pub(crate) local_path: PathBuf,
 }
 
+fn copy_starfield_plugins(source_plugins_path: &Path, data_path: &Path) {
+    copy_file(source_plugins_path, data_path, BLANK_FULL_ESM);
+    copy_file(source_plugins_path, data_path, BLANK_MEDIUM_ESM);
+
+    copy(
+        source_plugins_path.join(BLANK_FULL_ESM),
+        data_path.join(BLANK_ESM),
+    )
+    .unwrap();
+    copy(
+        source_plugins_path.join(BLANK_FULL_ESM),
+        data_path.join(BLANK_DIFFERENT_ESM),
+    )
+    .unwrap();
+    copy(
+        source_plugins_path.join("Blank - Override.full.esm"),
+        data_path.join(BLANK_MASTER_DEPENDENT_ESM),
+    )
+    .unwrap();
+
+    copy_file(source_plugins_path, data_path, BLANK_ESP);
+    copy(
+        source_plugins_path.join(BLANK_ESP),
+        data_path.join(BLANK_DIFFERENT_ESP),
+    )
+    .unwrap();
+    copy(
+        source_plugins_path.join(BLANK_OVERRIDE_ESP),
+        data_path.join(BLANK_MASTER_DEPENDENT_ESP),
+    )
+    .unwrap();
+}
+
+fn copy_plugins(source_plugins_path: &Path, data_path: &Path) {
+    copy_file(source_plugins_path, data_path, BLANK_ESM);
+    copy_file(source_plugins_path, data_path, BLANK_DIFFERENT_ESM);
+    copy_file(source_plugins_path, data_path, BLANK_MASTER_DEPENDENT_ESM);
+    copy_file(
+        source_plugins_path,
+        data_path,
+        BLANK_DIFFERENT_MASTER_DEPENDENT_ESM,
+    );
+
+    copy_file(source_plugins_path, data_path, BLANK_ESP);
+    copy_file(source_plugins_path, data_path, BLANK_DIFFERENT_ESP);
+    copy_file(source_plugins_path, data_path, BLANK_MASTER_DEPENDENT_ESP);
+    copy_file(
+        source_plugins_path,
+        data_path,
+        BLANK_DIFFERENT_MASTER_DEPENDENT_ESP,
+    );
+    copy_file(source_plugins_path, data_path, BLANK_PLUGIN_DEPENDENT_ESP);
+    copy_file(
+        source_plugins_path,
+        data_path,
+        BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP,
+    );
+}
+
 impl Fixture {
+    const PREFIX: &str = "libloot-t\u{00E9}st-";
+
     pub(crate) fn new(game_type: GameType) -> Self {
         let temp_dir = tempfile::Builder::new()
-            .prefix("libloot-t\u{00E9}st-")
+            .prefix(Self::PREFIX)
             .tempdir()
             .unwrap();
 
-        Self::with_tempdir(game_type, temp_dir)
+        Self::with_tempdir(game_type, temp_dir, true)
     }
 
-    pub(crate) fn in_path(game_type: GameType, in_path: &Path) -> Fixture {
+    /// This creates the fixture without intentionally creating paths that are
+    /// more than 260 characters long. It's intended for use when testing
+    /// symlinks, because Windows will only allow a test to create a symlink to
+    /// a long path if Windows is configured with long paths enabled and the
+    /// test executable also has a manifest that sets longPathAware to true, but
+    /// embedding a manifest isn't straightforward in Rust without the use of
+    /// build dependencies, which would also be built for non-test code.
+    /// The same functionality is more easily tested in the C++ wrapper, so it's
+    /// done there instead.
+    pub(crate) fn without_long_paths(game_type: GameType) -> Self {
         let temp_dir = tempfile::Builder::new()
-            .prefix("libloot-t\u{00E9}st-")
+            .prefix(Self::PREFIX)
+            .tempdir()
+            .unwrap();
+
+        Self::with_tempdir(game_type, temp_dir, false)
+    }
+
+    pub(crate) fn in_path(game_type: GameType, in_path: &Path) -> Self {
+        let temp_dir = tempfile::Builder::new()
+            .prefix(Self::PREFIX)
             .tempdir_in(in_path)
             .unwrap();
 
-        Self::with_tempdir(game_type, temp_dir)
+        Self::with_tempdir(game_type, temp_dir, true)
     }
 
-    fn with_tempdir(game_type: GameType, temp_dir: TempDir) -> Fixture {
-        let root_path = temp_dir.path();
-        let game_path = root_path.join("games/game");
-        let local_path = root_path.join("local/game");
+    fn with_tempdir(game_type: GameType, temp_dir: TempDir, use_long_path: bool) -> Self {
+        let base_path = if use_long_path {
+            temp_dir.path().join("a".repeat(255))
+        } else {
+            temp_dir.path().to_path_buf()
+        };
+
+        let game_path = base_path.join("games").join("game");
+        let local_path = base_path.join("local").join("game");
         let data_path = data_path(game_type, &game_path);
 
         create_dir_all(&data_path).unwrap();
@@ -214,58 +298,9 @@ impl Fixture {
         let source_plugins_path = source_plugins_path(game_type);
 
         if game_type == GameType::Starfield {
-            copy_file(&source_plugins_path, &data_path, BLANK_FULL_ESM);
-            copy_file(&source_plugins_path, &data_path, BLANK_MEDIUM_ESM);
-
-            copy(
-                source_plugins_path.join(BLANK_FULL_ESM),
-                data_path.join(BLANK_ESM),
-            )
-            .unwrap();
-            copy(
-                source_plugins_path.join(BLANK_FULL_ESM),
-                data_path.join(BLANK_DIFFERENT_ESM),
-            )
-            .unwrap();
-            copy(
-                source_plugins_path.join("Blank - Override.full.esm"),
-                data_path.join(BLANK_MASTER_DEPENDENT_ESM),
-            )
-            .unwrap();
-            copy_file(&source_plugins_path, &data_path, BLANK_ESP);
-            copy(
-                source_plugins_path.join(BLANK_ESP),
-                data_path.join(BLANK_DIFFERENT_ESP),
-            )
-            .unwrap();
-            copy(
-                source_plugins_path.join(BLANK_OVERRIDE_ESP),
-                data_path.join(BLANK_MASTER_DEPENDENT_ESP),
-            )
-            .unwrap();
+            copy_starfield_plugins(&source_plugins_path, &data_path);
         } else {
-            copy_file(&source_plugins_path, &data_path, BLANK_ESM);
-            copy_file(&source_plugins_path, &data_path, BLANK_DIFFERENT_ESM);
-            copy_file(&source_plugins_path, &data_path, BLANK_MASTER_DEPENDENT_ESM);
-            copy_file(
-                &source_plugins_path,
-                &data_path,
-                BLANK_DIFFERENT_MASTER_DEPENDENT_ESM,
-            );
-            copy_file(&source_plugins_path, &data_path, BLANK_ESP);
-            copy_file(&source_plugins_path, &data_path, BLANK_DIFFERENT_ESP);
-            copy_file(&source_plugins_path, &data_path, BLANK_MASTER_DEPENDENT_ESP);
-            copy_file(
-                &source_plugins_path,
-                &data_path,
-                BLANK_DIFFERENT_MASTER_DEPENDENT_ESP,
-            );
-            copy_file(&source_plugins_path, &data_path, BLANK_PLUGIN_DEPENDENT_ESP);
-            copy_file(
-                &source_plugins_path,
-                &data_path,
-                BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP,
-            );
+            copy_plugins(&source_plugins_path, &data_path);
         }
 
         if supports_light_plugins(game_type) {
@@ -307,7 +342,7 @@ impl Fixture {
         .unwrap();
 
         Self {
-            _temp_dir: temp_dir,
+            temp_dir,
             game_type,
             game_path,
             local_path,
@@ -316,6 +351,10 @@ impl Fixture {
 
     pub(crate) fn data_path(&self) -> PathBuf {
         data_path(self.game_type, &self.game_path)
+    }
+
+    pub(crate) fn root_path(&self) -> &Path {
+        self.temp_dir.path()
     }
 }
 

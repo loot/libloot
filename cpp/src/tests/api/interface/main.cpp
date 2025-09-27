@@ -113,6 +113,12 @@ TEST(Filesystem, u8pathConvertsCharacterEncodingFromUtf8ToNative) {
   EXPECT_EQ(utf16, path.u16string());
 }
 
+#ifdef _WIN32
+TEST(WindowsRegistry, hasLongPathsEnabled) { 
+    EXPECT_TRUE(loot::test::windowsHasLongPathsEnabled());
+}
+#endif
+
 namespace loot {
 namespace test {
 void testLoggingCallback(LogLevel, std::string_view) {

@@ -31,6 +31,10 @@ along with LOOT.  If not, see
 
 #include "loot/enum/game_type.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 namespace loot::test {
 bool supportsLightPlugins(GameType gameType) {
   return gameType == GameType::tes5se || gameType == GameType::tes5vr ||
@@ -63,6 +67,22 @@ std::filesystem::path getSourceArchivesPath(GameType gameType) {
   }
 }
 
+#ifdef _WIN32
+bool windowsHasLongPathsEnabled() {
+  DWORD value = 0;
+  DWORD valueSize = sizeof(value);
+  LONG ret = RegGetValue(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Control\\FileSystem",
+                         L"LongPathsEnabled",
+                         RRF_RT_REG_DWORD,
+                         NULL,
+                         &value,
+                         &valueSize);
+
+  return ret == ERROR_SUCCESS && value == 1;
+}
+#endif
+
 std::filesystem::path getRootTestPath() {
   std::random_device randomDevice;
   std::default_random_engine prng(randomDevice());
@@ -77,8 +97,16 @@ std::filesystem::path getRootTestPath() {
     directoryName.push_back(static_cast<char>(dist(prng)));
   }
 
-  return std::filesystem::absolute(std::filesystem::temp_directory_path() /
-                                   std::filesystem::u8path(directoryName));
+  auto tempPath = std::filesystem::temp_directory_path() /
+                  std::filesystem::u8path(directoryName);
+
+#ifdef _WIN32
+  if (windowsHasLongPathsEnabled()) {
+    tempPath /= std::filesystem::u8path(std::string(255, 'a'));
+  }
+#endif
+
+  return std::filesystem::absolute(tempPath);
 }
 }
 

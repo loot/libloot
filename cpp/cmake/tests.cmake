@@ -66,6 +66,9 @@ set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
     "${PROJECT_SOURCE_DIR}/src/tests/test_helpers.h"
     "${PROJECT_SOURCE_DIR}/src/tests/printers.h")
 
+if(MSVC)
+    list(APPEND LIBLOOT_INTERFACE_TESTS_ALL_SOURCES "${PROJECT_SOURCE_DIR}/src/tests/libloot_tests.manifest")
+endif()
 
 ##############################
 # Define Targets
