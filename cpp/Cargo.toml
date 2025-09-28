@@ -8,13 +8,13 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-cxx = { version = "1.0", features = ["c++17"] }
-delegate = "0.13.4"
+cxx = { version = "1.0.142", features = ["c++17"] }
+delegate = ">= 0.5.1, < 0.14"
 libloot = { path = ".." }
 libloot-ffi-errors = { path = "../ffi-errors" }
 
 [build-dependencies]
-cxx-build = "1.0"
+cxx-build = "1.0.142"
 
 [lib]
 crate-type = ["staticlib"]

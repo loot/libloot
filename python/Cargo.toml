@@ -15,8 +15,8 @@ crate-type = ["cdylib"]
 [dependencies]
 libloot = { path = ".." }
 libloot-ffi-errors = { path = "../ffi-errors" }
-pyo3 = "0.25.0"
-pyo3-log = "0.12.4"
+pyo3 = ">= 0.23.3, < 0.26"
+pyo3-log = "0.12"
 
 [lints]
 workspace = true
