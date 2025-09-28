@@ -13,6 +13,9 @@ url = "https://raw.githubusercontent.com/google/supply-chain/main/audits.toml"
 [imports.isrg]
 url = "https://raw.githubusercontent.com/divviup/libprio-rs/main/supply-chain/audits.toml"
 
+[imports.libloadorder]
+url = "https://raw.githubusercontent.com/Ortham/libloadorder/refs/heads/master/supply-chain/audits.toml"
+
 [imports.mozilla]
 url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 
@@ -34,10 +37,6 @@ criteria = "safe-to-deploy"
 version = "1.0.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.block-buffer]]
-version = "0.10.4"
-criteria = "safe-to-deploy"
-
 [[exemptions.cc]]
 version = "1.2.18"
 criteria = "safe-to-deploy"
@@ -52,10 +51,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.convert_case]]
 version = "0.8.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cpufeatures]]
-version = "0.2.17"
 criteria = "safe-to-deploy"
 
 [[exemptions.crc32fast]]
@@ -110,10 +105,6 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.digest]]
-version = "0.10.7"
-criteria = "safe-to-deploy"
-
 [[exemptions.dirs]]
 version = "6.0.0"
 criteria = "safe-to-deploy"
@@ -144,10 +135,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.fixedbitset]]
 version = "0.5.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.generic-array]]
-version = "0.14.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.getrandom]]
@@ -270,18 +257,6 @@ criteria = "safe-to-deploy"
 version = "2.8.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.pest_derive]]
-version = "2.8.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.pest_generator]]
-version = "2.8.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.pest_meta]]
-version = "2.8.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.petgraph]]
 version = "0.8.2"
 criteria = "safe-to-deploy"
@@ -375,15 +350,7 @@ version = "1.4.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.thiserror]]
-version = "1.0.69"
-criteria = "safe-to-deploy"
-
-[[exemptions.thiserror]]
 version = "2.0.12"
-criteria = "safe-to-deploy"
-
-[[exemptions.thiserror-impl]]
-version = "1.0.69"
 criteria = "safe-to-deploy"
 
 [[exemptions.thiserror-impl]]
@@ -398,20 +365,12 @@ criteria = "safe-to-deploy"
 version = "0.1.7"
 criteria = "safe-to-deploy"
 
-[[exemptions.typenum]]
-version = "1.18.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.ucd-trie]]
 version = "0.1.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.unindent]]
 version = "0.2.4"
-criteria = "safe-to-deploy"
-
-[[exemptions.version_check]]
-version = "0.9.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasi]]
