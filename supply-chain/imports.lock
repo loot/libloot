@@ -8,6 +8,12 @@ user-id = 4484
 user-login = "hsivonen"
 user-name = "Henri Sivonen"
 
+[[publisher.libc]]
+version = "0.2.171"
+when = "2025-03-11"
+user-id = 55123
+user-login = "rust-lang-owner"
+
 [[publisher.unicode-segmentation]]
 version = "1.12.0"
 when = "2024-09-13"
