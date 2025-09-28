@@ -4,6 +4,9 @@
 [cargo-vet]
 version = "0.10"
 
+[imports.bytecode-alliance]
+url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-chain/audits.toml"
+
 [imports.google]
 url = "https://raw.githubusercontent.com/google/supply-chain/main/audits.toml"
 
@@ -23,10 +26,6 @@ audit-as-crates-io = true
 version = "1.1.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.allocator-api2]]
-version = "0.2.21"
-criteria = "safe-to-deploy"
-
 [[exemptions.arc-swap]]
 version = "1.7.1"
 criteria = "safe-to-deploy"
@@ -41,10 +40,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
 version = "1.2.18"
-criteria = "safe-to-deploy"
-
-[[exemptions.codespan-reporting]]
-version = "0.12.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.const-random]]
@@ -77,10 +72,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.crossbeam-utils]]
 version = "0.8.21"
-criteria = "safe-to-deploy"
-
-[[exemptions.crypto-common]]
-version = "0.1.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.ctor]]
@@ -151,10 +142,6 @@ criteria = "safe-to-run"
 version = "6.1.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.fastrand]]
-version = "2.3.0"
-criteria = "safe-to-run"
-
 [[exemptions.fixedbitset]]
 version = "0.5.7"
 criteria = "safe-to-deploy"
@@ -171,16 +158,8 @@ criteria = "safe-to-deploy"
 version = "0.14.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.hashbrown]]
-version = "0.15.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.hashlink]]
 version = "0.10.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.heck]]
-version = "0.5.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.indoc]]
@@ -383,10 +362,6 @@ criteria = "safe-to-deploy"
 version = "1.0.26"
 criteria = "safe-to-deploy"
 
-[[exemptions.shlex]]
-version = "1.3.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.syn]]
 version = "2.0.106"
 criteria = "safe-to-deploy"
@@ -394,10 +369,6 @@ criteria = "safe-to-deploy"
 [[exemptions.target-lexicon]]
 version = "0.13.2"
 criteria = "safe-to-deploy"
-
-[[exemptions.tempfile]]
-version = "3.21.0"
-criteria = "safe-to-run"
 
 [[exemptions.termcolor]]
 version = "1.4.1"
@@ -433,10 +404,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.ucd-trie]]
 version = "0.1.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.unicase]]
-version = "2.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.unindent]]
@@ -590,7 +557,3 @@ criteria = "safe-to-deploy"
 [[exemptions.windows_x86_64_msvc]]
 version = "0.52.6"
 criteria = "safe-to-deploy"
-
-[[exemptions.wit-bindgen-rt]]
-version = "0.39.0"
-criteria = "safe-to-run"
