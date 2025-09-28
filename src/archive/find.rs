@@ -4,7 +4,7 @@ use std::{
 };
 
 #[cfg(windows)]
-use windows::Win32::Storage::FileSystem::BY_HANDLE_FILE_INFORMATION;
+use windows_sys::Win32::Storage::FileSystem::BY_HANDLE_FILE_INFORMATION;
 
 use crate::{GameType, game::GameCache, plugin::has_ascii_extension};
 
@@ -140,7 +140,7 @@ fn are_file_paths_equivalent(lhs: &Path, rhs: &Path) -> bool {
 #[cfg(windows)]
 fn get_file_info(file_path: &Path) -> Option<BY_HANDLE_FILE_INFORMATION> {
     use std::os::windows::io::AsRawHandle;
-    use windows::Win32::{Foundation::HANDLE, Storage::FileSystem::GetFileInformationByHandle};
+    use windows_sys::Win32::Storage::FileSystem::GetFileInformationByHandle;
 
     let Ok(file) = std::fs::File::open(file_path) else {
         return None;
@@ -153,9 +153,9 @@ fn get_file_info(file_path: &Path) -> Option<BY_HANDLE_FILE_INFORMATION> {
         unsafe_code,
         reason = "There is currently no way to get this data safely"
     )]
-    unsafe { GetFileInformationByHandle(HANDLE(file.as_raw_handle()), &raw mut info) }
-        .is_ok()
-        .then_some(info)
+    let result = unsafe { GetFileInformationByHandle(file.as_raw_handle(), &raw mut info) };
+
+    (result != 0).then_some(info)
 }
 
 #[cfg(not(windows))]
