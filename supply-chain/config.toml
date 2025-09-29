@@ -179,10 +179,6 @@ notes = "At time of review this was only built if targeting WASI, which is not a
 version = "0.4.28"
 criteria = "safe-to-deploy"
 
-[[exemptions.loot-condition-interpreter]]
-version = "5.3.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.memchr]]
 version = "2.7.4"
 criteria = "safe-to-deploy"

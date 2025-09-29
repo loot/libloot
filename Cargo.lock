@@ -589,9 +589,9 @@ checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 
 [[package]]
 name = "loot-condition-interpreter"
-version = "5.3.2"
+version = "5.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eec12dc709a84442632efdc064e3463612bf7ddcc39d804de021cf56e557be04"
+checksum = "092c6bc62415f8f8963d72444ca50bf93c6d5fc137bff8491e267afe63a978ba"
 dependencies = [
  "crc32fast",
  "esplugin",
