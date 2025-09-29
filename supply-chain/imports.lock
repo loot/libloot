@@ -43,13 +43,6 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows-sys]]
-version = "0.59.0"
-when = "2024-07-30"
-user-id = 64539
-user-login = "kennykerr"
-user-name = "Kenny Kerr"
-
-[[publisher.windows-sys]]
 version = "0.61.1"
 when = "2025-09-25"
 user-id = 64539
@@ -205,7 +198,17 @@ This crate contains no `unsafe` code and no unnecessary use of the standard
 library.
 """
 
-[audits.esplugin.audits]
+[[audits.esplugin.audits.tempfile]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "3.21.0 -> 3.22.0"
+notes = "The only significant change is updating its maximum accepted version of the windows-sys dependency to allow v0.61.x."
+
+[[audits.esplugin.audits.winapi-util]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.1.9 -> 0.1.11"
+notes = "The only change is to the allowed range of windows-sys dependency versions."
 
 [[audits.google.audits.autocfg]]
 who = "Manish Goregaokar <manishearth@google.com>"
