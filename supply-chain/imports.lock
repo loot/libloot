@@ -205,6 +205,8 @@ This crate contains no `unsafe` code and no unnecessary use of the standard
 library.
 """
 
+[audits.esplugin.audits]
+
 [[audits.google.audits.autocfg]]
 who = "Manish Goregaokar <manishearth@google.com>"
 criteria = "safe-to-deploy"
