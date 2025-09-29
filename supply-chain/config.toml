@@ -127,10 +127,6 @@ criteria = "safe-to-run"
 suggest = false
 notes = "At time of review this was only built if targeting WASI, which is not an intended target."
 
-[[exemptions.esplugin]]
-version = "6.1.3"
-criteria = "safe-to-deploy"
-
 [[exemptions.fixedbitset]]
 version = "0.5.7"
 criteria = "safe-to-deploy"
