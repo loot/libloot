@@ -14,7 +14,7 @@ libloot = { path = ".." }
 libloot-ffi-errors = { path = "../ffi-errors" }
 
 [build-dependencies]
-cxx-build = "1.0.142"
+cxx-build = "1.0.186"
 
 [lib]
 crate-type = ["staticlib"]
