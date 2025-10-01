@@ -102,7 +102,9 @@ jobs:
         if: matrix.target.platform == 'Win32'
 
       - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
+        uses: taiki-e/install-action@d6d752794628f1e1fffa3c4d3c8874e06f043d50 # v2.62.15
+        with:
+          tool: cargo-llvm-cov@0.6.19
 
       - name: Prepare test resources
         shell: pwsh
@@ -120,7 +122,7 @@ jobs:
         run: cargo llvm-cov --lcov --output-path lcov.info --target ${{ matrix.target.triple }}
 
       - name: Upload code coverage to Coveralls
-        uses: coverallsapp/github-action@v2
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
         if: github.event_name == 'push'
         continue-on-error: true
 
