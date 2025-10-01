@@ -79,6 +79,13 @@ jobs:
         working-directory: docs
         run: |
           curl -sSfLO https://github.com/doxygen/doxygen/releases/download/Release_1_13_2/doxygen-1.13.2.windows.x64.bin.zip
+
+          $hash = Get-FileHash -Algorithm SHA256 doxygen-1.13.2.windows.x64.bin.zip
+          $expectedHash = 'DEDBCF1D05911AFC003989D33194AB95539E2EF4535CC00143B5917C22614406'
+          if ($hash.Hash -ne $expectedHash) {
+            throw 'Unexpected hash: $($hash.Hash)'
+          }
+
           Expand-Archive doxygen-1.13.2.windows.x64.bin.zip
 
           echo "${{ github.workspace }}\doxygen-1.13.2.windows.x64.bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
