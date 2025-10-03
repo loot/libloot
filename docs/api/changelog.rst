@@ -2,6 +2,51 @@
 Version History
 ***************
 
+0.28.2 - 2025-10-03
+===================
+
+Added
+-----
+
+- Support for plugin and archive symlinks when the game is Oblivion Remastered
+  or OpenMW on Windows, and for all games on Linux.
+- Support for the DLC install paths used by the Microsoft Store's distribution
+  of Starfield (via libloadorder).
+
+Fixed
+-----
+
+- Cyclic interaction error messages from the C++ wrapper would report blueprint
+  master edges as unknown edges.
+- Reading active plugins for Morrowind now matches the Morrowind launcher's
+  handling of whitespace, entries in the wrong section and gaps in the index
+  sequences (via libloadorder).
+- The C++ wrapper will now throw a ``std::logic_error`` if it doesn't recognise
+  a graph edge type coming from the Rust code, instead of pretending that there
+  is no edge present.
+
+Changed
+-------
+
+- The Rust dependency version specifiers have been updated to accurately
+  represent the range of acceptable versions. As a result, libloot will accept
+  older versions of many of its dependencies than it did before. This does not
+  change the versions used by any existing dependents, including the C++
+  wrapper.
+- Replaced the windows crate dependency with a dependency on windows-sys.
+- Updated the minimum required libloadorder version to v18.5.0.
+- Updated dependency versions in Cargo.lock (which sets the versions used by the
+  C++ wrapper):
+
+  - Updated esplugin to v6.1.4.
+  - Updated libloadorder to v18.5.1.
+  - Updated loot-condition-interpreter to v5.3.3.
+  - Updated rayon to v1.11.0.
+
+- The compiler flags used when building the C++ wrapper now enable more
+  warnings, though it builds without logging any warnings with GCC 13.3.0 and
+  MSVC 19.44.35217.0.
+
 0.28.1 - 2025-08-11
 ===================
 
