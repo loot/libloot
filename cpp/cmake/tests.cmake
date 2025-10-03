@@ -89,6 +89,10 @@ target_include_directories(libloot_tests PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(libloot_tests SYSTEM PRIVATE
     ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
+set_target_properties(libloot_tests PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON)
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
 

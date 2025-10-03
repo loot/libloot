@@ -19,10 +19,6 @@ option(RUN_CLANG_TIDY "Whether or not to run clang-tidy during build. Has no eff
 option(LIBLOOT_BUILD_TESTS "Whether or not to build libloot's tests." ON)
 option(LIBLOOT_INSTALL_DOCS "Whether or not to install libloot's docs (which need to be built separately)." ON)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 ##############################
 # External Projects
 ##############################
@@ -171,6 +167,10 @@ target_include_directories(loot PRIVATE ${LIBLOOT_INCLUDE_DIRS})
 target_include_directories(loot SYSTEM PRIVATE
     ${LIBLOOT_COMMON_SYSTEM_INCLUDE_DIRS})
 
+set_target_properties(loot PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON)
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(loot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
 
@@ -228,7 +228,7 @@ if(MSVC)
         "/MP"
         "/sdl"
         "$<$<CONFIG:Debug>:/RTC1>")
-    target_link_options(loot PRIVATE "/LTCG")
+    target_link_options(loot PRIVATE "/INCREMENTAL:NO" "/LTCG")
 endif()
 
 ##############################
