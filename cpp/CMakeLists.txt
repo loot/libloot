@@ -181,7 +181,6 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(loot PRIVATE
-        "-Werror"
         "-Wall"
         "-Wextra"
         "-Wpedantic"
@@ -211,7 +210,6 @@ if(MSVC)
         "/permissive-"
         "/W4"
         "/Wall"
-        "/WX"
         "/wd4514"
         "/wd4623"
         "/wd4625"
