@@ -16,6 +16,3 @@ build:
       - asdf global uv latest
     install:
       - UV_PROJECT_ENVIRONMENT="$READTHEDOCS_VIRTUALENV_PATH" uv --project docs sync
-
-sphinx:
-  configuration: docs/conf.py
