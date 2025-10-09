@@ -97,11 +97,11 @@ jobs:
           echo "${{ github.workspace }}\doxygen-1.13.2.windows.x64.bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
           pipx install uv
-          uv sync
+          uv sync --locked
 
       - name: Build docs
         working-directory: docs
-        run: uv run -- sphinx-build -b html . build/html
+        run: uv run --locked -- sphinx-build -b html . build/html
 
       - name: Build archive
         id: build-archive
