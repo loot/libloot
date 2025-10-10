@@ -91,10 +91,12 @@ def get_package_dependencies(cargo_toml_path, package_name):
                 'version': package['version'],
                 'license': package['license'],
                 'manifest_path': package['manifest_path'],
-                'repository': package['repository'],
             })
 
     return dependencies
+
+def get_url(dependency):
+    return f'https://crates.io/crates/{dependency['name']}/{dependency['version']}'
 
 def parse_licenses(dependency):
     # This is not robust, but it's good enough with a couple of specific workarounds.
@@ -227,11 +229,7 @@ if __name__ == "__main__":
                 print(f'Skipping dependency with no notices: {dependency['name']}')
                 continue
 
-        if 'repository' not in dependency:
-            print(f'Found dependency with no repository: {dependency['name']}')
-            exit(1)
-
-        link_rst = f'`{dependency['name']} v{dependency['version']} <{dependency['repository']}>`_'
+        link_rst = f'`{dependency['name']} v{dependency['version']} <{get_url(dependency)}>`_'
         underline_rst = '-' * len(link_rst)
         dep_notices_rst = '\n    '.join(notices)
 
