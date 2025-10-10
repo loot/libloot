@@ -25,48 +25,6 @@ user-id = 55123 # rust-lang-owner
 start = "2024-08-15"
 end = "2026-09-28"
 
-[[trusted.windows]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2021-01-15"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
-[[trusted.windows-collections]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2025-02-06"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
-[[trusted.windows-core]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2021-11-15"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
-[[trusted.windows-future]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2025-02-10"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
-[[trusted.windows-implement]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2022-01-27"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
-[[trusted.windows-interface]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2022-02-18"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
 [[trusted.windows-link]]
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
@@ -74,21 +32,7 @@ start = "2024-07-17"
 end = "2026-09-28"
 notes = "kennykerr is on the Windows team at Microsoft."
 
-[[trusted.windows-numerics]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2023-05-15"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
 [[trusted.windows-result]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2024-02-02"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
-[[trusted.windows-strings]]
 criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2024-02-02"
@@ -101,64 +45,3 @@ user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2021-11-15"
 end = "2026-09-28"
 notes = "kennykerr is on the Windows team at Microsoft."
-
-[[trusted.windows-targets]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2022-09-09"
-end = "2026-09-28"
-
-[[trusted.windows-threading]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2025-04-29"
-end = "2026-09-28"
-notes = "kennykerr is on the Windows team at Microsoft."
-
-[[trusted.windows_aarch64_gnullvm]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2022-09-01"
-end = "2026-09-28"
-
-[[trusted.windows_aarch64_msvc]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2021-11-05"
-end = "2026-09-28"
-
-[[trusted.windows_i686_gnu]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2021-10-28"
-end = "2026-09-28"
-
-[[trusted.windows_i686_gnullvm]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2024-04-02"
-end = "2026-09-28"
-
-[[trusted.windows_i686_msvc]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2021-10-27"
-end = "2026-09-28"
-
-[[trusted.windows_x86_64_gnu]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2021-10-28"
-end = "2026-09-28"
-
-[[trusted.windows_x86_64_gnullvm]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2022-09-01"
-end = "2026-09-28"
-
-[[trusted.windows_x86_64_msvc]]
-criteria = "safe-to-deploy"
-user-id = 64539 # Kenny Kerr (kennykerr)
-start = "2021-10-27"
-end = "2026-09-28"
