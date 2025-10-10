@@ -1,47 +1,54 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
-# This script expects cargo-attribution
-# <https://github.com/ameknite/cargo-attribution> to be installed.
 
-import argparse
 import datetime
 import json
 import os
 import re
-import shutil
+import sys
 import subprocess
-import tomllib
 
-def process_licenses(source_dir, destination_dir):
-    # CC0, Unlicense and Zlib don't need licenses to be included.
-    # MPL doesn't need the license included with binary distributions, and
-    # allows distribution under a compatible license.
-    # cargo attribution's GPL-3.0 download doesn't contain the license text.
-    # The ISC license is skipped because its dependency gets filtered out, same
-    # with the exceptions.
-    skip_entries = [
-        'exceptions',
-        'CC0-1.0',
-        'GPL-3.0',
-        'ISC',
-        'MPL-2.0',
-        'Unlicense',
-        'Zlib'
-    ]
+from urllib.request import urlopen
 
-    for entry in os.scandir(source_dir):
-        if entry.name not in skip_entries:
-            destination_path = os.path.join(destination_dir, entry.name)
-            if entry.is_dir():
-                shutil.copytree(entry.path, destination_path, dirs_exist_ok=True)
-            else:
-                shutil.copy2(entry.path, destination_path)
+# CC0, Unlicense and Zlib don't need licenses to be included.
+SKIPPABLE_LICENSES = ['CC0-1.0', 'Unlicense', 'Zlib']
+# MPL-2.0 doesn't need the license to be included with binary distributions, and
+# a copy of the GPL-3.0(-only|-or-later)? license is already included as that's
+# libloot's own license
+SKIPPABLE_LICENSE_FILES = ['CC0-1.0', 'Unlicense', 'Zlib', 'MPL-2.0', 'GPL-3.0', 'GPL-3.0-only', 'GPL-3.0-or-later']
+# Don't include notices for libloot's own crates, or those that
+SKIPPABLE_CRATES = [
+        'libloot',
+        'libloot-ffi-errors',
+]
+# I've verified that these have no notices.
+NO_NOTICES_WHITELIST = [
+    ('allocator-api2', '0.2.21'),
+    ('cxx', '1.0.161'),
+    ('cxxbridge-macro', '1.0.161'),
+    ('delegate', '0.13.4'),
+    ('link-cplusplus', '1.0.10'),
+    ('once_cell', '1.21.3'),
+    ('option-ext', '0.2.0'),
+    ('pelite-macros', '0.1.1'),
+    ('pest', '2.8.0'),
+    ('proc-macro2', '1.0.101'),
+    ('quote', '1.0.40'),
+    ('rustc-hash', '2.1.1'),
+    ('rustversion', '1.0.20'),
+    ('serde', '1.0.219'),
+    ('serde_derive', '1.0.219'),
+    ('syn', '2.0.106'),
+    ('thiserror', '2.0.12'),
+    ('thiserror-impl', '2.0.12'),
+]
 
-def recurse_dependencies(packages, package, dependency_names):
-    for dependency in package['dependencies']:
+YEAR_REGEX = re.compile(r'\d{4}')
+
+def recurse_dependencies(packages, current_package, dependency_names):
+    for dependency in current_package['dependencies']:
         name = dependency['name']
-        if name in dependency_names:
+        if name in dependency_names or dependency['kind'] in ['dev', 'build'] or dependency['target'] == 'cfg(target_os = \"redox\")':
             continue
 
         dependency_names.add(name)
@@ -49,7 +56,7 @@ def recurse_dependencies(packages, package, dependency_names):
             if package['name'] == name:
                 recurse_dependencies(packages, package, dependency_names)
 
-def get_target_dependency_names(target_package_name):
+def get_package_dependencies(cargo_toml_path, package_name):
     result = subprocess.run(
         [
             'cargo',
@@ -58,6 +65,8 @@ def get_target_dependency_names(target_package_name):
             cargo_toml_path,
             '--filter-platform',
             'x86_64-pc-windows-msvc',
+            '--filter-platform',
+            'x86_64-unknown-linux-gnu',
             '--format-version',
             '1'
         ],
@@ -69,115 +78,167 @@ def get_target_dependency_names(target_package_name):
     json_output = json.loads(result.stdout[:-1])
     packages = json_output['packages']
 
-    target_dependency_names = set()
+    dependency_names = set()
     for package in packages:
-        if package['name'] == 'libloot-cpp':
-            recurse_dependencies(packages, package, target_dependency_names)
+        if package['name'] == package_name:
+            recurse_dependencies(packages, package, dependency_names)
 
-    return target_dependency_names
+    dependencies = []
+    for package in packages:
+        if package['name'] in dependency_names:
+            dependencies.append({
+                'name': package['name'],
+                'version': package['version'],
+                'license': package['license'],
+                'manifest_path': package['manifest_path'],
+                'repository': package['repository'],
+            })
+
+    return dependencies
+
+def parse_licenses(dependency):
+    # This is not robust, but it's good enough with a couple of specific workarounds.
+
+    if 'license' not in dependency:
+        print(f'Found dependency with no license: {dependency['name']}', file=sys.stderr)
+        exit(1)
+
+    # Fix non-SPDX expression
+    if dependency['license'] == 'MIT/Apache-2.0':
+        expression = 'MIT OR Apache-2.0'
+
+    # Preselect a license to simplify a couple of expressions.
+    elif dependency['license'] == '(Apache-2.0 OR MIT) AND BSD-3-Clause':
+        expression = 'MIT AND BSD-3-Clause'
+
+    elif dependency['license'] == '(MIT OR Apache-2.0) AND Unicode-3.0':
+        expression = 'MIT AND Unicode-3.0'
+
+    else:
+        expression = dependency['license']
+
+    licenses = list(map(str.strip, expression.split('OR')))
+    licenses.sort(reverse=True)
+
+    return list(map(str.strip, licenses[0].split('AND')))
+
+def download_licenses(dependencies, output_directory):
+    unique_licenses = set()
+    for dependency in dependencies:
+        licenses = parse_licenses(dependency)
+        unique_licenses.update(licenses)
+
+    # These three all have the same license text.
+    if 'GPL-3.0-or-later' in unique_licenses:
+        if 'GPL-3.0' in unique_licenses:
+            unique_licenses.remove('GPL-3.0')
+
+        if 'GPL-3.0-only' in unique_licenses:
+            unique_licenses.remove('GPL-3.0-only')
+
+    for license in unique_licenses:
+        if license in SKIPPABLE_LICENSE_FILES:
+            continue
+
+        license_url = f'https://raw.githubusercontent.com/spdx/license-list-data/refs/heads/main/text/{license}.txt'
+
+        print(f'Downloading {license} from {license_url}...')
+
+        response = urlopen(license_url)
+
+        if response.status != 200:
+            print(f'Error fetching license: {response.status} {response.reason}, {response.read()}', file=sys.stderr)
+            exit(1)
+
+        with open(os.path.join(output_directory, f'{license}'), 'wb') as outfile:
+            outfile.write(response.read())
+
+def read_notices_from_file(file_path):
+    notices = []
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            lowercase_line = line.lower()
+            if 'copyright' in lowercase_line and ('(c)' in lowercase_line or '©' in line or re.search(YEAR_REGEX, line)):
+                notices.append(line.strip())
+
+    return notices
+
+def read_notices(dependency):
+    # First hardcode a couple of notices that get mangled by the code below.
+    if dependency['name'] == 'hashlink':
+        return ['Copyright (c) 2015 The Rust Project Developers']
+    elif dependency['name'] == 'libloadorder':
+        return ['Copyright (C) 2017 Oliver Hamlet']
+    elif dependency['name'] == 'esplugin':
+        return ['Copyright (C) 2017 Oliver Hamlet']
+
+    crate_path = os.path.dirname(dependency['manifest_path'])
+
+
+    notices = []
+
+    for entry in os.scandir(crate_path):
+        lowercase_filename = entry.name.lower()
+        if 'license' in lowercase_filename or 'copying' in lowercase_filename:
+            if entry.is_file():
+                notices.extend(read_notices_from_file(entry.path))
+            elif entry.is_dir():
+                for entry in os.scandir(entry.path):
+                    if entry.is_file():
+                        notices.extend(read_notices_from_file(entry.path))
+
+    notices = list(set(notices))
+    notices.sort()
+
+    return notices
 
 if __name__ == "__main__":
     target_package_name = 'libloot-cpp'
     cargo_toml_path = os.path.join('..', 'cpp', 'Cargo.toml')
-    attribution_dir = os.path.join('build', 'attribution')
     output_dir = os.path.join('api', 'copyright')
 
-    subprocess.run(
-        [
-            'cargo',
-            'attribution',
-            '--manifest-path',
-            cargo_toml_path,
-            '--output-dir',
-            attribution_dir,
-            '--filter-platform',
-            'x86_64-pc-windows-msvc',
-            '--only-normal-dependencies'
-        ],
-        check=True
-    )
+    package_dependencies = get_package_dependencies(cargo_toml_path, target_package_name)
 
-    process_licenses(os.path.join(attribution_dir, 'licenses'), os.path.join(output_dir, 'licenses'))
+    download_licenses(package_dependencies, os.path.join(output_dir, 'licenses'))
 
-    target_dependency_names = get_target_dependency_names(target_package_name)
+    notices_rst = f'.. This file was generated by scripts/licenses.py at {datetime.datetime.now().isoformat()}.\n\n'
 
-    dependencies_toml_path = os.path.join(attribution_dir, 'dependencies.toml')
-    with open(dependencies_toml_path, 'rb') as f:
-        data = tomllib.load(f)
-        dependencies = data['dependencies']
+    heading = 'Dependency Copyright Notices'
+    notices_rst += heading
+    notices_rst += '\n'
+    notices_rst += '=' * len(heading)
+    notices_rst += '\n\n'
 
-        # esplugin's and libloadorder's notices are nonsense, but they're my
-        # libraries so I give myself permission to skip providing the notices.
-        skip_dependencies = [
-            'libloot',
-            'libloot-ffi-errors',
-            'libloot-cpp',
-            'libloot-nodejs',
-            'libloot-python',
-            'array-parameterized-test',
-            'esplugin',
-            'libloadorder'
-        ]
+    for dependency in package_dependencies:
+        if dependency['name'] in SKIPPABLE_CRATES:
+            continue
 
-        notices_rst = f'.. This file was generated by scripts/licenses.py at {datetime.datetime.now().isoformat()}.\n\n'
+        if all(license in SKIPPABLE_LICENSES for license in parse_licenses(dependency)):
+            print(f'Skipping {dependency['name']} because it uses a skippable license: {dependency['license']}')
+            continue
 
-        heading = 'Dependency Copyright Notices'
-        notices_rst += heading
-        notices_rst += '\n'
-        notices_rst += '=' * len(heading)
-        notices_rst += '\n\n'
+        notices = read_notices(dependency)
 
-        for dependency in dependencies:
-            if dependency['name'] not in target_dependency_names:
-                continue
-
-            if dependency['name'] in skip_dependencies:
-                continue
-
-            if 'license' not in dependency:
-                print(f'Found dependency with no license: {dependency['name']}')
+        if not notices:
+            if (dependency['name'], dependency['version']) not in NO_NOTICES_WHITELIST:
+                print(f'Found dependency with no notices: {dependency['name']} v{dependency['version']}', file=sys.stderr)
                 exit(1)
-
-            if 'ISC' in dependency['license']:
-                print(f'Found dependency that may require the ISC license: {dependency['name']}')
-                exit(1)
-
-            if 'exception' in dependency['license']:
-                print(f'Found dependency that may require an exception: {dependency['name']}')
-                exit(1)
-
-            if 'CC0-1.0' in dependency['license']:
-                print(f'Skipping {dependency['name']} because it uses the CC0-1.0 license: {dependency['license']}')
-                continue
-
-            if 'Unlicense' in dependency['license']:
-                print(f'Skipping {dependency['name']} because it uses the Unlicense license: {dependency['license']}')
-                continue
-
-            if 'Zlib' in dependency['license']:
-                print(f'Skipping {dependency['name']} because it uses the Zlib license: {dependency['license']}')
-                continue
-
-            if 'notices' not in dependency:
+            else:
                 print(f'Skipping dependency with no notices: {dependency['name']}')
                 continue
 
-            if 'repository' not in dependency:
-                print(f'Found dependency with no repository: {dependency['name']}')
-                exit(1)
+        if 'repository' not in dependency:
+            print(f'Found dependency with no repository: {dependency['name']}')
+            exit(1)
 
-            if dependency['name'] == 'hashlink':
-                # The notice for hashlink is mangled so correcting it here.
-                dependency['notices'] = ['Copyright (c) 2015 The Rust Project Developers']
+        link_rst = f'`{dependency['name']} v{dependency['version']} <{dependency['repository']}>`_'
+        underline_rst = '-' * len(link_rst)
+        dep_notices_rst = '\n    '.join(notices)
 
-            link_rst = f'`{dependency['name']} v{dependency['version']} <{dependency['repository']}>`_'
-            underline_rst = '-' * len(link_rst)
-            dep_notices_rst = '\n    '.join(dependency['notices'])
+        section_rst = f'{link_rst}\n{underline_rst}\n\n::\n\n    {dep_notices_rst}\n\n'
 
-            section_rst = f'{link_rst}\n{underline_rst}\n\n::\n\n    {dep_notices_rst}\n\n'
+        notices_rst += section_rst
 
-            notices_rst += section_rst
-
-        notices_rst_path = os.path.join(output_dir, 'dependency-notices.rst')
-        with open(notices_rst_path, 'w', encoding="utf-8") as outfile:
-            outfile.write(notices_rst)
+    notices_rst_path = os.path.join(output_dir, 'dependency-notices.rst')
+    with open(notices_rst_path, 'w', encoding="utf-8") as outfile:
+        outfile.write(notices_rst)

@@ -12,4 +12,4 @@ If [Doxygen](https://www.doxygen.nl/) is also installed and accessible from your
 
 The files for dependency licenses and copyright notices are auto-generated. The script is hardcoded to generate files for the C++ wrapper's dependencies, but in practice that doesn't add any content over doing the same for just the core libloot Rust library.
 
-To regenerate the generated files, first install [cargo-attribution](https://github.com/ameknite/cargo-attribution) then run `scripts/licenses.py`, e.g. `py scripts/licenses.py` or `python3 scripts/licenses.py`.
+Run `scripts/licenses.py` to regenerate the generated files, e.g. `py scripts/licenses.py` or `python3 scripts/licenses.py`.
