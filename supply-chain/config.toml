@@ -174,10 +174,6 @@ criteria = "safe-to-run"
 suggest = false
 notes = "At time of review this was only built if targeting WASI, which is not an intended target."
 
-[[exemptions.log]]
-version = "0.4.28"
-criteria = "safe-to-deploy"
-
 [[exemptions.memchr]]
 version = "2.7.4"
 criteria = "safe-to-deploy"
