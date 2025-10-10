@@ -1,6 +1,12 @@
 
 # cargo-vet audits file
 
+[[audits.libloading]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.8.6 -> 0.8.9"
+notes = "Mostly formatting changes, plus swaps windows-targets for windows-link, and adds a new function that looks fine."
+
 [[audits.libloadorder]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
