@@ -19,6 +19,11 @@ criteria = "safe-to-deploy"
 version = "5.3.3"
 notes = "This is my own crate published using Trusted Publishing, but I can't mark it as trusted by cargo-vet because it doesn't support Trusted Publishing and just sees that the publisher is unknown."
 
+[[audits.rust-ini]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.21.1 -> 0.21.3"
+
 [[trusted.libc]]
 criteria = "safe-to-deploy"
 user-id = 55123 # rust-lang-owner
