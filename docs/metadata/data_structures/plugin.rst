@@ -26,33 +26,8 @@ This is the structure that brings all the others together, and forms the main co
   be defined in the same metadata file. If at sort time the group does not
   exist, a sorting error will occur.
 
-  The plugin must load after all the plugins in the groups its group is defined
-  to load after, resolving them recursively. An exception exists if doing so
-  would introduce a cyclic dependency between two plugins without any other
-  group loading rules applied.
-
-  For example, if for plugins A.esp, B.esp, C.esp and D.esp:
-
-  - B.esp has A.esp as a master
-  - A.esp is in group A
-  - B.esp and C.esp are in the default group
-  - D.esp is in group D
-  - group A loads after the default group
-  - the default group loads after group D
-
-  Then the load order must be D.esp, C.esp, A.esp, B.esp. Although A.esp's group
-  must load after B.esp's group, this would cause a cycle between A.esp and
-  B.esp, so the requirement is ignored for that pair of plugins.
-
-  However, if for plugins A.esp, B.esp and C.esp in groups of the same names:
-
-  1. group B loads after group A
-  2. group C loads after group B
-  3. A.esp has C.esp as a master
-
-  This will cause a sorting error, as neither group rule introduces a cyclic
-  dependency when combined in isolation with the third rule, but having all
-  three rules applied causes a cycle.
+  The plugin should load after all the plugins in the groups its group is defined
+  to load after, resolving them recursively. If enforcing that for a pair of plugins would cause a cycle, the relationship between the two plugins' groups will be ignored.
 
 .. describe:: after
 
@@ -92,7 +67,7 @@ This is the structure that brings all the others together, and forms the main co
 
   ``location set``
 
-  An unordered set of locations for this plugin. If the same version can be found at multiple locations, only one location should be recorded. If undefined, the set is empty. This metadata is not currently used by LOOT.
+  An unordered set of locations for this plugin. If the same version can be found at multiple locations, only one location should be recorded. If undefined, the set is empty.
 
 .. describe:: dirty
 
