@@ -2,6 +2,20 @@
 Version History
 ***************
 
+0.28.3 - 2025-10-22
+===================
+
+Fixed
+-----
+
+- Undefined symbols in the C++ wrapper when ``CXXFLAGS`` contains ``-flto``.
+- Dependency copyright notices in the documentation were not up to date, some
+  dependencies were not listed, and some dev and build dependencies were listed.
+- The documentation unnecessarily included the Apache 2.0 license text.
+- The metadata syntax documentation included an outdated description of cycle
+  avoidance when handling plugin group metadata, and incorrectly said that
+  location metadata was not used by LOOT.
+
 0.28.2 - 2025-10-03
 ===================
 

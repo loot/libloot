@@ -1,6 +1,6 @@
 [project]
 name = "libloot-docs"
-version = "0.28.2"
+version = "0.28.3"
 requires-python = ">=3.11"
 dependencies = [
     "breathe==4.36.0",

@@ -1,6 +1,6 @@
 {
   "name": "libloot-nodejs-win32-x64-msvc",
-  "version": "0.28.2",
+  "version": "0.28.3",
   "os": [
     "win32"
   ],
