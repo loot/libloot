@@ -10,37 +10,46 @@ import subprocess
 
 from urllib.request import urlopen
 
-# CC0, Unlicense and Zlib don't need licenses to be included.
-SKIPPABLE_LICENSES = ['CC0-1.0', 'Unlicense', 'Zlib']
-# MPL-2.0 doesn't need the license to be included with binary distributions, and
-# a copy of the GPL-3.0(-only|-or-later)? license is already included as that's
-# libloot's own license
-SKIPPABLE_LICENSE_FILES = ['CC0-1.0', 'Unlicense', 'Zlib', 'MPL-2.0', 'GPL-3.0', 'GPL-3.0-only', 'GPL-3.0-or-later']
-# Don't include notices for libloot's own crates, or those that
+SKIPPABLE_NOTICE_LICENSES = [
+    # CC0 and Unlicense licenses don't require license redistribution.
+    'CC0-1.0',
+    'Unlicense',
+    # Zlib and MPL licenses don't need to be included in binary distributions.
+    'Zlib',
+    'MPL-2.0'
+]
+SKIPPABLE_LICENSE_FILES = SKIPPABLE_NOTICE_LICENSES + [
+    # Skip GPL v3 because it's already present as libloot's own license.
+    'GPL-3.0',
+    'GPL-3.0-only',
+    'GPL-3.0-or-later'
+]
+# Don't include notices for libloot's own crates.
 SKIPPABLE_CRATES = [
         'libloot',
         'libloot-ffi-errors',
 ]
-# I've verified that these have no notices.
+# Notice extraction is not flawless and may fail to find notices, so I've
+# verified that these have no notices.
 NO_NOTICES_WHITELIST = [
-    ('allocator-api2', '0.2.21'),
-    ('cxx', '1.0.161'),
+    ('allocator-api2',  '0.2.21'),
+    ('cxx',             '1.0.161'),
     ('cxxbridge-macro', '1.0.161'),
-    ('delegate', '0.13.4'),
-    ('link-cplusplus', '1.0.10'),
-    ('once_cell', '1.21.3'),
-    ('option-ext', '0.2.0'),
-    ('pelite-macros', '0.1.1'),
-    ('pest', '2.8.0'),
-    ('proc-macro2', '1.0.101'),
-    ('quote', '1.0.40'),
-    ('rustc-hash', '2.1.1'),
-    ('rustversion', '1.0.20'),
-    ('serde', '1.0.219'),
-    ('serde_derive', '1.0.219'),
-    ('syn', '2.0.106'),
-    ('thiserror', '2.0.12'),
-    ('thiserror-impl', '2.0.12'),
+    ('delegate',        '0.13.4'),
+    ('link-cplusplus',  '1.0.10'),
+    ('once_cell',       '1.21.3'),
+    ('option-ext',      '0.2.0'),
+    ('pelite-macros',   '0.1.1'),
+    ('pest',            '2.8.0'),
+    ('proc-macro2',     '1.0.101'),
+    ('quote',           '1.0.40'),
+    ('rustc-hash',      '2.1.1'),
+    ('rustversion',     '1.0.20'),
+    ('serde',           '1.0.219'),
+    ('serde_derive',    '1.0.219'),
+    ('syn',             '2.0.106'),
+    ('thiserror',       '2.0.12'),
+    ('thiserror-impl',  '2.0.12'),
 ]
 
 YEAR_REGEX = re.compile(r'\d{4}')
@@ -119,10 +128,19 @@ def parse_licenses(dependency):
     else:
         expression = dependency['license']
 
-    licenses = list(map(str.strip, expression.split('OR')))
-    licenses.sort(reverse=True)
+    licenses_any = list(map(str.strip, expression.split('OR')))
 
-    return list(map(str.strip, licenses[0].split('AND')))
+    # If it's possible to pick a license that doesn't need a notice, pick it.
+    for license in licenses_any:
+        licenses_all = list(map(str.strip, license.split('AND')))
+        if all(license in SKIPPABLE_NOTICE_LICENSES for license in licenses_all):
+            return licenses_all
+
+    # MIT OR Apache-2.0 is a common combination, MIT also appears on its own.
+    if 'MIT' in licenses_any:
+        return ['MIT']
+
+    return list(map(str.strip, licenses_any[0].split('AND')))
 
 def download_licenses(dependencies, output_directory):
     unique_licenses = set()
@@ -176,7 +194,6 @@ def read_notices(dependency):
 
     crate_path = os.path.dirname(dependency['manifest_path'])
 
-
     notices = []
 
     for entry in os.scandir(crate_path):
@@ -215,8 +232,8 @@ if __name__ == "__main__":
         if dependency['name'] in SKIPPABLE_CRATES:
             continue
 
-        if all(license in SKIPPABLE_LICENSES for license in parse_licenses(dependency)):
-            print(f'Skipping {dependency['name']} because it uses a skippable license: {dependency['license']}')
+        if all(license in SKIPPABLE_NOTICE_LICENSES for license in parse_licenses(dependency)):
+            print(f'Skipping {dependency['name']} because its license allows it: {dependency['license']}')
             continue
 
         notices = read_notices(dependency)

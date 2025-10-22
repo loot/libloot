@@ -16,12 +16,6 @@ GNU Free Documentation License 1.3
 .. include:: licenses/GFDL-1.3-no-invariants-or-later
   :literal:
 
-Apache License 2.0
-------------------
-
-.. include:: licenses/Apache-2.0
-  :literal:
-
 BSD 3-Clause "New" or "Revised" License
 ---------------------------------------
 
