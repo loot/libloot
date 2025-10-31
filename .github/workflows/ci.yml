@@ -12,6 +12,9 @@ env:
   CMAKE_CONFIG: RelWithDebInfo
   UV_VERSION: "0.9.0"
 
+permissions:
+  contents: read
+
 jobs:
   rustfmt:
     runs-on: ubuntu-24.04
