@@ -177,7 +177,7 @@ set_target_properties(loot PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(WIN32)
     target_compile_definitions(loot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
 
     set(LOOT_LIBS ntdll ws2_32 bcrypt)
@@ -185,7 +185,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(loot PRIVATE ${LOOT_LIBS})
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(loot PRIVATE
         "-Wall"
         "-Wextra"
@@ -367,7 +367,7 @@ if(NOT DEFINED CPACK_PACKAGE_VERSION)
     set(CPACK_PACKAGE_VERSION ${GIT_DESCRIBE_STRING})
 endif()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(WIN32)
     set(CPACK_GENERATOR "7Z")
 else()
     set(CPACK_GENERATOR "TXZ")

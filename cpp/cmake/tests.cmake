@@ -93,7 +93,7 @@ set_target_properties(libloot_tests PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(WIN32)
     target_compile_definitions(libloot_tests PRIVATE UNICODE _UNICODE)
 
     if((NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows") OR NOT LIBLOOT_BUILD_SHARED)
@@ -103,7 +103,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(libloot_tests PRIVATE "-Wall" "-Wextra")
 endif()
 
