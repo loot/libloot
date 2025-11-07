@@ -35,19 +35,24 @@ else()
     set(TARGET_PATH "${PROJECT_SOURCE_DIR}/../target")
 endif()
 
+set(CARGO_COMMAND cargo build
+    $<$<NOT:$<CONFIG:Debug>>:--release>
+    $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:--config>
+    $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/.cargo/msvc-debug-config.toml>
+    $<$<BOOL:${RUST_TARGET}>:--target>
+    $<$<BOOL:${RUST_TARGET}>:${RUST_TARGET}>)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CARGO_COMMAND ${CMAKE_COMMAND} -E env --modify "CXXFLAGS=string_append: -fno-lto" -- ${CARGO_COMMAND})
+endif()
+
 add_custom_target(libloot-cpp-build
     # Force LTO to be disabled when building the first layer of the C++ wrapper,
     # as it may be enabled by default, and if so that leads to undefined symbols
     # in the C++ wrapper's shared library. It's not enough to just pass -fno-lto
     # when building libloot-cpp itself, it also needs to be passed when building
     # the cxx crate, as otherwise there will be missing cxxbridge symbols.
-    COMMAND ${CMAKE_COMMAND} -E env --modify "CXXFLAGS=string_append: -fno-lto" --
-        cargo build
-        $<$<NOT:$<CONFIG:Debug>>:--release>
-        $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:--config>
-        $<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/.cargo/msvc-debug-config.toml>
-        $<$<BOOL:${RUST_TARGET}>:--target>
-        $<$<BOOL:${RUST_TARGET}>:${RUST_TARGET}>
+    COMMAND ${CARGO_COMMAND}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     BYPRODUCTS
         "${TARGET_PATH}/$<IF:$<CONFIG:Debug>,debug,release>/${LIBLOOT_CPP_FILENAME}"
