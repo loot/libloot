@@ -39,7 +39,14 @@ namespace loot {
 /** @brief The interface provided by API's database handle. */
 class DatabaseInterface {
 public:
+  DatabaseInterface() = default;
+  DatabaseInterface(const DatabaseInterface&) = delete;
+  DatabaseInterface(DatabaseInterface&&) = delete;
+
   virtual ~DatabaseInterface() = default;
+
+  DatabaseInterface& operator=(const DatabaseInterface&) = delete;
+  DatabaseInterface& operator=(DatabaseInterface&&) = delete;
 
   /**
    * @name Data Reading & Writing
