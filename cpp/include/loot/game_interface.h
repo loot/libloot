@@ -32,7 +32,14 @@ namespace loot {
 /** @brief The interface provided for accessing game-specific functionality. */
 class GameInterface {
 public:
+  GameInterface() = default;
+  GameInterface(const GameInterface&) = delete;
+  GameInterface(GameInterface&&) = delete;
+
   virtual ~GameInterface() = default;
+
+  GameInterface& operator=(const GameInterface&) = delete;
+  GameInterface& operator=(GameInterface&&) = delete;
 
   /**
    * @brief Get the game's type.

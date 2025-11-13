@@ -40,7 +40,14 @@ namespace loot {
  */
 class PluginInterface {
 public:
+  PluginInterface() = default;
+  PluginInterface(const PluginInterface&) = delete;
+  PluginInterface(PluginInterface&&) = delete;
+
   virtual ~PluginInterface() = default;
+
+  PluginInterface& operator=(const PluginInterface&) = delete;
+  PluginInterface& operator=(PluginInterface&&) = delete;
 
   /**
    * Get the plugin's filename.
