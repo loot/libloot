@@ -348,10 +348,6 @@ criteria = "safe-to-deploy"
 version = "2.0.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.trim-in-place]]
-version = "0.1.7"
-criteria = "safe-to-deploy"
-
 [[exemptions.ucd-trie]]
 version = "0.1.7"
 criteria = "safe-to-deploy"
