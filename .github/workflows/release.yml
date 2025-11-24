@@ -36,11 +36,8 @@ jobs:
     strategy:
       matrix:
         target:
-          - platform: Win32
-            triple: i686-pc-windows-msvc
-
-          - platform: x64
-            triple: x86_64-pc-windows-msvc
+          - i686-pc-windows-msvc
+          - x86_64-pc-windows-msvc
 
     steps:
       - uses: actions/checkout@v6
@@ -56,11 +53,11 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-${{ matrix.target.platform }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.platform == 'Win32'
+        if: matrix.target == 'i686-pc-windows-msvc'
 
       - name: Set LIBLOOT_REVISION
         shell: bash
@@ -69,11 +66,13 @@ jobs:
       - name: Run CMake
         working-directory: cpp
         run: |
+          $platform = if ("${{ matrix.target }}" -eq "i686-pc-windows-msvc") { "Win32" } else { "x64" }
+
           cmake -G "Visual Studio 17 2022" `
-            -A ${{ matrix.target.platform }} `
+            -A "$platform" `
             -DCPACK_PACKAGE_VERSION="${{ github.ref_name }}" `
             -DCPACK_THREADS=0 `
-            -DRUST_TARGET="${{ matrix.target.triple }}" `
+            -DRUST_TARGET="${{ matrix.target }}" `
             -B build
           cmake --build build --parallel --config ${{ env.CMAKE_CONFIG }}
 
@@ -114,7 +113,7 @@ jobs:
         run: |
           cpack -C ${{ env.CMAKE_CONFIG }}
 
-          if [[ "${{ matrix.target.platform }}" == "Win32" ]]
+          if [[ "${{ matrix.target }}" == "i686-pc-windows-msvc" ]]
           then
             PLATFORM=win32
           else

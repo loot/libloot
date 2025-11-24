@@ -66,19 +66,13 @@ jobs:
       matrix:
         target:
           - os: windows-2022
-            platform: Win32
             triple: i686-pc-windows-msvc
-            architecture: x86
 
           - os: windows-2022
-            platform: x64
             triple: x86_64-pc-windows-msvc
-            architecture: x64
 
           - os: ubuntu-24.04
-            platform: x86_64
             triple: x86_64-unknown-linux-gnu
-            architecture: x64
 
     runs-on: ${{ matrix.target.os }}
 
@@ -98,11 +92,11 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.triple }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.platform == 'Win32'
+        if: matrix.target.triple == 'i686-pc-windows-msvc'
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@d6d752794628f1e1fffa3c4d3c8874e06f043d50 # v2.62.15
@@ -139,19 +133,13 @@ jobs:
       matrix:
         target:
           - os: windows-2022
-            platform: Win32
             triple: i686-pc-windows-msvc
-            architecture: x86
 
           - os: windows-2022
-            platform: x64
             triple: x86_64-pc-windows-msvc
-            architecture: x64
 
           - os: ubuntu-24.04
-            platform: x86_64
             triple: x86_64-unknown-linux-gnu
-            architecture: x64
 
     runs-on: ${{ matrix.target.os }}
 
@@ -172,11 +160,11 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.triple }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.platform == 'Win32'
+        if: matrix.target.triple == 'i686-pc-windows-msvc'
 
       - name: Set LIBLOOT_REVISION
         shell: bash
@@ -207,8 +195,10 @@ jobs:
       - name: Build the C++ wrapper (Windows)
         working-directory: cpp
         run: |
+          $platform = if ("${{ matrix.target.triple }}" -eq "i686-pc-windows-msvc") { "Win32" } else { "x64" }
+
           cmake -G "Visual Studio 17 2022" `
-            -A ${{ matrix.target.platform }} `
+            -A "$platform" `
             -DCMAKE_COMPILE_WARNING_AS_ERROR=ON `
             -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" `
             -DCPACK_THREADS=0 `
@@ -269,7 +259,7 @@ jobs:
           if [[ "${{ runner.os }}" == "Windows" ]]
           then
             EXTENSION=7z
-            if [[ "${{ matrix.target.platform }}" == "Win32" ]]
+            if [[ "${{ matrix.target.triple }}" == "i686-pc-windows-msvc" ]]
             then
               PLATFORM=win32
             else
@@ -305,7 +295,6 @@ jobs:
       matrix:
         target:
           - os: ubuntu-24.04
-            platform: x86_64
             triple: x86_64-unknown-linux-gnu
             architecture: x64
 
@@ -331,7 +320,7 @@ jobs:
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.platform == 'Win32'
+        if: matrix.target.triple == 'i686-pc-windows-msvc'
 
       - name: Set LIBLOOT_REVISION
         shell: bash
@@ -359,9 +348,7 @@ jobs:
       matrix:
         target:
           - os: ubuntu-24.04
-            platform: x86_64
             triple: x86_64-unknown-linux-gnu
-            architecture: x64
 
     runs-on: ${{ matrix.target.os }}
 
@@ -376,7 +363,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.triple }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Get npm cache directory
         id: npm-cache-dir
@@ -393,7 +380,7 @@ jobs:
 
       - name: Install Rust i686-pc-windows-msvc target
         run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.platform == 'Win32'
+        if: matrix.target.triple == 'i686-pc-windows-msvc'
 
       - name: Set LIBLOOT_REVISION
         shell: bash
