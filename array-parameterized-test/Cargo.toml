@@ -9,7 +9,7 @@ license = "MIT"
 
 [dependencies]
 proc-macro2 = "1.0.83"
-quote = "1.0.35"
+quote = "1.0.42"
 syn = { version = ">= 1.0.0, < 3", features = ["full"] }
 
 [lib]
