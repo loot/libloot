@@ -29,6 +29,5 @@
     "test": "ava",
     "universalize": "napi universalize",
     "version": "napi version"
-  },
-  "packageManager": "yarn@4.9.1"
+  }
 }
