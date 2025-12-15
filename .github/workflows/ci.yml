@@ -299,7 +299,7 @@ jobs:
         if: github.event_name == 'push'
 
       - name: Upload archive
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.archive-name.outputs.filename }}
           path: |
@@ -448,7 +448,7 @@ jobs:
           genhtml --output-directory=report --substitute "s#.*libloot#$(pwd)#g" --substitute 's#\\#/#g' merged.info
 
       - name: Upload report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Code coverage report
           path: report/
