@@ -43,7 +43,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v5
       with:
         path: ${{ runner.tool_cache }}/cargo-vet
         key: cargo-vet-bin-${{ env.CARGO_VET_REV }}
@@ -86,7 +86,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -169,7 +169,7 @@ jobs:
         with:
           python-version: '3.13'
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -325,7 +325,7 @@ jobs:
           python-version: '3.13'
           architecture: ${{ matrix.target.architecture }}
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -372,7 +372,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -388,7 +388,7 @@ jobs:
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
         if: startsWith(runner.os, 'Linux')
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
