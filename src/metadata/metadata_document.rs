@@ -5,7 +5,10 @@ use std::{
 
 use saphyr::{LoadableYamlNode, MarkedYaml, YamlData};
 
-use crate::{escape_ascii, logging};
+use crate::{
+    escape_ascii, logging,
+    metadata::{PreludeDiffSpan, error::MetadataParsingErrorReason},
+};
 
 use super::{
     error::{
@@ -80,10 +83,32 @@ impl MetadataDocument {
         let prelude = std::fs::read_to_string(prelude_path)
             .map_err(|e| LoadMetadataError::from_io_error(masterlist_path.into(), e))?;
 
-        let masterlist = replace_prelude(masterlist, &prelude);
+        let masterlist = replace_prelude(masterlist, &prelude).map_err(|e| {
+            LoadMetadataError::new(
+                masterlist_path.into(),
+                MetadataDocumentParsingError::MetadataParsingError(e),
+            )
+        })?;
 
-        self.load_from_str(&masterlist)
-            .map_err(|e| LoadMetadataError::new(masterlist_path.into(), e))?;
+        self.load_from_str(&masterlist.masterlist)
+            .map_err(|mut e| {
+                match &mut e {
+                    MetadataDocumentParsingError::MetadataParsingError(err) => {
+                        if let Some(meta) = masterlist.meta {
+                            err.adjust_location(&meta);
+                        }
+                    }
+                    MetadataDocumentParsingError::YamlMergeKeyError(err) => {
+                        if let Some(meta) = masterlist.meta {
+                            err.adjust_location(&meta);
+                        }
+                    }
+                    _ => {
+                        // No location to adjust.
+                    }
+                }
+                LoadMetadataError::new(masterlist_path.into(), e)
+            })?;
 
         logging::trace!(
             "Successfully loaded metadata from file at \"{}\".",
@@ -99,11 +124,13 @@ impl MetadataDocument {
         let doc = docs
             .pop()
             .ok_or_else(|| MetadataDocumentParsingError::NoDocuments)?;
+
         if !docs.is_empty() {
             return Err(MetadataDocumentParsingError::MoreThanOneDocument(
                 docs.len() + 1,
             ));
         }
+
         let doc = process_merge_keys(doc)?;
 
         let YamlData::Mapping(doc) = doc.data else {
@@ -339,17 +366,74 @@ impl std::default::Default for MetadataDocument {
     }
 }
 
-fn replace_prelude(masterlist: String, prelude: &str) -> String {
-    if let Some((start, end)) = split_on_prelude(&masterlist) {
+struct MasterlistWithReplacedPrelude {
+    masterlist: String,
+    meta: Option<PreludeDiffSpan>,
+}
+
+fn replace_prelude(
+    masterlist: String,
+    prelude: &str,
+) -> Result<MasterlistWithReplacedPrelude, ParseMetadataError> {
+    if let Some(SplitMasterlist {
+        before_prelude,
+        prelude: old_prelude,
+        after_prelude,
+    }) = split_on_prelude(&masterlist)
+    {
         let prelude = indent_prelude(prelude);
 
-        format!("{start}{prelude}{end}")
+        let masterlist = if after_prelude.is_empty() {
+            format!("{before_prelude}\n{prelude}")
+        } else {
+            format!("{before_prelude}\n{prelude}\n{after_prelude}")
+        };
+
+        // The old prelude included leading and trailing newlines but the new prelude doesn't.
+        let count_modifier = if after_prelude.is_empty() { 1 } else { 2 };
+        let old_prelude_line_count = count_lines(old_prelude).saturating_sub(count_modifier);
+
+        // Add one because before_prelude does not include the line break after the prelude: key.
+        let prelude_start_line = count_lines(before_prelude) + 1;
+        let new_prelude_line_count = count_lines(&prelude);
+        // The last line of the prelude.
+        let prelude_end_line = prelude_start_line + new_prelude_line_count.saturating_sub(1);
+
+        let line_count_delta = new_prelude_line_count
+            .checked_signed_diff(old_prelude_line_count)
+            .ok_or_else(|| {
+                ParseMetadataError::new(
+                    saphyr::Marker::new(before_prelude.len(), prelude_start_line, 0),
+                    MetadataParsingErrorReason::PreludeSubstitutionOverflow {
+                        new_prelude_count: new_prelude_line_count,
+                        old_prelude_count: old_prelude_line_count,
+                    },
+                )
+            })?;
+
+        Ok(MasterlistWithReplacedPrelude {
+            masterlist,
+            meta: Some(PreludeDiffSpan {
+                start_line: prelude_start_line,
+                end_line: prelude_end_line,
+                line_count_delta,
+            }),
+        })
     } else {
-        masterlist
+        Ok(MasterlistWithReplacedPrelude {
+            masterlist,
+            meta: None,
+        })
     }
 }
 
-fn split_on_prelude(masterlist: &str) -> Option<(&str, &str)> {
+struct SplitMasterlist<'a> {
+    before_prelude: &'a str,
+    prelude: &'a str,
+    after_prelude: &'a str,
+}
+
+fn split_on_prelude(masterlist: &str) -> Option<SplitMasterlist<'_>> {
     let (prefix, remainder) = split_on_prelude_start(masterlist)?;
 
     let mut iter = remainder.bytes().enumerate().peekable();
@@ -362,11 +446,13 @@ fn split_on_prelude(masterlist: &str) -> Option<(&str, &str)> {
             && !matches!(next_byte, b' ' | b'#' | b'\n' | b'\r')
         {
             // LIMITATION: Slicing at index should never fail, but the
-            // compiler can't see that. A variation of str.find() that
-            // could take a closure that matches on substrings would
-            // eliminate the need for this.
-            if let Some(suffix) = remainder.get(index..) {
-                return Some((prefix, suffix));
+            // compiler can't see that.
+            if let Some((prelude, suffix)) = remainder.split_at_checked(index + 1) {
+                return Some(SplitMasterlist {
+                    before_prelude: prefix,
+                    prelude,
+                    after_prelude: suffix,
+                });
             }
 
             logging::error!(
@@ -376,9 +462,25 @@ fn split_on_prelude(masterlist: &str) -> Option<(&str, &str)> {
         }
     }
 
-    Some((prefix, ""))
+    Some(SplitMasterlist {
+        before_prelude: prefix,
+        prelude: remainder,
+        after_prelude: "",
+    })
 }
 
+fn count_lines(string: &str) -> usize {
+    // lines() ignores a trailing line ending.
+    let count = string.lines().count();
+    if string.ends_with('\n') {
+        count + 1
+    } else {
+        count
+    }
+}
+
+/// This includes the line break following the "prelude:" YAML as part of the
+/// tuple's second element.
 fn split_on_prelude_start(masterlist: &str) -> Option<(&str, &str)> {
     let prelude_on_first_line = "prelude:";
     let prelude_on_new_line = "\nprelude:";
@@ -405,7 +507,7 @@ fn split_on_prelude_start(masterlist: &str) -> Option<(&str, &str)> {
 }
 
 fn indent_prelude(prelude: &str) -> String {
-    let prelude = ("\n  ".to_owned() + &prelude.replace('\n', "\n  "))
+    let prelude = ("  ".to_owned() + &prelude.replace('\n', "\n  "))
         .replace("  \r\n", "\r\n")
         .replace("  \n", "\n");
 
@@ -425,6 +527,8 @@ mod tests {
     use super::*;
 
     mod metadata_document {
+        use std::error::Error;
+
         use crate::metadata::MessageType;
 
         use super::*;
@@ -677,6 +781,191 @@ plugins:
         }
 
         #[test]
+        fn load_with_prelude_should_not_change_yaml_parse_error_line_numbers_if_they_are_before_the_prelude()
+         {
+            let tmp_dir = tempdir().unwrap();
+
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "common:\n  - *invalid\nprelude:\n  - &ref\n    type: say\n    content: Loaded from same file\n\n  - &otherRef\n    type: error\n    content: Error from same file\nglobals:\n  - *ref\n  - *otherRef").unwrap();
+
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n\n  - &otherRef\n    type: error\n    content: An error message",
+            )
+            .unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            let err_message = metadata_list
+                .load_with_prelude(&masterlist_path, &prelude_path)
+                .unwrap_err()
+                .source()
+                .unwrap()
+                .source()
+                .unwrap()
+                .to_string();
+
+            assert_eq!(
+                "encountered a YAML parsing error at line 2 column 5: while parsing node, found unknown anchor",
+                err_message
+            );
+        }
+
+        #[test]
+        fn load_with_prelude_should_change_yaml_parse_error_line_numbers_if_within_the_prelude() {
+            let tmp_dir = tempdir().unwrap();
+
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\n\n  - &otherRef\n    type: error\n    content: Error from same file\nglobals:\n  - *ref\n  - *otherRef").unwrap();
+
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\n  - &ref\n    type\n    content: Loaded from prelude\n\n  - &otherRef\n    type: error\n    content: An error message",
+            )
+            .unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            let err_message = metadata_list
+                .load_with_prelude(&masterlist_path, &prelude_path)
+                .unwrap_err()
+                .source()
+                .unwrap()
+                .source()
+                .unwrap()
+                .to_string();
+
+            assert_eq!(
+                "encountered a YAML parsing error at line 4 column 12 within the prelude: mapping values are not allowed in this context",
+                err_message
+            );
+        }
+
+        #[test]
+        fn load_with_prelude_should_change_yaml_parse_error_line_numbers_if_they_are_after_the_prelude()
+         {
+            let tmp_dir = tempdir().unwrap();
+
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\n\n  - &otherRef\n    type: error\n    content: Error from same file\nglobals:\n  - *invalid\n  - *otherRef").unwrap();
+
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n\n  - &otherRef\n    type: error\n    content: An error message",
+            )
+            .unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            let err_message = metadata_list
+                .load_with_prelude(&masterlist_path, &prelude_path)
+                .unwrap_err()
+                .source()
+                .unwrap()
+                .source()
+                .unwrap()
+                .to_string();
+
+            assert_eq!(
+                "encountered a YAML parsing error at line 10 column 5: while parsing node, found unknown anchor",
+                err_message
+            );
+        }
+
+        #[test]
+        fn load_with_prelude_should_not_change_yaml_merge_key_error_line_numbers_if_they_are_before_the_prelude()
+         {
+            let tmp_dir = tempdir().unwrap();
+
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "common:\n  - <<: 1\nprelude:\n  - &ref\n    type: say\n    content: Loaded from same file\n\n  - &otherRef\n    type: error\n    content: Error from same file\nglobals:\n  - *ref\n  - *otherRef").unwrap();
+
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n\n  - &otherRef\n    type: error\n    content: An error message",
+            )
+            .unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            let err_message = metadata_list
+                .load_with_prelude(&masterlist_path, &prelude_path)
+                .unwrap_err()
+                .source()
+                .unwrap()
+                .source()
+                .unwrap()
+                .to_string();
+
+            assert_eq!(
+                "invalid YAML merge key value at line 2 column 9: 1",
+                err_message
+            );
+        }
+
+        #[test]
+        fn load_with_prelude_should_change_yaml_merge_key_error_line_numbers_if_within_the_prelude()
+        {
+            let tmp_dir = tempdir().unwrap();
+
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\n\n  - &otherRef\n    type: error\n    content: Error from same file\nglobals:\n  - *ref\n  - *otherRef").unwrap();
+
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\n  - &ref\n    <<: type\n    content: Loaded from prelude\n\n  - &otherRef\n    type: error\n    content: An error message",
+            )
+            .unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            let err_message = metadata_list
+                .load_with_prelude(&masterlist_path, &prelude_path)
+                .unwrap_err()
+                .source()
+                .unwrap()
+                .source()
+                .unwrap()
+                .to_string();
+
+            assert_eq!(
+                "invalid YAML merge key value at line 3 column 9 within the prelude: type",
+                err_message
+            );
+        }
+
+        #[test]
+        fn load_with_prelude_should_change_yaml_merge_key_error_line_numbers_if_they_are_after_the_prelude()
+         {
+            let tmp_dir = tempdir().unwrap();
+
+            let masterlist_path = tmp_dir.path().join("masterlist.yaml");
+            std::fs::write(&masterlist_path, "prelude:\n  - &ref\n    type: say\n    content: Loaded from same file\n\n  - &otherRef\n    type: error\n    content: Error from same file\nglobals:\n  - <<: 1\n  - *otherRef").unwrap();
+
+            let prelude_path = tmp_dir.path().join("prelude.yaml");
+            std::fs::write(
+                &prelude_path,
+                "common:\n  - &ref\n    type: say\n    content: Loaded from prelude\n\n  - &otherRef\n    type: error\n    content: An error message",
+            )
+            .unwrap();
+
+            let mut metadata_list = MetadataDocument::default();
+            let err_message = metadata_list
+                .load_with_prelude(&masterlist_path, &prelude_path)
+                .unwrap_err()
+                .source()
+                .unwrap()
+                .source()
+                .unwrap()
+                .to_string();
+
+            assert_eq!(
+                "invalid YAML merge key value at line 10 column 9: 1",
+                err_message
+            );
+        }
+
+        #[test]
         fn save_should_write_the_loaded_metadata() {
             let tmp_dir = tempdir().unwrap();
 
@@ -812,9 +1101,10 @@ plugins:
 
         #[test]
         fn should_return_an_empty_string_if_given_empty_strings() {
-            let result = replace_prelude(String::new(), "");
+            let result = replace_prelude(String::new(), "").unwrap();
 
-            assert!(result.is_empty());
+            assert!(result.masterlist.is_empty());
+            assert!(result.meta.is_none());
         }
 
         #[test]
@@ -827,9 +1117,10 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
-            assert_eq!(masterlist, result);
+            assert_eq!(masterlist, result.masterlist);
+            assert!(result.meta.is_none());
         }
 
         #[test]
@@ -837,9 +1128,10 @@ plugins:
             let prelude = "globals: [{type: note, content: A message.}]";
             let masterlist = "{prelude: {}, plugins: [{name: a.esp}]}";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
-            assert_eq!(masterlist, result);
+            assert_eq!(masterlist, result.masterlist);
+            assert!(result.meta.is_none());
         }
 
         #[test]
@@ -855,7 +1147,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
             let expected_result = "prelude:
   globals:
@@ -866,7 +1158,94 @@ plugins:
   - name: a.esp
 ";
 
-            assert_eq!(expected_result, result);
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(2, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(5, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(2, result.meta.as_ref().unwrap().line_count_delta);
+        }
+
+        #[test]
+        fn should_replace_a_prelude_with_no_line_break() {
+            let prelude = "globals:
+  - type: note
+    content: A message.
+";
+            let masterlist = "prelude:
+  a: b
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
+
+            let expected_result = "prelude:
+  globals:
+    - type: note
+      content: A message.
+
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(2, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(5, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(3, result.meta.as_ref().unwrap().line_count_delta);
+        }
+
+        #[test]
+        fn should_replace_a_prelude_with_one_that_has_no_trailing_line_break() {
+            let prelude = "globals:
+  - type: note
+    content: A message.";
+            let masterlist = "prelude:
+  a: b
+
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
+
+            let expected_result = "prelude:
+  globals:
+    - type: note
+      content: A message.
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(2, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(4, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(1, result.meta.as_ref().unwrap().line_count_delta);
+        }
+
+        #[test]
+        fn should_replace_a_prelude_with_no_line_break_with_one_that_has_no_trailing_line_break() {
+            let prelude = "globals:
+  - type: note
+    content: A message.";
+            let masterlist = "prelude:
+  a: b
+plugins:
+  - name: a.esp
+";
+
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
+
+            let expected_result = "prelude:
+  globals:
+    - type: note
+      content: A message.
+plugins:
+  - name: a.esp
+";
+
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(2, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(4, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(2, result.meta.as_ref().unwrap().line_count_delta);
         }
 
         #[test]
@@ -882,7 +1261,7 @@ prelude:
 
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
             let expected_result = "plugins:
   - name: a.esp
@@ -892,7 +1271,10 @@ prelude:
       content: A message.
 ";
 
-            assert_eq!(expected_result, result);
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(4, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(7, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(1, result.meta.as_ref().unwrap().line_count_delta);
         }
 
         #[test]
@@ -913,7 +1295,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
             let expected_result = "
 common:
@@ -930,7 +1312,10 @@ plugins:
   - name: a.esp
 ";
 
-            assert_eq!(expected_result, result);
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(5, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(11, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(6, result.meta.as_ref().unwrap().line_count_delta);
         }
 
         #[test]
@@ -946,7 +1331,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
             let expected_result = "prelude:
   globals:
@@ -957,7 +1342,10 @@ plugins:
   - name: a.esp
 ";
 
-            assert_eq!(expected_result, result);
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(2, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(5, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(2, result.meta.as_ref().unwrap().line_count_delta);
         }
 
         #[test]
@@ -970,7 +1358,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
             let expected_result = "prelude:
   globals: [{type: note, content: A message.}]
@@ -978,7 +1366,10 @@ plugins:
   - name: a.esp
 ";
 
-            assert_eq!(expected_result, result);
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(2, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(2, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(-1, result.meta.as_ref().unwrap().line_count_delta);
         }
 
         #[test]
@@ -996,7 +1387,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
             let expected_result = "prelude:
   globals:
@@ -1007,7 +1398,10 @@ plugins:
   - name: a.esp
 ";
 
-            assert_eq!(expected_result, result);
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(2, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(5, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(0, result.meta.as_ref().unwrap().line_count_delta);
         }
 
         #[test]
@@ -1024,7 +1418,7 @@ plugins:
   - name: a.esp
 ";
 
-            let result = replace_prelude(masterlist.into(), prelude);
+            let result = replace_prelude(masterlist.into(), prelude).unwrap();
 
             let expected_result = "prelude:
   globals:
@@ -1035,7 +1429,10 @@ plugins:
   - name: a.esp
 ";
 
-            assert_eq!(expected_result, result);
+            assert_eq!(expected_result, result.masterlist);
+            assert_eq!(2, result.meta.as_ref().unwrap().start_line);
+            assert_eq!(5, result.meta.as_ref().unwrap().end_line);
+            assert_eq!(1, result.meta.as_ref().unwrap().line_count_delta);
         }
     }
 }

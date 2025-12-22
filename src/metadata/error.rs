@@ -4,7 +4,10 @@ use std::path::PathBuf;
 use regress::Error as RegexImplError;
 use saphyr::Marker;
 
-use crate::{escape_ascii, metadata::MessageContent};
+use crate::{
+    escape_ascii,
+    metadata::{MessageContent, PreludeDiffSpan},
+};
 
 use super::yaml::{YamlObjectType, to_unmarked_yaml};
 
@@ -28,13 +31,20 @@ impl std::error::Error for MultilingualMessageContentsError {}
 /// Represents an error that occurred while parsing metadata.
 #[derive(Debug)]
 pub struct ParseMetadataError {
-    marker: saphyr::Marker,
+    line: usize,
+    column: usize,
     reason: MetadataParsingErrorReason,
+    is_within_replacement_prelude: bool,
 }
 
 impl ParseMetadataError {
     pub(super) fn new(marker: Marker, reason: MetadataParsingErrorReason) -> Self {
-        Self { marker, reason }
+        Self {
+            line: marker.line(),
+            column: marker.col(),
+            reason,
+            is_within_replacement_prelude: false,
+        }
     }
 
     pub(super) fn invalid_condition(
@@ -42,10 +52,10 @@ impl ParseMetadataError {
         condition: String,
         cause: loot_condition_interpreter::Error,
     ) -> Self {
-        Self {
+        Self::new(
             marker,
-            reason: MetadataParsingErrorReason::InvalidCondition(Box::new((condition, cause))),
-        }
+            MetadataParsingErrorReason::InvalidCondition(Box::new((condition, cause))),
+        )
     }
 
     pub(super) fn missing_key(
@@ -53,17 +63,17 @@ impl ParseMetadataError {
         key: &'static str,
         yaml_type: YamlObjectType,
     ) -> Self {
-        Self {
+        Self::new(
             marker,
-            reason: MetadataParsingErrorReason::MissingKey(key, yaml_type),
-        }
+            MetadataParsingErrorReason::MissingKey(key, yaml_type),
+        )
     }
 
     pub(super) fn duplicate_entry(marker: Marker, id: String, yaml_type: YamlObjectType) -> Self {
-        Self {
+        Self::new(
             marker,
-            reason: MetadataParsingErrorReason::DuplicateEntry(id, yaml_type),
-        }
+            MetadataParsingErrorReason::DuplicateEntry(id, yaml_type),
+        )
     }
 
     pub(super) fn unexpected_type(
@@ -71,10 +81,10 @@ impl ParseMetadataError {
         yaml_type: YamlObjectType,
         expected_type: ExpectedType,
     ) -> Self {
-        Self {
+        Self::new(
             marker,
-            reason: MetadataParsingErrorReason::UnexpectedType(expected_type, yaml_type),
-        }
+            MetadataParsingErrorReason::UnexpectedType(expected_type, yaml_type),
+        )
     }
 
     pub(super) fn unexpected_value_type(
@@ -83,22 +93,45 @@ impl ParseMetadataError {
         yaml_type: YamlObjectType,
         expected_type: ExpectedType,
     ) -> Self {
-        Self {
+        Self::new(
             marker,
-            reason: MetadataParsingErrorReason::UnexpectedValueType(key, expected_type, yaml_type),
-        }
+            MetadataParsingErrorReason::UnexpectedValueType(key, expected_type, yaml_type),
+        )
+    }
+
+    pub(super) fn adjust_location(&mut self, diff_span: &PreludeDiffSpan) {
+        let (pos, in_prelude) = adjust_location(
+            &Position {
+                line: self.line,
+                column: self.column,
+            },
+            diff_span,
+        );
+        self.line = pos.line;
+        self.column = pos.column;
+        self.is_within_replacement_prelude = in_prelude;
     }
 }
 
 impl std::fmt::Display for ParseMetadataError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "encountered a YAML parsing error at line {} column {}: {}",
-            self.marker.line(),
-            self.marker.col() + 1,
-            self.reason
-        )
+        if self.is_within_replacement_prelude {
+            write!(
+                f,
+                "encountered a YAML parsing error at line {} column {} within the prelude: {}",
+                self.line,
+                self.column + 1,
+                self.reason
+            )
+        } else {
+            write!(
+                f,
+                "encountered a YAML parsing error at line {} column {}: {}",
+                self.line,
+                self.column + 1,
+                self.reason
+            )
+        }
     }
 }
 
@@ -114,10 +147,46 @@ impl std::error::Error for ParseMetadataError {
 
 impl From<saphyr::ScanError> for ParseMetadataError {
     fn from(value: saphyr::ScanError) -> Self {
-        Self {
-            marker: *value.marker(),
-            reason: MetadataParsingErrorReason::Other(Box::new(value)),
-        }
+        Self::new(
+            *value.marker(),
+            MetadataParsingErrorReason::Other(value.info().to_owned()),
+        )
+    }
+}
+
+struct Position {
+    line: usize,
+    column: usize,
+}
+
+fn adjust_location(pos: &Position, diff_span: &PreludeDiffSpan) -> (Position, bool) {
+    if pos.line > diff_span.end_line {
+        (
+            Position {
+                line: pos.line.saturating_sub_signed(diff_span.line_count_delta),
+                column: pos.column,
+            },
+            false,
+        )
+    } else if pos.line >= diff_span.start_line {
+        (
+            Position {
+                // +1 because line numbers are 1-indexed.
+                line: pos.line - diff_span.start_line + 1,
+                // The prelude is indented by two spaces, need to undo the
+                // effect of that on the column value.
+                column: pos.column - 2,
+            },
+            true,
+        )
+    } else {
+        (
+            Position {
+                line: pos.line,
+                column: pos.column,
+            },
+            false,
+        )
     }
 }
 
@@ -133,7 +202,11 @@ pub(super) enum MetadataParsingErrorReason {
     MissingSubstitution(String),
     NonU32Number(i64),
     DuplicateEntry(String, YamlObjectType),
-    Other(Box<saphyr::ScanError>),
+    PreludeSubstitutionOverflow {
+        new_prelude_count: usize,
+        old_prelude_count: usize,
+    },
+    Other(String),
 }
 
 impl std::fmt::Display for MetadataParsingErrorReason {
@@ -170,6 +243,13 @@ impl std::fmt::Display for MetadataParsingErrorReason {
             Self::DuplicateEntry(id, yaml_object_type) => write!(
                 f,
                 "more than one entry exists for {yaml_object_type} \"{id}\""
+            ),
+            Self::PreludeSubstitutionOverflow {
+                new_prelude_count,
+                old_prelude_count,
+            } => write!(
+                f,
+                "overflow when computing difference between old and new prelude line or index counts: {new_prelude_count} - {old_prelude_count}"
             ),
             Self::Other(m) => m.fmt(f),
         }
@@ -321,8 +401,10 @@ impl From<saphyr::ScanError> for MetadataDocumentParsingError {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct YamlMergeKeyError {
-    start: Marker,
+    line: usize,
+    column: usize,
     yaml: String,
+    is_within_replacement_prelude: bool,
 }
 
 impl YamlMergeKeyError {
@@ -345,21 +427,47 @@ impl YamlMergeKeyError {
         }
 
         YamlMergeKeyError {
-            start: value.span.start,
+            line: value.span.start.line(),
+            column: value.span.start.col(),
             yaml,
+            // This may not be correct, but will be fixed if not by a call to with_adjusted_start().
+            is_within_replacement_prelude: false,
         }
+    }
+
+    pub(super) fn adjust_location(&mut self, diff_span: &PreludeDiffSpan) {
+        let (pos, in_prelude) = adjust_location(
+            &Position {
+                line: self.line,
+                column: self.column,
+            },
+            diff_span,
+        );
+        self.line = pos.line;
+        self.column = pos.column;
+        self.is_within_replacement_prelude = in_prelude;
     }
 }
 
 impl std::fmt::Display for YamlMergeKeyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "invalid YAML merge key value at line {} column {}: {}",
-            self.start.line(),
-            self.start.col() + 1,
-            self.yaml
-        )
+        if self.is_within_replacement_prelude {
+            write!(
+                f,
+                "invalid YAML merge key value at line {} column {} within the prelude: {}",
+                self.line,
+                self.column + 1,
+                self.yaml
+            )
+        } else {
+            write!(
+                f,
+                "invalid YAML merge key value at line {} column {}: {}",
+                self.line,
+                self.column + 1,
+                self.yaml
+            )
+        }
     }
 }
 

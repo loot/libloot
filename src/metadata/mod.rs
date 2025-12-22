@@ -18,6 +18,13 @@ pub use plugin_cleaning_data::PluginCleaningData;
 pub use plugin_metadata::PluginMetadata;
 pub use tag::{Tag, TagSuggestion};
 
+#[derive(Debug)]
+struct PreludeDiffSpan {
+    start_line: usize,
+    end_line: usize,
+    line_count_delta: isize,
+}
+
 #[cfg(test)]
 fn emit<T: yaml::EmitYaml>(metadata: &T) -> String {
     let mut emitter = yaml::YamlEmitter::new();
