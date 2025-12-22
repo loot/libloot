@@ -96,7 +96,7 @@ impl std::fmt::Display for ParseMetadataError {
             f,
             "encountered a YAML parsing error at line {} column {}: {}",
             self.marker.line(),
-            self.marker.col(),
+            self.marker.col() + 1,
             self.reason
         )
     }
@@ -357,7 +357,7 @@ impl std::fmt::Display for YamlMergeKeyError {
             f,
             "invalid YAML merge key value at line {} column {}: {}",
             self.start.line(),
-            self.start.col(),
+            self.start.col() + 1,
             self.yaml
         )
     }

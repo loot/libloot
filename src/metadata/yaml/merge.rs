@@ -90,7 +90,7 @@ mod tests {
             let error_message = process_merge_keys(yaml).unwrap_err().to_string();
 
             assert_eq!(
-                "invalid YAML merge key value at line 3 column 6: test",
+                "invalid YAML merge key value at line 3 column 7: test",
                 error_message
             );
         }
@@ -108,7 +108,7 @@ mod tests {
             let error_message = process_merge_keys(yaml).unwrap_err().to_string();
 
             assert_eq!(
-                "invalid YAML merge key value at line 4 column 17: test",
+                "invalid YAML merge key value at line 4 column 18: test",
                 error_message
             );
         }
