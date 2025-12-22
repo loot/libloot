@@ -148,11 +148,11 @@ fn get_file_info(file_path: &Path) -> Option<BY_HANDLE_FILE_INFORMATION> {
 
     let mut info = BY_HANDLE_FILE_INFORMATION::default();
 
-    // SAFETY: This is safe because the file handles and the info struct pointers are all valid until this function exits.
     #[expect(
         unsafe_code,
         reason = "There is currently no way to get this data safely"
     )]
+    // SAFETY: This is safe because the file handles and the info struct pointers are all valid until this function exits.
     let result = unsafe { GetFileInformationByHandle(file.as_raw_handle(), &raw mut info) };
 
     (result != 0).then_some(info)
