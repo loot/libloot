@@ -889,7 +889,7 @@ mod tests {
 
             assert_eq!(
                 format!(
-                    "name: '{}'\nafter: ['{}']",
+                    "name: '{}'\nafter: [ '{}' ]",
                     plugin.name(),
                     plugin.load_after[0].name()
                 ),
@@ -1054,7 +1054,7 @@ mod tests {
 
             assert_eq!(
                 format!(
-                    "name: '{}'\nafter: ['{}']",
+                    "name: '{}'\nafter: [ '{}' ]",
                     plugin.name(),
                     plugin.load_after[0].name()
                 ),
@@ -1109,7 +1109,7 @@ mod tests {
 
             assert_eq!(
                 format!(
-                    "name: '{}'\nreq: ['{}']",
+                    "name: '{}'\nreq: [ '{}' ]",
                     plugin.name(),
                     plugin.requirements[0].name()
                 ),
@@ -1125,7 +1125,7 @@ mod tests {
 
             assert_eq!(
                 format!(
-                    "name: '{}'\ninc: ['{}']",
+                    "name: '{}'\ninc: [ '{}' ]",
                     plugin.name(),
                     plugin.incompatibilities[0].name()
                 ),
@@ -1163,7 +1163,7 @@ mod tests {
 
             assert_eq!(
                 format!(
-                    "name: '{}'\ntag: [{}]",
+                    "name: '{}'\ntag: [ {} ]",
                     plugin.name(),
                     plugin.tags[0].name()
                 ),
@@ -1213,7 +1213,7 @@ mod tests {
 
             assert_eq!(
                 format!(
-                    "name: '{}'\nurl: ['{}']",
+                    "name: '{}'\nurl: [ '{}' ]",
                     plugin.name(),
                     plugin.locations[0].url()
                 ),

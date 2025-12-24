@@ -387,7 +387,7 @@ TEST_F(PluginMetadataTest,
 
   EXPECT_EQ(
       "name: 'Blank.esm'\n"
-      "after: ['Blank.esm']",
+      "after: [ 'Blank.esm' ]",
       plugin.AsYaml());
 }
 }
