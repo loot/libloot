@@ -308,7 +308,9 @@ impl<T: EmitYaml> EmitYaml for &[T] {
             [element] if element.is_scalar() => {
                 emitter.set_flow_style();
                 emitter.begin_array();
+                emitter.write(" ");
                 element.emit_yaml(emitter);
+                emitter.write(" ");
                 emitter.end_array();
                 emitter.set_block_style();
             }
