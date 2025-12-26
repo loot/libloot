@@ -2,6 +2,8 @@ use std::collections::BTreeSet;
 
 use saphyr::{MarkedYaml, Scalar, YamlData};
 
+use crate::metadata::yaml::YamlAnchors;
+
 use super::{
     error::{
         ExpectedType, MetadataParsingErrorReason, MultilingualMessageContentsError,
@@ -405,35 +407,48 @@ pub(super) fn emit_message_contents(
     emitter: &mut YamlEmitter,
     key: &'static str,
 ) {
-    match slice {
-        [] => {}
-        [detail] => {
-            emitter.write_map_key(key);
-            emitter.write_single_quoted_str(detail.text());
-        }
-        details => {
-            emitter.write_map_key(key);
-
-            details.emit_yaml(emitter);
-        }
+    if slice.is_empty() {
+        return;
     }
+
+    emitter.write_map_key(key);
+
+    emitter.write_anchored_value(
+        |a| a.message_contents_anchor(slice).cloned(),
+        |e| match slice {
+            [] => {}
+            [detail] => e.write_single_quoted_str(detail.text()),
+            details => details.emit_yaml(e),
+        },
+    );
 }
 
 impl EmitYaml for Message {
+    fn has_written_anchor(&self, anchors: &YamlAnchors) -> bool {
+        anchors
+            .message_anchor(self)
+            .is_some_and(|a| anchors.is_anchor_written(a))
+    }
+
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
-        emitter.begin_map();
+        emitter.write_anchored_value(
+            |e| e.message_anchor(self).cloned(),
+            |e| {
+                e.begin_map();
 
-        emitter.write_map_key("type");
-        emitter.write_unquoted_str(&self.level.to_string());
+                e.write_map_key("type");
+                e.write_unquoted_str(&self.level.to_string());
 
-        emit_message_contents(&self.content, emitter, "content");
+                emit_message_contents(&self.content, e, "content");
 
-        if let Some(condition) = &self.condition {
-            emitter.write_map_key("condition");
-            emitter.write_single_quoted_str(condition);
-        }
+                if let Some(condition) = &self.condition {
+                    e.write_map_key("condition");
+                    e.write_condition(condition);
+                }
 
-        emitter.end_map();
+                e.end_map();
+            },
+        );
     }
 }
 
@@ -819,7 +834,53 @@ mod tests {
             }
         }
 
+        mod has_written_anchor {
+            use std::collections::HashMap;
+
+            use super::*;
+
+            #[test]
+            fn should_return_true_if_there_is_an_anchor_for_the_message_that_has_been_written() {
+                let message = Message::new(MessageType::Say, "message".into());
+                // Clone to make sure we're not relying on the same object being in the map.
+                let message_clone = message.clone();
+
+                let mut anchors = YamlAnchors::new();
+                anchors
+                    .set_message_anchors(HashMap::from([(&message_clone, "message1".to_owned())]));
+                anchors.record_written_anchor("message1".to_owned());
+
+                assert!(message.has_written_anchor(&anchors));
+            }
+
+            #[test]
+            fn should_return_false_if_there_is_an_unwritten_anchor() {
+                let message = Message::new(MessageType::Say, "message".into());
+                // Clone to make sure we're not relying on the same object being in the map.
+                let message_clone = message.clone();
+
+                let mut anchors = YamlAnchors::new();
+                anchors
+                    .set_message_anchors(HashMap::from([(&message_clone, "message1".to_owned())]));
+
+                assert!(!message.has_written_anchor(&anchors));
+            }
+
+            #[test]
+            fn should_return_false_if_there_is_no_anchor_for_the_message() {
+                let message = Message::new(MessageType::Say, "message".into());
+
+                let anchors = YamlAnchors::new();
+
+                assert!(!message.has_written_anchor(&anchors));
+            }
+        }
+
         mod emit_yaml {
+            use std::collections::HashMap;
+
+            use crate::metadata::emit_with_anchors;
+
             use super::*;
 
             #[test]
@@ -897,6 +958,160 @@ content:
                         message.content[0].text(),
                         message.content[1].language(),
                         message.content[1].text()
+                    ),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_an_anchored_map_if_the_message_has_an_unwritten_anchor() {
+                let message = Message::new(MessageType::Say, "message".into());
+
+                let mut anchors = YamlAnchors::new();
+                anchors.set_message_anchors(HashMap::from([(&message, "message1".to_owned())]));
+
+                let yaml = emit_with_anchors(&message, anchors);
+
+                assert_eq!(
+                    format!(
+                        "&message1\ntype: say\ncontent: '{}'",
+                        message.content[0].text
+                    ),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_an_alias_if_the_message_has_an_anchor() {
+                let message = Message::new(MessageType::Say, "message".into());
+
+                let mut anchors = YamlAnchors::new();
+                anchors.set_message_anchors(HashMap::from([(&message, "message1".to_owned())]));
+                anchors.record_written_anchor("message1".to_owned());
+
+                let yaml = emit_with_anchors(&message, anchors);
+
+                assert_eq!("*message1", yaml);
+            }
+
+            #[test]
+            fn should_emit_an_anchored_flow_list_if_the_message_contents_has_an_unwritten_anchor_and_is_monolingual()
+             {
+                let message = Message::new(MessageType::Say, "message".into());
+
+                let mut anchors = YamlAnchors::new();
+                anchors.set_message_contents_anchors(HashMap::from([(
+                    message.content(),
+                    "content1".to_owned(),
+                )]));
+
+                let yaml = emit_with_anchors(&message, anchors);
+
+                assert_eq!(
+                    format!(
+                        "type: say\ncontent: &content1 '{}'",
+                        message.content[0].text
+                    ),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_an_anchored_block_list_if_the_message_contents_has_an_unwritten_anchor_and_is_multilingual()
+             {
+                let message = Message::multilingual(
+                    MessageType::Say,
+                    vec![
+                        MessageContent::new("english".into()).with_language("en".into()),
+                        MessageContent::new("french".into()).with_language("fr".into()),
+                    ],
+                )
+                .unwrap();
+
+                let mut anchors = YamlAnchors::new();
+                anchors.set_message_contents_anchors(HashMap::from([(
+                    message.content(),
+                    "content1".to_owned(),
+                )]));
+
+                let yaml = emit_with_anchors(&message, anchors);
+
+                assert_eq!(
+                    format!(
+                        "type: {}
+content: &content1
+  - lang: {}
+    text: '{}'
+  - lang: {}
+    text: '{}'",
+                        message.level,
+                        message.content[0].language(),
+                        message.content[0].text(),
+                        message.content[1].language(),
+                        message.content[1].text()
+                    ),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_an_alias_if_the_message_contents_has_an_anchor() {
+                let message = Message::new(MessageType::Say, "message".into());
+
+                let mut anchors = YamlAnchors::new();
+                anchors.set_message_contents_anchors(HashMap::from([(
+                    message.content(),
+                    "content1".to_owned(),
+                )]));
+                anchors.record_written_anchor("content1".to_owned());
+
+                let yaml = emit_with_anchors(&message, anchors);
+
+                assert_eq!("type: say\ncontent: *content1", yaml);
+            }
+
+            #[test]
+            fn should_emit_an_anchored_scalar_if_the_condition_has_an_unwritten_anchor() {
+                let message = Message::new(MessageType::Say, "message".into())
+                    .with_condition("condition 1".into());
+
+                let mut anchors = YamlAnchors::new();
+                anchors.set_condition_anchors(HashMap::from([(
+                    message.condition().unwrap(),
+                    "condition1".to_owned(),
+                )]));
+
+                let yaml = emit_with_anchors(&message, anchors);
+
+                assert_eq!(
+                    format!(
+                        "type: {}\ncontent: '{}'\ncondition: &condition1 '{}'",
+                        message.level,
+                        message.content[0].text,
+                        message.condition.unwrap()
+                    ),
+                    yaml
+                );
+            }
+
+            #[test]
+            fn should_emit_an_alias_if_the_condition_has_an_anchor() {
+                let message = Message::new(MessageType::Say, "message".into())
+                    .with_condition("condition1".into());
+
+                let mut anchors = YamlAnchors::new();
+                anchors.set_condition_anchors(HashMap::from([(
+                    message.condition().unwrap(),
+                    "condition1".to_owned(),
+                )]));
+                anchors.record_written_anchor("condition1".to_owned());
+
+                let yaml = emit_with_anchors(&message, anchors);
+
+                assert_eq!(
+                    format!(
+                        "type: {}\ncontent: '{}'\ncondition: *condition1",
+                        message.level, message.content[0].text
                     ),
                     yaml
                 );

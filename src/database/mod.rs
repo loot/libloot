@@ -10,7 +10,7 @@ use crate::{
     metadata::{
         Group, Message, PluginMetadata,
         error::{LoadMetadataError, WriteMetadataError, WriteMetadataErrorReason},
-        metadata_document::MetadataDocument,
+        metadata_document::{MetadataDocument, MetadataWriteOptions},
     },
     sorting::{
         error::GroupsPathError,
@@ -19,6 +19,10 @@ use crate::{
     },
 };
 pub use error::{ConditionEvaluationError, MetadataRetrievalError};
+
+const WRITE_OPTIONS: MetadataWriteOptions = MetadataWriteOptions {
+    write_anchors: true,
+};
 
 /// Control behaviour when writing to files.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -114,7 +118,7 @@ impl Database {
     ) -> Result<(), WriteMetadataError> {
         validate_write_path(output_path, mode)?;
 
-        self.userlist.save(output_path)
+        self.userlist.save(output_path, WRITE_OPTIONS)
     }
 
     /// Writes a metadata file that only contains plugin Bash Tag suggestions
@@ -139,7 +143,7 @@ impl Database {
             doc.set_plugin_metadata(minimal_plugin);
         }
 
-        doc.save(output_path)
+        doc.save(output_path, WRITE_OPTIONS)
     }
 
     /// Evaluate the given condition string.

@@ -2,7 +2,7 @@ mod emit;
 mod merge;
 mod parse;
 
-pub(in crate::metadata) use emit::{EmitYaml, YamlEmitter};
+pub(in crate::metadata) use emit::{EmitYaml, YamlAnchors, YamlEmitter};
 pub(in crate::metadata) use merge::process_merge_keys;
 pub(in crate::metadata) use parse::{
     TryFromYaml, YamlObjectType, as_mapping, get_required_string_value, get_slice_value,

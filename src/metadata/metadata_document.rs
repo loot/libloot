@@ -8,7 +8,7 @@ use saphyr::{LoadableYamlNode, MarkedYaml, YamlData};
 
 use crate::{
     escape_ascii, logging,
-    metadata::{PreludeDiffSpan, error::MetadataParsingErrorReason},
+    metadata::{PreludeDiffSpan, error::MetadataParsingErrorReason, yaml::YamlAnchors},
 };
 
 use super::{
@@ -24,6 +24,11 @@ use super::{
         EmitYaml, TryFromYaml, YamlEmitter, YamlObjectType, get_slice_value, process_merge_keys,
     },
 };
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub(crate) struct MetadataWriteOptions {
+    pub write_anchors: bool,
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct MetadataDocument {
@@ -220,10 +225,22 @@ impl MetadataDocument {
         Ok(())
     }
 
-    pub(crate) fn save(&self, file_path: &Path) -> Result<(), WriteMetadataError> {
+    pub(crate) fn save(
+        &self,
+        file_path: &Path,
+        options: MetadataWriteOptions,
+    ) -> Result<(), WriteMetadataError> {
         logging::trace!("Saving metadata list to: \"{}\"", escape_ascii(file_path));
 
-        let mut emitter = YamlEmitter::new();
+        let plugins: Vec<_> = self.ordered_plugins_iter().collect();
+
+        let mut anchors = YamlAnchors::new();
+
+        if options.write_anchors {
+            set_emitter_anchors(&self.messages, &plugins, &mut anchors);
+        }
+
+        let mut emitter = YamlEmitter::new(anchors);
 
         emitter.begin_map();
 
@@ -249,12 +266,12 @@ impl MetadataDocument {
             self.messages.emit_yaml(&mut emitter);
         }
 
-        if !self.plugins.is_empty() || !self.regex_plugins.is_empty() {
+        if !plugins.is_empty() {
             emitter.write_map_key("plugins");
 
             emitter.begin_array();
 
-            for plugin in self.ordered_plugins_iter() {
+            for plugin in plugins {
                 if !plugin.has_name_only() {
                     plugin.emit_yaml(&mut emitter);
                 }
@@ -398,6 +415,175 @@ impl std::default::Default for MetadataDocument {
             regex_plugins: Vec::default(),
             ordered_plugin_names: Vec::default(),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct OrderedCounts<T> {
+    order: Vec<T>,
+    counts: HashMap<T, u32>,
+}
+
+impl<T> OrderedCounts<T> {
+    fn new() -> Self {
+        Self {
+            order: Vec::new(),
+            counts: HashMap::new(),
+        }
+    }
+}
+
+impl<T: Eq + std::hash::Hash + Copy> OrderedCounts<T> {
+    fn increment_for(&mut self, value: T) -> u32 {
+        *self
+            .counts
+            .entry(value)
+            .and_modify(|e| *e += 1)
+            .or_insert_with(|| {
+                self.order.push(value);
+                1
+            })
+    }
+
+    fn into_anchor_map(self, anchor_prefix: &str) -> HashMap<T, String> {
+        self.order
+            .into_iter()
+            .filter(|e| self.counts.get(e).is_some_and(|c| *c > 1))
+            .enumerate()
+            .map(|(i, e)| (e, format!("{}{}", anchor_prefix, i + 1)))
+            .collect()
+    }
+}
+
+fn set_emitter_anchors<'a>(
+    general_messages: &'a [Message],
+    plugins: &[&'a PluginMetadata],
+    anchors: &mut YamlAnchors<'a>,
+) {
+    let mut file_counts = OrderedCounts::new();
+    let mut message_counts = OrderedCounts::new();
+    let mut message_contents_counts = OrderedCounts::new();
+    let mut condition_counts = OrderedCounts::new();
+
+    for message in general_messages {
+        count_message_values(
+            message,
+            &mut message_counts,
+            &mut message_contents_counts,
+            &mut condition_counts,
+        );
+    }
+
+    for plugin in plugins {
+        for file in plugin.load_after_files() {
+            count_file_values(
+                file,
+                &mut file_counts,
+                &mut message_contents_counts,
+                &mut condition_counts,
+            );
+        }
+
+        for file in plugin.requirements() {
+            count_file_values(
+                file,
+                &mut file_counts,
+                &mut message_contents_counts,
+                &mut condition_counts,
+            );
+        }
+
+        for file in plugin.incompatibilities() {
+            count_file_values(
+                file,
+                &mut file_counts,
+                &mut message_contents_counts,
+                &mut condition_counts,
+            );
+        }
+
+        for message in plugin.messages() {
+            count_message_values(
+                message,
+                &mut message_counts,
+                &mut message_contents_counts,
+                &mut condition_counts,
+            );
+        }
+
+        for tag in plugin.tags() {
+            if let Some(condition) = tag.condition() {
+                condition_counts.increment_for(condition);
+            }
+        }
+
+        for info in plugin.dirty_info() {
+            if !info.detail().is_empty() {
+                message_contents_counts.increment_for(info.detail());
+            }
+        }
+
+        for info in plugin.clean_info() {
+            if !info.detail().is_empty() {
+                message_contents_counts.increment_for(info.detail());
+            }
+        }
+    }
+
+    let file_anchors = file_counts.into_anchor_map("file");
+    let message_anchors = message_counts.into_anchor_map("message");
+    let message_contents_anchors = message_contents_counts.into_anchor_map("contents");
+    let condition_anchors = condition_counts.into_anchor_map("condition");
+
+    anchors.set_message_anchors(message_anchors);
+    anchors.set_message_contents_anchors(message_contents_anchors);
+    anchors.set_file_anchors(file_anchors);
+    anchors.set_condition_anchors(condition_anchors);
+}
+
+fn count_message_values<'a>(
+    message: &'a Message,
+    message_counts: &mut OrderedCounts<&'a Message>,
+    message_contents_counts: &mut OrderedCounts<&'a [crate::metadata::MessageContent]>,
+    condition_counts: &mut OrderedCounts<&'a str>,
+) {
+    let message_count = message_counts.increment_for(message);
+
+    if message_count > 1 {
+        return;
+    }
+
+    if !message.content().is_empty() {
+        message_contents_counts.increment_for(message.content());
+    }
+
+    if let Some(condition) = message.condition() {
+        condition_counts.increment_for(condition);
+    }
+}
+
+fn count_file_values<'a>(
+    file: &'a crate::metadata::File,
+    file_counts: &mut OrderedCounts<&'a crate::metadata::File>,
+    message_contents_counts: &mut OrderedCounts<&'a [crate::metadata::MessageContent]>,
+    condition_counts: &mut OrderedCounts<&'a str>,
+) {
+    let file_count = file_counts.increment_for(file);
+
+    if file_count > 1 {
+        return;
+    }
+
+    if !file.detail().is_empty() {
+        message_contents_counts.increment_for(file.detail());
+    }
+
+    if let Some(condition) = file.condition() {
+        condition_counts.increment_for(condition);
+    }
+
+    if let Some(constraint) = file.constraint() {
+        condition_counts.increment_for(constraint);
     }
 }
 
@@ -569,7 +755,9 @@ mod tests {
     mod metadata_document {
         use std::error::Error;
 
-        use crate::metadata::MessageType;
+        use crate::metadata::{
+            MessageContent, MessageType, PluginCleaningData, Tag, TagSuggestion,
+        };
 
         use super::*;
 
@@ -1019,10 +1207,158 @@ plugins:
             metadata.load(&path).unwrap();
 
             let other_path = tmp_dir.path().join("other.yaml");
-            metadata.save(&other_path).unwrap();
+            metadata
+                .save(&other_path, MetadataWriteOptions::default())
+                .unwrap();
 
             let mut other_metadata = MetadataDocument::default();
             other_metadata.load(&other_path).unwrap();
+
+            assert_eq!(metadata, other_metadata);
+        }
+
+        fn metadata_with_repeated_values() -> MetadataDocument {
+            let mut metadata = MetadataDocument::default();
+
+            let mut plugin = PluginMetadata::new("test1.esp").unwrap();
+
+            let condition1 = "file(\"test.txt\")";
+            let condition2 = "file(\"other.txt\")";
+            let condition3 = "file(\"third.txt\")";
+            let contents1 = vec![MessageContent::new("message text 1".to_owned())];
+            let contents2 = vec![
+                MessageContent::new("message text 1".to_owned()).with_language("en".to_owned()),
+                MessageContent::new("message text 2".to_owned()).with_language("fr".to_owned()),
+            ];
+            let contents3 = vec![MessageContent::new("message text 3".to_owned())];
+            let contents4 = vec![
+                MessageContent::new("message text 1".to_owned()).with_language("en".to_owned()),
+                MessageContent::new("message text 2".to_owned()).with_language("de".to_owned()),
+            ];
+            let file1 = File::new("file 1".to_owned());
+            let file2 = File::new("file 2".to_owned())
+                .with_condition(condition1.to_owned())
+                .with_detail(contents1.clone())
+                .unwrap();
+            let file3 = File::new("file 3".to_owned())
+                .with_condition(condition1.to_owned())
+                .with_constraint(condition2.to_owned());
+            let file4 = File::new("file 4".to_owned())
+                .with_constraint(condition3.to_owned())
+                .with_detail(contents3.clone())
+                .unwrap();
+
+            let message1 = Message::new(MessageType::Say, contents1[0].text().to_owned());
+            let message2 = Message::multilingual(MessageType::Say, contents2.clone()).unwrap();
+            let message3 = Message::multilingual(MessageType::Say, contents4.clone()).unwrap();
+
+            let tag1 = Tag::new("Relev".to_owned(), TagSuggestion::Addition)
+                .with_condition(condition2.to_owned());
+            let tag2 = Tag::new("Delev".to_owned(), TagSuggestion::Addition)
+                .with_condition(condition3.to_owned());
+
+            let info1 = PluginCleaningData::new(0xDEAD_BEEF, "utility".to_owned())
+                .with_detail(contents2.clone())
+                .unwrap();
+            let info2 = PluginCleaningData::new(0xDEAD_BEEF, "utility".to_owned())
+                .with_detail(contents3.clone())
+                .unwrap();
+
+            plugin.set_load_after_files(vec![file1.clone()]);
+            plugin.set_requirements(vec![file1.clone(), file2.clone()]);
+            plugin.set_incompatibilities(vec![file2.clone(), file3.clone()]);
+            plugin.set_messages(vec![message1.clone(), message2.clone(), message3]);
+            plugin.set_tags(vec![tag1, tag2]);
+            plugin.set_dirty_info(vec![info1]);
+            plugin.set_clean_info(vec![info2]);
+
+            metadata.set_plugin_metadata(plugin);
+
+            let mut plugin = PluginMetadata::new("test2.esp").unwrap();
+
+            plugin.set_messages(vec![message2]);
+            plugin.set_load_after_files(vec![file4]);
+
+            metadata.set_plugin_metadata(plugin);
+
+            metadata
+        }
+
+        #[test]
+        fn save_should_use_anchors_and_aliases_for_repeated_metadata_when_write_anchors_is_true() {
+            let tmp_dir = tempdir().unwrap();
+
+            let path = tmp_dir.path().join("masterlist.yaml");
+
+            let metadata = metadata_with_repeated_values();
+
+            metadata
+                .save(
+                    &path,
+                    MetadataWriteOptions {
+                        write_anchors: true,
+                    },
+                )
+                .unwrap();
+
+            let content = std::fs::read_to_string(&path).unwrap();
+
+            assert_eq!(
+                "plugins:
+  - name: 'test1.esp'
+    after: [ &file1 'file 1' ]
+    req:
+      - *file1
+      - &file2
+        name: 'file 2'
+        detail: &contents1 'message text 1'
+        condition: &condition1 'file(\"test.txt\")'
+    inc:
+      - *file2
+      - name: 'file 3'
+        condition: *condition1
+        constraint: &condition2 'file(\"other.txt\")'
+    msg:
+      - type: say
+        content: *contents1
+      - &message1
+        type: say
+        content: &contents2
+          - lang: en
+            text: 'message text 1'
+          - lang: fr
+            text: 'message text 2'
+      - type: say
+        content:
+          - lang: en
+            text: 'message text 1'
+          - lang: de
+            text: 'message text 2'
+    tag:
+      - name: Relev
+        condition: *condition2
+      - name: Delev
+        condition: &condition3 'file(\"third.txt\")'
+    dirty:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+        detail: *contents2
+    clean:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+        detail: &contents3 'message text 3'
+  - name: 'test2.esp'
+    after:
+      - name: 'file 4'
+        detail: *contents3
+        constraint: *condition3
+    msg: [ *message1 ]",
+                content
+            );
+
+            // Also check that the written metadata can be read correctly.
+            let mut other_metadata = MetadataDocument::default();
+            other_metadata.load(&path).unwrap();
 
             assert_eq!(metadata, other_metadata);
         }
@@ -1243,6 +1579,94 @@ plugins:
                     .ordered_plugin_names
                     .contains(&Arc::new(Filename::new(name.to_owned())))
             );
+        }
+    }
+
+    mod set_emitter_anchors {
+        use crate::metadata::{MessageContent, MessageType};
+
+        use super::*;
+
+        #[test]
+        fn set_emitter_anchors_should_skip_contents_and_conditions_within_messages_that_have_already_been_seen()
+         {
+            let content1 = "test message 1";
+            let content2 = "test message 2";
+            let condition1 = "condition 1";
+            let condition2 = "condition 2";
+            let message1 = Message::new(MessageType::Say, content1.to_owned())
+                .with_condition(condition1.to_owned());
+            let message2 = Message::new(MessageType::Say, content2.to_owned())
+                .with_condition(condition2.to_owned());
+            let message3 = Message::new(MessageType::Warn, content2.to_owned())
+                .with_condition(condition2.to_owned());
+            let general_messages = &[
+                message1.clone(),
+                message1.clone(),
+                message2.clone(),
+                message3,
+            ];
+            let plugins = &[];
+
+            let mut anchors = YamlAnchors::new();
+            set_emitter_anchors(general_messages, plugins, &mut anchors);
+
+            assert_eq!("message1", anchors.message_anchor(&message1).unwrap());
+            assert!(
+                anchors
+                    .message_contents_anchor(message1.content())
+                    .is_none()
+            );
+            assert!(anchors.condition_anchor(condition1).is_none());
+            assert_eq!(
+                "contents1",
+                anchors.message_contents_anchor(message2.content()).unwrap()
+            );
+            assert_eq!("condition1", anchors.condition_anchor(condition2).unwrap());
+        }
+
+        #[test]
+        fn set_emitter_anchors_should_skip_details_and_conditions_and_constraints_that_have_already_been_seen()
+         {
+            let content1 = "test message 1";
+            let content2 = "test message 2";
+            let condition1 = "condition 1";
+            let condition2 = "condition 2";
+            let constraint1 = "constraint 1";
+            let constraint2 = "constraint 2";
+            let file1 = File::new("file 1".to_owned())
+                .with_condition(condition1.to_owned())
+                .with_constraint(constraint1.to_owned())
+                .with_detail(vec![MessageContent::new(content1.to_owned())])
+                .unwrap();
+            let file2 = File::new("file 2".to_owned())
+                .with_condition(condition2.to_owned())
+                .with_constraint(constraint2.to_owned())
+                .with_detail(vec![MessageContent::new(content2.to_owned())])
+                .unwrap();
+            let file3 = File::new("file 3".to_owned())
+                .with_condition(condition2.to_owned())
+                .with_constraint(constraint2.to_owned())
+                .with_detail(vec![MessageContent::new(content2.to_owned())])
+                .unwrap();
+            let mut plugin = PluginMetadata::new("test1.esp").unwrap();
+            plugin.set_load_after_files(vec![file1.clone(), file1.clone(), file2.clone(), file3]);
+            let messages = &[];
+            let plugins = &[&plugin];
+
+            let mut anchors = YamlAnchors::new();
+            set_emitter_anchors(messages, plugins, &mut anchors);
+
+            assert_eq!("file1", anchors.file_anchor(&file1).unwrap());
+            assert!(anchors.message_contents_anchor(file1.detail()).is_none());
+            assert!(anchors.condition_anchor(condition1).is_none());
+            assert!(anchors.condition_anchor(constraint1).is_none());
+            assert_eq!(
+                "contents1",
+                anchors.message_contents_anchor(file2.detail()).unwrap()
+            );
+            assert_eq!("condition1", anchors.condition_anchor(condition2).unwrap());
+            assert_eq!("condition2", anchors.condition_anchor(constraint2).unwrap());
         }
     }
 

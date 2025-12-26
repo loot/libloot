@@ -315,7 +315,9 @@ mod tests {
     }
 
     mod emit_yaml {
-        use crate::metadata::emit;
+        use std::collections::HashMap;
+
+        use crate::metadata::{emit, emit_with_anchors, yaml::YamlAnchors};
 
         use super::*;
 
@@ -421,6 +423,24 @@ detail:
                 ),
                 yaml
             );
+        }
+
+        #[test]
+        fn should_emit_an_alias_if_the_detail_has_an_anchor() {
+            let data = PluginCleaningData::new(0xDEAD_BEEF, "TES5Edit".into())
+                .with_detail(vec![MessageContent::new("message".into())])
+                .unwrap();
+
+            let mut anchors = YamlAnchors::new();
+            anchors.set_message_contents_anchors(HashMap::from([(
+                data.detail(),
+                "content1".to_owned(),
+            )]));
+            anchors.record_written_anchor("content1".to_owned());
+
+            let yaml = emit_with_anchors(&data, anchors);
+
+            assert_eq!("crc: 0xDEADBEEF\nutil: 'TES5Edit'\ndetail: *content1", yaml);
         }
     }
 }

@@ -3,7 +3,9 @@ use std::borrow::Cow;
 use regress::{Error as RegexImplError, Regex};
 use saphyr::MarkedYaml;
 
-use crate::{Database, case_insensitive_regex, error::ConditionEvaluationError};
+use crate::{
+    Database, case_insensitive_regex, error::ConditionEvaluationError, metadata::yaml::YamlAnchors,
+};
 
 use super::{
     error::{MetadataParsingErrorReason, ParseMetadataError, RegexError},
@@ -219,7 +221,7 @@ impl PluginMetadata {
 
     /// Serialises the plugin metadata as YAML.
     pub fn as_yaml(&self) -> String {
-        let mut emitter = YamlEmitter::new();
+        let mut emitter = YamlEmitter::new(YamlAnchors::new());
         self.emit_yaml(&mut emitter);
         emitter.into_string()
     }

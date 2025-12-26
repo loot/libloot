@@ -18,6 +18,9 @@ pub use plugin_cleaning_data::PluginCleaningData;
 pub use plugin_metadata::PluginMetadata;
 pub use tag::{Tag, TagSuggestion};
 
+#[cfg(test)]
+use crate::metadata::yaml::YamlAnchors;
+
 #[derive(Debug)]
 struct PreludeDiffSpan {
     start_line: usize,
@@ -27,7 +30,15 @@ struct PreludeDiffSpan {
 
 #[cfg(test)]
 fn emit<T: yaml::EmitYaml>(metadata: &T) -> String {
-    let mut emitter = yaml::YamlEmitter::new();
+    let mut emitter = yaml::YamlEmitter::new(YamlAnchors::new());
+    metadata.emit_yaml(&mut emitter);
+
+    emitter.into_string()
+}
+
+#[cfg(test)]
+fn emit_with_anchors<T: yaml::EmitYaml>(metadata: &T, anchors: YamlAnchors) -> String {
+    let mut emitter = yaml::YamlEmitter::new(anchors);
     metadata.emit_yaml(&mut emitter);
 
     emitter.into_string()

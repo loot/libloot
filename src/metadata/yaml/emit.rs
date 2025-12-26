@@ -1,23 +1,109 @@
+use std::collections::{HashMap, HashSet};
+
+use crate::metadata::{Message, MessageContent};
+
 pub(in crate::metadata) trait EmitYaml {
     fn is_scalar(&self) -> bool {
+        false
+    }
+
+    fn has_written_anchor(&self, _: &YamlAnchors) -> bool {
         false
     }
 
     fn emit_yaml(&self, emitter: &mut YamlEmitter);
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub(in crate::metadata) struct YamlEmitter {
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
+pub(in crate::metadata) struct YamlAnchors<'a> {
+    message: HashMap<&'a Message, String>,
+    message_contents: HashMap<&'a [MessageContent], String>,
+    file: HashMap<&'a crate::metadata::File, String>,
+    condition: HashMap<&'a str, String>,
+    written_anchors: HashSet<String>,
+}
+
+impl<'a> YamlAnchors<'a> {
+    pub(in crate::metadata) fn new() -> Self {
+        YamlAnchors {
+            message: HashMap::new(),
+            message_contents: HashMap::new(),
+            file: HashMap::new(),
+            condition: HashMap::new(),
+            written_anchors: HashSet::new(),
+        }
+    }
+
+    pub(in crate::metadata) fn set_message_anchors(
+        &mut self,
+        message_anchors: HashMap<&'a Message, String>,
+    ) {
+        self.message = message_anchors;
+    }
+
+    pub(in crate::metadata) fn set_message_contents_anchors(
+        &mut self,
+        message_contents_anchors: HashMap<&'a [MessageContent], String>,
+    ) {
+        self.message_contents = message_contents_anchors;
+    }
+
+    pub(in crate::metadata) fn set_file_anchors(
+        &mut self,
+        file_anchors: HashMap<&'a crate::metadata::File, String>,
+    ) {
+        self.file = file_anchors;
+    }
+
+    pub(in crate::metadata) fn set_condition_anchors(
+        &mut self,
+        condition_anchors: HashMap<&'a str, String>,
+    ) {
+        self.condition = condition_anchors;
+    }
+
+    pub(in crate::metadata) fn record_written_anchor(&mut self, anchor_name: String) {
+        self.written_anchors.insert(anchor_name);
+    }
+
+    pub(in crate::metadata) fn message_anchor(&self, message: &Message) -> Option<&String> {
+        self.message.get(message)
+    }
+
+    pub(in crate::metadata) fn message_contents_anchor(
+        &self,
+        message_contents: &[MessageContent],
+    ) -> Option<&String> {
+        self.message_contents.get(message_contents)
+    }
+
+    pub(in crate::metadata) fn file_anchor(&self, file: &crate::metadata::File) -> Option<&String> {
+        self.file.get(file)
+    }
+
+    pub(in crate::metadata) fn condition_anchor(&self, condition: &str) -> Option<&String> {
+        self.condition.get(condition)
+    }
+
+    pub(in crate::metadata) fn is_anchor_written(&self, anchor_name: &str) -> bool {
+        self.written_anchors.contains(anchor_name)
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(in crate::metadata) struct YamlEmitter<'a> {
     buffer: String,
     scope: Vec<YamlBlock>,
     style: YamlStyle,
     is_first_line_of_map: bool,
+    pub(in crate::metadata) anchors: YamlAnchors<'a>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 enum YamlBlock {
     Array,
     Map,
+    Anchor,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -31,16 +117,17 @@ enum YamlStyle {
     Block,
 }
 
-impl YamlEmitter {
-    const INDENT_UNIT: &str = "  ";
-    const ARRAY_ELEMENT_PREFIX: &str = "- ";
+impl<'a> YamlEmitter<'a> {
+    const INDENT_UNIT: &'static str = "  ";
+    const ARRAY_ELEMENT_PREFIX: &'static str = "- ";
 
-    pub(in crate::metadata) fn new() -> Self {
+    pub(in crate::metadata) fn new(anchors: YamlAnchors<'a>) -> Self {
         Self {
             buffer: String::new(),
             scope: vec![],
             style: YamlStyle::Block,
             is_first_line_of_map: false,
+            anchors,
         }
     }
 
@@ -50,6 +137,60 @@ impl YamlEmitter {
 
     pub(in crate::metadata) fn into_string(self) -> String {
         self.buffer
+    }
+
+    fn begin_anchored_element(&mut self, anchor_name: &str) {
+        self.write_prefix();
+
+        self.write("&");
+        self.write(anchor_name);
+
+        self.anchors.record_written_anchor(anchor_name.to_owned());
+        self.scope.push(YamlBlock::Anchor);
+    }
+
+    fn end_anchored_element(&mut self) {
+        if self.scope.last() == Some(&YamlBlock::Anchor) {
+            self.scope.pop();
+        }
+    }
+
+    /// Writes an anchor if the anchor hasn't yet been written, otherwise writes
+    /// an alias of that anchor.
+    fn write_alias(&mut self, anchor_name: &str) {
+        self.write_prefix();
+
+        self.write("*");
+        self.write(anchor_name);
+    }
+
+    pub(in crate::metadata) fn write_anchored_value<F, W>(
+        &mut self,
+        get_anchor: F,
+        write_element: W,
+    ) where
+        F: Fn(&YamlAnchors) -> Option<String>,
+        W: Fn(&mut Self),
+    {
+        if let Some(anchor) = get_anchor(&self.anchors) {
+            let is_anchor_written = self.anchors.is_anchor_written(&anchor);
+            if is_anchor_written {
+                self.write_alias(&anchor);
+            } else {
+                self.begin_anchored_element(&anchor);
+                write_element(self);
+                self.end_anchored_element();
+            }
+        } else {
+            write_element(self);
+        }
+    }
+
+    pub(in crate::metadata) fn write_condition(&mut self, condition: &str) {
+        self.write_anchored_value(
+            |a| a.condition_anchor(condition).cloned(),
+            |e| e.write_single_quoted_str(condition),
+        );
     }
 
     pub(in crate::metadata) fn write_unquoted_str(&mut self, value: &str) {
@@ -83,9 +224,11 @@ impl YamlEmitter {
             self.write_array_element_prefix();
         }
 
+        let in_anchored_element = self.scope.last() == Some(&YamlBlock::Anchor);
+
         self.scope.push(YamlBlock::Map);
 
-        self.is_first_line_of_map = true;
+        self.is_first_line_of_map = !in_anchored_element;
     }
 
     pub(in crate::metadata) fn end_map(&mut self) {
@@ -137,10 +280,15 @@ impl YamlEmitter {
     }
 
     fn write_indent(&mut self) {
-        // If in a map, no indent is needed, but an array needs an indent, and a
-        // map in an array needs an indent.
         if !self.scope.is_empty() {
-            for _ in 0..self.scope.len() - 1 {
+            let scope_count = self
+                .scope
+                .iter()
+                .filter(|s| **s != YamlBlock::Anchor)
+                .skip(1) // Top-level scope needs no indentation.
+                .count();
+
+            for _ in 0..scope_count {
                 self.write(Self::INDENT_UNIT);
             }
         }
@@ -149,8 +297,8 @@ impl YamlEmitter {
     fn write_prefix(&mut self) {
         match self.scope.last() {
             Some(&YamlBlock::Array) => self.write_array_element_prefix(),
-            Some(&YamlBlock::Map) => self.write(" "),
-            _ => self.write_indent(),
+            Some(&YamlBlock::Map | &YamlBlock::Anchor) => self.write(" "),
+            None => self.write_indent(),
         }
     }
 
@@ -303,7 +451,7 @@ impl<T: EmitYaml> EmitYaml for &[T] {
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         match self {
             [] => {}
-            [element] if element.is_scalar() => {
+            [element] if element.is_scalar() || element.has_written_anchor(&emitter.anchors) => {
                 emitter.set_style(YamlStyle::Flow);
                 emitter.begin_array();
                 emitter.write(" ");
@@ -348,7 +496,7 @@ mod tests {
             use super::*;
 
             fn emit(str: &str) -> String {
-                let mut emitter = YamlEmitter::new();
+                let mut emitter = YamlEmitter::new(YamlAnchors::new());
                 emitter.write_unquoted_str(str);
                 emitter.into_string()
             }
@@ -395,7 +543,7 @@ mod tests {
             fn should_fall_back_to_single_quoting_string_that_contains_a_flow_indicator_when_style_is_flow()
              {
                 fn emit_flow(str: &str) -> String {
-                    let mut emitter = YamlEmitter::new();
+                    let mut emitter = YamlEmitter::new(YamlAnchors::new());
                     emitter.set_style(YamlStyle::Flow);
                     emitter.write_unquoted_str(str);
                     emitter.into_string()
@@ -534,7 +682,7 @@ mod tests {
             fn single_quoted_str_should_emit_string_wrapped_in_single_quotes_and_with_single_quotes_doubled()
              {
                 let value = "hello 'world'";
-                let mut emitter = YamlEmitter::new();
+                let mut emitter = YamlEmitter::new(YamlAnchors::new());
                 emitter.write_single_quoted_str(value);
 
                 assert_eq!("'hello ''world'''", emitter.into_string());
@@ -544,11 +692,72 @@ mod tests {
             fn single_quoted_str_should_fall_back_to_double_quoting_string_if_it_contains_non_printable_characters()
              {
                 let value = "\x1B[1mhello world\x1B[0m";
-                let mut emitter = YamlEmitter::new();
+                let mut emitter = YamlEmitter::new(YamlAnchors::new());
                 emitter.write_single_quoted_str(value);
 
                 assert_eq!("\"\\e[1mhello world\\e[0m\"", emitter.into_string());
             }
+        }
+    }
+
+    mod slice_emit_yaml {
+        use super::*;
+
+        use crate::metadata::{MessageType, emit, emit_with_anchors};
+
+        #[test]
+        fn should_emit_a_flow_style_message_list_if_it_has_only_one_element_that_can_use_an_alias()
+        {
+            let messages = vec![Message::new(MessageType::Say, "message".into())];
+
+            let mut anchors = YamlAnchors::new();
+            anchors.set_message_anchors(HashMap::from([(&messages[0], "message1".to_owned())]));
+            anchors.record_written_anchor("message1".to_owned());
+
+            let yaml = emit_with_anchors(&messages, anchors);
+
+            assert_eq!("[ *message1 ]", yaml);
+        }
+
+        #[test]
+        fn should_emit_a_block_style_message_list_if_it_has_multiple_elements() {
+            let messages = vec![
+                Message::new(MessageType::Say, "message 1".into()),
+                Message::new(MessageType::Say, "message 2".into()),
+            ];
+
+            let yaml = emit(&messages);
+
+            assert_eq!(
+                format!(
+                    "\n- type: say\n  content: '{}'\n- type: say\n  content: '{}'",
+                    messages[0].content()[0].text(),
+                    messages[1].content()[0].text()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_a_block_style_message_list_if_it_has_multiple_elements_and_one_alias() {
+            let messages = vec![
+                Message::new(MessageType::Say, "message 1".into()),
+                Message::new(MessageType::Say, "message 2".into()),
+            ];
+
+            let mut anchors = YamlAnchors::new();
+            anchors.set_message_anchors(HashMap::from([(&messages[0], "message1".to_owned())]));
+            anchors.record_written_anchor("message1".to_owned());
+
+            let yaml = emit_with_anchors(&messages, anchors);
+
+            assert_eq!(
+                format!(
+                    "\n- *message1\n- type: say\n  content: '{}'",
+                    messages[1].content()[0].text()
+                ),
+                yaml
+            );
         }
     }
 }
