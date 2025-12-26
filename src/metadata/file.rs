@@ -207,34 +207,45 @@ impl EmitYaml for File {
             && self.display_name.is_none()
     }
 
+    fn has_written_anchor(&self, emitter: &YamlEmitter) -> bool {
+        emitter
+            .file_anchor(self)
+            .is_some_and(|a| emitter.is_anchor_written(a))
+    }
+
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
-        if self.is_scalar() {
-            emitter.single_quoted_str(self.name.as_str());
-        } else {
-            emitter.begin_map();
+        emitter.write_anchored_value(
+            |e| e.file_anchor(self).map(str::to_owned),
+            |emitter| {
+                if self.is_scalar() {
+                    emitter.single_quoted_str(self.name.as_str());
+                } else {
+                    emitter.begin_map();
 
-            emitter.map_key("name");
-            emitter.single_quoted_str(self.name.as_str());
+                    emitter.map_key("name");
+                    emitter.single_quoted_str(self.name.as_str());
 
-            if let Some(display_name) = &self.display_name {
-                emitter.map_key("display");
-                emitter.single_quoted_str(display_name);
-            }
+                    if let Some(display_name) = &self.display_name {
+                        emitter.map_key("display");
+                        emitter.single_quoted_str(display_name);
+                    }
 
-            if let Some(condition) = &self.condition {
-                emitter.map_key("condition");
-                emitter.single_quoted_str(condition);
-            }
+                    if let Some(condition) = &self.condition {
+                        emitter.map_key("condition");
+                        emitter.condition(condition);
+                    }
 
-            if let Some(constraint) = &self.constraint {
-                emitter.map_key("constraint");
-                emitter.single_quoted_str(constraint);
-            }
+                    if let Some(constraint) = &self.constraint {
+                        emitter.map_key("constraint");
+                        emitter.condition(constraint);
+                    }
 
-            emit_message_contents(&self.detail, emitter, "detail");
+                    emit_message_contents(&self.detail, emitter, "detail");
 
-            emitter.end_map();
-        }
+                    emitter.end_map();
+                }
+            },
+        );
     }
 }
 
@@ -377,7 +388,49 @@ mod tests {
         }
     }
 
+    mod has_written_anchor {
+        use std::collections::HashMap;
+
+        use super::*;
+
+        #[test]
+        fn should_return_true_if_emitter_has_an_anchor_for_the_file_that_has_been_written() {
+            let file = File::new("filename".into());
+            // Clone to make sure we're not relying on the same object being in the map.
+            let file_clone = file.clone();
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_file_anchors(HashMap::from([(&file_clone, "file1".to_owned())]));
+            emitter.record_written_anchor("file1".to_owned());
+
+            assert!(file.has_written_anchor(&emitter));
+        }
+
+        #[test]
+        fn should_return_false_if_emitter_has_an_unwritten_anchor() {
+            let file = File::new("filename".into());
+            // Clone to make sure we're not relying on the same object being in the map.
+            let file_clone = file.clone();
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_file_anchors(HashMap::from([(&file_clone, "file1".to_owned())]));
+
+            assert!(!file.has_written_anchor(&emitter));
+        }
+
+        #[test]
+        fn should_return_false_if_emitter_has_no_anchor_for_the_message() {
+            let file = File::new("filename".into());
+
+            let emitter = YamlEmitter::new();
+
+            assert!(!file.has_written_anchor(&emitter));
+        }
+    }
+
     mod emit_yaml {
+        use std::collections::HashMap;
+
         use crate::metadata::emit;
 
         use super::*;
@@ -513,6 +566,183 @@ detail:
                     file.detail[1].language(),
                     file.detail[1].text()
                 ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_an_anchored_scalar_if_the_file_has_an_unwritten_anchor() {
+            let file = File::new("filename".into());
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_file_anchors(HashMap::from([(&file, "file1".to_owned())]));
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!("&file1 'filename'", yaml);
+        }
+
+        #[test]
+        fn should_emit_an_anchored_map_if_the_file_has_an_unwritten_anchor() {
+            let file = File::new("filename".into()).with_display_name("display1".into());
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_file_anchors(HashMap::from([(&file, "file1".to_owned())]));
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!(
+                format!(
+                    "&file1\nname: '{}'\ndisplay: '{}'",
+                    file.name.as_str(),
+                    file.display_name.unwrap()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_an_alias_if_the_file_has_an_anchor() {
+            let file = File::new("filename".into());
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_file_anchors(HashMap::from([(&file, "file1".to_owned())]));
+            emitter.record_written_anchor("file1".to_owned());
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!("*file1", yaml);
+        }
+
+        #[test]
+        fn should_emit_an_anchor_if_the_detail_has_an_anchor_and_it_has_not_yet_been_written() {
+            let file = File::new("filename".into())
+                .with_detail(vec![MessageContent::new("message".into())])
+                .unwrap();
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_message_contents_anchors(HashMap::from([(
+                file.detail(),
+                "content1".to_owned(),
+            )]));
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ndetail: &content1 '{}'",
+                    file.name.as_str(),
+                    file.detail[0].text()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_an_alias_if_the_detail_has_an_anchor() {
+            let file = File::new("filename".into())
+                .with_detail(vec![MessageContent::new("message".into())])
+                .unwrap();
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_message_contents_anchors(HashMap::from([(
+                file.detail(),
+                "content1".to_owned(),
+            )]));
+            emitter.record_written_anchor("content1".to_owned());
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!(format!("name: '{}'\ndetail: *content1", file.name()), yaml);
+        }
+
+        #[test]
+        fn should_emit_an_anchor_if_the_condition_has_an_anchor_and_it_has_not_yet_been_written() {
+            let file = File::new("filename".into()).with_condition("condition 1".into());
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_condition_anchors(HashMap::from([(
+                file.condition().unwrap(),
+                "condition1".to_owned(),
+            )]));
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\ncondition: &condition1 '{}'",
+                    file.name.as_str(),
+                    file.condition.unwrap()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_an_alias_if_the_condition_has_an_anchor() {
+            let file = File::new("filename".into()).with_condition("condition1".into());
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_condition_anchors(HashMap::from([(
+                file.condition().unwrap(),
+                "condition1".to_owned(),
+            )]));
+            emitter.record_written_anchor("condition1".to_owned());
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!(
+                format!("name: '{}'\ncondition: *condition1", file.name()),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_an_anchor_if_the_constraint_has_an_anchor_and_it_has_not_yet_been_written() {
+            let file = File::new("filename".into()).with_constraint("constraint1".into());
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_condition_anchors(HashMap::from([(
+                file.constraint().unwrap(),
+                "condition1".to_owned(),
+            )]));
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!(
+                format!(
+                    "name: '{}'\nconstraint: &condition1 '{}'",
+                    file.name.as_str(),
+                    file.constraint.unwrap()
+                ),
+                yaml
+            );
+        }
+
+        #[test]
+        fn should_emit_an_alias_if_the_constraint_has_an_anchor() {
+            let file = File::new("filename".into()).with_constraint("constraint1".into());
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_condition_anchors(HashMap::from([(
+                file.constraint().unwrap(),
+                "condition1".to_owned(),
+            )]));
+            emitter.record_written_anchor("condition1".to_owned());
+            file.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!(
+                format!("name: '{}'\nconstraint: *condition1", file.name()),
                 yaml
             );
         }

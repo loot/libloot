@@ -231,6 +231,11 @@ impl MetadataDocument {
 
         let mut emitter = YamlEmitter::new();
 
+        let mut plugins: Vec<_> = self.plugins_iter().collect();
+        plugins.sort_by_key(|p| p.name());
+
+        set_emitter_anchors(&self.messages, &plugins, &mut emitter);
+
         if !self.bash_tags.is_empty() {
             emitter.map_key("bash_tags");
 
@@ -253,12 +258,12 @@ impl MetadataDocument {
             self.messages.emit_yaml(&mut emitter);
         }
 
-        if !self.plugins.is_empty() || !self.regex_plugins.is_empty() {
+        if !plugins.is_empty() {
             emitter.map_key("plugins");
 
             emitter.begin_array();
 
-            for plugin in self.plugins_iter() {
+            for plugin in plugins {
                 if !plugin.has_name_only() {
                     plugin.emit_yaml(&mut emitter);
                 }
@@ -364,6 +369,150 @@ impl std::default::Default for MetadataDocument {
             regex_plugins: Vec::default(),
         }
     }
+}
+
+fn set_emitter_anchors<'a>(
+    general_messages: &'a [Message],
+    plugins: &[&'a PluginMetadata],
+    emitter: &mut YamlEmitter<'a>,
+) {
+    let mut file_counts = Vec::new();
+    let mut message_counts = Vec::new();
+    let mut message_contents_counts = Vec::new();
+    let mut condition_counts = Vec::new();
+
+    for message in general_messages {
+        count_message_values(
+            message,
+            &mut message_counts,
+            &mut message_contents_counts,
+            &mut condition_counts,
+        );
+    }
+
+    for plugin in plugins {
+        for file in plugin.load_after_files() {
+            count_file_values(
+                file,
+                &mut file_counts,
+                &mut message_contents_counts,
+                &mut condition_counts,
+            );
+        }
+
+        for file in plugin.requirements() {
+            count_file_values(
+                file,
+                &mut file_counts,
+                &mut message_contents_counts,
+                &mut condition_counts,
+            );
+        }
+
+        for file in plugin.incompatibilities() {
+            count_file_values(
+                file,
+                &mut file_counts,
+                &mut message_contents_counts,
+                &mut condition_counts,
+            );
+        }
+
+        for message in plugin.messages() {
+            count_message_values(
+                message,
+                &mut message_counts,
+                &mut message_contents_counts,
+                &mut condition_counts,
+            );
+        }
+
+        for tag in plugin.tags() {
+            if let Some(condition) = tag.condition() {
+                count_value(&mut condition_counts, condition);
+            }
+        }
+
+        for info in plugin.dirty_info() {
+            if !info.detail().is_empty() {
+                count_value(&mut message_contents_counts, info.detail());
+            }
+        }
+
+        for info in plugin.clean_info() {
+            if !info.detail().is_empty() {
+                count_value(&mut message_contents_counts, info.detail());
+            }
+        }
+    }
+
+    let file_anchors = to_anchor_map(file_counts, "file");
+    let message_anchors = to_anchor_map(message_counts, "message");
+    let message_contents_anchors = to_anchor_map(message_contents_counts, "contents");
+    let condition_anchors = to_anchor_map(condition_counts, "condition");
+
+    emitter.set_message_anchors(message_anchors);
+    emitter.set_message_contents_anchors(message_contents_anchors);
+    emitter.set_file_anchors(file_anchors);
+    emitter.set_condition_anchors(condition_anchors);
+}
+
+fn count_message_values<'a>(
+    message: &'a Message,
+    message_counts: &mut Vec<(&'a Message, u32)>,
+    message_contents_counts: &mut Vec<(&'a [crate::metadata::MessageContent], u32)>,
+    condition_counts: &mut Vec<(&'a str, u32)>,
+) {
+    count_value(message_counts, message);
+
+    if !message.content().is_empty() {
+        count_value(message_contents_counts, message.content());
+    }
+
+    if let Some(condition) = message.condition() {
+        count_value(condition_counts, condition);
+    }
+}
+
+fn count_file_values<'a>(
+    file: &'a crate::metadata::File,
+    file_counts: &mut Vec<(&'a crate::metadata::File, u32)>,
+    message_contents_counts: &mut Vec<(&'a [crate::metadata::MessageContent], u32)>,
+    condition_counts: &mut Vec<(&'a str, u32)>,
+) {
+    count_value(file_counts, file);
+
+    if !file.detail().is_empty() {
+        count_value(message_contents_counts, file.detail());
+    }
+
+    if let Some(condition) = file.condition() {
+        count_value(condition_counts, condition);
+    }
+
+    if let Some(constraint) = file.constraint() {
+        count_value(condition_counts, constraint);
+    }
+}
+
+fn count_value<T: PartialEq>(value_counts: &mut Vec<(T, u32)>, value: T) {
+    if let Some(e) = value_counts.iter_mut().find(|(f, _)| *f == value) {
+        e.1 += 1;
+    } else {
+        value_counts.push((value, 1));
+    }
+}
+
+fn to_anchor_map<T: Eq + std::hash::Hash>(
+    value_counts: Vec<(T, u32)>,
+    anchor_prefix: &str,
+) -> HashMap<T, String> {
+    value_counts
+        .into_iter()
+        .filter_map(|(e, c)| (c > 1).then_some(e))
+        .enumerate()
+        .map(|(i, e)| (e, format!("{}{}", anchor_prefix, i + 1)))
+        .collect()
 }
 
 struct MasterlistWithReplacedPrelude {
@@ -529,7 +678,9 @@ mod tests {
     mod metadata_document {
         use std::error::Error;
 
-        use crate::metadata::MessageType;
+        use crate::metadata::{
+            MessageContent, MessageType, PluginCleaningData, Tag, TagSuggestion,
+        };
 
         use super::*;
 
@@ -559,20 +710,19 @@ plugins:
         content: 'This message should be removed when evaluating conditions.'
         condition: 'active("Blank - Different.esm")'
 
-  - name: 'Blank.+\.esp'
-    after:
-      - 'Blank.esm'
-
-  - name: 'Blank.+(Different)?.*\.esp'
-    inc:
-      - 'Blank.esp'
-
   - name: 'Blank.esp'
     group: group2
     dirty:
       - crc: 0xDEADBEEF
         util: utility
-    "#;
+
+  - name: 'Blank.+(Different)?.*\.esp'
+    inc:
+      - 'Blank.esp'
+
+  - name: 'Blank.+\.esp'
+    after:
+      - 'Blank.esm'"#;
 
         #[test]
         fn load_from_str_should_resolve_aliases() {
@@ -980,6 +1130,140 @@ plugins:
 
             let mut other_metadata = MetadataDocument::default();
             other_metadata.load(&other_path).unwrap();
+
+            assert_eq!(metadata, other_metadata);
+        }
+
+        #[test]
+        #[expect(clippy::too_many_lines)]
+        fn save_should_use_anchors_and_aliases_for_repeated_metadata() {
+            let tmp_dir = tempdir().unwrap();
+
+            let path = tmp_dir.path().join("masterlist.yaml");
+
+            let mut metadata = MetadataDocument::default();
+
+            let mut plugin = PluginMetadata::new("test1.esp").unwrap();
+
+            let condition1 = "file(\"test.txt\")";
+            let condition2 = "file(\"other.txt\")";
+            let condition3 = "file(\"third.txt\")";
+            let contents1 = vec![MessageContent::new("message text 1".to_owned())];
+            let contents2 = vec![
+                MessageContent::new("message text 1".to_owned()).with_language("en".to_owned()),
+                MessageContent::new("message text 2".to_owned()).with_language("fr".to_owned()),
+            ];
+            let contents3 = vec![MessageContent::new("message text 3".to_owned())];
+            let contents4 = vec![
+                MessageContent::new("message text 1".to_owned()).with_language("en".to_owned()),
+                MessageContent::new("message text 2".to_owned()).with_language("de".to_owned()),
+            ];
+            let file1 = File::new("file 1".to_owned());
+            let file2 = File::new("file 2".to_owned())
+                .with_condition(condition1.to_owned())
+                .with_detail(contents1.clone())
+                .unwrap();
+            let file3 = File::new("file 3".to_owned())
+                .with_condition(condition1.to_owned())
+                .with_constraint(condition2.to_owned());
+            let file4 = File::new("file 4".to_owned())
+                .with_constraint(condition3.to_owned())
+                .with_detail(contents3.clone())
+                .unwrap();
+
+            let message1 = Message::new(MessageType::Say, contents1[0].text().to_owned());
+            let message2 = Message::multilingual(MessageType::Say, contents2.clone()).unwrap();
+            let message3 = Message::multilingual(MessageType::Say, contents4.clone()).unwrap();
+
+            let tag1 = Tag::new("Relev".to_owned(), TagSuggestion::Addition)
+                .with_condition(condition2.to_owned());
+            let tag2 = Tag::new("Delev".to_owned(), TagSuggestion::Addition)
+                .with_condition(condition3.to_owned());
+
+            let info1 = PluginCleaningData::new(0xDEAD_BEEF, "utility".to_owned())
+                .with_detail(contents2.clone())
+                .unwrap();
+            let info2 = PluginCleaningData::new(0xDEAD_BEEF, "utility".to_owned())
+                .with_detail(contents3.clone())
+                .unwrap();
+
+            plugin.set_load_after_files(vec![file1.clone()]);
+            plugin.set_requirements(vec![file1.clone(), file2.clone()]);
+            plugin.set_incompatibilities(vec![file2.clone(), file3.clone()]);
+            plugin.set_messages(vec![message1.clone(), message2.clone(), message3]);
+            plugin.set_tags(vec![tag1, tag2]);
+            plugin.set_dirty_info(vec![info1]);
+            plugin.set_clean_info(vec![info2]);
+
+            metadata.set_plugin_metadata(plugin);
+
+            let mut plugin = PluginMetadata::new("test2.esp").unwrap();
+
+            plugin.set_messages(vec![message2]);
+            plugin.set_load_after_files(vec![file4]);
+
+            metadata.set_plugin_metadata(plugin);
+
+            metadata.save(&path).unwrap();
+
+            let content = std::fs::read_to_string(&path).unwrap();
+
+            assert_eq!(
+                "plugins:
+  - name: 'test1.esp'
+    after: [ &file1 'file 1' ]
+    req:
+      - *file1
+      - &file2
+        name: 'file 2'
+        condition: &condition1 'file(\"test.txt\")'
+        detail: &contents1 'message text 1'
+    inc:
+      - *file2
+      - name: 'file 3'
+        condition: *condition1
+        constraint: &condition2 'file(\"other.txt\")'
+    msg:
+      - type: say
+        content: *contents1
+      - &message1
+        type: say
+        content: &contents2
+          - lang: en
+            text: 'message text 1'
+          - lang: fr
+            text: 'message text 2'
+      - type: say
+        content:
+          - lang: en
+            text: 'message text 1'
+          - lang: de
+            text: 'message text 2'
+    tag:
+      - name: Relev
+        condition: *condition2
+      - name: Delev
+        condition: &condition3 'file(\"third.txt\")'
+    dirty:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+        detail: *contents2
+    clean:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+        detail: &contents3 'message text 3'
+  - name: 'test2.esp'
+    after:
+      - name: 'file 4'
+        constraint: *condition3
+        detail: *contents3
+    msg: [ *message1 ]",
+                content
+            );
+
+            // Also check that the written metadata can be read correctly.
+            let mut other_metadata = MetadataDocument::default();
+            other_metadata.load(&path).unwrap();
 
             assert_eq!(metadata, other_metadata);
         }

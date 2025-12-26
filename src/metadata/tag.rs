@@ -117,7 +117,7 @@ impl EmitYaml for Tag {
             }
 
             emitter.map_key("condition");
-            emitter.single_quoted_str(condition);
+            emitter.condition(condition);
 
             emitter.end_map();
         } else if self.is_addition() {
@@ -204,6 +204,8 @@ mod tests {
     }
 
     mod emit_yaml {
+        use std::collections::HashMap;
+
         use crate::metadata::emit;
 
         use super::*;
@@ -223,6 +225,24 @@ mod tests {
             let yaml = emit(&tag);
 
             assert_eq!("name: -name1\ncondition: 'condition'", yaml);
+        }
+
+        #[test]
+        fn should_emit_an_alias_if_the_condition_has_an_anchor() {
+            let tag =
+                Tag::new("name1".into(), TagSuggestion::Removal).with_condition("condition".into());
+
+            let mut emitter = YamlEmitter::new();
+            emitter.set_condition_anchors(HashMap::from([(
+                tag.condition().unwrap(),
+                "condition1".to_owned(),
+            )]));
+            emitter.record_written_anchor("condition1".to_owned());
+            tag.emit_yaml(&mut emitter);
+
+            let yaml = emitter.into_string();
+
+            assert_eq!("name: -name1\ncondition: *condition1", yaml);
         }
     }
 }
