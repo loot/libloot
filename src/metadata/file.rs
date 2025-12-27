@@ -221,6 +221,8 @@ impl EmitYaml for File {
                 emitter.single_quoted_str(display_name);
             }
 
+            emit_message_contents(&self.detail, emitter, "detail");
+
             if let Some(condition) = &self.condition {
                 emitter.map_key("condition");
                 emitter.single_quoted_str(condition);
@@ -230,8 +232,6 @@ impl EmitYaml for File {
                 emitter.map_key("constraint");
                 emitter.single_quoted_str(constraint);
             }
-
-            emit_message_contents(&self.detail, emitter, "detail");
 
             emitter.end_map();
         }
@@ -497,21 +497,21 @@ detail:
                 format!(
                     "name: '{}'
 display: '{}'
-condition: '{}'
-constraint: '{}'
 detail:
   - lang: {}
     text: '{}'
   - lang: {}
-    text: '{}'",
+    text: '{}'
+condition: '{}'
+constraint: '{}'",
                     file.name.as_str(),
                     file.display_name.unwrap(),
-                    file.condition.unwrap(),
-                    file.constraint.unwrap(),
                     file.detail[0].language(),
                     file.detail[0].text(),
                     file.detail[1].language(),
-                    file.detail[1].text()
+                    file.detail[1].text(),
+                    file.condition.unwrap(),
+                    file.constraint.unwrap(),
                 ),
                 yaml
             );
