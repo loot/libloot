@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
+    sync::Arc,
 };
 
 use saphyr::{LoadableYamlNode, MarkedYaml, YamlData};
@@ -29,8 +30,9 @@ pub(crate) struct MetadataDocument {
     bash_tags: Vec<String>,
     groups: Vec<Group>,
     messages: Vec<Message>,
-    plugins: HashMap<Filename, PluginMetadata>,
+    plugins: HashMap<Arc<Filename>, PluginMetadata>,
     regex_plugins: Vec<PluginMetadata>,
+    ordered_plugin_names: Vec<Arc<Filename>>,
 }
 
 impl MetadataDocument {
@@ -142,23 +144,25 @@ impl MetadataDocument {
             .into());
         };
 
-        let mut plugins: HashMap<Filename, PluginMetadata> = HashMap::new();
-        let mut regex_plugins: Vec<PluginMetadata> = Vec::new();
+        let mut plugins = HashMap::new();
+        let mut regex_plugins = Vec::new();
+        let mut ordered_plugin_names = Vec::new();
         for plugin_yaml in get_slice_value(&doc, "plugins", YamlObjectType::MetadataDocument)? {
             let plugin = PluginMetadata::try_from_yaml(plugin_yaml)?;
+            let filename = Arc::new(Filename::new(plugin.name().to_owned()));
+
             if plugin.is_regex_plugin() {
                 regex_plugins.push(plugin);
-            } else {
-                let filename = Filename::new(plugin.name().to_owned());
-                if let Some(old) = plugins.insert(filename, plugin) {
-                    return Err(ParseMetadataError::duplicate_entry(
-                        plugin_yaml.span.start,
-                        old.name().to_owned(),
-                        YamlObjectType::PluginMetadata,
-                    )
-                    .into());
-                }
+            } else if let Some(old) = plugins.insert(Arc::clone(&filename), plugin) {
+                return Err(ParseMetadataError::duplicate_entry(
+                    plugin_yaml.span.start,
+                    old.name().to_owned(),
+                    YamlObjectType::PluginMetadata,
+                )
+                .into());
             }
+
+            ordered_plugin_names.push(filename);
         }
 
         let messages = get_slice_value(&doc, "globals", YamlObjectType::MetadataDocument)?
@@ -219,6 +223,7 @@ impl MetadataDocument {
 
         self.plugins = plugins;
         self.regex_plugins = regex_plugins;
+        self.ordered_plugin_names = ordered_plugin_names;
         self.messages = messages;
         self.bash_tags = bash_tags;
         self.groups = groups;
@@ -231,8 +236,7 @@ impl MetadataDocument {
 
         let mut emitter = YamlEmitter::new();
 
-        let mut plugins: Vec<_> = self.plugins_iter().collect();
-        plugins.sort_by_key(|p| p.name());
+        let plugins: Vec<_> = self.ordered_plugins_iter().collect();
 
         set_emitter_anchors(&self.messages, &plugins, &mut emitter);
 
@@ -295,8 +299,14 @@ impl MetadataDocument {
         &self.messages
     }
 
-    pub(crate) fn plugins_iter(&self) -> impl Iterator<Item = &PluginMetadata> {
-        self.plugins.values().chain(self.regex_plugins.iter())
+    pub(crate) fn ordered_plugins_iter(&self) -> impl Iterator<Item = &PluginMetadata> {
+        self.ordered_plugin_names.iter().filter_map(|f| {
+            self.plugins.get(f).or_else(|| {
+                self.regex_plugins
+                    .iter()
+                    .find(|r| r.name() == f.as_ref().as_str())
+            })
+        })
     }
 
     pub(crate) fn find_plugin(
@@ -336,18 +346,24 @@ impl MetadataDocument {
     }
 
     pub(crate) fn set_plugin_metadata(&mut self, plugin_metadata: PluginMetadata) {
+        let filename = Arc::new(Filename::new(plugin_metadata.name().to_owned()));
+
         if plugin_metadata.is_regex_plugin() {
             self.regex_plugins.push(plugin_metadata);
         } else {
-            self.plugins.insert(
-                Filename::new(plugin_metadata.name().to_owned()),
-                plugin_metadata,
-            );
+            self.plugins.insert(Arc::clone(&filename), plugin_metadata);
         }
+
+        self.ordered_plugin_names.push(filename);
     }
 
     pub(crate) fn remove_plugin_metadata(&mut self, plugin_name: &str) {
-        self.plugins.remove(&Filename::new(plugin_name.to_owned()));
+        let filename = Filename::new(plugin_name.to_owned());
+        let removed = self.plugins.remove(&filename).is_some();
+        if removed {
+            self.ordered_plugin_names
+                .retain(|f| f.as_ref() != &filename);
+        }
     }
 
     pub(crate) fn clear(&mut self) {
@@ -356,6 +372,7 @@ impl MetadataDocument {
         self.messages.clear();
         self.plugins.clear();
         self.regex_plugins.clear();
+        self.ordered_plugin_names.clear();
     }
 }
 
@@ -367,6 +384,7 @@ impl std::default::Default for MetadataDocument {
             messages: Vec::default(),
             plugins: HashMap::default(),
             regex_plugins: Vec::default(),
+            ordered_plugin_names: Vec::default(),
         }
     }
 }
@@ -710,19 +728,19 @@ plugins:
         content: 'This message should be removed when evaluating conditions.'
         condition: 'active("Blank - Different.esm")'
 
-  - name: 'Blank.esp'
-    group: group2
-    dirty:
-      - crc: 0xDEADBEEF
-        util: utility
+  - name: 'Blank.+\.esp'
+    after:
+      - 'Blank.esm'
 
   - name: 'Blank.+(Different)?.*\.esp'
     inc:
       - 'Blank.esp'
 
-  - name: 'Blank.+\.esp'
-    after:
-      - 'Blank.esm'"#;
+  - name: 'Blank.esp'
+    group: group2
+    dirty:
+      - crc: 0xDEADBEEF
+        util: utility"#;
 
         #[test]
         fn load_from_str_should_resolve_aliases() {
@@ -786,14 +804,17 @@ plugins:
             let mut metadata_list = MetadataDocument::default();
             metadata_list.load(&path).unwrap();
 
-            let plugin_names: Vec<_> = metadata_list
-                .plugins_iter()
-                .map(PluginMetadata::name)
-                .collect();
-            assert!(plugin_names.contains(&"Blank.esm"));
-            assert!(plugin_names.contains(&"Blank.esp"));
-            assert!(plugin_names.contains(&"Blank.+\\.esp"));
-            assert!(plugin_names.contains(&"Blank.+(Different)?.*\\.esp"));
+            let mut plugin_names_iter = metadata_list
+                .ordered_plugins_iter()
+                .map(PluginMetadata::name);
+            assert_eq!("Blank.esm", plugin_names_iter.next().unwrap());
+            assert_eq!("Blank.+\\.esp", plugin_names_iter.next().unwrap());
+            assert_eq!(
+                "Blank.+(Different)?.*\\.esp",
+                plugin_names_iter.next().unwrap()
+            );
+            assert_eq!("Blank.esp", plugin_names_iter.next().unwrap());
+            assert_eq!(None, plugin_names_iter.next());
 
             assert_eq!(&["C.Climate", "Relev"], metadata_list.bash_tags());
 
@@ -1274,14 +1295,18 @@ plugins:
             metadata.load_from_str(METADATA_LIST_YAML).unwrap();
 
             assert!(!metadata.messages().is_empty());
-            assert!(metadata.plugins_iter().next().is_some());
             assert!(!metadata.bash_tags().is_empty());
+            assert!(!metadata.plugins.is_empty());
+            assert!(!metadata.regex_plugins.is_empty());
+            assert!(!metadata.ordered_plugin_names.is_empty());
 
             metadata.clear();
 
             assert!(metadata.messages().is_empty());
-            assert!(metadata.plugins_iter().next().is_none());
             assert!(metadata.bash_tags().is_empty());
+            assert!(metadata.plugins.is_empty());
+            assert!(metadata.regex_plugins.is_empty());
+            assert!(metadata.ordered_plugin_names.is_empty());
         }
 
         #[test]
@@ -1320,7 +1345,7 @@ plugins:
         }
 
         #[test]
-        fn add_plugin_should_store_specific_plugin_metadata() {
+        fn set_plugin_metadata_should_store_specific_plugin_metadata() {
             let mut metadata = MetadataDocument::default();
 
             let name = "Blank.esp";
@@ -1335,7 +1360,19 @@ plugins:
         }
 
         #[test]
-        fn add_plugin_should_store_given_regex_plugin_metadata() {
+        fn set_plugin_metadata_should_append_the_specific_plugin_filename_to_ordered_plugin_names()
+        {
+            let mut metadata = MetadataDocument::default();
+            metadata.load_from_str(METADATA_LIST_YAML).unwrap();
+
+            let name = "Blank.esp";
+            metadata.set_plugin_metadata(PluginMetadata::new(name).unwrap());
+
+            assert_eq!(name, metadata.ordered_plugin_names.last().unwrap().as_str());
+        }
+
+        #[test]
+        fn set_plugin_metadata_should_store_given_regex_plugin_metadata() {
             let mut metadata = MetadataDocument::default();
 
             let mut plugin = PluginMetadata::new(".+Dependent\\.esp").unwrap();
@@ -1350,6 +1387,17 @@ plugins:
         }
 
         #[test]
+        fn set_plugin_metadata_should_append_the_regex_plugin_filename_to_ordered_plugin_names() {
+            let mut metadata = MetadataDocument::default();
+            metadata.load_from_str(METADATA_LIST_YAML).unwrap();
+
+            let name = ".+Dependent\\.esp";
+            metadata.set_plugin_metadata(PluginMetadata::new(name).unwrap());
+
+            assert_eq!(name, metadata.ordered_plugin_names.last().unwrap().as_str());
+        }
+
+        #[test]
         fn remove_plugin_metadata_should_remove_the_given_plugin_specific_metadata() {
             let mut metadata = MetadataDocument::default();
             metadata.load_from_str(METADATA_LIST_YAML).unwrap();
@@ -1360,6 +1408,12 @@ plugins:
             metadata.remove_plugin_metadata(name);
 
             assert!(metadata.find_plugin(name).unwrap().is_none());
+
+            assert!(
+                !metadata
+                    .ordered_plugin_names
+                    .contains(&Arc::new(Filename::new(name.to_owned())))
+            );
         }
 
         #[test]
@@ -1377,6 +1431,12 @@ plugins:
             metadata.remove_plugin_metadata("Blank - Different.esp");
 
             assert!(metadata.find_plugin(name).unwrap().is_some());
+
+            assert!(
+                metadata
+                    .ordered_plugin_names
+                    .contains(&Arc::new(Filename::new(name.to_owned())))
+            );
         }
     }
 

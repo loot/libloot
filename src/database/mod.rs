@@ -138,7 +138,7 @@ impl Database {
 
         let mut doc = MetadataDocument::default();
 
-        for plugin in self.masterlist.plugins_iter() {
+        for plugin in self.masterlist.ordered_plugins_iter() {
             let mut minimal_plugin = PluginMetadata::with_same_name(plugin);
             minimal_plugin.set_tags(plugin.tags().to_vec());
             minimal_plugin.set_dirty_info(plugin.dirty_info().to_vec());
@@ -292,8 +292,9 @@ impl Database {
         self.userlist.set_plugin_metadata(plugin_metadata);
     }
 
-    /// Discards all loaded user metadata for the plugin with the given
-    /// filename.
+    /// Discards all loaded user metadata that is specific to the plugin with
+    /// the given filename. Does not discard any plugin metadata with plugin
+    /// name regexes that match the given filename.
     pub fn discard_plugin_user_metadata(&mut self, plugin: &str) {
         self.userlist.remove_plugin_metadata(plugin);
     }
@@ -608,7 +609,7 @@ plugins:
         use super::*;
 
         #[test]
-        fn should_only_write_plugin_bash_tags_and_dirty_info() {
+        fn should_write_plugins_in_insertion_order_with_only_bash_tags_and_dirty_info() {
             let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
             let output_path = fixture.inner.local_path.join("minimal.yaml");
@@ -624,20 +625,7 @@ plugins:
             let content = std::fs::read_to_string(output_path).unwrap();
 
             // Plugin entries are unordered.
-            let expected_content = if content.find(BLANK_DIFFERENT_ESM) < content.find(BLANK_ESM) {
-                "plugins:
-  - name: 'Blank - Different.esm'
-    dirty:
-      - crc: 0x7D22F9DF
-        util: 'TES4Edit'
-        udr: 4
-  - name: 'Blank.esm'
-    tag:
-      - Actors.ACBS
-      - Actors.AIData
-      - -C.Water"
-            } else {
-                "plugins:
+            let expected_content = "plugins:
   - name: 'Blank.esm'
     tag:
       - Actors.ACBS
@@ -647,8 +635,7 @@ plugins:
     dirty:
       - crc: 0x7D22F9DF
         util: 'TES4Edit'
-        udr: 4"
-            };
+        udr: 4";
 
             assert_eq!(expected_content, content);
         }
