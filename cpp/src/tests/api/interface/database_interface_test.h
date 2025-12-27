@@ -964,31 +964,17 @@ TEST_P(DatabaseInterfaceTest,
 
   // Plugin entries are unordered.
   std::stringstream expectedContent;
-  if (content.find(blankDifferentEsm) < content.find(blankEsm)) {
-    expectedContent << "plugins:" << endl
-                    << "  - name: '" << blankDifferentEsm << "'" << endl
-                    << "    dirty:" << endl
-                    << "      - crc: 0x7D22F9DF" << endl
-                    << "        util: 'TES4Edit'" << endl
-                    << "        udr: 4" << endl
-                    << "  - name: '" << blankEsm << "'" << endl
-                    << "    tag:" << endl
-                    << "      - Actors.ACBS" << endl
-                    << "      - Actors.AIData" << endl
-                    << "      - -C.Water";
-  } else {
-    expectedContent << "plugins:" << endl
-                    << "  - name: '" << blankEsm << "'" << endl
-                    << "    tag:" << endl
-                    << "      - Actors.ACBS" << endl
-                    << "      - Actors.AIData" << endl
-                    << "      - -C.Water" << endl
-                    << "  - name: '" << blankDifferentEsm << "'" << endl
-                    << "    dirty:" << endl
-                    << "      - crc: 0x7D22F9DF" << endl
-                    << "        util: 'TES4Edit'" << endl
-                    << "        udr: 4";
-  }
+  expectedContent << "plugins:" << endl
+                  << "  - name: '" << blankEsm << "'" << endl
+                  << "    tag:" << endl
+                  << "      - Actors.ACBS" << endl
+                  << "      - Actors.AIData" << endl
+                  << "      - -C.Water" << endl
+                  << "  - name: '" << blankDifferentEsm << "'" << endl
+                  << "    dirty:" << endl
+                  << "      - crc: 0x7D22F9DF" << endl
+                  << "        util: 'TES4Edit'" << endl
+                  << "        udr: 4";
 
   EXPECT_EQ(expectedContent.str(), content);
 }
