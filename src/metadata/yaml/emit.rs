@@ -268,33 +268,33 @@ fn double_quote(value: &str) -> String {
     // <https://yaml.org/spec/1.2.2/#731-double-quoted-style>
     let escaped: String = value
         .chars()
-        .map(|c| {
-            if should_escape(c) {
-                match c {
-                    '\x00' => "\\0".to_owned(),
-                    '\x07' => "\\a".to_owned(),
-                    '\x08' => "\\b".to_owned(),
-                    '\x09' => "\\t".to_owned(),
-                    '\x0A' => "\\n".to_owned(),
-                    '\x0B' => "\\v".to_owned(),
-                    '\x0C' => "\\f".to_owned(),
-                    '\x0D' => "\\r".to_owned(),
-                    '\x1B' => "\\e".to_owned(),
-                    '\x20' => "\\x20".to_owned(),
-                    '"' => "\\\"".to_owned(),
-                    '/' => "\\/".to_owned(),
-                    '\\' => "\\\\".to_owned(),
-                    '\u{0085}' => "\\N".to_owned(),
-                    '\u{00A0}' => "\\_".to_owned(),
-                    '\u{2028}' => "\\L".to_owned(),
-                    '\u{2029}' => "\\P".to_owned(),
-                    '\u{00}'..='\u{FF}' => format!("\\x{:02X}", u32::from(c)),
-                    '\u{0100}'..='\u{FFFF}' => format!("\\u{:04X}", u32::from(c)),
-                    c => format!("\\U{:08X}", u32::from(c)),
-                }
-            } else {
-                c.to_string()
-            }
+        .map(|c| match c {
+            '\x00' => "\\0".to_owned(),
+            '\x07' => "\\a".to_owned(),
+            '\x08' => "\\b".to_owned(),
+            '\x09' => "\\t".to_owned(),
+            '\x0A' => "\\n".to_owned(),
+            '\x0B' => "\\v".to_owned(),
+            '\x0C' => "\\f".to_owned(),
+            '\x0D' => "\\r".to_owned(),
+            '\x1B' => "\\e".to_owned(),
+            // Don't escape spaces, it's only necessary to force them on
+            // the start or end of lines of strings that are written
+            // over multiple lines of YAML, but we're escaping the line breaks.
+            // '\x20' => "\\x20".to_owned(),
+            '"' => "\\\"".to_owned(),
+            // Escaping forward slashes is supported by YAML but unnecessary and
+            // noisy.
+            // '/' => "\\/".to_owned(),
+            '\\' => "\\\\".to_owned(),
+            '\u{0085}' => "\\N".to_owned(),
+            '\u{00A0}' => "\\_".to_owned(),
+            '\u{2028}' => "\\L".to_owned(),
+            '\u{2029}' => "\\P".to_owned(),
+            '\u{00}'..='\u{FF}' if should_escape(c) => format!("\\x{:02X}", u32::from(c)),
+            '\u{0100}'..='\u{FFFF}' if should_escape(c) => format!("\\u{:04X}", u32::from(c)),
+            c if should_escape(c) => format!("\\U{:08X}", u32::from(c)),
+            _ => c.to_string(),
         })
         .collect();
 
@@ -511,6 +511,21 @@ mod tests {
             fn should_fall_back_to_double_quoting_if_string_contains_unicode_fffe_or_ffff() {
                 assert_eq!("\"\\uFFFE\"", emit("\u{FFFE}"));
                 assert_eq!("\"\\uFFFF\"", emit("\u{FFFF}"));
+            }
+
+            #[test]
+            fn should_escape_double_quote_in_double_quoted_string() {
+                assert_eq!("\"\\\"\\n\"", emit("\"\n"));
+            }
+
+            #[test]
+            fn should_escape_backslash_in_double_quoted_string() {
+                assert_eq!("\"\\\\\\n\"", emit("\\\n"));
+            }
+
+            #[test]
+            fn should_escape_certain_unicode_whitespace_characters_in_double_quoted_string() {
+                assert_eq!(r#""\N\_\L\P""#, emit("\u{85}\u{A0}\u{2028}\u{2029}"));
             }
         }
 
