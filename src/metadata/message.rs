@@ -390,11 +390,11 @@ impl EmitYaml for MessageContent {
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 
-        emitter.map_key("lang");
-        emitter.unquoted_str(&self.language);
+        emitter.write_map_key("lang");
+        emitter.write_unquoted_str(&self.language);
 
-        emitter.map_key("text");
-        emitter.single_quoted_str(&self.text);
+        emitter.write_map_key("text");
+        emitter.write_single_quoted_str(&self.text);
 
         emitter.end_map();
     }
@@ -409,18 +409,14 @@ pub(super) fn emit_message_contents(
         return;
     }
 
-    emitter.map_key(key);
+    emitter.write_map_key(key);
 
     emitter.write_anchored_value(
         |e| e.message_contents_anchor(slice).map(str::to_owned),
         |e| match slice {
             [] => {}
-            [detail] => {
-                e.single_quoted_str(detail.text());
-            }
-            details => {
-                details.emit_yaml(e);
-            }
+            [detail] => e.write_single_quoted_str(detail.text()),
+            details => details.emit_yaml(e),
         },
     );
 }
@@ -438,14 +434,14 @@ impl EmitYaml for Message {
             |emitter| {
                 emitter.begin_map();
 
-                emitter.map_key("type");
-                emitter.unquoted_str(&self.level.to_string());
+                emitter.write_map_key("type");
+                emitter.write_unquoted_str(&self.level.to_string());
 
                 emit_message_contents(&self.content, emitter, "content");
 
                 if let Some(condition) = &self.condition {
-                    emitter.map_key("condition");
-                    emitter.condition(condition);
+                    emitter.write_map_key("condition");
+                    emitter.write_condition(condition);
                 }
 
                 emitter.end_map();

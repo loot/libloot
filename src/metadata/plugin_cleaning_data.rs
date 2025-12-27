@@ -151,25 +151,25 @@ impl EmitYaml for PluginCleaningData {
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 
-        emitter.map_key("crc");
-        emitter.unquoted_str(&format!("0x{:08X}", self.crc));
+        emitter.write_map_key("crc");
+        emitter.write_unquoted_str(&format!("0x{:08X}", self.crc));
 
-        emitter.map_key("util");
-        emitter.single_quoted_str(&self.cleaning_utility);
+        emitter.write_map_key("util");
+        emitter.write_single_quoted_str(&self.cleaning_utility);
 
         if self.itm_count > 0 {
-            emitter.map_key("itm");
-            emitter.u32(self.itm_count);
+            emitter.write_map_key("itm");
+            emitter.write_u32(self.itm_count);
         }
 
         if self.deleted_reference_count > 0 {
-            emitter.map_key("udr");
-            emitter.u32(self.deleted_reference_count);
+            emitter.write_map_key("udr");
+            emitter.write_u32(self.deleted_reference_count);
         }
 
         if self.deleted_navmesh_count > 0 {
-            emitter.map_key("nav");
-            emitter.u32(self.deleted_navmesh_count);
+            emitter.write_map_key("nav");
+            emitter.write_u32(self.deleted_navmesh_count);
         }
 
         emit_message_contents(&self.detail, emitter, "detail");

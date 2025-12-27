@@ -141,7 +141,7 @@ impl<'a> YamlEmitter<'a> {
 
     /// Writes an anchor if the anchor hasn't yet been written, otherwise writes
     /// an alias of that anchor.
-    pub(in crate::metadata) fn alias(&mut self, anchor_name: &str) {
+    pub(in crate::metadata) fn write_alias(&mut self, anchor_name: &str) {
         self.write_prefix();
 
         self.write("*");
@@ -159,7 +159,7 @@ impl<'a> YamlEmitter<'a> {
         if let Some(anchor) = get_anchor(self) {
             let is_anchor_written = self.is_anchor_written(&anchor);
             if is_anchor_written {
-                self.alias(&anchor);
+                self.write_alias(&anchor);
             } else {
                 self.begin_anchored_element(&anchor);
                 write_element(self);
@@ -170,19 +170,25 @@ impl<'a> YamlEmitter<'a> {
         }
     }
 
-    pub(in crate::metadata) fn condition(&mut self, condition: &str) {
+    pub(in crate::metadata) fn write_condition(&mut self, condition: &str) {
         self.write_anchored_value(
             |e| e.condition_anchor(condition).map(str::to_owned),
-            |e| e.single_quoted_str(condition),
+            |e| e.write_single_quoted_str(condition),
         );
     }
 
-    pub(in crate::metadata) fn unquoted_str(&mut self, value: &str) {
-        if self.style == YamlStyle::Block {
-            self.write_prefix();
-        }
+    pub(in crate::metadata) fn write_unquoted_str(&mut self, value: &str) {
+        self.write_string(value, true);
+    }
 
-        if can_emit_unquoted(value, self.style) {
+    pub(in crate::metadata) fn write_single_quoted_str(&mut self, value: &str) {
+        self.write_string(value, false);
+    }
+
+    fn write_string(&mut self, value: &str, prefer_unquoted: bool) {
+        self.write_prefix();
+
+        if prefer_unquoted && can_emit_unquoted(value, self.style) {
             self.write(value);
         } else if can_single_quote(value) {
             self.write(&single_quote(value));
@@ -191,17 +197,7 @@ impl<'a> YamlEmitter<'a> {
         }
     }
 
-    pub(in crate::metadata) fn single_quoted_str(&mut self, value: &str) {
-        self.write_prefix();
-
-        if can_single_quote(value) {
-            self.write(&single_quote(value));
-        } else {
-            self.write(&double_quote(value));
-        }
-    }
-
-    pub(in crate::metadata) fn u32(&mut self, value: u32) {
+    pub(in crate::metadata) fn write_u32(&mut self, value: u32) {
         if self.style == YamlStyle::Block {
             self.write_prefix();
         }
@@ -215,7 +211,7 @@ impl<'a> YamlEmitter<'a> {
         // to avoid a line break, and it does that by checking the scope.
         match self.scope.last() {
             Some(&YamlBlock::Array) => {
-                self.end_line();
+                self.write_end_of_line();
                 self.write_indent();
                 self.write(Self::ARRAY_ELEMENT_PREFIX);
             }
@@ -233,10 +229,10 @@ impl<'a> YamlEmitter<'a> {
     /// This assumes that the given key is valid to be written as an unquoted
     /// string, and expects a string literal so that it's obvious that a given
     /// value is valid.
-    pub(in crate::metadata) fn map_key(&mut self, key: &'static str) {
+    pub(in crate::metadata) fn write_map_key(&mut self, key: &'static str) {
         match self.scope.last() {
             Some(&YamlBlock::Map) => {
-                self.end_line();
+                self.write_end_of_line();
                 self.write_indent();
             }
             _ => self.scope.push(YamlBlock::Map),
@@ -274,7 +270,7 @@ impl<'a> YamlEmitter<'a> {
         self.style = YamlStyle::Block;
     }
 
-    fn end_line(&mut self) {
+    fn write_end_of_line(&mut self) {
         self.write("\n");
     }
 
@@ -303,7 +299,7 @@ impl<'a> YamlEmitter<'a> {
                     if self.scope.len() > 1 {
                         // A top-level array doesn't need to start with a line
                         // break.
-                        self.end_line();
+                        self.write_end_of_line();
                     }
                     self.write_indent();
                     self.write(Self::ARRAY_ELEMENT_PREFIX);
@@ -501,7 +497,7 @@ mod tests {
 
             fn emit(str: &str) -> String {
                 let mut emitter = YamlEmitter::new();
-                emitter.unquoted_str(str);
+                emitter.write_unquoted_str(str);
                 emitter.into_string()
             }
 
@@ -549,7 +545,7 @@ mod tests {
                 fn emit_flow(str: &str) -> String {
                     let mut emitter = YamlEmitter::new();
                     emitter.set_flow_style();
-                    emitter.unquoted_str(str);
+                    emitter.write_unquoted_str(str);
                     emitter.into_string()
                 }
 
@@ -672,7 +668,7 @@ mod tests {
              {
                 let value = "hello 'world'";
                 let mut emitter = YamlEmitter::new();
-                emitter.single_quoted_str(value);
+                emitter.write_single_quoted_str(value);
 
                 assert_eq!("'hello ''world'''", emitter.into_string());
             }
@@ -682,7 +678,7 @@ mod tests {
              {
                 let value = "\x1B[1mhello world\x1B[0m";
                 let mut emitter = YamlEmitter::new();
-                emitter.single_quoted_str(value);
+                emitter.write_single_quoted_str(value);
 
                 assert_eq!("\"\\e[1mhello world\\e[0m\"", emitter.into_string());
             }

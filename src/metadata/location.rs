@@ -84,15 +84,15 @@ impl EmitYaml for Location {
         if let Some(name) = &self.name {
             emitter.begin_map();
 
-            emitter.map_key("link");
-            emitter.single_quoted_str(&self.url);
+            emitter.write_map_key("link");
+            emitter.write_single_quoted_str(&self.url);
 
-            emitter.map_key("name");
-            emitter.single_quoted_str(name);
+            emitter.write_map_key("name");
+            emitter.write_single_quoted_str(name);
 
             emitter.end_map();
         } else {
-            emitter.single_quoted_str(&self.url);
+            emitter.write_single_quoted_str(&self.url);
         }
     }
 }

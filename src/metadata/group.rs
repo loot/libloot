@@ -94,20 +94,20 @@ impl EmitYaml for Group {
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 
-        emitter.map_key("name");
-        emitter.single_quoted_str(&self.name);
+        emitter.write_map_key("name");
+        emitter.write_single_quoted_str(&self.name);
 
         if let Some(description) = &self.description {
-            emitter.map_key("description");
-            emitter.single_quoted_str(description);
+            emitter.write_map_key("description");
+            emitter.write_single_quoted_str(description);
         }
 
         if !self.after_groups.is_empty() {
-            emitter.map_key("after");
+            emitter.write_map_key("after");
             emitter.begin_array();
 
             for after in &self.after_groups {
-                emitter.unquoted_str(after);
+                emitter.write_unquoted_str(after);
             }
 
             emitter.end_array();
