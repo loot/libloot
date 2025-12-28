@@ -32,6 +32,7 @@ use super::{
 pub(crate) struct MetadataWriteOptions {
     pub write_anchors: bool,
     pub write_common_section: bool,
+    pub anchor_file_strings: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -241,7 +242,7 @@ impl MetadataDocument {
         let mut anchors = YamlAnchors::new();
 
         let common_values = if options.write_anchors {
-            get_common_metadata_values(&self.messages, &plugins)
+            get_common_metadata_values(&self.messages, &plugins, options.anchor_file_strings)
         } else {
             CommonValues::default()
         };
@@ -475,6 +476,7 @@ type CommonValues<'a> = (
 fn get_common_metadata_values<'a>(
     general_messages: &'a [Message],
     plugins: &[&'a PluginMetadata],
+    anchor_scalar_files: bool,
 ) -> CommonValues<'a> {
     let mut file_counts = OrderedCounts::new();
     let mut message_counts = OrderedCounts::new();
@@ -494,6 +496,7 @@ fn get_common_metadata_values<'a>(
         for file in plugin.load_after_files() {
             count_file_values(
                 file,
+                anchor_scalar_files,
                 &mut file_counts,
                 &mut message_contents_counts,
                 &mut condition_counts,
@@ -503,6 +506,7 @@ fn get_common_metadata_values<'a>(
         for file in plugin.requirements() {
             count_file_values(
                 file,
+                anchor_scalar_files,
                 &mut file_counts,
                 &mut message_contents_counts,
                 &mut condition_counts,
@@ -512,6 +516,7 @@ fn get_common_metadata_values<'a>(
         for file in plugin.incompatibilities() {
             count_file_values(
                 file,
+                anchor_scalar_files,
                 &mut file_counts,
                 &mut message_contents_counts,
                 &mut condition_counts,
@@ -591,14 +596,17 @@ fn count_message_values<'a>(
 
 fn count_file_values<'a>(
     file: &'a crate::metadata::File,
+    anchor_scalar_files: bool,
     file_counts: &mut OrderedCounts<&'a crate::metadata::File>,
     message_contents_counts: &mut OrderedCounts<&'a [crate::metadata::MessageContent]>,
     condition_counts: &mut OrderedCounts<&'a str>,
 ) {
-    let file_count = file_counts.increment_for(file);
+    if anchor_scalar_files || !file.is_scalar() {
+        let file_count = file_counts.increment_for(file);
 
-    if file_count > 1 {
-        return;
+        if file_count > 1 {
+            return;
+        }
     }
 
     if !file.detail().is_empty() {
@@ -1380,6 +1388,7 @@ plugins:
                     MetadataWriteOptions {
                         write_anchors: true,
                         write_common_section: false,
+                        anchor_file_strings: true,
                     },
                 )
                 .unwrap();
@@ -1461,6 +1470,7 @@ plugins:
                     MetadataWriteOptions {
                         write_anchors: true,
                         write_common_section: true,
+                        anchor_file_strings: true,
                     },
                 )
                 .unwrap();
@@ -1495,6 +1505,96 @@ plugins:
       - *file2
     inc:
       - *file2
+      - name: 'file 3'
+        condition: *condition1
+        constraint: *condition2
+    msg:
+      - type: say
+        content: *contents1
+      - *message1
+      - type: say
+        content:
+          - lang: en
+            text: 'message text 1'
+          - lang: de
+            text: 'message text 2'
+    tag:
+      - name: Relev
+        condition: *condition2
+      - name: Delev
+        condition: *condition3
+    dirty:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+        detail: *contents2
+    clean:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+        detail: *contents3
+  - name: 'test2.esp'
+    after:
+      - name: 'file 4'
+        detail: *contents3
+        constraint: *condition3
+    msg: [ *message1 ]",
+                content
+            );
+
+            // Also check that the written metadata can be read correctly.
+            let mut other_metadata = MetadataDocument::default();
+            other_metadata.load(&path).unwrap();
+
+            assert_eq!(metadata, other_metadata);
+        }
+
+        #[test]
+        fn save_should_use_not_anchor_scalar_files_when_the_option_is_false() {
+            let tmp_dir = tempdir().unwrap();
+
+            let path = tmp_dir.path().join("masterlist.yaml");
+
+            let metadata = metadata_with_repeated_values();
+
+            metadata
+                .save(
+                    &path,
+                    MetadataWriteOptions {
+                        write_anchors: true,
+                        write_common_section: true,
+                        anchor_file_strings: false,
+                    },
+                )
+                .unwrap();
+
+            let content = std::fs::read_to_string(&path).unwrap();
+
+            assert_eq!(
+                "common:
+  - &contents1 'message text 1'
+  - &contents2
+    - lang: en
+      text: 'message text 1'
+    - lang: fr
+      text: 'message text 2'
+  - &contents3 'message text 3'
+  - &condition1 'file(\"test.txt\")'
+  - &condition2 'file(\"other.txt\")'
+  - &condition3 'file(\"third.txt\")'
+  - &message1
+    type: say
+    content: *contents2
+  - &file1
+    name: 'file 2'
+    detail: *contents1
+    condition: *condition1
+plugins:
+  - name: 'test1.esp'
+    after: [ 'file 1' ]
+    req:
+      - 'file 1'
+      - *file1
+    inc:
+      - *file1
       - name: 'file 3'
         condition: *condition1
         constraint: *condition2
@@ -1783,7 +1883,7 @@ plugins:
             let plugins = &[];
 
             let (_, common_messages, common_contents, common_conditions) =
-                get_common_metadata_values(general_messages, plugins);
+                get_common_metadata_values(general_messages, plugins, true);
 
             assert!(common_messages.contains(&&message1));
             assert!(!common_contents.contains(&message1.content()));
@@ -1822,7 +1922,7 @@ plugins:
             let plugins = &[&plugin];
 
             let (common_files, _, common_contents, common_conditions) =
-                get_common_metadata_values(messages, plugins);
+                get_common_metadata_values(messages, plugins, true);
 
             assert!(common_files.contains(&&file1));
             assert!(!common_contents.contains(&file1.detail()));

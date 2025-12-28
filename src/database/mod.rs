@@ -23,6 +23,7 @@ pub use error::{ConditionEvaluationError, MetadataRetrievalError};
 const WRITE_OPTIONS: MetadataWriteOptions = MetadataWriteOptions {
     write_anchors: true,
     write_common_section: true,
+    anchor_file_strings: true,
 };
 
 /// Control behaviour when writing to files.
