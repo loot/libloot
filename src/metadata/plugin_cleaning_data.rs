@@ -172,7 +172,10 @@ impl EmitYaml for PluginCleaningData {
             emitter.write_u32(self.deleted_navmesh_count);
         }
 
-        emit_message_contents(&self.detail, emitter, "detail");
+        if !self.detail.is_empty() {
+            emitter.write_map_key("detail");
+            emit_message_contents(&self.detail, emitter);
+        }
 
         emitter.end_map();
     }

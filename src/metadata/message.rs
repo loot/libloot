@@ -402,17 +402,7 @@ impl EmitYaml for MessageContent {
     }
 }
 
-pub(super) fn emit_message_contents(
-    slice: &[MessageContent],
-    emitter: &mut YamlEmitter,
-    key: &'static str,
-) {
-    if slice.is_empty() {
-        return;
-    }
-
-    emitter.write_map_key(key);
-
+pub(super) fn emit_message_contents(slice: &[MessageContent], emitter: &mut YamlEmitter) {
     emitter.write_anchored_value(
         |a| a.message_contents_anchor(slice).cloned(),
         |e| match slice {
@@ -423,7 +413,7 @@ pub(super) fn emit_message_contents(
     );
 }
 
-impl EmitYaml for Message {
+impl EmitYaml for &Message {
     fn has_written_anchor(&self, anchors: &YamlAnchors) -> bool {
         anchors
             .message_anchor(self)
@@ -439,7 +429,10 @@ impl EmitYaml for Message {
                 e.write_map_key("type");
                 e.write_unquoted_str(&self.level.to_string());
 
-                emit_message_contents(&self.content, e, "content");
+                if !self.content.is_empty() {
+                    e.write_map_key("content");
+                    emit_message_contents(&self.content, e);
+                }
 
                 if let Some(condition) = &self.condition {
                     e.write_map_key("condition");
@@ -449,6 +442,20 @@ impl EmitYaml for Message {
                 e.end_map();
             },
         );
+    }
+}
+
+impl EmitYaml for Message {
+    fn is_scalar(&self) -> bool {
+        (&self).is_scalar()
+    }
+
+    fn has_written_anchor(&self, anchors: &YamlAnchors) -> bool {
+        (&self).has_written_anchor(anchors)
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        (&self).emit_yaml(emitter);
     }
 }
 

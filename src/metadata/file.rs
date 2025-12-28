@@ -201,7 +201,7 @@ impl TryFromYaml for File {
     }
 }
 
-impl EmitYaml for File {
+impl EmitYaml for &File {
     fn is_scalar(&self) -> bool {
         self.condition.is_none()
             && self.constraint.is_none()
@@ -232,7 +232,10 @@ impl EmitYaml for File {
                         e.write_single_quoted_str(display_name);
                     }
 
-                    emit_message_contents(&self.detail, e, "detail");
+                    if !self.detail.is_empty() {
+                        e.write_map_key("detail");
+                        emit_message_contents(&self.detail, e);
+                    }
 
                     if let Some(condition) = &self.condition {
                         e.write_map_key("condition");
@@ -248,6 +251,20 @@ impl EmitYaml for File {
                 }
             },
         );
+    }
+}
+
+impl EmitYaml for File {
+    fn is_scalar(&self) -> bool {
+        (&self).is_scalar()
+    }
+
+    fn has_written_anchor(&self, anchors: &YamlAnchors) -> bool {
+        (&self).has_written_anchor(anchors)
+    }
+
+    fn emit_yaml(&self, emitter: &mut YamlEmitter) {
+        (&self).emit_yaml(emitter);
     }
 }
 

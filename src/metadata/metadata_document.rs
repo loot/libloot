@@ -8,7 +8,10 @@ use saphyr::{LoadableYamlNode, MarkedYaml, YamlData};
 
 use crate::{
     escape_ascii, logging,
-    metadata::{PreludeDiffSpan, error::MetadataParsingErrorReason, yaml::YamlAnchors},
+    metadata::{
+        File, MessageContent, PreludeDiffSpan, error::MetadataParsingErrorReason,
+        message::emit_message_contents, yaml::YamlAnchors,
+    },
 };
 
 use super::{
@@ -28,6 +31,7 @@ use super::{
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub(crate) struct MetadataWriteOptions {
     pub write_anchors: bool,
+    pub write_common_section: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -236,13 +240,21 @@ impl MetadataDocument {
 
         let mut anchors = YamlAnchors::new();
 
-        if options.write_anchors {
-            set_emitter_anchors(&self.messages, &plugins, &mut anchors);
-        }
+        let common_values = if options.write_anchors {
+            get_common_metadata_values(&self.messages, &plugins)
+        } else {
+            CommonValues::default()
+        };
+
+        set_anchors(&mut anchors, &common_values);
 
         let mut emitter = YamlEmitter::new(anchors);
 
         emitter.begin_map();
+
+        if options.write_anchors && options.write_common_section {
+            emit_common_values(&common_values, &mut emitter);
+        }
 
         if !self.bash_tags.is_empty() {
             emitter.write_map_key("bash_tags");
@@ -445,21 +457,25 @@ impl<T: Eq + std::hash::Hash + Copy> OrderedCounts<T> {
             })
     }
 
-    fn into_anchor_map(self, anchor_prefix: &str) -> HashMap<T, String> {
+    fn into_common_values(self) -> Vec<T> {
         self.order
             .into_iter()
             .filter(|e| self.counts.get(e).is_some_and(|c| *c > 1))
-            .enumerate()
-            .map(|(i, e)| (e, format!("{}{}", anchor_prefix, i + 1)))
             .collect()
     }
 }
 
-fn set_emitter_anchors<'a>(
+type CommonValues<'a> = (
+    Vec<&'a File>,
+    Vec<&'a Message>,
+    Vec<&'a [MessageContent]>,
+    Vec<&'a str>,
+);
+
+fn get_common_metadata_values<'a>(
     general_messages: &'a [Message],
     plugins: &[&'a PluginMetadata],
-    anchors: &mut YamlAnchors<'a>,
-) {
+) -> CommonValues<'a> {
     let mut file_counts = OrderedCounts::new();
     let mut message_counts = OrderedCounts::new();
     let mut message_contents_counts = OrderedCounts::new();
@@ -530,10 +546,21 @@ fn set_emitter_anchors<'a>(
         }
     }
 
-    let file_anchors = file_counts.into_anchor_map("file");
-    let message_anchors = message_counts.into_anchor_map("message");
-    let message_contents_anchors = message_contents_counts.into_anchor_map("contents");
-    let condition_anchors = condition_counts.into_anchor_map("condition");
+    (
+        file_counts.into_common_values(),
+        message_counts.into_common_values(),
+        message_contents_counts.into_common_values(),
+        condition_counts.into_common_values(),
+    )
+}
+
+fn set_anchors<'a>(anchors: &mut YamlAnchors<'a>, common_values: &CommonValues<'a>) {
+    let (files, messages, message_contents, conditions) = common_values;
+
+    let file_anchors = to_anchor_map(files, "file");
+    let message_anchors = to_anchor_map(messages, "message");
+    let message_contents_anchors = to_anchor_map(message_contents, "contents");
+    let condition_anchors = to_anchor_map(conditions, "condition");
 
     anchors.set_message_anchors(message_anchors);
     anchors.set_message_contents_anchors(message_contents_anchors);
@@ -585,6 +612,63 @@ fn count_file_values<'a>(
     if let Some(constraint) = file.constraint() {
         condition_counts.increment_for(constraint);
     }
+}
+
+fn to_anchor_map<'a, T: Eq + std::hash::Hash + ?Sized>(
+    values: &[&'a T],
+    anchor_prefix: &str,
+) -> HashMap<&'a T, String> {
+    values
+        .iter()
+        .enumerate()
+        .map(|(i, e)| (*e, format!("{}{}", anchor_prefix, i + 1)))
+        .collect()
+}
+
+fn emit_common_values(common_values: &CommonValues, emitter: &mut YamlEmitter) {
+    let (files, messages, message_contents, conditions) = common_values;
+
+    if files.is_empty()
+        && messages.is_empty()
+        && message_contents.is_empty()
+        && conditions.is_empty()
+    {
+        return;
+    }
+
+    emitter.write_map_key("common");
+
+    emitter.begin_array();
+    for contents in message_contents {
+        let Some(anchor) = emitter.anchors.message_contents_anchor(contents) else {
+            // Should be impossible.
+            logging::error!("Found a common message contents without an anchor: {contents:?}");
+            continue;
+        };
+
+        if !emitter.anchors.is_anchor_written(anchor) {
+            emit_message_contents(contents, emitter);
+        }
+    }
+    emitter.end_array();
+
+    emitter.begin_array();
+    for condition in conditions {
+        let Some(anchor) = emitter.anchors.condition_anchor(condition) else {
+            // Should be impossible.
+            logging::error!("Found a common condition without an anchor: {condition}");
+            continue;
+        };
+
+        if !emitter.anchors.is_anchor_written(anchor) {
+            emitter.write_condition(condition);
+        }
+    }
+    emitter.end_array();
+
+    messages.emit_yaml(emitter);
+
+    files.emit_yaml(emitter);
 }
 
 struct MasterlistWithReplacedPrelude {
@@ -755,9 +839,7 @@ mod tests {
     mod metadata_document {
         use std::error::Error;
 
-        use crate::metadata::{
-            MessageContent, MessageType, PluginCleaningData, Tag, TagSuggestion,
-        };
+        use crate::metadata::{MessageType, PluginCleaningData, Tag, TagSuggestion};
 
         use super::*;
 
@@ -1297,6 +1379,7 @@ plugins:
                     &path,
                     MetadataWriteOptions {
                         write_anchors: true,
+                        write_common_section: false,
                     },
                 )
                 .unwrap();
@@ -1347,6 +1430,97 @@ plugins:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: &contents3 'message text 3'
+  - name: 'test2.esp'
+    after:
+      - name: 'file 4'
+        detail: *contents3
+        constraint: *condition3
+    msg: [ *message1 ]",
+                content
+            );
+
+            // Also check that the written metadata can be read correctly.
+            let mut other_metadata = MetadataDocument::default();
+            other_metadata.load(&path).unwrap();
+
+            assert_eq!(metadata, other_metadata);
+        }
+
+        #[test]
+        fn save_should_use_anchors_and_aliases_for_repeated_metadata_when_write_anchors_and_write_common_section_are_true()
+         {
+            let tmp_dir = tempdir().unwrap();
+
+            let path = tmp_dir.path().join("masterlist.yaml");
+
+            let metadata = metadata_with_repeated_values();
+
+            metadata
+                .save(
+                    &path,
+                    MetadataWriteOptions {
+                        write_anchors: true,
+                        write_common_section: true,
+                    },
+                )
+                .unwrap();
+
+            let content = std::fs::read_to_string(&path).unwrap();
+
+            assert_eq!(
+                "common:
+  - &contents1 'message text 1'
+  - &contents2
+    - lang: en
+      text: 'message text 1'
+    - lang: fr
+      text: 'message text 2'
+  - &contents3 'message text 3'
+  - &condition1 'file(\"test.txt\")'
+  - &condition2 'file(\"other.txt\")'
+  - &condition3 'file(\"third.txt\")'
+  - &message1
+    type: say
+    content: *contents2
+  - &file1 'file 1'
+  - &file2
+    name: 'file 2'
+    detail: *contents1
+    condition: *condition1
+plugins:
+  - name: 'test1.esp'
+    after: [ *file1 ]
+    req:
+      - *file1
+      - *file2
+    inc:
+      - *file2
+      - name: 'file 3'
+        condition: *condition1
+        constraint: *condition2
+    msg:
+      - type: say
+        content: *contents1
+      - *message1
+      - type: say
+        content:
+          - lang: en
+            text: 'message text 1'
+          - lang: de
+            text: 'message text 2'
+    tag:
+      - name: Relev
+        condition: *condition2
+      - name: Delev
+        condition: *condition3
+    dirty:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+        detail: *contents2
+    clean:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+        detail: *contents3
   - name: 'test2.esp'
     after:
       - name: 'file 4'
@@ -1582,13 +1756,13 @@ plugins:
         }
     }
 
-    mod set_emitter_anchors {
-        use crate::metadata::{MessageContent, MessageType};
+    mod get_common_metadata_values {
+        use crate::metadata::MessageType;
 
         use super::*;
 
         #[test]
-        fn set_emitter_anchors_should_skip_contents_and_conditions_within_messages_that_have_already_been_seen()
+        fn get_common_metadata_values_should_skip_contents_and_conditions_within_messages_that_have_already_been_seen()
          {
             let content1 = "test message 1";
             let content2 = "test message 2";
@@ -1608,25 +1782,18 @@ plugins:
             ];
             let plugins = &[];
 
-            let mut anchors = YamlAnchors::new();
-            set_emitter_anchors(general_messages, plugins, &mut anchors);
+            let (_, common_messages, common_contents, common_conditions) =
+                get_common_metadata_values(general_messages, plugins);
 
-            assert_eq!("message1", anchors.message_anchor(&message1).unwrap());
-            assert!(
-                anchors
-                    .message_contents_anchor(message1.content())
-                    .is_none()
-            );
-            assert!(anchors.condition_anchor(condition1).is_none());
-            assert_eq!(
-                "contents1",
-                anchors.message_contents_anchor(message2.content()).unwrap()
-            );
-            assert_eq!("condition1", anchors.condition_anchor(condition2).unwrap());
+            assert!(common_messages.contains(&&message1));
+            assert!(!common_contents.contains(&message1.content()));
+            assert!(!common_conditions.contains(&condition1));
+            assert!(common_contents.contains(&message2.content()));
+            assert!(common_conditions.contains(&condition2));
         }
 
         #[test]
-        fn set_emitter_anchors_should_skip_details_and_conditions_and_constraints_that_have_already_been_seen()
+        fn get_common_metadata_values_should_skip_details_and_conditions_and_constraints_that_have_already_been_seen()
          {
             let content1 = "test message 1";
             let content2 = "test message 2";
@@ -1654,19 +1821,16 @@ plugins:
             let messages = &[];
             let plugins = &[&plugin];
 
-            let mut anchors = YamlAnchors::new();
-            set_emitter_anchors(messages, plugins, &mut anchors);
+            let (common_files, _, common_contents, common_conditions) =
+                get_common_metadata_values(messages, plugins);
 
-            assert_eq!("file1", anchors.file_anchor(&file1).unwrap());
-            assert!(anchors.message_contents_anchor(file1.detail()).is_none());
-            assert!(anchors.condition_anchor(condition1).is_none());
-            assert!(anchors.condition_anchor(constraint1).is_none());
-            assert_eq!(
-                "contents1",
-                anchors.message_contents_anchor(file2.detail()).unwrap()
-            );
-            assert_eq!("condition1", anchors.condition_anchor(condition2).unwrap());
-            assert_eq!("condition2", anchors.condition_anchor(constraint2).unwrap());
+            assert!(common_files.contains(&&file1));
+            assert!(!common_contents.contains(&file1.detail()));
+            assert!(!common_conditions.contains(&condition1));
+            assert!(!common_conditions.contains(&constraint1));
+            assert!(common_contents.contains(&file2.detail()));
+            assert!(common_conditions.contains(&condition2));
+            assert!(common_conditions.contains(&constraint2));
         }
     }
 
