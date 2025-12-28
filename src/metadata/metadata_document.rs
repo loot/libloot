@@ -234,29 +234,29 @@ impl MetadataDocument {
         emitter.begin_map();
 
         if !self.bash_tags.is_empty() {
-            emitter.map_key("bash_tags");
+            emitter.write_map_key("bash_tags");
 
             emitter.begin_array();
 
             for tag in &self.bash_tags {
-                emitter.unquoted_str(tag);
+                emitter.write_unquoted_str(tag);
             }
 
             emitter.end_array();
         }
 
         if self.groups.len() > 1 {
-            emitter.map_key("groups");
+            emitter.write_map_key("groups");
             self.groups.emit_yaml(&mut emitter);
         }
 
         if !self.messages.is_empty() {
-            emitter.map_key("globals");
+            emitter.write_map_key("globals");
             self.messages.emit_yaml(&mut emitter);
         }
 
         if !self.plugins.is_empty() || !self.regex_plugins.is_empty() {
-            emitter.map_key("plugins");
+            emitter.write_map_key("plugins");
 
             emitter.begin_array();
 

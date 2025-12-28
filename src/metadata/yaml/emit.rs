@@ -52,11 +52,11 @@ impl YamlEmitter {
         self.buffer
     }
 
-    pub(in crate::metadata) fn unquoted_str(&mut self, value: &str) {
+    pub(in crate::metadata) fn write_unquoted_str(&mut self, value: &str) {
         self.write_string(value, true);
     }
 
-    pub(in crate::metadata) fn single_quoted_str(&mut self, value: &str) {
+    pub(in crate::metadata) fn write_single_quoted_str(&mut self, value: &str) {
         self.write_string(value, false);
     }
 
@@ -72,7 +72,7 @@ impl YamlEmitter {
         }
     }
 
-    pub(in crate::metadata) fn u32(&mut self, value: u32) {
+    pub(in crate::metadata) fn write_u32(&mut self, value: u32) {
         self.write_prefix();
 
         self.write(&value.to_string());
@@ -99,9 +99,9 @@ impl YamlEmitter {
     /// This assumes that the given key is valid to be written as an unquoted
     /// string, and expects a string literal so that it's obvious that a given
     /// value is valid.
-    pub(in crate::metadata) fn map_key(&mut self, key: &'static str) {
+    pub(in crate::metadata) fn write_map_key(&mut self, key: &'static str) {
         if !self.is_first_line_of_map {
-            self.end_line();
+            self.write_end_of_line();
             self.write_indent();
         }
 
@@ -132,7 +132,7 @@ impl YamlEmitter {
         }
     }
 
-    fn end_line(&mut self) {
+    fn write_end_of_line(&mut self) {
         self.write("\n");
     }
 
@@ -156,7 +156,7 @@ impl YamlEmitter {
 
     fn write_array_element_prefix(&mut self) {
         if self.style == YamlStyle::Block {
-            self.end_line();
+            self.write_end_of_line();
             self.write_indent();
             self.write(Self::ARRAY_ELEMENT_PREFIX);
         }
@@ -344,12 +344,12 @@ mod tests {
     mod yaml_emitter {
         use super::*;
 
-        mod unquoted_str {
+        mod write_unquoted_str {
             use super::*;
 
             fn emit(str: &str) -> String {
                 let mut emitter = YamlEmitter::new();
-                emitter.unquoted_str(str);
+                emitter.write_unquoted_str(str);
                 emitter.into_string()
             }
 
@@ -397,7 +397,7 @@ mod tests {
                 fn emit_flow(str: &str) -> String {
                     let mut emitter = YamlEmitter::new();
                     emitter.set_style(YamlStyle::Flow);
-                    emitter.unquoted_str(str);
+                    emitter.write_unquoted_str(str);
                     emitter.into_string()
                 }
 
@@ -527,7 +527,7 @@ mod tests {
             }
         }
 
-        mod single_quoted_str {
+        mod write_single_quoted_str {
             use super::*;
 
             #[test]
@@ -535,7 +535,7 @@ mod tests {
              {
                 let value = "hello 'world'";
                 let mut emitter = YamlEmitter::new();
-                emitter.single_quoted_str(value);
+                emitter.write_single_quoted_str(value);
 
                 assert_eq!("'hello ''world'''", emitter.into_string());
             }
@@ -545,7 +545,7 @@ mod tests {
              {
                 let value = "\x1B[1mhello world\x1B[0m";
                 let mut emitter = YamlEmitter::new();
-                emitter.single_quoted_str(value);
+                emitter.write_single_quoted_str(value);
 
                 assert_eq!("\"\\e[1mhello world\\e[0m\"", emitter.into_string());
             }

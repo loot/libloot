@@ -450,51 +450,51 @@ impl EmitYaml for PluginMetadata {
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         emitter.begin_map();
 
-        emitter.map_key("name");
-        emitter.single_quoted_str(self.name());
+        emitter.write_map_key("name");
+        emitter.write_single_quoted_str(self.name());
 
         if !self.locations.is_empty() {
-            emitter.map_key("url");
+            emitter.write_map_key("url");
             self.locations.emit_yaml(emitter);
         }
 
         if let Some(group) = &self.group {
-            emitter.map_key("group");
-            emitter.single_quoted_str(group);
+            emitter.write_map_key("group");
+            emitter.write_single_quoted_str(group);
         }
 
         if !self.load_after.is_empty() {
-            emitter.map_key("after");
+            emitter.write_map_key("after");
             self.load_after.emit_yaml(emitter);
         }
 
         if !self.requirements.is_empty() {
-            emitter.map_key("req");
+            emitter.write_map_key("req");
             self.requirements.emit_yaml(emitter);
         }
 
         if !self.incompatibilities.is_empty() {
-            emitter.map_key("inc");
+            emitter.write_map_key("inc");
             self.incompatibilities.emit_yaml(emitter);
         }
 
         if !self.messages.is_empty() {
-            emitter.map_key("msg");
+            emitter.write_map_key("msg");
             self.messages.emit_yaml(emitter);
         }
 
         if !self.tags.is_empty() {
-            emitter.map_key("tag");
+            emitter.write_map_key("tag");
             self.tags.emit_yaml(emitter);
         }
 
         if !self.dirty_info.is_empty() {
-            emitter.map_key("dirty");
+            emitter.write_map_key("dirty");
             self.dirty_info.emit_yaml(emitter);
         }
 
         if !self.clean_info.is_empty() {
-            emitter.map_key("clean");
+            emitter.write_map_key("clean");
             self.clean_info.emit_yaml(emitter);
         }
 

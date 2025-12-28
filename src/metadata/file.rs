@@ -209,28 +209,28 @@ impl EmitYaml for File {
 
     fn emit_yaml(&self, emitter: &mut YamlEmitter) {
         if self.is_scalar() {
-            emitter.single_quoted_str(self.name.as_str());
+            emitter.write_single_quoted_str(self.name.as_str());
         } else {
             emitter.begin_map();
 
-            emitter.map_key("name");
-            emitter.single_quoted_str(self.name.as_str());
+            emitter.write_map_key("name");
+            emitter.write_single_quoted_str(self.name.as_str());
 
             if let Some(display_name) = &self.display_name {
-                emitter.map_key("display");
-                emitter.single_quoted_str(display_name);
+                emitter.write_map_key("display");
+                emitter.write_single_quoted_str(display_name);
             }
 
             emit_message_contents(&self.detail, emitter, "detail");
 
             if let Some(condition) = &self.condition {
-                emitter.map_key("condition");
-                emitter.single_quoted_str(condition);
+                emitter.write_map_key("condition");
+                emitter.write_single_quoted_str(condition);
             }
 
             if let Some(constraint) = &self.constraint {
-                emitter.map_key("constraint");
-                emitter.single_quoted_str(constraint);
+                emitter.write_map_key("constraint");
+                emitter.write_single_quoted_str(constraint);
             }
 
             emitter.end_map();

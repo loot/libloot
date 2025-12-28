@@ -109,21 +109,21 @@ impl EmitYaml for Tag {
         if let Some(condition) = &self.condition {
             emitter.begin_map();
 
-            emitter.map_key("name");
+            emitter.write_map_key("name");
             if self.is_addition() {
-                emitter.unquoted_str(&self.name);
+                emitter.write_unquoted_str(&self.name);
             } else {
-                emitter.unquoted_str(&format!("-{}", self.name));
+                emitter.write_unquoted_str(&format!("-{}", self.name));
             }
 
-            emitter.map_key("condition");
-            emitter.single_quoted_str(condition);
+            emitter.write_map_key("condition");
+            emitter.write_single_quoted_str(condition);
 
             emitter.end_map();
         } else if self.is_addition() {
-            emitter.unquoted_str(&self.name);
+            emitter.write_unquoted_str(&self.name);
         } else {
-            emitter.unquoted_str(&format!("-{}", self.name));
+            emitter.write_unquoted_str(&format!("-{}", self.name));
         }
     }
 }
