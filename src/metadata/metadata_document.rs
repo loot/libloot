@@ -231,6 +231,8 @@ impl MetadataDocument {
 
         let mut emitter = YamlEmitter::new();
 
+        emitter.begin_map();
+
         if !self.bash_tags.is_empty() {
             emitter.map_key("bash_tags");
 
@@ -266,6 +268,8 @@ impl MetadataDocument {
 
             emitter.end_array();
         }
+
+        emitter.end_map();
 
         let mut contents = emitter.into_string();
         if contents.is_empty() {
