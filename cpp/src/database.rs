@@ -4,12 +4,12 @@ use std::{
 };
 
 use delegate::delegate;
-use libloot::{EvalMode, MergeMode, WriteMode, error::DatabaseLockPoisonError};
+use libloot::{EvalMode, MergeMode, error::DatabaseLockPoisonError};
 use libloot_ffi_errors::UnsupportedEnumValueError;
 
 use crate::{
     OptionalPluginMetadata, VerboseError,
-    ffi::EdgeType,
+    ffi::{EdgeType, MetadataWriteOptionsImpl},
     metadata::{Group, Message, PluginMetadata, to_vec_of_unwrapped},
 };
 
@@ -53,36 +53,24 @@ impl Database {
     pub fn write_user_metadata(
         &self,
         output_path: &str,
-        overwrite: bool,
+        options: MetadataWriteOptionsImpl,
     ) -> Result<(), VerboseError> {
-        let write_mode = if overwrite {
-            WriteMode::CreateOrTruncate
-        } else {
-            WriteMode::Create
-        };
-
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .write_user_metadata(Path::new(output_path), write_mode)
+            .write_user_metadata(Path::new(output_path), &options.into())
             .map_err(Into::into)
     }
 
     pub fn write_minimal_list(
         &self,
         output_path: &str,
-        overwrite: bool,
+        options: MetadataWriteOptionsImpl,
     ) -> Result<(), VerboseError> {
-        let write_mode = if overwrite {
-            WriteMode::CreateOrTruncate
-        } else {
-            WriteMode::Create
-        };
-
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .write_minimal_list(Path::new(output_path), write_mode)
+            .write_minimal_list(Path::new(output_path), &options.into())
             .map_err(Into::into)
     }
 

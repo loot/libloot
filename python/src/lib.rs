@@ -4,7 +4,7 @@ mod game;
 mod metadata;
 mod plugin;
 
-use database::{Database, EdgeType, Vertex};
+use database::{Database, EdgeType, MetadataWriteOptions, Vertex};
 use game::{Game, GameType};
 use metadata::{
     File, Filename, Group, Location, Message, MessageContent, MessageType, PluginCleaningData,
@@ -64,6 +64,7 @@ fn libloot_pyo3(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<TagSuggestion>()?;
     m.add_class::<Location>()?;
     m.add_class::<PluginMetadata>()?;
+    m.add_class::<MetadataWriteOptions>()?;
 
     m.add(
         "CyclicInteractionError",

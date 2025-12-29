@@ -198,46 +198,55 @@ TEST_P(DatabaseInterfaceTest, loadUserlistShouldSucceedIfTheUserlistIsPresent) {
 TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldThrowIfTheFileAlreadyExistsAndTheOverwriteArgumentIsFalse) {
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, false));
+  ASSERT_NO_THROW(handle_->GetDatabase().WriteUserMetadata(
+      minimalOutputPath_, MetadataWriteOptions()));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
-  EXPECT_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, false),
-      std::runtime_error);
+  EXPECT_THROW(handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_,
+                                                        MetadataWriteOptions()),
+               std::runtime_error);
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldReturnOkAndWriteToFileIfTheArgumentsAreValidAndTheOverwriteArgumentIsTrue) {
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_NO_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, true));
+      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, options));
   EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeUserMetadataShouldReturnOkIfTheFileAlreadyExistsAndTheOverwriteArgumentIsTrue) {
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, false));
+  ASSERT_NO_THROW(handle_->GetDatabase().WriteUserMetadata(
+      minimalOutputPath_, MetadataWriteOptions()));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_NO_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, true));
+      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, options));
 }
 
 TEST_P(DatabaseInterfaceTest,
        writeUserMetadataShouldThrowIfPathGivenExistsAndIsReadOnly) {
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, false));
+  ASSERT_NO_THROW(handle_->GetDatabase().WriteUserMetadata(
+      minimalOutputPath_, MetadataWriteOptions()));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
   std::filesystem::permissions(minimalOutputPath_,
                                std::filesystem::perms::owner_read,
                                std::filesystem::perm_options::replace);
 
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, true),
+      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, options),
       std::runtime_error);
 }
 
@@ -246,8 +255,11 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_NO_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, true));
+      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, options));
 
   EXPECT_EQ("{}", GetFileContent(minimalOutputPath_));
 }
@@ -263,8 +275,11 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_NO_THROW(
-      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, true));
+      handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, options));
 
   EXPECT_FALSE(GetFileContent(minimalOutputPath_).empty());
 }
@@ -899,54 +914,63 @@ TEST_P(
 
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldReturnOkAndWriteToFileIfArgumentsGivenAreValid) {
-  EXPECT_NO_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, false));
+  EXPECT_NO_THROW(handle_->GetDatabase().WriteMinimalList(
+      minimalOutputPath_, MetadataWriteOptions()));
   EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldThrowIfTheFileAlreadyExistsAndTheOverwriteArgumentIsFalse) {
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, false));
+  ASSERT_NO_THROW(handle_->GetDatabase().WriteMinimalList(
+      minimalOutputPath_, MetadataWriteOptions()));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
-  EXPECT_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, false),
-      std::runtime_error);
+  EXPECT_THROW(handle_->GetDatabase().WriteMinimalList(minimalOutputPath_,
+                                                       MetadataWriteOptions()),
+               std::runtime_error);
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldReturnOkAndWriteToFileIfTheArgumentsAreValidAndTheOverwriteArgumentIsTrue) {
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_NO_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, true));
+      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, options));
   EXPECT_TRUE(std::filesystem::exists(minimalOutputPath_));
 }
 
 TEST_P(
     DatabaseInterfaceTest,
     writeMinimalListShouldReturnOkIfTheFileAlreadyExistsAndTheOverwriteArgumentIsTrue) {
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, false));
+  ASSERT_NO_THROW(handle_->GetDatabase().WriteMinimalList(
+      minimalOutputPath_, MetadataWriteOptions()));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_NO_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, true));
+      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, options));
 }
 
 TEST_P(DatabaseInterfaceTest,
        writeMinimalListShouldThrowIfPathGivenExistsAndIsReadOnly) {
-  ASSERT_NO_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, false));
+  ASSERT_NO_THROW(handle_->GetDatabase().WriteMinimalList(
+      minimalOutputPath_, MetadataWriteOptions()));
   ASSERT_TRUE(std::filesystem::exists(minimalOutputPath_));
 
   std::filesystem::permissions(minimalOutputPath_,
                                std::filesystem::perms::owner_read,
                                std::filesystem::perm_options::replace);
 
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, true),
+      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, options),
       std::runtime_error);
 }
 
@@ -957,8 +981,11 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 
+  MetadataWriteOptions options;
+  options.SetTruncate(true);
+
   EXPECT_NO_THROW(
-      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, true));
+      handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, options));
 
   const auto content = GetFileContent(minimalOutputPath_);
 

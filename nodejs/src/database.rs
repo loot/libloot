@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use libloot::{WriteMode, error::DatabaseLockPoisonError};
+use libloot::error::DatabaseLockPoisonError;
 use libloot_ffi_errors::UnsupportedEnumValueError;
 use napi_derive::napi;
 
@@ -41,6 +41,59 @@ impl From<MergeMode> for libloot::MergeMode {
             MergeMode::WithoutUserMetadata => libloot::MergeMode::WithoutUserMetadata,
             MergeMode::WithUserMetadata => libloot::MergeMode::WithUserMetadata,
         }
+    }
+}
+
+#[napi]
+#[repr(transparent)]
+#[derive(Clone, Debug, Default)]
+pub struct MetadataWriteOptions(libloot::MetadataWriteOptions);
+
+#[napi]
+impl MetadataWriteOptions {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        MetadataWriteOptions(libloot::MetadataWriteOptions::new())
+    }
+
+    #[napi(setter)]
+    pub fn set_truncate(&mut self, truncate: bool) {
+        self.0.set_truncate(truncate);
+    }
+
+    #[napi(setter)]
+    pub fn set_write_anchors(&mut self, write_anchors: bool) {
+        self.0.set_write_anchors(write_anchors);
+    }
+
+    #[napi(setter)]
+    pub fn set_write_common_section(&mut self, write_common_section: bool) {
+        self.0.set_write_common_section(write_common_section);
+    }
+
+    #[napi(setter)]
+    pub fn set_anchor_file_strings(&mut self, anchor_file_strings: bool) {
+        self.0.set_anchor_file_strings(anchor_file_strings);
+    }
+
+    #[napi(getter)]
+    pub fn truncate(&self) -> bool {
+        self.0.truncate()
+    }
+
+    #[napi(getter)]
+    pub fn write_anchors(&self) -> bool {
+        self.0.write_anchors()
+    }
+
+    #[napi(getter)]
+    pub fn write_common_section(&self) -> bool {
+        self.0.write_common_section()
+    }
+
+    #[napi(getter)]
+    pub fn anchor_file_strings(&self) -> bool {
+        self.0.anchor_file_strings()
     }
 }
 
@@ -85,18 +138,12 @@ impl Database {
     pub fn write_user_metadata(
         &self,
         output_path: String,
-        overwrite: bool,
+        options: &MetadataWriteOptions,
     ) -> Result<(), VerboseError> {
-        let write_mode = if overwrite {
-            WriteMode::CreateOrTruncate
-        } else {
-            WriteMode::Create
-        };
-
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .write_user_metadata(Path::new(&output_path), write_mode)
+            .write_user_metadata(Path::new(&output_path), &options.0)
             .map_err(Into::into)
     }
 
@@ -104,18 +151,12 @@ impl Database {
     pub fn write_minimal_list(
         &self,
         output_path: String,
-        overwrite: bool,
+        options: &MetadataWriteOptions,
     ) -> Result<(), VerboseError> {
-        let write_mode = if overwrite {
-            WriteMode::CreateOrTruncate
-        } else {
-            WriteMode::Create
-        };
-
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .write_minimal_list(Path::new(&output_path), write_mode)
+            .write_minimal_list(Path::new(&output_path), &options.0)
             .map_err(Into::into)
     }
 

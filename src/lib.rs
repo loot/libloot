@@ -31,9 +31,10 @@ use std::{path::Path, slice::EscapeAscii};
 
 use regress::{Error as RegexImplError, Regex};
 
-pub use database::{Database, EvalMode, MergeMode, WriteMode};
+pub use database::{Database, EvalMode, MergeMode};
 pub use game::{Game, GameType};
 pub use logging::{LogLevel, set_log_level, set_logging_callback};
+pub use metadata::metadata_document::MetadataWriteOptions;
 pub use plugin::Plugin;
 pub use sorting::vertex::{EdgeType, Vertex};
 pub use version::{

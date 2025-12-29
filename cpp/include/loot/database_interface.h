@@ -36,6 +36,97 @@
 #include "loot/metadata/plugin_metadata.h"
 
 namespace loot {
+struct MetadataWriteOptionsImpl;
+
+/** @brief Options to configure how metadata files are written. */
+class MetadataWriteOptions {
+public:
+  /**
+   * @brief Creates a new set of options, all initially set to `false`.
+   */
+  LOOT_API MetadataWriteOptions();
+  LOOT_API MetadataWriteOptions(const MetadataWriteOptions&);
+  LOOT_API MetadataWriteOptions(MetadataWriteOptions&&) noexcept;
+  LOOT_API ~MetadataWriteOptions();
+
+  LOOT_API MetadataWriteOptions& operator=(const MetadataWriteOptions&);
+  LOOT_API MetadataWriteOptions& operator=(MetadataWriteOptions&&) noexcept;
+
+  /**
+   * @brief Sets the option to overwrite the output file if it already exists.
+   * @details If true and the file path already exists, its contents will be
+   *          replaced.
+   *
+   *          If false and the file path already exists, an error will be
+   *          returned.
+   *
+   *          This setting has no effect if the file path does not exist.
+   * @param truncate
+   *        The value to set.
+   */
+  LOOT_API void SetTruncate(bool truncate);
+
+  /**
+   * @brief Sets the option to write YAML anchors and aliases.
+   * @details If true then conditions, constraints, files, file details, plugin
+   *          cleaning data details, messages and message contents that appear
+   *          more than once in the metadata will be deduplicated by including
+   *          a YAML anchor when writing the first occurrence of the value, and
+   *          writing YAML aliases in place of further occurrences.
+   *
+   *          If false, YAML anchors and aliases will not be used, so no
+   *          deduplication will occur.
+   * @param writeAnchors
+   *        The value to set.
+   */
+  LOOT_API void SetWriteAnchors(bool writeAnchors);
+
+  /**
+   * @brief Sets the option to write YAML anchors in a `common` section.
+   * @details If `writeAnchors` is true and this is also true, the document's
+   *          root-level map will start with a `common` key. Its value will be
+   *          a list of all the values for which YAML anchors will be written,
+   *          so that all YAML anchors will appear within that list.
+   *
+   *          This setting has no effect if `writeAnchors` is false.
+   * @param writeCommonSection
+   *        The value to set.
+   */
+  LOOT_API void SetWriteCommonSection(bool writeCommonSection);
+
+  /**
+   * @brief Sets the option to write anchors for File values that only have a
+   *        name.
+   * @details If `writeAnchors` is true and this is also true, then all
+   *          repeated File metadata values will be deduplicated using YAML
+   *          anchors and aliases.
+   *
+   *          If this is false, then only File metadata that is serialised as
+   *          a YAML object will be deduplicated (i.e. File values that only
+   *          have a name will not be deduplicated).
+   *
+   *          This setting has no effect if `writeAnchors` is false.
+   * @param anchorFileStrings
+   *        The value to set.
+   */
+  LOOT_API void SetAnchorFileStrings(bool anchorFileStrings);
+
+  /** Gets the current value of the truncate option. */
+  LOOT_API bool GetTruncate() const;
+
+  /** Gets the current value of the writeAnchors option. */
+  LOOT_API bool GetWriteAnchors() const;
+
+  /** Gets the current value of the writeCommonSection option. */
+  LOOT_API bool GetWriteCommonSection() const;
+
+  /** Gets the current value of the anchorFileStrings option. */
+  LOOT_API bool GetAnchorFileStrings() const;
+
+private:
+  std::unique_ptr<MetadataWriteOptionsImpl> pimpl_;
+};
+
 /** @brief The interface provided by API's database handle. */
 class DatabaseInterface {
 public:
@@ -98,7 +189,7 @@ public:
    *        written. Otherwise, data will be written.
    */
   virtual void WriteUserMetadata(const std::filesystem::path& outputFile,
-                                 const bool overwrite) const = 0;
+                                 const MetadataWriteOptions& options) const = 0;
 
   /**
    * @brief Writes a minimal metadata file that only contains plugins with
@@ -111,7 +202,7 @@ public:
    *        written. Otherwise, data will be written.
    */
   virtual void WriteMinimalList(const std::filesystem::path& outputFile,
-                                const bool overwrite) const = 0;
+                                const MetadataWriteOptions& options) const = 0;
 
   /**
    * @brief Evaluate the given condition string.

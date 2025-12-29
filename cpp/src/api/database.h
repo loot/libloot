@@ -10,19 +10,19 @@ class Database final : public DatabaseInterface {
 public:
   explicit Database(::rust::Box<loot::rust::Database>&& database);
 
-  void LoadMasterlist(const std::filesystem::path& masterlist_path) override;
+  void LoadMasterlist(const std::filesystem::path& masterlistPath) override;
 
   void LoadMasterlistWithPrelude(
-      const std::filesystem::path& masterlist_path,
-      const std::filesystem::path& masterlist_prelude_path) override;
+      const std::filesystem::path& masterlistPath,
+      const std::filesystem::path& masterlistPreludePath) override;
 
   void LoadUserlist(const std::filesystem::path& userlist_path) override;
 
   void WriteUserMetadata(const std::filesystem::path& outputFile,
-                         const bool overwrite) const override;
+                         const MetadataWriteOptions& options) const override;
 
   void WriteMinimalList(const std::filesystem::path& outputFile,
-                        const bool overwrite) const override;
+                        const MetadataWriteOptions& options) const override;
 
   bool Evaluate(const std::string& condition) const override;
 

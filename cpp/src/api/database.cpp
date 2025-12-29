@@ -4,7 +4,75 @@
 #include "api/convert.h"
 #include "api/exception/exception.h"
 
+namespace {
+loot::MetadataWriteOptionsImpl convert(
+    const loot::MetadataWriteOptions& options) {
+  loot::MetadataWriteOptionsImpl output;
+
+  output.truncate = options.GetTruncate();
+  output.write_anchors = options.GetWriteAnchors();
+  output.write_common_section = options.GetWriteCommonSection();
+  output.anchor_file_strings = options.GetAnchorFileStrings();
+
+  return output;
+}
+}
+
 namespace loot {
+MetadataWriteOptions::MetadataWriteOptions() :
+    pimpl_(std::make_unique<MetadataWriteOptionsImpl>()) {}
+
+MetadataWriteOptions::MetadataWriteOptions(const MetadataWriteOptions& other) :
+    pimpl_(std::make_unique<MetadataWriteOptionsImpl>(*other.pimpl_)) {}
+
+MetadataWriteOptions::MetadataWriteOptions(
+    MetadataWriteOptions&& other) noexcept :
+    pimpl_(std::move(other).pimpl_) {}
+
+MetadataWriteOptions::~MetadataWriteOptions() {}
+
+MetadataWriteOptions& MetadataWriteOptions::operator=(
+    const MetadataWriteOptions& other) {
+  *pimpl_ = *other.pimpl_;
+  return *this;
+}
+
+MetadataWriteOptions& MetadataWriteOptions::operator=(
+    MetadataWriteOptions&& other) noexcept {
+  pimpl_ = std::move(other.pimpl_);
+  return *this;
+}
+
+void MetadataWriteOptions::SetTruncate(bool truncate) {
+  pimpl_->truncate = truncate;
+}
+
+void MetadataWriteOptions::SetWriteAnchors(bool writeAnchors) {
+  pimpl_->write_anchors = writeAnchors;
+}
+
+void MetadataWriteOptions::SetWriteCommonSection(bool writeCommonSection) {
+  pimpl_->write_common_section = writeCommonSection;
+}
+
+void MetadataWriteOptions::SetAnchorFileStrings(bool anchorFileStrings) {
+  pimpl_->anchor_file_strings = anchorFileStrings;
+}
+
+bool MetadataWriteOptions::GetTruncate() const { return pimpl_->truncate; }
+
+bool MetadataWriteOptions::GetWriteAnchors() const {
+  return pimpl_->write_anchors;
+}
+
+bool MetadataWriteOptions::GetWriteCommonSection() const {
+  return pimpl_->write_common_section;
+}
+
+bool MetadataWriteOptions::GetAnchorFileStrings() const {
+  return pimpl_->anchor_file_strings;
+}
+
 Database::Database(::rust::Box<loot::rust::Database>&& database) :
     database_(std::move(database)) {}
 
@@ -36,9 +104,9 @@ void Database::LoadUserlist(const std::filesystem::path& userlistPath) {
 }
 
 void Database::WriteUserMetadata(const std::filesystem::path& outputFile,
-                                 const bool overwrite) const {
+                                 const MetadataWriteOptions& options) const {
   try {
-    database_->write_user_metadata(outputFile.u8string(), overwrite);
+    database_->write_user_metadata(outputFile.u8string(), ::convert(options));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
@@ -209,9 +277,9 @@ void Database::DiscardAllUserMetadata() {
 }
 
 void Database::WriteMinimalList(const std::filesystem::path& outputFile,
-                                const bool overwrite) const {
+                                const MetadataWriteOptions& options) const {
   try {
-    database_->write_minimal_list(outputFile.u8string(), overwrite);
+    database_->write_minimal_list(outputFile.u8string(), ::convert(options));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

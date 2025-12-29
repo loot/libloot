@@ -17,7 +17,7 @@ mod plugin;
 
 use database::{Database, Vertex, new_vertex};
 use error::{EmptyOptionalError, VerboseError};
-use ffi::OptionalMessageContentRef;
+use ffi::{MetadataWriteOptionsImpl, OptionalMessageContentRef};
 use game::{Game, new_game, new_game_with_local_path};
 use libloot_ffi_errors::UnsupportedEnumValueError;
 use metadata::{
@@ -112,6 +112,18 @@ impl TryFrom<ffi::LogLevel> for libloot::LogLevel {
     }
 }
 
+impl From<MetadataWriteOptionsImpl> for libloot::MetadataWriteOptions {
+    fn from(value: MetadataWriteOptionsImpl) -> Self {
+        let mut options = libloot::MetadataWriteOptions::new();
+        options.set_truncate(value.truncate);
+        options.set_write_anchors(value.write_anchors);
+        options.set_write_common_section(value.write_common_section);
+        options.set_anchor_file_strings(value.anchor_file_strings);
+
+        options
+    }
+}
+
 #[allow(
     let_underscore_drop,
     missing_debug_implementations,
@@ -123,7 +135,6 @@ impl TryFrom<ffi::LogLevel> for libloot::LogLevel {
 )]
 #[cxx::bridge(namespace = "loot::rust")]
 mod ffi {
-
     pub enum GameType {
         Oblivion,
         Skyrim,
@@ -179,6 +190,15 @@ mod ffi {
     #[derive(Debug)]
     struct OptionalMessageContentRef {
         pointer: *const MessageContent,
+    }
+
+    #[namespace = "loot"]
+    #[derive(Debug, Copy, Clone)]
+    struct MetadataWriteOptionsImpl {
+        truncate: bool,
+        write_anchors: bool,
+        write_common_section: bool,
+        anchor_file_strings: bool,
     }
 
     extern "Rust" {
@@ -260,9 +280,17 @@ mod ffi {
 
         pub fn load_userlist(&self, path: &str) -> Result<()>;
 
-        pub fn write_user_metadata(&self, output_path: &str, overwrite: bool) -> Result<()>;
+        pub fn write_user_metadata(
+            &self,
+            output_path: &str,
+            options: MetadataWriteOptionsImpl,
+        ) -> Result<()>;
 
-        pub fn write_minimal_list(&self, output_path: &str, overwrite: bool) -> Result<()>;
+        pub fn write_minimal_list(
+            &self,
+            output_path: &str,
+            options: MetadataWriteOptionsImpl,
+        ) -> Result<()>;
 
         pub fn evaluate(&self, condition: &str) -> Result<bool>;
 

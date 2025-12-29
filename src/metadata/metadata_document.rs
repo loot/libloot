@@ -28,11 +28,106 @@ use super::{
     },
 };
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub(crate) struct MetadataWriteOptions {
-    pub write_anchors: bool,
-    pub write_common_section: bool,
-    pub anchor_file_strings: bool,
+/// Options to configure how metadata files are written.
+#[derive(Clone, Debug, Default)]
+#[expect(
+    missing_copy_implementations,
+    reason = "Omitted Copy to allow this to become non-Copy-compatible without breaking backwards compatibility."
+)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "It's a config object, the bools make sense."
+)]
+pub struct MetadataWriteOptions {
+    truncate: bool,
+    write_anchors: bool,
+    write_common_section: bool,
+    anchor_file_strings: bool,
+}
+
+impl MetadataWriteOptions {
+    /// Creates a new set of options, all initially set to `false`.
+    pub fn new() -> Self {
+        MetadataWriteOptions {
+            truncate: false,
+            write_anchors: false,
+            write_common_section: false,
+            anchor_file_strings: false,
+        }
+    }
+
+    /// Sets the option to overwrite the output file if it already exists.
+    ///
+    /// If true and the file path already exists, its contents will be replaced.
+    ///
+    /// If false and the file path already exists, an error will be returned.
+    ///
+    /// This setting has no effect if the file path does not exist.
+    pub fn set_truncate(&mut self, truncate: bool) {
+        self.truncate = truncate;
+    }
+
+    /// Sets the option to write YAML anchors and aliases.
+    ///
+    /// If true then conditions, constraints, files, file details, plugin
+    /// cleaning data details, messages and message contents that appear more
+    /// than once in the metadata will be deduplicated by including a YAML
+    /// anchor when writing the first occurrence of the value, and writing
+    /// YAML aliases in place of further occurrences.
+    ///
+    /// If false, YAML anchors and aliases will not be used, so no deduplication
+    /// will occur.
+    pub fn set_write_anchors(&mut self, write_anchors: bool) {
+        self.write_anchors = write_anchors;
+    }
+
+    /// Sets the option to write YAML anchors in a `common` section.
+    ///
+    /// If `write_anchors` is true and this is also true, the document's
+    /// root-level map will start with a `common` key. Its value will be a list
+    /// of all the values for which YAML anchors will be written, so that all
+    /// YAML anchors will appear within that list.
+    ///
+    /// This setting has no effect if `write_anchors` is false.
+    pub fn set_write_common_section(&mut self, write_common_section: bool) {
+        self.write_common_section = write_common_section;
+    }
+
+    /// Sets the option to write anchors for [File] values that only have a
+    /// name.
+    ///
+    /// If `write_anchors` is true and this is also true, then all repeated
+    /// [File] metadata values will be deduplicated using YAML anchors and
+    /// aliases.
+    ///
+    /// If this is false, then only [File] metadata that is serialised
+    /// as a YAML object will be deduplicated (i.e. [File] values that only have
+    /// a name will not be deduplicated).
+    ///
+    /// This setting has no effect if `write_anchors` is false.
+    pub fn set_anchor_file_strings(&mut self, anchor_file_strings: bool) {
+        self.anchor_file_strings = anchor_file_strings;
+    }
+
+    /// Gets the current value of the `truncate` option.
+    pub fn truncate(&self) -> bool {
+        self.truncate
+    }
+
+    /// Gets the current value of the `write_anchors` option.
+    pub fn write_anchors(&self) -> bool {
+        self.write_anchors
+    }
+
+    /// Gets the current value of the `write_common_section` option.
+    pub fn write_common_section(&self) -> bool {
+        self.write_common_section
+    }
+
+    /// Gets the current value of the `anchor_file_strings` option.
+    pub fn anchor_file_strings(&self) -> bool {
+        self.anchor_file_strings
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -233,7 +328,7 @@ impl MetadataDocument {
     pub(crate) fn save(
         &self,
         file_path: &Path,
-        options: MetadataWriteOptions,
+        options: &MetadataWriteOptions,
     ) -> Result<(), WriteMetadataError> {
         logging::trace!("Saving metadata list to: \"{}\"", escape_ascii(file_path));
 
@@ -1298,7 +1393,7 @@ plugins:
 
             let other_path = tmp_dir.path().join("other.yaml");
             metadata
-                .save(&other_path, MetadataWriteOptions::default())
+                .save(&other_path, &MetadataWriteOptions::default())
                 .unwrap();
 
             let mut other_metadata = MetadataDocument::default();
@@ -1382,16 +1477,11 @@ plugins:
 
             let metadata = metadata_with_repeated_values();
 
-            metadata
-                .save(
-                    &path,
-                    MetadataWriteOptions {
-                        write_anchors: true,
-                        write_common_section: false,
-                        anchor_file_strings: true,
-                    },
-                )
-                .unwrap();
+            let mut options = MetadataWriteOptions::new();
+            options.set_write_anchors(true);
+            options.set_anchor_file_strings(true);
+
+            metadata.save(&path, &options).unwrap();
 
             let content = std::fs::read_to_string(&path).unwrap();
 
@@ -1464,16 +1554,12 @@ plugins:
 
             let metadata = metadata_with_repeated_values();
 
-            metadata
-                .save(
-                    &path,
-                    MetadataWriteOptions {
-                        write_anchors: true,
-                        write_common_section: true,
-                        anchor_file_strings: true,
-                    },
-                )
-                .unwrap();
+            let mut options = MetadataWriteOptions::new();
+            options.set_write_anchors(true);
+            options.set_write_common_section(true);
+            options.set_anchor_file_strings(true);
+
+            metadata.save(&path, &options).unwrap();
 
             let content = std::fs::read_to_string(&path).unwrap();
 
@@ -1555,16 +1641,11 @@ plugins:
 
             let metadata = metadata_with_repeated_values();
 
-            metadata
-                .save(
-                    &path,
-                    MetadataWriteOptions {
-                        write_anchors: true,
-                        write_common_section: true,
-                        anchor_file_strings: false,
-                    },
-                )
-                .unwrap();
+            let mut options = MetadataWriteOptions::new();
+            options.set_write_anchors(true);
+            options.set_write_common_section(true);
+
+            metadata.save(&path, &options).unwrap();
 
             let content = std::fs::read_to_string(&path).unwrap();
 

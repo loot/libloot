@@ -20,22 +20,6 @@ use crate::{
 };
 pub use error::{ConditionEvaluationError, MetadataRetrievalError};
 
-const WRITE_OPTIONS: MetadataWriteOptions = MetadataWriteOptions {
-    write_anchors: true,
-    write_common_section: true,
-    anchor_file_strings: true,
-};
-
-/// Control behaviour when writing to files.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-#[non_exhaustive]
-pub enum WriteMode {
-    /// Create the file if it does not exist, otherwise error.
-    Create,
-    /// Create the file if it does not exist, otherwise replace its contents.
-    CreateOrTruncate,
-}
-
 /// Control whether user metadata is included or not when retrieving metadata.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[expect(clippy::exhaustive_enums, reason = "It's effectively a boolean")]
@@ -116,11 +100,11 @@ impl Database {
     pub fn write_user_metadata(
         &self,
         output_path: &Path,
-        mode: WriteMode,
+        options: &MetadataWriteOptions,
     ) -> Result<(), WriteMetadataError> {
-        validate_write_path(output_path, mode)?;
+        validate_write_path(output_path, options)?;
 
-        self.userlist.save(output_path, WRITE_OPTIONS)
+        self.userlist.save(output_path, options)
     }
 
     /// Writes a metadata file that only contains plugin Bash Tag suggestions
@@ -131,9 +115,9 @@ impl Database {
     pub fn write_minimal_list(
         &self,
         output_path: &Path,
-        mode: WriteMode,
+        options: &MetadataWriteOptions,
     ) -> Result<(), WriteMetadataError> {
-        validate_write_path(output_path, mode)?;
+        validate_write_path(output_path, options)?;
 
         let mut doc = MetadataDocument::default();
 
@@ -145,7 +129,7 @@ impl Database {
             doc.set_plugin_metadata(minimal_plugin);
         }
 
-        doc.save(output_path, WRITE_OPTIONS)
+        doc.save(output_path, options)
     }
 
     /// Evaluate the given condition string.
@@ -351,7 +335,10 @@ impl Database {
     }
 }
 
-fn validate_write_path(output_path: &Path, mode: WriteMode) -> Result<(), WriteMetadataError> {
+fn validate_write_path(
+    output_path: &Path,
+    options: &MetadataWriteOptions,
+) -> Result<(), WriteMetadataError> {
     if !output_path
         .parent()
         .is_some_and(|p| p.as_os_str().is_empty() || p.exists())
@@ -360,7 +347,7 @@ fn validate_write_path(output_path: &Path, mode: WriteMode) -> Result<(), WriteM
             output_path.into(),
             WriteMetadataErrorReason::ParentDirectoryNotFound,
         ))
-    } else if mode == WriteMode::Create && output_path.exists() {
+    } else if !options.truncate() && output_path.exists() {
         Err(WriteMetadataError::new(
             output_path.into(),
             WriteMetadataErrorReason::PathAlreadyExists,
@@ -518,6 +505,12 @@ plugins:
         }
     }
 
+    fn truncate_options() -> MetadataWriteOptions {
+        let mut options = MetadataWriteOptions::new();
+        options.set_truncate(true);
+        options
+    }
+
     #[test]
     fn load_masterlist_should_succeed_if_given_a_valid_path() {
         let fixture = Fixture::new(GameType::Oblivion);
@@ -587,7 +580,7 @@ plugins:
 
             let output_path = fixture.inner.local_path.join("userlist.yaml");
             database
-                .write_user_metadata(&output_path, WriteMode::Create)
+                .write_user_metadata(&output_path, &MetadataWriteOptions::new())
                 .unwrap();
 
             let content = std::fs::read_to_string(output_path).unwrap();
@@ -603,7 +596,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, WriteMode::Create)
+                    .write_user_metadata(&output_path, &MetadataWriteOptions::new())
                     .is_ok()
             );
         }
@@ -616,7 +609,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, WriteMode::CreateOrTruncate)
+                    .write_user_metadata(&output_path, &truncate_options())
                     .is_ok()
             );
         }
@@ -631,7 +624,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, WriteMode::CreateOrTruncate)
+                    .write_user_metadata(&output_path, &truncate_options())
                     .is_ok()
             );
         }
@@ -644,7 +637,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(output_path, WriteMode::Create)
+                    .write_user_metadata(output_path, &MetadataWriteOptions::new())
                     .is_ok()
             );
 
@@ -657,7 +650,7 @@ plugins:
             let database = fixture.database();
 
             let err = database
-                .write_user_metadata(Path::new("/"), WriteMode::Create)
+                .write_user_metadata(Path::new("/"), &MetadataWriteOptions::new())
                 .unwrap_err();
 
             assert_eq!(
@@ -673,7 +666,7 @@ plugins:
             let output_path = fixture.inner.local_path;
 
             let err = database
-                .write_user_metadata(&output_path, WriteMode::CreateOrTruncate)
+                .write_user_metadata(&output_path, &truncate_options())
                 .unwrap_err();
 
             assert_eq!("an I/O error occurred", err.to_string());
@@ -687,7 +680,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, WriteMode::Create)
+                    .write_user_metadata(&output_path, &MetadataWriteOptions::new())
                     .is_err()
             );
         }
@@ -706,7 +699,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, WriteMode::CreateOrTruncate)
+                    .write_user_metadata(&output_path, &truncate_options())
                     .is_err()
             );
         }
@@ -721,7 +714,7 @@ plugins:
 
             assert!(
                 database
-                    .write_user_metadata(&output_path, WriteMode::Create)
+                    .write_user_metadata(&output_path, &MetadataWriteOptions::new())
                     .is_err()
             );
         }
@@ -740,7 +733,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, WriteMode::Create)
+                    .write_minimal_list(&output_path, &MetadataWriteOptions::new())
                     .is_ok()
             );
 
@@ -770,7 +763,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, WriteMode::Create)
+                    .write_minimal_list(&output_path, &MetadataWriteOptions::new())
                     .is_ok()
             );
         }
@@ -783,7 +776,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
+                    .write_minimal_list(&output_path, &truncate_options())
                     .is_ok()
             );
         }
@@ -798,7 +791,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
+                    .write_minimal_list(&output_path, &truncate_options())
                     .is_ok()
             );
         }
@@ -811,7 +804,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(output_path, WriteMode::Create)
+                    .write_minimal_list(output_path, &MetadataWriteOptions::new())
                     .is_ok()
             );
 
@@ -824,7 +817,7 @@ plugins:
             let database = fixture.database();
 
             let err = database
-                .write_minimal_list(Path::new("/"), WriteMode::Create)
+                .write_minimal_list(Path::new("/"), &MetadataWriteOptions::new())
                 .unwrap_err();
 
             assert_eq!(
@@ -840,7 +833,7 @@ plugins:
             let output_path = fixture.inner.local_path;
 
             let err = database
-                .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
+                .write_minimal_list(&output_path, &truncate_options())
                 .unwrap_err();
 
             assert_eq!("an I/O error occurred", err.to_string());
@@ -854,7 +847,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, WriteMode::Create)
+                    .write_minimal_list(&output_path, &MetadataWriteOptions::new())
                     .is_err()
             );
         }
@@ -873,7 +866,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
+                    .write_minimal_list(&output_path, &truncate_options())
                     .is_err()
             );
         }
@@ -888,7 +881,7 @@ plugins:
 
             assert!(
                 database
-                    .write_minimal_list(&output_path, WriteMode::Create)
+                    .write_minimal_list(&output_path, &MetadataWriteOptions::new())
                     .is_err()
             );
         }
