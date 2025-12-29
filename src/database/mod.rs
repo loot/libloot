@@ -306,7 +306,7 @@ impl Database {
 }
 
 fn validate_write_path(output_path: &Path, mode: WriteMode) -> Result<(), WriteMetadataError> {
-    if !output_path.parent().is_some_and(Path::exists) {
+    if !output_path.parent().is_some_and(|p| p == "" || p.exists()) {
         Err(WriteMetadataError::new(
             output_path.into(),
             WriteMetadataErrorReason::ParentDirectoryNotFound,
@@ -557,6 +557,49 @@ plugins:
         }
 
         #[test]
+        fn should_succeed_if_the_path_has_an_empty_parent() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let database = fixture.database();
+            let output_path = Path::new("userlist.yaml");
+
+            assert!(
+                database
+                    .write_user_metadata(output_path, WriteMode::Create)
+                    .is_ok()
+            );
+
+            std::fs::remove_file(output_path).unwrap();
+        }
+
+        #[test]
+        fn should_error_if_the_path_has_no_parent() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let database = fixture.database();
+
+            let err = database
+                .write_user_metadata(Path::new("/"), WriteMode::Create)
+                .unwrap_err();
+
+            assert_eq!(
+                "the parent directory of the path \"/\" was not found",
+                err.to_string()
+            );
+        }
+
+        #[test]
+        fn should_error_if_the_path_is_a_directory() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let database = fixture.database();
+            let output_path = fixture.inner.local_path;
+
+            let err = database
+                .write_user_metadata(&output_path, WriteMode::CreateOrTruncate)
+                .unwrap_err();
+
+            assert_eq!("an I/O error occurred", err.to_string());
+        }
+
+        #[test]
         fn should_error_if_the_parent_path_does_not_exist() {
             let fixture = Fixture::new(GameType::Oblivion);
             let database = fixture.database();
@@ -692,6 +735,49 @@ plugins:
                     .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
                     .is_ok()
             );
+        }
+
+        #[test]
+        fn should_succeed_if_the_path_has_an_empty_parent() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let database = fixture.database();
+            let output_path = Path::new("userlist.yaml");
+
+            assert!(
+                database
+                    .write_minimal_list(output_path, WriteMode::Create)
+                    .is_ok()
+            );
+
+            std::fs::remove_file(output_path).unwrap();
+        }
+
+        #[test]
+        fn should_error_if_the_path_has_no_parent() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let database = fixture.database();
+
+            let err = database
+                .write_minimal_list(Path::new("/"), WriteMode::Create)
+                .unwrap_err();
+
+            assert_eq!(
+                "the parent directory of the path \"/\" was not found",
+                err.to_string()
+            );
+        }
+
+        #[test]
+        fn should_error_if_the_path_is_a_directory() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let database = fixture.database();
+            let output_path = fixture.inner.local_path;
+
+            let err = database
+                .write_minimal_list(&output_path, WriteMode::CreateOrTruncate)
+                .unwrap_err();
+
+            assert_eq!("an I/O error occurred", err.to_string());
         }
 
         #[test]
