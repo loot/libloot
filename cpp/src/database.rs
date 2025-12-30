@@ -158,6 +158,22 @@ impl Database {
             .collect())
     }
 
+    #[expect(
+        clippy::vec_box,
+        reason = "Message is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_user_general_messages(
+        &self,
+        messages: Vec<Box<Message>>,
+    ) -> Result<(), VerboseError> {
+        self.0
+            .write()
+            .map_err(DatabaseLockPoisonError::from)?
+            .set_user_general_messages(to_vec_of_unwrapped(messages));
+
+        Ok(())
+    }
+
     pub fn groups(&self, include_user_metadata: bool) -> Result<Vec<Group>, VerboseError> {
         Ok(self
             .0

@@ -327,6 +327,10 @@ impl MetadataDocument {
         }
     }
 
+    pub(crate) fn set_messages(&mut self, messages: Vec<Message>) {
+        self.messages = messages;
+    }
+
     pub(crate) fn set_plugin_metadata(&mut self, plugin_metadata: PluginMetadata) {
         if plugin_metadata.is_regex_plugin() {
             self.regex_plugins.push(plugin_metadata);

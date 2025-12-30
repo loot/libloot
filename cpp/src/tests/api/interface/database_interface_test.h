@@ -582,6 +582,24 @@ TEST_P(DatabaseInterfaceTest,
 }
 
 TEST_P(DatabaseInterfaceTest,
+       setUserGeneralMessagesShouldReplaceExistingUserGeneralMessages) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
+
+  std::vector<Message> replacementMessages({
+      Message(MessageType::say, "A replacement message"),
+  });
+
+  handle_->GetDatabase().SetUserGeneralMessages(replacementMessages);
+
+  auto messages = handle_->GetDatabase().GetUserGeneralMessages();
+
+  EXPECT_EQ(replacementMessages, messages);
+}
+
+TEST_P(DatabaseInterfaceTest,
        getPluginMetadataShouldReturnAnEmptyOptionalIfThePluginHasNoMetadata) {
   EXPECT_FALSE(handle_->GetDatabase().GetPluginMetadata(blankEsm));
 }

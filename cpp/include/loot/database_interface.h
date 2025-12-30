@@ -192,6 +192,14 @@ public:
       bool evaluateConditions = false) const = 0;
 
   /**
+   * @brief Sets the general messages to store in the userlist, replacing any
+   *        messages already stored there.
+   * @param messages
+   *        The messages to set.
+   */
+  virtual void SetUserGeneralMessages(const std::vector<Message>& messages) = 0;
+
+  /**
    * @brief Gets the groups that are defined in the loaded metadata lists.
    * @param includeUserMetadata
    *        If true, any group metadata present in the userlist is included in

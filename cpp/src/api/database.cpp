@@ -105,6 +105,15 @@ std::vector<Message> Database::GetUserGeneralMessages(
   }
 }
 
+void Database::SetUserGeneralMessages(const std::vector<Message>& messages) {
+  try {
+    database_->set_user_general_messages(
+        convert<loot::rust::Message>(messages));
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
+
 std::vector<Group> Database::GetGroups(bool includeUserMetadata) const {
   try {
     return convert<Group>(database_->groups(includeUserMetadata));

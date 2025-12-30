@@ -216,6 +216,12 @@ impl Database {
         )
     }
 
+    /// Sets the general messages to store in the userlist, replacing any
+    /// existing values stored there.
+    pub fn set_user_general_messages(&mut self, general_messages: Vec<Message>) {
+        self.userlist.set_messages(general_messages);
+    }
+
     /// Gets the groups that are defined in the loaded metadata lists.
     pub fn groups(&self, include_user_metadata: MergeMode) -> Vec<Group> {
         if include_user_metadata == MergeMode::WithUserMetadata {
@@ -1108,6 +1114,32 @@ plugins:
                     .is_empty()
             );
         }
+    }
+
+    #[test]
+    fn set_user_general_messages_should_replace_existing_user_general_messages() {
+        let fixture = Fixture::new(GameType::Oblivion);
+        let mut database = fixture.database();
+
+        let userlist_path = fixture.inner.local_path.join("userlist.yaml");
+        std::fs::write(
+            &userlist_path,
+            "globals: [{type: say, content: 'A user message'}]",
+        )
+        .unwrap();
+
+        database.load_userlist(&userlist_path).unwrap();
+
+        let message = Message::new(MessageType::Say, "replacement message".to_owned());
+        database.set_user_general_messages(vec![message.clone()]);
+
+        assert_eq!(
+            &[message],
+            database
+                .user_general_messages(EvalMode::DoNotEvaluate)
+                .unwrap()
+                .as_slice()
+        );
     }
 
     mod groups {

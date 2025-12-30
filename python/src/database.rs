@@ -160,6 +160,15 @@ impl Database {
             .map_err(Into::into)
     }
 
+    pub fn set_user_general_messages(&self, messages: Vec<Message>) -> Result<(), VerboseError> {
+        self.0
+            .write()
+            .map_err(DatabaseLockPoisonError::from)?
+            .set_user_general_messages(messages.into_iter().map(Into::into).collect());
+
+        Ok(())
+    }
+
     pub fn groups(&self, include_user_metadata: bool) -> Result<Vec<Group>, VerboseError> {
         Ok(self
             .0
