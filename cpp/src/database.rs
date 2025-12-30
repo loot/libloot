@@ -144,6 +144,20 @@ impl Database {
             .map_err(Into::into)
     }
 
+    pub fn user_general_messages(
+        &self,
+        evaluate_conditions: bool,
+    ) -> Result<Vec<Message>, VerboseError> {
+        Ok(self
+            .0
+            .read()
+            .map_err(DatabaseLockPoisonError::from)?
+            .user_general_messages(to_eval_mode(evaluate_conditions))?
+            .into_iter()
+            .map(Into::into)
+            .collect())
+    }
+
     pub fn groups(&self, include_user_metadata: bool) -> Result<Vec<Group>, VerboseError> {
         Ok(self
             .0

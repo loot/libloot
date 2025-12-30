@@ -194,23 +194,26 @@ impl Database {
         &self,
         evaluate_conditions: EvalMode,
     ) -> Result<Vec<Message>, ConditionEvaluationError> {
-        let messages_iter = self
-            .masterlist
-            .messages()
-            .iter()
-            .chain(self.userlist.messages());
+        process_messages(
+            self.masterlist
+                .messages()
+                .iter()
+                .chain(self.userlist.messages()),
+            &self.condition_evaluator_state,
+            evaluate_conditions,
+        )
+    }
 
-        if evaluate_conditions == EvalMode::Evaluate {
-            let messages = messages_iter
-                .filter_map(|m| {
-                    filter_map_on_condition(m, m.condition(), &self.condition_evaluator_state)
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-
-            Ok(messages)
-        } else {
-            Ok(messages_iter.cloned().collect())
-        }
+    /// Get all general messages listed in the loaded userlist.
+    pub fn user_general_messages(
+        &self,
+        evaluate_conditions: EvalMode,
+    ) -> Result<Vec<Message>, ConditionEvaluationError> {
+        process_messages(
+            self.userlist.messages().iter(),
+            &self.condition_evaluator_state,
+            evaluate_conditions,
+        )
     }
 
     /// Gets the groups that are defined in the loaded metadata lists.
@@ -281,7 +284,7 @@ impl Database {
         }
     }
 
-    /// Get a plugin's metadata loaded from the given userlist.
+    /// Get a plugin's metadata loaded from the loaded userlist.
     pub fn plugin_user_metadata(
         &self,
         plugin_name: &str,
@@ -377,6 +380,22 @@ fn merge_groups(lhs: &[Group], rhs: &[Group]) -> Vec<Group> {
     groups.extend(new_groups);
 
     groups
+}
+
+fn process_messages<'a, I: Iterator<Item = &'a Message>>(
+    messages_iter: I,
+    condition_evaluator_state: &loot_condition_interpreter::State,
+    evaluate_conditions: EvalMode,
+) -> Result<Vec<Message>, ConditionEvaluationError> {
+    if evaluate_conditions == EvalMode::Evaluate {
+        let messages = messages_iter
+            .filter_map(|m| filter_map_on_condition(m, m.condition(), condition_evaluator_state))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(messages)
+    } else {
+        Ok(messages_iter.cloned().collect())
+    }
 }
 
 #[cfg(test)]
@@ -1035,6 +1054,58 @@ plugins:
                     .general_messages(EvalMode::Evaluate)
                     .unwrap()
                     .as_slice()
+            );
+        }
+    }
+
+    mod user_general_messages {
+        use super::*;
+
+        #[test]
+        fn user_general_messages_should_return_only_general_messages_in_the_userlist() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let mut database = fixture.database();
+
+            database.load_masterlist(&fixture.metadata_path).unwrap();
+
+            let userlist_path = fixture.inner.local_path.join("userlist.yaml");
+            std::fs::write(
+                &userlist_path,
+                "globals: [{type: say, content: 'A user message', condition: 'file(\"missing.esp\")'}]",
+            )
+            .unwrap();
+
+            database.load_userlist(&userlist_path).unwrap();
+
+            assert_eq!(
+                &[Message::new(MessageType::Say, "A user message".into())
+                    .with_condition("file(\"missing.esp\")".into())],
+                database
+                    .user_general_messages(EvalMode::DoNotEvaluate)
+                    .unwrap()
+                    .as_slice()
+            );
+        }
+
+        #[test]
+        fn should_filter_out_messages_with_false_conditions_when_evaluating_conditions() {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let mut database = fixture.database();
+
+            let userlist_path = fixture.inner.local_path.join("userlist.yaml");
+            std::fs::write(
+                &userlist_path,
+                "globals: [{type: say, content: 'A user message', condition: 'file(\"missing.esp\")'}]",
+            )
+            .unwrap();
+
+            database.load_userlist(&userlist_path).unwrap();
+
+            assert!(
+                database
+                    .user_general_messages(EvalMode::Evaluate)
+                    .unwrap()
+                    .is_empty()
             );
         }
     }

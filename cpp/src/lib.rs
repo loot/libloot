@@ -276,6 +276,8 @@ mod ffi {
 
         pub fn general_messages(&self, evaluate_conditions: bool) -> Result<Vec<Message>>;
 
+        pub fn user_general_messages(&self, evaluate_conditions: bool) -> Result<Vec<Message>>;
+
         pub fn groups(&self, include_user_metadata: bool) -> Result<Vec<Group>>;
 
         pub fn user_groups(&self) -> Result<Vec<Group>>;

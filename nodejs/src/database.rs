@@ -184,6 +184,19 @@ impl Database {
     }
 
     #[napi]
+    pub fn user_general_messages(
+        &self,
+        evaluate_conditions: EvalMode,
+    ) -> Result<Vec<Message>, VerboseError> {
+        self.0
+            .read()
+            .map_err(DatabaseLockPoisonError::from)?
+            .user_general_messages(evaluate_conditions.into())
+            .map(|v| v.into_iter().map(Into::into).collect())
+            .map_err(Into::into)
+    }
+
+    #[napi]
     pub fn groups(&self, include_user_metadata: MergeMode) -> Result<Vec<Group>, VerboseError> {
         Ok(self
             .0

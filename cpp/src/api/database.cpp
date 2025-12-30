@@ -95,6 +95,16 @@ std::vector<Message> Database::GetGeneralMessages(
   }
 }
 
+std::vector<Message> Database::GetUserGeneralMessages(
+    bool evaluateConditions) const {
+  try {
+    return convert<Message>(
+        database_->user_general_messages(evaluateConditions));
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
+
 std::vector<Group> Database::GetGroups(bool includeUserMetadata) const {
   try {
     return convert<Group>(database_->groups(includeUserMetadata));

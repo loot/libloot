@@ -38,6 +38,9 @@ public:
   std::vector<Message> GetGeneralMessages(
       bool evaluateConditions = false) const override;
 
+  std::vector<Message> GetUserGeneralMessages(
+      bool evaluateConditions = false) const override;
+
   std::vector<Group> GetGroups(bool includeUserMetadata = true) const override;
   std::vector<Group> GetUserGroups() const override;
   void SetUserGroups(const std::vector<Group>& groups) override;

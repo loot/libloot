@@ -567,6 +567,21 @@ TEST_P(
 }
 
 TEST_P(DatabaseInterfaceTest,
+       getUserGeneralMessagesShouldGetGeneralMessagesFromTheUserlistOnly) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
+
+  auto messages = handle_->GetDatabase().GetUserGeneralMessages();
+
+  std::vector<Message> expectedMessages({
+      Message(MessageType::say, generalUserlistMessage),
+  });
+  EXPECT_EQ(expectedMessages, messages);
+}
+
+TEST_P(DatabaseInterfaceTest,
        getPluginMetadataShouldReturnAnEmptyOptionalIfThePluginHasNoMetadata) {
   EXPECT_FALSE(handle_->GetDatabase().GetPluginMetadata(blankEsm));
 }

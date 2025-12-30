@@ -179,6 +179,19 @@ public:
       bool evaluateConditions = false) const = 0;
 
   /**
+   * @brief Get all general messages listed in the loaded userlist.
+   * @param evaluateConditions
+   *        If true, any metadata conditions are evaluated before the metadata
+   *        is returned, otherwise unevaluated metadata is returned. Evaluating
+   *        general message conditions also clears the condition cache before
+   *        evaluating conditions.
+   * @returns A vector of messages supplied in the userlist but not attached to
+   *          any particular plugin.
+   */
+  virtual std::vector<Message> GetUserGeneralMessages(
+      bool evaluateConditions = false) const = 0;
+
+  /**
    * @brief Gets the groups that are defined in the loaded metadata lists.
    * @param includeUserMetadata
    *        If true, any group metadata present in the userlist is included in
