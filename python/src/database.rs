@@ -107,12 +107,15 @@ impl Database {
         Ok(())
     }
 
-    pub fn known_bash_tags(&self) -> Result<Vec<String>, VerboseError> {
+    pub fn known_bash_tags(
+        &self,
+        include_user_metadata: bool,
+    ) -> Result<Vec<String>, VerboseError> {
         Ok(self
             .0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .known_bash_tags())
+            .known_bash_tags(to_merge_mode(include_user_metadata)))
     }
 
     pub fn user_known_bash_tags(&self) -> Result<Vec<String>, VerboseError> {

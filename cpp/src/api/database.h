@@ -28,7 +28,8 @@ public:
 
   void ClearConditionCache() override;
 
-  std::vector<std::string> GetKnownBashTags() const override;
+  std::vector<std::string> GetKnownBashTags(
+      bool includeUserMetadata = true) const override;
 
   std::vector<std::string> GetUserKnownBashTags() const override;
 

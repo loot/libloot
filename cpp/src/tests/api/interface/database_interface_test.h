@@ -485,6 +485,24 @@ TEST_P(DatabaseInterfaceTest,
   EXPECT_EQ(expectedTags, tags);
 }
 
+TEST_P(
+    DatabaseInterfaceTest,
+    getKnownBashTagsShouldReturnAllBashTagsListedInLoadedMasterlistOnlyWhenParamIsFalse) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
+
+  auto tags = handle_->GetDatabase().GetKnownBashTags(false);
+
+  std::vector<std::string> expectedTags({
+      "Actors.ACBS",
+      "C.Climate",
+  });
+  EXPECT_EQ(expectedTags, tags);
+}
+
 TEST_P(DatabaseInterfaceTest,
        getUserKnownBashTagsShouldReturnAllBashTagsListedInLoadedUserMetadata) {
   ASSERT_NO_THROW(GenerateMasterlist());

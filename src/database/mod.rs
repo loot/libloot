@@ -166,9 +166,12 @@ impl Database {
     /// Gets the Bash Tags that are listed in the loaded metadata lists.
     ///
     /// Bash Tag suggestions can include Bash Tags not in this list.
-    pub fn known_bash_tags(&self) -> Vec<String> {
+    pub fn known_bash_tags(&self, include_user_metadata: MergeMode) -> Vec<String> {
         let mut tags = self.masterlist.bash_tags().to_vec();
-        tags.extend_from_slice(self.userlist.bash_tags());
+
+        if include_user_metadata == MergeMode::WithUserMetadata {
+            tags.extend_from_slice(self.userlist.bash_tags());
+        }
 
         tags
     }
@@ -482,7 +485,12 @@ plugins:
 
         database.load_masterlist(&fixture.metadata_path).unwrap();
 
-        assert_eq!(&["C.Climate"], database.known_bash_tags().as_slice());
+        assert_eq!(
+            &["C.Climate"],
+            database
+                .known_bash_tags(MergeMode::WithUserMetadata)
+                .as_slice()
+        );
     }
 
     #[test]
@@ -494,7 +502,12 @@ plugins:
             .load_masterlist_with_prelude(&fixture.metadata_path, &fixture.prelude_path)
             .unwrap();
 
-        assert_eq!(&["Actors.ACBS"], database.known_bash_tags().as_slice());
+        assert_eq!(
+            &["Actors.ACBS"],
+            database
+                .known_bash_tags(MergeMode::WithUserMetadata)
+                .as_slice()
+        );
     }
 
     #[test]
@@ -504,7 +517,12 @@ plugins:
 
         database.load_userlist(&fixture.metadata_path).unwrap();
 
-        assert_eq!(&["C.Climate"], database.known_bash_tags().as_slice());
+        assert_eq!(
+            &["C.Climate"],
+            database
+                .known_bash_tags(MergeMode::WithUserMetadata)
+                .as_slice()
+        );
         assert_eq!(
             &[
                 Group::default(),
@@ -887,22 +905,50 @@ plugins:
         assert!(!database.evaluate(condition).unwrap());
     }
 
-    #[test]
-    fn known_bash_tags_should_append_userlist_tags_to_masterlist_tags() {
-        let fixture = Fixture::new(GameType::Oblivion);
-        let mut database = fixture.database();
+    mod known_bash_tags {
+        use super::*;
 
-        database.load_masterlist(&fixture.metadata_path).unwrap();
+        #[test]
+        fn should_not_append_userlist_tags_to_masterlist_tags_if_merge_mode_is_without_user_metadata()
+         {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let mut database = fixture.database();
 
-        let userlist_path = fixture.inner.local_path.join("userlist.yaml");
-        std::fs::write(&userlist_path, "bash_tags: [Relev, Delev]").unwrap();
+            database.load_masterlist(&fixture.metadata_path).unwrap();
 
-        database.load_userlist(&userlist_path).unwrap();
+            let userlist_path = fixture.inner.local_path.join("userlist.yaml");
+            std::fs::write(&userlist_path, "bash_tags: [Relev, Delev]").unwrap();
 
-        assert_eq!(
-            vec!["C.Climate", "Relev", "Delev"],
-            database.known_bash_tags()
-        );
+            database.load_userlist(&userlist_path).unwrap();
+
+            assert_eq!(
+                vec!["C.Climate"],
+                database.known_bash_tags(MergeMode::WithoutUserMetadata)
+            );
+        }
+
+        #[test]
+        fn should_append_unique_userlist_tags_to_masterlist_tags_if_merge_mode_is_with_user_metadata()
+         {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let mut database = fixture.database();
+
+            database.load_masterlist(&fixture.metadata_path).unwrap();
+
+            let userlist_path = fixture.inner.local_path.join("userlist.yaml");
+            std::fs::write(
+                &userlist_path,
+                "bash_tags: [C.Climate, Relev, Delev, Relev]",
+            )
+            .unwrap();
+
+            database.load_userlist(&userlist_path).unwrap();
+
+            assert_eq!(
+                vec!["C.Climate", "C.Climate", "Relev", "Delev", "Relev"],
+                database.known_bash_tags(MergeMode::WithUserMetadata)
+            );
+        }
     }
 
     #[test]

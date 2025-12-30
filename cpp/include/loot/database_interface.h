@@ -61,8 +61,7 @@ public:
    *        The relative or absolute path to the masterlist file that should be
    *        loaded.
    */
-  virtual void LoadMasterlist(
-      const std::filesystem::path& masterlistPath) = 0;
+  virtual void LoadMasterlist(const std::filesystem::path& masterlistPath) = 0;
 
   /**
    * @brief Loads the masterlist and masterlist prelude from the paths
@@ -141,9 +140,14 @@ public:
   /**
    * @brief Gets the Bash Tags that are listed in the loaded metadata lists.
    * @details Bash Tag suggestions can include Bash Tags not in this list.
+   * @param includeUserMetadata
+   *        If true, any Bash Tag metadata present in the userlist is included
+   *        in the returned metadata, otherwise the metadata returned only
+   *        includes metadata from the masterlist.
    * @returns The Bash Tag names, which may include duplicates.
    */
-  virtual std::vector<std::string> GetKnownBashTags() const = 0;
+  virtual std::vector<std::string> GetKnownBashTags(
+      bool includeUserMetadata = true) const = 0;
 
   /**
    * @brief Gets the Bash Tags that are listed in the loaded userlist.

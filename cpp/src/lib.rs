@@ -268,7 +268,7 @@ mod ffi {
 
         pub fn clear_condition_cache(&self) -> Result<()>;
 
-        pub fn known_bash_tags(&self) -> Result<Vec<String>>;
+        pub fn known_bash_tags(&self, include_user_metadata: bool) -> Result<Vec<String>>;
 
         pub fn user_known_bash_tags(&self) -> Result<Vec<String>>;
 

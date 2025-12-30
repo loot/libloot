@@ -60,9 +60,11 @@ void Database::ClearConditionCache() {
   }
 }
 
-std::vector<std::string> Database::GetKnownBashTags() const {
+std::vector<std::string> Database::GetKnownBashTags(
+    bool includeUserMetadata) const {
   try {
-    return convert<std::string>(database_->known_bash_tags());
+    return convert<std::string>(
+        database_->known_bash_tags(includeUserMetadata));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
