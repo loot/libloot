@@ -310,6 +310,10 @@ impl MetadataDocument {
         }
     }
 
+    pub(crate) fn set_bash_tags(&mut self, bash_tags: Vec<String>) {
+        self.bash_tags = bash_tags;
+    }
+
     pub(crate) fn set_groups(&mut self, groups: Vec<Group>) {
         // Ensure that the default group is present.
         let default_group_exists = groups.iter().any(|g| g.name() == Group::DEFAULT_NAME);

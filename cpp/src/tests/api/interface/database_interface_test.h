@@ -503,6 +503,23 @@ TEST_P(DatabaseInterfaceTest,
 }
 
 TEST_P(DatabaseInterfaceTest,
+       setUserKnownBashTagsShouldReplaceAllKnownBashTagsInTheUserlist) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
+
+  std::vector<std::string> tags({
+      "Filter",
+  });
+
+  handle_->GetDatabase().SetUserKnownBashTags({"Filter"});
+
+  EXPECT_EQ(tags, handle_->GetDatabase().GetUserKnownBashTags());
+}
+
+TEST_P(DatabaseInterfaceTest,
        getGeneralMessagesShouldGetGeneralMessagesFromTheMasterlistAndUserlist) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());

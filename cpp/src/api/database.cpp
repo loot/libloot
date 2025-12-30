@@ -70,8 +70,15 @@ std::vector<std::string> Database::GetKnownBashTags() const {
 
 std::vector<std::string> Database::GetUserKnownBashTags() const {
   try {
-    return convert<std::string>(
-        database_->user_known_bash_tags());
+    return convert<std::string>(database_->user_known_bash_tags());
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
+
+void Database::SetUserKnownBashTags(const std::vector<std::string>& bashTags) {
+  try {
+    return database_->set_user_known_bash_tags(convert(bashTags));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

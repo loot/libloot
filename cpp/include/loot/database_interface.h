@@ -153,6 +153,15 @@ public:
   virtual std::vector<std::string> GetUserKnownBashTags() const = 0;
 
   /**
+   * @brief Sets the known Bash Tags to store in the userlist, overwriting any
+   *        existing definitions there.
+   * @param bashTags
+   *        The Bash Tag names to set.
+   */
+  virtual void SetUserKnownBashTags(
+      const std::vector<std::string>& bashTags) = 0;
+
+  /**
    * @brief Get all general messages listed in the loaded metadata lists.
    * @param evaluateConditions
    *        If true, any metadata conditions are evaluated before the metadata

@@ -120,6 +120,15 @@ impl Database {
             .to_vec())
     }
 
+    pub fn set_user_known_bash_tags(&self, bash_tags: Vec<String>) -> Result<(), VerboseError> {
+        self.0
+            .write()
+            .map_err(DatabaseLockPoisonError::from)?
+            .set_user_known_bash_tags(bash_tags);
+
+        Ok(())
+    }
+
     pub fn general_messages(
         &self,
         evaluate_conditions: bool,

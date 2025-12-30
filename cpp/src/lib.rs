@@ -272,6 +272,8 @@ mod ffi {
 
         pub fn user_known_bash_tags(&self) -> Result<Vec<String>>;
 
+        pub fn set_user_known_bash_tags(&self, bash_tags: Vec<String>) -> Result<()>;
+
         pub fn general_messages(&self, evaluate_conditions: bool) -> Result<Vec<Message>>;
 
         pub fn groups(&self, include_user_metadata: bool) -> Result<Vec<Group>>;

@@ -180,6 +180,12 @@ impl Database {
         self.userlist.bash_tags()
     }
 
+    /// Sets the known Bash Tags to store in the userlist, replacing any
+    /// existing values stored there.
+    pub fn set_user_known_bash_tags(&mut self, bash_tags: Vec<String>) {
+        self.userlist.set_bash_tags(bash_tags);
+    }
+
     /// Get all general messages listed in the loaded metadata lists.
     pub fn general_messages(
         &self,
@@ -912,6 +918,21 @@ plugins:
         database.load_userlist(&userlist_path).unwrap();
 
         assert_eq!(&["Relev", "Delev"], database.user_known_bash_tags());
+    }
+
+    #[test]
+    fn set_user_known_bash_tags_should_replace_existing_user_known_bash_tags() {
+        let fixture = Fixture::new(GameType::Oblivion);
+        let mut database = fixture.database();
+
+        let userlist_path = fixture.inner.local_path.join("userlist.yaml");
+        std::fs::write(&userlist_path, "bash_tags: [Relev, Delev]").unwrap();
+
+        database.load_userlist(&userlist_path).unwrap();
+
+        database.set_user_known_bash_tags(vec!["Filter".to_owned()]);
+
+        assert_eq!(&["Filter"], database.user_known_bash_tags());
     }
 
     mod general_messages {
