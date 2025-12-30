@@ -343,7 +343,13 @@ impl MetadataDocument {
     }
 
     pub(crate) fn remove_plugin_metadata(&mut self, plugin_name: &str) {
-        self.plugins.remove(&Filename::new(plugin_name.to_owned()));
+        let removed = self.plugins.remove(&Filename::new(plugin_name.to_owned()));
+
+        // Only remove regex plugins if no specific plugin was removed, because
+        // they're mutually exclusive.
+        if removed.is_none() {
+            self.regex_plugins.retain(|p| p.name() != plugin_name);
+        }
     }
 
     pub(crate) fn clear(&mut self) {
@@ -1080,6 +1086,29 @@ plugins:
             assert!(metadata.find_plugin(name).unwrap().is_some());
 
             metadata.remove_plugin_metadata(name);
+
+            assert!(metadata.find_plugin(name).unwrap().is_none());
+        }
+
+        #[test]
+        fn remove_plugin_metadata_should_remove_regex_entries_with_the_given_plugin_name() {
+            let mut metadata = MetadataDocument::default();
+
+            let regex_name = "Blank.*\\.esp";
+
+            let mut plugin = PluginMetadata::new(regex_name).unwrap();
+            plugin.set_load_after_files(vec![File::new("A".to_owned())]);
+            metadata.set_plugin_metadata(plugin.clone());
+
+            let mut plugin = PluginMetadata::new(regex_name).unwrap();
+            plugin.set_load_after_files(vec![File::new("B".to_owned())]);
+            metadata.set_plugin_metadata(plugin.clone());
+
+            let name = "Blank.esp";
+
+            assert!(metadata.find_plugin(name).unwrap().is_some());
+
+            metadata.remove_plugin_metadata(regex_name);
 
             assert!(metadata.find_plugin(name).unwrap().is_none());
         }

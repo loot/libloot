@@ -327,14 +327,15 @@ impl Database {
         self.userlist.set_plugin_metadata(plugin_metadata);
     }
 
-    /// Discards all loaded user metadata that is specific to the plugin with
-    /// the given filename. Does not discard any plugin metadata with plugin
-    /// name regexes that match the given filename.
+    /// Discards all loaded user metadata that is specific to the plugin
+    /// metadata entry (or entries) with the given name.
     ///
-    /// Has no effect if the given plugin name contains any of the characters
-    /// `:\*?|`.
-    pub fn discard_plugin_user_metadata(&mut self, plugin: &str) {
-        self.userlist.remove_plugin_metadata(plugin);
+    /// If there is a specific plugin metadata entry with the given name, it
+    /// will be removed. Otherwise, all regex plugin metadata entries with names
+    /// equal to the given name will be removed. Regex name matching is not
+    /// performed.
+    pub fn discard_plugin_user_metadata(&mut self, plugin_name: &str) {
+        self.userlist.remove_plugin_metadata(plugin_name);
     }
 
     /// Discards all loaded user metadata for all groups, plugins, and any
