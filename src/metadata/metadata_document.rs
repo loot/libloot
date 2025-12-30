@@ -167,7 +167,6 @@ impl MetadataDocument {
             .collect::<Result<Vec<_>, _>>()?;
 
         let mut bash_tags = Vec::new();
-        let mut str_set = HashSet::new();
         for bash_tag_yaml in get_slice_value(&doc, "bash_tags", YamlObjectType::MetadataDocument)? {
             let bash_tag: &str = match bash_tag_yaml.data.as_str() {
                 Some(b) => b,
@@ -181,17 +180,7 @@ impl MetadataDocument {
                 }
             };
 
-            if str_set.contains(bash_tag) {
-                return Err(ParseMetadataError::duplicate_entry(
-                    bash_tag_yaml.span.start,
-                    bash_tag.to_owned(),
-                    YamlObjectType::BashTagsElement,
-                )
-                .into());
-            }
-
             bash_tags.push(bash_tag.to_owned());
-            str_set.insert(bash_tag);
         }
 
         let mut group_names = HashSet::new();
