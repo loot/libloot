@@ -122,19 +122,19 @@ public:
   /**
    * @brief Gets the Bash Tags that are listed in the loaded metadata lists.
    * @details Bash Tag suggestions can include Bash Tags not in this list.
-   * @returns A set of Bash Tag names.
+   * @returns The Bash Tag names, which may include duplicates.
    */
   virtual std::vector<std::string> GetKnownBashTags() const = 0;
 
   /**
-   * @brief Get all general messages listen in the loaded metadata lists.
+   * @brief Get all general messages listed in the loaded metadata lists.
    * @param evaluateConditions
    *        If true, any metadata conditions are evaluated before the metadata
    *        is returned, otherwise unevaluated metadata is returned. Evaluating
    *        general message conditions also clears the condition cache before
    *        evaluating conditions.
-   * @returns A vector of messages supplied in the metadata lists but not
-   *          attached to any particular plugin.
+   * @returns The messages supplied in the metadata lists that are not attached
+   *          to any particular plugin.
    */
   virtual std::vector<Message> GetGeneralMessages(
       bool evaluateConditions = false) const = 0;
@@ -145,16 +145,16 @@ public:
    *        If true, any group metadata present in the userlist is included in
    *        the returned metadata, otherwise the metadata returned only includes
    *        metadata from the masterlist.
-   * @returns An vector of Group objects. Each Group's name is unique, if a
-   *          group has masterlist and user metadata the two are merged into a
-   *          single group object.
+   * @returns The Group objects. Each Group's name is unique, if a group has
+   *          masterlist and user metadata the two are merged into a single
+   *          group object.
    */
   virtual std::vector<Group> GetGroups(
       bool includeUserMetadata = true) const = 0;
 
   /**
    * @brief Gets the groups that are defined or extended in the loaded userlist.
-   * @returns An unordered set of Group objects.
+   * @returns The Group objects.
    */
   virtual std::vector<Group> GetUserGroups() const = 0;
 
@@ -162,7 +162,7 @@ public:
    * @brief Sets the group definitions to store in the userlist, overwriting any
    *        existing definitions there.
    * @param groups
-   *        The unordered set of Group objects to set.
+   *        The Group objects to set.
    */
   virtual void SetUserGroups(const std::vector<Group>& groups) = 0;
 
@@ -227,17 +227,29 @@ public:
       bool evaluateConditions = false) const = 0;
 
   /**
-   * @brief Sets a plugin's user metadata, overwriting any existing user
-   *        metadata.
+   * @brief Sets a plugin's user metadata.
    * @param pluginMetadata
-   *        The user metadata you want to set, with plugin.Name() being the
-   *        filename of the plugin the metadata is for.
+   *        The user metadata you want to set, with plugin.GetName() being the
+   *        filename of the plugin the metadata is for, or a regex that matches
+   *        the relevant filenames.
+   *
+   *        If the plugin metadata's name is not a regex name, any existing user
+   *        metadata for that plugin name will be replaced.
+   *
+   *        If the plugin metadata has a regex name, the given metadata object
+   *        will be appended to the list of regex metadata entries, and any
+   *        existing entries with the same regex name will be retained.
    */
   virtual void SetPluginUserMetadata(const PluginMetadata& pluginMetadata) = 0;
 
   /**
    * @brief Discards all loaded user metadata for the plugin with the given
    *        filename.
+   * @details Does not discard any plugin metadata with plugin name regexes
+   *          that match the given filename.
+   *
+   *          Has no effect if the given plugin name contains any of the
+   *          characters `:\*?|`.
    * @param plugin
    *        The filename of the plugin for which all user-added metadata
    *        should be deleted.

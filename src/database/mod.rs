@@ -286,14 +286,24 @@ impl Database {
         }
     }
 
-    /// Sets a plugin's user metadata, replacing any loaded user metadata for
-    /// that plugin.
+    /// Sets a plugin's user metadata.
+    ///
+    /// If the plugin metadata's name is not a regex name, any existing user
+    /// metadata for that plugin name will be replaced.
+    ///
+    /// If the plugin metadata has a regex name, the given metadata object will
+    /// be appended to the list of regex metadata entries, and any existing
+    /// entries with the same regex name will be retained.
     pub fn set_plugin_user_metadata(&mut self, plugin_metadata: PluginMetadata) {
         self.userlist.set_plugin_metadata(plugin_metadata);
     }
 
-    /// Discards all loaded user metadata for the plugin with the given
-    /// filename.
+    /// Discards all loaded user metadata that is specific to the plugin with
+    /// the given filename. Does not discard any plugin metadata with plugin
+    /// name regexes that match the given filename.
+    ///
+    /// Has no effect if the given plugin name contains any of the characters
+    /// `:\*?|`.
     pub fn discard_plugin_user_metadata(&mut self, plugin: &str) {
         self.userlist.remove_plugin_metadata(plugin);
     }
