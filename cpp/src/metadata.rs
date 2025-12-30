@@ -141,9 +141,13 @@ pub fn new_message(
     Ok(Box::new(Message(message)))
 }
 
+#[expect(
+    clippy::vec_box,
+    reason = "MessageContent is an opaque type to C++ so needs to be held in a Box."
+)]
 pub fn multilingual_message(
     message_type: MessageType,
-    contents: &[Box<MessageContent>],
+    contents: Vec<Box<MessageContent>>,
     condition: &str,
 ) -> Result<Box<Message>, VerboseError> {
     let contents = to_vec_of_unwrapped(contents);
@@ -306,35 +310,67 @@ impl PluginMetadata {
         Location::wrap_slice(self.0.locations())
     }
 
-    pub fn set_load_after_files(&mut self, files: &[Box<File>]) {
+    #[expect(
+        clippy::vec_box,
+        reason = "File is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_load_after_files(&mut self, files: Vec<Box<File>>) {
         self.0.set_load_after_files(to_vec_of_unwrapped(files));
     }
 
-    pub fn set_requirements(&mut self, files: &[Box<File>]) {
+    #[expect(
+        clippy::vec_box,
+        reason = "File is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_requirements(&mut self, files: Vec<Box<File>>) {
         self.0.set_requirements(to_vec_of_unwrapped(files));
     }
 
-    pub fn set_incompatibilities(&mut self, files: &[Box<File>]) {
+    #[expect(
+        clippy::vec_box,
+        reason = "File is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_incompatibilities(&mut self, files: Vec<Box<File>>) {
         self.0.set_incompatibilities(to_vec_of_unwrapped(files));
     }
 
-    pub fn set_messages(&mut self, messages: &[Box<Message>]) {
+    #[expect(
+        clippy::vec_box,
+        reason = "Message is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_messages(&mut self, messages: Vec<Box<Message>>) {
         self.0.set_messages(to_vec_of_unwrapped(messages));
     }
 
-    pub fn set_tags(&mut self, tags: &[Box<Tag>]) {
+    #[expect(
+        clippy::vec_box,
+        reason = "Tag is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_tags(&mut self, tags: Vec<Box<Tag>>) {
         self.0.set_tags(to_vec_of_unwrapped(tags));
     }
 
-    pub fn set_dirty_info(&mut self, info: &[Box<PluginCleaningData>]) {
+    #[expect(
+        clippy::vec_box,
+        reason = "PluginCleaningData is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_dirty_info(&mut self, info: Vec<Box<PluginCleaningData>>) {
         self.0.set_dirty_info(to_vec_of_unwrapped(info));
     }
 
-    pub fn set_clean_info(&mut self, info: &[Box<PluginCleaningData>]) {
+    #[expect(
+        clippy::vec_box,
+        reason = "PluginCleaningData is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_clean_info(&mut self, info: Vec<Box<PluginCleaningData>>) {
         self.0.set_clean_info(to_vec_of_unwrapped(info));
     }
 
-    pub fn set_locations(&mut self, locations: &[Box<Location>]) {
+    #[expect(
+        clippy::vec_box,
+        reason = "Location is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_locations(&mut self, locations: Vec<Box<Location>>) {
         self.0.set_locations(to_vec_of_unwrapped(locations));
     }
 
@@ -381,11 +417,15 @@ impl From<Box<PluginMetadata>> for libloot::metadata::PluginMetadata {
 #[repr(transparent)]
 pub struct File(libloot::metadata::File);
 
+#[expect(
+    clippy::vec_box,
+    reason = "File is an opaque type to C++ so needs to be held in a Box."
+)]
 pub fn new_file(
     name: String,
     display_name: &str,
     condition: &str,
-    detail: &[Box<MessageContent>],
+    detail: Vec<Box<MessageContent>>,
     constraint: &str,
 ) -> Result<Box<File>, VerboseError> {
     let mut file = libloot::metadata::File::new(name);
@@ -534,10 +574,14 @@ impl TryFrom<TagSuggestion> for libloot::metadata::TagSuggestion {
 #[repr(transparent)]
 pub struct PluginCleaningData(libloot::metadata::PluginCleaningData);
 
+#[expect(
+    clippy::vec_box,
+    reason = "PluginCleaningData is an opaque type to C++ so needs to be held in a Box."
+)]
 pub fn new_plugin_cleaning_data(
     crc: u32,
     cleaning_utility: String,
-    detail: &[Box<MessageContent>],
+    detail: Vec<Box<MessageContent>>,
     itm_count: u32,
     deleted_reference_count: u32,
     deleted_navmesh_count: u32,
@@ -630,6 +674,6 @@ impl From<Box<Location>> for libloot::metadata::Location {
     }
 }
 
-pub fn to_vec_of_unwrapped<T: Clone, U: From<Box<T>>>(slice: &[Box<T>]) -> Vec<U> {
-    slice.iter().cloned().map(Into::into).collect()
+pub fn to_vec_of_unwrapped<T: Clone, U: From<Box<T>>>(vec: Vec<Box<T>>) -> Vec<U> {
+    vec.into_iter().map(Into::into).collect()
 }

@@ -118,6 +118,7 @@ impl TryFrom<ffi::LogLevel> for libloot::LogLevel {
     clippy::allow_attributes,
     clippy::multiple_unsafe_ops_per_block,
     clippy::needless_lifetimes,
+    clippy::vec_box,
     reason = "Required by CXX. clippy::allow_attributes is because CXX doesn't support #[expect(...)]"
 )]
 #[cxx::bridge(namespace = "loot::rust")]
@@ -273,7 +274,7 @@ mod ffi {
 
         pub fn user_groups(&self) -> Result<Vec<Group>>;
 
-        pub fn set_user_groups(&self, groups: &[Box<Group>]) -> Result<()>;
+        pub fn set_user_groups(&self, groups: Vec<Box<Group>>) -> Result<()>;
 
         pub fn groups_path(
             &self,
@@ -315,7 +316,7 @@ mod ffi {
 
         pub fn multilingual_message(
             message_type: MessageType,
-            contents: &[Box<MessageContent>],
+            contents: Vec<Box<MessageContent>>,
             condition: &str,
         ) -> Result<Box<Message>>;
 
@@ -466,21 +467,21 @@ mod ffi {
 
         pub fn unset_group(&mut self);
 
-        pub fn set_load_after_files(&mut self, files: &[Box<File>]);
+        pub fn set_load_after_files(&mut self, files: Vec<Box<File>>);
 
-        pub fn set_requirements(&mut self, files: &[Box<File>]);
+        pub fn set_requirements(&mut self, files: Vec<Box<File>>);
 
-        pub fn set_incompatibilities(&mut self, files: &[Box<File>]);
+        pub fn set_incompatibilities(&mut self, files: Vec<Box<File>>);
 
-        pub fn set_messages(&mut self, messages: &[Box<Message>]);
+        pub fn set_messages(&mut self, messages: Vec<Box<Message>>);
 
-        pub fn set_tags(&mut self, tags: &[Box<Tag>]);
+        pub fn set_tags(&mut self, tags: Vec<Box<Tag>>);
 
-        pub fn set_dirty_info(&mut self, info: &[Box<PluginCleaningData>]);
+        pub fn set_dirty_info(&mut self, info: Vec<Box<PluginCleaningData>>);
 
-        pub fn set_clean_info(&mut self, info: &[Box<PluginCleaningData>]);
+        pub fn set_clean_info(&mut self, info: Vec<Box<PluginCleaningData>>);
 
-        pub fn set_locations(&mut self, locations: &[Box<Location>]);
+        pub fn set_locations(&mut self, locations: Vec<Box<Location>>);
 
         pub fn merge_metadata(&mut self, plugin: &PluginMetadata);
 
@@ -502,7 +503,7 @@ mod ffi {
             name: String,
             display_name: &str,
             condition: &str,
-            detail: &[Box<MessageContent>],
+            detail: Vec<Box<MessageContent>>,
             constraint: &str,
         ) -> Result<Box<File>>;
 
@@ -565,7 +566,7 @@ mod ffi {
         pub fn new_plugin_cleaning_data(
             crc: u32,
             cleaning_utility: String,
-            detail: &[Box<MessageContent>],
+            detail: Vec<Box<MessageContent>>,
             itm_count: u32,
             deleted_reference_count: u32,
             deleted_navmesh_count: u32,

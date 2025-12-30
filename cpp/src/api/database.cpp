@@ -87,8 +87,7 @@ std::vector<Group> Database::GetUserGroups() const {
 
 void Database::SetUserGroups(const std::vector<Group>& groups) {
   try {
-    database_->set_user_groups(
-        ::rust::Slice(convert<loot::rust::Group>(groups)));
+    database_->set_user_groups(convert<loot::rust::Group>(groups));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

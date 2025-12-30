@@ -138,8 +138,11 @@ impl Database {
             .collect())
     }
 
-    // This is ugly, but Group can't be held as a value in C++ and CXX doesn't support Vec<Box<Group>> as a parameter, so this can't take ownership of the input groups.
-    pub fn set_user_groups(&self, groups: &[Box<Group>]) -> Result<(), VerboseError> {
+    #[expect(
+        clippy::vec_box,
+        reason = "Group is an opaque type to C++ so needs to be held in a Box."
+    )]
+    pub fn set_user_groups(&self, groups: Vec<Box<Group>>) -> Result<(), VerboseError> {
         let groups = to_vec_of_unwrapped(groups);
         self.0
             .write()

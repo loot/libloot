@@ -164,7 +164,7 @@ loot::Vertex convert(const loot::rust::Vertex& vertex) {
         std::string(file.GetName()),
         file.GetDisplayName(),
         file.GetCondition(),
-        ::rust::Slice(convert<loot::rust::MessageContent>(file.GetDetail())),
+        convert<loot::rust::MessageContent>(file.GetDetail()),
         file.GetConstraint());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
@@ -194,8 +194,7 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
   try {
     return loot::rust::multilingual_message(
         convert(message.GetType()),
-        ::rust::Slice(
-            convert<loot::rust::MessageContent>(message.GetContent())),
+        convert<loot::rust::MessageContent>(message.GetContent()),
         message.GetCondition());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
@@ -219,7 +218,7 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
     return loot::rust::new_plugin_cleaning_data(
         data.GetCRC(),
         data.GetCleaningUtility(),
-        ::rust::Slice(convert<loot::rust::MessageContent>(data.GetDetail())),
+        convert<loot::rust::MessageContent>(data.GetDetail()),
         data.GetITMCount(),
         data.GetDeletedReferenceCount(),
         data.GetDeletedNavmeshCount());
@@ -242,21 +241,19 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
     }
 
     output->set_load_after_files(
-        ::rust::Slice(convert<loot::rust::File>(metadata.GetLoadAfterFiles())));
+        convert<loot::rust::File>(metadata.GetLoadAfterFiles()));
     output->set_requirements(
-        ::rust::Slice(convert<loot::rust::File>(metadata.GetRequirements())));
-    output->set_incompatibilities(::rust::Slice(
-        convert<loot::rust::File>(metadata.GetIncompatibilities())));
-    output->set_messages(
-        ::rust::Slice(convert<loot::rust::Message>(metadata.GetMessages())));
-    output->set_tags(
-        ::rust::Slice(convert<loot::rust::Tag>(metadata.GetTags())));
-    output->set_dirty_info(::rust::Slice(
-        convert<loot::rust::PluginCleaningData>(metadata.GetDirtyInfo())));
-    output->set_clean_info(::rust::Slice(
-        convert<loot::rust::PluginCleaningData>(metadata.GetCleanInfo())));
+        convert<loot::rust::File>(metadata.GetRequirements()));
+    output->set_incompatibilities(
+        convert<loot::rust::File>(metadata.GetIncompatibilities()));
+    output->set_messages(convert<loot::rust::Message>(metadata.GetMessages()));
+    output->set_tags(convert<loot::rust::Tag>(metadata.GetTags()));
+    output->set_dirty_info(
+        convert<loot::rust::PluginCleaningData>(metadata.GetDirtyInfo()));
+    output->set_clean_info(
+        convert<loot::rust::PluginCleaningData>(metadata.GetCleanInfo()));
     output->set_locations(
-        ::rust::Slice(convert<loot::rust::Location>(metadata.GetLocations())));
+        convert<loot::rust::Location>(metadata.GetLocations()));
 
     return output;
   } catch (const ::rust::Error& e) {

@@ -83,8 +83,13 @@ std::vector<T> convert(const ::rust::Vec<U>& vec) {
 }
 
 template<typename T, typename U>
-const std::vector<::rust::Box<T>> convert(const std::vector<U>& vec) {
-  return convert<::rust::Box<T>, U>(::rust::Slice(vec));
+const ::rust::Vec<::rust::Box<T>> convert(const std::vector<U>& vec) {
+  ::rust::Vec<::rust::Box<T>> output;
+  for (const auto& element : vec) {
+    output.push_back(convert(element));
+  }
+
+  return output;
 }
 
 }

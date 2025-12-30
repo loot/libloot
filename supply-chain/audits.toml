@@ -1,6 +1,31 @@
 
 # cargo-vet audits file
 
+[[audits.codespan-reporting]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.12.0 -> 0.13.1"
+
+[[audits.cxx]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.161 -> 1.0.192"
+
+[[audits.cxx-build]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.161 -> 1.0.192"
+
+[[audits.cxxbridge-flags]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.161 -> 1.0.192"
+
+[[audits.cxxbridge-macro]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.161 -> 1.0.192"
+
 [[audits.libloading]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -12,6 +37,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 version = "18.5.1"
 notes = "This is my own crate published using Trusted Publishing, but I can't mark it as trusted by cargo-vet because it doesn't support Trusted Publishing and just sees that the publisher is unknown."
+
+[[audits.link-cplusplus]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.10 -> 1.0.12"
 
 [[audits.loot-condition-interpreter]]
 who = "Oliver Hamlet <git@ortham.net>"
