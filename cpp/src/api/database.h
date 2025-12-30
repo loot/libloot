@@ -36,6 +36,7 @@ public:
   void SetUserKnownBashTags(const std::vector<std::string>& bashTags) override;
 
   std::vector<Message> GetGeneralMessages(
+      bool includeUserMetadata = true,
       bool evaluateConditions = false) const override;
 
   std::vector<Message> GetUserGeneralMessages(

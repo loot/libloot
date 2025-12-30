@@ -87,9 +87,11 @@ void Database::SetUserKnownBashTags(const std::vector<std::string>& bashTags) {
 }
 
 std::vector<Message> Database::GetGeneralMessages(
+    bool includeUserMetadata,
     bool evaluateConditions) const {
   try {
-    return convert<Message>(database_->general_messages(evaluateConditions));
+    return convert<Message>(
+        database_->general_messages(includeUserMetadata, evaluateConditions));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

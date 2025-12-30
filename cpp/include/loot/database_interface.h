@@ -167,6 +167,10 @@ public:
 
   /**
    * @brief Get all general messages listed in the loaded metadata lists.
+   * @param includeUserMetadata
+   *        If true, any general messages present in the userlist are included
+   *        in the returned metadata, otherwise the metadata returned only
+   *        includes metadata from the masterlist.
    * @param evaluateConditions
    *        If true, any metadata conditions are evaluated before the metadata
    *        is returned, otherwise unevaluated metadata is returned. Evaluating
@@ -176,6 +180,7 @@ public:
    *          to any particular plugin.
    */
   virtual std::vector<Message> GetGeneralMessages(
+      bool includeUserMetadata = true,
       bool evaluateConditions = false) const = 0;
 
   /**

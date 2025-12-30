@@ -557,11 +557,29 @@ TEST_P(DatabaseInterfaceTest,
 
 TEST_P(
     DatabaseInterfaceTest,
+    getGeneralMessagesShouldGetGeneralMessagesFromTheMasterlistOnlyWhenFirstParamIsFalse) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
+
+  auto messages = handle_->GetDatabase().GetGeneralMessages(false);
+
+  std::vector<Message> expectedMessages({
+      Message(MessageType::say,
+              generalMasterlistMessage,
+              "file(\"" + missingEsp + "\")"),
+  });
+  EXPECT_EQ(expectedMessages, messages);
+}
+
+TEST_P(
+    DatabaseInterfaceTest,
     getGeneralMessagesShouldReturnOnlyValidMessagesIfConditionsAreEvaluated) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 
-  auto messages = handle_->GetDatabase().GetGeneralMessages(true);
+  auto messages = handle_->GetDatabase().GetGeneralMessages(true, true);
 
   EXPECT_TRUE(messages.empty());
 }

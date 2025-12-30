@@ -192,16 +192,24 @@ impl Database {
     /// Get all general messages listed in the loaded metadata lists.
     pub fn general_messages(
         &self,
+        include_user_metadata: MergeMode,
         evaluate_conditions: EvalMode,
     ) -> Result<Vec<Message>, ConditionEvaluationError> {
-        process_messages(
-            self.masterlist
-                .messages()
-                .iter()
-                .chain(self.userlist.messages()),
-            &self.condition_evaluator_state,
-            evaluate_conditions,
-        )
+        let messages_iter = self.masterlist.messages().iter();
+
+        if include_user_metadata == MergeMode::WithUserMetadata {
+            process_messages(
+                messages_iter.chain(self.userlist.messages()),
+                &self.condition_evaluator_state,
+                evaluate_conditions,
+            )
+        } else {
+            process_messages(
+                messages_iter,
+                &self.condition_evaluator_state,
+                evaluate_conditions,
+            )
+        }
     }
 
     /// Get all general messages listed in the loaded userlist.
@@ -1010,7 +1018,35 @@ plugins:
         use super::*;
 
         #[test]
-        fn should_append_userlist_messages_to_masterlist_messages() {
+        fn should_not_append_userlist_messages_to_masterlist_messages_if_merge_mode_is_without_user_metadata()
+         {
+            let fixture = Fixture::new(GameType::Oblivion);
+            let mut database = fixture.database();
+
+            database.load_masterlist(&fixture.metadata_path).unwrap();
+
+            let userlist_path = fixture.inner.local_path.join("userlist.yaml");
+            std::fs::write(
+                &userlist_path,
+                "globals: [{type: say, content: 'A user message'}]",
+            )
+            .unwrap();
+
+            database.load_userlist(&userlist_path).unwrap();
+
+            assert_eq!(
+                &[Message::new(MessageType::Say, "A general message".into())
+                    .with_condition("file(\"missing.esp\")".into()),],
+                database
+                    .general_messages(MergeMode::WithoutUserMetadata, EvalMode::DoNotEvaluate)
+                    .unwrap()
+                    .as_slice()
+            );
+        }
+
+        #[test]
+        fn should_append_userlist_messages_to_masterlist_messages_if_merge_mode_is_with_user_metadata()
+         {
             let fixture = Fixture::new(GameType::Oblivion);
             let mut database = fixture.database();
 
@@ -1032,7 +1068,7 @@ plugins:
                     Message::new(MessageType::Say, "A user message".into())
                 ],
                 database
-                    .general_messages(EvalMode::DoNotEvaluate)
+                    .general_messages(MergeMode::WithUserMetadata, EvalMode::DoNotEvaluate)
                     .unwrap()
                     .as_slice()
             );
@@ -1057,7 +1093,7 @@ plugins:
             assert_eq!(
                 &[Message::new(MessageType::Say, "A user message".into())],
                 database
-                    .general_messages(EvalMode::Evaluate)
+                    .general_messages(MergeMode::WithUserMetadata, EvalMode::Evaluate)
                     .unwrap()
                     .as_slice()
             );

@@ -134,12 +134,16 @@ impl Database {
 
     pub fn general_messages(
         &self,
+        include_user_metadata: bool,
         evaluate_conditions: bool,
     ) -> Result<Vec<Message>, VerboseError> {
         self.0
             .read()
             .map_err(DatabaseLockPoisonError::from)?
-            .general_messages(to_eval_mode(evaluate_conditions))
+            .general_messages(
+                to_merge_mode(include_user_metadata),
+                to_eval_mode(evaluate_conditions),
+            )
             .map(|v| v.into_iter().map(Into::into).collect())
             .map_err(Into::into)
     }
