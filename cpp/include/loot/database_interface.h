@@ -146,6 +146,13 @@ public:
   virtual std::vector<std::string> GetKnownBashTags() const = 0;
 
   /**
+   * @brief Gets the Bash Tags that are listed in the loaded userlist.
+   * @details Bash Tag suggestions can include Bash Tags not in this list.
+   * @returns The Bash Tag names, which may include duplicates.
+   */
+  virtual std::vector<std::string> GetUserKnownBashTags() const = 0;
+
+  /**
    * @brief Get all general messages listed in the loaded metadata lists.
    * @param evaluateConditions
    *        If true, any metadata conditions are evaluated before the metadata

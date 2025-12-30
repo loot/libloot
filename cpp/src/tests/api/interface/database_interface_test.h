@@ -486,6 +486,23 @@ TEST_P(DatabaseInterfaceTest,
 }
 
 TEST_P(DatabaseInterfaceTest,
+       getUserKnownBashTagsShouldReturnAllBashTagsListedInLoadedUserMetadata) {
+  ASSERT_NO_THROW(GenerateMasterlist());
+  ASSERT_NO_THROW(GenerateUserlist());
+
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
+  ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
+
+  auto tags = handle_->GetDatabase().GetUserKnownBashTags();
+
+  std::vector<std::string> expectedTags({
+      "RaceRelations",
+      "C.Lighting",
+  });
+  EXPECT_EQ(expectedTags, tags);
+}
+
+TEST_P(DatabaseInterfaceTest,
        getGeneralMessagesShouldGetGeneralMessagesFromTheMasterlistAndUserlist) {
   ASSERT_NO_THROW(GenerateMasterlist());
   ASSERT_NO_THROW(GenerateUserlist());

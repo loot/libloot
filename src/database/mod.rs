@@ -173,6 +173,13 @@ impl Database {
         tags
     }
 
+    /// Gets the Bash Tags that are listed in the loaded userlist.
+    ///
+    /// Bash Tag suggestions can include Bash Tags not in this list.
+    pub fn user_known_bash_tags(&self) -> &[String] {
+        self.userlist.bash_tags()
+    }
+
     /// Get all general messages listed in the loaded metadata lists.
     pub fn general_messages(
         &self,
@@ -890,6 +897,21 @@ plugins:
             vec!["C.Climate", "Relev", "Delev"],
             database.known_bash_tags()
         );
+    }
+
+    #[test]
+    fn user_known_bash_tags_should_return_only_known_bash_tags_in_the_userlist() {
+        let fixture = Fixture::new(GameType::Oblivion);
+        let mut database = fixture.database();
+
+        database.load_masterlist(&fixture.metadata_path).unwrap();
+
+        let userlist_path = fixture.inner.local_path.join("userlist.yaml");
+        std::fs::write(&userlist_path, "bash_tags: [Relev, Delev]").unwrap();
+
+        database.load_userlist(&userlist_path).unwrap();
+
+        assert_eq!(&["Relev", "Delev"], database.user_known_bash_tags());
     }
 
     mod general_messages {

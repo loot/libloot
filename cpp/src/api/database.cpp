@@ -68,6 +68,15 @@ std::vector<std::string> Database::GetKnownBashTags() const {
   }
 }
 
+std::vector<std::string> Database::GetUserKnownBashTags() const {
+  try {
+    return convert<std::string>(
+        database_->user_known_bash_tags());
+  } catch (const ::rust::Error& e) {
+    std::rethrow_exception(mapError(e));
+  }
+}
+
 std::vector<Message> Database::GetGeneralMessages(
     bool evaluateConditions) const {
   try {
