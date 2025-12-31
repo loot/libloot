@@ -2,6 +2,47 @@
 Version History
 ***************
 
+0.28.4 - 2025-12-31
+===================
+
+Fixed
+-----
+
+- When writing a metadata file, if a string needed to be written enclosed in
+  double quotes, any double quotes and backslashes within the string would not
+  be escaped, which could result in invalid YAML.
+- An error that occurred if ``Database::write_user_metadata()`` or
+  ``Database::write_minimal_list()`` (or their C++ wrappers
+  :cpp:any:`loot::DatabaseInterface::WriteUserMetadata()` and
+  :cpp:any:`loot::DatabaseInterface::WriteMinimalList()`) were passed a file
+  path that consisted of only a filename.
+- An warning about trying to pass ``-fno-lto`` when building the C++ wrapper
+  using MSVC.
+
+Changed
+-------
+
+- Loading a metadata file that has duplicate entries in its ``bash_tags`` list
+  no longer causes an error.
+- Metadata parsing errors that occur while parsing a masterlist with a separate
+  prelude file now give the correct line and column numbers for the relevant
+  file, instead of giving numbers that apply to the contents of the two files
+  after they have been merged in memory.
+- Metadata YAML files written by libloot now write single-element lists as
+  ``[ element ]`` instead of ``[element]``, to match the style used in LOOT's
+  masterlists.
+- When writing File metadata values, their ``detail`` key is now positioned
+  before their ``condition`` key, instead of after it and their ``constraint``
+  key.
+- Updated the API reference documentation to clarify the behaviour of
+  ``Database::set_plugin_user_metadata()`` and
+  ``Database::discard_plugin_user_metadata()`` (and their C++ wrappers
+  :cpp:any:`loot::DatabaseInterface::SetPluginUserMetadata()` and
+  :cpp:any:`loot::DatabaseInterface::DiscardPluginUserMetadata()`) when dealing
+  with regex plugin metadata.
+- Various minor API reference documentation improvements.
+
+
 0.28.3 - 2025-10-22
 ===================
 

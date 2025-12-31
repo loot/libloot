@@ -38,7 +38,7 @@ lto = "thin"
 members = ["cpp", "ffi-errors", "nodejs", "array-parameterized-test", "python"]
 
 [workspace.package]
-version = "0.28.3"
+version = "0.28.4"
 repository = "https://github.com/loot/libloot.git"
 edition = "2024"
 license = "GPL-3.0-or-later"
