@@ -92,16 +92,8 @@ criteria = "safe-to-deploy"
 version = "1.0.161"
 criteria = "safe-to-deploy"
 
-[[exemptions.dataview]]
-version = "1.0.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.delegate]]
 version = "0.13.4"
-criteria = "safe-to-deploy"
-
-[[exemptions.derive_pod]]
-version = "0.1.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.dirs]]
@@ -202,10 +194,6 @@ criteria = "safe-to-deploy"
 version = "3.0.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.no-std-compat]]
-version = "0.4.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.nohash-hasher]]
 version = "0.2.0"
 criteria = "safe-to-deploy"
@@ -224,14 +212,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.ordered-multimap]]
 version = "0.7.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.pelite]]
-version = "0.10.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.pelite-macros]]
-version = "0.1.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.pest]]
@@ -368,18 +348,6 @@ criteria = "safe-to-run"
 suggest = false
 notes = "At time of review this was only built if targeting WASI, which is not an intended target."
 
-[[exemptions.winapi]]
-version = "0.3.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.winapi-i686-pc-windows-gnu]]
-version = "0.4.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.winapi-util]]
 version = "0.1.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.winapi-x86_64-pc-windows-gnu]]
-version = "0.4.0"
 criteria = "safe-to-deploy"
