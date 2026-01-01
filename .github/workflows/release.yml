@@ -22,7 +22,7 @@ jobs:
         run: |
           RELEASE_TAG="${{ github.ref_name }}"
           RELEASE_TITLE="libloot v$RELEASE_TAG"
-          RELEASE_NOTES="$(printf "Requires Windows 10 or later, the MSVC 2022 [x86](https://aka.ms/vs/17/release/vc_redist.x86.exe) or [x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) redistributable for 32-bit and 64-bit builds respectively, and [7-Zip](http://www.7-zip.org/) to extract the archives.\n\n## Change Logs\n- [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)\n- [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)")"
+          RELEASE_NOTES="$(printf "Requires Windows 10 or later, the MSVC 2022 [x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) redistributable, and [7-Zip](http://www.7-zip.org/) to extract the archives.\n\n## Change Logs\n- [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)\n- [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)")"
 
           gh release create --draft --title "$RELEASE_TITLE" --notes "$RELEASE_NOTES" --verify-tag --repo "${{ github.repository }}" "$RELEASE_TAG"
 
@@ -32,12 +32,6 @@ jobs:
 
     permissions:
       contents: write
-
-    strategy:
-      matrix:
-        target:
-          - i686-pc-windows-msvc
-          - x86_64-pc-windows-msvc
 
     steps:
       - uses: actions/checkout@v6
@@ -53,11 +47,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install Rust i686-pc-windows-msvc target
-        run: rustup target add i686-pc-windows-msvc
-        if: matrix.target == 'i686-pc-windows-msvc'
+          key: ${{ runner.os }}-x86_64-pc-windows-msvc-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Set LIBLOOT_REVISION
         shell: bash
@@ -66,13 +56,11 @@ jobs:
       - name: Run CMake
         working-directory: cpp
         run: |
-          $platform = if ("${{ matrix.target }}" -eq "i686-pc-windows-msvc") { "Win32" } else { "x64" }
-
           cmake -G "Visual Studio 17 2022" `
-            -A "$platform" `
+            -A x64 `
             -DCPACK_PACKAGE_VERSION="${{ github.ref_name }}" `
             -DCPACK_THREADS=0 `
-            -DRUST_TARGET="${{ matrix.target }}" `
+            -DRUST_TARGET="x86_64-pc-windows-msvc" `
             -B build
           cmake --build build --parallel --config ${{ env.CMAKE_CONFIG }}
 
@@ -113,14 +101,7 @@ jobs:
         run: |
           cpack -C ${{ env.CMAKE_CONFIG }}
 
-          if [[ "${{ matrix.target }}" == "i686-pc-windows-msvc" ]]
-          then
-            PLATFORM=win32
-          else
-            PLATFORM=win64
-          fi
-
-          echo "filename=libloot-${{ github.ref_name }}-${PLATFORM}.7z" >> "$GITHUB_OUTPUT"
+          echo "filename=libloot-${{ github.ref_name }}-win64.7z" >> "$GITHUB_OUTPUT"
 
       - name: Upload archive to GitHub Release
         env:

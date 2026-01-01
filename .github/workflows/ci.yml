@@ -65,9 +65,6 @@ jobs:
       matrix:
         target:
           - os: windows-2022
-            triple: i686-pc-windows-msvc
-
-          - os: windows-2022
             triple: x86_64-pc-windows-msvc
 
           - os: ubuntu-24.04
@@ -95,10 +92,6 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.triple }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install Rust i686-pc-windows-msvc target
-        run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.triple == 'i686-pc-windows-msvc'
 
       - name: Install cargo-llvm-cov
         shell: bash
@@ -147,9 +140,6 @@ jobs:
       matrix:
         target:
           - os: windows-2022
-            triple: i686-pc-windows-msvc
-
-          - os: windows-2022
             triple: x86_64-pc-windows-msvc
 
           - os: ubuntu-24.04
@@ -178,10 +168,6 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.triple }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install Rust i686-pc-windows-msvc target
-        run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.triple == 'i686-pc-windows-msvc'
 
       - name: Set LIBLOOT_REVISION
         shell: bash
@@ -212,10 +198,8 @@ jobs:
       - name: Build the C++ wrapper (Windows)
         working-directory: cpp
         run: |
-          $platform = if ("${{ matrix.target.triple }}" -eq "i686-pc-windows-msvc") { "Win32" } else { "x64" }
-
           cmake -G "Visual Studio 17 2022" `
-            -A "$platform" `
+            -A x64 `
             -DCMAKE_COMPILE_WARNING_AS_ERROR=ON `
             -DCPACK_PACKAGE_VERSION="${{ steps.get-libloot-version.outputs.version }}" `
             -DCPACK_THREADS=0 `
@@ -276,12 +260,7 @@ jobs:
           if [[ "${{ runner.os }}" == "Windows" ]]
           then
             EXTENSION=7z
-            if [[ "${{ matrix.target.triple }}" == "i686-pc-windows-msvc" ]]
-            then
-              PLATFORM=win32
-            else
-              PLATFORM=win64
-            fi
+            PLATFORM=win64
           else
             EXTENSION=tar.xz
             PLATFORM=Linux
@@ -334,10 +313,6 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ github.job }}-${{ runner.os }}-${{ matrix.target.architecture }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install Rust i686-pc-windows-msvc target
-        run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.triple == 'i686-pc-windows-msvc'
 
       - name: Set LIBLOOT_REVISION
         shell: bash
@@ -395,10 +370,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Install Rust i686-pc-windows-msvc target
-        run: rustup target add i686-pc-windows-msvc
-        if: matrix.target.triple == 'i686-pc-windows-msvc'
-
       - name: Set LIBLOOT_REVISION
         shell: bash
         run: echo "LIBLOOT_REVISION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
@@ -428,15 +399,13 @@ jobs:
 
       - name: Merge lcov coverage reports
         env:
-          coverage_windows_x86: ${{ needs.rust.outputs.coverage_windows_x86 }}
           coverage_windows_x86_64: ${{ needs.rust.outputs.coverage_windows_x86_64 }}
           coverage_linux_x86_64: ${{ needs.rust.outputs.coverage_linux_x86_64 }}
         run: |
-          echo "$coverage_windows_x86" | base64 -d | xz -d > windows_x86.info
           echo "$coverage_windows_x86_64" | base64 -d | xz -d > windows_x86_64.info
           echo "$coverage_linux_x86_64" | base64 -d | xz -d > linux_x86_64.info
 
-          lcov -a windows_x86.info -a windows_x86_64.info -a linux_x86_64.info -o merged.info
+          lcov -a windows_x86_64.info -a linux_x86_64.info -o merged.info
 
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "$(lcov --summary merged.info)" >> $GITHUB_STEP_SUMMARY
