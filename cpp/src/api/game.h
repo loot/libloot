@@ -35,10 +35,10 @@ public:
 
   void ClearLoadedPlugins() override;
 
-  std::shared_ptr<const PluginInterface> GetPlugin(
+  std::unique_ptr<const PluginInterface> GetPlugin(
       std::string_view pluginName) const override;
 
-  std::vector<std::shared_ptr<const PluginInterface>> GetLoadedPlugins()
+  std::vector<std::unique_ptr<const PluginInterface>> GetLoadedPlugins()
       const override;
 
   std::vector<std::string> SortPlugins(

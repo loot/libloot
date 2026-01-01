@@ -171,7 +171,7 @@ void Game::LoadPlugins(const std::vector<std::filesystem::path>& pluginPaths,
 
 void Game::ClearLoadedPlugins() { game_->clear_loaded_plugins(); }
 
-std::shared_ptr<const PluginInterface> Game::GetPlugin(
+std::unique_ptr<const PluginInterface> Game::GetPlugin(
     std::string_view pluginName) const {
   const auto pluginOpt = game_->plugin(convert(pluginName));
   if (!pluginOpt->is_some()) {
@@ -179,19 +179,19 @@ std::shared_ptr<const PluginInterface> Game::GetPlugin(
   }
 
   try {
-    return std::make_shared<Plugin>(
+    return std::make_unique<Plugin>(
         std::move(pluginOpt->as_ref().boxed_clone()));
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }
 }
 
-std::vector<std::shared_ptr<const PluginInterface>> Game::GetLoadedPlugins()
+std::vector<std::unique_ptr<const PluginInterface>> Game::GetLoadedPlugins()
     const {
-  std::vector<std::shared_ptr<const PluginInterface>> plugins;
+  std::vector<std::unique_ptr<const PluginInterface>> plugins;
   for (const auto& pluginRef : game_->loaded_plugins()) {
     plugins.push_back(
-        std::make_shared<Plugin>(std::move(pluginRef.boxed_clone())));
+        std::make_unique<Plugin>(std::move(pluginRef.boxed_clone())));
   }
 
   return plugins;
