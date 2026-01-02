@@ -348,7 +348,8 @@ impl MetadataDocument {
         // Only remove regex plugins if no specific plugin was removed, because
         // they're mutually exclusive.
         if removed.is_none() {
-            self.regex_plugins.retain(|p| p.name() != plugin_name);
+            self.regex_plugins
+                .retain(|p| !unicase::eq(p.name(), plugin_name));
         }
     }
 
@@ -1109,6 +1110,29 @@ plugins:
             assert!(metadata.find_plugin(name).unwrap().is_some());
 
             metadata.remove_plugin_metadata(regex_name);
+
+            assert!(metadata.find_plugin(name).unwrap().is_none());
+        }
+
+        #[test]
+        fn remove_plugin_metadata_should_remove_regex_entries_comparing_names_case_insensitively() {
+            let mut metadata = MetadataDocument::default();
+
+            let regex_name = "Blank.*\\.esp";
+
+            let mut plugin = PluginMetadata::new(regex_name).unwrap();
+            plugin.set_load_after_files(vec![File::new("A".to_owned())]);
+            metadata.set_plugin_metadata(plugin.clone());
+
+            let mut plugin = PluginMetadata::new(regex_name).unwrap();
+            plugin.set_load_after_files(vec![File::new("B".to_owned())]);
+            metadata.set_plugin_metadata(plugin.clone());
+
+            let name = "Blank.esp";
+
+            assert!(metadata.find_plugin(name).unwrap().is_some());
+
+            metadata.remove_plugin_metadata("blank.*\\.esp");
 
             assert!(metadata.find_plugin(name).unwrap().is_none());
         }
