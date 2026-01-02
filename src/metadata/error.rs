@@ -161,9 +161,17 @@ struct Position {
 
 fn adjust_location(pos: &Position, diff_span: &PreludeDiffSpan) -> (Position, bool) {
     if pos.line > diff_span.end_line {
+        // TODO: usize::saturating_sub_signed() is stable as of Rust 1.91.0, but the org.freedesktop.Sdk.Extension.rust-stable extension for LOOT's Flatpak build environment supplies an older version of Rust, so this can only be updated to use saturating_sub_signed() once it's available in that environment.
+        let line = if diff_span.lines_added_count.is_negative() {
+            pos.line
+                .saturating_add(diff_span.lines_added_count.unsigned_abs())
+        } else {
+            pos.line
+                .saturating_sub(diff_span.lines_added_count.unsigned_abs())
+        };
         (
             Position {
-                line: pos.line.saturating_sub_signed(diff_span.line_count_delta),
+                line,
                 column: pos.column,
             },
             false,

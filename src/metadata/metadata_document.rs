@@ -392,24 +392,29 @@ fn replace_prelude(
         // The last line of the prelude.
         let prelude_end_line = prelude_start_line + new_prelude_line_count.saturating_sub(1);
 
-        let line_count_delta = new_prelude_line_count
-            .checked_signed_diff(old_prelude_line_count)
-            .ok_or_else(|| {
-                ParseMetadataError::new(
-                    saphyr::Marker::new(before_prelude.len(), prelude_start_line, 0),
-                    MetadataParsingErrorReason::PreludeSubstitutionOverflow {
-                        new_prelude_count: new_prelude_line_count,
-                        old_prelude_count: old_prelude_line_count,
-                    },
-                )
-            })?;
+        // TODO: usize::checked_signed_diff() is stable as of Rust 1.91.0, but the org.freedesktop.Sdk.Extension.rust-stable extension for LOOT's Flatpak build environment supplies an older version of Rust, so this can only be updated to use checked_signed_diff() once it's available in that environment.
+        let lines_added_count = if new_prelude_line_count >= old_prelude_line_count {
+            isize::try_from(new_prelude_line_count - old_prelude_line_count)
+        } else {
+            isize::try_from(old_prelude_line_count - new_prelude_line_count).map(std::ops::Neg::neg)
+        };
+
+        let lines_added_count = lines_added_count.map_err(|_e| {
+            ParseMetadataError::new(
+                saphyr::Marker::new(before_prelude.len(), prelude_start_line, 0),
+                MetadataParsingErrorReason::PreludeSubstitutionOverflow {
+                    new_prelude_count: new_prelude_line_count,
+                    old_prelude_count: old_prelude_line_count,
+                },
+            )
+        })?;
 
         Ok(MasterlistWithReplacedPrelude {
             masterlist,
             meta: Some(PreludeDiffSpan {
                 start_line: prelude_start_line,
                 end_line: prelude_end_line,
-                line_count_delta,
+                lines_added_count,
             }),
         })
     } else {
@@ -1154,7 +1159,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(2, result.meta.as_ref().unwrap().start_line);
             assert_eq!(5, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(2, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(2, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1183,7 +1188,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(2, result.meta.as_ref().unwrap().start_line);
             assert_eq!(5, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(3, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(3, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1211,7 +1216,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(2, result.meta.as_ref().unwrap().start_line);
             assert_eq!(4, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(1, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(1, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1238,7 +1243,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(2, result.meta.as_ref().unwrap().start_line);
             assert_eq!(4, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(2, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(2, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1267,7 +1272,7 @@ prelude:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(4, result.meta.as_ref().unwrap().start_line);
             assert_eq!(7, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(1, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(1, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1308,7 +1313,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(5, result.meta.as_ref().unwrap().start_line);
             assert_eq!(11, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(6, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(6, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1338,7 +1343,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(2, result.meta.as_ref().unwrap().start_line);
             assert_eq!(5, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(2, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(2, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1362,7 +1367,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(2, result.meta.as_ref().unwrap().start_line);
             assert_eq!(2, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(-1, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(-1, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1394,7 +1399,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(2, result.meta.as_ref().unwrap().start_line);
             assert_eq!(5, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(0, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(0, result.meta.as_ref().unwrap().lines_added_count);
         }
 
         #[test]
@@ -1425,7 +1430,7 @@ plugins:
             assert_eq!(expected_result, result.masterlist);
             assert_eq!(2, result.meta.as_ref().unwrap().start_line);
             assert_eq!(5, result.meta.as_ref().unwrap().end_line);
-            assert_eq!(1, result.meta.as_ref().unwrap().line_count_delta);
+            assert_eq!(1, result.meta.as_ref().unwrap().lines_added_count);
         }
     }
 }

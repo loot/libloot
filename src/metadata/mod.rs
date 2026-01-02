@@ -22,7 +22,7 @@ pub use tag::{Tag, TagSuggestion};
 struct PreludeDiffSpan {
     start_line: usize,
     end_line: usize,
-    line_count_delta: isize,
+    lines_added_count: isize,
 }
 
 #[cfg(test)]

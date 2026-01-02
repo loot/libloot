@@ -312,7 +312,10 @@ impl Database {
 }
 
 fn validate_write_path(output_path: &Path, mode: WriteMode) -> Result<(), WriteMetadataError> {
-    if !output_path.parent().is_some_and(|p| p == "" || p.exists()) {
+    if !output_path
+        .parent()
+        .is_some_and(|p| p.as_os_str().is_empty() || p.exists())
+    {
         Err(WriteMetadataError::new(
             output_path.into(),
             WriteMetadataErrorReason::ParentDirectoryNotFound,
