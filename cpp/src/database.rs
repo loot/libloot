@@ -116,7 +116,7 @@ impl Database {
         evaluate_conditions: bool,
     ) -> Result<Vec<Message>, VerboseError> {
         self.0
-            .write()
+            .read()
             .map_err(DatabaseLockPoisonError::from)?
             .general_messages(to_eval_mode(evaluate_conditions))
             .map(|v| v.into_iter().map(Into::into).collect())
