@@ -6,6 +6,21 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.12.0 -> 0.13.1"
 
+[[audits.convert_case]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.10.0"
+
+[[audits.ctor]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.4.2 -> 0.6.3"
+
+[[audits.ctor-proc-macro]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.0.5 -> 0.0.7"
+
 [[audits.cxx]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -25,6 +40,16 @@ delta = "1.0.161 -> 1.0.192"
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "1.0.161 -> 1.0.192"
+
+[[audits.dtor]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.0.6 -> 0.1.1"
+
+[[audits.dtor-proc-macro]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.0.5 -> 0.0.6"
 
 [[audits.libloading]]
 who = "Oliver Hamlet <git@ortham.net>"
@@ -64,6 +89,16 @@ notes = "This is my own crate published using Trusted Publishing, but I can't ma
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "2.2.3 -> 2.3.1"
+
+[[audits.napi-derive]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "3.2.2 -> 3.5.0"
+
+[[audits.napi-derive-backend]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.1.2 -> 5.0.0"
 
 [[audits.proc-macro2]]
 who = "Oliver Hamlet <git@ortham.net>"
