@@ -55,6 +55,11 @@ criteria = "safe-to-deploy"
 delta = "5.3.3 -> 5.4.0"
 notes = "This is my own crate published using Trusted Publishing, but I can't mark it as trusted by cargo-vet because it doesn't support Trusted Publishing and just sees that the publisher is unknown."
 
+[[audits.napi-build]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.2.3 -> 2.3.1"
+
 [[audits.regress]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
