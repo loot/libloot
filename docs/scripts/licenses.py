@@ -33,10 +33,10 @@ SKIPPABLE_CRATES = [
 # verified that these have no notices.
 NO_NOTICES_WHITELIST = [
     ('allocator-api2',  '0.2.21'),
-    ('cxx',             '1.0.161'),
-    ('cxxbridge-macro', '1.0.161'),
+    ('cxx',             '1.0.192'),
+    ('cxxbridge-macro', '1.0.192'),
     ('delegate',        '0.13.4'),
-    ('link-cplusplus',  '1.0.10'),
+    ('link-cplusplus',  '1.0.12'),
     ('once_cell',       '1.21.3'),
     ('option-ext',      '0.2.0'),
     ('pelite-macros',   '0.1.1'),
@@ -47,7 +47,7 @@ NO_NOTICES_WHITELIST = [
     ('rustversion',     '1.0.20'),
     ('serde',           '1.0.219'),
     ('serde_derive',    '1.0.219'),
-    ('syn',             '2.0.106'),
+    ('syn',             '2.0.112'),
     ('thiserror',       '2.0.12'),
     ('thiserror-impl',  '2.0.12'),
 ]
