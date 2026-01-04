@@ -2,6 +2,115 @@
 Version History
 ***************
 
+0.29.0 - Unreleased
+===================
+
+Added
+-----
+
+- ``Database::clear_condition_cache()`` clears the cache of metadata
+  condition evaluation results, allowing more control over when conditions are
+  re-evaluated. As before, loading the current load order state, loading plugins
+  and setting additional data paths also clear the condition cache. The C++
+  wrapper's method is :cpp:any:`loot::DatabaseInterface::ClearConditionCache()`.
+- ``Database::user_known_bash_tags()`` returns the known bash tags that are
+  defined in the loaded userlist. The C++ wrapper's method is
+  :cpp:any:`loot::DatabaseInterface::GetUserKnownBashTags()`.
+- ``Database::set_user_known_bash_tags()`` replaces the known bash tags that are
+  defined in the loaded userlist with the given values. The C++ wrapper's method
+  is :cpp:any:`loot::DatabaseInterface::SetUserKnownBashTags()`.
+- ``Database::user_general_messages()`` returns the general messages that are
+  defined in the loaded userlist. The C++ wrapper's method is
+  :cpp:any:`loot::DatabaseInterface::GetUserGeneralMessages()`.
+- ``Database::set_user_general_messages()`` replaces the general messages that
+  are defined in the loaded userlist with the given values. The C++ wrapper's
+  method is :cpp:any:`loot::DatabaseInterface::SetUserGeneralMessages()`.
+- Support for writing metadata files that use YAML anchors and aliases to
+  deduplicate certain metadata values. The behaviour is configurable using the
+  new ``MetadataWriteOptions`` struct (or class, in the C++ wrapper), and is
+  disabled by default.
+
+Fixed
+-----
+
+- The C++ wrapper's :cpp:any:`loot::DatabaseInterface`,
+  :cpp:any:`loot::GameInterface` and :cpp:any:`loot::PluginInterface` abstract
+  classes now implement default constructors and delete their copy and move
+  constructors and assignment operators to protect against slicing.
+- The C++ wrapper's API reference documentation for
+  :cpp:any:`loot::GameInterface::LoadPlugins()`,
+  :cpp:any:`loot::GameInterface::ClearLoadedPlugins()`,
+  :cpp:any:`loot::GameInterface::GetPlugin()` and
+  :cpp:any:`loot::GameInterface::GetLoadedPlugins()` has been corrected to state
+  that :cpp:any:`loot::PluginInterface` smart pointers that are held by the
+  caller remain valid for as long as the caller holds them.
+
+Changed
+-------
+
+- The C++ wrapper's CMake target has been renamed from ``loot`` to ``libloot``,
+  and as a result ``loot.dll``, ``loot.lib`` and ``loot.pdb`` are now named
+  ``libloot.dll``, ``libloot.lib`` and ``libloot.pdb``. This avoids name
+  collisions with LOOT's CMake target and debug symbols on Windows. The build
+  artifact filenames on Linux are unchanged.
+- Evaluating conditions as part of retrieving general messages no longer clears
+  the condition cache. This also means that ``Database::general_messages()`` now
+  takes ``&self`` instead of ``&mut self``, and the C++ wrapper now takes a
+  shared read lock instead of an exclusive write lock when
+  :cpp:any:`loot::DatabaseInterface::GetGeneralMessages()` is called.
+- The ``Database::general_messages()`` function has gained a ``MergeMode``
+  parameter to control whether or not user metadata is included in the returned
+  value. The previous behaviour was to always include user metadata.
+
+  In the C++ wrapper, :cpp:any:`loot::DatabaseInterface::GetGeneralMessages()`
+  has gained a boolean parameter that defaults to ``true``. The behaviour of
+  existing calls that do not pass any parameters is unchanged, but as the new
+  parameter comes before the existing ``evaluateConditions`` parameter,
+  **existing calls that pass an explicit parameter value must be updated**.
+- The ``Database::known_bash_tags()`` function now takes a ``MergeMode``
+  parameter to control whether or not user metadata is included in the returned
+  value. The previous behaviour was to always include user metadata.
+
+  In the C++ wrapper, :cpp:any:`loot::DatabaseInterface::GetKnownBashTags()` has
+  gained a boolean parameter that defaults to ``true``, so the behaviour of
+  existing calls is unchanged.
+- ``Database::write_user_metadata()`` and ``Database::write_minimal_list()`` now
+  take a ``&MetadataWriteOptions`` parameter instead of a ``WriteMode``
+  parameter. ``WriteMode::Create`` is replaced by the default value of ``MetadataWriteOptions``'s truncate option, while
+  ``WriteMode::CreateOrTruncate`` is replaced by passing ``true`` to ``MetadataWriteOptions::set_truncate``.
+
+  Similarly, the C++ wrapper's
+  :cpp:any:`loot::DatabaseInterface::WriteUserMetadata()` and :cpp:any:`loot::DatabaseInterface::WriteMinimalList()` now take a ``const MetadataWriteOptions& options`` instead of a ``bool overwrite`` parameter, and
+  the equivalent to ``MetadataWriteOptions::set_truncate`` is
+  :cpp:any:`loot::MetadataWriteOptions::SetTruncate()`.
+- If ``Database::discard_plugin_user_metadata()`` (or the C++ wrapper's
+  :cpp:any:`loot::DatabaseInterface::DiscardPluginUserMetadata()`) is passed a
+  plugin name that is not case-insensitively equal to any non-regex plugin name
+  but does case-insensitively equal one or more plugin name regexes, those regex
+  plugin metadata entries will now be removed. Previously it was only possible
+  to remove non-regex plugin metadata entries.
+- The order of plugin metadata entries in the loaded metadata lists is now
+  preserved when writing user metadata or a minimal list.
+- The C++ wrapper's :cpp:any:`loot::GameInterface::GetPlugin()` now returns
+  ``std::unique_ptr<const PluginInterface>`` instead of ``std::shared_ptr<const PluginInterface>``.
+- The C++ wrapper's :cpp:any:`loot::GameInterface::GetLoadedPlugins()` now
+  returns ``std::vector<std::unique_ptr<const PluginInterface>>`` instead of
+  ``std::vector<std::shared_ptr<const PluginInterface>>``.
+- Updated cxx and cxx-build to v1.0.192.
+- Updated dependency versions in Cargo.lock (which sets the versions used by the
+  C++ wrapper):
+
+  - Updated loot-condition-interpreter to v5.4.0.
+  - Updated regress to v0.10.5.
+
+Removed
+-------
+
+- The ``WriteMode`` enum has been removed as its functionality is now provided
+  by the ``MetadataWriteOptions`` struct (or class, in the C++ wrapper).
+- Prebuilt 32-bit Windows binaries. It may be possible to continue to build
+  libloot for 32-bit Windows, but that is no longer tested in CI.
+
 0.28.4 - 2025-12-31
 ===================
 
