@@ -96,6 +96,9 @@ Classes
 .. doxygenclass:: loot::Tag
    :members:
 
+.. doxygenclass:: loot::MetadataWriteOptions
+   :members:
+
 .. doxygenclass:: loot::Vertex
    :members:
 
