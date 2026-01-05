@@ -177,8 +177,9 @@ version = "0.9.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.napi]]
-version = "3.1.6"
+version = "3.8.1"
 criteria = "safe-to-deploy"
+notes = "There's a lot of unsafe usage, and I don't have the knowledge to tell if it meets the safe-to-deploy criteria. I've certified the 3.1.6 -> 3.8.1 diff as safe-to-run, which is good enough considering the libloot Node.js wrapper is experimental."
 
 [[exemptions.napi-build]]
 version = "2.2.3"

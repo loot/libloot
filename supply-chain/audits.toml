@@ -90,6 +90,11 @@ criteria = "safe-to-deploy"
 delta = "5.3.3 -> 5.4.0"
 notes = "This is my own crate published using Trusted Publishing, but I can't mark it as trusted by cargo-vet because it doesn't support Trusted Publishing and just sees that the publisher is unknown."
 
+[[audits.napi]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-run"
+delta = "3.1.6 -> 3.8.1"
+
 [[audits.napi-build]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -105,6 +110,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "2.1.2 -> 5.0.0"
 
+[[audits.napi-sys]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "3.0.0 -> 3.2.1"
+
 [[audits.proc-macro2]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -119,6 +129,11 @@ delta = "0.10.4 -> 0.10.5"
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.21.1 -> 0.21.3"
+
+[[audits.slab]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.4.8 -> 0.4.11"
 
 [[audits.syn]]
 who = "Oliver Hamlet <git@ortham.net>"
