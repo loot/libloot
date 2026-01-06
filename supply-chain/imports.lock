@@ -8,6 +8,20 @@ user-id = 4484
 user-login = "hsivonen"
 user-name = "Henri Sivonen"
 
+[[publisher.futures-task]]
+version = "0.3.31"
+when = "2024-10-05"
+user-id = 33035
+user-login = "taiki-e"
+user-name = "Taiki Endo"
+
+[[publisher.futures-util]]
+version = "0.3.31"
+when = "2024-10-05"
+user-id = 33035
+user-login = "taiki-e"
+user-name = "Taiki Endo"
+
 [[publisher.libc]]
 version = "0.2.171"
 when = "2025-03-11"
