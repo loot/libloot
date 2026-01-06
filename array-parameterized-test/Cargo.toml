@@ -8,7 +8,7 @@ edition.workspace = true
 license = "MIT"
 
 [dependencies]
-proc-macro2 = "1.0.83"
+proc-macro2 = "1.0.105"
 quote = "1.0.35"
 syn = { version = ">= 1.0.0, < 3", features = ["full"] }
 
