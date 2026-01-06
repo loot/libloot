@@ -39,6 +39,7 @@ criteria = "safe-to-deploy"
 [[exemptions.cc]]
 version = "1.2.18"
 criteria = "safe-to-deploy"
+notes = "This crate's source repo is owned by the rust-lang GitHub org."
 
 [[exemptions.const-random]]
 version = "0.1.18"
@@ -133,6 +134,7 @@ criteria = "safe-to-deploy"
 [[exemptions.hashbrown]]
 version = "0.14.5"
 criteria = "safe-to-deploy"
+notes = "This crate's source repo is owned by the rust-lang GitHub org."
 
 [[exemptions.hashlink]]
 version = "0.10.0"
@@ -269,10 +271,12 @@ notes = "At time of review this was only built if targeting Redox, which is not 
 [[exemptions.regex]]
 version = "1.11.1"
 criteria = "safe-to-deploy"
+notes = "This crate's source repo is owned by the rust-lang GitHub org."
 
 [[exemptions.regex-automata]]
 version = "0.4.9"
 criteria = "safe-to-deploy"
+notes = "This crate's source repo is owned by the rust-lang GitHub org."
 
 [[exemptions.regress]]
 version = "0.10.4"
