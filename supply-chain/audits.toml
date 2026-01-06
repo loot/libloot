@@ -43,6 +43,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "1.0.10 -> 1.0.12"
 
+[[audits.log]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.4.28 -> 0.4.29"
+
 [[audits.loot-condition-interpreter]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
