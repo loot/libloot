@@ -11,7 +11,7 @@ license.workspace = true
 crc32fast = "1"
 esplugin = "6.1"
 libloadorder = "18.5"
-log = { version = "0.4.29", features = ["std"] }
+log = { version = "0.4.6", features = ["std"] }
 loot-condition-interpreter = "5"
 petgraph = ">= 0.6, < 0.9"
 rayon = "1"
