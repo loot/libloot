@@ -100,8 +100,12 @@ Changed
 - Updated dependency versions in Cargo.lock (which sets the versions used by the
   C++ wrapper):
 
+  - Updated log to v0.4.29.
   - Updated loot-condition-interpreter to v5.4.0.
+  - Updated proc-macro2 to v1.0.105.
   - Updated regress to v0.10.5.
+  - Updated syn to v2.0.113.
+  - Updated unicase to v2.9.0.
 
 Removed
 -------
