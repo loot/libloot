@@ -11,21 +11,22 @@ LOOT also provides some load order error checking, including checks for requirem
 
 libloot provides access to LOOT's metadata and sorting functionality, and the LOOT application is built using it.
 
-libloot's core is written in Rust, and C++, Python and Node.js wrappers can be found in the `cpp`, `python` and `nodejs` subdirectories respectively.
+libloot is written in Rust. C++, Python and Node.js wrappers can be found in the `cpp`, `python` and `nodejs` subdirectories respectively.
 
 ## Downloads
 
-Binary artifacts are currently only provided for the C++ wrapper.
+libloot releases are published to [crates.io](https://crates.io/crates/libloot).
 
-Releases are hosted on [GitHub](https://github.com/loot/libloot/releases).
+The C++ wrapper is available as a prebuilt shared library:
 
-Snapshot builds are available as artifacts from [GitHub Actions runs](https://github.com/loot/libloot/actions), though they are only kept for 90 days and can only be downloaded when logged into a GitHub account. To mitigate these restrictions, snapshot build artifacts include a GPG signature that can be verified using the public key hosted [here](https://loot.github.io/.well-known/openpgpkey/hu/mj86by43a9hz8y8rbddtx54n3bwuuucg), which means it's possible to re-upload the artifacts elsewhere and still prove their authenticity.
+- Release binaries are hosted on [GitHub](https://github.com/loot/libloot/releases), and are only available for 64-bit Windows.
+- Snapshot builds are available for 64-bit Windows and 64-bit Linux, as artifacts from [GitHub Actions runs](https://github.com/loot/libloot/actions). The snapshot build artifacts are named like so:
 
-The snapshot build artifacts are named like so:
+  ```
+  libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.<file extension>
+  ```
 
-```
-libloot-<last tag>-<revisions since tag>-g<short revision ID>_<branch>-<platform>.<file extension>
-```
+  GitHub Actions only keeps artifacts for 90 days, and they can only be downloaded when logged into a GitHub account. To mitigate these restrictions, snapshot build artifacts include a GPG signature that can be verified using the public key hosted [here](https://loot.github.io/.well-known/openpgpkey/hu/mj86by43a9hz8y8rbddtx54n3bwuuucg), which means it's possible to re-upload the artifacts elsewhere and still prove their authenticity.
 
 ## Build
 
