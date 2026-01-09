@@ -22,7 +22,7 @@ jobs:
         run: |
           RELEASE_TAG="${{ github.ref_name }}"
           RELEASE_TITLE="libloot v$RELEASE_TAG"
-          RELEASE_NOTES="$(printf "Requires Windows 10 or later, the MSVC 2022 [x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) redistributable, and [7-Zip](http://www.7-zip.org/) to extract the archives.\n\n## Change Logs\n- [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)\n- [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)")"
+          RELEASE_NOTES="$(printf "Requires Windows 10 or later, the [MSVC 2022 x64 redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe), and [7-Zip](http://www.7-zip.org/) to extract the archives.\n\n## Change Logs\n- [API](https://loot-api.readthedocs.io/en/latest/api/changelog.html)\n- [Metadata Syntax](https://loot-api.readthedocs.io/en/latest/metadata/changelog.html)")"
 
           gh release create --draft --title "$RELEASE_TITLE" --notes "$RELEASE_NOTES" --verify-tag --repo "${{ github.repository }}" "$RELEASE_TAG"
 
