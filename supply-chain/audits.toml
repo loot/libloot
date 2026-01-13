@@ -110,10 +110,20 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "3.2.2 -> 3.5.0"
 
+[[audits.napi-derive]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "3.5.0 -> 3.5.1"
+
 [[audits.napi-derive-backend]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "2.1.2 -> 5.0.0"
+
+[[audits.napi-derive-backend]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "5.0.0 -> 5.0.1"
 
 [[audits.napi-sys]]
 who = "Oliver Hamlet <git@ortham.net>"
