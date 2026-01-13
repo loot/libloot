@@ -233,6 +233,21 @@ This crate contains no `unsafe` code and no unnecessary use of the standard
 library.
 """
 
+[[audits.esplugin.audits.proc-macro2]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.101 -> 1.0.105"
+
+[[audits.esplugin.audits.syn]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.0.106 -> 2.0.112"
+
+[[audits.esplugin.audits.syn]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.0.112 -> 2.0.113"
+
 [[audits.esplugin.audits.tempfile]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -875,6 +890,11 @@ notes = "This is my own crate published using Trusted Publishing, but I can't ma
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.2.0 -> 0.2.1"
+
+[[audits.libloadorder.audits.rust-ini]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.21.1 -> 0.21.3"
 
 [[audits.mozilla.wildcard-audits.encoding_rs]]
 who = "Henri Sivonen <hsivonen@hsivonen.fi>"

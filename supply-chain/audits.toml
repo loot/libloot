@@ -115,35 +115,15 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "3.0.0 -> 3.2.1"
 
-[[audits.proc-macro2]]
-who = "Oliver Hamlet <git@ortham.net>"
-criteria = "safe-to-deploy"
-delta = "1.0.101 -> 1.0.105"
-
 [[audits.regress]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.10.4 -> 0.10.5"
 
-[[audits.rust-ini]]
-who = "Oliver Hamlet <git@ortham.net>"
-criteria = "safe-to-deploy"
-delta = "0.21.1 -> 0.21.3"
-
 [[audits.slab]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.4.8 -> 0.4.11"
-
-[[audits.syn]]
-who = "Oliver Hamlet <git@ortham.net>"
-criteria = "safe-to-deploy"
-delta = "2.0.106 -> 2.0.112"
-
-[[audits.syn]]
-who = "Oliver Hamlet <git@ortham.net>"
-criteria = "safe-to-deploy"
-delta = "2.0.112 -> 2.0.113"
 
 [[trusted.futures-task]]
 criteria = "safe-to-deploy"
