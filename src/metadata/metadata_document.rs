@@ -362,30 +362,25 @@ impl MetadataDocument {
             }
 
             emitter.end_array();
+            emitter.write_end_of_line();
         }
 
         if self.groups.len() > 1 {
             emitter.write_map_key("groups");
-            self.groups.emit_yaml(&mut emitter);
+            write_list_with_line_breaks(self.groups.iter(), &mut emitter);
         }
 
         if !self.messages.is_empty() {
             emitter.write_map_key("globals");
-            self.messages.emit_yaml(&mut emitter);
+            write_list_with_line_breaks(self.messages.iter(), &mut emitter);
         }
 
         if !plugins.is_empty() {
             emitter.write_map_key("plugins");
-
-            emitter.begin_array();
-
-            for plugin in plugins {
-                if !plugin.has_name_only() {
-                    plugin.emit_yaml(&mut emitter);
-                }
-            }
-
-            emitter.end_array();
+            write_list_with_line_breaks(
+                plugins.into_iter().filter(|p| !p.has_name_only()),
+                &mut emitter,
+            );
         }
 
         emitter.end_map();
@@ -751,6 +746,7 @@ fn emit_common_values(common_values: &CommonValues, emitter: &mut YamlEmitter) {
 
         if !emitter.anchors.is_anchor_written(anchor) {
             emit_message_contents(contents, emitter);
+            emitter.write_end_of_line();
         }
     }
     emitter.end_array();
@@ -765,13 +761,29 @@ fn emit_common_values(common_values: &CommonValues, emitter: &mut YamlEmitter) {
 
         if !emitter.anchors.is_anchor_written(anchor) {
             emitter.write_condition(condition);
+            emitter.write_end_of_line();
         }
     }
     emitter.end_array();
 
-    messages.emit_yaml(emitter);
+    write_list_with_line_breaks(messages.iter(), emitter);
 
-    files.emit_yaml(emitter);
+    write_list_with_line_breaks(files.iter(), emitter);
+}
+
+fn write_list_with_line_breaks<'a, T, U>(values: T, emitter: &mut YamlEmitter)
+where
+    T: Iterator<Item = &'a U>,
+    U: 'a + EmitYaml,
+{
+    emitter.begin_array();
+
+    for value in values {
+        value.emit_yaml(emitter);
+        emitter.write_end_of_line();
+    }
+
+    emitter.end_array();
 }
 
 struct MasterlistWithReplacedPrelude {
@@ -1396,6 +1408,52 @@ plugins:
                 .save(&other_path, &MetadataWriteOptions::default())
                 .unwrap();
 
+            let content = std::fs::read_to_string(&other_path).unwrap();
+
+            assert_eq!(
+                "bash_tags:
+  - C.Climate
+  - Relev
+
+groups:
+  - name: 'default'
+
+  - name: 'group1'
+    after:
+      - group2
+
+  - name: 'group2'
+    after:
+      - default
+
+globals:
+  - type: say
+    content: 'A global message.'
+
+plugins:
+  - name: 'Blank.esm'
+    msg:
+      - type: warn
+        content: 'This is a warning.'
+      - type: say
+        content: 'This message should be removed when evaluating conditions.'
+        condition: 'active(\"Blank - Different.esm\")'
+
+  - name: 'Blank.+\\.esp'
+    after: [ 'Blank.esm' ]
+
+  - name: 'Blank.+(Different)?.*\\.esp'
+    inc: [ 'Blank.esp' ]
+
+  - name: 'Blank.esp'
+    group: 'group2'
+    dirty:
+      - crc: 0xDEADBEEF
+        util: 'utility'
+",
+                content
+            );
+
             let mut other_metadata = MetadataDocument::default();
             other_metadata.load(&other_path).unwrap();
 
@@ -1529,12 +1587,14 @@ plugins:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: &contents3 'message text 3'
+
   - name: 'test2.esp'
     after:
       - name: 'file 4'
         detail: *contents3
         constraint: *condition3
-    msg: [ *message1 ]",
+    msg: [ *message1 ]
+",
                 content
             );
 
@@ -1566,23 +1626,32 @@ plugins:
             assert_eq!(
                 "common:
   - &contents1 'message text 1'
+
   - &contents2
     - lang: en
       text: 'message text 1'
     - lang: fr
       text: 'message text 2'
+
   - &contents3 'message text 3'
+
   - &condition1 'file(\"test.txt\")'
+
   - &condition2 'file(\"other.txt\")'
+
   - &condition3 'file(\"third.txt\")'
+
   - &message1
     type: say
     content: *contents2
+
   - &file1 'file 1'
+
   - &file2
     name: 'file 2'
     detail: *contents1
     condition: *condition1
+
 plugins:
   - name: 'test1.esp'
     after: [ *file1 ]
@@ -1617,12 +1686,14 @@ plugins:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: *contents3
+
   - name: 'test2.esp'
     after:
       - name: 'file 4'
         detail: *contents3
         constraint: *condition3
-    msg: [ *message1 ]",
+    msg: [ *message1 ]
+",
                 content
             );
 
@@ -1652,22 +1723,30 @@ plugins:
             assert_eq!(
                 "common:
   - &contents1 'message text 1'
+
   - &contents2
     - lang: en
       text: 'message text 1'
     - lang: fr
       text: 'message text 2'
+
   - &contents3 'message text 3'
+
   - &condition1 'file(\"test.txt\")'
+
   - &condition2 'file(\"other.txt\")'
+
   - &condition3 'file(\"third.txt\")'
+
   - &message1
     type: say
     content: *contents2
+
   - &file1
     name: 'file 2'
     detail: *contents1
     condition: *condition1
+
 plugins:
   - name: 'test1.esp'
     after: [ 'file 1' ]
@@ -1702,12 +1781,14 @@ plugins:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: *contents3
+
   - name: 'test2.esp'
     after:
       - name: 'file 4'
         detail: *contents3
         constraint: *condition3
-    msg: [ *message1 ]",
+    msg: [ *message1 ]
+",
                 content
             );
 

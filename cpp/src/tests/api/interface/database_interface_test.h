@@ -996,12 +996,12 @@ TEST_P(DatabaseInterfaceTest,
                   << "    tag:" << endl
                   << "      - Actors.ACBS" << endl
                   << "      - Actors.AIData" << endl
-                  << "      - -C.Water" << endl
+                  << "      - -C.Water" << endl << endl
                   << "  - name: '" << blankDifferentEsm << "'" << endl
                   << "    dirty:" << endl
                   << "      - crc: 0x7D22F9DF" << endl
                   << "        util: 'TES4Edit'" << endl
-                  << "        udr: 4";
+                  << "        udr: 4" << endl;
 
   EXPECT_EQ(expectedContent.str(), content);
 }

@@ -585,7 +585,10 @@ plugins:
 
             let content = std::fs::read_to_string(output_path).unwrap();
 
-            assert_eq!("groups:\n  - name: 'default'\n  - name: 'group3'", content);
+            assert_eq!(
+                "groups:\n  - name: 'default'\n\n  - name: 'group3'\n",
+                content
+            );
         }
 
         #[test]
@@ -746,11 +749,13 @@ plugins:
       - Actors.ACBS
       - Actors.AIData
       - -C.Water
+
   - name: 'Blank - Different.esm'
     dirty:
       - crc: 0x7D22F9DF
         util: 'TES4Edit'
-        udr: 4";
+        udr: 4
+";
 
             assert_eq!(expected_content, content);
         }

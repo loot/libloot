@@ -275,7 +275,7 @@ impl<'a> YamlEmitter<'a> {
         }
     }
 
-    fn write_end_of_line(&mut self) {
+    pub(in crate::metadata) fn write_end_of_line(&mut self) {
         self.write("\n");
     }
 
