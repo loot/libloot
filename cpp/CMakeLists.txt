@@ -46,7 +46,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang
     set(CARGO_COMMAND ${CMAKE_COMMAND} -E env --modify "CXXFLAGS=string_append: -fno-lto" -- ${CARGO_COMMAND})
 endif()
 
-add_custom_target(libloot-cpp-build
+add_custom_target(libloot_cargo
     # Force LTO to be disabled when building the first layer of the C++ wrapper,
     # as it may be enabled by default, and if so that leads to undefined symbols
     # in the C++ wrapper's shared library. It's not enough to just pass -fno-lto
@@ -61,13 +61,13 @@ add_custom_target(libloot-cpp-build
         "${TARGET_PATH}/cxxbridge/rust/cxx.h"
 )
 
-add_library(libloot-cpp INTERFACE)
-add_dependencies(libloot-cpp libloot-cpp-build)
+add_library(libloot_cpp INTERFACE)
+add_dependencies(libloot_cpp libloot_cargo)
 
-target_link_libraries(libloot-cpp INTERFACE
+target_link_libraries(libloot_cpp INTERFACE
     optimized "${TARGET_PATH}/release/${LIBLOOT_CPP_FILENAME}"
     debug "${TARGET_PATH}/debug/${LIBLOOT_CPP_FILENAME}")
-target_include_directories(libloot-cpp INTERFACE "${TARGET_PATH}/cxxbridge")
+target_include_directories(libloot_cpp INTERFACE "${TARGET_PATH}/cxxbridge")
 
 
 ##############################
@@ -156,7 +156,7 @@ endif()
 
 # Build API.
 add_library(libloot ${LIBLOOT_LIBRARY_TYPE} ${LIBLOOT_ALL_SOURCES})
-target_link_libraries(libloot PRIVATE libloot-cpp)
+target_link_libraries(libloot PRIVATE libloot_cpp)
 
 ##############################
 # Set Target-Specific Flags
