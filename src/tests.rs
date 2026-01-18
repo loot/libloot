@@ -413,3 +413,202 @@ mod unicase {
         assert!(unicase::eq("\u{03c1}", "\u{03f1}"));
     }
 }
+
+mod case_insensitive_regex {
+    use array_parameterized_test::{parameterized_test, test_parameter};
+
+    use super::super::case_insensitive_regex;
+
+    #[test_parameter]
+    const POSIX_CHARACTER_CLASSES: [&str; 15] = [
+        "alnum", "alpha", "blank", "cntrl", "digit", "graph", "lower", "print", "punct", "space",
+        "upper", "xdigit", "d", "s", "w",
+    ];
+
+    #[test_parameter]
+    const IDENTITY_ESCAPE_CHARS: [char; 62] = [
+        ' ', '!', '"', '#', '%', '&', '\'', ',', '-', ':', ';', '<', '=', '>', '@', '_', '`', '~',
+        'A', 'C', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'Q', 'R', 'T', 'U', 'V',
+        'X', 'Y', 'Z', 'a', 'c', 'e', 'g', 'h', 'i', 'j', 'l', 'm', 'o', 'q', 'x', 'y', 'z', '1',
+        '2', '3', '4', '5', '6', '7', '8', '9',
+    ];
+
+    #[test_parameter]
+    const SYNTAX_ESCAPE_CHARS: [char; 15] = [
+        '$', '(', ')', '*', '+', '.', '/', '?', '[', '\\', ']', '^', '{', '|', '}',
+    ];
+
+    // From <https://262.ecma-international.org/16.0/index.html#table-binary-unicode-properties-of-strings>
+    #[test_parameter]
+    const UNICODE_STRING_PROPERTY_NAMES: [&str; 7] = [
+        "Basic_Emoji",
+        "Emoji_Keycap_Sequence",
+        "RGI_Emoji_Modifier_Sequence",
+        "RGI_Emoji_Flag_Sequence",
+        "RGI_Emoji_Tag_Sequence",
+        "RGI_Emoji_ZWJ_Sequence",
+        "RGI_Emoji",
+    ];
+
+    #[test]
+    fn should_be_case_insensitive() {
+        let regex = case_insensitive_regex("A").unwrap();
+
+        assert!(regex.find("a").is_some());
+    }
+
+    #[test]
+    fn should_support_unicode() {
+        let regex = case_insensitive_regex("\\u{61}").unwrap();
+
+        assert!(regex.find("a").is_some());
+
+        let regex = case_insensitive_regex("[\u{1F604}]").unwrap();
+
+        assert!(regex.find("\u{1F604}").is_some());
+    }
+
+    #[test]
+    fn should_support_i_modifier() {
+        let regex = case_insensitive_regex("(?-i:A)").unwrap();
+
+        assert!(regex.find("A").is_some());
+        assert!(regex.find("a").is_none());
+    }
+
+    #[test]
+    fn should_support_m_modifier() {
+        let regex = case_insensitive_regex("A\n(?m:^)B").unwrap();
+
+        assert!(regex.find("A\nB").is_some());
+    }
+
+    #[test]
+    fn should_support_s_modifier() {
+        let regex = case_insensitive_regex("A(?s:.)B").unwrap();
+
+        assert!(regex.find("A\nB").is_some());
+    }
+
+    #[parameterized_test(POSIX_CHARACTER_CLASSES)]
+    fn does_not_support_named_character_classes(class: &str) {
+        let err = case_insensitive_regex(&format!("[[:{class}:]]")).unwrap_err();
+
+        assert_eq!("Invalid atom character", err.to_string());
+    }
+
+    #[test]
+    fn should_not_support_quantifiers_on_lookahead_assertions() {
+        let err = case_insensitive_regex("(?=a)?b").unwrap_err();
+
+        assert_eq!("Quantifier not allowed here", err.to_string());
+    }
+
+    #[test]
+    fn should_not_support_octal_escapes() {
+        let err = case_insensitive_regex("\\01").unwrap_err();
+
+        assert_eq!("Invalid character escape", err.to_string());
+    }
+
+    #[test]
+    fn should_not_support_character_ranges_with_character_class_boundaries() {
+        let err = case_insensitive_regex("[\\s-9]").unwrap_err();
+
+        assert_eq!("Invalid character range", err.to_string());
+    }
+
+    #[parameterized_test(IDENTITY_ESCAPE_CHARS)]
+    fn should_not_support_identity_escapes(c: char) {
+        let err = case_insensitive_regex(&format!("\\{c}")).unwrap_err();
+
+        assert_eq!("Invalid character escape", err.to_string());
+    }
+
+    #[parameterized_test(SYNTAX_ESCAPE_CHARS)]
+    fn should_support_syntax_character_escapes(c: char) {
+        let regex = case_insensitive_regex(&format!("\\{c}")).unwrap();
+
+        assert!(regex.find(&c.to_string()).is_some());
+    }
+
+    #[test]
+    fn should_support_null_escape() {
+        let regex = case_insensitive_regex("\\0").unwrap();
+
+        assert!(regex.find("\0").is_some());
+    }
+
+    #[test]
+    fn should_support_control_character_escapes() {
+        let regex = case_insensitive_regex("\\cJ").unwrap();
+
+        assert!(regex.find("\n").is_some());
+    }
+
+    #[test]
+    fn should_not_support_digit_or_underscore_control_character_escapes_in_character_classes() {
+        let err = case_insensitive_regex("[\\c0]").unwrap_err();
+
+        assert_eq!("Invalid character escape", err.to_string());
+
+        let err = case_insensitive_regex("[\\c_]").unwrap_err();
+
+        assert_eq!("Invalid character escape", err.to_string());
+    }
+
+    #[test]
+    fn should_not_support_backslash_k_when_there_are_no_capturing_groups() {
+        let err = case_insensitive_regex("\\k<name>").unwrap_err();
+
+        assert_eq!(
+            "Backreference to invalid named capture group: name",
+            err.to_string()
+        );
+    }
+
+    #[test]
+    fn should_not_support_unescaped_unambiguous_brackets() {
+        let err = case_insensitive_regex("]").unwrap_err();
+
+        assert_eq!("Invalid atom character", err.to_string());
+
+        let err = case_insensitive_regex("{").unwrap_err();
+
+        assert_eq!("Invalid atom character", err.to_string());
+
+        let err = case_insensitive_regex("}").unwrap_err();
+
+        assert_eq!("Invalid atom character", err.to_string());
+    }
+
+    #[parameterized_test(UNICODE_STRING_PROPERTY_NAMES)]
+    fn does_not_support_unicode_property_escapes_for_strings(value: &str) {
+        let err = case_insensitive_regex(&format!("\\p{{{value}}}")).unwrap_err();
+
+        assert_eq!("Invalid property name", err.to_string());
+    }
+
+    #[test]
+    fn does_not_support_character_class_intersection() {
+        let regex = case_insensitive_regex("[\\p{Script_Extensions=Greek}&&\\p{Letter}]").unwrap();
+
+        assert!(regex.find("\u{03C0}").is_some());
+        assert!(regex.find("A").is_some());
+        assert!(regex.find("\u{1018A}").is_some());
+    }
+
+    #[test]
+    fn does_not_support_character_class_subtraction() {
+        let err = case_insensitive_regex("[\\p{Decimal_Number}--\\d]").unwrap_err();
+
+        assert_eq!("Invalid character range", err.to_string());
+    }
+
+    #[test]
+    fn does_not_support_q_escapes_in_character_classes() {
+        let err = case_insensitive_regex("^[\\q{\u{1F1FA}}]$").unwrap_err();
+
+        assert_eq!("Invalid character escape", err.to_string());
+    }
+}

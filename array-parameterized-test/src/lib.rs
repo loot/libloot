@@ -1,4 +1,4 @@
-use proc_macro2::{Group, TokenStream};
+use proc_macro2::{Group, TokenStream, TokenTree};
 use quote::{ToTokens, format_ident, quote};
 use syn::{Expr, Ident, ItemConst, ItemFn, Token, parse, parse_macro_input};
 
@@ -122,11 +122,45 @@ pub fn generate_tests(input: proc_macro::TokenStream) -> proc_macro::TokenStream
         .step_by(2)
         .enumerate()
         .flat_map(|(i, value)| {
-            let suffix = value
-                .to_string()
+            let suffix = string_value(&value)
                 .escape_default()
-                .collect::<String>()
-                .replace(|c: char| !c.is_ascii_alphanumeric(), "_");
+                .map(|c| match c {
+                    ' ' => "_space_".to_owned(),
+                    '!' => "_exclamation_mark_".to_owned(),
+                    '"' => "_double_quote_".to_owned(),
+                    '#' => "_hash_sign_".to_owned(),
+                    '$' => "_dollar_sign_".to_owned(),
+                    '%' => "_percent_sign_".to_owned(),
+                    '&' => "_ampersand_".to_owned(),
+                    '\'' => "_single_quote_".to_owned(),
+                    '(' => "_opening_parenthesis_".to_owned(),
+                    ')' => "_closing_parenthesis_".to_owned(),
+                    '*' => "_asterisk_".to_owned(),
+                    '+' => "_plus_sign_".to_owned(),
+                    ',' => "_comma_".to_owned(),
+                    '-' => "_hyphen_".to_owned(),
+                    '.' => "_period_".to_owned(),
+                    '/' => "_slash_".to_owned(),
+                    ':' => "_colon_".to_owned(),
+                    ';' => "_semicolon_".to_owned(),
+                    '<' => "_less_than_sign_".to_owned(),
+                    '=' => "_equals_sign_".to_owned(),
+                    '>' => "_greater_than_sign_".to_owned(),
+                    '?' => "_question_mark_".to_owned(),
+                    '@' => "_at_sign_".to_owned(),
+                    '[' => "_opening_square_bracket_".to_owned(),
+                    '\\' => "_backslash_".to_owned(),
+                    ']' => "_closing_square_bracket_".to_owned(),
+                    '^' => "_caret_".to_owned(),
+                    '_' => "_underscore_".to_owned(),
+                    '`' => "_backtick_".to_owned(),
+                    '{' => "_opening_curly_brace_".to_owned(),
+                    '|' => "_vertical_bar_".to_owned(),
+                    '}' => "_closing_curly_brace_".to_owned(),
+                    '~' => "_tilde_".to_owned(),
+                    _ => c.to_string(),
+                })
+                .collect::<String>();
 
             let test_name = format_ident!("_{suffix}");
 
@@ -141,4 +175,20 @@ pub fn generate_tests(input: proc_macro::TokenStream) -> proc_macro::TokenStream
         .collect();
 
     tokens.into()
+}
+
+fn string_value(tree: &TokenTree) -> String {
+    match tree {
+        TokenTree::Literal(literal) => {
+            let s = literal.to_string();
+            if s.starts_with('"') && s.ends_with('"') {
+                s.trim_matches('"').to_owned()
+            } else if s.starts_with('\'') && s.ends_with('\'') {
+                s.trim_matches('\'').to_owned()
+            } else {
+                s
+            }
+        }
+        TokenTree::Group(_) | TokenTree::Ident(_) | TokenTree::Punct(_) => tree.to_string(),
+    }
 }
