@@ -1,5 +1,7 @@
 use saphyr::MarkedYaml;
 
+use crate::metadata::yaml::parse_condition;
+
 use super::{
     error::{MultilingualMessageContentsError, ParseMetadataError},
     message::{
@@ -22,6 +24,7 @@ pub struct PluginCleaningData {
     deleted_navmesh_count: u32,
     cleaning_utility: Box<str>,
     detail: Box<[MessageContent]>,
+    condition: Option<Box<str>>,
 }
 
 impl PluginCleaningData {
@@ -69,6 +72,13 @@ impl PluginCleaningData {
         Ok(self)
     }
 
+    /// Set the condition string.
+    #[must_use]
+    pub fn with_condition(mut self, condition: String) -> Self {
+        self.condition = Some(condition.into_boxed_str());
+        self
+    }
+
     /// Get the CRC that identifies the plugin that the cleaning data is for.
     pub fn crc(&self) -> u32 {
         self.crc
@@ -104,6 +114,11 @@ impl PluginCleaningData {
     pub fn detail(&self) -> &[MessageContent] {
         &self.detail
     }
+
+    /// Get the condition string.
+    pub fn condition(&self) -> Option<&str> {
+        self.condition.as_deref()
+    }
 }
 
 impl TryFromYaml for PluginCleaningData {
@@ -136,6 +151,8 @@ impl TryFromYaml for PluginCleaningData {
             None => Box::default(),
         };
 
+        let condition = parse_condition(mapping, "condition", YamlObjectType::File)?;
+
         Ok(PluginCleaningData {
             crc,
             itm_count: itm,
@@ -143,6 +160,7 @@ impl TryFromYaml for PluginCleaningData {
             deleted_navmesh_count: nav,
             cleaning_utility: util.into(),
             detail,
+            condition,
         })
     }
 }
@@ -175,6 +193,11 @@ impl EmitYaml for PluginCleaningData {
         if !self.detail.is_empty() {
             emitter.write_map_key("detail");
             emit_message_contents(&self.detail, emitter);
+        }
+
+        if let Some(condition) = &self.condition {
+            emitter.write_map_key("condition");
+            emitter.write_condition(condition);
         }
 
         emitter.end_map();
@@ -250,8 +273,9 @@ mod tests {
 
         #[test]
         fn should_set_all_given_fields() {
-            let yaml =
-                parse("{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: 30}");
+            let yaml = parse(
+                "{crc: 0x12345678, util: cleaner, detail: info, itm: 2, udr: 10, nav: 30, condition: file(\"example.esp\")}",
+            );
 
             let data = PluginCleaningData::try_from_yaml(&yaml).unwrap();
 
@@ -261,6 +285,7 @@ mod tests {
             assert_eq!(2, data.itm_count());
             assert_eq!(10, data.deleted_reference_count());
             assert_eq!(30, data.deleted_navmesh_count());
+            assert_eq!("file(\"example.esp\")", data.condition().unwrap());
         }
 
         #[test]
@@ -275,6 +300,7 @@ mod tests {
             assert_eq!(0, data.itm_count());
             assert_eq!(0, data.deleted_reference_count());
             assert_eq!(0, data.deleted_navmesh_count());
+            assert!(data.condition().is_none());
         }
 
         #[test]
@@ -400,7 +426,8 @@ detail:
                     MessageContent::new("english".into()).with_language("en".into()),
                     MessageContent::new("french".into()).with_language("fr".into()),
                 ])
-                .unwrap();
+                .unwrap()
+                .with_condition("file(\"example.esp\")".into());
             let yaml = emit(&data);
 
             assert_eq!(
@@ -414,7 +441,8 @@ detail:
   - lang: {}
     text: '{}'
   - lang: {}
-    text: '{}'",
+    text: '{}'
+condition: '{}'",
                     data.cleaning_utility,
                     data.itm_count,
                     data.deleted_reference_count,
@@ -422,7 +450,8 @@ detail:
                     data.detail[0].language(),
                     data.detail[0].text(),
                     data.detail[1].language(),
-                    data.detail[1].text()
+                    data.detail[1].text(),
+                    data.condition.unwrap()
                 ),
                 yaml
             );
@@ -444,6 +473,26 @@ detail:
             let yaml = emit_with_anchors(&data, anchors);
 
             assert_eq!("crc: 0xDEADBEEF\nutil: 'TES5Edit'\ndetail: *content1", yaml);
+        }
+
+        #[test]
+        fn should_emit_an_alias_if_the_condition_has_an_anchor() {
+            let data = PluginCleaningData::new(0xDEAD_BEEF, "TES5Edit".into())
+                .with_condition("file(\"example.esp\")".into());
+
+            let mut anchors = YamlAnchors::new();
+            anchors.set_condition_anchors(HashMap::from([(
+                data.condition().unwrap(),
+                "condition1".to_owned(),
+            )]));
+            anchors.record_written_anchor("condition1".to_owned());
+
+            let yaml = emit_with_anchors(&data, anchors);
+
+            assert_eq!(
+                "crc: 0xDEADBEEF\nutil: 'TES5Edit'\ncondition: *condition1",
+                yaml
+            );
         }
     }
 }

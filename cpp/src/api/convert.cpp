@@ -106,7 +106,8 @@ loot::PluginCleaningData convert(const loot::rust::PluginCleaningData& data) {
                                   convert<loot::MessageContent>(data.detail()),
                                   data.itm_count(),
                                   data.deleted_reference_count(),
-                                  data.deleted_navmesh_count());
+                                  data.deleted_navmesh_count(),
+      convert(data.condition()));
 }
 
 loot::Location convert(const loot::rust::Location& location) {
@@ -221,7 +222,8 @@ loot::rust::MessageType convert(loot::MessageType messageType) {
         convert<loot::rust::MessageContent>(data.GetDetail()),
         data.GetITMCount(),
         data.GetDeletedReferenceCount(),
-        data.GetDeletedNavmeshCount());
+        data.GetDeletedNavmeshCount(),
+        data.GetCondition());
   } catch (const ::rust::Error& e) {
     std::rethrow_exception(mapError(e));
   }

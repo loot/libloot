@@ -632,11 +632,19 @@ fn get_common_metadata_values<'a>(
             if !info.detail().is_empty() {
                 message_contents_counts.increment_for(info.detail());
             }
+
+            if let Some(condition) = info.condition() {
+                condition_counts.increment_for(condition);
+            }
         }
 
         for info in plugin.clean_info() {
             if !info.detail().is_empty() {
                 message_contents_counts.increment_for(info.detail());
+            }
+
+            if let Some(condition) = info.condition() {
+                condition_counts.increment_for(condition);
             }
         }
     }
@@ -1468,6 +1476,7 @@ plugins:
             let condition1 = "file(\"test.txt\")";
             let condition2 = "file(\"other.txt\")";
             let condition3 = "file(\"third.txt\")";
+            let condition4 = "file(\"fourth.txt\")";
             let contents1 = vec![MessageContent::new("message text 1".to_owned())];
             let contents2 = vec![
                 MessageContent::new("message text 1".to_owned()).with_language("en".to_owned()),
@@ -1502,10 +1511,12 @@ plugins:
 
             let info1 = PluginCleaningData::new(0xDEAD_BEEF, "utility".to_owned())
                 .with_detail(contents2.clone())
-                .unwrap();
+                .unwrap()
+                .with_condition(condition4.to_owned());
             let info2 = PluginCleaningData::new(0xDEAD_BEEF, "utility".to_owned())
                 .with_detail(contents3.clone())
-                .unwrap();
+                .unwrap()
+                .with_condition(condition4.to_owned());
 
             plugin.set_load_after_files(vec![file1.clone()]);
             plugin.set_requirements(vec![file1.clone(), file2.clone()]);
@@ -1583,10 +1594,12 @@ plugins:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: *contents2
+        condition: &condition4 'file(\"fourth.txt\")'
     clean:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: &contents3 'message text 3'
+        condition: *condition4
 
   - name: 'test2.esp'
     after:
@@ -1641,6 +1654,8 @@ plugins:
 
   - &condition3 'file(\"third.txt\")'
 
+  - &condition4 'file(\"fourth.txt\")'
+
   - &message1
     type: say
     content: *contents2
@@ -1682,10 +1697,12 @@ plugins:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: *contents2
+        condition: *condition4
     clean:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: *contents3
+        condition: *condition4
 
   - name: 'test2.esp'
     after:
@@ -1738,6 +1755,8 @@ plugins:
 
   - &condition3 'file(\"third.txt\")'
 
+  - &condition4 'file(\"fourth.txt\")'
+
   - &message1
     type: say
     content: *contents2
@@ -1777,10 +1796,12 @@ plugins:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: *contents2
+        condition: *condition4
     clean:
       - crc: 0xDEADBEEF
         util: 'utility'
         detail: *contents3
+        condition: *condition4
 
   - name: 'test2.esp'
     after:

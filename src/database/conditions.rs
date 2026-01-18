@@ -107,7 +107,11 @@ fn filter_cleaning_data_on_conditions(
     cleaning_info
         .iter()
         .filter_map(|i| {
-            let condition = format!("checksum(\"{}\", {:08X})", plugin_name, i.crc());
+            let condition = if let Some(c) = i.condition() {
+                format!("checksum(\"{}\", {:08X}) and ({})", plugin_name, i.crc(), c)
+            } else {
+                format!("checksum(\"{}\", {:08X})", plugin_name, i.crc())
+            };
 
             filter_map_on_condition(i, Some(condition.as_str()), state)
         })
@@ -152,7 +156,9 @@ mod tests {
 
             let info1 = PluginCleaningData::new(0x374E_2A6F, "utility1".into());
             let info2 = PluginCleaningData::new(0xDEAD_BEEF, "utility2".into());
-            plugin.set_dirty_info(vec![info1.clone(), info2.clone()]);
+            let info3 = PluginCleaningData::new(0x374E_2A6F, "utility3".into())
+                .with_condition(condition.clone());
+            plugin.set_dirty_info(vec![info1.clone(), info2.clone(), info3.clone()]);
             plugin.set_clean_info(vec![info1.clone(), info2.clone()]);
 
             let state = loot_condition_interpreter::State::new(

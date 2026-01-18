@@ -205,8 +205,8 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeTags) {
 TEST_F(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
-  PluginCleaningData info1(0x5, "utility", info_, 1, 2, 3);
-  PluginCleaningData info2(0xA, "utility", info_, 1, 2, 3);
+  PluginCleaningData info1(0x5, "utility", info_, 1, 2, 3, "condition");
+  PluginCleaningData info2(0xA, "utility", info_, 1, 2, 3, "condition");
 
   plugin1.SetDirtyInfo({info1});
   plugin2.SetDirtyInfo({info1, info2});
@@ -314,7 +314,8 @@ TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTagsExist) {
 
 TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfDirtyInfoExists) {
   PluginMetadata plugin(blankEsp);
-  plugin.SetDirtyInfo({PluginCleaningData(5, "utility", info_, 0, 1, 2)});
+  plugin.SetDirtyInfo(
+      {PluginCleaningData(5, "utility", info_, 0, 1, 2, "condition")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }

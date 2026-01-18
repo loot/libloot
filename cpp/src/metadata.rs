@@ -585,6 +585,7 @@ pub fn new_plugin_cleaning_data(
     itm_count: u32,
     deleted_reference_count: u32,
     deleted_navmesh_count: u32,
+    condition: String,
 ) -> Result<Box<PluginCleaningData>, VerboseError> {
     let mut data = libloot::metadata::PluginCleaningData::new(crc, cleaning_utility)
         .with_itm_count(itm_count)
@@ -595,12 +596,20 @@ pub fn new_plugin_cleaning_data(
         data = data.with_detail(to_vec_of_unwrapped(detail))?;
     }
 
+    if !condition.is_empty() {
+        data = data.with_condition(condition);
+    }
+
     Ok(Box::new(PluginCleaningData(data)))
 }
 
 impl PluginCleaningData {
     pub fn detail(&self) -> &[MessageContent] {
         MessageContent::wrap_slice(self.0.detail())
+    }
+
+    pub fn condition(&self) -> &str {
+        self.0.condition().unwrap_or("")
     }
 
     pub fn boxed_clone(&self) -> Box<Self> {

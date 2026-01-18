@@ -612,6 +612,7 @@ mod ffi {
             itm_count: u32,
             deleted_reference_count: u32,
             deleted_navmesh_count: u32,
+            condition: String,
         ) -> Result<Box<PluginCleaningData>>;
 
         pub fn crc(&self) -> u32;
@@ -625,6 +626,8 @@ mod ffi {
         pub fn cleaning_utility(&self) -> &str;
 
         pub fn detail(&self) -> &[MessageContent];
+
+        pub fn condition(&self) -> &str;
 
         pub fn boxed_clone(&self) -> Box<PluginCleaningData>;
     }

@@ -80,7 +80,8 @@ public:
       const std::vector<MessageContent>& detail,
       unsigned int itm,
       unsigned int ref,
-      unsigned int nav);
+      unsigned int nav,
+      std::string_view condition);
 
   /**
    * Get the CRC that identifies the plugin that the cleaning data is for.
@@ -122,6 +123,12 @@ public:
    */
   LOOT_API std::vector<MessageContent> GetDetail() const;
 
+  /**
+   * Get the condition string.
+   * @return The cleaning data's condition string.
+   */
+  LOOT_API std::string GetCondition() const;
+
 private:
   uint32_t crc_{0};
   unsigned int itm_{0};
@@ -129,6 +136,7 @@ private:
   unsigned int nav_{0};
   std::string utility_;
   std::vector<MessageContent> detail_;
+  std::string condition_;
 };
 
 /**

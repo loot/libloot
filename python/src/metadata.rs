@@ -391,7 +391,7 @@ pub struct PluginCleaningData(libloot::metadata::PluginCleaningData);
 #[pymethods]
 impl PluginCleaningData {
     #[new]
-    #[pyo3(signature = (crc, cleaning_utility, itm_count = None, deleted_reference_count = None, deleted_navmesh_count = None, detail = None))]
+    #[pyo3(signature = (crc, cleaning_utility, itm_count = None, deleted_reference_count = None, deleted_navmesh_count = None, detail = None, condition = None))]
     fn new(
         crc: u32,
         cleaning_utility: String,
@@ -399,6 +399,7 @@ impl PluginCleaningData {
         deleted_reference_count: Option<u32>,
         deleted_navmesh_count: Option<u32>,
         detail: Option<Vec<MessageContent>>,
+        condition: Option<String>,
     ) -> Result<Self, VerboseError> {
         let mut data = libloot::metadata::PluginCleaningData::new(crc, cleaning_utility);
 
@@ -417,6 +418,10 @@ impl PluginCleaningData {
         if let Some(detail) = detail {
             let detail = detail.into_iter().map(Into::into).collect();
             data = data.with_detail(detail)?;
+        }
+
+        if let Some(condition) = condition {
+            data = data.with_condition(condition);
         }
 
         Ok(Self(data))
@@ -452,18 +457,24 @@ impl PluginCleaningData {
         self.0.detail().iter().cloned().map(Into::into).collect()
     }
 
+    #[getter]
+    fn condition(&self) -> Option<&str> {
+        self.0.condition()
+    }
+
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
         let class_name = slf.get_type().qualname()?;
         let inner = &slf.borrow().0;
         Ok(format!(
-            "{}({}, {}, {}, {}, {}, {})",
+            "{}({}, {}, {}, {}, {}, {}, {})",
             class_name,
             inner.crc(),
             inner.cleaning_utility(),
             inner.itm_count(),
             inner.deleted_reference_count(),
             inner.deleted_navmesh_count(),
-            repr_message_contents(inner.detail())
+            repr_message_contents(inner.detail()),
+            inner.condition().unwrap_or(NONE_REPR)
         ))
     }
 }

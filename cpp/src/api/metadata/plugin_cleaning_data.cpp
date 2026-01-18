@@ -34,13 +34,15 @@ PluginCleaningData::PluginCleaningData(
     const std::vector<MessageContent>& detail,
     unsigned int itm,
     unsigned int ref,
-    unsigned int nav) :
+    unsigned int nav,
+    std::string_view condition) :
     crc_(crc),
     itm_(itm),
     ref_(ref),
     nav_(nav),
     utility_(utility),
-    detail_(detail) {}
+    detail_(detail),
+    condition_(condition) {}
 
 uint32_t PluginCleaningData::GetCRC() const { return crc_; }
 
@@ -58,12 +60,15 @@ std::vector<MessageContent> PluginCleaningData::GetDetail() const {
   return detail_;
 }
 
+std::string PluginCleaningData::GetCondition() const { return condition_; }
+
 bool operator==(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
   return lhs.GetCRC() == rhs.GetCRC() &&
          lhs.GetITMCount() == rhs.GetITMCount() &&
          lhs.GetDeletedReferenceCount() == rhs.GetDeletedReferenceCount() &&
          lhs.GetDeletedNavmeshCount() == rhs.GetDeletedNavmeshCount() &&
          lhs.GetCleaningUtility() == rhs.GetCleaningUtility() &&
+         lhs.GetCondition() == rhs.GetCondition() &&
          lhs.GetDetail() == rhs.GetDetail();
 }
 
@@ -109,6 +114,14 @@ bool operator<(const PluginCleaningData& lhs, const PluginCleaningData& rhs) {
   }
 
   if (rhs.GetDeletedNavmeshCount() < lhs.GetDeletedNavmeshCount()) {
+    return false;
+  }
+
+  if (lhs.GetCondition() < rhs.GetCondition()) {
+    return true;
+  }
+
+  if (rhs.GetCondition() < lhs.GetCondition()) {
     return false;
   }
 

@@ -317,6 +317,7 @@ impl PluginCleaningData {
         deleted_reference_count: Option<u32>,
         deleted_navmesh_count: Option<u32>,
         detail: Option<Vec<&MessageContent>>,
+        condition: Option<String>,
     ) -> Result<Self, VerboseError> {
         let mut data = libloot::metadata::PluginCleaningData::new(crc, cleaning_utility);
 
@@ -335,6 +336,10 @@ impl PluginCleaningData {
         if let Some(detail) = detail {
             let detail = detail.into_iter().cloned().map(Into::into).collect();
             data = data.with_detail(detail)?;
+        }
+
+        if let Some(condition) = condition {
+            data = data.with_condition(condition);
         }
 
         Ok(Self(data))
@@ -368,6 +373,11 @@ impl PluginCleaningData {
     #[napi(getter)]
     pub fn detail(&self) -> Vec<MessageContent> {
         self.0.detail().iter().cloned().map(Into::into).collect()
+    }
+
+    #[napi(getter)]
+    pub fn condition(&self) -> Option<&str> {
+        self.0.condition()
     }
 }
 
