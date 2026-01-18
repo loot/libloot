@@ -11,7 +11,6 @@ This is the structure that brings all the others together, and forms the main co
 
   Regular expression plugin filenames must be written in a modified `ECMAScript <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions>`_ syntax. Notable differences include:
 
-  - `Modifiers <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Modifier>`_ are not supported.
   - Some ``\p{}`` and ``\P{}`` `Unicode character class escapes <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Unicode_character_class_escape>`_ are not supported.
 
   Regular expression plugin filenames are prefixed with ``^`` and suffixed with ``$`` to ensure they match whole filenames, and are case-insensitive and Unicode-aware (as if they're created with the ``i`` and ``u`` flags).
