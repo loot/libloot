@@ -62,12 +62,6 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.8.9 -> 0.9.0"
 
-[[audits.libloadorder]]
-who = "Oliver Hamlet <git@ortham.net>"
-criteria = "safe-to-deploy"
-version = "18.5.1"
-notes = "This is my own crate published using Trusted Publishing, but I can't mark it as trusted by cargo-vet because it doesn't support Trusted Publishing and just sees that the publisher is unknown."
-
 [[audits.link-cplusplus]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -77,18 +71,6 @@ delta = "1.0.10 -> 1.0.12"
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.4.28 -> 0.4.29"
-
-[[audits.loot-condition-interpreter]]
-who = "Oliver Hamlet <git@ortham.net>"
-criteria = "safe-to-deploy"
-version = "5.3.3"
-notes = "This is my own crate published using Trusted Publishing, but I can't mark it as trusted by cargo-vet because it doesn't support Trusted Publishing and just sees that the publisher is unknown."
-
-[[audits.loot-condition-interpreter]]
-who = "Oliver Hamlet <git@ortham.net>"
-criteria = "safe-to-deploy"
-delta = "5.3.3 -> 5.4.0"
-notes = "This is my own crate published using Trusted Publishing, but I can't mark it as trusted by cargo-vet because it doesn't support Trusted Publishing and just sees that the publisher is unknown."
 
 [[audits.napi]]
 who = "Oliver Hamlet <git@ortham.net>"
@@ -140,6 +122,12 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.4.8 -> 0.4.11"
 
+[[trusted.esplugin]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:Ortham/esplugin"
+start = "2025-09-29"
+end = "2027-01-19"
+
 [[trusted.futures-task]]
 criteria = "safe-to-deploy"
 user-id = 33035 # Taiki Endo (taiki-e)
@@ -160,6 +148,18 @@ user-id = 55123 # rust-lang-owner
 start = "2024-08-15"
 end = "2026-09-28"
 notes = "rust-lang-owner is a bot managed by the Rust language's infrastructure team, and the source repo is owned by the rust-lang GitHub org."
+
+[[trusted.libloadorder]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:Ortham/libloadorder"
+start = "2025-08-01"
+end = "2027-01-19"
+
+[[trusted.loot-condition-interpreter]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:loot/loot-condition-interpreter"
+start = "2025-09-29"
+end = "2027-01-19"
 
 [[trusted.windows-link]]
 criteria = "safe-to-deploy"
