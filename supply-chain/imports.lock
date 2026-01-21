@@ -39,8 +39,8 @@ when = "2025-09-29"
 trusted-publisher = "github:Ortham/libloadorder"
 
 [[publisher.loot-condition-interpreter]]
-version = "5.4.0"
-when = "2026-01-01"
+version = "6.0.0"
+when = "2026-01-21"
 trusted-publisher = "github:loot/loot-condition-interpreter"
 
 [[publisher.unicode-segmentation]]
