@@ -39,6 +39,10 @@ This structure holds information on which versions of a plugin are dirty or clea
 
   The number of deleted navmeshes reported for the dirty plugin. If undefined, defaults to zero.
 
+.. describe:: condition
+
+  A condition string that is evaluated to determine whether this cleaning data should be used: if it evaluates to true, the data is used, otherwise it is ignored. See :doc:`../conditions` for details.
+
 Equality
 --------
 

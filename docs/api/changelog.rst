@@ -8,6 +8,13 @@ Version History
 Added
 -----
 
+- ``PluginCleaningData::with_condition()`` and
+  ``PluginCleaningData::condition()`` for setting and getting the new condition
+  field on plugin cleaning data objects. The C++ wrapper's
+  :cpp:any:`loot::PluginCleaningData` constructor has gained a ``condition``
+  parameter that defaults to an empty string, and
+  :cpp:any:`loot::PluginCleaningData::GetCondition()` can be used to get the
+  value that was passed to the constructor.
 - ``Database::clear_condition_cache()`` clears the cache of metadata
   condition evaluation results, allowing more control over when conditions are
   re-evaluated. As before, loading the current load order state, loading plugins
@@ -100,13 +107,14 @@ Changed
   global/general messages and plugin entries, and at the end of the file. Blank
   lines are also used to separate elements of the ``common`` list if it is
   written.
+- libloot now supports v0.29 of the metadata syntax.
 - Updated cxx and cxx-build to v1.0.192.
 - Updated sphinx_rtd_theme to v3.1.0.
 - Updated dependency versions in Cargo.lock (which sets the versions used by the
   C++ wrapper):
 
   - Updated log to v0.4.29.
-  - Updated loot-condition-interpreter to v5.4.0.
+  - Updated loot-condition-interpreter to v6.0.0.
   - Updated proc-macro2 to v1.0.105.
   - Updated quote to v1.0.43.
   - Updated regress to v0.10.5.

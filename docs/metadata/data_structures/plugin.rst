@@ -9,11 +9,15 @@ This is the structure that brings all the others together, and forms the main co
 
   **Required.** Can be an exact plugin filename or a regular expression plugin filename. If the filename contains any of the characters ``:\*?|``, the string will be treated as a regular expression, otherwise it will be treated as an exact filename. For example, ``Example\.esm`` will be treated as a regular expression, as it contains a ``\`` character.
 
-  Regular expression plugin filenames must be written in a modified `ECMAScript <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions>`_ syntax. Notable differences include:
+  Regular expression plugin filenames are prefixed with ``^`` and suffixed with ``$`` to ensure they match whole filenames, and are case-insensitive and Unicode-aware.
 
-  - Some ``\p{}`` and ``\P{}`` `Unicode character class escapes <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Unicode_character_class_escape>`_ are not supported.
+  .. note::
+    Regular expression plugin filenames are currently expected to be written in a modified `ECMAScript <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions>`_ syntax. Notable differences include:
 
-  Regular expression plugin filenames are prefixed with ``^`` and suffixed with ``$`` to ensure they match whole filenames, and are case-insensitive and Unicode-aware (as if they're created with the ``i`` and ``u`` flags).
+    - Some ``\p{}`` and ``\P{}`` `Unicode character class escapes <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Unicode_character_class_escape>`_ are not supported.
+    - The functionality that is enabled by setting the `v <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/unicodeSets>`_ flag (a.k.a. ``unicodeSets``) is not supported. Instead, the regexes are created as if the ``i`` and ``u`` flags are set.
+
+    The specific syntax and features supported are an implementation detail that may change without changing the masterlist syntax version, so it's best to restrict regexes to the common subset that is supported across several regex flavours and implementations.
 
 .. describe:: group
 
@@ -118,7 +122,7 @@ Examples
     - 'Oblivion.esm'  # Don't do this, Oblivion.esm is a master of Oscuro's_Oblivion_Overhaul.esm, so LOOT already knows it's required.
     - name: 'example.esp'
       display: '[Example Mod](http://www.example.com)'
-      condition: 'version("Oscuro''s_Oblivion_Overhaul.esm", "15.0", ==)'
+      condition: 'version("Oscuro''s_Oblivion_Overhaul.esm", ==, "15.0")'
   tag:
     - Actors.Spells
     - Graphics

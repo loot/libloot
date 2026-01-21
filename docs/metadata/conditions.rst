@@ -41,7 +41,16 @@ Types
 
 .. describe:: regular_expression
 
-  A double-quoted file path, with a regular expression in place of a filename. The path must use ``/`` for directory separators, not ``\``. The regular expression must be written in a `modified Perl <https://docs.rs/regex/1.0.5/regex/index.html#syntax>`_ syntax.
+  A double-quoted regular expression that is case-insensitive and Unicode-aware.
+
+  .. note::
+    The regular expression is currently expected to be written in a `modified Perl <https://docs.rs/regex/1.0.5/regex/index.html#syntax>`_ syntax.
+
+    The specific syntax and features supported are an implementation detail that may change without changing the masterlist syntax version, so it's best to restrict regexes to the common subset that is supported across several regex flavours and implementations.
+
+.. describe:: regular_expression_path
+
+  A double-quoted file path, with a regular expression in place of a filename. The path must use ``/`` for directory separators, not ``\``. The filename regular expression is prefixed with ``^`` and suffixed with ``$`` before evaluation to ensure that it only matches whole filenames.
 
   Only the filename path component will be evaluated as a regular expression. For example, given the regex file path ``Meshes/Resources(1|2)/(upperclass)?table.nif``, LOOT will look for a file named ``table.nif`` or ``upperclasstable.nif`` in the ``Meshes\Resources(1|2)`` folder, rather than looking in the ``Meshes\Resources1`` and ``Meshes\Resources2`` folders.
 
@@ -90,7 +99,7 @@ There are several conditions that can be tested for using the functions detailed
 
   Returns true if ``path`` is installed, and false otherwise.
 
-.. describe:: file(regular_expression regex)
+.. describe:: file(regular_expression_path regex)
 
   Returns true if a file matching ``regex`` is found, and false otherwise.
 
@@ -109,15 +118,15 @@ There are several conditions that can be tested for using the functions detailed
 
   Returns true if ``path`` is an active plugin, and false otherwise.
 
-.. describe:: active(regular_expression regex)
+.. describe:: active(regular_expression_path regex)
 
   Returns true if an active plugin matching ``regex`` is found, and false otherwise.
 
-.. describe:: many(regular_expression regex)
+.. describe:: many(regular_expression_path regex)
 
   Returns true if more than one file matching ``regex`` is found, and false otherwise.
 
-.. describe:: many_active(regular_expression regex)
+.. describe:: many_active(regular_expression_path regex)
 
   Returns true if more than one active plugin matching ``regex`` is found, and false otherwise.
 
@@ -134,7 +143,7 @@ There are several conditions that can be tested for using the functions detailed
 
   Returns true if the calculated CRC-32 checksum of ``path`` matches ``expected_checksum``, and false otherwise. Returns false if ``path`` does not exist.
 
-.. describe:: version(file_path path, version given_version, comparison_operator comparator)
+.. describe:: version(file_path path, comparison_operator comparator, version given_version)
 
   Returns true if the boolean expression::
 
@@ -146,16 +155,20 @@ There are several conditions that can be tested for using the functions detailed
   * If ``path`` is a plugin, its version is read from its description field.
   * If ``path`` is not a plugin, it will be assumed to be an executable (e.g.
     ``*.exe`` or ``*.dll``), and its version is read from its File Version field.
-  * If ``path`` does not exist or does not have a version number, the condition
-    evaluates to true for the ``!=``, ``<`` and ``<=`` comparators, i.e. a
-    missing version is always less than the given version.
+  * If ``path`` does not exist or does not have a version number, the function
+    returns false.
   * If ``path`` is not readable or is not a plugin or an executable, an error
     will occur.
 
   The supported version syntax and precedence rules are detailed in the section
   below.
 
-.. describe:: product_version(file_path path, version given_version, comparison_operator comparator)
+.. describe:: version(file_path path, version given_version, comparison_operator comparator)
+
+  An older, deprecated form of
+  ``version(file_path path, comparison_operator comparator, version given_version)``.
+
+.. describe:: product_version(file_path path, comparison_operator comparator, version given_version)
 
   Returns true if the boolean expression::
 
@@ -165,15 +178,19 @@ There are several conditions that can be tested for using the functions detailed
   false otherwise. ``path`` must be an executable (e.g. ``*.exe`` or ``*.dll``),
   and its version is read from its Product Version field.
 
-  * If ``path`` does not exist or does not have a version number, the condition
-    evaluates to true for the ``!=``, ``<`` and ``<=`` comparators, i.e. a
-    missing version is always less than the given version.
+  * If ``path`` does not exist or does not have a version number, the function
+    returns false.
   * If ``path`` is not a readable executable, an error will occur.
 
   The supported version syntax and precedence rules are detailed in the section
   below.
 
-.. describe:: filename_version(regular_expression path, version given_version, comparison_operator comparator)
+.. describe:: product_version(file_path path, version given_version, comparison_operator comparator)
+
+  An older, deprecated form of
+  ``product_version(file_path path, comparison_operator comparator, version given_version)``.
+
+.. describe:: filename_version(regular_expression_path path, comparison_operator comparator, version given_version)
 
   The regex in ``path`` must contain a single capturing group.
 
@@ -185,9 +202,17 @@ There are several conditions that can be tested for using the functions detailed
   (where ``actual_version`` is the value captured by the regex) holds true, and
   false otherwise.
 
-  Unlike the other version functions, it always returns false if it cannot find
-  a version to compare against the given version, irrespective of the given
-  comparison operator.
+  If the contents of the parent directory of the filename component of ``path``
+  can't be read, an error will occur.
+
+  If the function can't find a version to compare against the given file path
+  (e.g. because there is no matching filename in the parent path), it always
+  returns false.
+
+.. describe:: filename_version(regular_expression_path path, version given_version, comparison_operator comparator)
+
+  An older, deprecated form of
+  ``filename_version(regular_expression_path path, comparison_operator comparator, version given_version)``.
 
 .. describe:: description_contains(file_path path, regular_expression regex)
 

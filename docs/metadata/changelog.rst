@@ -4,6 +4,45 @@ Version History
 
 The version history of the metadata syntax is given below.
 
+0.29 - Unreleased
+=================
+
+Added
+-----
+
+- The cleaning data structure now has an optional ``condition`` key that takes a
+  condition string that must evaluate to true for the cleaning data to be
+  considered relevant.
+- When supplying parameters for version condition functions, the comparator and
+  version string can now be swapped for readability, e.g.
+  ``version("example.esp", ==, "1.0.0")``,
+  ``product_version("example.exe", ==, "1.0.0")`` and
+  ``filename_version("example (.+).esp", ==, "1.0.0")``.
+
+  The new ordering of the parameters should be preferred, and the existing order
+  (file path, version string then comparator) is deprecated and may be removed
+  in a future version of the metadata syntax.
+
+Fixed
+-----
+
+- The documentation described the ``description_contains()`` condition
+  function's regex parameter in the same way as the regex file paths accepted by
+  some other functions, when it's actually a relatively arbitrary regex that
+  may match a substring of a plugin's description field.
+
+Changed
+-------
+
+- When evaluating ``version()`` and ``product_version()`` conditions and no
+  version could be read from the given file path (e.g. because the file does not
+  exist), the function now always evaluates to false. Previously it would
+  evaluate to true when the comparator was ``<``, ``<=`` or ``!=``, and false
+  otherwise.
+- Plugin metadata name regexes now support modifiers.
+- The specific regex syntax and features supported are now explicitly decoupled
+  from metadata syntax versioning, so they can change independently.
+
 0.26 - 2025-04-19
 =================
 

@@ -55,5 +55,5 @@ Scalar form::
 Map form::
 
   name: '../obse_loader.exe'
-  condition: 'version("../obse_loader.exe", "0.0.18.0", >=)'
+  condition: 'version("../obse_loader.exe", >=, "0.0.18.0")'
   display: 'OBSE v18+'
