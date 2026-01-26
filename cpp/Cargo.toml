@@ -8,7 +8,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-cxx = { version = "1.0.192", features = ["c++17"] }
+cxx = { version = "1.0.194", features = ["c++17"] }
 delegate = ">= 0.5.1, < 0.14"
 libloot = { path = ".." }
 libloot-ffi-errors = { path = "../ffi-errors" }
