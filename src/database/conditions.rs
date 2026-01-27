@@ -194,4 +194,31 @@ mod tests {
             assert!(evaluate_all_conditions(plugin, &state).unwrap().is_none());
         }
     }
+
+    mod evaluate_condition {
+        use crate::tests::source_plugins_path;
+
+        use super::*;
+
+        #[test]
+        fn should_support_version_with_comparator_as_second_parameter() {
+            let mut state = loot_condition_interpreter::State::new(
+                loot_condition_interpreter::GameType::Oblivion,
+                source_plugins_path(crate::GameType::Oblivion),
+            );
+            state.set_plugin_versions(&[("Blank.esp", "1.0.0")]);
+
+            assert!(evaluate_condition("version(\"Blank.esp\", ==, \"1.0.0\")", &state).unwrap());
+        }
+
+        #[test]
+        fn should_eval_less_than_missing_version_as_false() {
+            let state = loot_condition_interpreter::State::new(
+                loot_condition_interpreter::GameType::Oblivion,
+                source_plugins_path(crate::GameType::Oblivion),
+            );
+
+            assert!(!evaluate_condition("version(\"example.esp\", \"1.0.0\", <)", &state).unwrap());
+        }
+    }
 }

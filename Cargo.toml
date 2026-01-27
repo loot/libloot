@@ -12,7 +12,7 @@ crc32fast = "1"
 esplugin = "6.1"
 libloadorder = "18.5"
 log = { version = "0.4.6", features = ["std"] }
-loot-condition-interpreter = ">= 5, < 7"
+loot-condition-interpreter = "6"
 petgraph = ">= 0.6, < 0.9"
 rayon = "1"
 regress = "0.10.5"
