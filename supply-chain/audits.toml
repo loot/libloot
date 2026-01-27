@@ -112,6 +112,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "3.0.0 -> 3.2.1"
 
+[[audits.proc-macro2]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.105 -> 1.0.106"
+
 [[audits.regress]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
