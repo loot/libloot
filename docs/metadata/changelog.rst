@@ -39,7 +39,6 @@ Changed
   exist), the function now always evaluates to false. Previously it would
   evaluate to true when the comparator was ``<``, ``<=`` or ``!=``, and false
   otherwise.
-- Plugin metadata name regexes now support modifiers.
 - The specific regex syntax and features supported are now explicitly decoupled
   from metadata syntax versioning, so they can change independently.
 

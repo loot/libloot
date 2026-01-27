@@ -36,6 +36,7 @@ Added
   deduplicate certain metadata values. The behaviour is configurable using the
   new ``MetadataWriteOptions`` struct (or class, in the C++ wrapper), and is
   disabled by default.
+- Support for modifiers in plugin metadata name regexes.
 
 Fixed
 -----
