@@ -68,6 +68,8 @@ set(LIBLOOT_INTERFACE_TESTS_ALL_SOURCES
 
 if(MSVC)
     list(APPEND LIBLOOT_INTERFACE_TESTS_ALL_SOURCES "${PROJECT_SOURCE_DIR}/src/tests/libloot_tests.manifest")
+elseif(MINGW)
+    list(APPEND LIBLOOT_INTERFACE_TESTS_ALL_SOURCES "${PROJECT_SOURCE_DIR}/src/tests/resource.rc")
 endif()
 
 ##############################
