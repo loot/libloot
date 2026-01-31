@@ -1,0 +1,9 @@
+{
+  "name": "libloot (Linux, MinGW cross-compile)",
+  "build": {
+    "dockerfile": "./Dockerfile"
+  },
+  "runArgs": [
+    "--userns=keep-id",
+  ],
+}
