@@ -29,12 +29,12 @@ To build a debug build, pass `Debug` instead of `RelWithDebInfo`.
 
 The following CMake variables can be used to configure the build:
 
-Parameter | Values | Default |Description
-----------|--------|---------|-----------
-`LIBLOOT_BUILD_SHARED` | `ON`, `OFF` | `ON` | Whether or not to build a shared libloot binary.
-`LIBLOOT_BUILD_TESTS` | `ON`, `OFF` | `ON` | Whether or not to build libloot's tests.
-`LIBLOOT_INSTALL_DOCS` | `ON`, `OFF` | `ON` | Whether or not to install libloot's docs (which need to be built separately).
-`RUN_CLANG_TIDY` | `ON`, `OFF` | `OFF` | Whether or not to run clang-tidy during build. Has no effect when using CMake's Visual Studio generator.
+| Parameter              | Values      | Default | Description                                                                                              |
+|------------------------|-------------|---------|----------------------------------------------------------------------------------------------------------|
+| `LIBLOOT_BUILD_SHARED` | `ON`, `OFF` | `ON`    | Whether or not to build a shared libloot binary.                                                         |
+| `LIBLOOT_BUILD_TESTS`  | `ON`, `OFF` | `ON`    | Whether or not to build libloot's tests.                                                                 |
+| `LIBLOOT_INSTALL_DOCS` | `ON`, `OFF` | `ON`    | Whether or not to install libloot's docs (which need to be built separately).                            |
+| `RUN_CLANG_TIDY`       | `ON`, `OFF` | `OFF`   | Whether or not to run clang-tidy during build. Has no effect when using CMake's Visual Studio generator. |
 
 An example of using libloot with CMake's FetchContent:
 
