@@ -32,7 +32,7 @@ along with LOOT.  If not, see
 #include "loot/enum/game_type.h"
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 namespace loot::test {
