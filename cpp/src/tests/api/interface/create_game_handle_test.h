@@ -32,6 +32,53 @@ along with LOOT.  If not, see
 
 namespace loot {
 namespace test {
+inline std::string replace(std::string_view str,
+                           std::string_view from,
+                           std::string_view to) {
+  std::string out;
+  out.reserve(str.size());
+
+  size_t startPos = 0;
+  auto findPos = str.find(from, startPos);
+  while (findPos != std::string_view::npos) {
+    out.append(str.substr(startPos, findPos - startPos));
+    out.append(to);
+
+    startPos = findPos + from.size();
+    findPos = str.find(from, startPos);
+  }
+
+  out.append(str.substr(startPos));
+
+  return out;
+}
+
+// This is limited to supporting only the UTF-8 strings that are expected to be
+// passed in.
+inline std::string utf8ToWindows1252(std::string_view str) {
+  return replace(str, "\xC3\xA9", "\xE9");
+}
+
+#ifdef _WIN32
+inline void makeJunctionLink(const std::filesystem::path &linkPath,
+                             const std::filesystem::path &targetPath) {
+#ifdef __MINGW64__
+  const auto linkPathString =
+      utf8ToWindows1252(std::filesystem::absolute(linkPath).string());
+  const auto targetPathString =
+      utf8ToWindows1252(std::filesystem::absolute(targetPath).string());
+#else
+  const auto linkPathString = std::filesystem::absolute(linkPath).string();
+  const auto targetPathString = std::filesystem::absolute(targetPath).string();
+#endif
+
+  const auto command =
+      "mklink /J \"" + linkPathString + "\" \"" + targetPathString + "\"";
+
+  system(command.c_str());
+}
+#endif
+
 class CreateGameHandleTest : public CommonGameTestFixture,
                              public testing::WithParamInterface<GameType> {
 protected:
@@ -99,6 +146,13 @@ TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedAnEmptyLocalPathString) {
 #endif
 
 TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathSymlinks) {
+#ifdef __MINGW64__
+  GTEST_SKIP()
+      << "This test fails when built with MinGW and run in Wine 11.0 or on "
+         "Windows, due to a C++ exception with description \"filesystem error: "
+         "cannot create directory symlink: Function not implemented\"";
+#endif
+
   const auto gamePathSymlink =
       std::filesystem::u8path(gamePath.u8string() + ".symlink");
   const auto localPathSymlink =
@@ -125,14 +179,8 @@ TEST_P(CreateGameHandleTest,
   const auto localPathJunctionLink =
       std::filesystem::u8path(localPath.u8string() + ".junction");
 
-  system(("mklink /J \"" +
-          std::filesystem::absolute(gamePathJunctionLink).string() + "\" \"" +
-          std::filesystem::absolute(dataPath).parent_path().string() + "\"")
-             .c_str());
-  system(("mklink /J \"" +
-          std::filesystem::absolute(localPathJunctionLink).string() + "\" \"" +
-          std::filesystem::absolute(localPath).string() + "\"")
-             .c_str());
+  makeJunctionLink(gamePathJunctionLink, dataPath.parent_path());
+  makeJunctionLink(localPathJunctionLink, localPath);
 
   EXPECT_NO_THROW(handle_ = CreateGameHandle(
                       GetParam(), gamePathJunctionLink, localPathJunctionLink));

@@ -25,6 +25,13 @@ cmake -B build . -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build --parallel
 ```
 
+To cross-compile on Linux for Windows:
+
+```
+cmake -B build . -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake
+cmake --build build --parallel
+```
+
 To build a debug build, pass `Debug` instead of `RelWithDebInfo`.
 
 The following CMake variables can be used to configure the build:

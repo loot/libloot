@@ -970,6 +970,10 @@ mod tests {
             }
 
             #[test]
+            #[cfg_attr(
+                all(windows, target_env = "gnu"),
+                ignore = "Cannot resolve the symlink's long path when run in Wine"
+            )]
             fn should_succeed_if_given_a_symlink_path() {
                 let fixture = Fixture::without_long_paths(GameType::Morrowind);
 
@@ -985,6 +989,10 @@ mod tests {
 
             #[cfg(windows)]
             #[test]
+            #[cfg_attr(
+                all(windows, target_env = "gnu"),
+                ignore = "Creating the junction link causes a page fault exception when run in Wine"
+            )]
             fn should_succeed_if_given_a_junction_link_path() {
                 let fixture = Fixture::new(GameType::Morrowind);
 
@@ -1054,6 +1062,10 @@ mod tests {
             }
 
             #[test]
+            #[cfg_attr(
+                all(windows, target_env = "gnu"),
+                ignore = "Cannot resolve the symlink's long path when run in Wine"
+            )]
             fn should_succeed_if_given_symlink_paths() {
                 let fixture = Fixture::without_long_paths(GameType::Oblivion);
 
@@ -1080,6 +1092,10 @@ mod tests {
 
             #[cfg(windows)]
             #[test]
+            #[cfg_attr(
+                all(windows, target_env = "gnu"),
+                ignore = "Creating the junction link causes a page fault exception when run in Wine"
+            )]
             fn should_succeed_if_given_junction_link_paths() {
                 let fixture = Fixture::new(GameType::Oblivion);
 

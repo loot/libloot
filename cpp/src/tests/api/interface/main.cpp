@@ -27,6 +27,10 @@
 #include <filesystem>
 
 #include "loot/api.h"
+#include "tests/api/interface/create_game_handle_test.h"
+#include "tests/api/interface/database_interface_test.h"
+#include "tests/api/interface/game_interface_test.h"
+#include "tests/api/interface/is_compatible_test.h"
 #include "tests/api/interface/metadata/file_test.h"
 #include "tests/api/interface/metadata/group_test.h"
 #include "tests/api/interface/metadata/location_test.h"
@@ -35,10 +39,6 @@
 #include "tests/api/interface/metadata/plugin_cleaning_data_test.h"
 #include "tests/api/interface/metadata/plugin_metadata_test.h"
 #include "tests/api/interface/metadata/tag_test.h"
-#include "tests/api/interface/create_game_handle_test.h"
-#include "tests/api/interface/database_interface_test.h"
-#include "tests/api/interface/game_interface_test.h"
-#include "tests/api/interface/is_compatible_test.h"
 #include "tests/api/interface/plugin_interface_test.h"
 
 int main(int argc, char **argv) {
@@ -57,9 +57,15 @@ TEST(Filesystem,
 
   std::filesystem::path path(utf8);
 
+#ifdef __MINGW64__
+  EXPECT_EQ(utf8, path.string());
+  EXPECT_EQ(utf8, path.u8string());
+  EXPECT_EQ(utf16, path.u16string());
+#else
   EXPECT_EQ(utf8, path.string());
   EXPECT_NE(utf8, path.u8string());
   EXPECT_NE(utf16, path.u16string());
+#endif
 }
 
 TEST(
@@ -73,7 +79,12 @@ TEST(
 
   std::filesystem::path path(utf8, std::locale::classic());
 
+#ifdef __MINGW64__
+  // The string is double-encoded as UTF-8.
+  EXPECT_EQ(u8"Andr\xC3\x83\xC2\xA9_settings.toml", path.string());
+#else
   EXPECT_EQ(utf8, path.string());
+#endif
 
   EXPECT_NE(utf8, path.u8string());
   EXPECT_NE(utf16, path.u16string());
@@ -103,7 +114,7 @@ TEST(Filesystem, u8pathConvertsCharacterEncodingFromUtf8ToNative) {
 
   std::filesystem::path path = std::filesystem::u8path(utf8);
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW64__)
   EXPECT_NE(utf8, path.string());
 #else
   EXPECT_EQ(utf8, path.string());
@@ -114,8 +125,14 @@ TEST(Filesystem, u8pathConvertsCharacterEncodingFromUtf8ToNative) {
 }
 
 #ifdef _WIN32
-TEST(WindowsRegistry, hasLongPathsEnabled) { 
-    EXPECT_TRUE(loot::test::windowsHasLongPathsEnabled());
+TEST(WindowsRegistry, hasLongPathsEnabled) {
+#ifdef __MINGW64__
+  // MinGW does not support long paths, most tests will fail if they're
+  // enabled.
+  EXPECT_FALSE(loot::test::windowsHasLongPathsEnabled());
+#else
+  EXPECT_TRUE(loot::test::windowsHasLongPathsEnabled());
+#endif
 }
 #endif
 
