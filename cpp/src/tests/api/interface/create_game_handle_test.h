@@ -38,38 +38,7 @@ protected:
   CreateGameHandleTest() :
       CommonGameTestFixture(GetParam()),
       handle_(nullptr),
-      gamePathSymlink(gamePath.string() + ".symlink"),
-      localPathSymlink(localPath.string() + ".symlink"),
-      gamePathJunctionLink(gamePath.string() + ".junction"),
-      localPathJunctionLink(localPath.string() + ".junction"),
       originalWorkingDirectory(std::filesystem::current_path()) {}
-
-  void SetUp() override {
-    using std::filesystem::file_type;
-    using std::filesystem::status;
-    CommonGameTestFixture::SetUp();
-
-    std::filesystem::create_directory_symlink(gamePath, gamePathSymlink);
-    ASSERT_EQ(file_type::directory, status(gamePathSymlink).type());
-
-    std::filesystem::create_directory_symlink(localPath, localPathSymlink);
-    ASSERT_EQ(file_type::directory, status(localPathSymlink).type());
-
-#ifdef _WIN32
-    system(("mklink /J \"" +
-            std::filesystem::absolute(gamePathJunctionLink).string() + "\" \"" +
-            std::filesystem::absolute(dataPath).parent_path().string() + "\"")
-               .c_str());
-    system(("mklink /J \"" +
-            std::filesystem::absolute(localPathJunctionLink).string() +
-            "\" \"" + std::filesystem::absolute(localPath).string() + "\"")
-               .c_str());
-#endif
-
-    // relative() doesn't work when the current working directory and the given
-    // path are on separate drives, so ensure that's not the case.
-    std::filesystem::current_path(gamePath.parent_path());
-  }
 
   void TearDown() override {
     std::filesystem::current_path(originalWorkingDirectory);
@@ -77,11 +46,8 @@ protected:
 
   std::unique_ptr<GameInterface> handle_;
 
-  const std::filesystem::path gamePathSymlink;
-  const std::filesystem::path localPathSymlink;
-  const std::filesystem::path gamePathJunctionLink;
-  const std::filesystem::path localPathJunctionLink;
-  const std::filesystem::path originalWorkingDirectory;
+private:
+  std::filesystem::path originalWorkingDirectory;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -93,6 +59,11 @@ INSTANTIATE_TEST_SUITE_P(,
 TEST_P(CreateGameHandleTest,
        shouldSucceedIfPassedValidParametersWithRelativePaths) {
   using std::filesystem::relative;
+
+  // relative() doesn't work when the current working directory and the given
+  // path are on separate drives, so ensure that's not the case.
+  std::filesystem::current_path(gamePath.parent_path());
+
   EXPECT_NO_THROW(handle_ = CreateGameHandle(
                       GetParam(), relative(gamePath), relative(localPath)));
   EXPECT_TRUE(handle_);
@@ -128,6 +99,19 @@ TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedAnEmptyLocalPathString) {
 #endif
 
 TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathSymlinks) {
+  const auto gamePathSymlink =
+      std::filesystem::u8path(gamePath.u8string() + ".symlink");
+  const auto localPathSymlink =
+      std::filesystem::u8path(localPath.u8string() + ".symlink");
+
+  std::filesystem::create_directory_symlink(gamePath, gamePathSymlink);
+  ASSERT_EQ(std::filesystem::file_type::directory,
+            std::filesystem::status(gamePathSymlink).type());
+
+  std::filesystem::create_directory_symlink(localPath, localPathSymlink);
+  ASSERT_EQ(std::filesystem::file_type::directory,
+            std::filesystem::status(localPathSymlink).type());
+
   EXPECT_NO_THROW(handle_ = CreateGameHandle(
                       GetParam(), gamePathSymlink, localPathSymlink));
   EXPECT_TRUE(handle_);
@@ -136,6 +120,20 @@ TEST_P(CreateGameHandleTest, shouldReturnOkIfPassedGameAndLocalPathSymlinks) {
 #ifdef _WIN32
 TEST_P(CreateGameHandleTest,
        shouldReturnOkIfPassedGameAndLocalPathJunctionLinks) {
+  const auto gamePathJunctionLink =
+      std::filesystem::u8path(gamePath.u8string() + ".junction");
+  const auto localPathJunctionLink =
+      std::filesystem::u8path(localPath.u8string() + ".junction");
+
+  system(("mklink /J \"" +
+          std::filesystem::absolute(gamePathJunctionLink).string() + "\" \"" +
+          std::filesystem::absolute(dataPath).parent_path().string() + "\"")
+             .c_str());
+  system(("mklink /J \"" +
+          std::filesystem::absolute(localPathJunctionLink).string() + "\" \"" +
+          std::filesystem::absolute(localPath).string() + "\"")
+             .c_str());
+
   EXPECT_NO_THROW(handle_ = CreateGameHandle(
                       GetParam(), gamePathJunctionLink, localPathJunctionLink));
   EXPECT_TRUE(handle_);
@@ -154,19 +152,16 @@ TEST_P(
   }
 }
 #else
-TEST_P(CreateGameHandleTest,
-       shouldNotThrowOnWindowsIfLocalPathIsNotGiven) {
+TEST_P(CreateGameHandleTest, shouldNotThrowOnWindowsIfLocalPathIsNotGiven) {
   EXPECT_NO_THROW(CreateGameHandle(GetParam(), gamePath));
 }
 #endif
 
-TEST_P(CreateGameHandleTest,
-       shouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
+TEST_P(CreateGameHandleTest, shouldNotThrowIfGameAndLocalPathsAreNotEmpty) {
   EXPECT_NO_THROW(CreateGameHandle(GetParam(), gamePath, localPath));
 }
 
-TEST_P(
-    CreateGameHandleTest,
+TEST_P(CreateGameHandleTest,
        shouldSetAdditionalDataPathsForFallout4FromMicrosoftStoreOrStarfield) {
   if (GetParam() == GameType::fo4) {
     // Create the file that indicates it's a Microsoft Store install.
@@ -201,7 +196,7 @@ TEST_P(
     const auto expectedSuffix = std::filesystem::u8path("Documents") /
                                 "My Games" / "Starfield" / "Data";
     EXPECT_TRUE(endsWith(game->GetAdditionalDataPaths()[0].u8string(),
-                                 expectedSuffix.u8string()));
+                         expectedSuffix.u8string()));
   } else if (GetParam() == GameType::openmw) {
     EXPECT_EQ(std::vector<std::filesystem::path>{localPath / "data"},
               game->GetAdditionalDataPaths());
