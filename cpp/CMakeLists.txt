@@ -69,6 +69,10 @@ target_link_libraries(libloot_cpp INTERFACE
     debug "${TARGET_PATH}/debug/${LIBLOOT_CPP_FILENAME}")
 target_include_directories(libloot_cpp INTERFACE "${TARGET_PATH}/cxxbridge")
 
+if(WIN32)
+    target_link_libraries(libloot_cpp INTERFACE ntdll ws2_32 bcrypt)
+endif()
+
 
 ##############################
 # General Settings
@@ -186,10 +190,6 @@ set_target_properties(libloot PROPERTIES
 
 if(WIN32)
     target_compile_definitions(libloot PRIVATE UNICODE _UNICODE LOOT_EXPORT)
-
-    set(LOOT_LIBS ntdll ws2_32 bcrypt)
-
-    target_link_libraries(libloot PRIVATE ${LOOT_LIBS})
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

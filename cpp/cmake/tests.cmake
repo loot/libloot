@@ -99,8 +99,6 @@ if(WIN32)
     if((NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows") OR NOT LIBLOOT_BUILD_SHARED)
         target_compile_definitions(libloot_tests PRIVATE LOOT_STATIC)
     endif()
-
-    target_link_libraries(libloot_tests PRIVATE ${LOOT_LIBS})
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
