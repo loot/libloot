@@ -846,8 +846,6 @@ mod tests {
 
         use super::*;
 
-        const MAX_PATH_COMPONENT: usize = 255;
-
         #[cfg(windows)]
         fn symlink_dir(original: &Path, link: &Path) {
             std::os::windows::fs::symlink_dir(original, link).unwrap();
@@ -926,6 +924,8 @@ mod tests {
         }
 
         mod new {
+            use crate::tests::MAX_PATH_COMPONENT_LENGTH;
+
             use super::*;
 
             #[cfg(windows)]
@@ -973,7 +973,9 @@ mod tests {
             fn should_succeed_if_given_a_symlink_path() {
                 let fixture = Fixture::without_long_paths(GameType::Morrowind);
 
-                let symlink_game_path = fixture.root_path().join("a".repeat(MAX_PATH_COMPONENT));
+                let symlink_game_path = fixture
+                    .root_path()
+                    .join("a".repeat(MAX_PATH_COMPONENT_LENGTH));
 
                 symlink_dir(&fixture.game_path, &symlink_game_path);
                 assert!(symlink_game_path.is_symlink());
@@ -1003,6 +1005,8 @@ mod tests {
         }
 
         mod with_local_path {
+            use crate::tests::MAX_PATH_COMPONENT_LENGTH;
+
             use super::*;
 
             #[parameterized_test(ALL_GAME_TYPES)]
@@ -1053,11 +1057,15 @@ mod tests {
             fn should_succeed_if_given_symlink_paths() {
                 let fixture = Fixture::without_long_paths(GameType::Oblivion);
 
-                let symlink_game_path = fixture.root_path().join("a".repeat(MAX_PATH_COMPONENT));
+                let symlink_game_path = fixture
+                    .root_path()
+                    .join("a".repeat(MAX_PATH_COMPONENT_LENGTH));
                 symlink_dir(&fixture.game_path, &symlink_game_path);
                 assert!(symlink_game_path.is_symlink());
 
-                let symlink_local_path = fixture.root_path().join("b".repeat(MAX_PATH_COMPONENT));
+                let symlink_local_path = fixture
+                    .root_path()
+                    .join("b".repeat(MAX_PATH_COMPONENT_LENGTH));
                 symlink_dir(&fixture.local_path, &symlink_local_path);
                 assert!(symlink_local_path.is_symlink());
 

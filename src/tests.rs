@@ -26,6 +26,8 @@ pub(crate) const BLANK_ESL: &str = "Blank.esl";
 pub(crate) const NON_PLUGIN_FILE: &str = "NotAPlugin.esm";
 pub(crate) const NON_ASCII_ESM: &str = "non\u{00C1}scii.esm";
 
+pub(crate) const MAX_PATH_COMPONENT_LENGTH: usize = 255;
+
 pub(crate) fn source_plugins_path(game_type: GameType) -> PathBuf {
     match game_type {
         GameType::Morrowind | GameType::OpenMW => {
@@ -283,7 +285,7 @@ impl Fixture {
 
     fn with_tempdir(game_type: GameType, temp_dir: TempDir, use_long_path: bool) -> Self {
         let base_path = if use_long_path {
-            temp_dir.path().join("a".repeat(255))
+            temp_dir.path().join("a".repeat(MAX_PATH_COMPONENT_LENGTH))
         } else {
             temp_dir.path().to_path_buf()
         };
