@@ -28,8 +28,8 @@ user-login = "taiki-e"
 user-name = "Taiki Endo"
 
 [[publisher.libc]]
-version = "0.2.171"
-when = "2025-03-11"
+version = "0.2.182"
+when = "2026-02-13"
 user-id = 55123
 user-login = "rust-lang-owner"
 
@@ -238,6 +238,12 @@ who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
 delta = "3.20.0 -> 3.21.0"
 notes = "Only minor manifest/CI changes."
+
+[[audits.bytecode-alliance.audits.tempfile]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "3.21.0 -> 3.23.0"
+notes = "Doc/test/platform updates, nothing out of the ordinary."
 
 [[audits.bytecode-alliance.audits.unicase]]
 who = "Alex Crichton <alex@alexcrichton.com>"
@@ -1094,6 +1100,12 @@ criteria = "safe-to-deploy"
 delta = "0.21.1 -> 0.21.3"
 aggregated-from = "https://raw.githubusercontent.com/Ortham/libloadorder/refs/heads/master/supply-chain/audits.toml"
 
+[[audits.ortham.audits.rustix]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-run"
+delta = "1.1.2 -> 1.1.3"
+aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/master/supply-chain/audits.toml"
+
 [[audits.ortham.audits.syn]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -1114,9 +1126,8 @@ aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/
 
 [[audits.ortham.audits.tempfile]]
 who = "Oliver Hamlet <git@ortham.net>"
-criteria = "safe-to-deploy"
-delta = "3.21.0 -> 3.22.0"
-notes = "The only significant change is updating its maximum accepted version of the windows-sys dependency to allow v0.61.x."
+criteria = "safe-to-run"
+delta = "3.23.0 -> 3.25.0"
 aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/master/supply-chain/audits.toml"
 
 [[audits.ortham.audits.unicase]]
