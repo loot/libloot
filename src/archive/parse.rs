@@ -9,7 +9,6 @@ use super::error::{ArchiveParsingError, ArchivePathParsingError};
 use crate::{
     escape_ascii,
     logging::{self, format_details},
-    plugin::has_ascii_extension,
 };
 
 use super::{ba2, bsa};
@@ -35,39 +34,21 @@ pub(crate) fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTr
             }
         };
 
-        let warn_on_hash_collisions = should_warn_on_hash_collisions(archive_path);
-
-        for (folder_hash, file_hashes) in assets {
-            let entry_file_hashes = archive_assets.entry(folder_hash).or_default();
-
-            for file_hash in file_hashes {
-                if !entry_file_hashes.insert(file_hash) && warn_on_hash_collisions {
-                    logging::warn!(
-                        "The folder and file with hashes {:x} and {:x} in \"{}\" are present in another Bethesda archive.",
-                        folder_hash,
-                        file_hash,
-                        escape_ascii(archive_path)
-                    );
-                }
-            }
+        // If two archives contain the same combination of folder hash and file
+        // hash, they will be deduplicated. Since each asset is only identified
+        // by a hash pair, collisions are possible, but since BSAs don't
+        // necessarily contain asset file paths, it's not necessarily possible
+        // to tell if a collision is for two different file paths or not, and
+        // logging all collisions is too noisy.
+        for (folder_hash, mut file_hashes) in assets {
+            archive_assets
+                .entry(folder_hash)
+                .or_default()
+                .append(&mut file_hashes);
         }
     }
 
     archive_assets
-}
-
-fn should_warn_on_hash_collisions(archive_path: &Path) -> bool {
-    if !has_ascii_extension(archive_path, "ba2") {
-        return true;
-    }
-
-    let filename = archive_path
-        .file_name()
-        .unwrap_or_default()
-        .to_string_lossy()
-        .to_ascii_lowercase();
-
-    filename.starts_with("fallout4 - ") || filename.starts_with("dlcultrahighresolution - ")
 }
 
 fn get_assets_in_archive(

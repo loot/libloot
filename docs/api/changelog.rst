@@ -2,6 +2,17 @@
 Version History
 ***************
 
+0.29.1 - Unreleased
+===================
+
+Removed
+-------
+
+- A warning is no longer logged when two archive files loaded by the same
+  plugin both appear to contain the same asset file path. The removed log
+  message had the format ``The folder and file with hashes <folder hash> and
+  <file hash> in "<archive path>" are present in another Bethesda archive.``.
+
 0.29.0 - 2026-02-04
 ===================
 
