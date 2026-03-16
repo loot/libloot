@@ -117,12 +117,6 @@ criteria = "safe-to-deploy"
 version = "0.0.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.errno]]
-version = "0.3.14"
-criteria = "safe-to-run"
-suggest = false
-notes = "At time of review this was only built if targeting WASI, which is not an intended target."
-
 [[exemptions.fixedbitset]]
 version = "0.5.7"
 criteria = "safe-to-deploy"
@@ -227,10 +221,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.portable-atomic]]
 version = "1.11.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.proc-macro2]]
-version = "1.0.101"
 criteria = "safe-to-deploy"
 
 [[exemptions.pyo3]]
