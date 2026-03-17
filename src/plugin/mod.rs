@@ -291,7 +291,7 @@ pub(crate) fn validate_plugin_path_and_header(
         Ok(())
     } else if !has_plugin_file_extension(game_type, plugin_path) {
         logging::debug!(
-            "The file \"{}\" is not a valid plugin",
+            "The file \"{}\" is not a valid plugin, as it has an unsupported file extension",
             escape_ascii(plugin_path)
         );
         Err(PluginValidationError::invalid(
@@ -303,7 +303,7 @@ pub(crate) fn validate_plugin_path_and_header(
         Ok(())
     } else {
         logging::debug!(
-            "The file \"{}\" is not a valid plugin",
+            "The file \"{}\" is not a valid plugin, as it has an invalid header",
             escape_ascii(plugin_path)
         );
         Err(PluginValidationError::new(
