@@ -686,17 +686,21 @@ fn try_load_plugin(
 ) -> Option<Plugin> {
     let resolved_path = resolve_plugin_path(game_type, data_path, plugin_path);
 
-    match Plugin::new(game_type, game_cache, &resolved_path, load_scope) {
-        Ok(p) => Some(p),
-        Err(e) => {
+    Plugin::new(game_type, game_cache, &resolved_path, load_scope)
+        .inspect(|_| {
+            logging::debug!(
+                "Successfully loaded the plugin at \"{}\"",
+                escape_ascii(plugin_path)
+            );
+        })
+        .inspect_err(|e| {
             logging::error!(
                 "Caught error while trying to load \"{}\": {}",
                 escape_ascii(plugin_path),
                 format_details(&e)
             );
-            None
-        }
-    }
+        })
+        .ok()
 }
 
 fn resolve_plugin_path(game_type: GameType, data_path: &Path, plugin_path: &Path) -> PathBuf {
