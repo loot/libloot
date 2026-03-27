@@ -2,6 +2,44 @@
 Version History
 ***************
 
+0.29.2 - 2026-03-27
+===================
+
+Added
+-----
+
+- Support for recognising when Starfield BlueprintShips plugins are implicitly
+  active.
+
+  Starfield treats a plugin named BlueprintShips-X.esm (where X can be anything)
+  as active even if it is not listed as active in plugins.txt (or not listed in
+  plugins.txt at all), so long as there is an active plugin named X.esm, X.esp
+  or X.esl. I.e. activating X.esm will also activate BlueprintShips-X.esm if it
+  exists.
+
+  libloot will account for this behaviour when reading the load order. When it
+  sets the load order, it will include the implicitly-active BlueprintShips
+  plugins in ``plugins.txt``, making them explicitly active until after the next
+  time Starfield starts. Via libloadorder.
+- Support for persisting blueprint master load order across Starfield starts.
+
+  When libloot sets the load order, it will now set the modification timestamps
+  of blueprint masters to match the load order that it writes to
+  ``plugins.txt``. When Starfield next starts, it will use the order in
+  ``plugins.txt`` and then remove the blueprint masters from ``plugins.txt``.
+  Subsequent Starfield starts will then load any implicitly active blueprint
+  masters in order of their modification timestamps. Via libloadorder.
+
+Changed
+-------
+
+- Updated libloadorder to v18.6.0.
+- Updated the accepted regress version range to include v0.11.x.
+- Updated dependency versions in Cargo.lock (which sets the versions used by the
+  C++ wrapper):
+
+  - Updated regress to v0.11.0.
+
 0.29.1 - 2026-03-13
 ===================
 
