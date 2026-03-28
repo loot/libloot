@@ -4,6 +4,8 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
+  cooldown:
+    default-days: 7
 
 - package-ecosystem: uv
   directories:
@@ -11,11 +13,15 @@ updates:
     - /python
   schedule:
     interval: weekly
+  cooldown:
+    default-days: 7
 
 - package-ecosystem: npm
   directory: /nodejs
   schedule:
     interval: weekly
+  cooldown:
+    default-days: 7
 
 - package-ecosystem: github-actions
   directory: "/"
