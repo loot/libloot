@@ -6,6 +6,7 @@ version.workspace = true
 repository.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 crc32fast = "1"
@@ -43,6 +44,7 @@ repository = "https://github.com/loot/libloot.git"
 edition = "2024"
 license = "GPL-3.0-or-later"
 categories = ["games"]
+rust-version = "1.89"
 
 # Deny some rustc lints that are allow-by-default.
 [workspace.lints.rust]

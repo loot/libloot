@@ -86,3 +86,7 @@ The tests can then be run using:
 ```
 cargo test
 ```
+
+## Minimum supported Rust version
+
+The minimum supported Rust version is `1.89`. This may change at any time, but there is a CI job to check that it does not change unexpectedly.
