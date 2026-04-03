@@ -52,7 +52,7 @@ impl Vertex {
     pub fn new(name: String) -> Self {
         Self {
             name,
-            ..Default::default()
+            out_edge_type: None,
         }
     }
 

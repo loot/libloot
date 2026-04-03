@@ -42,14 +42,30 @@ impl PluginMetadata {
     pub fn new(name: &str) -> Result<Self, RegexError> {
         Ok(Self {
             name: PluginName::new(name)?,
-            ..Default::default()
+            group: None,
+            load_after: Box::default(),
+            requirements: Box::default(),
+            incompatibilities: Box::default(),
+            messages: Box::default(),
+            tags: Box::default(),
+            dirty_info: Box::default(),
+            clean_info: Box::default(),
+            locations: Box::default(),
         })
     }
 
     pub(crate) fn with_same_name(metadata: &PluginMetadata) -> Self {
         Self {
             name: metadata.name.clone(),
-            ..Default::default()
+            group: None,
+            load_after: Box::default(),
+            requirements: Box::default(),
+            incompatibilities: Box::default(),
+            messages: Box::default(),
+            tags: Box::default(),
+            dirty_info: Box::default(),
+            clean_info: Box::default(),
+            locations: Box::default(),
         }
     }
 

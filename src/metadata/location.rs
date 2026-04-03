@@ -18,7 +18,7 @@ impl Location {
     pub fn new(url: String) -> Self {
         Location {
             url: url.into_boxed_str(),
-            ..Default::default()
+            name: None,
         }
     }
 

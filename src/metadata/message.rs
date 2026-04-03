@@ -59,7 +59,7 @@ impl MessageContent {
     pub fn new(text: String) -> Self {
         MessageContent {
             text: text.into_boxed_str(),
-            ..Default::default()
+            language: MessageContent::DEFAULT_LANGUAGE.into(),
         }
     }
 

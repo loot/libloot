@@ -25,7 +25,8 @@ impl Group {
     pub fn new(name: String) -> Self {
         Self {
             name: name.into_boxed_str(),
-            ..Default::default()
+            description: None,
+            after_groups: Box::default(),
         }
     }
 

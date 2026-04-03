@@ -32,7 +32,10 @@ impl File {
     pub fn new(name: String) -> Self {
         Self {
             name: Filename::new(name),
-            ..Default::default()
+            display_name: None,
+            detail: Box::default(),
+            condition: None,
+            constraint: None,
         }
     }
 

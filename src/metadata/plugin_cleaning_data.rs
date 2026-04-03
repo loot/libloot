@@ -34,8 +34,12 @@ impl PluginCleaningData {
     pub fn new(crc: u32, cleaning_utility: String) -> Self {
         Self {
             crc,
+            itm_count: 0,
+            deleted_reference_count: 0,
+            deleted_navmesh_count: 0,
             cleaning_utility: cleaning_utility.into_boxed_str(),
-            ..Default::default()
+            detail: Box::default(),
+            condition: None,
         }
     }
 

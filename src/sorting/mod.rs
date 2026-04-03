@@ -26,7 +26,13 @@ mod test {
         pub(super) fn new(name: &str) -> Self {
             Self {
                 name: name.to_owned(),
-                ..Default::default()
+                masters: Vec::new(),
+                is_master: false,
+                is_blueprint_plugin: false,
+                override_record_count: 0,
+                asset_count: 0,
+                overlapping_record_plugins: Vec::new(),
+                overlapping_asset_plugins: Vec::new(),
             }
         }
 
