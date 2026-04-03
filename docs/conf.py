@@ -54,8 +54,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'libloot'
-copyright = u'2016–2026 WrinklyNinja'
-author = u'WrinklyNinja'
+copyright = u'2016–2026 Oliver Hamlet'
+author = u'Oliver Hamlet'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -265,7 +265,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'libloot.tex', u'libloot Documentation',
-     u'WrinklyNinja', 'manual'),
+     u'Oliver Hamlet', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
