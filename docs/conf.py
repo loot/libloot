@@ -54,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'libloot'
-copyright = u'2016, WrinklyNinja'
+copyright = u'2016–2026 WrinklyNinja'
 author = u'WrinklyNinja'
 
 # The version info for the project you're documenting, acts as replacement for

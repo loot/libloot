@@ -9,7 +9,7 @@ libloot has been specifically designed to prevent it being locked into the LOOT 
 
 GNU Free Documentation License Version 1.3 Notice:
 
-  Copyright (C) 2012—2016 WrinklyNinja
+  Copyright (C) 2012–2026 WrinklyNinja
 
   Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.3 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
