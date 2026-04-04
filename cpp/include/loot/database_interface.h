@@ -42,14 +42,35 @@ struct MetadataWriteOptionsImpl;
 class MetadataWriteOptions {
 public:
   /**
-   * @brief Creates a new set of options, all initially set to `false`.
+   * @brief Creates a new options object, with all options initially set to
+   *        `false`.
    */
   LOOT_API MetadataWriteOptions();
+
+  /**
+   * @brief Creates a new options object, copying the options' values from the
+   *        given object.
+   */
   LOOT_API MetadataWriteOptions(const MetadataWriteOptions&);
+
+  /**
+   * @brief Creates a new options object, moving the options' values from the
+   *        given object.
+   */
   LOOT_API MetadataWriteOptions(MetadataWriteOptions&&) noexcept;
+
   LOOT_API ~MetadataWriteOptions();
 
+  /**
+   * @brief Assigns the options values of this object by copying them from the
+   *        given object.
+   */
   LOOT_API MetadataWriteOptions& operator=(const MetadataWriteOptions&);
+
+  /**
+   * @brief Assigns the options values of this object by moving them from the
+   *        given object.
+   */
   LOOT_API MetadataWriteOptions& operator=(MetadataWriteOptions&&) noexcept;
 
   /**
@@ -184,9 +205,8 @@ public:
    * Writes a metadata file containing all loaded user-added metadata.
    * @param outputFile
    *        The path to which the file shall be written.
-   * @param overwrite
-   *        If `false` and `outputFile` already exists, no data will be
-   *        written. Otherwise, data will be written.
+   * @param options
+   *        The configuration options to use when writing the file.
    */
   virtual void WriteUserMetadata(const std::filesystem::path& outputFile,
                                  const MetadataWriteOptions& options) const = 0;
@@ -197,9 +217,8 @@ public:
    *        info themselves.
    * @param outputFile
    *        The path to which the file shall be written.
-   * @param overwrite
-   *        If `false` and `outputFile` already exists, no data will be
-   *        written. Otherwise, data will be written.
+   * @param options
+   *        The configuration options to use when writing the file.
    */
   virtual void WriteMinimalList(const std::filesystem::path& outputFile,
                                 const MetadataWriteOptions& options) const = 0;

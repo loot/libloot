@@ -73,6 +73,8 @@ public:
    *         The number of deleted references found in the plugin.
    * @param  nav
    *         The number of deleted navmeshes found in the plugin.
+   * @param  condition
+   *         A condition string.
    */
   LOOT_API explicit PluginCleaningData(
       uint32_t crc,
