@@ -2,6 +2,38 @@
 Version History
 ***************
 
+0.29.3 - 2026-04-07
+===================
+
+Added
+-----
+
+- Starfield's new ``SFBGS00D.esm``, ``SFBGS047.esm`` and ``SFBGS050.esm``
+  plugins are now recognised as hardcoded to load in that order, following
+  ``SFBGS008.esm``. Via libloadorder.
+- libloot's Cargo config now includes ``package.rust-version``, set to ``1.89``.
+- A debug-level log message is now written when a plugin is successfully loaded,
+  as the success equivalent to the existing error-level log message written when
+  an error is encountered while trying to load a plugin.
+
+Fixed
+-----
+
+- Some missing C++ API documentation for :cpp:any:`loot::MetadataWriteOptions`
+  and outdated documentation for
+  :cpp:any:`loot::DatabaseInterface::WriteUserMetadata()`,
+  :cpp:any:`loot::DatabaseInterface::WriteMinimalList()` and
+  :cpp:any:`loot::PluginCleaningData`.
+
+Changed
+-------
+
+- A couple of plugin validation error log messages have been given more detail
+  to distinguish between failure due to an unsupported file extension and due to
+  an invalid file header.
+- Updated libloadorder to v18.7.0.
+- Updated Sphinx to v9.1.0.
+
 0.29.2 - 2026-03-27
 ===================
 
