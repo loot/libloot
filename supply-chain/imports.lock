@@ -34,8 +34,8 @@ user-id = 55123
 user-login = "rust-lang-owner"
 
 [[publisher.libloadorder]]
-version = "18.6.0"
-when = "2026-03-26"
+version = "18.7.0"
+when = "2026-04-07"
 trusted-publisher = "github:Ortham/libloadorder"
 
 [[publisher.loot-condition-interpreter]]
