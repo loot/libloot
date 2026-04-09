@@ -127,6 +127,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.10.5 -> 0.11.0"
 
+[[audits.regress]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.11.0 -> 0.11.1"
+
 [[audits.slab]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
