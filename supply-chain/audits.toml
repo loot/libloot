@@ -132,6 +132,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.11.0 -> 0.11.1"
 
+[[audits.rustc-hash]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.1.1 -> 2.1.2"
+
 [[audits.slab]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
