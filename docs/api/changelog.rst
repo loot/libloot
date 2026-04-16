@@ -2,6 +2,41 @@
 Version History
 ***************
 
+0.29.4 - Unreleased
+===================
+
+Fixed
+-----
+
+- When loading a load order that contained an inactive master, one or more
+  blueprint masters and no non-master plugins, the inactive master was
+  incorrectly positioned after the blueprint masters if it had a more recent
+  modification timestamp. Via libloadorder.
+- The wrong fallback filename ordering behaviour was used when loading a load
+  order and ordering plugins by timestamp and two plugins had the same
+  modification timestamp. Via libloadorder.
+- When loading a Starfield load order, ``sTestFile`` entries were ordered
+  differently to how they're ordered by Starfield v1.16.236.0. Via libloadorder.
+
+Changed
+-------
+
+- When setting a Starfield load order, blueprint plugins and plugins with names
+  that start with ``BlueprintShips-`` are no longer written to ``plugins.txt``.
+  This means that it is effectively no longer possible to explicitly activate
+  such plugins, or to give them consistent load order positions unless they are
+  blueprint masters. Via libloadorder.
+
+  Blueprint non-masters and plugins with names that begin with
+  ``BlueprintShips-`` but do not have a ``.esm`` file extension and/or that are
+  not blueprint plugins should be considered unsupported and their use avoided,
+  as Starfield's behaviour indicates that it probably intends for all blueprint
+  plugins to be blueprint masters, and for all ``BlueprintShips-`` plugins to be
+  blueprint masters that use the ``.esm`` file extension.
+- Updated libloadorder to v18.8.0.
+- Update regress to v0.11.1.
+- Update rustc-hash to v2.1.2.
+
 0.29.3 - 2026-04-07
 ===================
 
