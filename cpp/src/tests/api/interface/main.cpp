@@ -40,6 +40,7 @@
 #include "tests/api/interface/metadata/plugin_metadata_test.h"
 #include "tests/api/interface/metadata/tag_test.h"
 #include "tests/api/interface/plugin_interface_test.h"
+#include "tests/printers.h"
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
