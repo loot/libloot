@@ -47,8 +47,6 @@ pub(crate) enum ArchiveParsingError {
     InvalidFolderNameLengthOffset(usize),
     InvalidFileRecordsOffset(usize),
     UsesBigEndianNumbers,
-    FolderHashCollision(u64),
-    HashCollision { folder_hash: u64, file_hash: u64 },
 }
 
 impl std::fmt::Display for ArchiveParsingError {
@@ -70,16 +68,6 @@ impl std::fmt::Display for ArchiveParsingError {
             Self::UsesBigEndianNumbers => {
                 write!(f, "archive uses big-endian numbers, which is unsupported")
             }
-            Self::FolderHashCollision(h) => {
-                write!(f, "unexpected collision for folder name hash {h:x}")
-            }
-            Self::HashCollision {
-                folder_hash,
-                file_hash,
-            } => write!(
-                f,
-                "unexpected collision for file name hash {file_hash:x} in set for folder name hash {folder_hash:x}"
-            ),
         }
     }
 }

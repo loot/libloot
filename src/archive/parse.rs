@@ -64,9 +64,9 @@ fn get_assets_in_archive(
         .map_err(|e| ArchivePathParsingError::from_io_error(archive_path.into(), e))?;
 
     match type_id {
-        bsa::TYPE_ID => bsa::read_assets(reader)
+        bsa::TYPE_ID => bsa::read_assets(reader, archive_path)
             .map_err(|e| ArchivePathParsingError::new(archive_path.into(), e)),
-        ba2::TYPE_ID => ba2::read_assets(reader)
+        ba2::TYPE_ID => ba2::read_assets(reader, archive_path)
             .map_err(|e| ArchivePathParsingError::new(archive_path.into(), e)),
         _ => Err(ArchivePathParsingError::new(
             archive_path.into(),

@@ -2,7 +2,10 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     hash::{DefaultHasher, Hash, Hasher},
     io::{BufRead, Seek},
+    path::Path,
 };
+
+use crate::{escape_ascii, logging};
 
 use super::error::ArchiveParsingError;
 
@@ -59,6 +62,7 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
 
 pub(super) fn read_assets<T: BufRead + Seek>(
     mut reader: T,
+    archive_path: &Path,
 ) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
     let mut header_buffer = [0; HEADER_SIZE - TYPE_ID.len()];
 
@@ -70,6 +74,7 @@ pub(super) fn read_assets<T: BufRead + Seek>(
 
     reader.seek(std::io::SeekFrom::Start(header.file_paths_offset))?;
 
+    let mut collision_count: usize = 0;
     for _ in 0..header.file_count {
         let mut length_buf = [0; 2];
         reader.read_exact(&mut length_buf)?;
@@ -90,11 +95,16 @@ pub(super) fn read_assets<T: BufRead + Seek>(
         let file_hashes: &mut BTreeSet<u64> = assets.entry(folder_hash).or_default();
 
         if !file_hashes.insert(file_hash) {
-            return Err(ArchiveParsingError::HashCollision {
-                folder_hash,
-                file_hash,
-            });
+            collision_count += 1;
         }
+    }
+
+    if collision_count > 0 {
+        logging::debug!(
+            "Encountered {} hash collisions for asset file paths while reading \"{}\"",
+            collision_count,
+            escape_ascii(archive_path)
+        );
     }
 
     Ok(assets)

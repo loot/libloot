@@ -1,7 +1,10 @@
 use std::{
     collections::{BTreeMap, BTreeSet, btree_map::Entry},
     io::BufRead,
+    path::Path,
 };
+
+use crate::{escape_ascii, logging};
 
 use super::error::ArchiveParsingError;
 
@@ -134,6 +137,7 @@ mod v105 {
 
 pub(super) fn read_assets<T: BufRead>(
     mut reader: T,
+    archive_path: &Path,
 ) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
     let mut header_buffer = [0; HEADER_SIZE - TYPE_ID.len()];
 
@@ -144,11 +148,13 @@ pub(super) fn read_assets<T: BufRead>(
     match header.version {
         103 | 104 => read_assets_with_header::<T, { v103::FOLDER_RECORD_SIZE }>(
             reader,
+            archive_path,
             &header,
             v103::read_folder_record,
         ),
         105 => read_assets_with_header::<T, { v105::FOLDER_RECORD_SIZE }>(
             reader,
+            archive_path,
             &header,
             v105::read_folder_record,
         ),
@@ -160,6 +166,7 @@ pub(super) fn read_assets<T: BufRead>(
 
 fn read_assets_with_header<T: BufRead, const U: usize>(
     mut reader: T,
+    archive_path: &Path,
     header: &Header,
     read_folder_record: impl Fn(&[u8; U]) -> FolderRecord,
 ) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
@@ -178,15 +185,15 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
     let folder_record_offset_baseline =
         HEADER_SIZE + folders_buffer.len() + to_usize(header.total_file_names_length);
 
+    let mut folder_collision_count: usize = 0;
+    let mut asset_collision_count: usize = 0;
     let mut assets = BTreeMap::new();
     for chunk in folders_buffer.as_chunks::<U>().0 {
         let folder_record = read_folder_record(chunk);
 
         let entry = assets.entry(folder_record.name_hash);
         if let Entry::Occupied(_) = entry {
-            return Err(ArchiveParsingError::FolderHashCollision(
-                folder_record.name_hash,
-            ));
+            folder_collision_count += 1;
         }
 
         let file_records_offset = if (header.archive_flags & 0x1) == 0 {
@@ -221,12 +228,25 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
             let file_hash = file_record_hash(file_chunk);
 
             if !file_hashes.insert(file_hash) {
-                return Err(ArchiveParsingError::HashCollision {
-                    folder_hash: folder_record.name_hash,
-                    file_hash,
-                });
+                asset_collision_count += 1;
             }
         }
+    }
+
+    if folder_collision_count > 0 {
+        logging::debug!(
+            "Encountered {} hash collisions for asset folders while reading \"{}\"",
+            folder_collision_count,
+            escape_ascii(archive_path)
+        );
+    }
+
+    if asset_collision_count > 0 {
+        logging::debug!(
+            "Encountered {} hash collisions for asset file paths while reading \"{}\"",
+            asset_collision_count,
+            escape_ascii(archive_path)
+        );
     }
 
     Ok(assets)
