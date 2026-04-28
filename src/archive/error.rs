@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{ops::Range, path::PathBuf};
 
 use crate::escape_ascii;
 
@@ -45,8 +45,10 @@ pub(crate) enum ArchiveParsingError {
     UnsupportedArchiveTypeId([u8; 4]),
     InvalidRecordsOffset(u32),
     InvalidFolderNameLengthOffset(usize),
-    InvalidFileRecordsOffset(usize),
+    InvalidFolderNameRange(Range<usize>),
     UsesBigEndianNumbers,
+    DirectoryNamesNotIncluded,
+    FileNamesNotIncluded,
 }
 
 impl std::fmt::Display for ArchiveParsingError {
@@ -64,9 +66,23 @@ impl std::fmt::Display for ArchiveParsingError {
             Self::InvalidFolderNameLengthOffset(o) => {
                 write!(f, "invalid folder name length offset {o}")
             }
-            Self::InvalidFileRecordsOffset(o) => write!(f, "invalid file records offset {o}"),
+            Self::InvalidFolderNameRange(r) => {
+                write!(f, "invalid folder name range {:#x}..{:#x}", r.start, r.end)
+            }
             Self::UsesBigEndianNumbers => {
                 write!(f, "archive uses big-endian numbers, which is unsupported")
+            }
+            Self::DirectoryNamesNotIncluded => {
+                write!(
+                    f,
+                    "archive does not include directory names, which is unsupported"
+                )
+            }
+            Self::FileNamesNotIncluded => {
+                write!(
+                    f,
+                    "archive does not include file names, which is unsupported"
+                )
             }
         }
     }

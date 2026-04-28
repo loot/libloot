@@ -1,11 +1,6 @@
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    hash::{DefaultHasher, Hash, Hasher},
-    io::{BufRead, Seek},
-    path::Path,
-};
+use std::io::{BufRead, Seek};
 
-use crate::{escape_ascii, logging};
+use crate::archive::{ArchiveAssets, normalise_path};
 
 use super::error::ArchiveParsingError;
 
@@ -62,19 +57,17 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
 
 pub(super) fn read_assets<T: BufRead + Seek>(
     mut reader: T,
-    archive_path: &Path,
-) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
+) -> Result<ArchiveAssets, ArchiveParsingError> {
     let mut header_buffer = [0; HEADER_SIZE - TYPE_ID.len()];
 
     reader.read_exact(&mut header_buffer)?;
 
     let header = Header::try_from(header_buffer)?;
 
-    let mut assets = BTreeMap::new();
+    let mut assets = ArchiveAssets::new();
 
     reader.seek(std::io::SeekFrom::Start(header.file_paths_offset))?;
 
-    let mut collision_count: usize = 0;
     for _ in 0..header.file_count {
         let mut length_buf = [0; 2];
         reader.read_exact(&mut length_buf)?;
@@ -85,75 +78,41 @@ pub(super) fn read_assets<T: BufRead + Seek>(
 
         normalise_path(&mut file_path_bytes);
 
-        let file_path_bytes = trim_slashes(&file_path_bytes);
+        trim_slashes(&mut file_path_bytes);
 
-        let (folder_hash, file_hash) = rsplit_on(file_path_bytes, b'\\').map_or_else(
-            || (0, hash(&file_path_bytes)),
-            |(folder_path, file_path)| (hash(&folder_path), hash(&file_path)),
-        );
+        let (folder_path, file_name) = rsplit_on(file_path_bytes, b'\\');
 
-        let file_hashes: &mut BTreeSet<u64> = assets.entry(folder_hash).or_default();
-
-        if !file_hashes.insert(file_hash) {
-            collision_count += 1;
-        }
-    }
-
-    if collision_count > 0 {
-        logging::debug!(
-            "Encountered {} hash collisions for asset file paths while reading \"{}\"",
-            collision_count,
-            escape_ascii(archive_path)
-        );
+        assets.entry(folder_path).or_default().insert(file_name);
     }
 
     Ok(assets)
 }
 
-fn normalise_path(path_bytes: &mut [u8]) {
-    for byte in path_bytes {
-        // Ignore any non-ASCII characters.
-        if *byte > 127 {
-            continue;
-        }
+fn trim_slashes(path_bytes: &mut Vec<u8>) {
+    let predicate = |c: &u8| *c != b'\\';
 
-        *byte = match byte {
-            b'/' => b'\\',
-            _ => byte.to_ascii_lowercase(),
-        }
-    }
-}
-
-fn trim_slashes(mut path_bytes: &[u8]) -> &[u8] {
-    while let [first, rest @ ..] = path_bytes {
-        if *first == b'\\' {
-            path_bytes = rest;
-        } else {
-            break;
-        }
+    match path_bytes.iter().rposition(predicate) {
+        Some(i) => path_bytes.truncate(i + 1),
+        None => path_bytes.clear(),
     }
 
-    while let [rest @ .., last] = path_bytes {
-        if *last == b'\\' {
-            path_bytes = rest;
-        } else {
-            break;
-        }
-    }
+    let mut trimmed = path_bytes
+        .iter()
+        .position(predicate)
+        .map(|i| path_bytes.split_off(i))
+        .unwrap_or_default();
 
-    path_bytes
+    std::mem::swap(path_bytes, &mut trimmed);
 }
 
-fn rsplit_on(slice: &[u8], needle: u8) -> Option<(&[u8], &[u8])> {
-    let mut iter = slice.rsplitn(2, |b| *b == needle);
-    let second = iter.next()?;
-    let first = iter.next()?;
+fn rsplit_on(mut path_bytes: Vec<u8>, needle: u8) -> (Box<[u8]>, Box<[u8]>) {
+    let second = path_bytes
+        .iter()
+        .rposition(|b| *b == needle)
+        .map(|i| path_bytes.split_off(i + 1))
+        .unwrap_or_default();
 
-    Some((first, second))
-}
+    path_bytes.truncate(path_bytes.len().saturating_sub(1));
 
-fn hash<T: Hash>(value: &T) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    value.hash(&mut hasher);
-    hasher.finish()
+    (path_bytes.into_boxed_slice(), second.into_boxed_slice())
 }

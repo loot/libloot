@@ -1,16 +1,16 @@
-use std::{
-    collections::{BTreeMap, BTreeSet, btree_map::Entry},
-    io::BufRead,
-    path::Path,
-};
+use std::io::BufRead;
 
-use crate::{escape_ascii, logging};
+use crate::archive::{ArchiveAssets, normalise_path};
 
 use super::error::ArchiveParsingError;
 
 pub(super) const TYPE_ID: [u8; 4] = *b"BSA\0";
 const HEADER_SIZE: usize = 36;
 const FILE_RECORD_SIZE: usize = 16;
+
+const ARCHIVE_FLAG_HAS_DIRECTORY_NAMES: u32 = 0x1;
+const ARCHIVE_FLAG_HAS_FILE_NAMES: u32 = 0x2;
+const ARCHIVE_FLAG_BIG_ENDIAN: u32 = 0x40;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 struct Header {
@@ -79,16 +79,11 @@ impl TryFrom<[u8; HEADER_SIZE - TYPE_ID.len()]> for Header {
             ));
         }
 
-        if (header.archive_flags & 0x40) != 0 {
-            return Err(ArchiveParsingError::UsesBigEndianNumbers);
-        }
-
         Ok(header)
     }
 }
 
 struct FolderRecord {
-    name_hash: u64,
     file_count: u32,
     file_records_offset: u32,
 }
@@ -101,10 +96,9 @@ mod v103 {
 
     pub(super) fn read_folder_record(value: &[u8; FOLDER_RECORD_SIZE]) -> FolderRecord {
         // LIMITATION: There's no syntax to infallibly split an array into sub-arrays.
-        let [name_hash @ .., c0, c1, c2, c3, o0, o1, o2, o3] = *value;
+        let [_name_hash @ .., c0, c1, c2, c3, o0, o1, o2, o3] = *value;
 
         FolderRecord {
-            name_hash: u64::from_le_bytes(name_hash),
             file_count: u32::from_le_bytes([c0, c1, c2, c3]),
             file_records_offset: u32::from_le_bytes([o0, o1, o2, o3]),
         }
@@ -120,7 +114,7 @@ mod v105 {
         // LIMITATION: There's no syntax to infallibly split an array into sub-arrays.
         #[rustfmt::skip]
         let [
-            name_hash @ ..,
+            _name_hash @ ..,
             c0, c1, c2, c3, // file_count
             _, _, _, _,
             o0, o1, o2, o3, // file_records_offset
@@ -128,17 +122,13 @@ mod v105 {
         ] = *value;
 
         FolderRecord {
-            name_hash: u64::from_le_bytes(name_hash),
             file_count: u32::from_le_bytes([c0, c1, c2, c3]),
             file_records_offset: u32::from_le_bytes([o0, o1, o2, o3]),
         }
     }
 }
 
-pub(super) fn read_assets<T: BufRead>(
-    mut reader: T,
-    archive_path: &Path,
-) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
+pub(super) fn read_assets<T: BufRead>(mut reader: T) -> Result<ArchiveAssets, ArchiveParsingError> {
     let mut header_buffer = [0; HEADER_SIZE - TYPE_ID.len()];
 
     reader.read_exact(&mut header_buffer)?;
@@ -148,13 +138,11 @@ pub(super) fn read_assets<T: BufRead>(
     match header.version {
         103 | 104 => read_assets_with_header::<T, { v103::FOLDER_RECORD_SIZE }>(
             reader,
-            archive_path,
             &header,
             v103::read_folder_record,
         ),
         105 => read_assets_with_header::<T, { v105::FOLDER_RECORD_SIZE }>(
             reader,
-            archive_path,
             &header,
             v105::read_folder_record,
         ),
@@ -166,10 +154,21 @@ pub(super) fn read_assets<T: BufRead>(
 
 fn read_assets_with_header<T: BufRead, const U: usize>(
     mut reader: T,
-    archive_path: &Path,
     header: &Header,
     read_folder_record: impl Fn(&[u8; U]) -> FolderRecord,
-) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchiveParsingError> {
+) -> Result<ArchiveAssets, ArchiveParsingError> {
+    if (header.archive_flags & ARCHIVE_FLAG_BIG_ENDIAN) != 0 {
+        return Err(ArchiveParsingError::UsesBigEndianNumbers);
+    }
+
+    if (header.archive_flags & ARCHIVE_FLAG_HAS_DIRECTORY_NAMES) == 0 {
+        return Err(ArchiveParsingError::DirectoryNamesNotIncluded);
+    }
+
+    if (header.archive_flags & ARCHIVE_FLAG_HAS_FILE_NAMES) == 0 {
+        return Err(ArchiveParsingError::FileNamesNotIncluded);
+    }
+
     let mut folders_buffer: Vec<u8> = vec![0; U * to_usize(header.folder_count)];
 
     reader.read_exact(folders_buffer.as_mut_slice())?;
@@ -182,80 +181,102 @@ fn read_assets_with_header<T: BufRead, const U: usize>(
 
     reader.read_exact(file_records_buffer.as_mut_slice())?;
 
+    let mut file_names_buffer: Vec<u8> = vec![0; to_usize(header.total_file_names_length)];
+
+    reader.read_exact(file_names_buffer.as_mut_slice())?;
+
     let folder_record_offset_baseline =
         HEADER_SIZE + folders_buffer.len() + to_usize(header.total_file_names_length);
 
-    let mut folder_collision_count: usize = 0;
-    let mut asset_collision_count: usize = 0;
-    let mut assets = BTreeMap::new();
+    // Store folder names and their file counts.
+    let mut folders: Vec<(Box<[u8]>, u32)> = Vec::with_capacity(to_usize(header.folder_count));
     for chunk in folders_buffer.as_chunks::<U>().0 {
         let folder_record = read_folder_record(chunk);
 
-        let entry = assets.entry(folder_record.name_hash);
-        if let Entry::Occupied(_) = entry {
-            folder_collision_count += 1;
-        }
+        let folder_name_length_offset =
+            to_usize(folder_record.file_records_offset) - folder_record_offset_baseline;
 
-        let file_records_offset = if (header.archive_flags & 0x1) == 0 {
-            to_usize(folder_record.file_records_offset) - folder_record_offset_baseline
-        } else {
-            let folder_name_length_offset =
-                to_usize(folder_record.file_records_offset) - folder_record_offset_baseline;
+        let folder_name = read_folder_name(&file_records_buffer, folder_name_length_offset)?;
 
-            if let Some(folder_name_length) = file_records_buffer.get(folder_name_length_offset) {
-                folder_name_length_offset + 1 + usize::from(*folder_name_length)
-            } else {
-                return Err(ArchiveParsingError::InvalidFolderNameLengthOffset(
-                    folder_name_length_offset,
-                ));
-            }
-        };
-
-        let Some(file_records_buffer) = file_records_buffer.get(file_records_offset..) else {
-            return Err(ArchiveParsingError::InvalidFileRecordsOffset(
-                file_records_offset,
-            ));
-        };
-
-        let file_hashes: &mut BTreeSet<u64> = entry.or_default();
-
-        for file_chunk in file_records_buffer
-            .as_chunks::<FILE_RECORD_SIZE>()
-            .0
-            .iter()
-            .take(to_usize(folder_record.file_count))
-        {
-            let file_hash = file_record_hash(file_chunk);
-
-            if !file_hashes.insert(file_hash) {
-                asset_collision_count += 1;
-            }
-        }
+        folders.push((folder_name, folder_record.file_count));
     }
 
-    if folder_collision_count > 0 {
-        logging::debug!(
-            "Encountered {} hash collisions for asset folders while reading \"{}\"",
-            folder_collision_count,
-            escape_ascii(archive_path)
-        );
-    }
+    // Repeat each folder name by the number of files in that folder.
+    let folder_names_iter = folders
+        .into_iter()
+        .flat_map(|(f, c)| std::iter::repeat_n(f, to_usize(c)));
 
-    if asset_collision_count > 0 {
-        logging::debug!(
-            "Encountered {} hash collisions for asset file paths while reading \"{}\"",
-            asset_collision_count,
-            escape_ascii(archive_path)
-        );
+    // File names are separated by a null byte, and are listed in the order that
+    // their file records appear, which is the order in which their parent
+    // folder records appear.
+    let file_names_iter = file_names_buffer.split(|b| *b == 0);
+
+    let mut assets = ArchiveAssets::new();
+
+    for (folder_name, file_name) in folder_names_iter.zip(file_names_iter) {
+        let file_name = trim_and_normalise(file_name);
+        assets.entry(folder_name).or_default().insert(file_name);
     }
 
     Ok(assets)
 }
 
-fn file_record_hash(file_record: &[u8; FILE_RECORD_SIZE]) -> u64 {
-    // LIMITATION: There's no syntax to infallibly split an array into sub-arrays.
-    let [hash_bytes @ .., _, _, _, _, _, _, _, _] = file_record;
-    u64::from_le_bytes(*hash_bytes)
+fn read_folder_name(
+    file_records_buffer: &[u8],
+    folder_name_length_offset: usize,
+) -> Result<Box<[u8]>, ArchiveParsingError> {
+    if let Some(folder_name_length) = file_records_buffer.get(folder_name_length_offset) {
+        let folder_name_start = folder_name_length_offset + 1;
+        let folder_name_range =
+            folder_name_start..folder_name_start + usize::from(*folder_name_length);
+
+        file_records_buffer
+            .get(folder_name_range.clone())
+            .map(trim_and_normalise)
+            .ok_or(ArchiveParsingError::InvalidFolderNameRange(
+                folder_name_range,
+            ))
+    } else {
+        Err(ArchiveParsingError::InvalidFolderNameLengthOffset(
+            folder_name_length_offset,
+        ))
+    }
+}
+
+fn trim_and_normalise(path_bytes: &[u8]) -> Box<[u8]> {
+    let mut trimmed: Box<[u8]> = trim_slashes(trim_null_terminator(path_bytes)).into();
+
+    normalise_path(&mut trimmed);
+
+    trimmed
+}
+
+fn trim_null_terminator(path_bytes: &[u8]) -> &[u8] {
+    if let [rest @ .., b'\0'] = path_bytes {
+        rest
+    } else {
+        path_bytes
+    }
+}
+
+fn trim_slashes(mut path_bytes: &[u8]) -> &[u8] {
+    while let [first, rest @ ..] = path_bytes {
+        if *first == b'\\' || *first == b'/' {
+            path_bytes = rest;
+        } else {
+            break;
+        }
+    }
+
+    while let [rest @ .., last] = path_bytes {
+        if *last == b'\\' || *last == b'/' {
+            path_bytes = rest;
+        } else {
+            break;
+        }
+    }
+
+    path_bytes
 }
 
 #[expect(

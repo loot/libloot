@@ -1,7 +1,6 @@
 pub(crate) mod error;
 
 use std::{
-    collections::{BTreeMap, BTreeSet},
     fs::File,
     hash::Hasher,
     io::{BufRead, BufReader},
@@ -14,7 +13,7 @@ use regress::Regex;
 
 use crate::{
     GameType,
-    archive::{assets_in_archives, do_assets_overlap, find_associated_archives},
+    archive::{ArchiveAssets, assets_in_archives, do_assets_overlap, find_associated_archives},
     case_insensitive_regex, escape_ascii,
     game::GameCache,
     logging,
@@ -50,7 +49,7 @@ pub struct Plugin {
     version: Option<String>,
     tags: Box<[String]>,
     archive_paths: Box<[PathBuf]>,
-    archive_assets: BTreeMap<u64, BTreeSet<u64>>,
+    archive_assets: ArchiveAssets,
 }
 
 impl Plugin {
@@ -72,7 +71,7 @@ impl Plugin {
         let mut version = None;
         let mut tags = Box::default();
         let mut archive_paths = Box::default();
-        let mut archive_assets = BTreeMap::new();
+        let mut archive_assets = ArchiveAssets::new();
         let plugin =
             if game_type != GameType::OpenMW || !has_ascii_extension(plugin_path, "omwscripts") {
                 let mut plugin = esplugin::Plugin::new(game_type.into(), plugin_path);

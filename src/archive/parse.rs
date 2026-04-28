@@ -1,5 +1,4 @@
 use std::{
-    collections::{BTreeMap, BTreeSet},
     fs::File,
     io::{BufReader, Read},
     path::{Path, PathBuf},
@@ -7,14 +6,15 @@ use std::{
 
 use super::error::{ArchiveParsingError, ArchivePathParsingError};
 use crate::{
+    archive::ArchiveAssets,
     escape_ascii,
     logging::{self, format_details},
 };
 
 use super::{ba2, bsa};
 
-pub(crate) fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTreeSet<u64>> {
-    let mut archive_assets: BTreeMap<u64, BTreeSet<u64>> = BTreeMap::new();
+pub(crate) fn assets_in_archives(archive_paths: &[PathBuf]) -> ArchiveAssets {
+    let mut archive_assets: ArchiveAssets = ArchiveAssets::new();
 
     for archive_path in archive_paths {
         logging::trace!(
@@ -51,9 +51,7 @@ pub(crate) fn assets_in_archives(archive_paths: &[PathBuf]) -> BTreeMap<u64, BTr
     archive_assets
 }
 
-fn get_assets_in_archive(
-    archive_path: &Path,
-) -> Result<BTreeMap<u64, BTreeSet<u64>>, ArchivePathParsingError> {
+fn get_assets_in_archive(archive_path: &Path) -> Result<ArchiveAssets, ArchivePathParsingError> {
     let file = File::open(archive_path)
         .map_err(|e| ArchivePathParsingError::from_io_error(archive_path.into(), e))?;
     let mut reader = BufReader::new(file);
@@ -64,9 +62,9 @@ fn get_assets_in_archive(
         .map_err(|e| ArchivePathParsingError::from_io_error(archive_path.into(), e))?;
 
     match type_id {
-        bsa::TYPE_ID => bsa::read_assets(reader, archive_path)
+        bsa::TYPE_ID => bsa::read_assets(reader)
             .map_err(|e| ArchivePathParsingError::new(archive_path.into(), e)),
-        ba2::TYPE_ID => ba2::read_assets(reader, archive_path)
+        ba2::TYPE_ID => ba2::read_assets(reader)
             .map_err(|e| ArchivePathParsingError::new(archive_path.into(), e)),
         _ => Err(ArchivePathParsingError::new(
             archive_path.into(),
@@ -80,21 +78,12 @@ mod tests {
     use super::*;
 
     mod get_assets_in_archive {
-        use std::{
-            hash::{DefaultHasher, Hash, Hasher},
-            io::SeekFrom,
-        };
+        use std::{collections::BTreeSet, io::SeekFrom};
 
         use array_parameterized_test::{parameterized_test, test_parameter};
         use tempfile::tempdir;
 
         use super::*;
-
-        fn hash<T: Hash>(value: T) -> u64 {
-            let mut hasher = DefaultHasher::new();
-            value.hash(&mut hasher);
-            hasher.finish()
-        }
 
         #[test]
         fn should_error_if_file_cannot_be_opened() {
@@ -109,14 +98,14 @@ mod tests {
 
             let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
-            let expected_key = 0;
+            let expected_key = "".as_bytes();
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
-            assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
-            assert_eq!(1, assets[&expected_key].len());
+            assert_eq!(expected_key, assets.first_key_value().unwrap().0.as_ref());
+            assert_eq!(1, assets[expected_key].len());
             assert_eq!(
-                0x4670_B683_6C07_7365,
-                *assets[&expected_key].first().unwrap()
+                "license".as_bytes(),
+                assets[expected_key].first().unwrap().as_ref()
             );
         }
 
@@ -127,14 +116,14 @@ mod tests {
 
             let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
-            let expected_key = 0x2E01_002E;
+            let expected_key = "\x2E".as_bytes();
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
-            assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
-            assert_eq!(1, assets[&expected_key].len());
+            assert_eq!(expected_key, assets.first_key_value().unwrap().0.as_ref());
+            assert_eq!(1, assets[expected_key].len());
             assert_eq!(
-                0x4670_B683_6C07_7365,
-                *assets[&expected_key].first().unwrap()
+                "license".as_bytes(),
+                assets[expected_key].first().unwrap().as_ref()
             );
         }
 
@@ -145,14 +134,14 @@ mod tests {
 
             let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
-            let expected_key = 0xB681_02C9_6417_6E73;
+            let expected_key = "dev\\git\\testing-plugins".as_bytes();
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
-            assert_eq!(expected_key, *assets.first_key_value().unwrap().0);
-            assert_eq!(1, assets[&expected_key].len());
+            assert_eq!(expected_key, assets.first_key_value().unwrap().0.as_ref());
+            assert_eq!(1, assets[expected_key].len());
             assert_eq!(
-                0x4670_B683_6C07_7365,
-                *assets[&expected_key].first().unwrap()
+                "license".as_bytes(),
+                assets[expected_key].first().unwrap().as_ref()
             );
         }
 
@@ -163,16 +152,16 @@ mod tests {
 
             let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
-            let expected_key = hash("dev\\git\\testing-plugins".as_bytes());
-            let expected_file_hash = hash("license.txt".as_bytes());
+            let expected_key = "dev\\git\\testing-plugins".as_bytes();
+            let expected_file_hash = "license.txt".as_bytes();
 
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
 
             let (key, value) = assets.first_key_value().unwrap();
-            assert_eq!(expected_key, *key);
+            assert_eq!(expected_key, key.as_ref());
             assert_eq!(1, value.len());
-            assert_eq!(expected_file_hash, *value.first().unwrap());
+            assert_eq!(expected_file_hash, value.first().unwrap().as_ref());
         }
 
         #[test]
@@ -182,16 +171,16 @@ mod tests {
 
             let files_count: usize = assets.values().map(BTreeSet::len).sum();
 
-            let expected_key = hash("dev\\git\\testing-plugins".as_bytes());
-            let expected_file_hash = hash("blank.dds".as_bytes());
+            let expected_key = "dev\\git\\testing-plugins".as_bytes();
+            let expected_file_hash = "blank.dds".as_bytes();
 
             assert_eq!(1, assets.len());
             assert_eq!(1, files_count);
 
             let (key, value) = assets.first_key_value().unwrap();
-            assert_eq!(expected_key, *key);
+            assert_eq!(expected_key, key.as_ref());
             assert_eq!(1, value.len());
-            assert_eq!(expected_file_hash, *value.first().unwrap());
+            assert_eq!(expected_file_hash, value.first().unwrap().as_ref());
         }
 
         #[test_parameter]
@@ -218,6 +207,8 @@ mod tests {
     }
 
     mod assets_in_archives {
+        use std::collections::BTreeSet;
+
         use super::*;
 
         #[test]
@@ -235,9 +226,9 @@ mod tests {
             assert_eq!(1, files_count);
 
             let (key, value) = assets.first_key_value().unwrap();
-            assert_eq!(0x2E01_002E, *key);
+            assert_eq!("\x2E".as_bytes(), key.as_ref());
             assert_eq!(1, value.len());
-            assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
+            assert_eq!("license".as_bytes(), value.first().unwrap().as_ref());
         }
 
         #[test]
@@ -255,17 +246,17 @@ mod tests {
             assert_eq!(3, assets.len());
             assert_eq!(3, files_count);
 
-            let value = &assets[&0];
+            let value = &assets["".as_bytes()];
             assert_eq!(1, value.len());
-            assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
+            assert_eq!("license".as_bytes(), value.first().unwrap().as_ref());
 
-            let value = &assets[&0x2E01_002E];
+            let value = &assets["\x2E".as_bytes()];
             assert_eq!(1, value.len());
-            assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
+            assert_eq!("license".as_bytes(), value.first().unwrap().as_ref());
 
-            let value = &assets[&0xB681_02C9_6417_6E73];
+            let value = &assets["dev\\git\\testing-plugins".as_bytes()];
             assert_eq!(1, value.len());
-            assert_eq!(0x4670_B683_6C07_7365, *value.first().unwrap());
+            assert_eq!("license".as_bytes(), value.first().unwrap().as_ref());
         }
     }
 }

@@ -9,10 +9,9 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(crate) use find::find_associated_archives;
 pub(crate) use parse::assets_in_archives;
 
-pub(crate) fn do_assets_overlap(
-    assets: &BTreeMap<u64, BTreeSet<u64>>,
-    other_assets: &BTreeMap<u64, BTreeSet<u64>>,
-) -> bool {
+pub(crate) type ArchiveAssets = BTreeMap<Box<[u8]>, BTreeSet<Box<[u8]>>>;
+
+pub(crate) fn do_assets_overlap(assets: &ArchiveAssets, other_assets: &ArchiveAssets) -> bool {
     let mut assets_iter = assets.iter();
     let mut other_assets_iter = other_assets.iter();
 
@@ -34,6 +33,20 @@ pub(crate) fn do_assets_overlap(
     }
 
     false
+}
+
+fn normalise_path(path_bytes: &mut [u8]) {
+    for byte in path_bytes {
+        // Ignore any non-ASCII characters.
+        if *byte > 127 {
+            continue;
+        }
+
+        *byte = match byte {
+            b'/' => b'\\',
+            _ => byte.to_ascii_lowercase(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -61,7 +74,7 @@ mod tests {
             let path = PathBuf::from("./testing-plugins/Skyrim/Data/Blank.bsa");
             let assets2 = assets_in_archives(&[path]);
 
-            assert_eq!(assets1.get(&0), assets2.get(&0x2E01_002E));
+            assert_eq!(assets1.get("".as_bytes()), assets2.get("\x2E".as_bytes()));
 
             assert!(!do_assets_overlap(&assets1, &assets2));
         }
