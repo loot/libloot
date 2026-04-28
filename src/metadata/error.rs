@@ -366,7 +366,7 @@ impl std::fmt::Display for MetadataDocumentParsingError {
             Self::IoError(_) => write!(f, "an I/O error occurred"),
             Self::MetadataParsingError(_) => write!(f, "a metadata parsing error occurred"),
             Self::YamlMergeKeyError(_) => {
-                write!(f, "an error occurred while resolving YAML merge keys",)
+                write!(f, "an error occurred while resolving YAML merge keys")
             }
         }
     }

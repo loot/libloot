@@ -373,7 +373,7 @@ impl Filename {
     fn __repr__(slf: &Bound<'_, Self>) -> PyResult<String> {
         let class_name = slf.get_type().qualname()?;
         let inner = &slf.borrow().0;
-        Ok(format!("{}({})", class_name, inner.as_str(),))
+        Ok(format!("{}({})", class_name, inner.as_str()))
     }
 }
 

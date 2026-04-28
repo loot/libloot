@@ -36,7 +36,7 @@ impl std::fmt::Display for VerboseError {
                 Ok(())
             }
             Self::UndefinedGroupError(group) => {
-                write!(f, "UndefinedGroupError: {group}",)
+                write!(f, "UndefinedGroupError: {group}")
             }
             Self::PluginNotLoadedError(plugin) => write!(f, "PluginNotLoadedError: {plugin}"),
             Self::InvalidArgument(e) => {

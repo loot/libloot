@@ -104,7 +104,7 @@ mod tests {
         #[test]
         fn should_be_version_numbers_separated_by_periods() {
             let expected =
-                format!("{LIBLOOT_VERSION_MAJOR}.{LIBLOOT_VERSION_MINOR}.{LIBLOOT_VERSION_PATCH}",);
+                format!("{LIBLOOT_VERSION_MAJOR}.{LIBLOOT_VERSION_MINOR}.{LIBLOOT_VERSION_PATCH}");
 
             assert_eq!(expected, libloot_version());
         }
