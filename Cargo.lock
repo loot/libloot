@@ -576,9 +576,9 @@ dependencies = [
 
 [[package]]
 name = "libloadorder"
-version = "18.8.1"
+version = "18.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c56f600203795fb91dd595c86ae99e469261c260973b464f93de70f20606ea16"
+checksum = "f954bf837e054963beea549a85e2161ead8c45cb5535ac8057e68d967daa9458"
 dependencies = [
  "dirs",
  "encoding_rs",
