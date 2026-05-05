@@ -2,6 +2,34 @@
 Version History
 ***************
 
+0.29.5 - 2026-05-05
+===================
+
+Fixed
+-----
+
+- Resolving the default user config and user data directories referenced in
+  OpenMW configuration when libloot is running inside a Flatpak sandbox and
+  OpenMW was not installed as a Flatpak application and the host did not have
+  the ``XDG_CONFIG_HOME`` and/or ``XDG_DATA_HOME`` environment variables defined
+  would incorrectly look for the directories inside the current Flatpak's XDG
+  directories instead of in the host's home directory. Via libloadorder.
+
+Changed
+-------
+
+- When reading BSAs and BA2s, libloot now stores asset paths instead of hashes
+  of their paths. This improves the accuracy of asset overlap checks performed
+  during sorting, as the hashes used by BSAs are relatively collision-prone.
+
+  This means that BSAs are now required to include folder and file names, and
+  any that don't will be skipped with an error logged for each. All official
+  BSAs and BSAs created using the official tools include folder and file names.
+- Updated dependency versions in Cargo.lock (which sets the versions used by the
+  C++ wrapper):
+
+  - Updated libloadorder to v18.8.2.
+
 0.29.4 - 2026-04-17
 ===================
 
