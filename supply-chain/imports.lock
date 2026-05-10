@@ -28,8 +28,8 @@ user-login = "taiki-e"
 user-name = "Taiki Endo"
 
 [[publisher.libc]]
-version = "0.2.182"
-when = "2026-02-13"
+version = "0.2.186"
+when = "2026-04-23"
 user-id = 55123
 user-login = "rust-lang-owner"
 
