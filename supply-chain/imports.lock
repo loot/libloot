@@ -1224,6 +1224,12 @@ criteria = "safe-to-deploy"
 delta = "1.0.40 -> 1.0.43"
 aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/master/supply-chain/audits.toml"
 
+[[audits.ortham.audits.rayon]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.11.0 -> 1.12.0"
+aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/master/supply-chain/audits.toml"
+
 [[audits.ortham.audits.rust-ini]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
