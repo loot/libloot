@@ -25,37 +25,32 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERFACE_METADATA_MESSAGE_TEST
 #define LOOT_TESTS_API_INTERFACE_METADATA_MESSAGE_TEST
 
+#include <gtest/gtest.h>
+
 #include "loot/metadata/message.h"
-#include "tests/common_game_test_fixture.h"
 
 namespace loot::test {
-class MessageTest : public CommonGameTestFixture {
-protected:
-  MessageTest() : CommonGameTestFixture(GameType::tes4) {}
-  typedef std::vector<MessageContent> MessageContents;
-};
-
-TEST_F(MessageTest, defaultConstructorShouldCreateNoteWithNoContent) {
+TEST(Message, defaultConstructorShouldCreateNoteWithNoContent) {
   Message message;
   EXPECT_EQ(MessageType::say, message.GetType());
-  EXPECT_EQ(MessageContents(), message.GetContent());
+  EXPECT_TRUE(message.GetContent().empty());
 }
 
-TEST_F(MessageTest,
-       scalarContentConstructorShouldCreateAMessageWithASingleContentString) {
+TEST(Message,
+     scalarContentConstructorShouldCreateAMessageWithASingleContentString) {
   MessageContent content = MessageContent("content1");
   Message message(MessageType::warn, content.GetText(), "condition1");
 
   EXPECT_EQ(MessageType::warn, message.GetType());
-  EXPECT_EQ(MessageContents({content}), message.GetContent());
+  EXPECT_EQ(std::vector<MessageContent>({content}), message.GetContent());
   EXPECT_EQ("condition1", message.GetCondition());
 }
 
-TEST_F(MessageTest,
-       vectorContentConstructorShouldCreateAMessageWithGivenContentStrings) {
-  MessageContents contents({
+TEST(Message,
+     vectorContentConstructorShouldCreateAMessageWithGivenContentStrings) {
+  std::vector<MessageContent> contents({
       MessageContent("content1"),
-      MessageContent("content2", french),
+      MessageContent("content2", "fr"),
   });
   Message message(MessageType::error, contents, "condition1");
 
@@ -64,18 +59,18 @@ TEST_F(MessageTest,
   EXPECT_EQ("condition1", message.GetCondition());
 }
 
-TEST_F(
-    MessageTest,
+TEST(
+    Message,
     vectorContentConstructorShouldThrowIfMultipleContentStringsAreGivenAndNoneAreEnglish) {
-  MessageContents contents({
-      MessageContent("content1", german),
-      MessageContent("content2", french),
+  std::vector<MessageContent> contents({
+      MessageContent("content1", "de"),
+      MessageContent("content2", "fr"),
   });
   EXPECT_THROW(Message(MessageType::error, contents, "condition1"),
                std::invalid_argument);
 }
 
-TEST_F(MessageTest, equalityShouldRequireEqualMessageTypes) {
+TEST(Message, equalityShouldRequireEqualMessageTypes) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -87,7 +82,7 @@ TEST_F(MessageTest, equalityShouldRequireEqualMessageTypes) {
   EXPECT_FALSE(message1 == message2);
 }
 
-TEST_F(MessageTest, equalityShouldRequireCaseSensitiveEqualityOnCondition) {
+TEST(Message, equalityShouldRequireCaseSensitiveEqualityOnCondition) {
   Message message1(MessageType::say, "content", "condition");
   Message message2(MessageType::say, "content", "condition");
 
@@ -104,7 +99,7 @@ TEST_F(MessageTest, equalityShouldRequireCaseSensitiveEqualityOnCondition) {
   EXPECT_FALSE(message1 == message2);
 }
 
-TEST_F(MessageTest, equalityShouldRequireEqualContent) {
+TEST(Message, equalityShouldRequireEqualContent) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -116,7 +111,7 @@ TEST_F(MessageTest, equalityShouldRequireEqualContent) {
   EXPECT_FALSE(message1 == message2);
 }
 
-TEST_F(MessageTest, inequalityShouldBeTheInverseOfEquality) {
+TEST(Message, inequalityShouldBeTheInverseOfEquality) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -153,7 +148,7 @@ TEST_F(MessageTest, inequalityShouldBeTheInverseOfEquality) {
   EXPECT_TRUE(message1 != message2);
 }
 
-TEST_F(MessageTest, lessThanOperatorShouldCompareMessageTypes) {
+TEST(Message, lessThanOperatorShouldCompareMessageTypes) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -167,7 +162,7 @@ TEST_F(MessageTest, lessThanOperatorShouldCompareMessageTypes) {
   EXPECT_FALSE(message2 < message1);
 }
 
-TEST_F(MessageTest, lessThanOperatorShouldCompareContent) {
+TEST(Message, lessThanOperatorShouldCompareContent) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -181,8 +176,8 @@ TEST_F(MessageTest, lessThanOperatorShouldCompareContent) {
   EXPECT_FALSE(message2 < message1);
 }
 
-TEST_F(
-    MessageTest,
+TEST(
+    Message,
     lessThanOperatorShouldUseCaseSensitiveLexicographicalComparisonForConditions) {
   Message message1(MessageType::say, "content", "condition");
   Message message2(MessageType::say, "content", "condition");
@@ -203,9 +198,8 @@ TEST_F(
   EXPECT_FALSE(message2 < message1);
 }
 
-TEST_F(
-    MessageTest,
-    greaterThanOperatorShouldReturnTrueIfTheSecondMessageIsLessThanTheFirst) {
+TEST(Message,
+     greaterThanOperatorShouldReturnTrueIfTheSecondMessageIsLessThanTheFirst) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
 
@@ -249,8 +243,8 @@ TEST_F(
   EXPECT_TRUE(message2 > message1);
 }
 
-TEST_F(
-    MessageTest,
+TEST(
+    Message,
     lessThanOrEqualOperatorShouldReturnTrueIfTheFirstMessageIsNotGreaterThanTheSecond) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");
@@ -295,8 +289,8 @@ TEST_F(
   EXPECT_FALSE(message2 <= message1);
 }
 
-TEST_F(
-    MessageTest,
+TEST(
+    Message,
     greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstMessageIsNotLessThanTheSecond) {
   Message message1(MessageType::say, "content");
   Message message2(MessageType::say, "content");

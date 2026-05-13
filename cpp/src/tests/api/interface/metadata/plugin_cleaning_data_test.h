@@ -25,450 +25,442 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_API_INTERFACE_METADATA_PLUGIN_CLEANING_DATA_TEST
 #define LOOT_TESTS_API_INTERFACE_METADATA_PLUGIN_CLEANING_DATA_TEST
 
+#include <gtest/gtest.h>
+
 #include "loot/metadata/plugin_cleaning_data.h"
-#include "tests/common_game_test_fixture.h"
 
 namespace loot::test {
-class PluginCleaningDataTest : public CommonGameTestFixture {
-protected:
-  PluginCleaningDataTest() :
-      CommonGameTestFixture(GameType::tes4),
-      info_(std::vector<MessageContent>({
-          MessageContent("info"),
-      })) {}
-
-  const std::vector<MessageContent> info_;
-};
-
-TEST_F(PluginCleaningDataTest,
-       defaultConstructorShouldLeaveAllCountsAtZeroAndTheUtilityStringEmpty) {
-  PluginCleaningData info;
-  EXPECT_EQ(0u, info.GetCRC());
-  EXPECT_EQ(0u, info.GetITMCount());
-  EXPECT_EQ(0u, info.GetDeletedReferenceCount());
-  EXPECT_EQ(0u, info.GetDeletedNavmeshCount());
-  EXPECT_TRUE(info.GetCleaningUtility().empty());
-  EXPECT_TRUE(info.GetDetail().empty());
-  EXPECT_TRUE(info.GetCondition().empty());
+TEST(PluginCleaningData,
+     defaultConstructorShouldLeaveAllCountsAtZeroAndTheUtilityStringEmpty) {
+  PluginCleaningData data;
+  EXPECT_EQ(0u, data.GetCRC());
+  EXPECT_EQ(0u, data.GetITMCount());
+  EXPECT_EQ(0u, data.GetDeletedReferenceCount());
+  EXPECT_EQ(0u, data.GetDeletedNavmeshCount());
+  EXPECT_TRUE(data.GetCleaningUtility().empty());
+  EXPECT_TRUE(data.GetDetail().empty());
+  EXPECT_TRUE(data.GetCondition().empty());
 }
 
-TEST_F(PluginCleaningDataTest, contentConstructorShouldStoreAllGivenData) {
-  PluginCleaningData info(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_EQ(0x12345678u, info.GetCRC());
-  EXPECT_EQ(2u, info.GetITMCount());
-  EXPECT_EQ(10u, info.GetDeletedReferenceCount());
-  EXPECT_EQ(30u, info.GetDeletedNavmeshCount());
-  EXPECT_EQ("cleaner", info.GetCleaningUtility());
-  EXPECT_EQ(info_, info.GetDetail());
-  EXPECT_EQ("condition", info.GetCondition());
+TEST(PluginCleaningData, contentConstructorShouldStoreAllGivenData) {
+  const std::vector<MessageContent> info{MessageContent("info")};
+
+  PluginCleaningData data(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_EQ(0x12345678u, data.GetCRC());
+  EXPECT_EQ(2u, data.GetITMCount());
+  EXPECT_EQ(10u, data.GetDeletedReferenceCount());
+  EXPECT_EQ(30u, data.GetDeletedNavmeshCount());
+  EXPECT_EQ("cleaner", data.GetCleaningUtility());
+  EXPECT_EQ(info, data.GetDetail());
+  EXPECT_EQ("condition", data.GetCondition());
 }
 
-TEST_F(PluginCleaningDataTest, equalityShouldCheckEqualityOfAllFields) {
-  PluginCleaningData info1(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  PluginCleaningData info2(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 == info2);
+TEST(PluginCleaningData, equalityShouldCheckEqualityOfAllFields) {
+  const std::vector<MessageContent> info{MessageContent("info")};
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x87654321, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 == info2);
+  PluginCleaningData data1(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  PluginCleaningData data2(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 == data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "Cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 == info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x87654321, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 == data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner1", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner2", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 == info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "Cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 == data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 = PluginCleaningData(0x12345678,
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner1", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner2", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 == data2);
+
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 = PluginCleaningData(0x12345678,
                              "cleaner",
                              std::vector<MessageContent>(),
                              2,
                              10,
                              30,
                              "condition");
-  EXPECT_FALSE(info1 == info2);
+  EXPECT_FALSE(data1 == data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 4, 10, 30, "condition");
-  EXPECT_FALSE(info1 == info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 4, 10, 30, "condition");
+  EXPECT_FALSE(data1 == data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 20, 30, "condition");
-  EXPECT_FALSE(info1 == info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 20, 30, "condition");
+  EXPECT_FALSE(data1 == data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 60, "condition");
-  EXPECT_FALSE(info1 == info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 60, "condition");
+  EXPECT_FALSE(data1 == data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "Condition");
-  EXPECT_FALSE(info1 == info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "Condition");
+  EXPECT_FALSE(data1 == data2);
 }
 
-TEST_F(PluginCleaningDataTest, inequalityShouldBeTheInverseOfEquality) {
-  PluginCleaningData info1(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  PluginCleaningData info2(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 != info2);
+TEST(PluginCleaningData, inequalityShouldBeTheInverseOfEquality) {
+  const std::vector<MessageContent> info{MessageContent("info")};
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x87654321, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 != info2);
+  PluginCleaningData data1(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  PluginCleaningData data2(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 != data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "Cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 != info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x87654321, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 != data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner1", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner2", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 != info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "Cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 != data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 = PluginCleaningData(0x12345678,
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner1", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner2", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 != data2);
+
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 = PluginCleaningData(0x12345678,
                              "cleaner",
                              std::vector<MessageContent>(),
                              2,
                              10,
                              30,
                              "condition");
-  EXPECT_TRUE(info1 != info2);
+  EXPECT_TRUE(data1 != data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 4, 10, 30, "condition");
-  EXPECT_TRUE(info1 != info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 4, 10, 30, "condition");
+  EXPECT_TRUE(data1 != data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 20, 30, "condition");
-  EXPECT_TRUE(info1 != info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 20, 30, "condition");
+  EXPECT_TRUE(data1 != data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 60, "condition");
-  EXPECT_TRUE(info1 != info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 60, "condition");
+  EXPECT_TRUE(data1 != data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "Condition");
-  EXPECT_TRUE(info1 != info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "Condition");
+  EXPECT_TRUE(data1 != data2);
 }
 
-TEST_F(PluginCleaningDataTest, lessThanOperatorShouldCompareAllFields) {
-  PluginCleaningData info1(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  PluginCleaningData info2(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 < info2);
-  EXPECT_FALSE(info2 < info1);
+TEST(PluginCleaningData, lessThanOperatorShouldCompareAllFields) {
+  const std::vector<MessageContent> info{MessageContent("info")};
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x87654321, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 < info2);
-  EXPECT_FALSE(info2 < info1);
+  PluginCleaningData data1(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  PluginCleaningData data2(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 < data2);
+  EXPECT_FALSE(data2 < data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "Cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info2 < info1);
-  EXPECT_FALSE(info1 < info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x87654321, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 < data2);
+  EXPECT_FALSE(data2 < data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner1", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner2", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 < info2);
-  EXPECT_FALSE(info2 < info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "Cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data2 < data1);
+  EXPECT_FALSE(data1 < data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 = PluginCleaningData(0x12345678,
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner1", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner2", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 < data2);
+  EXPECT_FALSE(data2 < data1);
+
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 = PluginCleaningData(0x12345678,
                              "cleaner",
                              std::vector<MessageContent>(),
                              2,
                              10,
                              30,
                              "condition");
-  EXPECT_TRUE(info2 < info1);
-  EXPECT_FALSE(info1 < info2);
+  EXPECT_TRUE(data2 < data1);
+  EXPECT_FALSE(data1 < data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 4, 10, 30, "condition");
-  EXPECT_TRUE(info1 < info2);
-  EXPECT_FALSE(info2 < info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 4, 10, 30, "condition");
+  EXPECT_TRUE(data1 < data2);
+  EXPECT_FALSE(data2 < data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 20, 30, "condition");
-  EXPECT_TRUE(info1 < info2);
-  EXPECT_FALSE(info2 < info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 20, 30, "condition");
+  EXPECT_TRUE(data1 < data2);
+  EXPECT_FALSE(data2 < data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 60, "condition");
-  EXPECT_TRUE(info1 < info2);
-  EXPECT_FALSE(info2 < info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 60, "condition");
+  EXPECT_TRUE(data1 < data2);
+  EXPECT_FALSE(data2 < data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "Condition");
-  EXPECT_TRUE(info2 < info1);
-  EXPECT_FALSE(info1 < info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "Condition");
+  EXPECT_TRUE(data2 < data1);
+  EXPECT_FALSE(data1 < data2);
 }
 
-TEST_F(
-    PluginCleaningDataTest,
+TEST(
+    PluginCleaningData,
     greaterThanOperatorShouldReturnTrueIfTheSecondPluginCleaningDataIsLessThanTheFirst) {
-  PluginCleaningData info1(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  PluginCleaningData info2(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 > info2);
-  EXPECT_FALSE(info2 > info1);
+  const std::vector<MessageContent> info{MessageContent("info")};
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x87654321, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 > info2);
-  EXPECT_TRUE(info2 > info1);
+  PluginCleaningData data1(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  PluginCleaningData data2(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 > data2);
+  EXPECT_FALSE(data2 > data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "Cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info2 > info1);
-  EXPECT_TRUE(info1 > info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x87654321, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 > data2);
+  EXPECT_TRUE(data2 > data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner1", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner2", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 > info2);
-  EXPECT_TRUE(info2 > info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "Cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data2 > data1);
+  EXPECT_TRUE(data1 > data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 = PluginCleaningData(0x12345678,
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner1", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner2", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 > data2);
+  EXPECT_TRUE(data2 > data1);
+
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 = PluginCleaningData(0x12345678,
                              "cleaner",
                              std::vector<MessageContent>(),
                              2,
                              10,
                              30,
                              "condition");
-  EXPECT_FALSE(info2 > info1);
-  EXPECT_TRUE(info1 > info2);
+  EXPECT_FALSE(data2 > data1);
+  EXPECT_TRUE(data1 > data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 4, 10, 30, "condition");
-  EXPECT_FALSE(info1 > info2);
-  EXPECT_TRUE(info2 > info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 4, 10, 30, "condition");
+  EXPECT_FALSE(data1 > data2);
+  EXPECT_TRUE(data2 > data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 20, 30, "condition");
-  EXPECT_FALSE(info1 > info2);
-  EXPECT_TRUE(info2 > info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 20, 30, "condition");
+  EXPECT_FALSE(data1 > data2);
+  EXPECT_TRUE(data2 > data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 60, "condition");
-  EXPECT_FALSE(info1 > info2);
-  EXPECT_TRUE(info2 > info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 60, "condition");
+  EXPECT_FALSE(data1 > data2);
+  EXPECT_TRUE(data2 > data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "Condition");
-  EXPECT_FALSE(info2 > info1);
-  EXPECT_TRUE(info1 > info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "Condition");
+  EXPECT_FALSE(data2 > data1);
+  EXPECT_TRUE(data1 > data2);
 }
 
-TEST_F(
-    PluginCleaningDataTest,
+TEST(
+    PluginCleaningData,
     lessThanOrEqualOperatorShouldReturnTrueIfTheFirstPluginCleaningDataIsNotGreaterThanTheSecond) {
-  PluginCleaningData info1(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  PluginCleaningData info2(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 <= info2);
-  EXPECT_TRUE(info2 <= info1);
+  const std::vector<MessageContent> info{MessageContent("info")};
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x87654321, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 <= info2);
-  EXPECT_FALSE(info2 <= info1);
+  PluginCleaningData data1(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  PluginCleaningData data2(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 <= data2);
+  EXPECT_TRUE(data2 <= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "Cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info2 <= info1);
-  EXPECT_FALSE(info1 <= info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x87654321, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 <= data2);
+  EXPECT_FALSE(data2 <= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner1", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner2", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 <= info2);
-  EXPECT_FALSE(info2 <= info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "Cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data2 <= data1);
+  EXPECT_FALSE(data1 <= data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 = PluginCleaningData(0x12345678,
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner1", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner2", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 <= data2);
+  EXPECT_FALSE(data2 <= data1);
+
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 = PluginCleaningData(0x12345678,
                              "cleaner",
                              std::vector<MessageContent>(),
                              2,
                              10,
                              30,
                              "condition");
-  EXPECT_TRUE(info2 <= info1);
-  EXPECT_FALSE(info1 <= info2);
+  EXPECT_TRUE(data2 <= data1);
+  EXPECT_FALSE(data1 <= data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 4, 10, 30, "condition");
-  EXPECT_TRUE(info1 <= info2);
-  EXPECT_FALSE(info2 <= info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 4, 10, 30, "condition");
+  EXPECT_TRUE(data1 <= data2);
+  EXPECT_FALSE(data2 <= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 20, 30, "condition");
-  EXPECT_TRUE(info1 <= info2);
-  EXPECT_FALSE(info2 <= info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 20, 30, "condition");
+  EXPECT_TRUE(data1 <= data2);
+  EXPECT_FALSE(data2 <= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 60, "condition");
-  EXPECT_TRUE(info1 <= info2);
-  EXPECT_FALSE(info2 <= info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 60, "condition");
+  EXPECT_TRUE(data1 <= data2);
+  EXPECT_FALSE(data2 <= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "Condition");
-  EXPECT_TRUE(info2 <= info1);
-  EXPECT_FALSE(info1 <= info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "Condition");
+  EXPECT_TRUE(data2 <= data1);
+  EXPECT_FALSE(data1 <= data2);
 }
 
-TEST_F(
-    PluginCleaningDataTest,
+TEST(
+    PluginCleaningData,
     greaterThanOrEqualToOperatorShouldReturnTrueIfTheFirstPluginCleaningDataIsNotLessThanTheSecond) {
-  PluginCleaningData info1(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  PluginCleaningData info2(
-      0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_TRUE(info1 >= info2);
-  EXPECT_TRUE(info2 >= info1);
+  const std::vector<MessageContent> info{MessageContent("info")};
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x87654321, "cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 >= info2);
-  EXPECT_TRUE(info2 >= info1);
+  PluginCleaningData data1(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  PluginCleaningData data2(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_TRUE(data1 >= data2);
+  EXPECT_TRUE(data2 >= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "Cleaner", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info2 >= info1);
-  EXPECT_TRUE(info1 >= info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x87654321, "cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 >= data2);
+  EXPECT_TRUE(data2 >= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner1", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner2", info_, 2, 10, 30, "condition");
-  EXPECT_FALSE(info1 >= info2);
-  EXPECT_TRUE(info2 >= info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "Cleaner", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data2 >= data1);
+  EXPECT_TRUE(data1 >= data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 = PluginCleaningData(0x12345678,
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner1", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner2", info, 2, 10, 30, "condition");
+  EXPECT_FALSE(data1 >= data2);
+  EXPECT_TRUE(data2 >= data1);
+
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 = PluginCleaningData(0x12345678,
                              "cleaner",
                              std::vector<MessageContent>(),
                              2,
                              10,
                              30,
                              "condition");
-  EXPECT_FALSE(info2 >= info1);
-  EXPECT_TRUE(info1 >= info2);
+  EXPECT_FALSE(data2 >= data1);
+  EXPECT_TRUE(data1 >= data2);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 4, 10, 30, "condition");
-  EXPECT_FALSE(info1 >= info2);
-  EXPECT_TRUE(info2 >= info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 4, 10, 30, "condition");
+  EXPECT_FALSE(data1 >= data2);
+  EXPECT_TRUE(data2 >= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 20, 30, "condition");
-  EXPECT_FALSE(info1 >= info2);
-  EXPECT_TRUE(info2 >= info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 20, 30, "condition");
+  EXPECT_FALSE(data1 >= data2);
+  EXPECT_TRUE(data2 >= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 60, "condition");
-  EXPECT_FALSE(info1 >= info2);
-  EXPECT_TRUE(info2 >= info1);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 60, "condition");
+  EXPECT_FALSE(data1 >= data2);
+  EXPECT_TRUE(data2 >= data1);
 
-  info1 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "condition");
-  info2 =
-      PluginCleaningData(0x12345678, "cleaner", info_, 2, 10, 30, "Condition");
-  EXPECT_FALSE(info2 >= info1);
-  EXPECT_TRUE(info1 >= info2);
+  data1 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "condition");
+  data2 =
+      PluginCleaningData(0x12345678, "cleaner", info, 2, 10, 30, "Condition");
+  EXPECT_FALSE(data2 >= data1);
+  EXPECT_TRUE(data1 >= data2);
 }
 }
 

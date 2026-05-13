@@ -54,38 +54,61 @@ static const std::array<GameType, 12> ALL_GAME_TYPES = {
     GameType::oblivionRemastered,
 };
 
+inline constexpr std::string_view FRENCH = "fr";
+inline constexpr std::string_view GERMAN = "de";
+
+inline constexpr std::string_view MISSING_ESP = "Blank.missing.esp";
+inline constexpr std::string_view NON_PLUGIN_FILE = "NotAPlugin.esm";
+inline constexpr std::string_view INVALID_PLUGIN = "Invalid.esm";
+inline constexpr std::string_view BLANK_ESM = "Blank.esm";
+inline constexpr std::string_view BLANK_FULL_ESM = "Blank.full.esm";
+inline constexpr std::string_view BLANK_MEDIUM_ESM = "Blank.medium.esm";
+inline constexpr std::string_view BLANK_DIFFERENT_ESM = "Blank - Different.esm";
+inline constexpr std::string_view BLANK_MASTER_DEPENDENT_ESM =
+    "Blank - Master Dependent.esm";
+inline constexpr std::string_view BLANK_DIFFERENT_MASTER_DEPENDENT_ESM =
+    "Blank - Different Master Dependent.esm";
+inline constexpr std::string_view BLANK_ESL = "Blank.esl";
+inline constexpr std::string_view BLANK_ESP = "Blank.esp";
+inline constexpr std::string_view BLANK_DIFFERENT_ESP = "Blank - Different.esp";
+inline constexpr std::string_view BLANK_MASTER_DEPENDENT_ESP =
+    "Blank - Master Dependent.esp";
+inline constexpr std::string_view BLANK_DIFFERENT_MASTER_DEPENDENT_ESP =
+    "Blank - Different Master Dependent.esp";
+inline constexpr std::string_view BLANK_PLUGIN_DEPENDENT_ESP =
+    "Blank - Plugin Dependent.esp";
+inline constexpr std::string_view BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP =
+    "Blank - Different Plugin Dependent.esp";
+
 class CommonGameTestFixture : public ::testing::Test {
 protected:
   CommonGameTestFixture(GameType gameType) :
       gameType_(gameType),
       rootTestPath(getRootTestPath()),
-      french("fr"),
-      german("de"),
+      french(FRENCH),
+      german(GERMAN),
       missingPath(rootTestPath / "missing"),
       gamePath(rootTestPath / "games" / "game"),
       dataPath(gamePath / getPluginsFolder()),
       localPath(rootTestPath / "local" / "game"),
       metadataFilesPath(rootTestPath / "metadata"),
       masterFile(getMasterFile()),
-      missingEsp("Blank.missing.esp"),
-      nonPluginFile("NotAPlugin.esm"),
-      invalidPlugin("Invalid.esm"),
-      blankEsm("Blank.esm"),
-      blankFullEsm("Blank.full.esm"),
-      blankMediumEsm("Blank.medium.esm"),
-      blankDifferentEsm("Blank - Different.esm"),
-      blankMasterDependentEsm("Blank - Master Dependent.esm"),
-      blankDifferentMasterDependentEsm(
-          "Blank - Different Master Dependent.esm"),
-      blankEsl("Blank.esl"),
-      blankEsp("Blank.esp"),
-      blankDifferentEsp("Blank - Different.esp"),
-      blankMasterDependentEsp("Blank - Master Dependent.esp"),
-      blankDifferentMasterDependentEsp(
-          "Blank - Different Master Dependent.esp"),
-      blankPluginDependentEsp("Blank - Plugin Dependent.esp"),
-      blankDifferentPluginDependentEsp(
-          "Blank - Different Plugin Dependent.esp"),
+      missingEsp(MISSING_ESP),
+      nonPluginFile(NON_PLUGIN_FILE),
+      invalidPlugin(INVALID_PLUGIN),
+      blankEsm(BLANK_ESM),
+      blankFullEsm(BLANK_FULL_ESM),
+      blankMediumEsm(BLANK_MEDIUM_ESM),
+      blankDifferentEsm(BLANK_DIFFERENT_ESM),
+      blankMasterDependentEsm(BLANK_MASTER_DEPENDENT_ESM),
+      blankDifferentMasterDependentEsm(BLANK_DIFFERENT_MASTER_DEPENDENT_ESM),
+      blankEsl(BLANK_ESL),
+      blankEsp(BLANK_ESP),
+      blankDifferentEsp(BLANK_DIFFERENT_ESP),
+      blankMasterDependentEsp(BLANK_MASTER_DEPENDENT_ESP),
+      blankDifferentMasterDependentEsp(BLANK_DIFFERENT_MASTER_DEPENDENT_ESP),
+      blankPluginDependentEsp(BLANK_PLUGIN_DEPENDENT_ESP),
+      blankDifferentPluginDependentEsp(BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP),
       blankEsmCrc(getBlankEsmCrc()) {
     assertInitialState();
   }

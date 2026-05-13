@@ -29,19 +29,8 @@ along with LOOT.  If not, see
 #include "tests/common_game_test_fixture.h"
 
 namespace loot::test {
-class PluginMetadataTest : public CommonGameTestFixture {
-protected:
-  PluginMetadataTest() :
-      CommonGameTestFixture(GameType::tes5),
-      info_(std::vector<MessageContent>({
-          MessageContent("info"),
-      })) {}
-
-  const std::vector<MessageContent> info_;
-};
-
-TEST_F(
-    PluginMetadataTest,
+TEST(
+    PluginMetadata,
     defaultConstructorShouldLeaveNameEmptyAndEnableMetadataAndLeaveGroupUnset) {
   PluginMetadata plugin;
 
@@ -49,50 +38,49 @@ TEST_F(
   EXPECT_FALSE(plugin.GetGroup());
 }
 
-TEST_F(
-    PluginMetadataTest,
+TEST(
+    PluginMetadata,
     stringConstructorShouldSetNameToGivenStringAndEnableMetadataAndLeaveGroupUnset) {
-  PluginMetadata plugin(blankEsm);
+  PluginMetadata plugin(BLANK_ESM);
 
-  EXPECT_EQ(blankEsm, plugin.GetName());
+  EXPECT_EQ(BLANK_ESM, plugin.GetName());
   EXPECT_FALSE(plugin.GetGroup());
 }
 
-TEST_F(PluginMetadataTest,
-       nameMatchesShouldUseCaseInsensitiveNameComparisonForNonRegexNames) {
-  PluginMetadata plugin(blankEsm);
+TEST(PluginMetadata,
+     nameMatchesShouldUseCaseInsensitiveNameComparisonForNonRegexNames) {
+  PluginMetadata plugin(BLANK_ESM);
 
   EXPECT_TRUE(plugin.NameMatches("blank.esm"));
-  EXPECT_FALSE(plugin.NameMatches(blankDifferentEsm));
+  EXPECT_FALSE(plugin.NameMatches(BLANK_DIFFERENT_ESM));
 }
 
-TEST_F(PluginMetadataTest,
-       nameMatchesShouldTreatGivenPluginNameStringsAsLiterals) {
-  PluginMetadata plugin(blankEsm);
+TEST(PluginMetadata, nameMatchesShouldTreatGivenPluginNameStringsAsLiterals) {
+  PluginMetadata plugin(BLANK_ESM);
   std::string regex = "blan.\\.esm";
 
   EXPECT_FALSE(plugin.NameMatches(regex));
 }
 
-TEST_F(PluginMetadataTest,
-       nameMatchesShouldUseCaseInsensitiveRegexMatchingForARegexName) {
+TEST(PluginMetadata,
+     nameMatchesShouldUseCaseInsensitiveRegexMatchingForARegexName) {
   PluginMetadata plugin("Blan.\\.esm");
 
   EXPECT_TRUE(plugin.NameMatches("blank.esm"));
-  EXPECT_FALSE(plugin.NameMatches(blankDifferentEsm));
+  EXPECT_FALSE(plugin.NameMatches(BLANK_DIFFERENT_ESM));
 }
 
-TEST_F(PluginMetadataTest, mergeMetadataShouldNotChangeName) {
-  PluginMetadata plugin1(blankEsm);
-  PluginMetadata plugin2(blankDifferentEsm);
+TEST(PluginMetadata, mergeMetadataShouldNotChangeName) {
+  PluginMetadata plugin1(BLANK_ESM);
+  PluginMetadata plugin2(BLANK_DIFFERENT_ESM);
 
   plugin1.MergeMetadata(plugin2);
 
-  EXPECT_EQ(blankEsm, plugin1.GetName());
+  EXPECT_EQ(BLANK_ESM, plugin1.GetName());
 }
 
-TEST_F(PluginMetadataTest,
-       mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothExplicit) {
+TEST(PluginMetadata,
+     mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothExplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -103,8 +91,8 @@ TEST_F(PluginMetadataTest,
   EXPECT_EQ("group1", plugin1.GetGroup());
 }
 
-TEST_F(PluginMetadataTest,
-       mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothImplicit) {
+TEST(PluginMetadata,
+     mergeMetadataShouldNotUseMergedGroupIfItAndCurrentGroupAreBothImplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -113,8 +101,8 @@ TEST_F(PluginMetadataTest,
   EXPECT_FALSE(plugin1.GetGroup().has_value());
 }
 
-TEST_F(
-    PluginMetadataTest,
+TEST(
+    PluginMetadata,
     mergeMetadataShouldNotUseMergedGroupIfItIsImplicitAndCurrentGroupIsExplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
@@ -125,9 +113,8 @@ TEST_F(
   EXPECT_EQ("group1", plugin1.GetGroup());
 }
 
-TEST_F(
-    PluginMetadataTest,
-    mergeMetadataShouldUseMergedGroupIfItIsExplicitAndCurrentGroupIsImplicit) {
+TEST(PluginMetadata,
+     mergeMetadataShouldUseMergedGroupIfItIsExplicitAndCurrentGroupIsImplicit) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
 
@@ -137,11 +124,11 @@ TEST_F(
   EXPECT_EQ("group2", plugin1.GetGroup());
 }
 
-TEST_F(PluginMetadataTest, mergeMetadataShouldMergeLoadAfterData) {
+TEST(PluginMetadata, mergeMetadataShouldMergeLoadAfterData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
-  File file1(blankEsm);
-  File file2(blankDifferentEsm);
+  File file1(BLANK_ESM);
+  File file2(BLANK_DIFFERENT_ESM);
 
   plugin1.SetLoadAfterFiles({file1});
   plugin2.SetLoadAfterFiles({file1, file2});
@@ -150,11 +137,11 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeLoadAfterData) {
   EXPECT_EQ(std::vector<File>({file1, file2}), plugin1.GetLoadAfterFiles());
 }
 
-TEST_F(PluginMetadataTest, mergeMetadataShouldMergeRequirementData) {
+TEST(PluginMetadata, mergeMetadataShouldMergeRequirementData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
-  File file1(blankEsm);
-  File file2(blankDifferentEsm);
+  File file1(BLANK_ESM);
+  File file2(BLANK_DIFFERENT_ESM);
 
   plugin1.SetRequirements({file1});
   plugin2.SetRequirements({file1, file2});
@@ -163,11 +150,11 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeRequirementData) {
   EXPECT_EQ(std::vector<File>({file1, file2}), plugin1.GetRequirements());
 }
 
-TEST_F(PluginMetadataTest, mergeMetadataShouldMergeIncompatibilityData) {
+TEST(PluginMetadata, mergeMetadataShouldMergeIncompatibilityData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
-  File file1(blankEsm);
-  File file2(blankDifferentEsm);
+  File file1(BLANK_ESM);
+  File file2(BLANK_DIFFERENT_ESM);
 
   plugin1.SetIncompatibilities({file1});
   plugin2.SetIncompatibilities({file1, file2});
@@ -176,7 +163,7 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeIncompatibilityData) {
   EXPECT_EQ(std::vector<File>({file1, file2}), plugin1.GetIncompatibilities());
 }
 
-TEST_F(PluginMetadataTest, mergeMetadataShouldMergeMessages) {
+TEST(PluginMetadata, mergeMetadataShouldMergeMessages) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Message message(MessageType::say, "content");
@@ -188,7 +175,7 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeMessages) {
   EXPECT_EQ(std::vector<Message>({message, message}), plugin1.GetMessages());
 }
 
-TEST_F(PluginMetadataTest, mergeMetadataShouldMergeTags) {
+TEST(PluginMetadata, mergeMetadataShouldMergeTags) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Tag tag1("Relev");
@@ -202,11 +189,13 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeTags) {
   EXPECT_EQ(std::vector<Tag>({tag1, tag2, tag3}), plugin1.GetTags());
 }
 
-TEST_F(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
+TEST(PluginMetadata, mergeMetadataShouldMergeDirtyInfoData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
-  PluginCleaningData info1(0x5, "utility", info_, 1, 2, 3, "condition");
-  PluginCleaningData info2(0xA, "utility", info_, 1, 2, 3, "condition");
+  PluginCleaningData info1(
+      0x5, "utility", {MessageContent("info")}, 1, 2, 3, "condition");
+  PluginCleaningData info2(
+      0xA, "utility", {MessageContent("info")}, 1, 2, 3, "condition");
 
   plugin1.SetDirtyInfo({info1});
   plugin2.SetDirtyInfo({info1, info2});
@@ -215,7 +204,7 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeDirtyInfoData) {
   EXPECT_EQ(std::vector<PluginCleaningData>({info1, info2}),
             plugin1.GetDirtyInfo());
 }
-TEST_F(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
+TEST(PluginMetadata, mergeMetadataShouldMergeCleanInfoData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   PluginCleaningData info1(0x5, "utility");
@@ -229,7 +218,7 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeCleanInfoData) {
             plugin1.GetCleanInfo());
 }
 
-TEST_F(PluginMetadataTest, mergeMetadataShouldMergeLocationData) {
+TEST(PluginMetadata, mergeMetadataShouldMergeLocationData) {
   PluginMetadata plugin1;
   PluginMetadata plugin2;
   Location location1("http://www.example.com/1");
@@ -243,7 +232,7 @@ TEST_F(PluginMetadataTest, mergeMetadataShouldMergeLocationData) {
             plugin1.GetLocations());
 }
 
-TEST_F(PluginMetadataTest, unsetGroupShouldLeaveNoGroupValueSet) {
+TEST(PluginMetadata, unsetGroupShouldLeaveNoGroupValueSet) {
   PluginMetadata plugin;
   EXPECT_FALSE(plugin.GetGroup().has_value());
 
@@ -254,137 +243,134 @@ TEST_F(PluginMetadataTest, unsetGroupShouldLeaveNoGroupValueSet) {
   EXPECT_FALSE(plugin.GetGroup().has_value());
 }
 
-TEST_F(PluginMetadataTest,
-       hasNameOnlyShouldBeTrueForADefaultConstructedPluginMetadataObject) {
+TEST(PluginMetadata,
+     hasNameOnlyShouldBeTrueForADefaultConstructedPluginMetadataObject) {
   PluginMetadata plugin;
 
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest,
-       hasNameOnlyShouldBeTrueForAPluginMetadataObjectConstructedWithAName) {
-  PluginMetadata plugin(blankEsp);
+TEST(PluginMetadata,
+     hasNameOnlyShouldBeTrueForAPluginMetadataObjectConstructedWithAName) {
+  PluginMetadata plugin(BLANK_ESP);
 
   EXPECT_TRUE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTheGroupIsExplicit) {
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfTheGroupIsExplicit) {
   PluginMetadata plugin;
   plugin.SetGroup("group");
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfLoadAfterMetadataExists) {
-  PluginMetadata plugin(blankEsp);
-  plugin.SetLoadAfterFiles({File(blankEsm)});
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfLoadAfterMetadataExists) {
+  PluginMetadata plugin(BLANK_ESP);
+  plugin.SetLoadAfterFiles({File(BLANK_ESM)});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest,
-       hasNameOnlyShouldBeFalseIfRequirementMetadataExists) {
-  PluginMetadata plugin(blankEsp);
-  plugin.SetRequirements({File(blankEsm)});
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfRequirementMetadataExists) {
+  PluginMetadata plugin(BLANK_ESP);
+  plugin.SetRequirements({File(BLANK_ESM)});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest,
-       hasNameOnlyShouldBeFalseIfIncompatibilityMetadataExists) {
-  PluginMetadata plugin(blankEsp);
-  plugin.SetIncompatibilities({File(blankEsm)});
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfIncompatibilityMetadataExists) {
+  PluginMetadata plugin(BLANK_ESP);
+  plugin.SetIncompatibilities({File(BLANK_ESM)});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfMessagesExist) {
-  PluginMetadata plugin(blankEsp);
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfMessagesExist) {
+  PluginMetadata plugin(BLANK_ESP);
   plugin.SetMessages({Message(MessageType::say, "content")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfTagsExist) {
-  PluginMetadata plugin(blankEsp);
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfTagsExist) {
+  PluginMetadata plugin(BLANK_ESP);
   plugin.SetTags({Tag("Relev")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfDirtyInfoExists) {
-  PluginMetadata plugin(blankEsp);
-  plugin.SetDirtyInfo(
-      {PluginCleaningData(5, "utility", info_, 0, 1, 2, "condition")});
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfDirtyInfoExists) {
+  PluginMetadata plugin(BLANK_ESP);
+  plugin.SetDirtyInfo({PluginCleaningData(
+      5, "utility", {MessageContent("info")}, 0, 1, 2, "condition")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfCleanInfoExists) {
-  PluginMetadata plugin(blankEsp);
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfCleanInfoExists) {
+  PluginMetadata plugin(BLANK_ESP);
   plugin.SetCleanInfo({PluginCleaningData(5, "utility")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest, hasNameOnlyShouldBeFalseIfLocationsExist) {
-  PluginMetadata plugin(blankEsp);
+TEST(PluginMetadata, hasNameOnlyShouldBeFalseIfLocationsExist) {
+  PluginMetadata plugin(BLANK_ESP);
   plugin.SetLocations({Location("http://www.example.com")});
 
   EXPECT_FALSE(plugin.HasNameOnly());
 }
 
-TEST_F(PluginMetadataTest, isRegexPluginShouldBeFalseForAnEmptyPluginName) {
+TEST(PluginMetadata, isRegexPluginShouldBeFalseForAnEmptyPluginName) {
   PluginMetadata plugin;
 
   EXPECT_FALSE(plugin.IsRegexPlugin());
 }
 
-TEST_F(PluginMetadataTest, isRegexPluginShouldBeFalseForAnExactPluginFilename) {
-  PluginMetadata plugin(blankEsm);
+TEST(PluginMetadata, isRegexPluginShouldBeFalseForAnExactPluginFilename) {
+  PluginMetadata plugin(BLANK_ESM);
 
   EXPECT_FALSE(plugin.IsRegexPlugin());
 }
 
-TEST_F(PluginMetadataTest,
-       isRegexPluginShouldBeTrueIfThePluginNameContainsAColon) {
+TEST(PluginMetadata, isRegexPluginShouldBeTrueIfThePluginNameContainsAColon) {
   PluginMetadata plugin("Blank:.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_F(PluginMetadataTest,
-       isRegexPluginShouldBeTrueIfThePluginNameContainsABackslash) {
+TEST(PluginMetadata,
+     isRegexPluginShouldBeTrueIfThePluginNameContainsABackslash) {
   PluginMetadata plugin("Blank\\.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_F(PluginMetadataTest,
-       isRegexPluginShouldBeTrueIfThePluginNameContainsAnAsterisk) {
+TEST(PluginMetadata,
+     isRegexPluginShouldBeTrueIfThePluginNameContainsAnAsterisk) {
   PluginMetadata plugin("Blank*.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_F(PluginMetadataTest,
-       isRegexPluginShouldBeTrueIfThePluginNameContainsAQuestionMark) {
+TEST(PluginMetadata,
+     isRegexPluginShouldBeTrueIfThePluginNameContainsAQuestionMark) {
   PluginMetadata plugin("Blank?.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_F(PluginMetadataTest,
-       isRegexPluginShouldBeTrueIfThePluginNameContainsAVerticalBar) {
+TEST(PluginMetadata,
+     isRegexPluginShouldBeTrueIfThePluginNameContainsAVerticalBar) {
   PluginMetadata plugin("Blank|.esm");
 
   EXPECT_TRUE(plugin.IsRegexPlugin());
 }
 
-TEST_F(PluginMetadataTest,
-       asYamlShouldReturnAStringContainingTheMetadataEmittedAsYaml) {
-  PluginMetadata plugin(blankEsm);
-  plugin.SetLoadAfterFiles({File(blankEsm)});
+TEST(PluginMetadata,
+     asYamlShouldReturnAStringContainingTheMetadataEmittedAsYaml) {
+  PluginMetadata plugin(BLANK_ESM);
+  plugin.SetLoadAfterFiles({File(BLANK_ESM)});
 
   EXPECT_EQ(
       "name: 'Blank.esm'\n"

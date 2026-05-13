@@ -30,8 +30,6 @@ along with LOOT.  If not, see
 #include "loot/metadata/message_content.h"
 
 namespace loot::test {
-const std::string french = "fr";
-
 TEST(MessageContent, defaultConstructorShouldSetEmptyEnglishLanguageString) {
   MessageContent content;
 
@@ -40,10 +38,10 @@ TEST(MessageContent, defaultConstructorShouldSetEmptyEnglishLanguageString) {
 }
 
 TEST(MessageContent, contentConstructorShouldStoreGivenStringAndLanguage) {
-  MessageContent content("content", french);
+  MessageContent content("content", "fr");
 
   EXPECT_EQ("content", content.GetText());
-  EXPECT_EQ(french, content.GetLanguage());
+  EXPECT_EQ("fr", content.GetLanguage());
 }
 
 TEST(MessageContent,
