@@ -43,6 +43,7 @@ set(LIBLOOT_SRC_TESTS_INTERFACE_H_FILES
     "${PROJECT_SOURCE_DIR}/src/tests/api/interface/game_interface_test.h"
     "${PROJECT_SOURCE_DIR}/src/tests/api/interface/is_compatible_test.h"
     "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/file_test.h"
+    "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/filename_test.h"
     "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/group_test.h"
     "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/location_test.h"
     "${PROJECT_SOURCE_DIR}/src/tests/api/interface/metadata/message_test.h"

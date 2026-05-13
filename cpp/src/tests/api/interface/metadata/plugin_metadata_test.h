@@ -47,6 +47,11 @@ TEST(
   EXPECT_FALSE(plugin.GetGroup());
 }
 
+TEST(PluginMetadata, stringConstructorShouldTrimDotGhostExtension) {
+  EXPECT_EQ("a.esp", PluginMetadata("a.esp").GetName());
+  EXPECT_EQ("a.esp", PluginMetadata("a.esp.ghost").GetName());
+}
+
 TEST(PluginMetadata,
      nameMatchesShouldUseCaseInsensitiveNameComparisonForNonRegexNames) {
   PluginMetadata plugin(BLANK_ESM);
@@ -68,6 +73,23 @@ TEST(PluginMetadata,
 
   EXPECT_TRUE(plugin.NameMatches("blank.esm"));
   EXPECT_FALSE(plugin.NameMatches(BLANK_DIFFERENT_ESM));
+}
+
+TEST(PluginMetadata,
+     nameMatchesShouldThrowIfThePluginNameContainsInvalidRegex) {
+  PluginMetadata plugin("invalid(\\.esp");
+
+  try {
+    plugin.NameMatches("blank.esm");
+    FAIL();
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(
+        "encountered a regex error: Unbalanced parenthesis: Unbalanced "
+        "parenthesis",
+        e.what());
+  } catch (...) {
+    FAIL();
+  }
 }
 
 TEST(PluginMetadata, mergeMetadataShouldNotChangeName) {

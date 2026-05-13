@@ -32,6 +32,7 @@
 #include "tests/api/interface/game_interface_test.h"
 #include "tests/api/interface/is_compatible_test.h"
 #include "tests/api/interface/metadata/file_test.h"
+#include "tests/api/interface/metadata/filename_test.h"
 #include "tests/api/interface/metadata/group_test.h"
 #include "tests/api/interface/metadata/location_test.h"
 #include "tests/api/interface/metadata/message_content_test.h"
