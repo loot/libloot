@@ -51,8 +51,6 @@ protected:
   void SetUp() override {
     CommonGameTestFixture::SetUp();
 
-    ASSERT_FALSE(std::filesystem::exists(masterlistPath));
-
     handle_ = CreateGameHandle(GetParam(), gamePath, localPath);
   }
 
@@ -103,6 +101,7 @@ protected:
                << "  - name: " << blankEsp << endl
                << "    after:" << endl
                << "      - " << blankDifferentMasterDependentEsp << endl
+               << "      - " << BLANK_OVERRIDE_ESP << endl
                << "  - name: " << blankDifferentMasterDependentEsp << endl
                << "    after:" << endl
                << "      - " << blankMasterDependentEsp << endl

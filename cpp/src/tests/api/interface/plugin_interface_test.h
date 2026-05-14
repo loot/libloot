@@ -31,73 +31,58 @@ along with LOOT.  If not, see
 namespace loot::test {
 class PluginInterfaceTest : public ApiGameOperationsTest {
 protected:
-  PluginInterfaceTest() :
-      ApiGameOperationsTest(),
-      nonAsciiEsp(u8"non\u00C1scii.esp"),
-      otherNonAsciiEsp(u8"other non\u00C1scii.esp"),
-      blankArchive("Blank" + GetArchiveFileExtension(GetParam())),
-      blankSuffixArchive("Blank - Different - suffix" +
-                         GetArchiveFileExtension(GetParam())) {}
+  static constexpr std::string_view OTHER_NON_ASCII_ESP =
+      u8"other non\u00C1scii.esp";
 
-  void SetUp() override {
-    ApiGameOperationsTest::SetUp();
+  PluginInterfaceTest() {}
 
-    handle_->LoadPlugins(GetInstalledPlugins(), false);
-
-    if (!supportsLightPlugins(GetParam())) {
-      ASSERT_NO_THROW(
-          std::filesystem::copy(dataPath / blankEsp, dataPath / blankEsl));
-    }
-    ASSERT_TRUE(std::filesystem::exists(dataPath / blankEsl));
-
-    // Make sure the plugins with non-ASCII filenames exists.
-    ASSERT_NO_THROW(std::filesystem::copy_file(
-        dataPath / blankEsp, dataPath / std::filesystem::u8path(nonAsciiEsp)));
-    ASSERT_NO_THROW(std::filesystem::copy_file(
-        dataPath / blankEsp,
-        dataPath / std::filesystem::u8path(otherNonAsciiEsp)));
-
+  void SetUpTestArchives() {
     // Copy across archive files.
-    std::filesystem::path blankMasterDependentArchive;
-    if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
-        GetParam() == GameType::starfield) {
-      copyPlugin(getSourceArchivesPath(GetParam()), "Blank - Main.ba2");
-      copyPlugin(getSourceArchivesPath(GetParam()), "Blank - Textures.ba2");
+    const auto sourceArchivesPath = getSourceArchivesPath(GetParam());
+    const auto blankArchive = "Blank" + GetArchiveFileExtension(GetParam());
 
-      blankMasterDependentArchive = "Blank - Master Dependent - Main.ba2";
-      std::filesystem::copy_file(
-          getSourceArchivesPath(GetParam()) / "Blank - Main.ba2",
-          dataPath / blankMasterDependentArchive);
-      ASSERT_TRUE(
-          std::filesystem::exists(dataPath / blankMasterDependentArchive));
+    if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr) {
+      copyDataFile(sourceArchivesPath, "Blank - Main.ba2");
+      copyDataFile(sourceArchivesPath, "Blank - Textures.ba2");
+      copyDataFile(sourceArchivesPath,
+                   "Blank - Main.ba2",
+                   "Blank - Master Dependent - Main.ba2");
+    } else if (GetParam() == GameType::starfield) {
+      copyDataFile(sourceArchivesPath, "Blank - Main.ba2");
+      copyDataFile(sourceArchivesPath, "Blank - Textures.ba2");
+      copyDataFile(sourceArchivesPath,
+                   "Blank - Main.ba2",
+                   "Blank - Master Dependent - Main.ba2");
+
+      copyDataFile(
+          sourceArchivesPath, "Blank - Main.ba2", "Blank.full - Main.ba2");
+      copyDataFile(sourceArchivesPath,
+                   "Blank - Textures.ba2",
+                   "Blank.full - Textures.ba2");
     } else if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
       touch(dataPath / blankArchive);
-
-      blankMasterDependentArchive = "Blank - Master Dependent.bsa";
-      touch(dataPath / blankMasterDependentArchive);
+      touch(dataPath / "Blank - Master Dependent.bsa");
     } else {
-      copyPlugin(getSourcePluginsPath(), blankArchive);
+      copyDataFile(sourceArchivesPath, blankArchive);
 
       // Also create a copy for Blank - Master Dependent.esp to test overlap.
-      blankMasterDependentArchive = "Blank - Master Dependent.bsa";
-      std::filesystem::copy_file(getSourcePluginsPath() / blankArchive,
-                                 dataPath / blankMasterDependentArchive);
-      ASSERT_TRUE(
-          std::filesystem::exists(dataPath / blankMasterDependentArchive));
+      copyDataFile(
+          sourceArchivesPath, blankArchive, "Blank - Master Dependent.bsa");
     }
 
     // Create dummy archive files.
+    const auto blankSuffixArchive =
+        "Blank - Different - suffix" + GetArchiveFileExtension(GetParam());
     touch(dataPath / blankSuffixArchive);
 
-    auto nonAsciiArchivePath =
-        dataPath / std::filesystem::u8path(u8"non\u00E1scii" +
-                                           GetArchiveFileExtension(GetParam()));
-    touch(dataPath / nonAsciiArchivePath);
+    auto nonAsciiArchive = std::filesystem::u8path(
+        u8"non\u00E1scii" + GetArchiveFileExtension(GetParam()));
+    touch(dataPath / nonAsciiArchive);
 
-    auto nonAsciiPrefixArchivePath =
-        dataPath / std::filesystem::u8path(u8"other non\u00E1scii2 - suffix" +
-                                           GetArchiveFileExtension(GetParam()));
-    touch(dataPath / nonAsciiPrefixArchivePath);
+    auto nonAsciiPrefixArchive =
+        std::filesystem::u8path(u8"other non\u00E1scii2 - suffix" +
+                                GetArchiveFileExtension(GetParam()));
+    touch(dataPath / nonAsciiPrefixArchive);
   }
 
   std::shared_ptr<const PluginInterface> LoadPluginHeader(
@@ -113,11 +98,6 @@ protected:
 
     return handle_->GetPlugin(pluginName);
   }
-
-  std::string nonAsciiEsp;
-  std::string otherNonAsciiEsp;
-  std::string blankArchive;
-  std::string blankSuffixArchive;
 
   std::shared_ptr<GameInterface> game_;
 
@@ -182,9 +162,13 @@ INSTANTIATE_TEST_SUITE_P(,
 
 TEST_P(PluginInterfaceTest,
        shouldBeAbleToGetHeaderDataFromPluginLoadedHeaderOnly) {
-  const auto plugin = LoadPluginHeader(blankEsm);
+  const auto pluginName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  copyPlugin(pluginName);
 
-  EXPECT_EQ(blankEsm, plugin->GetName());
+  const auto plugin = LoadPluginHeader(pluginName);
+
+  EXPECT_EQ(pluginName, plugin->GetName());
   EXPECT_TRUE(plugin->GetMasters().empty());
   if (GetParam() == GameType::openmw ||
       GetParam() == GameType::oblivionRemastered) {
@@ -208,9 +192,13 @@ TEST_P(PluginInterfaceTest,
 }
 
 TEST_P(PluginInterfaceTest, shouldBeAbleToGetAllDataFromFullyLoadedPlugin) {
-  const auto plugin = LoadPlugin(blankEsm);
+  const auto pluginName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  copyPlugin(pluginName);
 
-  EXPECT_EQ(blankEsm, plugin->GetName());
+  const auto plugin = LoadPlugin(pluginName);
+
+  EXPECT_EQ(pluginName, plugin->GetName());
   EXPECT_TRUE(plugin->GetMasters().empty());
   if (GetParam() == GameType::openmw ||
       GetParam() == GameType::oblivionRemastered) {
@@ -237,7 +225,9 @@ TEST_P(PluginInterfaceTest, shouldBeAbleToGetAllDataFromFullyLoadedPlugin) {
 
 TEST_P(PluginInterfaceTest,
        loadingANonMasterPluginShouldReadTheMasterFlagAsFalse) {
-  const auto plugin = LoadPluginHeader(blankMasterDependentEsp);
+  copyPlugin(BLANK_ESP);
+
+  const auto plugin = LoadPluginHeader(BLANK_ESP);
 
   EXPECT_FALSE(plugin->IsMaster());
 }
@@ -245,23 +235,31 @@ TEST_P(PluginInterfaceTest,
 TEST_P(
     PluginInterfaceTest,
     isLightPluginShouldBeTrueForAPluginWithEslFileExtensionForFallout4AndSkyrimSe) {
-  const auto plugin1 = LoadPluginHeader(blankEsm);
-  const auto plugin2 = LoadPluginHeader(blankMasterDependentEsp);
+  const auto masterName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  const auto lightPluginName =
+      GetParam() == GameType::starfield ? BLANK_SMALL_ESM : BLANK_ESL;
+  copyPlugin(masterName);
+  copyPlugin(BLANK_ESP);
 
-  EXPECT_FALSE(plugin1->IsLightPlugin());
-  EXPECT_FALSE(plugin2->IsLightPlugin());
+  EXPECT_FALSE(LoadPluginHeader(masterName)->IsLightPlugin());
+  EXPECT_FALSE(LoadPluginHeader(BLANK_ESP)->IsLightPlugin());
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
       GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
       GetParam() == GameType::starfield) {
-    const auto plugin3 = LoadPluginHeader(blankEsl);
-    EXPECT_TRUE(plugin3->IsLightPlugin());
+    copyPlugin(lightPluginName);
+
+    EXPECT_TRUE(LoadPluginHeader(lightPluginName)->IsLightPlugin());
   }
 }
 
 TEST_P(PluginInterfaceTest,
        isMediumPluginShouldBeTrueForAMediumFlaggedPluginForStarfield) {
-  if (GetParam() != GameType::starfield) {
+  if (GetParam() == GameType::starfield) {
+    copyPlugin(BLANK_MEDIUM_ESM);
+  } else {
+    copyPlugin(BLANK_ESM);
     auto bytes = ReadFile(dataPath / blankEsm);
     bytes[9] = 0x4;
     WriteFile(dataPath / blankEsm, bytes);
@@ -276,30 +274,45 @@ TEST_P(PluginInterfaceTest,
 
 TEST_P(PluginInterfaceTest,
        isUpdatePluginShouldOnlyBeTrueForAStarfieldUpdatePlugin) {
-  auto bytes = ReadFile(dataPath / blankMasterDependentEsp);
+  copyPlugin(BLANK_ESP);
+
+  EXPECT_FALSE(LoadPluginHeader(BLANK_ESP)->IsUpdatePlugin());
+
+  if (GetParam() == GameType::starfield) {
+    copyPlugin(BLANK_OVERRIDE_ESP, BLANK_MASTER_DEPENDENT_ESP);
+  } else {
+    copyPlugin(BLANK_MASTER_DEPENDENT_ESP);
+  }
+
+  auto bytes = ReadFile(dataPath / BLANK_MASTER_DEPENDENT_ESP);
   bytes[9] = 0x2;
-  WriteFile(dataPath / blankMasterDependentEsp, bytes);
+  WriteFile(dataPath / BLANK_MASTER_DEPENDENT_ESP, bytes);
 
-  const auto plugin1 = LoadPluginHeader(blankEsp);
-  const auto plugin2 = LoadPluginHeader(blankMasterDependentEsp);
+  const auto plugin = LoadPluginHeader(BLANK_MASTER_DEPENDENT_ESP);
 
-  EXPECT_FALSE(plugin1->IsUpdatePlugin());
-  EXPECT_EQ(GetParam() == GameType::starfield, plugin2->IsUpdatePlugin());
+  EXPECT_EQ(GetParam() == GameType::starfield, plugin->IsUpdatePlugin());
 }
 
 TEST_P(PluginInterfaceTest,
        isBlueprintPluginShouldOnlyBeTrueForAStarfieldBlueprintPlugin) {
-  SetBlueprintFlag(dataPath / blankMasterDependentEsp);
+  copyPlugin(BLANK_ESP);
 
-  const auto plugin1 = LoadPluginHeader(blankEsp);
-  const auto plugin2 = LoadPluginHeader(blankMasterDependentEsp);
+  EXPECT_FALSE(LoadPluginHeader(BLANK_ESP)->IsBlueprintPlugin());
 
-  EXPECT_FALSE(plugin1->IsBlueprintPlugin());
-  EXPECT_EQ(GetParam() == GameType::starfield, plugin2->IsBlueprintPlugin());
+  SetBlueprintFlag(dataPath / BLANK_ESP);
+
+  const auto plugin = LoadPluginHeader(BLANK_ESP);
+
+  EXPECT_EQ(GetParam() == GameType::starfield, plugin->IsBlueprintPlugin());
 }
 
 TEST_P(PluginInterfaceTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
-  const auto plugin = LoadPluginHeader(blankMasterDependentEsp);
+  const auto pluginName = GetParam() == GameType::starfield
+                              ? BLANK_OVERRIDE_ESP
+                              : BLANK_MASTER_DEPENDENT_ESP;
+  copyPlugin(pluginName);
+
+  const auto plugin = LoadPluginHeader(pluginName);
 
   if (GetParam() == GameType::starfield) {
     EXPECT_EQ(std::vector<std::string>({blankFullEsm}), plugin->GetMasters());
@@ -311,7 +324,13 @@ TEST_P(PluginInterfaceTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
 TEST_P(
     PluginInterfaceTest,
     loadsArchiveForAnArchiveThatExactlyMatchesAnEsmFileBasenameShouldReturnTrueForAllGamesExceptMorrowindAndOblivion) {
-  bool loadsArchive = LoadPluginHeader(blankEsm)->LoadsArchive();
+  SetUpTestArchives();
+
+  const auto pluginName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  copyPlugin(pluginName);
+
+  bool loadsArchive = LoadPluginHeader(pluginName)->LoadsArchive();
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
       GetParam() == GameType::tes4 ||
@@ -325,7 +344,10 @@ TEST_P(
 TEST_P(
     PluginInterfaceTest,
     loadsArchiveForAnArchiveThatExactlyMatchesANonAsciiEspFileBasenameShouldReturnTrueForAllGamesExceptMorrowindAndStarfield) {
-  bool loadsArchive = LoadPluginHeader(nonAsciiEsp)->LoadsArchive();
+  SetUpTestArchives();
+  copyPlugin(BLANK_ESP, NON_ASCII_ESP);
+
+  bool loadsArchive = LoadPluginHeader(NON_ASCII_ESP)->LoadsArchive();
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw ||
       GetParam() == GameType::starfield)
@@ -338,6 +360,9 @@ TEST_P(
 TEST_P(
     PluginInterfaceTest,
     loadsArchiveForAnArchiveThatExactlyMatchesAnEspFileBasenameShouldReturnTrueForAllGamesExceptMorrowind) {
+  SetUpTestArchives();
+  copyPlugin(BLANK_ESP);
+
   bool loadsArchive = LoadPluginHeader(blankEsp)->LoadsArchive();
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw)
@@ -349,7 +374,14 @@ TEST_P(
 TEST_P(
     PluginInterfaceTest,
     loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEsmFileBasenameShouldReturnTrueForOnlyTheFalloutGames) {
-  bool loadsArchive = LoadPluginHeader(blankDifferentEsm)->LoadsArchive();
+  SetUpTestArchives();
+  if (GetParam() == GameType::starfield) {
+    copyPlugin(BLANK_FULL_ESM, BLANK_DIFFERENT_ESM);
+  } else {
+    copyPlugin(BLANK_DIFFERENT_ESM);
+  }
+
+  bool loadsArchive = LoadPluginHeader(BLANK_DIFFERENT_ESM)->LoadsArchive();
 
   if (GetParam() == GameType::fo3 || GetParam() == GameType::fonv ||
       GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr) {
@@ -362,7 +394,14 @@ TEST_P(
 TEST_P(
     PluginInterfaceTest,
     loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheEspFileBasenameShouldReturnTrueForOnlyOblivionAndTheFalloutGames) {
-  bool loadsArchive = LoadPluginHeader(blankDifferentEsp)->LoadsArchive();
+  SetUpTestArchives();
+  if (GetParam() == GameType::starfield) {
+    copyPlugin(BLANK_ESP, BLANK_DIFFERENT_ESP);
+  } else {
+    copyPlugin(BLANK_DIFFERENT_ESP);
+  }
+
+  bool loadsArchive = LoadPluginHeader(BLANK_DIFFERENT_ESP)->LoadsArchive();
 
   if (GetParam() == GameType::tes4 || GetParam() == GameType::fo3 ||
       GetParam() == GameType::fonv || GetParam() == GameType::fo4 ||
@@ -378,7 +417,10 @@ TEST_P(
 TEST_P(
     PluginInterfaceTest,
     loadsArchiveForAnArchiveWithAFilenameWhichStartsWithTheNonAsciiEspFileBasenameShouldReturnTrueForOnlyOblivionAndTheFalloutGames) {
-  bool loadsArchive = LoadPluginHeader(otherNonAsciiEsp)->LoadsArchive();
+  SetUpTestArchives();
+  copyPlugin(BLANK_ESP, OTHER_NON_ASCII_ESP);
+
+  bool loadsArchive = LoadPluginHeader(OTHER_NON_ASCII_ESP)->LoadsArchive();
 
   if (GetParam() == GameType::tes4 || GetParam() == GameType::fo3 ||
       GetParam() == GameType::fonv || GetParam() == GameType::fo4 ||
@@ -393,10 +435,15 @@ TEST_P(
 
 TEST_P(PluginInterfaceTest,
        loadsArchiveShouldReturnFalseForAPluginThatDoesNotLoadAnArchive) {
-  const auto pluginName = GetParam() == GameType::starfield
-                              ? blankDifferentEsp
-                              : blankDifferentMasterDependentEsp;
-  bool loadsArchive = LoadPluginHeader(pluginName)->LoadsArchive();
+  SetUpTestArchives();
+  if (GetParam() == GameType::starfield) {
+    copyPlugin(BLANK_ESP, BLANK_DIFFERENT_MASTER_DEPENDENT_ESP);
+  } else {
+    copyPlugin(BLANK_DIFFERENT_MASTER_DEPENDENT_ESP);
+  }
+
+  bool loadsArchive =
+      LoadPluginHeader(BLANK_DIFFERENT_MASTER_DEPENDENT_ESP)->LoadsArchive();
 
   EXPECT_FALSE(loadsArchive);
 }
@@ -404,7 +451,11 @@ TEST_P(PluginInterfaceTest,
 TEST_P(
     PluginInterfaceTest,
     isValidAsLightPluginShouldReturnTrueOnlyForASkyrimSEOrFallout4PluginWithNewFormIdsBetween0x800And0xFFFInclusive) {
-  bool valid = LoadPlugin(blankEsm)->IsValidAsLightPlugin();
+  const auto pluginName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  copyPlugin(pluginName);
+
+  bool valid = LoadPlugin(pluginName)->IsValidAsLightPlugin();
   if (GetParam() == GameType::fo4 || GetParam() == GameType::fo4vr ||
       GetParam() == GameType::tes5se || GetParam() == GameType::tes5vr ||
       GetParam() == GameType::starfield) {
@@ -417,11 +468,14 @@ TEST_P(
 TEST_P(
     PluginInterfaceTest,
     isValidAsMediumPluginShouldReturnTrueOnlyForAStarfieldPluginWithNewFormIdsBetween0And0xFFFFInclusive) {
-  bool valid = LoadPlugin(blankEsm)->IsValidAsMediumPlugin();
   if (GetParam() == GameType::starfield) {
-    EXPECT_TRUE(valid);
+    copyPlugin(BLANK_FULL_ESM);
+
+    EXPECT_TRUE(LoadPlugin(BLANK_FULL_ESM)->IsValidAsMediumPlugin());
   } else {
-    EXPECT_FALSE(valid);
+    copyPlugin(BLANK_ESM);
+
+    EXPECT_FALSE(LoadPlugin(BLANK_ESM)->IsValidAsMediumPlugin());
   }
 }
 
@@ -431,10 +485,18 @@ TEST_P(
   const auto sourcePluginName =
       GetParam() == GameType::starfield ? blankFullEsm : blankEsp;
   const auto updatePluginName = GetParam() == GameType::starfield
-                                    ? blankMasterDependentEsp
-                                    : blankDifferentPluginDependentEsp;
+                                    ? BLANK_OVERRIDE_ESP
+                                    : BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP;
+  copyPlugin(sourcePluginName);
+  copyPlugin(updatePluginName);
 
   std::vector<std::shared_ptr<const PluginInterface>> plugins;
+
+  if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw) {
+    copyPlugin(BLANK_DIFFERENT_ESP);
+    plugins.push_back(LoadPlugin(BLANK_DIFFERENT_ESP));
+  }
+
   plugins.push_back(LoadPlugin(sourcePluginName));
   plugins.push_back(LoadPlugin(updatePluginName));
 
@@ -445,7 +507,11 @@ TEST_P(
 
 TEST_P(PluginInterfaceTest,
        doRecordsOverlapShouldReturnFalseIfTheArgumentIsNotAPluginObject) {
-  const auto plugin1 = LoadPlugin(blankEsm);
+  const auto pluginName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  copyPlugin(pluginName);
+
+  const auto plugin1 = LoadPlugin(pluginName);
   TestPlugin plugin2;
 
   EXPECT_FALSE(plugin1->DoRecordsOverlap(plugin2));
@@ -453,8 +519,16 @@ TEST_P(PluginInterfaceTest,
 
 TEST_P(PluginInterfaceTest,
        doRecordsOverlapShouldReturnFalseForTwoPluginsWithOnlyHeadersLoaded) {
-  const auto plugin1 = LoadPluginHeader(blankEsm);
-  const auto plugin2 = LoadPluginHeader(blankMasterDependentEsm);
+  const auto basePluginName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  const auto dependentPluginName = GetParam() == GameType::starfield
+                                       ? BLANK_OVERRIDE_FULL_ESM
+                                       : BLANK_MASTER_DEPENDENT_ESM;
+  copyPlugin(basePluginName);
+  copyPlugin(dependentPluginName);
+
+  const auto plugin1 = LoadPluginHeader(basePluginName);
+  const auto plugin2 = LoadPluginHeader(dependentPluginName);
 
   EXPECT_FALSE(plugin1->DoRecordsOverlap(*plugin2));
   EXPECT_FALSE(plugin2->DoRecordsOverlap(*plugin1));
@@ -462,8 +536,13 @@ TEST_P(PluginInterfaceTest,
 
 TEST_P(PluginInterfaceTest,
        doRecordsOverlapShouldReturnFalseIfThePluginsHaveUnrelatedRecords) {
-  const auto plugin1 = LoadPlugin(blankEsm);
-  const auto plugin2 = LoadPlugin(blankEsp);
+  const auto pluginName1 =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  copyPlugin(pluginName1);
+  copyPlugin(BLANK_ESP);
+
+  const auto plugin1 = LoadPlugin(pluginName1);
+  const auto plugin2 = LoadPlugin(BLANK_ESP);
 
   EXPECT_FALSE(plugin1->DoRecordsOverlap(*plugin2));
   EXPECT_FALSE(plugin2->DoRecordsOverlap(*plugin1));
@@ -471,11 +550,16 @@ TEST_P(PluginInterfaceTest,
 
 TEST_P(PluginInterfaceTest,
        doRecordsOverlapShouldReturnTrueIfOnePluginOverridesTheOthersRecords) {
-  const auto plugin1Name =
-      GetParam() == GameType::starfield ? blankFullEsm : blankEsm;
+  const auto basePluginName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+  const auto dependentPluginName = GetParam() == GameType::starfield
+                                       ? BLANK_OVERRIDE_FULL_ESM
+                                       : BLANK_MASTER_DEPENDENT_ESM;
+  copyPlugin(basePluginName);
+  copyPlugin(dependentPluginName);
 
-  const auto plugin1 = LoadPlugin(plugin1Name);
-  const auto plugin2 = LoadPlugin(blankMasterDependentEsm);
+  const auto plugin1 = LoadPlugin(basePluginName);
+  const auto plugin2 = LoadPlugin(dependentPluginName);
 
   EXPECT_TRUE(plugin1->DoRecordsOverlap(*plugin2));
   EXPECT_TRUE(plugin2->DoRecordsOverlap(*plugin1));

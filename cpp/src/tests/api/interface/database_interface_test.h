@@ -37,12 +37,6 @@ protected:
       minimalOutputPath_(localPath / "minimal.yml"),
       generalUserlistMessage("A general userlist message.") {}
 
-  void SetUp() override {
-    ApiGameOperationsTest::SetUp();
-
-    ASSERT_FALSE(std::filesystem::exists(minimalOutputPath_));
-  }
-
   std::string GetExpectedMinimalContent() const {
     using std::endl;
 
@@ -285,6 +279,7 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
 }
 
 TEST_P(DatabaseInterfaceTest, evaluateShouldReturnTrueIfTheConditionIsTrue) {
+  touch(dataPath / BLANK_ESP);
   EXPECT_TRUE(handle_->GetDatabase().Evaluate("file(\"Blank.esp\")"));
 }
 
@@ -294,11 +289,13 @@ TEST_P(DatabaseInterfaceTest, evaluateShouldReturnFalseIfTheConditionIsFalse) {
 
 TEST_P(DatabaseInterfaceTest,
     clearConditionCacheShouldCauseConditionsToBeEvaluatedFromScratch) {
+  touch(dataPath / BLANK_ESP);
+
   const auto condition = "file(\"Blank.esp\")";
 
   EXPECT_TRUE(handle_->GetDatabase().Evaluate(condition));
 
-  std::filesystem::remove(dataPath / "Blank.esp");
+  std::filesystem::remove(dataPath / BLANK_ESP);
 
   EXPECT_TRUE(handle_->GetDatabase().Evaluate(condition));
 
