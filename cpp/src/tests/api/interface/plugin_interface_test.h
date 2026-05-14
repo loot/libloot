@@ -220,7 +220,7 @@ TEST_P(PluginInterfaceTest, shouldBeAbleToGetAllDataFromFullyLoadedPlugin) {
     EXPECT_FLOAT_EQ(0.94f, plugin->GetHeaderVersion().value());
   }
 
-  EXPECT_EQ(blankEsmCrc, plugin->GetCRC());
+  EXPECT_EQ(getBlankEsmCrc(), plugin->GetCRC());
 }
 
 TEST_P(PluginInterfaceTest,
@@ -260,13 +260,13 @@ TEST_P(PluginInterfaceTest,
     copyPlugin(BLANK_MEDIUM_ESM);
   } else {
     copyPlugin(BLANK_ESM);
-    auto bytes = ReadFile(dataPath / blankEsm);
+    auto bytes = readFile(dataPath / BLANK_ESM);
     bytes[9] = 0x4;
-    WriteFile(dataPath / blankEsm, bytes);
+    writeFile(dataPath / BLANK_ESM, bytes);
   }
 
   const auto& pluginName =
-      GetParam() == GameType::starfield ? blankMediumEsm : blankEsm;
+      GetParam() == GameType::starfield ? BLANK_MEDIUM_ESM : BLANK_ESM;
   const auto plugin = LoadPluginHeader(pluginName);
 
   EXPECT_EQ(GetParam() == GameType::starfield, plugin->IsMediumPlugin());
@@ -284,9 +284,9 @@ TEST_P(PluginInterfaceTest,
     copyPlugin(BLANK_MASTER_DEPENDENT_ESP);
   }
 
-  auto bytes = ReadFile(dataPath / BLANK_MASTER_DEPENDENT_ESP);
+  auto bytes = readFile(dataPath / BLANK_MASTER_DEPENDENT_ESP);
   bytes[9] = 0x2;
-  WriteFile(dataPath / BLANK_MASTER_DEPENDENT_ESP, bytes);
+  writeFile(dataPath / BLANK_MASTER_DEPENDENT_ESP, bytes);
 
   const auto plugin = LoadPluginHeader(BLANK_MASTER_DEPENDENT_ESP);
 
@@ -299,7 +299,7 @@ TEST_P(PluginInterfaceTest,
 
   EXPECT_FALSE(LoadPluginHeader(BLANK_ESP)->IsBlueprintPlugin());
 
-  SetBlueprintFlag(dataPath / BLANK_ESP);
+  setBlueprintFlag(dataPath / BLANK_ESP);
 
   const auto plugin = LoadPluginHeader(BLANK_ESP);
 
@@ -315,9 +315,9 @@ TEST_P(PluginInterfaceTest, loadingAPluginWithMastersShouldReadThemCorrectly) {
   const auto plugin = LoadPluginHeader(pluginName);
 
   if (GetParam() == GameType::starfield) {
-    EXPECT_EQ(std::vector<std::string>({blankFullEsm}), plugin->GetMasters());
+    EXPECT_EQ(std::vector<std::string>({std::string(BLANK_FULL_ESM)}), plugin->GetMasters());
   } else {
-    EXPECT_EQ(std::vector<std::string>({blankEsm}), plugin->GetMasters());
+    EXPECT_EQ(std::vector<std::string>({std::string(BLANK_ESM)}), plugin->GetMasters());
   }
 }
 
@@ -363,7 +363,7 @@ TEST_P(
   SetUpTestArchives();
   copyPlugin(BLANK_ESP);
 
-  bool loadsArchive = LoadPluginHeader(blankEsp)->LoadsArchive();
+  bool loadsArchive = LoadPluginHeader(BLANK_ESP)->LoadsArchive();
 
   if (GetParam() == GameType::tes3 || GetParam() == GameType::openmw)
     EXPECT_FALSE(loadsArchive);
@@ -483,7 +483,7 @@ TEST_P(
     PluginInterfaceTest,
     IsValidAsUpdatePluginShouldOnlyReturnTrueForAStarfieldPluginWithNoNewRecords) {
   const auto sourcePluginName =
-      GetParam() == GameType::starfield ? blankFullEsm : blankEsp;
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESP;
   const auto updatePluginName = GetParam() == GameType::starfield
                                     ? BLANK_OVERRIDE_ESP
                                     : BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP;

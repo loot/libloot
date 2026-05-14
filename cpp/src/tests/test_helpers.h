@@ -25,9 +25,14 @@ along with LOOT.  If not, see
 #ifndef LOOT_TESTS_TEST_HELPERS
 #define LOOT_TESTS_TEST_HELPERS
 
+#include <algorithm>
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <random>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #include "loot/enum/game_type.h"
 
@@ -107,6 +112,87 @@ std::filesystem::path getRootTestPath() {
 #endif
 
   return std::filesystem::absolute(tempPath);
+}
+
+void writeFile(const std::filesystem::path& path,
+               const std::vector<char>& content) {
+  std::ofstream out(path, std::ios::binary);
+
+  out.write(content.data(), content.size());
+}
+
+std::vector<char> readFile(const std::filesystem::path& path) {
+  std::vector<char> bytes;
+  std::ifstream in(path, std::ios::binary);
+
+  std::copy(std::istreambuf_iterator<char>(in),
+            std::istreambuf_iterator<char>(),
+            std::back_inserter(bytes));
+
+  return bytes;
+}
+
+std::string readFileToString(const std::filesystem::path& file) {
+  std::ifstream stream(file);
+  std::stringstream content;
+  content << stream.rdbuf();
+
+  return content.str();
+}
+
+std::vector<std::string> readFileLines(const std::filesystem::path& file) {
+  std::ifstream in(file);
+
+  std::vector<std::string> lines;
+  while (in) {
+    std::string line;
+    std::getline(in, line);
+
+    if (!line.empty()) {
+      lines.push_back(line);
+    }
+  }
+
+  return lines;
+}
+
+void setBlueprintFlag(const std::filesystem::path& path) {
+  auto bytes = readFile(path);
+  bytes[9] = 0x8;
+  writeFile(path, bytes);
+}
+
+void touch(const std::filesystem::path& path) {
+  std::filesystem::create_directories(path.parent_path());
+  std::ofstream out(path);
+  out.close();
+}
+
+bool startsWith(const std::string& str, const std::string& prefix) {
+  if (str.length() < prefix.length()) {
+    return false;
+  }
+
+  auto view = std::string_view(str);
+  view.remove_suffix(str.length() - prefix.length());
+
+  return view == prefix;
+}
+
+bool endsWith(const std::string& str, const std::string& suffix) {
+  if (str.length() < suffix.length()) {
+    return false;
+  }
+
+  auto view = std::string_view(str);
+  view.remove_prefix(str.length() - suffix.length());
+
+  return view == suffix;
+}
+
+bool isLoadOrderTimestampBased(GameType gameType) {
+  return gameType == GameType::tes3 || gameType == GameType::tes4 ||
+         gameType == GameType::fo3 || gameType == GameType::fonv;
 }
 }
 

@@ -61,12 +61,12 @@ TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldDoThat) {
 }
 
 TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldClearTheConditionCache) {
-  PluginMetadata metadata(blankEsm);
+  PluginMetadata metadata(BLANK_ESM);
   metadata.SetLoadAfterFiles({File("plugin.esp", "", "file(\"plugin.esp\")")});
   handle_->GetDatabase().SetPluginUserMetadata(metadata);
 
   auto evaluatedMetadata =
-      handle_->GetDatabase().GetPluginUserMetadata(blankEsm, true);
+      handle_->GetDatabase().GetPluginUserMetadata(BLANK_ESM, true);
   EXPECT_FALSE(evaluatedMetadata.has_value());
 
   const auto dataFilePath = gamePath.parent_path() / "Data" / "plugin.esp";
@@ -74,7 +74,7 @@ TEST_P(GameInterfaceTest, setAdditionalDataPathsShouldClearTheConditionCache) {
   handle_->SetAdditionalDataPaths({dataFilePath.parent_path()});
 
   evaluatedMetadata =
-      handle_->GetDatabase().GetPluginUserMetadata(blankEsm, true);
+      handle_->GetDatabase().GetPluginUserMetadata(BLANK_ESM, true);
   EXPECT_FALSE(evaluatedMetadata.value().GetLoadAfterFiles().empty());
 }
 
@@ -90,13 +90,11 @@ TEST_P(GameInterfaceTest,
   const auto filename = "plugin.esp";
   const auto dataFilePath = gamePath.parent_path() / "Data" / filename;
   std::filesystem::create_directories(dataFilePath.parent_path());
-  std::filesystem::copy_file(getSourcePluginsPath() / blankEsp, dataFilePath);
+  std::filesystem::copy_file(getSourcePluginsPath() / BLANK_ESP, dataFilePath);
   ASSERT_TRUE(std::filesystem::exists(dataFilePath));
 
   if (GetParam() == GameType::starfield) {
-    std::filesystem::copy_file(getSourcePluginsPath() / blankEsp,
-                               dataPath / filename);
-    ASSERT_TRUE(std::filesystem::exists(dataPath / filename));
+    copyPlugin(BLANK_ESP, filename);
   }
 
   std::filesystem::last_write_time(
@@ -250,7 +248,7 @@ TEST_P(GameInterfaceTest,
   EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that not only the header has been read.
-  EXPECT_EQ(blankEsmCrc, plugin->GetCRC().value());
+  EXPECT_EQ(getBlankEsmCrc(), plugin->GetCRC().value());
 }
 
 TEST_P(GameInterfaceTest, loadPluginsWithANonAsciiPluginShouldLoadIt) {
@@ -269,7 +267,7 @@ TEST_P(GameInterfaceTest, loadPluginsWithANonAsciiPluginShouldLoadIt) {
   EXPECT_EQ("5.0", plugin->GetVersion().value());
 
   // Check that not only the header has been read.
-  EXPECT_EQ(blankEsmCrc, plugin->GetCRC().value());
+  EXPECT_EQ(getBlankEsmCrc(), plugin->GetCRC().value());
 }
 
 TEST_P(
@@ -462,7 +460,8 @@ TEST_P(GameInterfaceTest, sortPluginsShouldOnlySortTheGivenPlugins) {
 
   handle_->LoadPlugins({BLANK_ESM, BLANK_ESP, BLANK_DIFFERENT_ESP}, false);
 
-  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+  std::vector<std::string> plugins{std::string(BLANK_ESP),
+                                   std::string(BLANK_DIFFERENT_ESP)};
   const auto sorted = handle_->SortPlugins(plugins);
 
   EXPECT_EQ(plugins, sorted);
@@ -473,23 +472,23 @@ TEST_P(GameInterfaceTest,
   std::vector<std::string> initialOrder;
   if (GetParam() == GameType::starfield) {
     initialOrder = {
-        blankFullEsm,
+        std::string(BLANK_FULL_ESM),
         std::string(BLANK_OVERRIDE_FULL_ESM),
-        blankEsp,
+        std::string(BLANK_ESP),
         std::string(BLANK_OVERRIDE_ESP),
     };
   } else {
     initialOrder = {
-        blankEsm,
-        blankDifferentEsm,
-        blankMasterDependentEsm,
-        blankDifferentMasterDependentEsm,
-        blankEsp,
-        blankDifferentEsp,
-        blankMasterDependentEsp,
-        blankDifferentMasterDependentEsp,
-        blankPluginDependentEsp,
-        blankDifferentPluginDependentEsp,
+        std::string(BLANK_ESM),
+        std::string(BLANK_DIFFERENT_ESM),
+        std::string(BLANK_MASTER_DEPENDENT_ESM),
+        std::string(BLANK_DIFFERENT_MASTER_DEPENDENT_ESM),
+        std::string(BLANK_ESP),
+        std::string(BLANK_DIFFERENT_ESP),
+        std::string(BLANK_MASTER_DEPENDENT_ESP),
+        std::string(BLANK_DIFFERENT_MASTER_DEPENDENT_ESP),
+        std::string(BLANK_PLUGIN_DEPENDENT_ESP),
+        std::string(BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP),
     };
   }
 
@@ -509,7 +508,8 @@ TEST_P(GameInterfaceTest,
 }
 
 TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfAGivenPluginIsNotLoaded) {
-  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
+  std::vector<std::string> plugins{std::string(BLANK_ESP),
+                                   std::string(BLANK_DIFFERENT_ESP)};
 
   try {
     handle_->SortPlugins(plugins);
@@ -527,16 +527,17 @@ TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfACyclicInteractionOccurs) {
     copyPlugin(BLANK_DIFFERENT_ESP);
   }
 
-  std::vector<std::string> plugins{blankEsp, blankDifferentEsp};
-  handle_->LoadPlugins({blankEsp, blankDifferentEsp}, false);
+  std::vector<std::string> plugins{std::string(BLANK_ESP),
+                                   std::string(BLANK_DIFFERENT_ESP)};
+  handle_->LoadPlugins({BLANK_ESP, BLANK_DIFFERENT_ESP}, false);
 
   auto& db = handle_->GetDatabase();
-  PluginMetadata blankEspMetadata(blankEsp);
-  blankEspMetadata.SetLoadAfterFiles({File(blankDifferentEsp)});
+  PluginMetadata blankEspMetadata(BLANK_ESP);
+  blankEspMetadata.SetLoadAfterFiles({File(BLANK_DIFFERENT_ESP)});
   db.SetPluginUserMetadata(blankEspMetadata);
 
-  PluginMetadata blankDifferentEspMetadata(blankDifferentEsp);
-  blankDifferentEspMetadata.SetLoadAfterFiles({File(blankEsp)});
+  PluginMetadata blankDifferentEspMetadata(BLANK_DIFFERENT_ESP);
+  blankDifferentEspMetadata.SetLoadAfterFiles({File(BLANK_ESP)});
   db.SetPluginUserMetadata(blankDifferentEspMetadata);
 
   try {
@@ -545,9 +546,9 @@ TEST_P(GameInterfaceTest, sortPluginsShouldThrowIfACyclicInteractionOccurs) {
   } catch (CyclicInteractionError& e) {
     const auto cycle = e.GetCycle();
     ASSERT_EQ(2, cycle.size());
-    EXPECT_EQ(blankDifferentEsp, cycle[0].GetName());
+    EXPECT_EQ(BLANK_DIFFERENT_ESP, cycle[0].GetName());
     EXPECT_EQ(EdgeType::userLoadAfter, cycle[0].GetTypeOfEdgeToNextVertex());
-    EXPECT_EQ(blankEsp, cycle[1].GetName());
+    EXPECT_EQ(BLANK_ESP, cycle[1].GetName());
     EXPECT_EQ(EdgeType::userLoadAfter, cycle[1].GetTypeOfEdgeToNextVertex());
   }
 }
@@ -565,7 +566,7 @@ TEST_P(GameInterfaceTest, clearLoadedPluginsShouldClearThePluginsCache) {
 }
 
 TEST_P(GameInterfaceTest, getPluginThatIsNotCachedShouldReturnANullPointer) {
-  EXPECT_FALSE(handle_->GetPlugin(blankEsm));
+  EXPECT_FALSE(handle_->GetPlugin(BLANK_ESM));
 }
 
 TEST_P(GameInterfaceTest,
@@ -619,47 +620,47 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSucceedIfPassedValidArguments) {
   std::vector<std::string> expectedOrder;
   if (GetParam() == GameType::starfield) {
     initialOrder = {
-        blankFullEsm,
+        std::string(BLANK_FULL_ESM),
         std::string(BLANK_OVERRIDE_FULL_ESM),
-        blankEsp,
+        std::string(BLANK_ESP),
         std::string(BLANK_OVERRIDE_ESP),
     };
     expectedOrder = {
-        blankFullEsm,
+        std::string(BLANK_FULL_ESM),
         std::string(BLANK_OVERRIDE_FULL_ESM),
         std::string(BLANK_OVERRIDE_ESP),
-        blankEsp,
+        std::string(BLANK_ESP),
     };
   } else {
     initialOrder = {
-        blankEsm,
-        blankDifferentEsm,
-        blankMasterDependentEsm,
-        blankDifferentMasterDependentEsm,
-        blankEsp,
-        blankDifferentEsp,
-        blankMasterDependentEsp,
-        blankDifferentMasterDependentEsp,
-        blankPluginDependentEsp,
-        blankDifferentPluginDependentEsp,
+        std::string(BLANK_ESM),
+        std::string(BLANK_DIFFERENT_ESM),
+        std::string(BLANK_MASTER_DEPENDENT_ESM),
+        std::string(BLANK_DIFFERENT_MASTER_DEPENDENT_ESM),
+        std::string(BLANK_ESP),
+        std::string(BLANK_DIFFERENT_ESP),
+        std::string(BLANK_MASTER_DEPENDENT_ESP),
+        std::string(BLANK_DIFFERENT_MASTER_DEPENDENT_ESP),
+        std::string(BLANK_PLUGIN_DEPENDENT_ESP),
+        std::string(BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP),
     };
     expectedOrder = {
-        blankEsm,
-        blankMasterDependentEsm,
-        blankDifferentEsm,
-        blankDifferentMasterDependentEsm,
-        blankMasterDependentEsp,
-        blankDifferentMasterDependentEsp,
-        blankEsp,
-        blankPluginDependentEsp,
-        blankDifferentEsp,
-        blankDifferentPluginDependentEsp,
+        std::string(BLANK_ESM),
+        std::string(BLANK_MASTER_DEPENDENT_ESM),
+        std::string(BLANK_DIFFERENT_ESM),
+        std::string(BLANK_DIFFERENT_MASTER_DEPENDENT_ESM),
+        std::string(BLANK_MASTER_DEPENDENT_ESP),
+        std::string(BLANK_DIFFERENT_MASTER_DEPENDENT_ESP),
+        std::string(BLANK_ESP),
+        std::string(BLANK_PLUGIN_DEPENDENT_ESP),
+        std::string(BLANK_DIFFERENT_ESP),
+        std::string(BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP),
     };
   }
 
   if (GetParam() == GameType::fo4 || GetParam() == GameType::tes5se) {
-    initialOrder.push_back(blankEsl);
-    expectedOrder.insert(expectedOrder.begin() + 4, blankEsl);
+    initialOrder.push_back(std::string(BLANK_ESL));
+    expectedOrder.insert(expectedOrder.begin() + 4, std::string(BLANK_ESL));
   }
 
   std::vector<std::filesystem::path> pluginsToLoad;
@@ -717,7 +718,7 @@ TEST_P(GameInterfaceTest,
 
   handle_->LoadCurrentLoadOrderState();
 
-  EXPECT_FALSE(handle_->IsPluginActive(blankEsp));
+  EXPECT_FALSE(handle_->IsPluginActive(std::string(BLANK_ESP)));
 }
 
 TEST_P(GameInterfaceTest,
@@ -763,9 +764,9 @@ TEST_P(GameInterfaceTest,
 
   handle_->LoadCurrentLoadOrderState();
 
-  ASSERT_NO_THROW(handle_->LoadPlugins({blankEsp}, false));
+  ASSERT_NO_THROW(handle_->LoadPlugins({BLANK_ESP}, false));
 
-  EXPECT_FALSE(handle_->IsPluginActive(blankEsp));
+  EXPECT_FALSE(handle_->IsPluginActive(std::string(BLANK_ESP)));
 }
 
 TEST_P(GameInterfaceTest, getLoadOrderShouldReturnTheCurrentLoadOrder) {

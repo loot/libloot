@@ -29,10 +29,16 @@ along with LOOT.  If not, see
 
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <map>
-#include <unordered_set>
+#include <ostream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "loot/enum/game_type.h"
 #include "tests/test_helpers.h"
@@ -83,7 +89,7 @@ inline constexpr std::string_view BLANK_SMALL_ESM = "Blank.small.esm";
 inline constexpr std::string_view BLANK_OVERRIDE_FULL_ESM =
     "Blank - Override.full.esm";
 inline constexpr std::string_view BLANK_OVERRIDE_ESP = "Blank - Override.esp";
-static constexpr std::string_view NON_ASCII_ESP = u8"non\u00C1scii.esp";
+inline constexpr std::string_view NON_ASCII_ESP = u8"non\u00C1scii.esp";
 
 class CommonGameTestFixture : public ::testing::Test {
 protected:
@@ -93,30 +99,9 @@ protected:
       missingPath(rootTestPath / "missing"),
       gamePath(rootTestPath / "games" / "game"),
       dataPath(gamePath / getPluginsFolder()),
-      localPath(rootTestPath / "local" / "game"),
-      metadataFilesPath(rootTestPath / "metadata"),
-      masterFile(getMasterFile()),
-      missingEsp(MISSING_ESP),
-      nonPluginFile(NON_PLUGIN_FILE),
-      blankEsm(BLANK_ESM),
-      blankFullEsm(BLANK_FULL_ESM),
-      blankMediumEsm(BLANK_MEDIUM_ESM),
-      blankDifferentEsm(BLANK_DIFFERENT_ESM),
-      blankMasterDependentEsm(BLANK_MASTER_DEPENDENT_ESM),
-      blankDifferentMasterDependentEsm(BLANK_DIFFERENT_MASTER_DEPENDENT_ESM),
-      blankEsl(BLANK_ESL),
-      blankEsp(BLANK_ESP),
-      blankDifferentEsp(BLANK_DIFFERENT_ESP),
-      blankMasterDependentEsp(BLANK_MASTER_DEPENDENT_ESP),
-      blankDifferentMasterDependentEsp(BLANK_DIFFERENT_MASTER_DEPENDENT_ESP),
-      blankPluginDependentEsp(BLANK_PLUGIN_DEPENDENT_ESP),
-      blankDifferentPluginDependentEsp(BLANK_DIFFERENT_PLUGIN_DEPENDENT_ESP),
-      blankEsmCrc(getBlankEsmCrc()) {
-    using std::filesystem::create_directories;
-
-    create_directories(dataPath);
-    create_directories(localPath);
-    create_directories(metadataFilesPath);
+      localPath(rootTestPath / "local" / "game") {
+    std::filesystem::create_directories(dataPath);
+    std::filesystem::create_directories(localPath);
   }
 
   void copyPlugin(std::string_view filename) {
@@ -144,25 +129,7 @@ protected:
         dataPath / std::filesystem::u8path(destinationFilename)));
   }
 
-  void TearDown() override {
-    std::filesystem::remove_all(rootTestPath);
-  }
-
-  std::vector<std::string> readFileLines(const std::filesystem::path& file) {
-    std::ifstream in(file);
-
-    std::vector<std::string> lines;
-    while (in) {
-      std::string line;
-      std::getline(in, line);
-
-      if (!line.empty()) {
-        lines.push_back(line);
-      }
-    }
-
-    return lines;
-  }
+  void TearDown() override { std::filesystem::remove_all(rootTestPath); }
 
   std::vector<std::string> getLoadOrder() {
     std::vector<std::string> actual;
@@ -173,7 +140,7 @@ protected:
            ++it) {
         if (std::filesystem::is_regular_file(it->status())) {
           std::string filename = it->path().filename().u8string();
-          if (filename == nonPluginFile)
+          if (filename == NON_PLUGIN_FILE)
             continue;
           if (endsWith(filename, ".ghost"))
             filename = it->path().stem().u8string();
@@ -214,110 +181,18 @@ protected:
     return loot::test::getSourcePluginsPath(gameType_);
   }
 
-  void touch(const std::filesystem::path& path) {
-    std::filesystem::create_directories(path.parent_path());
-    std::ofstream out(path);
-    out.close();
-  }
-
-  std::vector<char> ReadFile(const std::filesystem::path& path) {
-    std::vector<char> bytes;
-    std::ifstream in(path, std::ios::binary);
-
-    std::copy(std::istreambuf_iterator<char>(in),
-              std::istreambuf_iterator<char>(),
-              std::back_inserter(bytes));
-
-    return bytes;
-  }
-
-  void WriteFile(const std::filesystem::path& path,
-                 const std::vector<char>& content) {
-    std::ofstream out(path, std::ios::binary);
-
-    out.write(content.data(), content.size());
-  }
-
-  void SetBlueprintFlag(const std::filesystem::path& path) {
-    auto bytes = ReadFile(path);
-    bytes[9] = 0x8;
-    WriteFile(path, bytes);
-  }
-
-  static bool startsWith(const std::string& str, const std::string& prefix) {
-    if (str.length() < prefix.length()) {
-      return false;
-    }
-
-    auto view = std::string_view(str);
-    view.remove_suffix(str.length() - prefix.length());
-
-    return view == prefix;
-  }
-
-  static bool endsWith(const std::string& str, const std::string& suffix) {
-    if (str.length() < suffix.length()) {
-      return false;
-    }
-
-    auto view = std::string_view(str);
-    view.remove_prefix(str.length() - suffix.length());
-
-    return view == suffix;
-  }
-
 private:
   GameType gameType_;
-  const std::filesystem::path rootTestPath;
+  std::filesystem::path rootTestPath;
 
 protected:
-  const std::filesystem::path missingPath;
-  const std::filesystem::path gamePath;
-  const std::filesystem::path dataPath;
-  const std::filesystem::path localPath;
-  const std::filesystem::path metadataFilesPath;
-
-  const std::string masterFile;
-  const std::string missingEsp;
-  const std::string nonPluginFile;
-  const std::string blankEsm;
-  const std::string blankFullEsm;
-  const std::string blankMediumEsm;
-  const std::string blankDifferentEsm;
-  const std::string blankMasterDependentEsm;
-  const std::string blankDifferentMasterDependentEsm;
-  const std::string blankEsl;
-  const std::string blankEsp;
-  const std::string blankDifferentEsp;
-  const std::string blankMasterDependentEsp;
-  const std::string blankDifferentMasterDependentEsp;
-  const std::string blankPluginDependentEsp;
-  const std::string blankDifferentPluginDependentEsp;
-
-  const uint32_t blankEsmCrc;
+  std::filesystem::path missingPath;
+  std::filesystem::path gamePath;
+  std::filesystem::path dataPath;
+  std::filesystem::path localPath;
+  std::filesystem::path metadataFilesPath;
 
 private:
-  std::string getMasterFile() const {
-    if (gameType_ == GameType::tes3 || gameType_ == GameType::openmw)
-      return "Morrowind.esm";
-    else if (gameType_ == GameType::tes4 ||
-             gameType_ == GameType::oblivionRemastered)
-      return "Oblivion.esm";
-    else if (gameType_ == GameType::tes5 || gameType_ == GameType::tes5se ||
-             gameType_ == GameType::tes5vr)
-      return "Skyrim.esm";
-    else if (gameType_ == GameType::fo3)
-      return "Fallout3.esm";
-    else if (gameType_ == GameType::fonv)
-      return "FalloutNV.esm";
-    else if (gameType_ == GameType::fo4 || gameType_ == GameType::fo4vr)
-      return "Fallout4.esm";
-    else if (gameType_ == GameType::starfield)
-      return "Starfield.esm";
-    else
-      throw std::logic_error("Unrecognised game type");
-  }
-
   std::string getPluginsFolder() const {
     if (gameType_ == GameType::openmw) {
       return "resources/vfs";
@@ -330,6 +205,7 @@ private:
     }
   }
 
+protected:
   uint32_t getBlankEsmCrc() const {
     switch (gameType_) {
       case GameType::tes3:
@@ -345,7 +221,6 @@ private:
     }
   }
 
-protected:
   void setLoadOrder(
       const std::vector<std::pair<std::string, bool>>& loadOrder) const {
     if (gameType_ == GameType::tes3) {
@@ -404,12 +279,6 @@ protected:
       std::ofstream out(parentPath / "loadorder.txt");
       for (const auto& plugin : loadOrder) out << plugin.first << std::endl;
     }
-  }
-
-private:
-  static bool isLoadOrderTimestampBased(GameType gameType) {
-    return gameType == GameType::tes3 || gameType == GameType::tes4 ||
-           gameType == GameType::fo3 || gameType == GameType::fonv;
   }
 };
 }

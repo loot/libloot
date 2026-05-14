@@ -32,36 +32,30 @@ namespace loot {
 namespace test {
 class DatabaseInterfaceTest : public ApiGameOperationsTest {
 protected:
+  static constexpr std::string_view GENERAL_USERLIST_MESSAGE =
+      "A general userlist message.";
+
   DatabaseInterfaceTest() :
       userlistPath_(localPath / "userlist.yaml"),
-      minimalOutputPath_(localPath / "minimal.yml"),
-      generalUserlistMessage("A general userlist message.") {}
+      minimalOutputPath_(localPath / "minimal.yml") {}
 
   std::string GetExpectedMinimalContent() const {
     using std::endl;
 
     std::stringstream expectedContent;
     expectedContent << "plugins:" << endl
-                    << "  - name: '" << blankDifferentEsm << "'" << endl
+                    << "  - name: '" << BLANK_DIFFERENT_ESM << "'" << endl
                     << "    dirty:" << endl
                     << "      - crc: 0x7D22F9DF" << endl
                     << "        util: 'TES4Edit'" << endl
                     << "        udr: 4" << endl
-                    << "  - name: '" << blankEsm << "'" << endl
+                    << "  - name: '" << BLANK_ESM << "'" << endl
                     << "    tag:" << endl
                     << "      - Actors.ACBS" << endl
                     << "      - Actors.AIData" << endl
                     << "      - -C.Water";
 
     return expectedContent.str();
-  }
-
-  std::string GetFileContent(const std::filesystem::path& file) {
-    std::ifstream stream(file);
-    std::stringstream content;
-    content << stream.rdbuf();
-
-    return content.str();
   }
 
   void GenerateUserlist() {
@@ -80,27 +74,26 @@ protected:
              << "      - group1" << endl
              << "globals:" << endl
              << "  - type: say" << endl
-             << "    content: '" << generalUserlistMessage << "'" << endl
+             << "    content: '" << GENERAL_USERLIST_MESSAGE << "'" << endl
              << "plugins:" << endl
-             << "  - name: " << blankEsm << endl
+             << "  - name: " << BLANK_ESM << endl
              << "    after:" << endl
-             << "      - " << blankDifferentEsm << endl
+             << "      - " << BLANK_DIFFERENT_ESM << endl
              << "    tag:" << endl
              << "      - name: Actors.ACBS" << endl
-             << "        condition: 'file(\"" << missingEsp << "\")'" << endl
-             << "  - name: " << blankDifferentEsp << endl
+             << "        condition: 'file(\"" << MISSING_ESP << "\")'" << endl
+             << "  - name: " << BLANK_DIFFERENT_ESP << endl
              << "    inc:" << endl
-             << "      - " << blankEsp << endl
+             << "      - " << BLANK_ESP << endl
              << "    tag:" << endl
              << "      - name: C.Climate" << endl
-             << "        condition: 'file(\"" << missingEsp << "\")'" << endl;
+             << "        condition: 'file(\"" << MISSING_ESP << "\")'" << endl;
 
     userlist.close();
   }
 
-  const std::filesystem::path userlistPath_;
-  const std::filesystem::path minimalOutputPath_;
-  const std::string generalUserlistMessage;
+  std::filesystem::path userlistPath_;
+  std::filesystem::path minimalOutputPath_;
 };
 
 // Pass an empty first argument, as it's a prefix for the test instantation,
@@ -255,7 +248,7 @@ TEST_P(DatabaseInterfaceTest,
   EXPECT_NO_THROW(
       handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, options));
 
-  EXPECT_EQ("{}", GetFileContent(minimalOutputPath_));
+  EXPECT_EQ("{}", readFileToString(minimalOutputPath_));
 }
 
 TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
@@ -275,7 +268,7 @@ TEST_P(DatabaseInterfaceTest, writeUserMetadataShouldShouldWriteUserMetadata) {
   EXPECT_NO_THROW(
       handle_->GetDatabase().WriteUserMetadata(minimalOutputPath_, options));
 
-  EXPECT_FALSE(GetFileContent(minimalOutputPath_).empty());
+  EXPECT_FALSE(readFileToString(minimalOutputPath_).empty());
 }
 
 TEST_P(DatabaseInterfaceTest, evaluateShouldReturnTrueIfTheConditionIsTrue) {
@@ -288,7 +281,7 @@ TEST_P(DatabaseInterfaceTest, evaluateShouldReturnFalseIfTheConditionIsFalse) {
 }
 
 TEST_P(DatabaseInterfaceTest,
-    clearConditionCacheShouldCauseConditionsToBeEvaluatedFromScratch) {
+       clearConditionCacheShouldCauseConditionsToBeEvaluatedFromScratch) {
   touch(dataPath / BLANK_ESP);
 
   const auto condition = "file(\"Blank.esp\")";
@@ -560,9 +553,9 @@ TEST_P(DatabaseInterfaceTest,
 
   std::vector<Message> expectedMessages({
       Message(MessageType::say,
-              generalMasterlistMessage,
-              "file(\"" + missingEsp + "\")"),
-      Message(MessageType::say, generalUserlistMessage),
+              GENERAL_MASTERLIST_MESSAGE,
+              "file(\"" + std::string(MISSING_ESP) + "\")"),
+      Message(MessageType::say, GENERAL_USERLIST_MESSAGE),
   });
   EXPECT_EQ(expectedMessages, messages);
 }
@@ -579,8 +572,8 @@ TEST_P(
 
   std::vector<Message> expectedMessages({
       Message(MessageType::say,
-              generalMasterlistMessage,
-              "file(\"" + missingEsp + "\")"),
+              GENERAL_MASTERLIST_MESSAGE,
+              "file(\"" + std::string(MISSING_ESP) + "\")"),
   });
   EXPECT_EQ(expectedMessages, messages);
 }
@@ -606,7 +599,7 @@ TEST_P(DatabaseInterfaceTest,
   auto messages = handle_->GetDatabase().GetUserGeneralMessages();
 
   std::vector<Message> expectedMessages({
-      Message(MessageType::say, generalUserlistMessage),
+      Message(MessageType::say, GENERAL_USERLIST_MESSAGE),
   });
   EXPECT_EQ(expectedMessages, messages);
 }
@@ -631,7 +624,7 @@ TEST_P(DatabaseInterfaceTest,
 
 TEST_P(DatabaseInterfaceTest,
        getPluginMetadataShouldReturnAnEmptyOptionalIfThePluginHasNoMetadata) {
-  EXPECT_FALSE(handle_->GetDatabase().GetPluginMetadata(blankEsm));
+  EXPECT_FALSE(handle_->GetDatabase().GetPluginMetadata(BLANK_ESM));
 }
 
 TEST_P(
@@ -643,11 +636,11 @@ TEST_P(
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
-      handle_->GetDatabase().GetPluginMetadata(blankEsm, true).value();
+      handle_->GetDatabase().GetPluginMetadata(BLANK_ESM, true).value();
 
   std::vector<File> expectedLoadAfter({
-      File(blankDifferentEsm),
-      File(masterFile),
+      File(BLANK_DIFFERENT_ESM),
+      File(MASTER_FILE),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
 }
@@ -660,16 +653,16 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
-      handle_->GetDatabase().GetPluginMetadata(blankEsm, true).value();
+      handle_->GetDatabase().GetPluginMetadata(BLANK_ESM, true).value();
 
   std::vector<Tag> expectedTags({
-      Tag("Actors.ACBS", true, "file(\"" + missingEsp + "\")"),
+      Tag("Actors.ACBS", true, "file(\"" + std::string(MISSING_ESP) + "\")"),
       Tag("Actors.ACBS"),
       Tag("Actors.AIData"),
       Tag("C.Water", false),
   });
   EXPECT_EQ(expectedTags, metadata.GetTags());
-  EXPECT_EQ("file(\"" + missingEsp + "\")",
+  EXPECT_EQ("file(\"" + std::string(MISSING_ESP) + "\")",
             metadata.GetTags()[0].GetCondition());
 }
 
@@ -682,10 +675,10 @@ TEST_P(
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
-      handle_->GetDatabase().GetPluginMetadata(blankEsm, false).value();
+      handle_->GetDatabase().GetPluginMetadata(BLANK_ESM, false).value();
 
   std::vector<File> expectedLoadAfter({
-      File(masterFile),
+      File(MASTER_FILE),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
 }
@@ -697,7 +690,7 @@ TEST_P(
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
 
   auto metadata =
-      handle_->GetDatabase().GetPluginMetadata(blankEsm, false, true).value();
+      handle_->GetDatabase().GetPluginMetadata(BLANK_ESM, false, true).value();
 
   EXPECT_TRUE(metadata.GetMessages().empty());
 }
@@ -710,7 +703,8 @@ TEST_P(
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
-  EXPECT_FALSE(handle_->GetDatabase().GetPluginUserMetadata(blankDifferentEsm));
+  EXPECT_FALSE(
+      handle_->GetDatabase().GetPluginUserMetadata(BLANK_DIFFERENT_ESM));
 }
 
 TEST_P(DatabaseInterfaceTest,
@@ -721,10 +715,10 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
-      handle_->GetDatabase().GetPluginUserMetadata(blankEsm).value();
+      handle_->GetDatabase().GetPluginUserMetadata(BLANK_ESM).value();
 
   std::vector<File> expectedLoadAfter({
-      File(blankDifferentEsm),
+      File(BLANK_DIFFERENT_ESM),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
 }
@@ -738,7 +732,7 @@ TEST_P(
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
   auto metadata =
-      handle_->GetDatabase().GetPluginMetadata(blankEsm, false, true).value();
+      handle_->GetDatabase().GetPluginMetadata(BLANK_ESM, false, true).value();
 
   EXPECT_TRUE(metadata.GetMessages().empty());
 }
@@ -751,16 +745,16 @@ TEST_P(
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
-  PluginMetadata newMetadata(blankDifferentEsp);
-  newMetadata.SetRequirements(std::vector<File>({File(masterFile)}));
+  PluginMetadata newMetadata(BLANK_DIFFERENT_ESP);
+  newMetadata.SetRequirements(std::vector<File>({File(MASTER_FILE)}));
 
   handle_->GetDatabase().SetPluginUserMetadata(newMetadata);
 
   auto metadata =
-      handle_->GetDatabase().GetPluginUserMetadata(blankDifferentEsp).value();
+      handle_->GetDatabase().GetPluginUserMetadata(BLANK_DIFFERENT_ESP).value();
 
   std::set<File> expectedLoadAfter({
-      File(blankDifferentEsm),
+      File(BLANK_DIFFERENT_ESM),
   });
   EXPECT_TRUE(metadata.GetIncompatibilities().empty());
   EXPECT_EQ(newMetadata.GetRequirements(), metadata.GetRequirements());
@@ -773,15 +767,15 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
-  PluginMetadata newMetadata(blankEsm);
-  newMetadata.SetRequirements(std::vector<File>({File(masterFile)}));
+  PluginMetadata newMetadata(BLANK_ESM);
+  newMetadata.SetRequirements(std::vector<File>({File(MASTER_FILE)}));
 
   handle_->GetDatabase().SetPluginUserMetadata(newMetadata);
 
-  auto metadata = handle_->GetDatabase().GetPluginMetadata(blankEsm).value();
+  auto metadata = handle_->GetDatabase().GetPluginMetadata(BLANK_ESM).value();
 
   std::vector<File> expectedLoadAfter({
-      File(masterFile),
+      File(MASTER_FILE),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
 }
@@ -793,9 +787,9 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
-  handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
+  handle_->GetDatabase().DiscardPluginUserMetadata(BLANK_ESM);
 
-  EXPECT_FALSE(handle_->GetDatabase().GetPluginUserMetadata(blankEsm));
+  EXPECT_FALSE(handle_->GetDatabase().GetPluginUserMetadata(BLANK_ESM));
 }
 
 TEST_P(
@@ -806,12 +800,12 @@ TEST_P(
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
-  handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
+  handle_->GetDatabase().DiscardPluginUserMetadata(BLANK_ESM);
 
-  auto metadata = handle_->GetDatabase().GetPluginMetadata(blankEsm).value();
+  auto metadata = handle_->GetDatabase().GetPluginMetadata(BLANK_ESM).value();
 
   std::vector<File> expectedLoadAfter({
-      File(masterFile),
+      File(MASTER_FILE),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
 }
@@ -823,10 +817,10 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
-  handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
+  handle_->GetDatabase().DiscardPluginUserMetadata(BLANK_ESM);
 
   auto metadata =
-      handle_->GetDatabase().GetPluginUserMetadata(blankDifferentEsp);
+      handle_->GetDatabase().GetPluginUserMetadata(BLANK_DIFFERENT_ESP);
 
   EXPECT_TRUE(metadata);
 }
@@ -838,15 +832,15 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
-  handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
+  handle_->GetDatabase().DiscardPluginUserMetadata(BLANK_ESM);
 
   auto messages = handle_->GetDatabase().GetGeneralMessages();
 
   std::vector<Message> expectedMessages({
       Message(MessageType::say,
-              generalMasterlistMessage,
-              "file(\"" + missingEsp + "\")"),
-      Message(MessageType::say, generalUserlistMessage),
+              GENERAL_MASTERLIST_MESSAGE,
+              "file(\"" + std::string(MISSING_ESP) + "\")"),
+      Message(MessageType::say, GENERAL_USERLIST_MESSAGE),
   });
   EXPECT_EQ(expectedMessages, messages);
 }
@@ -858,7 +852,7 @@ TEST_P(DatabaseInterfaceTest,
   ASSERT_NO_THROW(handle_->GetDatabase().LoadMasterlist(masterlistPath));
   ASSERT_NO_THROW(handle_->GetDatabase().LoadUserlist(userlistPath_));
 
-  handle_->GetDatabase().DiscardPluginUserMetadata(blankEsm);
+  handle_->GetDatabase().DiscardPluginUserMetadata(BLANK_ESM);
 
   auto tags = handle_->GetDatabase().GetKnownBashTags();
 
@@ -881,13 +875,14 @@ TEST_P(
 
   handle_->GetDatabase().DiscardAllUserMetadata();
 
-  EXPECT_FALSE(handle_->GetDatabase().GetPluginUserMetadata(blankEsm));
-  EXPECT_FALSE(handle_->GetDatabase().GetPluginUserMetadata(blankDifferentEsp));
+  EXPECT_FALSE(handle_->GetDatabase().GetPluginUserMetadata(BLANK_ESM));
+  EXPECT_FALSE(
+      handle_->GetDatabase().GetPluginUserMetadata(BLANK_DIFFERENT_ESP));
 
-  auto metadata = handle_->GetDatabase().GetPluginMetadata(blankEsm).value();
+  auto metadata = handle_->GetDatabase().GetPluginMetadata(BLANK_ESM).value();
 
   std::vector<File> expectedLoadAfter({
-      File(masterFile),
+      File(MASTER_FILE),
   });
   EXPECT_EQ(expectedLoadAfter, metadata.GetLoadAfterFiles());
 
@@ -895,8 +890,8 @@ TEST_P(
 
   std::vector<Message> expectedMessages({
       Message(MessageType::say,
-              generalMasterlistMessage,
-              "file(\"" + missingEsp + "\")"),
+              GENERAL_MASTERLIST_MESSAGE,
+              "file(\"" + std::string(MISSING_ESP) + "\")"),
   });
   EXPECT_EQ(expectedMessages, messages);
 
@@ -984,17 +979,18 @@ TEST_P(DatabaseInterfaceTest,
   EXPECT_NO_THROW(
       handle_->GetDatabase().WriteMinimalList(minimalOutputPath_, options));
 
-  const auto content = GetFileContent(minimalOutputPath_);
+  const auto content = readFileToString(minimalOutputPath_);
 
   // Plugin entries are unordered.
   std::stringstream expectedContent;
   expectedContent << "plugins:" << endl
-                  << "  - name: '" << blankEsm << "'" << endl
+                  << "  - name: '" << BLANK_ESM << "'" << endl
                   << "    tag:" << endl
                   << "      - Actors.ACBS" << endl
                   << "      - Actors.AIData" << endl
-                  << "      - -C.Water" << endl << endl
-                  << "  - name: '" << blankDifferentEsm << "'" << endl
+                  << "      - -C.Water" << endl
+                  << endl
+                  << "  - name: '" << BLANK_DIFFERENT_ESM << "'" << endl
                   << "    dirty:" << endl
                   << "      - crc: 0x7D22F9DF" << endl
                   << "        util: 'TES4Edit'" << endl
