@@ -19,7 +19,7 @@ use crate::{
     logging::{self, format_details, is_log_enabled},
     metadata::{
         Filename,
-        plugin_metadata::{GHOST_FILE_EXTENSION, iends_with_ascii},
+        plugin_metadata::{GHOST_FILE_EXTENSION, iends_with_ascii, trim_dot_ghost},
     },
     plugin::{
         LoadScope, Plugin,
@@ -821,7 +821,8 @@ impl GameCache {
     }
 
     fn plugin(&self, plugin_name: &str) -> Option<&Arc<Plugin>> {
-        self.plugins.get(&Filename::new(plugin_name.to_owned()))
+        self.plugins
+            .get(&Filename::new(trim_dot_ghost(plugin_name).to_owned()))
     }
 
     pub(crate) fn archives_iter(&self) -> impl Iterator<Item = &PathBuf> {
@@ -2272,6 +2273,23 @@ mod tests {
                 ]);
 
                 assert_eq!("Blank.esm", cache.plugin("blank.esm").unwrap().name());
+            }
+
+            #[test]
+            fn should_trim_dot_ghost_extension() {
+                let mut cache = GameCache::default();
+
+                cache.insert_plugins(vec![
+                    Plugin::new(
+                        GameType::Oblivion,
+                        &cache,
+                        &source_plugins_path(GameType::Oblivion).join(BLANK_ESM),
+                        LoadScope::HeaderOnly,
+                    )
+                    .unwrap(),
+                ]);
+
+                assert_eq!("Blank.esm", cache.plugin("blank.esm.ghost").unwrap().name());
             }
 
             #[test]

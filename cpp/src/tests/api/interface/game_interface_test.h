@@ -580,6 +580,23 @@ TEST_P(GameInterfaceTest,
   EXPECT_NE(pointer1, pointer2);
 }
 
+TEST_P(GameInterfaceTest, getPluginShouldStripGhostExtension) {
+  if (GetParam() == GameType::openmw) {
+    return;
+  }
+
+  const auto ghostedName = std::string(BLANK_ESP) + ".ghost";
+  copyPlugin(BLANK_ESP, ghostedName);
+
+  handle_->LoadPlugins({BLANK_ESP}, true);
+
+  EXPECT_EQ(1, handle_->GetLoadedPlugins().size());
+
+  const auto plugin = handle_->GetPlugin(ghostedName);
+  ASSERT_NE(nullptr, plugin);
+  EXPECT_EQ(BLANK_ESP, plugin->GetName());
+}
+
 TEST_P(GameInterfaceTest,
        getLoadedPluginsShouldReturnAnEmptySetIfNoneHaveBeenLoaded) {
   EXPECT_TRUE(handle_->GetLoadedPlugins().empty());
@@ -666,14 +683,19 @@ TEST_P(GameInterfaceTest, sortPluginsShouldSupportGhostedPlugins) {
     return;
   }
 
+  const auto pluginName =
+      GetParam() == GameType::starfield ? BLANK_FULL_ESM : BLANK_ESM;
+
+  copyPlugin(pluginName);
   copyPlugin(BLANK_ESP, "Blank.esp.ghost");
 
-  handle_->LoadPlugins({BLANK_ESP}, false);
+  handle_->LoadPlugins({pluginName, BLANK_ESP}, false);
 
   const auto sortedOrder = handle_->SortPlugins(
-      {std::string(BLANK_ESP)});
+      {std::string(pluginName) + ".ghost", std::string(BLANK_ESP)});
 
-  std::vector<std::string> expectedOrder{std::string(BLANK_ESP)};
+  std::vector<std::string> expectedOrder{std::string(pluginName),
+                                         std::string(BLANK_ESP)};
 
   EXPECT_EQ(expectedOrder, sortedOrder);
 }
