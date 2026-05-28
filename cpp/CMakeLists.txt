@@ -349,7 +349,7 @@ if(LIBLOOT_BUILD_SHARED)
         install(FILES $<TARGET_PDB_FILE:libloot>
             DESTINATION ${CMAKE_INSTALL_LIBDIR}
             OPTIONAL
-            CONFIGURATIONS RelWithDebInfo)
+            CONFIGURATIONS Debug RelWithDebInfo)
     endif()
 
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
