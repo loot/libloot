@@ -167,20 +167,19 @@ impl Game {
             escape_ascii(game_path)
         );
 
-        let resolved_game_path = resolve_path(game_path);
-        if !resolved_game_path.is_dir() {
+        if !game_path.is_dir() {
             return Err(GameHandleCreationError::NotADirectory(game_path.into()));
         }
 
         let load_order =
-            loadorder::GameSettings::new(game_type.into(), &resolved_game_path)?.into_load_order();
+            loadorder::GameSettings::new(game_type.into(), game_path)?.into_load_order();
 
         let condition_evaluator_state =
-            new_condition_evaluator_state(game_type, &resolved_game_path, load_order.as_ref());
+            new_condition_evaluator_state(game_type, game_path, load_order.as_ref());
 
         Ok(Game {
             base_type: game_type,
-            install_path: resolved_game_path,
+            install_path: game_path.to_path_buf(),
             load_order,
             database: Arc::new(RwLock::new(Database::new(condition_evaluator_state))),
             cache: GameCache::default(),
@@ -210,31 +209,26 @@ impl Game {
             escape_ascii(game_local_path)
         );
 
-        let resolved_game_path = resolve_path(game_path);
-        if !resolved_game_path.is_dir() {
+        if !game_path.is_dir() {
             return Err(GameHandleCreationError::NotADirectory(game_path.into()));
         }
 
-        let resolved_game_local_path = resolve_path(game_local_path);
-        if resolved_game_local_path.exists() && !resolved_game_local_path.is_dir() {
+        if game_local_path.exists() && !game_local_path.is_dir() {
             return Err(GameHandleCreationError::NotADirectory(
                 game_local_path.into(),
             ));
         }
 
-        let load_order = loadorder::GameSettings::with_local_path(
-            game_type.into(),
-            &resolved_game_path,
-            &resolved_game_local_path,
-        )?
-        .into_load_order();
+        let load_order =
+            loadorder::GameSettings::with_local_path(game_type.into(), game_path, game_local_path)?
+                .into_load_order();
 
         let condition_evaluator_state =
-            new_condition_evaluator_state(game_type, &resolved_game_path, load_order.as_ref());
+            new_condition_evaluator_state(game_type, game_path, load_order.as_ref());
 
         Ok(Game {
             base_type: game_type,
-            install_path: resolved_game_path,
+            install_path: game_path.to_path_buf(),
             load_order,
             database: Arc::new(RwLock::new(Database::new(condition_evaluator_state))),
             cache: GameCache::default(),
@@ -544,14 +538,6 @@ impl Game {
         self.load_order.set_load_order(load_order)?;
         self.load_order.save()?;
         Ok(())
-    }
-}
-
-fn resolve_path(path: &Path) -> PathBuf {
-    if path.is_symlink() {
-        path.read_link().unwrap_or_else(|_| path.to_path_buf())
-    } else {
-        path.to_path_buf()
     }
 }
 
@@ -989,7 +975,8 @@ mod tests {
                 symlink_dir(&fixture.game_path, &symlink_game_path);
                 assert!(symlink_game_path.is_symlink());
 
-                assert!(Game::new(fixture.game_type, &symlink_game_path).is_ok());
+                let game = Game::new(fixture.game_type, &symlink_game_path).unwrap();
+                assert_eq!(symlink_game_path, game.install_path);
             }
 
             #[cfg(windows)]
@@ -1090,9 +1077,18 @@ mod tests {
                     fixture.game_type,
                     &symlink_game_path,
                     &symlink_local_path,
-                );
+                )
+                .unwrap();
 
-                assert!(game.is_ok());
+                assert_eq!(symlink_game_path, game.install_path);
+                assert_eq!(
+                    symlink_local_path,
+                    game.load_order
+                        .game_settings()
+                        .active_plugins_file()
+                        .parent()
+                        .unwrap()
+                );
             }
 
             #[cfg(windows)]
