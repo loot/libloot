@@ -55,9 +55,10 @@ Fixed
 - Resolving the default user config and user data directories referenced in
   OpenMW configuration when libloot is running inside a Flatpak sandbox and
   OpenMW was not installed as a Flatpak application and the host did not have
-  the ``XDG_CONFIG_HOME`` and/or ``XDG_DATA_HOME`` environment variables defined
-  would incorrectly look for the directories inside the current Flatpak's XDG
-  directories instead of in the host's home directory. Via libloadorder.
+  the ``XDG_CONFIG_HOME`` and/or ``XDG_DATA_HOME`` environment variables
+  defined. libloot would previously incorrectly look for the directories inside
+  the current Flatpak's XDG directories instead of in the host's home directory.
+  Via libloadorder.
 
 Changed
 -------
