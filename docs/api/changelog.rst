@@ -2,6 +2,50 @@
 Version History
 ***************
 
+0.29.6 - Unreleased
+===================
+
+Fixed
+-----
+
+- When creating a game handle and the game path and/or game local path given are
+  symlinks, libloot no longer internally replaces them with the target
+  directories that the symlinks point to.
+
+  This fixes plugins not appearing in the load order read by libloot when the
+  plugins are installed by MO2 and libloot was run through MO2, due to a
+  known limitation of MO2's virtual filesystem not working with symlinks.
+- When CPack was run for a debug build of libloot built using MSVC, the
+  library's PDB file was not included in the output package.
+
+Changed
+-------
+
+- When retrieving a loaded plugin's data, it's now possible to pass the plugin
+  filename optionally suffixed with a ``.ghost`` file extension, e.g.
+  ``example.esm.ghost``, similar to when loading or sorting plugins. Previously
+  loading or sorting plugins would accept accept ghosted filenames but getting
+  loaded plugins would only find the plugin if given its un-ghosted filename.
+- Updated dependency versions in Cargo.lock (which sets the versions used by the
+  C++ wrapper):
+
+  - Updated autocfg to v1.5.0.
+  - Updated bitflags to v2.11.1.
+  - Updated cfg-if to v1.0.4.
+  - Updated libc to v0.2.186.
+  - Updated memchr to v2.8.0.
+  - Updated once_cell to v1.21.4.
+  - Updated quote to v1.0.45.
+  - Updated rayon to v1.12.0.
+  - Updated regex to v1.12.3.
+  - Updated regex-automata to v0.4.14.
+  - Updated serde to v1.0.228.
+  - Updated syn to v2.0.117.
+  - Updated unicode-width to v0.2.2.
+  - Updated windows-link to v0.2.1.
+  - Updated windows-result to v0.4.1.
+  - Updated windows-sys to v0.61.2.
+
 0.29.5 - 2026-05-05
 ===================
 
