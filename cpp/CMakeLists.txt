@@ -253,6 +253,12 @@ if(MSVC)
         "/sdl"
         "$<$<CONFIG:Debug>:/RTC1>")
     target_link_options(libloot PRIVATE "/INCREMENTAL:NO" "/LTCG")
+
+    # Copy test code coverage config into build directory where MSVC expects to
+    # find it.
+    configure_file("${PROJECT_SOURCE_DIR}/.runsettings"
+        "${PROJECT_BINARY_DIR}/.runsettings"
+        COPYONLY)
 endif()
 
 ##############################
