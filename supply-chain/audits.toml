@@ -72,6 +72,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.4.28 -> 0.4.29"
 
+[[audits.log]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.4.29 -> 0.4.33"
+
 [[audits.memchr]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
