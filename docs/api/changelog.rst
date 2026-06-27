@@ -22,10 +22,10 @@ Changed
 -------
 
 - When retrieving a loaded plugin's data, it's now possible to pass the plugin
-  filename optionally suffixed with a ``.ghost`` file extension, e.g.
-  ``example.esm.ghost``, similar to when loading or sorting plugins. Previously
-  loading or sorting plugins would accept accept ghosted filenames but getting
-  loaded plugins would only find the plugin if given its un-ghosted filename.
+  filename suffixed with a ``.ghost`` file extension, e.g.
+  ``example.esm.ghost``, similar to when loading or sorting plugins. Previously,
+  loading or sorting plugins would accept ghosted filenames but getting a loaded
+  plugin would only find the plugin if given its un-ghosted filename.
 - Updated dependency versions in Cargo.lock (which sets the versions used by the
   C++ wrapper):
 
@@ -33,6 +33,7 @@ Changed
   - Updated bitflags to v2.11.1.
   - Updated cfg-if to v1.0.4.
   - Updated libc to v0.2.186.
+  - Updated log to v0.4.33.
   - Updated memchr to v2.8.0.
   - Updated once_cell to v1.21.4.
   - Updated quote to v1.0.45.
