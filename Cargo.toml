@@ -7,6 +7,14 @@ repository.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
+include = [
+    "/src/**/*.rs",
+    "/build.rs",
+    "/Cargo.lock",
+    "/Cargo.toml",
+    "/LICENSE",
+    "/README.md",
+]
 
 [dependencies]
 crc32fast = "1"
