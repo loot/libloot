@@ -282,7 +282,7 @@ impl PluginName {
         if is_regex_name(&name) {
             let non_capturing_name = replace_capturing_groups(&name);
 
-            let regex = case_insensitive_regex(&format!("^{}$", &non_capturing_name))?;
+            let regex = case_insensitive_regex(&format!("^{non_capturing_name}$"))?;
 
             Ok(Self {
                 string: name,
