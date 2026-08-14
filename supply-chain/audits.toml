@@ -26,7 +26,22 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "1.0.161 -> 1.0.192"
 
+[[audits.cxx]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.192 -> 1.0.199"
+
 [[audits.cxx-build]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.161 -> 1.0.192"
+
+[[audits.cxx-build]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.192 -> 1.0.199"
+
+[[audits.cxxbridge-flags]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "1.0.161 -> 1.0.192"
@@ -34,12 +49,17 @@ delta = "1.0.161 -> 1.0.192"
 [[audits.cxxbridge-flags]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
-delta = "1.0.161 -> 1.0.192"
+delta = "1.0.192 -> 1.0.199"
 
 [[audits.cxxbridge-macro]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "1.0.161 -> 1.0.192"
+
+[[audits.cxxbridge-macro]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.192 -> 1.0.199"
 
 [[audits.dtor]]
 who = "Oliver Hamlet <git@ortham.net>"
@@ -156,6 +176,11 @@ delta = "2.1.2 -> 2.1.3"
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.4.8 -> 0.4.11"
+
+[[audits.syn]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.0.117 -> 3.0.3"
 
 [[trusted.esplugin]]
 criteria = "safe-to-deploy"

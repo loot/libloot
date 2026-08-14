@@ -1249,6 +1249,13 @@ delta = "2.8.0 -> 2.9.0"
 notes = "Doc update, a new API, one carefully annotated unsafe code block with all preconditions checked"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
+[[audits.mozilla.audits.libloading]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.9.0"
+notes = "The exposed functionality is inherently unsafe, but all such functions are correctly tagged as `unsafe` and requirements documented. It also includes extensive documentation about the choices made about differing platform APIs"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
 [[audits.mozilla.audits.option-ext]]
 who = "Nika Layzell <nika@thelayzells.com>"
 criteria = "safe-to-deploy"
