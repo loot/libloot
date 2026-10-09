@@ -24,7 +24,8 @@ use crate::{
     plugin::{
         LoadScope, Plugin,
         error::{InvalidFilenameReason, PluginValidationError},
-        plugins_metadata, validate_plugin_path_and_header,
+        has_plugin_file_extension, plugins_metadata, validate_plugin_file_extension,
+        validate_plugin_header,
     },
     sorting::{
         groups::build_groups_graph,
@@ -297,12 +298,16 @@ impl Game {
     /// relative to the game's plugins directory, while absolute paths are used
     /// as given.
     pub fn is_valid_plugin(&self, plugin_path: &Path) -> bool {
+        if !has_plugin_file_extension(self.base_type, plugin_path) {
+            return false;
+        }
+
         let resolved_path = resolve_plugin_path(
             self.base_type,
             &data_path(self.base_type, &self.install_path),
             plugin_path,
         );
-        validate_plugin_path_and_header(self.base_type, &resolved_path).is_ok()
+        validate_plugin_header(self.base_type, &resolved_path).is_ok()
     }
 
     /// Fully parses plugins and loads their data.
@@ -599,8 +604,10 @@ fn validate_plugin_paths(
     plugin_paths
         .par_iter()
         .map(|path| {
-            let resolved_path = resolve_plugin_path(game_type, data_path, path);
-            validate_plugin_path_and_header(game_type, &resolved_path)
+            validate_plugin_file_extension(game_type, path).and_then(|()| {
+                let resolved_path = resolve_plugin_path(game_type, data_path, path);
+                validate_plugin_header(game_type, &resolved_path)
+            })
         })
         .collect()
 }

@@ -282,13 +282,13 @@ impl Plugin {
     }
 }
 
-pub(crate) fn validate_plugin_path_and_header(
+pub(crate) fn validate_plugin_file_extension(
     game_type: GameType,
     plugin_path: &Path,
 ) -> Result<(), PluginValidationError> {
-    if game_type == GameType::OpenMW && has_ascii_extension(plugin_path, "omwscripts") {
+    if has_plugin_file_extension(game_type, plugin_path) {
         Ok(())
-    } else if !has_plugin_file_extension(game_type, plugin_path) {
+    } else {
         logging::debug!(
             "The file \"{}\" is not a valid plugin, as it has an unsupported file extension",
             escape_ascii(plugin_path)
@@ -297,7 +297,15 @@ pub(crate) fn validate_plugin_path_and_header(
             plugin_path.into(),
             InvalidFilenameReason::UnsupportedFileExtension,
         ))
-    } else if esplugin::Plugin::is_valid(game_type.into(), plugin_path, ParseOptions::header_only())
+    }
+}
+
+pub(crate) fn validate_plugin_header(
+    game_type: GameType,
+    plugin_path: &Path,
+) -> Result<(), PluginValidationError> {
+    if (game_type == GameType::OpenMW && has_ascii_extension(plugin_path, "omwscripts"))
+        || esplugin::Plugin::is_valid(game_type.into(), plugin_path, ParseOptions::header_only())
     {
         Ok(())
     } else {
@@ -312,7 +320,7 @@ pub(crate) fn validate_plugin_path_and_header(
     }
 }
 
-fn has_plugin_file_extension(game_type: GameType, plugin_path: &Path) -> bool {
+pub(crate) fn has_plugin_file_extension(game_type: GameType, plugin_path: &Path) -> bool {
     let extension = if game_type != GameType::OpenMW && has_ascii_extension(plugin_path, "ghost") {
         plugin_path
             .file_stem()
