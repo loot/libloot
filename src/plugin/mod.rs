@@ -560,7 +560,11 @@ mod tests {
             assert!(!plugin.is_empty());
             assert!(plugin.version().is_none());
 
-            #[expect(clippy::float_cmp, reason = "float values should be exactly equal")]
+            #[expect(
+                clippy::allow_attributes,
+                reason = "clippy::float_cmp stopped triggering here in Rust v1.99, and it's not possible to gate the expectation on the Rust toolchain version"
+            )]
+            #[allow(clippy::float_cmp, reason = "float values should be exactly equal")]
             match game_type {
                 GameType::Morrowind | GameType::OpenMW => {
                     assert_eq!(1.2, plugin.header_version().unwrap());
@@ -637,7 +641,11 @@ mod tests {
             assert!(!plugin.is_empty());
             assert!(plugin.version().is_none());
 
-            #[expect(clippy::float_cmp, reason = "float values should be exactly equal")]
+            #[expect(
+                clippy::allow_attributes,
+                reason = "clippy::float_cmp stopped triggering here in Rust v1.99, and it's not possible to gate the expectation on the Rust toolchain version"
+            )]
+            #[allow(clippy::float_cmp, reason = "float values should be exactly equal")]
             match game_type {
                 GameType::Morrowind | GameType::OpenMW => {
                     assert_eq!(1.2, plugin.header_version().unwrap());
