@@ -193,7 +193,8 @@ mod tests {
 
         use crate::tests::{
             ALL_GAME_TYPES, BLANK_DIFFERENT_ESM, BLANK_DIFFERENT_ESP, BLANK_ESM, BLANK_ESP,
-            BLANK_MASTER_DEPENDENT_ESM, copy_file, source_plugins_path,
+            BLANK_MASTER_DEPENDENT_ESM, assert_eq_empty_string_slice, assert_ne_empty_string_slice,
+            copy_file, source_plugins_path,
         };
 
         const NON_ASCII_ESP: &str = "non\u{00C1}scii.esp";
@@ -276,7 +277,7 @@ mod tests {
                 &fixture.data_path.join(BLANK_MASTER_DEPENDENT_ESM),
             );
 
-            assert!(archives.is_empty());
+            assert_eq_empty_string_slice!(archives);
         }
 
         #[parameterized_test(ALL_GAME_TYPES)]
@@ -298,9 +299,9 @@ mod tests {
                     | GameType::Oblivion
                     | GameType::OblivionRemastered
             ) {
-                assert!(archives.is_empty());
+                assert_eq_empty_string_slice!(archives);
             } else {
-                assert!(!archives.is_empty());
+                assert_ne_empty_string_slice!(archives);
             }
         }
 
@@ -320,9 +321,9 @@ mod tests {
                 game_type,
                 GameType::Morrowind | GameType::OpenMW | GameType::Starfield
             ) {
-                assert!(archives.is_empty());
+                assert_eq_empty_string_slice!(archives);
             } else {
-                assert!(!archives.is_empty());
+                assert_ne_empty_string_slice!(archives);
             }
         }
 
@@ -339,9 +340,9 @@ mod tests {
             );
 
             if matches!(game_type, GameType::Morrowind | GameType::OpenMW) {
-                assert!(archives.is_empty());
+                assert_eq_empty_string_slice!(archives);
             } else {
-                assert!(!archives.is_empty());
+                assert_ne_empty_string_slice!(archives);
             }
         }
 
@@ -364,9 +365,9 @@ mod tests {
                     | GameType::Fallout4
                     | GameType::Fallout4VR
             ) {
-                assert!(!archives.is_empty());
+                assert_ne_empty_string_slice!(archives);
             } else {
-                assert!(archives.is_empty());
+                assert_eq_empty_string_slice!(archives);
             }
         }
 
@@ -391,9 +392,9 @@ mod tests {
                     | GameType::Fallout4
                     | GameType::Fallout4VR
             ) {
-                assert!(!archives.is_empty());
+                assert_ne_empty_string_slice!(archives);
             } else {
-                assert!(archives.is_empty());
+                assert_eq_empty_string_slice!(archives);
             }
         }
     }

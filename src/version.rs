@@ -115,7 +115,7 @@ mod tests {
 
         #[test]
         fn should_not_be_empty() {
-            assert!(!libloot_revision().is_empty());
+            assert_ne!(libloot_revision(), "");
         }
     }
 }

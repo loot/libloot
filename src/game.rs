@@ -1012,7 +1012,7 @@ mod tests {
         }
 
         mod with_local_path {
-            use crate::tests::MAX_PATH_COMPONENT_LENGTH;
+            use crate::tests::{MAX_PATH_COMPONENT_LENGTH, assert_eq_empty_string_slice};
 
             use super::*;
 
@@ -1235,7 +1235,7 @@ mod tests {
                             game.additional_data_paths()
                         );
                     }
-                    _ => assert!(game.additional_data_paths().is_empty()),
+                    _ => assert_eq_empty_string_slice!(game.additional_data_paths()),
                 }
             }
 
@@ -1284,7 +1284,7 @@ mod tests {
                         .plugin_user_metadata(BLANK_ESM, EvalMode::Evaluate)
                         .unwrap()
                         .unwrap();
-                    assert!(!evaluated_metadata.load_after_files().is_empty());
+                    assert_ne!(evaluated_metadata.load_after_files(), []);
                 }
 
                 #[test]
@@ -1951,7 +1951,7 @@ mod tests {
         }
 
         mod sort_plugins {
-            use crate::tests::initial_load_order;
+            use crate::tests::{assert_eq_empty_string_slice, initial_load_order};
 
             use super::*;
 
@@ -1975,7 +1975,7 @@ mod tests {
                 )
                 .unwrap();
 
-                assert!(game.sort_plugins(&[]).unwrap().is_empty());
+                assert_eq_empty_string_slice!(game.sort_plugins(&[]).unwrap());
             }
 
             #[test]

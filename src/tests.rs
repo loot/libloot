@@ -28,6 +28,22 @@ pub(crate) const NON_ASCII_ESM: &str = "non\u{00C1}scii.esm";
 
 pub(crate) const MAX_PATH_COMPONENT_LENGTH: usize = 255;
 
+macro_rules! assert_eq_empty_string_slice {
+    ($cond:expr) => {{
+        let empty: [String; 0] = [];
+        assert_eq!($cond, &empty);
+    }};
+}
+pub(crate) use assert_eq_empty_string_slice;
+
+macro_rules! assert_ne_empty_string_slice {
+    ($cond:expr) => {{
+        let empty: [String; 0] = [];
+        assert_ne!($cond, &empty);
+    }};
+}
+pub(crate) use assert_ne_empty_string_slice;
+
 pub(crate) fn source_plugins_path(game_type: GameType) -> PathBuf {
     match game_type {
         GameType::Morrowind | GameType::OpenMW => {

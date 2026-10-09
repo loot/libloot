@@ -1438,7 +1438,7 @@ mod tests {
             let graph = PluginsGraph::<TestPlugin>::new();
             let sorted = graph.topological_sort().unwrap();
 
-            assert!(sorted.is_empty());
+            assert_eq!(sorted, []);
         }
 
         mod add_early_loading_plugin_edges {

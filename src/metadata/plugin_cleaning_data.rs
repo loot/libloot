@@ -300,7 +300,7 @@ mod tests {
 
             assert_eq!(0x1234_5678, data.crc());
             assert_eq!("cleaner", data.cleaning_utility());
-            assert!(data.detail().is_empty());
+            assert_eq!(data.detail(), []);
             assert_eq!(0, data.itm_count());
             assert_eq!(0, data.deleted_reference_count());
             assert_eq!(0, data.deleted_navmesh_count());

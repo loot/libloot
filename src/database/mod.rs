@@ -1134,11 +1134,9 @@ plugins:
 
             database.load_userlist(&userlist_path).unwrap();
 
-            assert!(
-                database
-                    .user_general_messages(EvalMode::Evaluate)
-                    .unwrap()
-                    .is_empty()
+            assert_eq!(
+                database.user_general_messages(EvalMode::Evaluate).unwrap(),
+                []
             );
         }
     }
@@ -1413,13 +1411,13 @@ plugins:
 
             database.set_plugin_user_metadata(plugin);
 
-            assert!(
+            assert_eq!(
                 database
                     .plugin_metadata(BLANK_ESM, MergeMode::WithUserMetadata, EvalMode::Evaluate)
                     .unwrap()
                     .unwrap()
-                    .messages()
-                    .is_empty()
+                    .messages(),
+                []
             );
         }
     }

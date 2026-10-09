@@ -312,7 +312,7 @@ mod tests {
             assert!(file.display_name().is_none());
             assert!(file.condition().is_none());
             assert!(file.constraint().is_none());
-            assert!(file.detail().is_empty());
+            assert_eq!(file.detail(), []);
         }
 
         #[test]
@@ -368,7 +368,7 @@ mod tests {
             assert!(file.display_name().is_none());
             assert!(file.condition().is_none());
             assert!(file.constraint().is_none());
-            assert!(file.detail().is_empty());
+            assert_eq!(file.detail(), []);
         }
 
         #[test]

@@ -962,7 +962,10 @@ mod tests {
     mod metadata_document {
         use std::error::Error;
 
-        use crate::metadata::{MessageType, PluginCleaningData, Tag, TagSuggestion};
+        use crate::{
+            metadata::{MessageType, PluginCleaningData, Tag, TagSuggestion},
+            tests::{assert_eq_empty_string_slice, assert_ne_empty_string_slice},
+        };
 
         use super::*;
 
@@ -1087,7 +1090,7 @@ plugins:
             assert_eq!(3, groups.len());
 
             assert_eq!("default", groups[0].name());
-            assert!(groups[0].after_groups().is_empty());
+            assert_eq_empty_string_slice!(groups[0].after_groups());
 
             assert_eq!("group1", groups[1].name());
             assert_eq!(&["group2"], groups[1].after_groups());
@@ -1825,19 +1828,19 @@ plugins:
             let mut metadata = MetadataDocument::default();
             metadata.load_from_str(METADATA_LIST_YAML).unwrap();
 
-            assert!(!metadata.messages().is_empty());
-            assert!(!metadata.bash_tags().is_empty());
-            assert!(!metadata.plugins.is_empty());
-            assert!(!metadata.regex_plugins.is_empty());
-            assert!(!metadata.ordered_plugin_names.is_empty());
+            assert_ne!(metadata.messages(), []);
+            assert_ne_empty_string_slice!(metadata.bash_tags());
+            assert_ne!(metadata.plugins, HashMap::new());
+            assert_ne!(metadata.regex_plugins, []);
+            assert_ne!(metadata.ordered_plugin_names, []);
 
             metadata.clear();
 
-            assert!(metadata.messages().is_empty());
-            assert!(metadata.bash_tags().is_empty());
-            assert!(metadata.plugins.is_empty());
-            assert!(metadata.regex_plugins.is_empty());
-            assert!(metadata.ordered_plugin_names.is_empty());
+            assert_eq!(metadata.messages(), []);
+            assert_eq_empty_string_slice!(metadata.bash_tags());
+            assert_eq!(metadata.plugins, HashMap::new());
+            assert_eq!(metadata.regex_plugins, []);
+            assert_eq!(metadata.ordered_plugin_names, []);
         }
 
         #[test]
@@ -1850,10 +1853,10 @@ plugins:
             let groups = metadata.groups();
 
             assert_eq!("default", groups[0].name());
-            assert!(groups[0].after_groups().is_empty());
+            assert_eq_empty_string_slice!(groups[0].after_groups());
 
             assert_eq!("group4", groups[1].name());
-            assert!(groups[1].after_groups().is_empty());
+            assert_eq_empty_string_slice!(groups[1].after_groups());
         }
 
         #[test]
@@ -2124,7 +2127,7 @@ plugins:
         fn should_return_an_empty_string_if_given_empty_strings() {
             let result = replace_prelude(String::new(), "").unwrap();
 
-            assert!(result.masterlist.is_empty());
+            assert_eq!(result.masterlist, "");
             assert!(result.meta.is_none());
         }
 

@@ -123,7 +123,7 @@ mod tests {
     use super::*;
 
     mod try_from_yaml {
-        use crate::metadata::parse;
+        use crate::{metadata::parse, tests::assert_eq_empty_string_slice};
 
         use super::*;
 
@@ -171,7 +171,7 @@ mod tests {
 
             assert_eq!("group1", group.name());
             assert!(group.description().is_none());
-            assert!(group.after_groups().is_empty());
+            assert_eq_empty_string_slice!(group.after_groups());
         }
     }
 

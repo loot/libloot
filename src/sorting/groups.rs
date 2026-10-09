@@ -403,7 +403,7 @@ mod tests {
 
             let path = find_path(&graph, "a", "b").unwrap();
 
-            assert!(path.is_empty());
+            assert_eq!(path, []);
         }
 
         #[test]
