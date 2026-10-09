@@ -405,10 +405,8 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                 // assets, otherwise only check their assets if their override
                 // record counts are equal.
 
-                let outer_plugin_loads_first;
-                let edge_type;
-
-                if plugin.override_record_count == other_plugin.override_record_count
+                let (outer_plugin_loads_first, edge_type) = if plugin.override_record_count
+                    == other_plugin.override_record_count
                     || !plugin.do_records_overlap(other_plugin)?
                 {
                     // Records don't overlap, or override the same number of records,
@@ -423,15 +421,18 @@ impl<'a, T: SortingPlugin> PluginsGraph<'a, T> {
                         continue;
                     }
 
-                    outer_plugin_loads_first = plugin_asset_count > other_plugin_asset_count;
-                    edge_type = EdgeType::AssetOverlap;
+                    (
+                        plugin_asset_count > other_plugin_asset_count,
+                        EdgeType::AssetOverlap,
+                    )
                 } else {
                     // Records overlap and override different numbers of records.
                     // Load this plugin first if it overrides more records.
-                    outer_plugin_loads_first =
-                        plugin.override_record_count > other_plugin.override_record_count;
-                    edge_type = EdgeType::RecordOverlap;
-                }
+                    (
+                        plugin.override_record_count > other_plugin.override_record_count,
+                        EdgeType::RecordOverlap,
+                    )
+                };
 
                 let (from_index, to_index) = if outer_plugin_loads_first {
                     (node_index, other_node_index)
