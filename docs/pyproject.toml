@@ -3,7 +3,7 @@ name = "libloot-docs"
 version = "0.29.6"
 requires-python = ">=3.12"
 dependencies = [
-    "breathe==4.36.0",
+    "breathe==5.1.0",
     "sphinx==9.1.0",
     "sphinx-rtd-theme==3.1.0",
 ]
