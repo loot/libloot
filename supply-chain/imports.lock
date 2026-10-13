@@ -1464,6 +1464,12 @@ criteria = "safe-to-deploy"
 delta = "2.8.1 -> 2.9.0"
 aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/master/supply-chain/audits.toml"
 
+[[audits.ortham.audits.unicase]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.9.0 -> 2.10.0"
+aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/master/supply-chain/audits.toml"
+
 [[audits.ortham.audits.winapi-util]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
