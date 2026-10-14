@@ -11,6 +11,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.8.0 -> 0.10.0"
 
+[[audits.crossbeam-epoch]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.9.20 -> 0.9.21"
+
 [[audits.ctor]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
