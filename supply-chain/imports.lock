@@ -1089,6 +1089,12 @@ criteria = "safe-to-deploy"
 delta = "1.0.95 -> 1.0.101"
 aggregated-from = "https://raw.githubusercontent.com/loot/metadata-validator/refs/heads/master/supply-chain/audits.toml"
 
+[[audits.loot.audits.regex-syntax]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.8.5 -> 0.8.11"
+aggregated-from = "https://raw.githubusercontent.com/loot/loot-condition-interpreter/refs/heads/master/supply-chain/audits.toml"
+
 [[audits.loot.audits.syn]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
