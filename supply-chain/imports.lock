@@ -1391,6 +1391,18 @@ criteria = "safe-to-deploy"
 delta = "2.7.5 -> 2.8.0"
 aggregated-from = "https://raw.githubusercontent.com/Ortham/svg_to_ico/refs/heads/master/supply-chain/audits.toml"
 
+[[audits.ortham.audits.memchr]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.8.0 -> 2.8.2"
+aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/master/supply-chain/audits.toml"
+
+[[audits.ortham.audits.memchr]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.8.2 -> 2.8.3"
+aggregated-from = "https://raw.githubusercontent.com/Ortham/esplugin/refs/heads/master/supply-chain/audits.toml"
+
 [[audits.ortham.audits.proc-macro2]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
