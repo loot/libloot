@@ -35,7 +35,7 @@ version = "1.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.3",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -540,9 +540,9 @@ checksum = "f4c7245a08504955605670dbf141fceab975f15ca21570696aebe9d2e71576bd"
 
 [[package]]
 name = "keyvalues-parser"
-version = "0.2.1"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a08dbe66b5c751fa0ccb33b447931646bf7dc055e8d48562dfed7fa6ee216bf"
+checksum = "eded51a3b2cdcdc173e23683fd49f72e8151160b279f80c0378f7661a2ae10b7"
 dependencies = [
  "pest",
 ]
