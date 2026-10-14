@@ -333,12 +333,6 @@ criteria = "safe-to-deploy"
 suggest = false
 notes = "At time of review this was only built if targeting WASI, which is not an intended target."
 
-[[exemptions.wasi]]
-version = "0.14.2+wasi-0.2.4"
-criteria = "safe-to-run"
-suggest = false
-notes = "At time of review this was only built if targeting WASI, which is not an intended target."
-
 [[exemptions.winapi-util]]
 version = "0.1.9"
 criteria = "safe-to-deploy"
