@@ -86,6 +86,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "1.0.199 -> 1.0.205"
 
+[[audits.delegate]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.13.4 -> 0.13.5"
+
 [[audits.dtor]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
