@@ -252,6 +252,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "2.0.117 -> 3.0.3"
 
+[[audits.syn]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "3.0.3 -> 3.0.9"
+
 [[audits.thiserror]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
