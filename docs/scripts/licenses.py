@@ -33,24 +33,25 @@ SKIPPABLE_CRATES = [
 # verified that these have no notices.
 NO_NOTICES_WHITELIST = [
     ('allocator-api2',  '0.2.21'),
-    ('cxx',             '1.0.192'),
-    ('cxxbridge-macro', '1.0.192'),
-    ('delegate',        '0.13.4'),
+    ('cxx',             '1.0.205'),
+    ('cxxbridge-macro', '1.0.205'),
+    ('delegate',        '0.13.5'),
     ('link-cplusplus',  '1.0.12'),
     ('once_cell',       '1.21.4'),
     ('option-ext',      '0.2.0'),
     ('pelite-macros',   '0.1.1'),
     ('pest',            '2.8.0'),
-    ('proc-macro2',     '1.0.106'),
-    ('quote',           '1.0.45'),
-    ('rustc-hash',      '2.1.2'),
+    ('proc-macro2',     '1.0.107'),
+    ('quote',           '1.0.47'),
+    ('rustc-hash',      '2.1.3'),
     ('rustversion',     '1.0.20'),
     ('serde',           '1.0.228'),
     ('serde_core',      '1.0.228'),
     ('serde_derive',    '1.0.228'),
     ('syn',             '2.0.117'),
-    ('thiserror',       '2.0.12'),
-    ('thiserror-impl',  '2.0.12'),
+    ('syn',             '3.0.9'),
+    ('thiserror',       '2.0.21'),
+    ('thiserror-impl',  '2.0.21'),
 ]
 
 YEAR_REGEX = re.compile(r'\d{4}')
