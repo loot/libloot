@@ -76,6 +76,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.0.5 -> 0.0.6"
 
+[[audits.hashlink]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.11.0 -> 0.12.2"
+
 [[audits.libloading]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -152,6 +157,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "3.0.0 -> 3.2.1"
 
+[[audits.ordered-float]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "5.0.0 -> 5.4.0"
+
 [[audits.proc-macro2]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -186,6 +196,21 @@ delta = "2.1.1 -> 2.1.2"
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "2.1.2 -> 2.1.3"
+
+[[audits.saphyr]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.0.6 -> 0.2.2"
+
+[[audits.saphyr-parser]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.0.6 -> 0.2.1"
+
+[[audits.saphyr-parser]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.2.1 -> 0.2.2"
 
 [[audits.slab]]
 who = "Oliver Hamlet <git@ortham.net>"
