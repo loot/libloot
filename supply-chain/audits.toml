@@ -277,6 +277,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "2.0.12 -> 2.0.21"
 
+[[audits.unicode-ident]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.18 -> 1.0.27"
+
 [[trusted.esplugin]]
 criteria = "safe-to-deploy"
 trusted-publisher = "github:Ortham/esplugin"
