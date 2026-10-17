@@ -287,6 +287,21 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.2.1 -> 0.2.2"
 
+[[audits.serde]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.228 -> 1.0.229"
+
+[[audits.serde_core]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.228 -> 1.0.229"
+
+[[audits.serde_derive]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.0.228 -> 1.0.229"
+
 [[audits.slab]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
