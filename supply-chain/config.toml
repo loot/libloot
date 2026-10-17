@@ -244,7 +244,7 @@ version = "0.25.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.r-efi]]
-version = "5.2.0"
+version = "6.0.0"
 criteria = "safe-to-run"
 suggest = false
 notes = "At time of review this was only built if targeting UEFI, which is not an intended target."
