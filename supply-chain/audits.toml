@@ -1,6 +1,11 @@
 
 # cargo-vet audits file
 
+[[audits.aho-corasick]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.1.3 -> 1.1.5"
+
 [[audits.autocfg]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
