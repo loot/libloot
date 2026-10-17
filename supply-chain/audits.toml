@@ -242,6 +242,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "5.0.0 -> 5.4.0"
 
+[[audits.pest]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.8.0 -> 2.9.2"
+
 [[audits.petgraph]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
