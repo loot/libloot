@@ -314,10 +314,16 @@ notes = "taiki-e is a member of the rust-lang GitHub org and of the Rust languag
 
 [[trusted.libc]]
 criteria = "safe-to-deploy"
-user-id = 55123 # rust-lang-owner
+user-id = 55123
 start = "2024-08-15"
 end = "2026-09-28"
 notes = "rust-lang-owner is a bot managed by the Rust language's infrastructure team, and the source repo is owned by the rust-lang GitHub org."
+
+[[trusted.libc]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:rust-lang/libc"
+start = "2026-10-02"
+end = "2027-10-17"
 
 [[trusted.libloadorder]]
 criteria = "safe-to-deploy"
