@@ -36,6 +36,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.9.20 -> 0.9.21"
 
+[[audits.crossbeam-utils]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.8.21 -> 0.8.23"
+
 [[audits.crunchy]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
