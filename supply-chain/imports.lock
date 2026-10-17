@@ -1048,6 +1048,24 @@ criteria = "safe-to-deploy"
 delta = "1.0.95 -> 1.0.101"
 aggregated-from = "https://raw.githubusercontent.com/loot/metadata-validator/refs/heads/master/supply-chain/audits.toml"
 
+[[audits.loot.audits.regex]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.12.4 -> 1.13.0"
+aggregated-from = "https://raw.githubusercontent.com/loot/loot-condition-interpreter/refs/heads/master/supply-chain/audits.toml"
+
+[[audits.loot.audits.regex]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.13.0 -> 1.13.1"
+aggregated-from = "https://raw.githubusercontent.com/loot/loot-condition-interpreter/refs/heads/master/supply-chain/audits.toml"
+
+[[audits.loot.audits.regex-automata]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.4.14 -> 0.4.16"
+aggregated-from = "https://raw.githubusercontent.com/loot/loot-condition-interpreter/refs/heads/master/supply-chain/audits.toml"
+
 [[audits.loot.audits.regex-syntax]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
