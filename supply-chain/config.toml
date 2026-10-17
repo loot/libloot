@@ -36,11 +36,6 @@ criteria = "safe-to-deploy"
 version = "1.7.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.cc]]
-version = "1.2.18"
-criteria = "safe-to-deploy"
-notes = "This crate's source repo is owned by the rust-lang GitHub org."
-
 [[exemptions.const-random]]
 version = "0.1.18"
 criteria = "safe-to-deploy"
