@@ -126,6 +126,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "1.0.2 -> 1.0.3"
 
+[[audits.fastrand]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-run"
+delta = "2.3.0 -> 2.5.0"
+
 [[audits.getrandom]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-run"
