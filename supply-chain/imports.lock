@@ -1275,11 +1275,17 @@ delta = "0.10.0 -> 0.11.0"
 aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.indexmap]]
-who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
-delta = "2.8.0 -> 2.9.0"
-notes = "Doc update, a new API, one carefully annotated unsafe code block with all preconditions checked"
-aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+delta = "2.8.0 -> 2.11.4"
+aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.indexmap]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "2.11.4 -> 2.14.0"
+notes = "Mostly internal refactorings.  No new unsafe code."
+aggregated-from = "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.libloading]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"

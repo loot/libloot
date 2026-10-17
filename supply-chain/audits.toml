@@ -111,6 +111,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.11.0 -> 0.12.2"
 
+[[audits.indexmap]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "2.14.0 -> 2.14.2"
+
 [[audits.libloading]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
