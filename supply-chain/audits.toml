@@ -1,6 +1,11 @@
 
 # cargo-vet audits file
 
+[[audits.autocfg]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.5.0 -> 1.5.1"
+
 [[audits.cfg-if]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
