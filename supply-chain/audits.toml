@@ -31,6 +31,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "0.9.20 -> 0.9.21"
 
+[[audits.crunchy]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.2.3 -> 0.2.4"
+
 [[audits.ctor]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
