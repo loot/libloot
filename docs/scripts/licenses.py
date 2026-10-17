@@ -40,14 +40,13 @@ NO_NOTICES_WHITELIST = [
     ('once_cell',       '1.21.4'),
     ('option-ext',      '0.2.0'),
     ('pelite-macros',   '0.1.1'),
-    ('pest',            '2.8.0'),
     ('proc-macro2',     '1.0.107'),
     ('quote',           '1.0.47'),
     ('rustc-hash',      '2.1.3'),
     ('rustversion',     '1.0.20'),
-    ('serde',           '1.0.228'),
-    ('serde_core',      '1.0.228'),
-    ('serde_derive',    '1.0.228'),
+    ('serde',           '1.0.229'),
+    ('serde_core',      '1.0.229'),
+    ('serde_derive',    '1.0.229'),
     ('syn',             '2.0.117'),
     ('syn',             '3.0.9'),
     ('thiserror',       '2.0.21'),
@@ -186,13 +185,15 @@ def read_notices_from_file(file_path):
     return notices
 
 def read_notices(dependency):
-    # First hardcode a couple of notices that get mangled by the code below.
+    # First hardcode a couple of notices that get mangled or not handled by the code below.
     if dependency['name'] == 'hashlink':
         return ['Copyright (c) 2015 The Rust Project Developers']
     elif dependency['name'] == 'libloadorder':
         return ['Copyright (C) 2017 Oliver Hamlet']
     elif dependency['name'] == 'esplugin':
         return ['Copyright (C) 2017 Oliver Hamlet']
+    elif dependency['name'] == 'pest':
+        return ['Copyright (c) 2018 Dragoș Tiselice']
 
     crate_path = os.path.dirname(dependency['manifest_path'])
 
