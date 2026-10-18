@@ -348,8 +348,14 @@ pub struct Vertex(libloot::Vertex);
 #[pymethods]
 impl Vertex {
     #[new]
-    fn new(name: String) -> Self {
-        Self(libloot::Vertex::new(name))
+    fn new(name: String, out_edge_type: Option<EdgeType>) -> Self {
+        let mut vertex = libloot::Vertex::new(name);
+
+        if let Some(edge_type) = out_edge_type {
+            vertex = vertex.with_out_edge_type(edge_type.into());
+        }
+
+        Self(vertex)
     }
 
     #[getter]
@@ -430,24 +436,22 @@ impl TryFrom<libloot::EdgeType> for EdgeType {
     }
 }
 
-impl TryFrom<EdgeType> for libloot::EdgeType {
-    type Error = UnsupportedEnumValueError;
-
-    fn try_from(value: EdgeType) -> Result<Self, Self::Error> {
+impl From<EdgeType> for libloot::EdgeType {
+    fn from(value: EdgeType) -> Self {
         match value {
-            EdgeType::Hardcoded => Ok(libloot::EdgeType::Hardcoded),
-            EdgeType::MasterFlag => Ok(libloot::EdgeType::MasterFlag),
-            EdgeType::Master => Ok(libloot::EdgeType::Master),
-            EdgeType::MasterlistRequirement => Ok(libloot::EdgeType::MasterlistRequirement),
-            EdgeType::UserRequirement => Ok(libloot::EdgeType::UserRequirement),
-            EdgeType::MasterlistLoadAfter => Ok(libloot::EdgeType::MasterlistLoadAfter),
-            EdgeType::UserLoadAfter => Ok(libloot::EdgeType::UserLoadAfter),
-            EdgeType::MasterlistGroup => Ok(libloot::EdgeType::MasterlistGroup),
-            EdgeType::UserGroup => Ok(libloot::EdgeType::UserGroup),
-            EdgeType::RecordOverlap => Ok(libloot::EdgeType::RecordOverlap),
-            EdgeType::AssetOverlap => Ok(libloot::EdgeType::AssetOverlap),
-            EdgeType::TieBreak => Ok(libloot::EdgeType::TieBreak),
-            EdgeType::BlueprintMaster => Ok(libloot::EdgeType::BlueprintMaster),
+            EdgeType::Hardcoded => libloot::EdgeType::Hardcoded,
+            EdgeType::MasterFlag => libloot::EdgeType::MasterFlag,
+            EdgeType::Master => libloot::EdgeType::Master,
+            EdgeType::MasterlistRequirement => libloot::EdgeType::MasterlistRequirement,
+            EdgeType::UserRequirement => libloot::EdgeType::UserRequirement,
+            EdgeType::MasterlistLoadAfter => libloot::EdgeType::MasterlistLoadAfter,
+            EdgeType::UserLoadAfter => libloot::EdgeType::UserLoadAfter,
+            EdgeType::MasterlistGroup => libloot::EdgeType::MasterlistGroup,
+            EdgeType::UserGroup => libloot::EdgeType::UserGroup,
+            EdgeType::RecordOverlap => libloot::EdgeType::RecordOverlap,
+            EdgeType::AssetOverlap => libloot::EdgeType::AssetOverlap,
+            EdgeType::TieBreak => libloot::EdgeType::TieBreak,
+            EdgeType::BlueprintMaster => libloot::EdgeType::BlueprintMaster,
         }
     }
 }
