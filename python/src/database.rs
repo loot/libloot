@@ -15,7 +15,7 @@ use crate::{
     metadata::{Group, Message, NONE_REPR, PluginMetadata},
 };
 
-#[pyclass(str = "{0:?}")]
+#[pyclass(str = "{0:?}", skip_from_py_object)]
 #[repr(transparent)]
 #[derive(Clone, Debug, Default)]
 pub struct MetadataWriteOptions(libloot::MetadataWriteOptions);
@@ -68,7 +68,7 @@ impl MetadataWriteOptions {
     }
 }
 
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 #[derive(Clone, Debug)]
 pub struct Database(Arc<RwLock<libloot::Database>>);
 
@@ -340,7 +340,7 @@ fn to_merge_mode(value: bool) -> MergeMode {
     }
 }
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", skip_from_py_object)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Vertex(libloot::Vertex);
@@ -395,7 +395,7 @@ impl From<Vertex> for libloot::Vertex {
     }
 }
 
-#[pyclass(eq, frozen, hash, ord)]
+#[pyclass(eq, frozen, hash, ord, from_py_object)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum EdgeType {
     Hardcoded,

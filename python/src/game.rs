@@ -5,7 +5,7 @@ use pyo3::{pyclass, pymethods};
 
 use crate::{database::Database, error::VerboseError, plugin::Plugin};
 
-#[pyclass(eq, frozen, hash, ord)]
+#[pyclass(eq, frozen, hash, ord, from_py_object)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum GameType {
     Oblivion,

@@ -11,6 +11,3 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dynamic = ["version"]
-
-[tool.maturin]
-features = ["pyo3/extension-module"]

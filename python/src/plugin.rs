@@ -4,7 +4,7 @@ use pyo3::{pyclass, pymethods};
 
 use crate::error::VerboseError;
 
-#[pyclass(eq, frozen)]
+#[pyclass(eq, frozen, skip_from_py_object)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Plugin(Arc<libloot::Plugin>);

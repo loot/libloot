@@ -52,6 +52,26 @@ version = "6.0.0"
 when = "2026-01-21"
 trusted-publisher = "github:loot/loot-condition-interpreter"
 
+[[publisher.pyo3]]
+version = "0.29.3"
+when = "2026-09-30"
+trusted-publisher = "github:PyO3/pyo3"
+
+[[publisher.pyo3-build-config]]
+version = "0.29.3"
+when = "2026-09-30"
+trusted-publisher = "github:PyO3/pyo3"
+
+[[publisher.pyo3-ffi]]
+version = "0.29.3"
+when = "2026-09-30"
+trusted-publisher = "github:PyO3/pyo3"
+
+[[publisher.pyo3-macros-backend]]
+version = "0.29.3"
+when = "2026-09-30"
+trusted-publisher = "github:PyO3/pyo3"
+
 [[publisher.unicode-segmentation]]
 version = "1.12.0"
 when = "2024-09-13"

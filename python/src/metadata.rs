@@ -10,7 +10,7 @@ use crate::error::VerboseError;
 
 pub(crate) const NONE_REPR: &str = "None";
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", from_py_object)]
 #[repr(transparent)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Group(libloot::metadata::Group);
@@ -78,7 +78,7 @@ impl From<Group> for libloot::metadata::Group {
     }
 }
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", from_py_object)]
 #[repr(transparent)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct MessageContent(libloot::metadata::MessageContent);
@@ -159,7 +159,7 @@ pub fn select_message_content(
         .map(Into::into)
 }
 
-#[pyclass(eq, frozen, hash, ord)]
+#[pyclass(eq, frozen, hash, ord, from_py_object)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum MessageType {
     Say,
@@ -187,7 +187,7 @@ impl From<MessageType> for libloot::metadata::MessageType {
     }
 }
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", from_py_object)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Message(libloot::metadata::Message);
@@ -264,7 +264,7 @@ impl From<Message> for libloot::metadata::Message {
     }
 }
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", from_py_object)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct File(libloot::metadata::File);
@@ -354,7 +354,7 @@ impl From<File> for libloot::metadata::File {
     }
 }
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", skip_from_py_object)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Filename(libloot::metadata::Filename);
@@ -383,7 +383,7 @@ impl From<libloot::metadata::Filename> for Filename {
     }
 }
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", from_py_object)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct PluginCleaningData(libloot::metadata::PluginCleaningData);
@@ -491,7 +491,7 @@ impl From<PluginCleaningData> for libloot::metadata::PluginCleaningData {
     }
 }
 
-#[pyclass(eq, frozen, hash, ord)]
+#[pyclass(eq, frozen, hash, ord, from_py_object)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum TagSuggestion {
     Addition,
@@ -509,7 +509,7 @@ impl TryFrom<TagSuggestion> for libloot::metadata::TagSuggestion {
     }
 }
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", from_py_object)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Tag(libloot::metadata::Tag);
@@ -577,7 +577,7 @@ impl From<Tag> for libloot::metadata::Tag {
     }
 }
 
-#[pyclass(eq, ord, frozen, hash, str = "{0:?}")]
+#[pyclass(eq, ord, frozen, hash, str = "{0:?}", from_py_object)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Location(libloot::metadata::Location);
@@ -630,7 +630,7 @@ impl From<Location> for libloot::metadata::Location {
     }
 }
 
-#[pyclass(eq, ord, str = "{0:?}")]
+#[pyclass(eq, ord, str = "{0:?}", from_py_object)]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct PluginMetadata(libloot::metadata::PluginMetadata);

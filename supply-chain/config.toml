@@ -129,10 +129,6 @@ notes = "This crate's source repo is owned by the rust-lang GitHub org."
 version = "0.10.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.indoc]]
-version = "2.0.6"
-criteria = "safe-to-deploy"
-
 [[exemptions.keyvalues-parser]]
 version = "0.2.0"
 criteria = "safe-to-deploy"
@@ -155,10 +151,6 @@ notes = "At time of review this was only built if targeting WASI, which is not a
 
 [[exemptions.memchr]]
 version = "2.7.4"
-criteria = "safe-to-deploy"
-
-[[exemptions.memoffset]]
-version = "0.9.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.napi]]
@@ -214,27 +206,11 @@ criteria = "safe-to-deploy"
 version = "1.11.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.pyo3]]
-version = "0.25.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.pyo3-build-config]]
-version = "0.25.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.pyo3-ffi]]
-version = "0.25.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.pyo3-log]]
 version = "0.12.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.pyo3-macros]]
-version = "0.25.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.pyo3-macros-backend]]
 version = "0.25.1"
 criteria = "safe-to-deploy"
 
@@ -316,10 +292,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.ucd-trie]]
 version = "0.1.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.unindent]]
-version = "0.2.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasi]]

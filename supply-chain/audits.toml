@@ -262,6 +262,16 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "1.0.106 -> 1.0.107"
 
+[[audits.pyo3-log]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.12.4 -> 0.13.4"
+
+[[audits.pyo3-macros]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.25.1 -> 0.29.3"
+
 [[audits.regex]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -352,6 +362,11 @@ who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
 delta = "3.0.3 -> 3.0.9"
 
+[[audits.target-lexicon]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "0.13.2 -> 0.13.5"
+
 [[audits.thiserror]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
@@ -423,6 +438,30 @@ criteria = "safe-to-deploy"
 trusted-publisher = "github:loot/loot-condition-interpreter"
 start = "2025-09-29"
 end = "2027-01-19"
+
+[[trusted.pyo3]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:PyO3/pyo3"
+start = "2025-08-29"
+end = "2027-10-18"
+
+[[trusted.pyo3-build-config]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:PyO3/pyo3"
+start = "2025-08-29"
+end = "2027-10-18"
+
+[[trusted.pyo3-ffi]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:PyO3/pyo3"
+start = "2025-08-29"
+end = "2027-10-18"
+
+[[trusted.pyo3-macros-backend]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:PyO3/pyo3"
+start = "2025-08-29"
+end = "2027-10-18"
 
 [[trusted.windows-link]]
 criteria = "safe-to-deploy"
