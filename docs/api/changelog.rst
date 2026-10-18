@@ -2,6 +2,64 @@
 Version History
 ***************
 
+0.29.7 - 2026-10-19
+===================
+
+Changed
+-------
+
+- ``Game::is_valid_plugin()``, ``Game::load_plugin_headers()`` and
+  ``Game::load_plugins()`` now check the file extension before attempting to
+  resolve the given path, which significantly improves performance when a given
+  path does not have a valid plugin file extension.
+- The Cargo package now uses an ``include`` list to only include relevant files
+  in the archive that gets published to crates.io.
+- The array-parameterised-test crate's accepted syn version range now includes
+  v3.x.
+- The accepted regress version range now includes v0.12.x.
+- Updated dependencies for building the docs:
+
+  - Updated Breathe to v5.1.0.
+  - Updated urllib3 to v2.8.0.
+
+- Updated dependency versions in Cargo.lock (which sets the versions used by the
+  C++ wrapper):
+
+  - Updated aho-corasick to v1.1.5.
+  - Updated autocfg to v1.5.1.
+  - Updated cc to v1.8.0.
+  - Updated cfg-if to v1.0.5.
+  - Updated crc32fast to v1.5.2.
+  - Updated crossbeam-deque to v0.8.8.
+  - Updated crossbeam-epoch to v0.9.21.
+  - Updated crossbeam-utils to v0.8.23.
+  - Updated crunchy to v0.2.4.
+  - Updated cxx to v1.0.205.
+  - Updated either to v1.19.0.
+  - Updated equivalent to v1.0.3.
+  - Updated getrandom to v0.4.3.
+  - Updated hashbrown to v0.15.5.
+  - Updated indexmap to v2.14.2.
+  - Updated keyvalues-parser to v0.2.4.
+  - Updated libc to v0.2.191.
+  - Updated log to v0.4.34.
+  - Updated memchr to v2.8.3.
+  - Updated pest to v2.9.2.
+  - Updated petgraph v0.8.3.
+  - Updated proc-macro2 to v1.0.107.
+  - Updated quote to v1.0.47.
+  - Updated regex to v1.13.1.
+  - Updated regex-syntax to v0.8.11.
+  - Updated regress to v0.12.0.
+  - Updated rustc-hash to v2.1.3.
+  - Updated saphyr to v0.2.2.
+  - Updated scratch to v1.0.9.
+  - Updated serde to v1.0.229.
+  - Updated syn to v3.0.9.
+  - Updated thiserror to v2.0.21.
+  - Updated unicase to v2.10.0.
+  - Updated unicode-ident to v1.0.27.
+
 0.29.6 - 2026-06-27
 ===================
 
