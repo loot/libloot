@@ -65,11 +65,7 @@ version = "0.8.21"
 criteria = "safe-to-deploy"
 
 [[exemptions.ctor]]
-version = "0.4.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.ctor-proc-macro]]
-version = "0.0.5"
+version = "1.0.13"
 criteria = "safe-to-deploy"
 
 [[exemptions.cxx]]
@@ -102,14 +98,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.dlv-list]]
 version = "0.5.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.dtor]]
-version = "0.0.6"
-criteria = "safe-to-deploy"
-
-[[exemptions.dtor-proc-macro]]
-version = "0.0.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.fixedbitset]]
@@ -154,12 +142,11 @@ version = "2.7.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.napi]]
-version = "3.8.1"
+version = "3.14.2"
 criteria = "safe-to-deploy"
-notes = "There's a lot of unsafe usage, and I don't have the knowledge to tell if it meets the safe-to-deploy criteria. I've certified the 3.1.6 -> 3.8.1 diff as safe-to-run, which is good enough considering the libloot Node.js wrapper is experimental."
 
 [[exemptions.napi-build]]
-version = "2.2.3"
+version = "2.6.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.napi-derive]]
@@ -167,7 +154,7 @@ version = "3.2.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.napi-derive-backend]]
-version = "2.1.2"
+version = "6.1.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.napi-sys]]
