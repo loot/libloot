@@ -1,13 +1,14 @@
-import test from 'ava'
+import assert from 'node:assert';
+import { test } from 'node:test';
 
-import { liblootVersion, isCompatible, Group } from '../index.js'
+import { liblootVersion, isCompatible, Group } from '../index.js';
 
 test('liblootVersion', t => {
-  t.is(liblootVersion(), process.env.npm_package_version)
+  assert.strictEqual(liblootVersion(), process.env.npm_package_version);
 });
 
 test('isCompatible', t => {
-  t.is(isCompatible(0, 29, 0), true)
+  assert.strictEqual(isCompatible(0, 29, 0), true);
 });
 
 test('Group equality', t => {
@@ -15,11 +16,11 @@ test('Group equality', t => {
   const group2 = new Group("A");
   const group3 = new Group("B");
 
-  t.deepEqual(group1.name, group2.name);
-  t.notDeepEqual(group1.name, group3.name);
+  assert.deepStrictEqual(group1.name, group2.name);
+  assert.notDeepStrictEqual(group1.name, group3.name);
 
-  t.deepEqual(group1, group2);
+  assert.deepStrictEqual(group1, group2);
 
   // The objects have no public fields so appear to be equal.
-  t.deepEqual(group1, group3);
+  assert.deepStrictEqual(group1, group3);
 })
