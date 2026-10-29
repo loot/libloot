@@ -1072,6 +1072,12 @@ criteria = "safe-to-deploy"
 delta = "1.5.0 -> 1.5.2"
 aggregated-from = "https://raw.githubusercontent.com/loot/loot-condition-interpreter/refs/heads/master/supply-chain/audits.toml"
 
+[[audits.loot.audits.crc32fast]]
+who = "Oliver Hamlet <git@ortham.net>"
+criteria = "safe-to-deploy"
+delta = "1.5.2 -> 1.5.3"
+aggregated-from = "https://raw.githubusercontent.com/loot/loot-condition-interpreter/refs/heads/master/supply-chain/audits.toml"
+
 [[audits.loot.audits.proc-macro2]]
 who = "Oliver Hamlet <git@ortham.net>"
 criteria = "safe-to-deploy"
