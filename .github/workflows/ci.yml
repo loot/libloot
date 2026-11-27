@@ -105,7 +105,7 @@ jobs:
     runs-on: ${{ matrix.target.os }}
 
     env:
-      CARGO_LLVM_COV_VERSION: v0.6.19
+      CARGO_LLVM_COV_VERSION: v0.9.2
 
     outputs:
       coverage_windows_x86: ${{ steps.check-coverage.outputs.coverage_i686-pc-windows-msvc }}
@@ -133,9 +133,9 @@ jobs:
 
           if [[ "${{ runner.os }}" == "Windows" ]]
           then
-            EXPECTED_HASH=dcf8e75e10b07f8348c900a600e429585cccaf4239533b7247a76c7ceaca0b3f
+            EXPECTED_HASH=5525084e4f6a4fa771c1055e6d260a7cee40939f0f624265e92c16bffb777956
           else
-            EXPECTED_HASH=aa53c5963beb832f8ea04fea8dcbcece55a99e0c31a8d1e8d514d59ed5942160
+            EXPECTED_HASH=1e0ed5c64f11e9217f7b9d7c776b3125eab26f27d49313919c909881a2fc7cff
           fi
 
           sha256sum -c <<< "$EXPECTED_HASH cargo-llvm-cov-$host.tar.gz"
