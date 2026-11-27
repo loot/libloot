@@ -2,6 +2,27 @@
 Version History
 ***************
 
+0.29.8 - 2026-11-27
+===================
+
+Fixed
+-----
+
+- Include path errors when building the C++ wrapper with Rust v1.100 on Windows,
+  due to a symlink's target path containing a forward slash and so appearing to
+  be invalid.
+- Unresolved external symbol linker errors when building the C++ wrapper with
+  Rust v1.100 on Windows.
+
+Changed
+-------
+
+- Updated Sphinx to v9.1.1.
+- Updated dependency versions in Cargo.lock (which sets the versions used by the
+  C++ wrapper):
+
+  - Updated crc32fast to v1.5.3.
+
 0.29.7 - 2026-10-19
 ===================
 
