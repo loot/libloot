@@ -91,7 +91,7 @@ target_link_libraries(libloot_cpp INTERFACE
 target_include_directories(libloot_cpp INTERFACE "${TARGET_PATH}/cxxbridge")
 
 if(WIN32)
-    target_link_libraries(libloot_cpp INTERFACE ntdll ws2_32 bcrypt)
+    target_link_libraries(libloot_cpp INTERFACE ntdll ws2_32 bcrypt synchronization)
 endif()
 
 
