@@ -53,17 +53,27 @@ set(CARGO_COMMAND cargo build
     $<$<BOOL:${RUST_TARGET}>:--target>
     $<$<BOOL:${RUST_TARGET}>:${RUST_TARGET}>)
 
+# Force LTO to be disabled when building the first layer of the C++ wrapper,
+# as it may be enabled by default, and if so that leads to undefined symbols
+# in the C++ wrapper's shared library. It's not enough to just pass -fno-lto
+# when building libloot-cpp itself, it also needs to be passed when building
+# the cxx crate, as otherwise there will be missing cxxbridge symbols.
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CARGO_COMMAND ${CMAKE_COMMAND} -E env --modify "CXXFLAGS=string_append: -fno-lto" -- ${CARGO_COMMAND})
 endif()
 
 add_custom_target(libloot_cargo
-    # Force LTO to be disabled when building the first layer of the C++ wrapper,
-    # as it may be enabled by default, and if so that leads to undefined symbols
-    # in the C++ wrapper's shared library. It's not enough to just pass -fno-lto
-    # when building libloot-cpp itself, it also needs to be passed when building
-    # the cxx crate, as otherwise there will be missing cxxbridge symbols.
     COMMAND ${CARGO_COMMAND}
+    # Windows builds fail since Rust v1.100.0 because the symlink file that cxx
+    # writes contains a forward slash path separator (because it uses the
+    # OUT_DIR value provided by cargo, which includes the forward slash) and
+    # that causes Windows to be unable to resolve the symlink, so #include
+    # directives fail.
+    # To work around that, the fix-symlink.cmake script rewrites the symlink to
+    # use backslash separators on Windows.
+    COMMAND ${CMAKE_COMMAND}
+        -D SYMLINK_PATH="${TARGET_PATH}/cxxbridge/libloot-cpp/src/lib.rs.h"
+        -P "${PROJECT_SOURCE_DIR}/cmake/fix-symlink.cmake"
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     BYPRODUCTS
         "${TARGET_PATH}/$<IF:$<CONFIG:Debug>,debug,release>/${LIBLOOT_CPP_FILENAME}"
